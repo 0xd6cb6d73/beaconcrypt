@@ -38,7 +38,7 @@ let Cur(
   r: nat,
   cached_2: bool
 ) =
-  (* @beaconcrypt-fs-fidelity key=beacon.decrypt src=beaconcrypt/src/beacon.rs:163-173 anchor=pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> { *)
+  (* @beaconcrypt-fs-fidelity key=beacon.decrypt src=beaconcrypt/src/beacon.rs:190-200 anchor=pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> { *)
   in(c, frame: bitstring) [precise];
   (* Decode exactly one frame and require the pinned Server ID as sender;
      anything else returns None before the ratchet is touched. *)

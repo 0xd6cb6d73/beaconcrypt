@@ -177,6 +177,7 @@ def expected_verdicts(directory=HERE):
         "check-registration-set",
         "check-registration-response",
         "check-registration-beacon",
+        "check-mldsa-registration-auth",
     ):
         rows.extend(fixture_expectations(name, directory))
     for name in (

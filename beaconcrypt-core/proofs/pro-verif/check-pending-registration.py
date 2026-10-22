@@ -232,7 +232,7 @@ def check_source(directory=HERE):
     if "consumed_registrations" in body:
         raise ValueError("builder now observes the accepting consumed set")
     for anchor in (
-        "let RegistrationOutput { derived_secret, control: pending, } = reg_out;",
+        "let RegistrationOutput { derived_secret, control: pending, authentication, } = reg_out;",
         "let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;",
         "let plaintext = data.unwrap_or(REGISTRATION_WITNESS);",
         "registration_response_len(plaintext.len(), next_key_id)?;",
@@ -248,6 +248,7 @@ def check_source(directory=HERE):
         "let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;",
         "registration_response_len(plaintext.len(), next_key_id)?;",
         "let RegistrationOutput {",
+        "if auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
         "if plaintext.is_empty()",
         "encrypt_registration_message_with_ratchet(",
         "crate::wire::encode_response(KexResponse {",

@@ -16,6 +16,11 @@ use beaconcrypt_core::{
 
 const INTERFACE: &str = include_str!("../proofs/pro-verif/production-transcript-interface.pvl");
 const CRYPTO_MODEL: &str = include_str!("../proofs/pro-verif/crypto.pvl");
+const MLDSA_AUTH_MODEL: &str = include_str!("../proofs/pro-verif/mldsa-auth.pvl");
+const MLDSA_REGISTRATION_MODEL: &str =
+	include_str!("../proofs/pro-verif/mldsa-registration-auth.pvl");
+const MLDSA_REGISTRATION_QUERIES: &str =
+	include_str!("../proofs/pro-verif/mldsa-registration-auth.pv");
 const CBOR_REGISTRATION_MODEL: &str = include_str!("../proofs/pro-verif/cbor-registration.pvl");
 const EXACT_REGISTRATION_ORIGIN_QUERIES: &str =
 	include_str!("../proofs/pro-verif/exact-registration-origin-queries.pvl");
@@ -62,6 +67,7 @@ const MLKEM_REENCAPSULATION_CONTROL: &str =
 const CORE_MAKEFILE: &str = include_str!("../Makefile");
 const FORMAL_WORKFLOW: &str = include_str!("../../.github/workflows/formal-verification.yml");
 const ADAPTER_PQXDH: &str = include_str!("../../beaconcrypt/src/pqxdh.rs");
+const ADAPTER_AUTH: &str = include_str!("../../beaconcrypt/src/auth.rs");
 const ADAPTER_RATCHET: &str = include_str!("../../beaconcrypt/src/ratchet.rs");
 const ADAPTER_SHARED: &str = include_str!("../../beaconcrypt/src/shared.rs");
 const ADAPTER_SERVER: &str = include_str!("../../beaconcrypt/src/server.rs");
@@ -177,9 +183,40 @@ const POST_REGISTRATION_QUERY_HASHES: [u64; 29] = [
 const POST_REGISTRATION_CHECKER_HASH: u64 = 329_879_472_483_210_497;
 const EXPECTED_FACTS: &[&str] = &[
 	"schema=1",
+	"legacy_profiles.scope=classical_projection:MLDSA_guards_not_globally_lifted",
+	"domain.scope=HKDF_domains_only:MLDSA_signing_and_transcript_domains_are_separate",
+	"phase1.init_kex.scope=classical_four_field_projection_inside_mandatory_MLDSA_v2_wire",
+	"phase2.response.scope=classical_five_field_projection_inside_mandatory_MLDSA_v2_wire",
+	"associated_data.core=281_bytes:classical_prefix_153_then_128_zero_placeholder_bytes",
+	"associated_data.adapter=overwrite_153..217_with_server_hash_and_217..281_with_beacon_hash",
+	"associated_data.symbolic_scope=legacy_constructor_is_classical_prefix:new_MLDSA_profile_models_both_hash_slots",
+	"mldsa.security=explicit_external_EUF_CMA_assumption:implementation_and_assumption_not_proved",
+	"mldsa.algorithm=ML_DSA_65:seed_32,public_key_1952,signature_3309",
+	"mldsa.wire.init=CBOR_v2_array_8:identity,prekey,one_time,pq,mldsa_public_key,signature",
+	"mldsa.wire.response=CBOR_v2_array_8:identity,ephemeral,kem,raw_app,assigned_id,signature",
+	"mldsa.signature.context=beaconcrypt_registration_auth_v1",
+	"mldsa.signature.input=64_spaces||role_label||00||blake2b512_transcript",
+	"mldsa.signature.roles=beaconcrypt_v1_beacon_registration,beaconcrypt_v1_server_registration",
+	"mldsa.hash=unkeyed_BLAKE2b512:64_bytes",
+	"mldsa.hash.variable_fields=LE64_length_then_exact_bytes",
+	"mldsa.init.hash=init_domain,LE64_server_kid,server_ed_pin,beacon_MLpk,server_MLpk,length_framed_identity_prekey_one_time_pq",
+	"mldsa.response.hash=response_domain,init_hash,length_framed_identity_ephemeral_kem_app,LE64_assigned_id",
+	"mldsa.hash.signature_field=excluded",
+	"mldsa.init.verify=decoded_request_MLkey_before_classical_signatures_replay_KEM_and_DH",
+	"mldsa.response.verify=pinned_server_MLkey_before_KEM_DH_and_CTX_open",
+	"mldsa.response.publish=signature_and_complete_CBOR_encoding_before_server_commit",
+	"mldsa.accepted_token=private_init_hash,server_MLkey_hash,beacon_MLkey_hash",
+	"mldsa.accepted_token.retarget=reject_current_server_MLkey_hash_mismatch_before_candidate_and_KDF",
+	"mldsa.authorization=attacker_owned_beacon_keys_and_registrations_allowed:no_enrollment_assumption",
+	"mldsa.proof_scope=focused_signature_provenance_and_source_synchronization:not_whole_protocol_refinement",
+	"mldsa.symbolic.files=mldsa-auth.pvl,mldsa-registration-auth.pvl,mldsa-registration-auth.pv",
+	"mldsa.symbolic.init_origin=only_exact_uncompromised_honest_MLkey:not_Ed_identity_authorization",
+	"mldsa.symbolic.response_origin=pinned_uncompromised_server_MLkey_and_retained_request_hash",
+	"mldsa.symbolic.controls=owned_key_admission,explicit_compromise,role_context_request_separation,AD_hash_slot_binding",
+	"mldsa.source_fidelity=reviewed_transcription_guards:not_Rust_to_ProVerif_semantic_compilation",
 	"transport.format=deterministic_CBOR:definite_arrays,canonical_primitive_encodings",
-	"transport.prefix.init=version:1,kind:0,array_length:6",
-	"transport.prefix.response=version:1,kind:1,array_length:7",
+	"transport.prefix.init=version:2,kind:0,array_length:8",
+	"transport.prefix.response=version:2,kind:1,array_length:8",
 	"transport.prefix.frame=version:1,kind:2,array_length:5",
 	"transport.message_limit=33554432:complete_encoded_message_bytes",
 	"transport.parser=bounded_primitive_preflight_then_generated_validator:empty_remainder_required",
@@ -220,9 +257,9 @@ const EXPECTED_FACTS: &[&str] = &[
 	"encoding.mlkem768=03,pk",
 	"encoding.x25519_prekey=04,80,pk",
 	"encoding.x25519_one_time=04,81,pk",
-	"associated_data.fields=tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain,symmetric_ratchet_domain",
-	"associated_data.offsets=0..33,33..66,66..112,112..153",
-	"associated_data.length=153",
+	"associated_data.fields=tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain,symmetric_ratchet_domain,blake2b512(server_mldsa_public_key),blake2b512(beacon_mldsa_public_key)",
+	"associated_data.offsets=0..33,33..66,66..112,112..153,153..217,217..281",
+	"associated_data.length=281",
 	"associated_data.domains=hkdf_domain_values",
 	"aead.primitive=chacha20poly1305_ietf",
 	"aead.fields=key,nonce,associated_data,plaintext",
@@ -235,8 +272,8 @@ const EXPECTED_FACTS: &[&str] = &[
 	"aead.label=none",
 	"ctx.hash=blake2b512",
 	"ctx.fields=key,nonce,associated_data,retained_aead_tag,le64(sequence),le64(sender_id)",
-	"ctx.offsets=0..32,32..44,44..197,197..213,213..221,221..229",
-	"ctx.length=229",
+	"ctx.offsets=0..32,32..44,44..325,325..341,341..349,349..357",
+	"ctx.length=357",
 	"ctx.sequence_encoding=le64",
 	"ctx.sender_id_encoding=le64",
 	"ctx.label=none",
@@ -275,7 +312,7 @@ const EXPECTED_FACTS: &[&str] = &[
 	"cryptoframe.schema.field.2=cipher-text@4:ciphertext||retained_aead_tag||commitment",
 	"cryptoframe.wire.key_id=sender_kid",
 	"cryptoframe.local.encrypted.key_id=target_kid:not_serialized",
-	"cryptoframe.seal.inputs=key:32,nonce:12,associated_data:153,plaintext",
+	"cryptoframe.seal.inputs=key:32,nonce:12,associated_data:281,plaintext",
 	"cryptoframe.seal.detached_outputs=ciphertext,retained_aead_tag:16",
 	"cryptoframe.seal.commitment.output=blake2b512_unkeyed_unlabeled:64",
 	"cryptoframe.seal.commitment.input=existing_ctx_transcript",
@@ -459,7 +496,7 @@ const EXPECTED_FACTS: &[&str] = &[
 	"registration.lifecycle.beacon.bundle.fresh.one_time=generated_for_current_attempt",
 	"registration.lifecycle.beacon.bundle.fresh_with_coins.one_time=stored_current_key",
 	"registration.lifecycle.beacon.bundle.start=beacon_start(control,identity,prekey,pq,one_time)",
-	"registration.lifecycle.beacon.bundle.serialization=wire::encode_init:CBOR_version_1_kind_0_and_four_fields",
+	"registration.lifecycle.beacon.bundle.serialization=wire::encode_init:CBOR_version_2_kind_0_and_six_byte_fields",
 	"registration.lifecycle.beacon.bundle.transition_order=successful_encode_init_before_state_replace",
 	"registration.lifecycle.beacon.bundle.success.fresh=InitSent(started_state,same_prekey,generated_one_time,same_pq)",
 	"registration.lifecycle.beacon.bundle.success.fresh_with_coins=InitSent(started_state,same_prekey,same_one_time,same_pq)",
@@ -705,12 +742,17 @@ struct Snapshot {
 	interface: String,
 	crypto: String,
 	cbor_registration: String,
+	mldsa_auth: String,
+	mldsa_registration: String,
+	mldsa_queries: String,
 	environment: String,
 	active_quantum_witness: String,
 	extraction: String,
 	mlkem_reencapsulation_control: String,
 	makefile: String,
 	adapter_ratchet: String,
+	adapter_auth: String,
+	adapter_pqxdh: String,
 	adapter_shared: String,
 	core_record: String,
 	core_commitment: String,
@@ -757,12 +799,17 @@ impl Snapshot {
 			interface: INTERFACE.to_owned(),
 			crypto: CRYPTO_MODEL.to_owned(),
 			cbor_registration: CBOR_REGISTRATION_MODEL.to_owned(),
+			mldsa_auth: MLDSA_AUTH_MODEL.to_owned(),
+			mldsa_registration: MLDSA_REGISTRATION_MODEL.to_owned(),
+			mldsa_queries: MLDSA_REGISTRATION_QUERIES.to_owned(),
 			environment: ENVIRONMENT_MODEL.to_owned(),
 			active_quantum_witness: ACTIVE_QUANTUM_WITNESS.to_owned(),
 			extraction: EXTRACTION_MODEL.to_owned(),
 			mlkem_reencapsulation_control: MLKEM_REENCAPSULATION_CONTROL.to_owned(),
 			makefile: CORE_MAKEFILE.to_owned(),
 			adapter_ratchet: ADAPTER_RATCHET.to_owned(),
+			adapter_auth: ADAPTER_AUTH.to_owned(),
+			adapter_pqxdh: ADAPTER_PQXDH.to_owned(),
 			adapter_shared: ADAPTER_SHARED.to_owned(),
 			core_record: CORE_RECORD.to_owned(),
 			core_commitment: CORE_COMMITMENT.to_owned(),
@@ -1215,8 +1262,8 @@ fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
 	for wanted in [
 		"pubusetransport::{cryptoframeasCryptoFrame,initkexasInitKex,kexresponseasKexResponse};",
 		"preflight(input,&[0x85,1,2],&[0,0,2])?;matchvalidate_and_parse_cryptoframe(input){ParsedFrame::Some{v:(frame,[])}=>Some(frame),_=>None,}",
-		"preflight(input,&[0x86,1,0],&[2,2,2,2])?;matchvalidate_and_parse_initkex(input){ParsedInit::Some{v:(init,[])}=>Some(init),_=>None,}",
-		"preflight(input,&[0x87,1,1],&[2,2,2,2,0])?;matchvalidate_and_parse_kexresponse(input){ParsedResponse::Some{v:(response,[])}=>Some(response),_=>None,}",
+		"preflight(input,&[0x88,2,0],&[2,2,2,2,2,2])?;matchvalidate_and_parse_initkex(input){ParsedInit::Some{v:(init,[])}=>Some(init),_=>None,}",
+		"preflight(input,&[0x88,2,1],&[2,2,2,2,0,2])?;matchvalidate_and_parse_kexresponse(input){ParsedResponse::Some{v:(response,[])}=>Some(response),_=>None,}",
 	] {
 		require_once(&parser, wanted, "CBOR exact complete-message parser")?;
 	}
@@ -1310,7 +1357,7 @@ fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 	require_once(
 		&response_len,
-		"beaconcrypt_parse::encoded_response_len([verified_pqxdh::SIGN_PUBLIC_KEY_SIZE,verified_pqxdh::X25519_PUBLIC_KEY_SIZE,verified_pqxdh::MLKEM768_CIPHERTEXT_SIZE,ciphertext_len,],assigned_key_id,)",
+		"beaconcrypt_parse::encoded_response_len([verified_pqxdh::SIGN_PUBLIC_KEY_SIZE,verified_pqxdh::X25519_PUBLIC_KEY_SIZE,verified_pqxdh::MLKEM768_CIPHERTEXT_SIZE,ciphertext_len,auth::MLDSA_SIGNATURE_LEN,],assigned_key_id,)",
 		"CBOR complete response length",
 	)?;
 	let response = rust_body(&snapshot.adapter_server, "build_registration_response")?;
@@ -1328,7 +1375,7 @@ fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
 
 fn validate_phase1_source(snapshot: &Snapshot) -> Result<(), String> {
 	let schema = compact(&uncommented_cddl(&snapshot.phase1_schema));
-	let expected_schema = "init-kex=[1,0,identity-key:bstr.size33,pre-key:bstr.size98,one-time-key:bstr.size98,pq-key:bstr.size1249]";
+	let expected_schema = "init-kex=[2,0,identity-key:bstr.size33,pre-key:bstr.size98,one-time-key:bstr.size98,pq-key:bstr.size1249,mldsa-public-key:bstr.size1952,signature:bstr.size3309]";
 	require(&schema, expected_schema, "Phase-1 InitKex schema")?;
 
 	let core_start = rust_body(&snapshot.core_pqxdh, "beacon_start")?;
@@ -1374,7 +1421,7 @@ fn validate_phase1_source(snapshot: &Snapshot) -> Result<(), String> {
 	}
 	require_once(
 		&beacon,
-		"letbuffer=crate::wire::encode_init(InitKex{identity_key:started.message.identity_key(),pre_key:&prekey_sig,one_time_key:&onetime_sig,pq_key:&pq_sig,})?;",
+		"letinit=InitKex{identity_key:started.message.identity_key(),pre_key:&prekey_sig,one_time_key:&onetime_sig,pq_key:&pq_sig,mldsa_public_key:&public_key,signature:&[],};",
 		"Phase-1 Beacon CBOR encoding",
 	)?;
 
@@ -1495,11 +1542,302 @@ fn validate_phase1_source(snapshot: &Snapshot) -> Result<(), String> {
 	Ok(())
 }
 
+// This checks the adapter's use of an assumed signature primitive. It does not
+// establish ML-DSA correctness, unforgeability, or a whole-protocol refinement.
+fn validate_mldsa_source(snapshot: &Snapshot) -> Result<(), String> {
+	let source = compact(&uncommented_rust(&snapshot.adapter_auth)?);
+	for wanted in [
+		"pubconstMLDSA_PUBLIC_KEY_LEN:usize=1952;",
+		"pubconstMLDSA_SIGNATURE_LEN:usize=3309;",
+		"pub(crate)constTRANSCRIPT_HASH_LEN:usize=64;",
+		"constSIGNING_CONTEXT:&[u8]=b\"beaconcryptregistrationauthv1\";",
+		"constINIT_TRANSCRIPT_DOMAIN:&[u8]=b\"beaconcryptML-DSA-65inittranscriptv1\\0\";",
+		"constRESPONSE_TRANSCRIPT_DOMAIN:&[u8]=b\"beaconcryptML-DSA-65responsetranscriptv1\\0\";",
+	] {
+		require_once(&source, wanted, "MLDSA fixed primitive and domain boundary")?;
+	}
+	let labels = rust_body(&snapshot.adapter_auth, "label")?;
+	for wanted in [
+		"Self::Beacon=>b\"beaconcryptv1beaconregistration\",",
+		"Self::Server=>b\"beaconcryptv1serverregistration\",",
+	] {
+		require_once(&labels, wanted, "MLDSA distinct role labels")?;
+	}
+	let input = rust_body(&snapshot.adapter_auth, "signature_input")?;
+	require_ordered_once(
+		&input,
+		&[
+			"input.extend_from_slice(&[b'';64]);",
+			"input.extend_from_slice(role.label());",
+			"input.push(0);",
+			"input.extend_from_slice(transcript);",
+		],
+		"MLDSA TLS-style signed input",
+	)?;
+	let sign = rust_body(&snapshot.adapter_auth, "sign")?;
+	require_once(
+		&sign,
+		".sign_deterministic(&signature_input(role,transcript),SIGNING_CONTEXT)",
+		"MLDSA signing context and input",
+	)?;
+	let verify = rust_body(&snapshot.adapter_auth, "verify")?;
+	for wanted in [
+		"letOk(encoded_key)=<&EncodedVerifyingKey<MlDsa65>>::try_from(public_key)else{returnfalse;};",
+		"letOk(signature)=Signature::<MlDsa65>::try_from(signature)else{returnfalse;};",
+		"VerifyingKey::decode(encoded_key).verify_with_context(&signature_input(role,transcript),SIGNING_CONTEXT,&signature,)",
+	] {
+		require_once(
+			&verify,
+			wanted,
+			"MLDSA canonical parsing and verification context",
+		)?;
+	}
+	let hash = rust_body(&snapshot.adapter_auth, "hash_state")?;
+	require_once(
+		&hash,
+		"crypto_generichash::State::new(None,TRANSCRIPT_HASH_LEN).ok()",
+		"MLDSA unkeyed BLAKE2b512 transcript hash",
+	)?;
+	let field = rust_body(&snapshot.adapter_auth, "hash_field")?;
+	require_ordered_once(
+		&field,
+		&[
+			"state.update(&u64::try_from(field.len()).ok()?.to_le_bytes());",
+			"state.update(field);",
+		],
+		"MLDSA variable-field length framing",
+	)?;
+	let fingerprint = rust_body(&snapshot.adapter_auth, "public_key_hash")?;
+	require_ordered_once(
+		&fingerprint,
+		&[
+			"ifpublic_key.len()!=MLDSA_PUBLIC_KEY_LEN{returnNone;}",
+			"letmutstate=hash_state()?;",
+			"state.update(public_key);",
+			"finish_hash(state)",
+		],
+		"MLDSA public-key fingerprint",
+	)?;
+	let init_hash = rust_body(&snapshot.adapter_auth, "init_transcript_hash")?;
+	require_ordered_once(
+		&init_hash,
+		&[
+			"state.update(INIT_TRANSCRIPT_DOMAIN);",
+			"state.update(&server_kid.to_le_bytes());",
+			"state.update(pinned_server_ed);",
+			"state.update(init.mldsa_public_key);",
+			"state.update(server_auth_key);",
+			"forfieldin[init.identity_key,init.pre_key,init.one_time_key,init.pq_key,]{hash_field(&mutstate,field)?;}",
+			"finish_hash(state)",
+		],
+		"MLDSA request transcript field order and pins",
+	)?;
+	forbid(
+		&init_hash,
+		"init.signature",
+		"MLDSA request signature exclusion",
+	)?;
+	let response_hash = rust_body(&snapshot.adapter_auth, "response_transcript_hash")?;
+	require_ordered_once(
+		&response_hash,
+		&[
+			"state.update(RESPONSE_TRANSCRIPT_DOMAIN);",
+			"state.update(init_hash);",
+			"forfieldin[response.identity_key,response.ephemeral_key,response.kem_cipher_text,response.app_cipher_text,]{hash_field(&mutstate,field)?;}",
+			"state.update(&response.key_id.to_le_bytes());",
+			"finish_hash(state)",
+		],
+		"MLDSA complete response transcript",
+	)?;
+	forbid(
+		&response_hash,
+		"response.signature",
+		"MLDSA response signature exclusion",
+	)?;
+	let helper = rust_body(&snapshot.adapter_pqxdh, "mldsa_associated_data")?;
+	require_ordered_once(
+		&helper,
+		&[
+			"letmutad=*base;",
+			"ad[153..217].copy_from_slice(server_hash);",
+			"ad[217..281].copy_from_slice(beacon_hash);ad",
+		],
+		"MLDSA associated-data hash-slot order",
+	)?;
+	let server_source = compact(&uncommented_rust(&snapshot.adapter_server)?);
+	require_once(
+		&server_source,
+		"structRegistrationAuthentication{init_hash:[u8;64],server_hash:[u8;64],beacon_hash:[u8;64],}",
+		"MLDSA private accepted-token context",
+	)?;
+	forbid(
+		&server_source,
+		"pubstructRegistrationAuthentication",
+		"MLDSA private accepted-token context",
+	)?;
+	let accept = rust_body(&snapshot.adapter_server, "get_shared_secret")?;
+	require_ordered_once(
+		&accept,
+		&[
+			"letregistration=decode_init(buffer)?;",
+			"letpublic_key=registration.mldsa_public_key;",
+			"letserver_key=self.mldsa_public_key();",
+			"letinit_hash=auth::init_transcript_hash(&registration,self.identity_key_kid,self.identity_pk().as_bytes(),&server_key,)?;",
+			"if!auth::verify(public_key,AuthRole::Beacon,&init_hash,registration.signature,){returnNone;}",
+			"letauthentication=RegistrationAuthentication{init_hash,server_hash:auth::public_key_hash(&server_key)?,beacon_hash:auth::public_key_hash(public_key)?,};",
+			"registration.identity_key.try_into()",
+			"crypto_sign::verify(registration.pq_key,&remote_id)",
+			"validate_registration_status(registration_status)",
+			"mlkem768::encapsulate(&pq_pub)",
+			"letdh1:DhSecret=crypto_scalarmult::scalarmult(",
+			"Some(RegistrationOutput{derived_secret,control:pending,authentication,})",
+		],
+		"MLDSA request verification precedes classical and stateful work",
+	)?;
+	let build = rust_body(&snapshot.adapter_server, "build_registration_response")?;
+	require_ordered_once(
+		&build,
+		&[
+			"letRegistrationOutput{derived_secret,control:pending,authentication,}=reg_out;",
+			"ifauth::public_key_hash(&self.mldsa_public_key())?!=authentication.server_hash{returnNone;}",
+			"verified_pqxdh::server_prepare_commit(",
+			"start_server_candidate_ratchet_kdf(",
+			"auth::response_transcript_hash(&authentication.init_hash,&response)",
+			"self.mldsa_identity.sign(AuthRole::Server,&hash)",
+			"crate::wire::encode_response(KexResponse{signature:&signature,..response})?;",
+			"verified_pqxdh::server_commit(candidate)",
+		],
+		"MLDSA token binding and signed publication precede commit",
+	)?;
+	let bundle = rust_body(&snapshot.adapter_beacon, "get_registration_bundle")?;
+	require_ordered_once(
+		&bundle,
+		&[
+			"mldsa_public_key:&public_key,signature:&[],",
+			"auth::init_transcript_hash(&init,self.server_kid(),self.server_id.as_bytes(),&self.authentication.server_public_key,)",
+			".sign(AuthRole::Beacon,&init_hash)",
+			"crate::wire::encode_init(InitKex{signature:&signature,..init})?;",
+			"std::mem::replace(&mutself.state,fallback)",
+			"self.authentication.init_hash=Some(init_hash);",
+			"Some(buffer)",
+		],
+		"MLDSA request signing and retained hash before publication",
+	)?;
+	let finish = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
+	require_ordered_once(
+		&finish,
+		&[
+			"letresponse=decode_response(bytes)?;",
+			"auth::response_transcript_hash(self.authentication.init_hash.as_ref()?,&response)?;",
+			"if!auth::verify(&self.authentication.server_public_key,AuthRole::Server,&hash,response.signature,){returnNone;}",
+			"mlkem768::Ciphertext::from_bytes(response.kem_cipher_text)",
+			"mlkem768::decapsulate(",
+			"letdh1:DhSecret=crypto_scalarmult::scalarmult(",
+			"decrypt_registration_message_with_ratchet(",
+			"self.state=BeaconState::Established",
+		],
+		"MLDSA pinned response verification before KEM, DH and installation",
+	)?;
+	Ok(())
+}
+
+// This pins the symbolic transcription of the assumed interface. The separate
+// focused checker verifies its exact queries and reconstructed bypass controls.
+fn validate_mldsa_model(snapshot: &Snapshot) -> Result<(), String> {
+	let model = compact(&uncommented_pv(&snapshot.mldsa_auth)?);
+	for (wanted, label) in [
+		(
+			"mldsa_verify(mldsa_sign(message,signing_secret,context),mldsa_public(signing_secret),context)=message.",
+			"MLDSA assumed matching secret, message and context",
+		),
+		(
+			"letfunmldsa_init_hash(server_id:key_id,server_ed:bitstring,agent_ml:bitstring,server_ml:bitstring,classical_init:bitstring)=letsigned_init_kex(identity,prekey,one_time,pq)=classical_initinblake2b512(mldsa_init_preimage(mldsa_init_domain(),sender_id_le64(server_id),server_ed,agent_ml,server_ml,mldsa_length_prefixed(identity),mldsa_length_prefixed(prekey),mldsa_length_prefixed(one_time),mldsa_length_prefixed(pq))).",
+			"MLDSA symbolic request transcript",
+		),
+		(
+			"funmldsa_response_fields(bitstring,bitstring,bitstring,bitstring,key_id):bitstring[data].",
+			"MLDSA raw response-field constructor",
+		),
+		(
+			"letfunmldsa_response_hash(init_hash:bitstring,response:bitstring)=letmldsa_response_fields(identity,ephemeral,kem,raw_ctu,assigned)=responseinblake2b512(mldsa_response_preimage(mldsa_response_domain(),init_hash,mldsa_length_prefixed(identity),mldsa_length_prefixed(ephemeral),mldsa_length_prefixed(kem),mldsa_length_prefixed(raw_ctu),sender_id_le64(assigned))).",
+			"MLDSA symbolic raw response transcript",
+		),
+		(
+			"letfunmldsa_beacon_input(hash:bitstring)=mldsa_signature_input(mldsa_spaces64(),mldsa_beacon_label(),mldsa_zero(),hash).",
+			"MLDSA symbolic beacon role input",
+		),
+		(
+			"letfunmldsa_server_input(hash:bitstring)=mldsa_signature_input(mldsa_spaces64(),mldsa_server_label(),mldsa_zero(),hash).",
+			"MLDSA symbolic server role input",
+		),
+		(
+			"funmldsa_signed_init_kex(bitstring,bitstring,bitstring):bitstring[data].",
+			"MLDSA mandatory symbolic request wrapper",
+		),
+		(
+			"funmldsa_signed_kex_response(bitstring,bitstring):bitstring[data].",
+			"MLDSA mandatory symbolic response wrapper",
+		),
+		(
+			"letfunmldsa_ad(base:bitstring,server_ml:bitstring,agent_ml:bitstring)=mldsa_associated_data(base,blake2b512(server_ml),blake2b512(agent_ml)).",
+			"MLDSA symbolic associated-data hash-slot order",
+		),
+		(
+			"mldsa_strip(crypto_frame(body,tag,commitment,seq,sender))=mldsa_raw_ctu(body,tag,commitment).",
+			"MLDSA symbolic raw ciphertext projection",
+		),
+		(
+			"mldsa_restore(mldsa_raw_ctu(body,tag,commitment),pinned)=crypto_frame(body,tag,commitment,first_sequence(),pinned).",
+			"MLDSA symbolic fixed sequence and pinned sender restoration",
+		),
+	] {
+		require_once(&model, wanted, label)?;
+	}
+	let profile = compact(&uncommented_pv(&snapshot.mldsa_registration)?);
+	for (wanted, label) in [
+		(
+			"out(mldsa_channel,(server_ed_secret,beacon_ed_secret,prekey_secret,one_time_secret,server_ml,beacon_ml,owned_ml_secret,mlkem_public(pq_secret)));",
+			"MLDSA public classical secrets and attacker-owned signing key",
+		),
+		(
+			"letverified_init_input=mldsa_verify(candidate_signature,candidate_ml,mldsa_signing_context())inifverified_init_input=mldsa_beacon_input(candidate_hash)thenletsigned_init_kex(encoded_identity,signed_prekey,signed_one_time,signed_pq)=candidate_initin",
+			"MLDSA symbolic self-presented request verification before classical projection",
+		),
+		(
+			"lettag_x25519_one_time(candidate_one_time)=verify_signature(signed_one_time,candidate_ed)in((ifcandidate_ml=beacon_mltheneventMldsaHonestInitAccepted(candidate_ml,server_ml,candidate_hash,candidate_init))|(ifcandidate_ml=owned_mlthenifcandidate_ed=beacon_edtheneventMldsaOwnedKeyAccepted())|(newephemeral_secret:bitstring;",
+			"MLDSA target events do not gate response admission",
+		),
+		(
+			"letresponse=mldsa_response_fields(server_ed,x25519_public(ephemeral_secret),mlkem_ciphertext(candidate_pq,kem_coins),mldsa_raw_ctu(body,tag,commitment),mldsa_assigned_id())in",
+			"MLDSA symbolic signed raw response fields",
+		),
+		(
+			"letresponse_hash=mldsa_response_hash(candidate_hash,response)inletresponse_signature=mldsa_sign(mldsa_server_input(response_hash),server_ml_secret,mldsa_signing_context())ineventMldsaResponseSigned(server_ml,candidate_hash,response);out(mldsa_channel,mldsa_signed_kex_response(response,response_signature))",
+			"MLDSA symbolic response signing and publication",
+		),
+		(
+			"letexpected_response_hash=mldsa_response_hash(honest_hash,candidate_response)inletverified_response_input=mldsa_verify(response_signature,server_ml,mldsa_signing_context())inifverified_response_input=mldsa_server_input(expected_response_hash)theneventMldsaResponseAccepted(server_ml,honest_hash,candidate_response);eventMldsaHonestResponseVerified()",
+			"MLDSA symbolic pinned server and retained request verification",
+		),
+	] {
+		require_once(&profile, wanted, label)?;
+	}
+	let queries = compact(&uncommented_pv(&snapshot.mldsa_queries)?);
+	let expected = compact("query agent_ml: bitstring, server_ml: bitstring, init_hash: bitstring, classical_init: bitstring; event(MldsaHonestInitAccepted(agent_ml, server_ml, init_hash, classical_init)) ==> event(MldsaInitSigned(agent_ml, server_ml, init_hash, classical_init)).
+query server_ml: bitstring, init_hash: bitstring, response: bitstring; event(MldsaResponseAccepted(server_ml, init_hash, response)) ==> event(MldsaResponseSigned(server_ml, init_hash, response)).
+query event(MldsaHonestResponseVerified()). query event(MldsaOwnedKeyAccepted()). query event(MldsaCompromisedAgentAccepted()). query event(MldsaCompromisedServerAccepted()). query event(MldsaAdOpened()). query event(MldsaWrongServerAdOpened()). query event(MldsaWrongAgentAdOpened()). query event(MldsaWrongRoleAccepted()). query event(MldsaWrongContextAccepted()). query event(MldsaWrongRequestAccepted()).
+process MldsaRegistrationProfile() | MldsaCompromiseControl() | MldsaSeparationControl() | MldsaAdControl()");
+	if queries != expected {
+		return Err("MLDSA exact focused query and control roster changed".to_owned());
+	}
+	Ok(())
+}
+
 fn validate_phase2_source(snapshot: &Snapshot) -> Result<(), String> {
 	let schema = compact(&uncommented_cddl(&snapshot.phase2_schema));
 	require(
 		&schema,
-		"kex-response=[1,1,identity-key:bstr.size32,ephemeral-key:bstr.size32,kem-cipher-text:bstr.size1088,app-cipher-text:bstr,key-id:uint]",
+		"kex-response=[2,1,identity-key:bstr.size32,ephemeral-key:bstr.size32,kem-cipher-text:bstr.size1088,app-cipher-text:bstr,key-id:uint,signature:bstr.size3309]",
 		"Phase-2 response schema",
 	)?;
 	let server = rust_body(&snapshot.adapter_server, "build_registration_response")?;
@@ -2060,11 +2398,11 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 			"CryptoFrame core transcript-size formula",
 		),
 		(
-			"const_:()=assert!(ASSOCIATED_DATA_SIZE==153);",
+			"const_:()=assert!(ASSOCIATED_DATA_SIZE==281);",
 			"CryptoFrame core associated-data length",
 		),
 		(
-			"const_:()=assert!(COMMITMENT_TRANSCRIPT_SIZE==229);",
+			"const_:()=assert!(COMMITMENT_TRANSCRIPT_SIZE==357);",
 			"CryptoFrame core transcript length",
 		),
 		(
@@ -2095,18 +2433,18 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		("ifi<32{key[i]}", "CryptoFrame core key field"),
 		("elseifi<44{nonce[i-32]}", "CryptoFrame core nonce field"),
 		(
-			"elseifi<197{associated_data[i-44]}",
+			"elseifi<325{associated_data[i-44]}",
 			"CryptoFrame core associated-data field",
 		),
 		(
-			"elseifi<213{tag[i-197]}",
+			"elseifi<341{tag[i-325]}",
 			"CryptoFrame core retained-tag field",
 		),
 		(
-			"elseifi<221{sequence[i-213]}",
+			"elseifi<349{sequence[i-341]}",
 			"CryptoFrame core sequence field",
 		),
-		("else{sender_id[i-221]}", "CryptoFrame core sender-ID field"),
+		("else{sender_id[i-349]}", "CryptoFrame core sender-ID field"),
 	] {
 		require_once(&core_commitment, wanted, label)?;
 	}
@@ -2115,10 +2453,10 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		&[
 			"ifi<32{key[i]}",
 			"elseifi<44{nonce[i-32]}",
-			"elseifi<197{associated_data[i-44]}",
-			"elseifi<213{tag[i-197]}",
-			"elseifi<221{sequence[i-213]}",
-			"else{sender_id[i-221]}",
+			"elseifi<325{associated_data[i-44]}",
+			"elseifi<341{tag[i-325]}",
+			"elseifi<349{sequence[i-341]}",
+			"else{sender_id[i-349]}",
 		],
 		"CryptoFrame core transcript field order",
 	)?;
@@ -2243,12 +2581,19 @@ fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), Str
 	require_one_call(
 		&server_associated_data,
 		"build_associated_data",
+		&["self.identity_pk().clone()", "self.pk_by_kid(k)?.clone()"],
+		"endpoint Server server-first associated-data mapping",
+	)?;
+	require_one_call(
+		&server_associated_data,
+		"mldsa_associated_data",
 		&[
-			"self.identity_pk().clone()",
-			"self.pk_by_kid(k)?.clone()",
+			"&base",
+			"&auth::public_key_hash(&self.mldsa_public_key())?",
+			"self.mldsa_public_key_hash_by_kid(k)?",
 			"",
 		],
-		"endpoint Server server-first associated-data mapping",
+		"endpoint Server MLDSA associated-data hash mapping",
 	)?;
 
 	let server_send = rust_body(&snapshot.adapter_server, "encrypt_message")?;
@@ -2362,7 +2707,7 @@ fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), Str
 	)?;
 	require_once(
 		&server_initial,
-		"letassociated_data=*candidate.associated_data();",
+		"letassociated_data=mldsa_associated_data(candidate.associated_data(),&authentication.server_hash,&authentication.beacon_hash,);",
 		"endpoint registration Server candidate associated data",
 	)?;
 	require_once(
@@ -2390,7 +2735,7 @@ fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), Str
 	)?;
 	require_once(
 		&server_initial,
-		"letold=self.known_ids.insert(remote_kid,EstablishedRemote::new(public_key,ratchet));",
+		"letold=self.known_ids.insert(remote_kid,EstablishedRemote::new(public_key,ratchet,authentication.beacon_hash),);",
 		"endpoint registration Server committed peer identity and candidate ratchet",
 	)?;
 	require_ordered_once(
@@ -2399,12 +2744,12 @@ fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), Str
 			"crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key())",
 			"start_server_candidate_ratchet_kdf(&candidate,derived_secret.as_array())",
 			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
-			"letassociated_data=*candidate.associated_data();",
+			"letassociated_data=mldsa_associated_data(candidate.associated_data(),&authentication.server_hash,&authentication.beacon_hash,);",
 			"encrypt_registration_message_with_ratchet(",
 			"letencrypted=encrypted?;",
 			"crate::wire::encode_response(KexResponse{",
 			"let(next_control,established_peer)=verified_pqxdh::server_commit(candidate);",
-			"self.known_ids.insert(remote_kid,EstablishedRemote::new(public_key,ratchet))",
+			"self.known_ids.insert(remote_kid,EstablishedRemote::new(public_key,ratchet,authentication.beacon_hash),)",
 			"self.control=next_control;",
 			"Some(RegResponse{serialized:buffer,kid:remote_kid,})",
 		],
@@ -2425,7 +2770,7 @@ fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), Str
 	)?;
 	require_once(
 		&beacon_initial,
-		"letassociated_data=*candidate.associated_data();",
+		"letassociated_data=mldsa_associated_data(candidate.associated_data(),&auth::public_key_hash(&self.authentication.server_public_key)?,&auth::public_key_hash(&self.mldsa_public_key())?,);",
 		"endpoint registration Beacon candidate associated data",
 	)?;
 	require_one_call(
@@ -2460,7 +2805,7 @@ fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), Str
 		&[
 			"start_beacon_candidate_ratchet_kdf(&candidate,derived_secret.as_array())",
 			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
-			"letassociated_data=*candidate.associated_data();",
+			"letassociated_data=mldsa_associated_data(candidate.associated_data(),&auth::public_key_hash(&self.authentication.server_public_key)?,&auth::public_key_hash(&self.mldsa_public_key())?,);",
 			"decrypt_registration_message_with_ratchet(",
 			"verified_pqxdh::authenticate_registration_key_id_binding(",
 			"Some((authenticated,associated_data,ratchet,plaintext))})();",
@@ -4722,7 +5067,7 @@ fn validate_registration_lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 		),
 		("pq_key:&pq_sig,", "registration serialized PQ field"),
 		(
-			"pq_key:&pq_sig,})?;",
+			"signature:&signature,..init})?;",
 			"registration completed InitKex serialization",
 		),
 		(
@@ -4740,7 +5085,7 @@ fn validate_registration_lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 	require_ordered(
 		&bundle,
 		&[
-			"pq_key:&pq_sig,})?;",
+			"signature:&signature,..init})?;",
 			"letprevious=std::mem::replace(&mutself.state,fallback);",
 			"self.state=BeaconState::InitSent{",
 			"Some(buffer)",
@@ -4868,7 +5213,7 @@ fn validate_registration_lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 			"registration Server complete post-validation PQXDH inputs",
 		),
 		(
-			"Some(RegistrationOutput{derived_secret,control:pending,})",
+			"Some(RegistrationOutput{derived_secret,control:pending,authentication,})",
 			"registration Server pending output",
 		),
 	] {
@@ -5135,7 +5480,7 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 	let server_source = compact(&uncommented_rust(&snapshot.adapter_server)?);
 	require_once(
 		&server_source,
-		"pubstructRegistrationOutput{pub(crate)derived_secret:KexDerivedSecret,pub(crate)control:beaconcrypt_core::pqxdh::PendingServerRegistration,}",
+		"pubstructRegistrationOutput{pub(crate)derived_secret:KexDerivedSecret,pub(crate)control:beaconcrypt_core::pqxdh::PendingServerRegistration,authentication:RegistrationAuthentication,}",
 		"initial ratchet RegistrationOutput storage",
 	)?;
 	for (wanted, label) in [
@@ -5155,7 +5500,7 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 		&get_shared_secret,
 		&[
 			"letderived_secret=derive_root_key_input(pending.root_key_input_mut())?;",
-			"Some(RegistrationOutput{derived_secret,control:pending,})",
+			"Some(RegistrationOutput{derived_secret,control:pending,authentication,})",
 		],
 		"initial ratchet Server derived-root output",
 	)?;
@@ -5165,7 +5510,7 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 	let server_response = rust_body(&snapshot.adapter_server, "build_registration_response")?;
 	require_once(
 		&server_response,
-		"letRegistrationOutput{derived_secret,control:pending,}=reg_out;",
+		"letRegistrationOutput{derived_secret,control:pending,authentication,}=reg_out;",
 		"initial ratchet Server RegistrationOutput destructure",
 	)?;
 	require_one_call(
@@ -5189,7 +5534,7 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 	require_ordered_once(
 		&server_response,
 		&[
-			"letRegistrationOutput{derived_secret,control:pending,}=reg_out;",
+			"letRegistrationOutput{derived_secret,control:pending,authentication,}=reg_out;",
 			"letpending=start_server_candidate_ratchet_kdf(&candidate,derived_secret.as_array());",
 			"letmutratchet=RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));",
 			"letencrypted=encrypt_registration_message_with_ratchet(",
@@ -5828,7 +6173,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration Beacon finish inputs",
 		),
 		(
-			"letassociated_data=*candidate.associated_data();",
+			"letassociated_data=mldsa_associated_data(candidate.associated_data(),&auth::public_key_hash(&self.authentication.server_public_key)?,&auth::public_key_hash(&self.mldsa_public_key())?,);",
 			"later-registration Beacon candidate associated data",
 		),
 		(
@@ -5894,7 +6239,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"response.ephemeral_key",
 			"response.identity_key",
 			"assigned_key_id:response.key_id",
-			"letassociated_data=*candidate.associated_data();",
+			"letassociated_data=mldsa_associated_data(candidate.associated_data(),&auth::public_key_hash(&self.authentication.server_public_key)?,&auth::public_key_hash(&self.mldsa_public_key())?,);",
 			"decrypt_registration_message_with_ratchet(response.app_cipher_text,candidate.server_key_id(),&associated_data,&mutratchet,)?",
 			"letauthenticated_server_key_id=decrypted.key_id;",
 			"letmutauthenticated_plaintext=decrypted.plaintext;",
@@ -7594,6 +7939,8 @@ fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_initial_ratchet_fidelity(snapshot)?;
 	validate_later_registration_fidelity(snapshot)?;
 	validate_post_registration_fidelity(snapshot)?;
+	validate_mldsa_source(snapshot)?;
+	validate_mldsa_model(snapshot)?;
 	validate_makefile(&snapshot.makefile)
 }
 
@@ -7828,7 +8175,10 @@ fn replace_phase1_schema(snapshot: &mut Snapshot, fields: &[(&str, usize)]) {
 	let end = start + snapshot.phase1_schema[start..].find('\n').unwrap();
 	snapshot.phase1_schema.replace_range(
 		start..end,
-		&format!("init-kex = [1, 0, {}]", fields.join(", ")),
+		&format!(
+			"init-kex = [2, 0, {}, mldsa-public-key: bstr .size 1952, signature: bstr .size 3309]",
+			fields.join(", ")
+		),
 	);
 }
 
@@ -8266,7 +8616,8 @@ fn compiled_core_matches_the_canonical_transcript() {
 	let server_identity = [0xa1; 32];
 	let beacon_identity = [0xb2; 32];
 	let ad = pqxdh::build_associated_data(server_identity, beacon_identity);
-	assert_eq!(ad.len(), 153);
+	assert_eq!(ad.len(), 281);
+	assert_eq!(&ad[153..281], &[0; 128]);
 	assert_eq!(ad[0], 0x01);
 	assert_eq!(&ad[1..33], &server_identity);
 	assert_eq!(ad[33], 0x01);
@@ -8360,7 +8711,7 @@ fn compiled_core_matches_the_canonical_transcript() {
 	assert_eq!(AEAD_KEY_SIZE, 32);
 	assert_eq!(AEAD_NONCE_SIZE, 12);
 	assert_eq!(AEAD_TAG_SIZE, 16);
-	assert_eq!(COMMITMENT_TRANSCRIPT_SIZE, 229);
+	assert_eq!(COMMITMENT_TRANSCRIPT_SIZE, 357);
 	let key = core::array::from_fn(|index| index as u8);
 	let nonce = core::array::from_fn(|index| 0x20 + index as u8);
 	let associated_data = core::array::from_fn(|index| (index as u8).wrapping_add(0x40));
@@ -8372,10 +8723,10 @@ fn compiled_core_matches_the_canonical_transcript() {
 	let bytes = transcript.as_bytes();
 	assert_eq!(&bytes[0..32], &key);
 	assert_eq!(&bytes[32..44], &nonce);
-	assert_eq!(&bytes[44..197], &associated_data);
-	assert_eq!(&bytes[197..213], &tag);
-	assert_eq!(&bytes[213..221], &sequence.to_le_bytes());
-	assert_eq!(&bytes[221..229], &sender_id.to_le_bytes());
+	assert_eq!(&bytes[44..325], &associated_data);
+	assert_eq!(&bytes[325..341], &tag);
+	assert_eq!(&bytes[341..349], &sequence.to_le_bytes());
+	assert_eq!(&bytes[349..357], &sender_id.to_le_bytes());
 }
 
 #[test]
@@ -8580,7 +8931,7 @@ fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
 	assert!(snapshot(&kernel).4[1..].iter().all(Option::is_none));
 
 	// Carry that very kernel into ordinary receive; do not reconstruct its post-registration state.
-	let original_frame_context = ("original seq2 frame", 7u64, [0x51; 153]);
+	let original_frame_context = ("original seq2 frame", 7u64, [0x51; 281]);
 	let full_cached_payload = "seq2 application payload";
 	let ReceiveEffect::ReceiveOpenRequested(open) =
 		begin_receive(kernel, 2, &original_frame_context)
@@ -8609,7 +8960,7 @@ fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
 	assert_eq!(context, &original_frame_context);
 	assert_eq!(snapshot(&kernel), before_replay);
 
-	let fourth_frame_context = ("genuine seq4 frame", 7u64, [0x51; 153]);
+	let fourth_frame_context = ("genuine seq4 frame", 7u64, [0x51; 281]);
 	let ReceiveEffect::ReceiveKdfRequested(pending) =
 		begin_receive(kernel, 4, &fourth_frame_context)
 	else {
@@ -9785,7 +10136,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"later_registration_beacon_associated_data_substituted",
-			"let associated_data = *candidate.associated_data();",
+			"let associated_data = mldsa_associated_data(\n\t\t\t\tcandidate.associated_data(),\n\t\t\t\t&auth::public_key_hash(&self.authentication.server_public_key)?,\n\t\t\t\t&auth::public_key_hash(&self.mldsa_public_key())?,\n\t\t\t);",
 			"let associated_data = replacement_associated_data;",
 			"later-registration Beacon candidate associated data",
 		),
@@ -12459,13 +12810,17 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		("cbor_frame_version", "[0x85, 1, 2]", "[0x85, 2, 2]"),
 		("cbor_frame_kind", "[0x85, 1, 2]", "[0x85, 1, 1]"),
 		("cbor_frame_field_types", "&[0, 0, 2]", "&[2, 0, 0]"),
-		("cbor_init_array_arity", "[0x86, 1, 0]", "[0x85, 1, 0]"),
-		("cbor_init_field_types", "&[2, 2, 2, 2]", "&[0, 2, 2, 2]"),
-		("cbor_response_array_arity", "[0x87, 1, 1]", "[0x86, 1, 1]"),
+		("cbor_init_array_arity", "[0x88, 2, 0]", "[0x87, 2, 0]"),
+		(
+			"cbor_init_field_types",
+			"&[2, 2, 2, 2, 2, 2]",
+			"&[0, 2, 2, 2, 2, 2]",
+		),
+		("cbor_response_array_arity", "[0x88, 2, 1]", "[0x87, 2, 1]"),
 		(
 			"cbor_response_field_types",
-			"&[2, 2, 2, 2, 0]",
-			"&[2, 2, 2, 0, 2]",
+			"&[2, 2, 2, 2, 0, 2]",
+			"&[2, 2, 2, 0, 2, 2]",
 		),
 		(
 			"cbor_frame_trailing_suffix",
@@ -12835,20 +13190,20 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_core_ad_length_assertion_drift",
-			"assert!(ASSOCIATED_DATA_SIZE == 153)",
-			"assert!(ASSOCIATED_DATA_SIZE == 152)",
+			"assert!(ASSOCIATED_DATA_SIZE == 281)",
+			"assert!(ASSOCIATED_DATA_SIZE == 280)",
 			"CryptoFrame core associated-data length",
 		),
 		(
 			"cryptoframe_core_transcript_length_assertion_drift",
-			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 229)",
-			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 228)",
+			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 357)",
+			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 356)",
 			"CryptoFrame core transcript length",
 		),
 		(
 			"cryptoframe_core_result_uses_literal_size",
 			"bytes: [u8; COMMITMENT_TRANSCRIPT_SIZE]",
-			"bytes: [u8; 229]",
+			"bytes: [u8; 357]",
 			"CryptoFrame core fixed-width result",
 		),
 		(
@@ -12910,20 +13265,20 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_core_tag_offset_drift",
-			"tag[i - 197]",
-			"tag[i - 196]",
+			"tag[i - 325]",
+			"tag[i - 324]",
 			"CryptoFrame core retained-tag field",
 		),
 		(
 			"cryptoframe_core_sequence_offset_drift",
-			"sequence[i - 213]",
-			"sequence[i - 212]",
+			"sequence[i - 341]",
+			"sequence[i - 340]",
 			"CryptoFrame core sequence field",
 		),
 		(
 			"cryptoframe_core_sender_offset_drift",
-			"sender_id[i - 221]",
-			"sender_id[i - 220]",
+			"sender_id[i - 349]",
+			"sender_id[i - 348]",
 			"CryptoFrame core sender-ID field",
 		),
 	] {
@@ -12962,8 +13317,8 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		|snapshot| {
 			replace_once(
 				&mut snapshot.core_commitment,
-				"\t\t} else if i < 213 {\n\t\t\ttag[i - 197]\n\t\t} else if i < 221 {\n\t\t\tsequence[i - 213]",
-				"\t\t} else if i < 221 {\n\t\t\tsequence[i - 213]\n\t\t} else if i < 213 {\n\t\t\ttag[i - 197]",
+				"\t\t} else if i < 341 {\n\t\t\ttag[i - 325]\n\t\t} else if i < 349 {\n\t\t\tsequence[i - 341]",
+				"\t\t} else if i < 349 {\n\t\t\tsequence[i - 341]\n\t\t} else if i < 341 {\n\t\t\ttag[i - 325]",
 			);
 		},
 	);
@@ -13844,8 +14199,8 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to) in [
 		(
 			"endpoint_server_ad_reverses_identities",
-			"build_associated_data(\n\t\t\tself.identity_pk().clone(),\n\t\t\tself.pk_by_kid(k)?.clone(),\n\t\t)",
-			"build_associated_data(\n\t\t\tself.pk_by_kid(k)?.clone(),\n\t\t\tself.identity_pk().clone(),\n\t\t)",
+			"build_associated_data(self.identity_pk().clone(), self.pk_by_kid(k)?.clone())",
+			"build_associated_data(self.pk_by_kid(k)?.clone(), self.identity_pk().clone())",
 		),
 		(
 			"endpoint_server_ad_selects_local_id",
@@ -14025,7 +14380,7 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"endpoint_registration_server_rebuilds_candidate_ad",
-			"let associated_data = *candidate.associated_data();",
+			"let associated_data = mldsa_associated_data(\n\t\t\tcandidate.associated_data(),\n\t\t\t&authentication.server_hash,\n\t\t\t&authentication.beacon_hash,\n\t\t);",
 			"let associated_data = self.associated_data(remote_kid)?;",
 			"endpoint registration Server candidate associated data",
 		),
@@ -14061,8 +14416,8 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"endpoint_registration_server_map_uses_local_id",
-			".insert(remote_kid, EstablishedRemote::new(public_key, ratchet))",
-			".insert(self.identity_key_kid, EstablishedRemote::new(public_key, ratchet))",
+			".insert(\n\t\t\tremote_kid,\n\t\t\tEstablishedRemote::new(public_key, ratchet, authentication.beacon_hash),\n\t\t)",
+			".insert(\n\t\t\tself.identity_key_kid,\n\t\t\tEstablishedRemote::new(public_key, ratchet, authentication.beacon_hash),\n\t\t)",
 			"endpoint registration Server committed peer identity and candidate ratchet",
 		),
 	] {
@@ -14100,7 +14455,7 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"endpoint_registration_beacon_replaces_candidate_ad",
-			"let associated_data = *candidate.associated_data();",
+			"let associated_data = mldsa_associated_data(\n\t\t\t\tcandidate.associated_data(),\n\t\t\t\t&auth::public_key_hash(&self.authentication.server_public_key)?,\n\t\t\t\t&auth::public_key_hash(&self.mldsa_public_key())?,\n\t\t\t);",
 			"let associated_data = [0; AD_SIZE];",
 			"endpoint registration Beacon candidate associated data",
 		),
@@ -14221,14 +14576,14 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"endpoint_registration_server_map_discards_peer_identity",
-			"EstablishedRemote::new(public_key, ratchet)",
-			"EstablishedRemote::new(panic!(), ratchet)",
+			"EstablishedRemote::new(public_key, ratchet, authentication.beacon_hash)",
+			"EstablishedRemote::new(panic!(), ratchet, authentication.beacon_hash)",
 			"endpoint registration Server committed peer identity and candidate ratchet",
 		),
 		(
 			"endpoint_registration_server_map_discards_post_send_ratchet",
-			"EstablishedRemote::new(public_key, ratchet)",
-			"EstablishedRemote::new(public_key, panic!())",
+			"EstablishedRemote::new(public_key, ratchet, authentication.beacon_hash)",
+			"EstablishedRemote::new(public_key, panic!(), authentication.beacon_hash)",
 			"endpoint registration Server committed peer identity and candidate ratchet",
 		),
 	] {
@@ -14295,8 +14650,8 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 			replace_once_after(
 				&mut snapshot.adapter_server,
 				"fn build_registration_response",
-				"let old = self\n\t\t\t.known_ids\n\t\t\t.insert(remote_kid, EstablishedRemote::new(public_key, ratchet));\n\t\tdebug_assert!(old.is_none());\n\t\tself.control = next_control;",
-				"self.control = next_control;\n\t\tlet old = self\n\t\t\t.known_ids\n\t\t\t.insert(remote_kid, EstablishedRemote::new(public_key, ratchet));\n\t\tdebug_assert!(old.is_none());",
+				"let old = self.known_ids.insert(\n\t\t\tremote_kid,\n\t\t\tEstablishedRemote::new(public_key, ratchet, authentication.beacon_hash),\n\t\t);\n\t\tdebug_assert!(old.is_none());\n\t\tself.control = next_control;",
+				"self.control = next_control;\n\t\tlet old = self.known_ids.insert(\n\t\t\tremote_kid,\n\t\t\tEstablishedRemote::new(public_key, ratchet, authentication.beacon_hash),\n\t\t);\n\t\tdebug_assert!(old.is_none());",
 			);
 		},
 	);
@@ -17774,8 +18129,8 @@ fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"registration_serialization_call_removed",
-			"pq_key: &pq_sig,\n\t\t})?;",
-			"pq_key: &pq_sig,\n\t\t}).unwrap();",
+			"signature: &signature,\n\t\t\t..init\n\t\t})?;",
+			"signature: &signature,\n\t\t\t..init\n\t\t}).unwrap();",
 			"registration completed InitKex serialization",
 		),
 		(
@@ -18711,14 +19066,14 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"initial_ratchet_server_output_substitutes_pending",
-			"control: pending,\n\t\t})",
-			"control: replacement_pending,\n\t\t})",
+			"control: pending,\n\t\t\tauthentication,\n\t\t})",
+			"control: replacement_pending,\n\t\t\tauthentication,\n\t\t})",
 			"Server derived-root output",
 		),
 		(
 			"initial_ratchet_server_response_drops_root_destructure",
-			"\t\t\tderived_secret,\n\t\t\tcontrol: pending,\n\t\t} = reg_out;",
-			"\t\t\tcontrol: pending,\n\t\t} = reg_out;",
+			"\t\t\tderived_secret,\n\t\t\tcontrol: pending,\n\t\t\tauthentication,\n\t\t} = reg_out;",
+			"\t\t\tcontrol: pending,\n\t\t\tauthentication,\n\t\t} = reg_out;",
 			"RegistrationOutput destructure",
 		),
 		(
@@ -20750,12 +21105,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration-consumed.pvl",
 		"consumed.contains",
-		"beaconcrypt/src/server.rs:369-374",
+		"beaconcrypt/src/server.rs:434-439",
 	),
 	(
 		"fs-common.pvl",
 		"common.kid_counter_start",
-		"beaconcrypt/src/server.rs:177-177",
+		"beaconcrypt/src/server.rs:199-199",
 	),
 	(
 		"fs-common.pvl",
@@ -20770,27 +21125,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration-binding.pvl",
 		"binding.associated_data",
-		"beaconcrypt-core/src/pqxdh.rs:928-947",
+		"beaconcrypt-core/src/pqxdh.rs:931-952",
 	),
 	(
 		"fs-registration.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:349-351",
+		"beaconcrypt/src/server.rs:393-395",
 	),
 	(
 		"fs-registration.pvl",
 		"server.identity_tag",
-		"beaconcrypt/src/server.rs:352-357",
+		"beaconcrypt/src/server.rs:417-422",
 	),
 	(
 		"fs-registration.pvl",
 		"server.signatures",
-		"beaconcrypt/src/server.rs:358-360",
+		"beaconcrypt/src/server.rs:423-425",
 	),
 	(
 		"fs-registration.pvl",
 		"server.validate_init_kex",
-		"beaconcrypt/src/server.rs:361-367",
+		"beaconcrypt/src/server.rs:426-432",
 	),
 	(
 		"fs-registration.pvl",
@@ -20800,7 +21155,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:368-368",
+		"beaconcrypt/src/server.rs:433-433",
 	),
 	(
 		"fs-registration.pvl",
@@ -20815,7 +21170,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:369-374",
+		"beaconcrypt/src/server.rs:434-439",
 	),
 	(
 		"fs-registration.pvl",
@@ -20825,57 +21180,57 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.fresh_ephemeral",
-		"beaconcrypt/src/server.rs:382-382",
+		"beaconcrypt/src/server.rs:447-447",
 	),
 	(
 		"fs-registration.pvl",
 		"server.encapsulate",
-		"beaconcrypt/src/server.rs:387-387",
+		"beaconcrypt/src/server.rs:452-452",
 	),
 	(
 		"fs-registration.pvl",
 		"server.identity_conversion",
-		"beaconcrypt/src/server.rs:388-389",
+		"beaconcrypt/src/server.rs:453-454",
 	),
 	(
 		"fs-registration.pvl",
 		"server.dh",
-		"beaconcrypt/src/server.rs:390-408",
+		"beaconcrypt/src/server.rs:455-473",
 	),
 	(
 		"fs-registration.pvl",
 		"server.accept_root_input",
-		"beaconcrypt/src/server.rs:409-425",
+		"beaconcrypt/src/server.rs:474-490",
 	),
 	(
 		"fs-registration.pvl",
 		"server.root",
-		"beaconcrypt/src/server.rs:428-428",
+		"beaconcrypt/src/server.rs:493-493",
 	),
 	(
 		"fs-registration.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:429-430",
+		"beaconcrypt/src/server.rs:494-495",
 	),
 	(
 		"fs-registration.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:432-435",
+		"beaconcrypt/src/server.rs:497-501",
 	),
 	(
 		"fs-registration.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:438-442",
+		"beaconcrypt/src/server.rs:504-508",
 	),
 	(
 		"fs-registration.pvl",
 		"server.next_key_id",
-		"beaconcrypt/src/server.rs:445-455",
+		"beaconcrypt/src/server.rs:511-525",
 	),
 	(
 		"fs-registration.pvl",
 		"server.prepare_commit",
-		"beaconcrypt/src/server.rs:456-465",
+		"beaconcrypt/src/server.rs:526-535",
 	),
 	(
 		"fs-registration.pvl",
@@ -20890,57 +21245,57 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.ratchet_start",
-		"beaconcrypt/src/server.rs:472-473",
+		"beaconcrypt/src/server.rs:542-543",
 	),
 	(
 		"fs-registration.pvl",
 		"server.associated_data",
-		"beaconcrypt/src/server.rs:474-474",
+		"beaconcrypt/src/server.rs:544-548",
 	),
 	(
 		"fs-registration.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:444-446",
+		"beaconcrypt/src/server.rs:510-512",
 	),
 	(
 		"fs-registration.pvl",
 		"server.binding",
-		"beaconcrypt/src/server.rs:478-485",
+		"beaconcrypt/src/server.rs:552-559",
 	),
 	(
 		"fs-registration.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:486-494",
+		"beaconcrypt/src/server.rs:560-568",
 	),
 	(
 		"fs-registration.pvl",
 		"server.commit",
-		"beaconcrypt/src/server.rs:502-510",
+		"beaconcrypt/src/server.rs:583-595",
 	),
 	(
 		"fs-registration.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:511-514",
+		"beaconcrypt/src/server.rs:596-599",
 	),
 	(
 		"fs-registration.pvl",
 		"server.token_consumed",
-		"beaconcrypt/src/server.rs:126-131",
+		"beaconcrypt/src/server.rs:137-142",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:64-82",
+		"beaconcrypt/src/beacon.rs:75-104",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:300-304",
+		"beaconcrypt/src/beacon.rs:327-331",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:334-344",
+		"beaconcrypt/src/beacon.rs:361-371",
 	),
 	(
 		"fs-registration.pvl",
@@ -20950,42 +21305,42 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.sign",
-		"beaconcrypt/src/beacon.rs:345-351",
+		"beaconcrypt/src/beacon.rs:372-379",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.bundle_return",
-		"beaconcrypt/src/beacon.rs:395-395",
+		"beaconcrypt/src/beacon.rs:440-440",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:399-403",
+		"beaconcrypt/src/beacon.rs:444-448",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:419-423",
+		"beaconcrypt/src/beacon.rs:464-478",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.identity_conversion",
-		"beaconcrypt/src/beacon.rs:424-425",
+		"beaconcrypt/src/beacon.rs:479-480",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.decapsulate",
-		"beaconcrypt/src/beacon.rs:426-426",
+		"beaconcrypt/src/beacon.rs:481-481",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.dh",
-		"beaconcrypt/src/beacon.rs:427-441",
+		"beaconcrypt/src/beacon.rs:482-496",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.prepare",
-		"beaconcrypt/src/beacon.rs:442-449",
+		"beaconcrypt/src/beacon.rs:497-504",
 	),
 	(
 		"fs-registration.pvl",
@@ -20995,17 +21350,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.root",
-		"beaconcrypt/src/beacon.rs:450-450",
+		"beaconcrypt/src/beacon.rs:505-505",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.ratchet_start",
-		"beaconcrypt/src/beacon.rs:451-452",
+		"beaconcrypt/src/beacon.rs:506-507",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.associated_data",
-		"beaconcrypt/src/beacon.rs:453-453",
+		"beaconcrypt/src/beacon.rs:508-512",
 	),
 	(
 		"fs-registration.pvl",
@@ -21015,17 +21370,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:454-459",
+		"beaconcrypt/src/beacon.rs:513-518",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.sequence_one",
-		"beaconcrypt/src/beacon.rs:460-462",
+		"beaconcrypt/src/beacon.rs:519-521",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.binding",
-		"beaconcrypt/src/beacon.rs:468-476",
+		"beaconcrypt/src/beacon.rs:527-535",
 	),
 	(
 		"fs-registration.pvl",
@@ -21035,12 +21390,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.pin_checks",
-		"beaconcrypt/src/beacon.rs:485-494",
+		"beaconcrypt/src/beacon.rs:544-553",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:495-501",
+		"beaconcrypt/src/beacon.rs:554-560",
 	),
 	(
 		"fs-records-s2b-window.pvl",
@@ -21055,17 +21410,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-gate.pvl",
 		"gate.sequence_one",
-		"beaconcrypt/src/beacon.rs:460-462",
+		"beaconcrypt/src/beacon.rs:519-521",
 	),
 	(
 		"fs-records-s2b-gate.pvl",
 		"gate.abort",
-		"beaconcrypt/src/beacon.rs:480-483",
+		"beaconcrypt/src/beacon.rs:539-542",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.encrypt",
-		"beaconcrypt/src/server.rs:241-245",
+		"beaconcrypt/src/server.rs:277-281",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
@@ -21090,12 +21445,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:517-527",
+		"beaconcrypt/src/server.rs:602-612",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.encrypt",
-		"beaconcrypt/src/server.rs:241-245",
+		"beaconcrypt/src/server.rs:277-281",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
@@ -21120,12 +21475,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:517-527",
+		"beaconcrypt/src/server.rs:602-612",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
 		"beacon.decrypt",
-		"beaconcrypt/src/beacon.rs:163-173",
+		"beaconcrypt/src/beacon.rs:190-200",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
@@ -21200,32 +21555,32 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.fresh_ephemeral",
-		"beaconcrypt/src/server.rs:382-382",
+		"beaconcrypt/src/server.rs:447-447",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.encapsulate",
-		"beaconcrypt/src/server.rs:387-387",
+		"beaconcrypt/src/server.rs:452-452",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:349-351",
+		"beaconcrypt/src/server.rs:393-395",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.identity_tag",
-		"beaconcrypt/src/server.rs:352-357",
+		"beaconcrypt/src/server.rs:417-422",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.signatures",
-		"beaconcrypt/src/server.rs:358-360",
+		"beaconcrypt/src/server.rs:423-425",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.validate_init_kex",
-		"beaconcrypt/src/server.rs:361-367",
+		"beaconcrypt/src/server.rs:426-432",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21235,7 +21590,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:368-368",
+		"beaconcrypt/src/server.rs:433-433",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21245,22 +21600,22 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:369-374",
+		"beaconcrypt/src/server.rs:434-439",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.identity_conversion",
-		"beaconcrypt/src/server.rs:388-389",
+		"beaconcrypt/src/server.rs:453-454",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.dh",
-		"beaconcrypt/src/server.rs:390-408",
+		"beaconcrypt/src/server.rs:455-473",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.accept_root_input",
-		"beaconcrypt/src/server.rs:409-425",
+		"beaconcrypt/src/server.rs:474-490",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21270,32 +21625,32 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.root",
-		"beaconcrypt/src/server.rs:428-428",
+		"beaconcrypt/src/server.rs:493-493",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:429-430",
+		"beaconcrypt/src/server.rs:494-495",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:432-435",
+		"beaconcrypt/src/server.rs:497-501",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:438-442",
+		"beaconcrypt/src/server.rs:504-508",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.next_key_id",
-		"beaconcrypt/src/server.rs:445-455",
+		"beaconcrypt/src/server.rs:511-525",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.prepare_commit",
-		"beaconcrypt/src/server.rs:456-465",
+		"beaconcrypt/src/server.rs:526-535",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21305,57 +21660,57 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.ratchet_start",
-		"beaconcrypt/src/server.rs:472-473",
+		"beaconcrypt/src/server.rs:542-543",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.associated_data",
-		"beaconcrypt/src/server.rs:474-474",
+		"beaconcrypt/src/server.rs:544-548",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.associated_data",
-		"beaconcrypt-core/src/pqxdh.rs:928-947",
+		"beaconcrypt-core/src/pqxdh.rs:931-952",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:444-446",
+		"beaconcrypt/src/server.rs:510-512",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.binding",
-		"beaconcrypt/src/server.rs:478-485",
+		"beaconcrypt/src/server.rs:552-559",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:486-494",
+		"beaconcrypt/src/server.rs:560-568",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.commit",
-		"beaconcrypt/src/server.rs:502-510",
+		"beaconcrypt/src/server.rs:583-595",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:511-514",
+		"beaconcrypt/src/server.rs:596-599",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:64-82",
+		"beaconcrypt/src/beacon.rs:75-104",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:300-304",
+		"beaconcrypt/src/beacon.rs:327-331",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:334-344",
+		"beaconcrypt/src/beacon.rs:361-371",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21365,42 +21720,42 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.sign",
-		"beaconcrypt/src/beacon.rs:345-351",
+		"beaconcrypt/src/beacon.rs:372-379",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.bundle_return",
-		"beaconcrypt/src/beacon.rs:395-395",
+		"beaconcrypt/src/beacon.rs:440-440",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:399-403",
+		"beaconcrypt/src/beacon.rs:444-448",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:419-423",
+		"beaconcrypt/src/beacon.rs:464-478",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.identity_conversion",
-		"beaconcrypt/src/beacon.rs:424-425",
+		"beaconcrypt/src/beacon.rs:479-480",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.decapsulate",
-		"beaconcrypt/src/beacon.rs:426-426",
+		"beaconcrypt/src/beacon.rs:481-481",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.dh",
-		"beaconcrypt/src/beacon.rs:427-441",
+		"beaconcrypt/src/beacon.rs:482-496",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.prepare",
-		"beaconcrypt/src/beacon.rs:442-449",
+		"beaconcrypt/src/beacon.rs:497-504",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21410,17 +21765,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.root",
-		"beaconcrypt/src/beacon.rs:450-450",
+		"beaconcrypt/src/beacon.rs:505-505",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.ratchet_start",
-		"beaconcrypt/src/beacon.rs:451-452",
+		"beaconcrypt/src/beacon.rs:506-507",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.associated_data",
-		"beaconcrypt/src/beacon.rs:453-453",
+		"beaconcrypt/src/beacon.rs:508-512",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21430,7 +21785,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:454-459",
+		"beaconcrypt/src/beacon.rs:513-518",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21440,12 +21795,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.sequence_one",
-		"beaconcrypt/src/beacon.rs:460-462",
+		"beaconcrypt/src/beacon.rs:519-521",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.binding",
-		"beaconcrypt/src/beacon.rs:468-476",
+		"beaconcrypt/src/beacon.rs:527-535",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21455,12 +21810,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.pin_checks",
-		"beaconcrypt/src/beacon.rs:485-494",
+		"beaconcrypt/src/beacon.rs:544-553",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:495-501",
+		"beaconcrypt/src/beacon.rs:554-560",
 	),
 	(
 		"fs-records-b2s-window.pvl",
@@ -21475,7 +21830,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-sends.pvl",
 		"sends.encrypt",
-		"beaconcrypt/src/beacon.rs:151-162",
+		"beaconcrypt/src/beacon.rs:178-189",
 	),
 	(
 		"fs-records-b2s-sends.pvl",
@@ -21500,7 +21855,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-sends-chosen.pvl",
 		"sends.encrypt",
-		"beaconcrypt/src/beacon.rs:151-162",
+		"beaconcrypt/src/beacon.rs:178-189",
 	),
 	(
 		"fs-records-b2s-sends-chosen.pvl",
@@ -21525,12 +21880,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.decrypt",
-		"beaconcrypt/src/server.rs:246-248",
+		"beaconcrypt/src/server.rs:282-284",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.route",
-		"beaconcrypt/src/server.rs:254-262",
+		"beaconcrypt/src/server.rs:290-298",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -21540,7 +21895,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.peer_associated_data",
-		"beaconcrypt/src/server.rs:235-240",
+		"beaconcrypt/src/server.rs:269-276",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -21600,7 +21955,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.accepted",
-		"beaconcrypt/src/server.rs:263-266",
+		"beaconcrypt/src/server.rs:299-302",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -21620,32 +21975,32 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.fresh_ephemeral",
-		"beaconcrypt/src/server.rs:382-382",
+		"beaconcrypt/src/server.rs:447-447",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.encapsulate",
-		"beaconcrypt/src/server.rs:387-387",
+		"beaconcrypt/src/server.rs:452-452",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:349-351",
+		"beaconcrypt/src/server.rs:393-395",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.identity_tag",
-		"beaconcrypt/src/server.rs:352-357",
+		"beaconcrypt/src/server.rs:417-422",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.signatures",
-		"beaconcrypt/src/server.rs:358-360",
+		"beaconcrypt/src/server.rs:423-425",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.validate_init_kex",
-		"beaconcrypt/src/server.rs:361-367",
+		"beaconcrypt/src/server.rs:426-432",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -21655,7 +22010,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:368-368",
+		"beaconcrypt/src/server.rs:433-433",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -21665,57 +22020,57 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:369-374",
+		"beaconcrypt/src/server.rs:434-439",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.identity_conversion",
-		"beaconcrypt/src/server.rs:388-389",
+		"beaconcrypt/src/server.rs:453-454",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.dh",
-		"beaconcrypt/src/server.rs:390-408",
+		"beaconcrypt/src/server.rs:455-473",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.accept_root_input",
-		"beaconcrypt/src/server.rs:409-425",
+		"beaconcrypt/src/server.rs:474-490",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.root",
-		"beaconcrypt/src/server.rs:428-428",
+		"beaconcrypt/src/server.rs:493-493",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:429-430",
+		"beaconcrypt/src/server.rs:494-495",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:432-435",
+		"beaconcrypt/src/server.rs:497-501",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:438-442",
+		"beaconcrypt/src/server.rs:504-508",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.next_key_id",
-		"beaconcrypt/src/server.rs:445-455",
+		"beaconcrypt/src/server.rs:511-525",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.prepare_commit",
-		"beaconcrypt/src/server.rs:456-465",
+		"beaconcrypt/src/server.rs:526-535",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.ratchet_start",
-		"beaconcrypt/src/server.rs:472-473",
+		"beaconcrypt/src/server.rs:542-543",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -21725,7 +22080,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.associated_data",
-		"beaconcrypt/src/server.rs:474-474",
+		"beaconcrypt/src/server.rs:544-548",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -21735,27 +22090,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:444-446",
+		"beaconcrypt/src/server.rs:510-512",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.binding",
-		"beaconcrypt/src/server.rs:478-485",
+		"beaconcrypt/src/server.rs:552-559",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:486-494",
+		"beaconcrypt/src/server.rs:560-568",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.commit",
-		"beaconcrypt/src/server.rs:502-510",
+		"beaconcrypt/src/server.rs:583-595",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:511-514",
+		"beaconcrypt/src/server.rs:596-599",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -21765,17 +22120,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:64-82",
+		"beaconcrypt/src/beacon.rs:75-104",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:300-304",
+		"beaconcrypt/src/beacon.rs:327-331",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:334-344",
+		"beaconcrypt/src/beacon.rs:361-371",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -21785,42 +22140,42 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.sign",
-		"beaconcrypt/src/beacon.rs:345-351",
+		"beaconcrypt/src/beacon.rs:372-379",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.bundle_return",
-		"beaconcrypt/src/beacon.rs:395-395",
+		"beaconcrypt/src/beacon.rs:440-440",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:399-403",
+		"beaconcrypt/src/beacon.rs:444-448",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:419-423",
+		"beaconcrypt/src/beacon.rs:464-478",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.identity_conversion",
-		"beaconcrypt/src/beacon.rs:424-425",
+		"beaconcrypt/src/beacon.rs:479-480",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.decapsulate",
-		"beaconcrypt/src/beacon.rs:426-426",
+		"beaconcrypt/src/beacon.rs:481-481",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.dh",
-		"beaconcrypt/src/beacon.rs:427-441",
+		"beaconcrypt/src/beacon.rs:482-496",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.prepare",
-		"beaconcrypt/src/beacon.rs:442-449",
+		"beaconcrypt/src/beacon.rs:497-504",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -21830,12 +22185,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.root",
-		"beaconcrypt/src/beacon.rs:450-450",
+		"beaconcrypt/src/beacon.rs:505-505",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.ratchet_start",
-		"beaconcrypt/src/beacon.rs:451-452",
+		"beaconcrypt/src/beacon.rs:506-507",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -21845,7 +22200,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.associated_data",
-		"beaconcrypt/src/beacon.rs:453-453",
+		"beaconcrypt/src/beacon.rs:508-512",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -21855,17 +22210,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:454-459",
+		"beaconcrypt/src/beacon.rs:513-518",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.sequence_one",
-		"beaconcrypt/src/beacon.rs:460-462",
+		"beaconcrypt/src/beacon.rs:519-521",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.binding",
-		"beaconcrypt/src/beacon.rs:468-476",
+		"beaconcrypt/src/beacon.rs:527-535",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -21875,12 +22230,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.pin_checks",
-		"beaconcrypt/src/beacon.rs:485-494",
+		"beaconcrypt/src/beacon.rs:544-553",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:495-501",
+		"beaconcrypt/src/beacon.rs:554-560",
 	),
 ];
 
@@ -22374,6 +22729,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"check-toolchain",
 			"extract-proverif",
 			"check-proverif",
+			"check-proverif-mldsa-auth",
 			"check-proverif-fs",
 			"check-proverif-primitive-fidelity",
 			"check-proverif-active-strong-secrecy",
@@ -24141,7 +24497,7 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 			Box::new(|files: &mut FsFiles| {
 				replace_once(
 					&mut files.registration,
-					"src=beaconcrypt/src/server.rs:429-430",
+					"src=beaconcrypt/src/server.rs:494-495",
 					"src=beaconcrypt/src/server.rs:414-416",
 				)
 			}) as Box<dyn Fn(&mut FsFiles)>,
@@ -24172,7 +24528,7 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 		(
 			"annotation added to a control",
 			Box::new(|files: &mut FsFiles| {
-				files.nocheck.push_str("(* @beaconcrypt-fs-fidelity key=x src=beaconcrypt/src/server.rs:369-374 anchor=let registration_status *)\n");
+				files.nocheck.push_str("(* @beaconcrypt-fs-fidelity key=x src=beaconcrypt/src/server.rs:434-439 anchor=let registration_status *)\n");
 			}),
 			"fs fidelity annotations of fs-control-nocheck.pvl changed",
 		),
@@ -24198,13 +24554,13 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 		);
 	}
 	assert_eq!(
-		check_fs_citation("beaconcrypt/src/server.rs:429-430", "let inserted"),
+		check_fs_citation("beaconcrypt/src/server.rs:494-495", "let inserted"),
 		Ok(())
 	);
 	assert!(check_fs_citation("beaconcrypt/src/server.rs:416-415", "let inserted").is_err());
 	assert!(check_fs_citation("beaconcrypt/src/server.rs:1-415", "let inserted").is_err());
 	assert!(check_fs_citation("beaconcrypt/src/other.rs:415-416", "let inserted").is_err());
-	assert!(check_fs_citation("beaconcrypt/src/server.rs:429-430", "let").is_err());
+	assert!(check_fs_citation("beaconcrypt/src/server.rs:494-495", "let").is_err());
 }
 
 #[test]
@@ -24245,8 +24601,8 @@ fn free_schedule_vocabulary_and_registration_model_are_pinned() {
 			Box::new(|files: &mut FsFiles| {
 				replace_once(
 					&mut files.registration,
-					"    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/server.rs:382-382 anchor=let ephemeral = crypto_kx::KeyPair::generate().ok()?; *)\n      new ephemeral_secret: bitstring;\n",
-					"    new ephemeral_secret: bitstring;\n    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/server.rs:382-382 anchor=let ephemeral = crypto_kx::KeyPair::generate().ok()?; *)\n",
+					"    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/server.rs:447-447 anchor=let ephemeral = crypto_kx::KeyPair::generate().ok()?; *)\n      new ephemeral_secret: bitstring;\n",
+					"    new ephemeral_secret: bitstring;\n    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/server.rs:447-447 anchor=let ephemeral = crypto_kx::KeyPair::generate().ok()?; *)\n",
 				)
 			}),
 			"fs-registration Rust-ordered process changed",
@@ -25668,4 +26024,619 @@ fn serial_proverif_ci_preserves_every_gate_and_separate_group() {
 			"missing {group} CI job"
 		);
 	}
+}
+
+const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 71;
+
+#[test]
+fn mldsa_transcript_source_and_model_mutations_are_rejected() {
+	let baseline = Snapshot::production();
+	validate_mldsa_source(&baseline).unwrap();
+	validate_mldsa_model(&baseline).unwrap();
+	let mut checked = 0;
+	for (name, target, scope, from, to, diagnostic) in [
+		(
+			"mldsa_public_key_length",
+			"adapter_auth",
+			"",
+			"MLDSA_PUBLIC_KEY_LEN: usize = 1952",
+			"MLDSA_PUBLIC_KEY_LEN: usize = 1951",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_signature_length",
+			"adapter_auth",
+			"",
+			"MLDSA_SIGNATURE_LEN: usize = 3309",
+			"MLDSA_SIGNATURE_LEN: usize = 3308",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_signing_context",
+			"adapter_auth",
+			"",
+			"b\"beaconcrypt registration auth v1\"",
+			"b\"beaconcrypt registration auth v2\"",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_init_domain",
+			"adapter_auth",
+			"",
+			"beaconcrypt ML-DSA-65 init transcript v1",
+			"beaconcrypt ML-DSA-65 init transcript v2",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_response_domain",
+			"adapter_auth",
+			"",
+			"beaconcrypt ML-DSA-65 response transcript v1",
+			"beaconcrypt ML-DSA-65 response transcript v2",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_beacon_role_label",
+			"adapter_auth",
+			"",
+			"Self::Beacon => b\"beaconcrypt v1 beacon registration\"",
+			"Self::Beacon => b\"beaconcrypt v1 server registration\"",
+			"distinct role labels",
+		),
+		(
+			"mldsa_server_role_label",
+			"adapter_auth",
+			"",
+			"Self::Server => b\"beaconcrypt v1 server registration\"",
+			"Self::Server => b\"beaconcrypt v1 beacon registration\"",
+			"distinct role labels",
+		),
+		(
+			"mldsa_signed_spaces",
+			"adapter_auth",
+			"fn signature_input",
+			"&[b' '; 64]",
+			"&[b' '; 63]",
+			"TLS-style signed input",
+		),
+		(
+			"mldsa_signed_separator",
+			"adapter_auth",
+			"fn signature_input",
+			"input.push(0);",
+			"input.push(1);",
+			"TLS-style signed input",
+		),
+		(
+			"mldsa_signed_hash",
+			"adapter_auth",
+			"fn signature_input",
+			"input.extend_from_slice(transcript);",
+			"input.extend_from_slice(&[0; 64]);",
+			"TLS-style signed input",
+		),
+		(
+			"mldsa_sign_context_substitution",
+			"adapter_auth",
+			"fn sign(",
+			".sign_deterministic(&signature_input(role, transcript), SIGNING_CONTEXT)",
+			".sign_deterministic(&signature_input(role, transcript), b\"\")",
+			"signing context and input",
+		),
+		(
+			"mldsa_verify_context_substitution",
+			"adapter_auth",
+			"fn verify(",
+			"\n\t\tSIGNING_CONTEXT,",
+			"\n\t\tb\"\",",
+			"canonical parsing and verification context",
+		),
+		(
+			"mldsa_verify_public_key_substitution",
+			"adapter_auth",
+			"fn verify(",
+			"try_from(public_key)",
+			"try_from(&[0; MLDSA_PUBLIC_KEY_LEN][..])",
+			"canonical parsing and verification context",
+		),
+		(
+			"mldsa_verify_signature_substitution",
+			"adapter_auth",
+			"fn verify(",
+			"Signature::<MlDsa65>::try_from(signature)",
+			"Signature::<MlDsa65>::try_from(&[0; MLDSA_SIGNATURE_LEN][..])",
+			"canonical parsing and verification context",
+		),
+		(
+			"mldsa_keyed_transcript_hash",
+			"adapter_auth",
+			"fn hash_state",
+			"State::new(None, TRANSCRIPT_HASH_LEN)",
+			"State::new(Some(&[0; 32]), TRANSCRIPT_HASH_LEN)",
+			"unkeyed BLAKE2b512 transcript hash",
+		),
+		(
+			"mldsa_transcript_hash_output_size",
+			"adapter_auth",
+			"",
+			"TRANSCRIPT_HASH_LEN: usize = 64",
+			"TRANSCRIPT_HASH_LEN: usize = 32",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_variable_length_big_endian",
+			"adapter_auth",
+			"fn hash_field",
+			"to_le_bytes()",
+			"to_be_bytes()",
+			"variable-field length framing",
+		),
+		(
+			"mldsa_variable_field_bytes_substitution",
+			"adapter_auth",
+			"fn hash_field",
+			"state.update(field);",
+			"state.update(&[]);",
+			"variable-field length framing",
+		),
+		(
+			"mldsa_public_key_hash_length",
+			"adapter_auth",
+			"fn public_key_hash",
+			"public_key.len() != MLDSA_PUBLIC_KEY_LEN",
+			"public_key.len() == MLDSA_PUBLIC_KEY_LEN",
+			"public-key fingerprint",
+		),
+		(
+			"mldsa_public_key_hash_bytes",
+			"adapter_auth",
+			"fn public_key_hash",
+			"state.update(public_key);",
+			"state.update(&[]);",
+			"public-key fingerprint",
+		),
+		(
+			"mldsa_request_server_id_big_endian",
+			"adapter_auth",
+			"fn init_transcript_hash",
+			"server_kid.to_le_bytes()",
+			"server_kid.to_be_bytes()",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_request_ed_pin_omitted",
+			"adapter_auth",
+			"fn init_transcript_hash",
+			"state.update(pinned_server_ed);",
+			"state.update(&[]);",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_request_beacon_ml_key_omitted",
+			"adapter_auth",
+			"fn init_transcript_hash",
+			"state.update(init.mldsa_public_key);",
+			"state.update(&[]);",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_request_server_ml_key_omitted",
+			"adapter_auth",
+			"fn init_transcript_hash",
+			"state.update(server_auth_key);",
+			"state.update(&[]);",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_request_classical_field_order",
+			"adapter_auth",
+			"fn init_transcript_hash",
+			"init.pre_key,\n\t\tinit.one_time_key,",
+			"init.one_time_key,\n\t\tinit.pre_key,",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_request_hashes_signature",
+			"adapter_auth",
+			"fn init_transcript_hash",
+			"\n\tfinish_hash(state)",
+			"\n\tstate.update(init.signature);\n\tfinish_hash(state)",
+			"request signature exclusion",
+		),
+		(
+			"mldsa_response_request_hash_omitted",
+			"adapter_auth",
+			"fn response_transcript_hash",
+			"state.update(init_hash);",
+			"state.update(&[]);",
+			"complete response transcript",
+		),
+		(
+			"mldsa_response_field_order",
+			"adapter_auth",
+			"fn response_transcript_hash",
+			"response.kem_cipher_text,\n\t\tresponse.app_cipher_text,",
+			"response.app_cipher_text,\n\t\tresponse.kem_cipher_text,",
+			"complete response transcript",
+		),
+		(
+			"mldsa_response_assigned_id_big_endian",
+			"adapter_auth",
+			"fn response_transcript_hash",
+			"response.key_id.to_le_bytes()",
+			"response.key_id.to_be_bytes()",
+			"complete response transcript",
+		),
+		(
+			"mldsa_response_hashes_signature",
+			"adapter_auth",
+			"fn response_transcript_hash",
+			"\n\tfinish_hash(state)",
+			"\n\tstate.update(response.signature);\n\tfinish_hash(state)",
+			"response signature exclusion",
+		),
+		(
+			"mldsa_ad_server_hash_slot",
+			"adapter_pqxdh",
+			"fn mldsa_associated_data",
+			"ad[153..217].copy_from_slice(server_hash);",
+			"ad[153..217].copy_from_slice(beacon_hash);",
+			"associated-data hash-slot order",
+		),
+		(
+			"mldsa_ad_beacon_hash_slot",
+			"adapter_pqxdh",
+			"fn mldsa_associated_data",
+			"ad[217..281].copy_from_slice(beacon_hash);",
+			"ad[217..281].copy_from_slice(server_hash);",
+			"associated-data hash-slot order",
+		),
+		(
+			"mldsa_token_context_public",
+			"adapter_server",
+			"",
+			"struct RegistrationAuthentication {",
+			"pub struct RegistrationAuthentication {",
+			"private accepted-token context",
+		),
+		(
+			"mldsa_init_self_presented_key_substituted",
+			"adapter_server",
+			"fn get_shared_secret",
+			"let public_key = registration.mldsa_public_key;",
+			"let public_key = &self.mldsa_public_key();",
+			"request verification precedes classical and stateful work",
+		),
+		(
+			"mldsa_init_verification_role",
+			"adapter_server",
+			"fn get_shared_secret",
+			"AuthRole::Beacon,",
+			"AuthRole::Server,",
+			"request verification precedes classical and stateful work",
+		),
+		(
+			"mldsa_init_verification_bypass",
+			"adapter_server",
+			"fn get_shared_secret",
+			"if !auth::verify(",
+			"if false && !auth::verify(",
+			"request verification precedes classical and stateful work",
+		),
+		(
+			"mldsa_token_request_hash_substitution",
+			"adapter_server",
+			"fn get_shared_secret",
+			"RegistrationAuthentication {\n\t\t\tinit_hash,",
+			"RegistrationAuthentication {\n\t\t\tinit_hash: [0; 64],",
+			"request verification precedes classical and stateful work",
+		),
+		(
+			"mldsa_token_server_key_binding_bypass",
+			"adapter_server",
+			"fn build_registration_response",
+			"if auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
+			"if false && auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
+			"token binding and signed publication precede commit",
+		),
+		(
+			"mldsa_response_signs_wrong_request_hash",
+			"adapter_server",
+			"fn build_registration_response",
+			"response_transcript_hash(&authentication.init_hash, &response)",
+			"response_transcript_hash(&[0; 64], &response)",
+			"token binding and signed publication precede commit",
+		),
+		(
+			"mldsa_response_signing_role",
+			"adapter_server",
+			"fn build_registration_response",
+			"self.mldsa_identity.sign(AuthRole::Server, &hash)",
+			"self.mldsa_identity.sign(AuthRole::Beacon, &hash)",
+			"token binding and signed publication precede commit",
+		),
+		(
+			"mldsa_response_published_signature_substitution",
+			"adapter_server",
+			"fn build_registration_response",
+			"signature: &signature,",
+			"signature: &[0; auth::MLDSA_SIGNATURE_LEN],",
+			"token binding and signed publication precede commit",
+		),
+		(
+			"mldsa_request_published_ml_key_substitution",
+			"adapter_beacon",
+			"fn get_registration_bundle",
+			"mldsa_public_key: &public_key,",
+			"mldsa_public_key: &[0; auth::MLDSA_PUBLIC_KEY_LEN],",
+			"request signing and retained hash before publication",
+		),
+		(
+			"mldsa_request_signing_role",
+			"adapter_beacon",
+			"fn get_registration_bundle",
+			".sign(AuthRole::Beacon, &init_hash)",
+			".sign(AuthRole::Server, &init_hash)",
+			"request signing and retained hash before publication",
+		),
+		(
+			"mldsa_request_retained_hash_substitution",
+			"adapter_beacon",
+			"fn get_registration_bundle",
+			"self.authentication.init_hash = Some(init_hash);",
+			"self.authentication.init_hash = Some([0; 64]);",
+			"request signing and retained hash before publication",
+		),
+		(
+			"mldsa_response_verification_pin_substitution",
+			"adapter_beacon",
+			"fn finish_registration",
+			"&self.authentication.server_public_key,",
+			"&self.mldsa_public_key(),",
+			"pinned response verification before KEM, DH and installation",
+		),
+		(
+			"mldsa_response_verification_request_substitution",
+			"adapter_beacon",
+			"fn finish_registration",
+			"self.authentication.init_hash.as_ref()?, &response",
+			"&[0; 64], &response",
+			"pinned response verification before KEM, DH and installation",
+		),
+		(
+			"mldsa_response_verification_role",
+			"adapter_beacon",
+			"fn finish_registration",
+			"AuthRole::Server,",
+			"AuthRole::Beacon,",
+			"pinned response verification before KEM, DH and installation",
+		),
+		(
+			"mldsa_response_verification_bypass",
+			"adapter_beacon",
+			"fn finish_registration",
+			"if !auth::verify(",
+			"if false && !auth::verify(",
+			"pinned response verification before KEM, DH and installation",
+		),
+		(
+			"mldsa_model_context_match",
+			"mldsa_auth",
+			"",
+			"mldsa_public(signing_secret), context) = message.",
+			"mldsa_public(signing_secret), other_context) = message.",
+			"assumed matching secret, message and context",
+		),
+		(
+			"mldsa_model_request_pin_order",
+			"mldsa_auth",
+			"",
+			"server_ed, agent_ml, server_ml,",
+			"server_ed, server_ml, agent_ml,",
+			"symbolic request transcript",
+		),
+		(
+			"mldsa_model_request_field_omitted",
+			"mldsa_auth",
+			"",
+			"mldsa_length_prefixed(one_time), mldsa_length_prefixed(pq)",
+			"mldsa_length_prefixed(prekey), mldsa_length_prefixed(pq)",
+			"symbolic request transcript",
+		),
+		(
+			"mldsa_model_raw_response_constructor",
+			"mldsa_auth",
+			"",
+			"fun mldsa_response_fields(bitstring, bitstring, bitstring, bitstring, key_id)",
+			"fun mldsa_response_fields(bitstring, bitstring, bitstring, bitstring, bitstring)",
+			"raw response-field constructor",
+		),
+		(
+			"mldsa_model_response_request_hash",
+			"mldsa_auth",
+			"",
+			"mldsa_response_domain(), init_hash,",
+			"mldsa_response_domain(), mldsa_zero(),",
+			"symbolic raw response transcript",
+		),
+		(
+			"mldsa_model_response_raw_ciphertext",
+			"mldsa_auth",
+			"",
+			"mldsa_length_prefixed(raw_ctu)",
+			"mldsa_length_prefixed(kem)",
+			"symbolic raw response transcript",
+		),
+		(
+			"mldsa_model_beacon_role",
+			"mldsa_auth",
+			"",
+			"mldsa_spaces64(), mldsa_beacon_label(), mldsa_zero(), hash",
+			"mldsa_spaces64(), mldsa_server_label(), mldsa_zero(), hash",
+			"symbolic beacon role input",
+		),
+		(
+			"mldsa_model_server_role",
+			"mldsa_auth",
+			"",
+			"mldsa_spaces64(), mldsa_server_label(), mldsa_zero(), hash",
+			"mldsa_spaces64(), mldsa_beacon_label(), mldsa_zero(), hash",
+			"symbolic server role input",
+		),
+		(
+			"mldsa_model_init_wrapper",
+			"mldsa_auth",
+			"",
+			"fun mldsa_signed_init_kex(bitstring, bitstring, bitstring)",
+			"fun mldsa_signed_init_kex(bitstring, bitstring)",
+			"mandatory symbolic request wrapper",
+		),
+		(
+			"mldsa_model_response_wrapper",
+			"mldsa_auth",
+			"",
+			"fun mldsa_signed_kex_response(bitstring, bitstring)",
+			"fun mldsa_signed_kex_response(bitstring, bitstring, bitstring)",
+			"mandatory symbolic response wrapper",
+		),
+		(
+			"mldsa_model_ad_hash_order",
+			"mldsa_auth",
+			"",
+			"base, blake2b512(server_ml), blake2b512(agent_ml)",
+			"base, blake2b512(agent_ml), blake2b512(server_ml)",
+			"symbolic associated-data hash-slot order",
+		),
+		(
+			"mldsa_model_raw_tag_omitted",
+			"mldsa_auth",
+			"",
+			"mldsa_raw_ctu(body, tag, commitment).",
+			"mldsa_raw_ctu(body, body, commitment).",
+			"symbolic raw ciphertext projection",
+		),
+		(
+			"mldsa_model_restored_sequence",
+			"mldsa_auth",
+			"",
+			"commitment, first_sequence(), pinned).",
+			"commitment, next_sequence(first_sequence()), pinned).",
+			"symbolic fixed sequence and pinned sender restoration",
+		),
+		(
+			"mldsa_model_restored_sender",
+			"mldsa_auth",
+			"",
+			"commitment, first_sequence(), pinned).",
+			"commitment, first_sequence(), SERVER_KEY_ID).",
+			"symbolic fixed sequence and pinned sender restoration",
+		),
+		(
+			"mldsa_model_owned_key_not_public",
+			"mldsa_registration",
+			"",
+			"server_ml, beacon_ml, owned_ml_secret, mlkem_public(pq_secret)",
+			"server_ml, beacon_ml, mlkem_public(pq_secret)",
+			"public classical secrets and attacker-owned signing key",
+		),
+		(
+			"mldsa_model_init_verifier_bypassed",
+			"mldsa_registration",
+			"",
+			"let verified_init_input = mldsa_verify(candidate_signature,\n        candidate_ml, mldsa_signing_context()) in",
+			"let verified_init_input = mldsa_beacon_input(candidate_hash) in",
+			"symbolic self-presented request verification before classical projection",
+		),
+		(
+			"mldsa_model_honest_event_becomes_admission_guard",
+			"mldsa_registration",
+			"",
+			"((if candidate_ml = beacon_ml then",
+			"if candidate_ml = beacon_ml then\n      ((if candidate_ml = beacon_ml then",
+			"target events do not gate response admission",
+		),
+		(
+			"mldsa_model_response_ciphertext_substituted",
+			"mldsa_registration",
+			"",
+			"mldsa_raw_ctu(body, tag, commitment),",
+			"mldsa_raw_ctu(body, body, commitment),",
+			"symbolic signed raw response fields",
+		),
+		(
+			"mldsa_model_response_request_substitution",
+			"mldsa_registration",
+			"",
+			"let response_hash = mldsa_response_hash(candidate_hash, response)",
+			"let response_hash = mldsa_response_hash(honest_hash, response)",
+			"symbolic response signing and publication",
+		),
+		(
+			"mldsa_model_response_pin_substitution",
+			"mldsa_registration",
+			"",
+			"mldsa_verify(response_signature,\n        server_ml, mldsa_signing_context())",
+			"mldsa_verify(response_signature,\n        beacon_ml, mldsa_signing_context())",
+			"symbolic pinned server and retained request verification",
+		),
+		(
+			"mldsa_model_response_retained_hash_substitution",
+			"mldsa_registration",
+			"",
+			"mldsa_response_hash(honest_hash, candidate_response)",
+			"mldsa_response_hash(mldsa_zero(), candidate_response)",
+			"symbolic pinned server and retained request verification",
+		),
+		(
+			"mldsa_model_owned_admission_query_omitted",
+			"mldsa_queries",
+			"",
+			"query event(MldsaOwnedKeyAccepted()).",
+			"",
+			"exact focused query and control roster",
+		),
+		(
+			"mldsa_model_compromise_control_omitted",
+			"mldsa_queries",
+			"",
+			"MldsaRegistrationProfile() | MldsaCompromiseControl() |",
+			"MldsaRegistrationProfile() |",
+			"exact focused query and control roster",
+		),
+	] {
+		let mut changed = baseline.clone();
+		let source = match target {
+			"adapter_auth" => &mut changed.adapter_auth,
+			"adapter_server" => &mut changed.adapter_server,
+			"adapter_beacon" => &mut changed.adapter_beacon,
+			"adapter_pqxdh" => &mut changed.adapter_pqxdh,
+			"mldsa_auth" => &mut changed.mldsa_auth,
+			"mldsa_registration" => &mut changed.mldsa_registration,
+			"mldsa_queries" => &mut changed.mldsa_queries,
+			_ => panic!("unknown MLDSA mutation source: {target}"),
+		};
+		// Role traits repeat method names; select the concrete definition after them.
+		let scope_start = if scope.is_empty() {
+			0
+		} else {
+			source.rfind(scope).expect("MLDSA mutation scope missing")
+		};
+		let start = scope_start
+			+ source[scope_start..]
+				.find(from)
+				.expect("MLDSA mutation anchor missing");
+		source.replace_range(start..start + from.len(), to);
+		let result = if target.starts_with("adapter_") {
+			validate_mldsa_source(&changed)
+		} else {
+			validate_mldsa_model(&changed)
+		};
+		let error = result.expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+		checked += 1;
+	}
+	assert_eq!(checked, MLDSA_TRANSCRIPT_MUTATION_COUNT);
 }

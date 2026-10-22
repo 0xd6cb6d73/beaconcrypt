@@ -40,6 +40,7 @@ PROVERIF_AEAD_CONTROL_LIBS := \
 	-lib $(PROVERIF_DIR)/aead-commitment-negative-control-queries.pvl
 PROVERIF_CHECKER := $(PROVERIF_DIR)/check-results.awk
 PROVERIF_TIMEOUT ?= 240
+PROVERIF_MLDSA_LOG_DIR ?= $(abspath ../.build/proofs/mldsa-auth)
 override PROVERIF := proverif
 PROVERIF_SCENARIOS := \
 	aead-commitment \
@@ -153,6 +154,7 @@ LEAN_GENERATED_PATHS := \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-proverif-transcript-fidelity check-proverif-primitive-fidelity check-proverif-active-strong-secrecy \
 	check-proverif-pending-registration check-proverif-aead-differential check-proverif-registration-provenance check-proverif-delayed-response check-proverif-exact-far check-proverif-record-origin check-proverif-tasking-origin check-proverif-application-secrecy check-proverif-exact-interface-strong \
+	check-proverif-mldsa-auth \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
 	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
 	check-proverif-extraction check-generated check-generated-lean \
@@ -173,6 +175,7 @@ verify-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
+	$(MAKE) check-proverif-mldsa-auth
 	$(MAKE) check-proverif-fs
 	$(MAKE) check-proverif-primitive-fidelity
 	$(MAKE) check-proverif-active-strong-secrecy
@@ -290,6 +293,13 @@ check-proverif-extraction:
 check-proverif-transcript-fidelity:
 	python3 $(PROVERIF_DIR)/test-verdict-classes.py
 	cargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity
+
+# Focused assumed-security profile; this does not upgrade the legacy projection proofs.
+check-proverif-mldsa-auth:
+	python3 $(PROVERIF_DIR)/test-mldsa-registration-auth-checker.py
+	python3 $(PROVERIF_DIR)/check-mldsa-registration-auth.py \
+		--proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)' \
+		--logdir '$(PROVERIF_MLDSA_LOG_DIR)'
 
 $(PROVERIF_CHECK_TARGETS): check-proverif-transcript-fidelity
 check-proverif-passive-reachability check-proverif-quantum-capabilities: check-proverif-transcript-fidelity
@@ -832,6 +842,8 @@ check-lean-root:
 		BeaconcryptCore.Model.Pqxdh.InstanceCommit \
 		BeaconcryptCore.Model.Pqxdh.Acceptance \
 		BeaconcryptCore.Model.Pqxdh.Runs \
+		BeaconcryptCore.Model.Pqxdh.TranscriptAuth \
+		BeaconcryptCore.Computational.MldsaTranscriptAuth \
 		BeaconcryptCore.Computational.CtxReduction \
 		BeaconcryptCore.Computational.CtxTransitionReduction \
 		BeaconcryptCore.Computational.VCVioFeasibility \

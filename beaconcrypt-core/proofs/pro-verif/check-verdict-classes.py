@@ -265,8 +265,88 @@ def extension_class_scope(name, target, driver):
     raise ValueError(f"unreviewed extension scope: {name}")
 
 
+def mldsa_class_scope(target, position, driver):
+    """Exact scope for the separate assumed-interface profile and its controls."""
+    common = (
+        "focused assumed-interface ML-DSA authentication profile; "
+        "one honest agent ML key and one pinned server ML key unrevealed; "
+        "classical identity/DH secrets exposed; attacker-owned ML registrations admitted without enrollment; "
+        "independent key-reveal and closed separation/AD fixtures; "
+        "ideal ML-signature unforgeability and collision-free hash assumed; "
+        "no computational/QPT, full-protocol, parser/compiler or native-library theorem; "
+    )
+    claims = (
+        (
+            "security",
+            "noninjective Init origin scoped to the exact honest ML public key",
+        ),
+        (
+            "security",
+            "pinned-server origin of request digest and all unsigned decoded response fields, including raw C||T||U and assigned ID, excluding signature bytes",
+        ),
+        ("witness", "honest request/response verification is reachable"),
+        (
+            "limitation",
+            "attacker-owned ML key with the recovered honest Ed identity is admitted; no Ed-identity-only post-quantum authentication claim",
+        ),
+        (
+            "negative-control",
+            "independent exposed agent ML signing key permits acceptance without an honest-sign event",
+        ),
+        (
+            "negative-control",
+            "independent exposed server ML signing key permits acceptance without an honest-sign event",
+        ),
+        (
+            "definitional",
+            "closed shared-material fixture opens with ordered server/agent ML-key hashes in AD281",
+        ),
+        (
+            "definitional",
+            "closed shared-material fixture rejects a changed server ML-key hash in AD281",
+        ),
+        (
+            "definitional",
+            "closed shared-material fixture rejects a changed agent ML-key hash in AD281",
+        ),
+        ("definitional", "closed signature fixture rejects a changed role label"),
+        (
+            "definitional",
+            "closed signature fixture rejects a changed FIPS signing context",
+        ),
+        ("definitional", "closed signature fixture rejects a different request digest"),
+    )
+    if target == "mldsa-registration-auth" and 1 <= position <= len(claims):
+        cls, claim = claims[position - 1]
+    elif target in {control[0] for control in driver.CONTROLS} and position == 1:
+        cls = "negative-control"
+        claim = (
+            "reconstructed origin counterexample after bypassing only the "
+            + {
+                "without-init-verifier": "Init ML verifier",
+                "without-response-verifier": "response ML verifier",
+            }[target]
+        )
+    else:
+        raise ValueError("unknown ML-DSA verdict identity")
+    return cls, common + claim + "; libraries=" + ";".join(
+        (*driver.LIBRARIES, "mldsa-registration-auth.pvl")
+    )
+
+
+def validate_mldsa_scope(rows):
+    driver = INVENTORY.module("check-mldsa-registration-auth")
+    for row in rows:
+        if row["checker"] != "check-mldsa-registration-auth.py":
+            continue
+        cls, scope = mldsa_class_scope(row["target"], int(row["position"]), driver)
+        if row["class"] != cls or row["scope"] != scope:
+            raise ValueError("ML-DSA assumed-interface class or exact scope differs")
+
+
 def validate_scope(rows):
     """Pin reviewed exclusions and each fs target's actual bounds and libraries."""
+    validate_mldsa_scope(rows)
     for row in rows:
         checker, target, position = row["checker"], row["target"], int(row["position"])
         if row["status"] == "unknown":

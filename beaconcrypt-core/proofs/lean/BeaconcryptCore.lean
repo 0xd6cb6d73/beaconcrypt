@@ -1,3 +1,5 @@
+import BeaconcryptCore.Model.Pqxdh.TranscriptAuth
+import BeaconcryptCore.Computational.MldsaTranscriptAuth
 import BeaconcryptCore.Computational.NonceAeadRandomQueryBounds
 import BeaconcryptCore.Computational.AdaptiveCtxPlaintextQueryBounds
 import BeaconcryptCore.Computational.AdaptiveCtxStoppedRaw

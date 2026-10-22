@@ -5,6 +5,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 SPEC = importlib.util.spec_from_file_location(
@@ -103,6 +104,70 @@ class ExactResponseGate(unittest.TestCase):
     def test_warning_cannot_pass(self):
         with self.assertRaises(ValueError):
             self.check("Warning: unexpected approximation\n" + self.text)
+
+
+class NativeResponseSourceGate(unittest.TestCase):
+    """Textual source controls retain the classical tail's explicit scope."""
+
+    def test_current_signed_source(self):
+        CHECKER.check_source_order()
+
+    def mutate_source(self, old, new):
+        path = CHECKER.HERE.parents[2] / "beaconcrypt/src/server.rs"
+        original = Path.read_text
+        source = original(path)
+        self.assertEqual(source.count(old), 1)
+        changed = source.replace(old, new, 1)
+
+        def read_text(candidate, *args, **kwargs):
+            if candidate == path:
+                return changed
+            return original(candidate, *args, **kwargs)
+
+        with patch.object(Path, "read_text", read_text):
+            with self.assertRaises(ValueError):
+                CHECKER.check_source_order()
+
+    def test_token_server_key_binding_preserved(self):
+        self.mutate_source(
+            "if auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
+            "if false && auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
+        )
+
+    def test_response_uses_accepted_request_hash(self):
+        self.mutate_source(
+            "auth::response_transcript_hash(&authentication.init_hash, &response)",
+            "auth::response_transcript_hash(&[0; 64], &response)",
+        )
+
+    def test_response_signer_role_preserved(self):
+        self.mutate_source(
+            "self.mldsa_identity.sign(AuthRole::Server, &hash)",
+            "self.mldsa_identity.sign(AuthRole::Beacon, &hash)",
+        )
+
+    def test_complete_signed_encoding_preserved(self):
+        self.mutate_source(
+            "signature: &signature,\n\t\t\t..response",
+            "signature: &[],\n\t\t\t..response",
+        )
+
+    def test_peer_map_key_preserved(self):
+        self.mutate_source(
+            "let old = self.known_ids.insert(\n\t\t\tremote_kid,",
+            "let old = self.known_ids.insert(\n\t\t\tself.identity_key_kid,",
+        )
+
+    def test_peer_auth_hash_preserved(self):
+        self.mutate_source(
+            "EstablishedRemote::new(public_key, ratchet, authentication.beacon_hash)",
+            "EstablishedRemote::new(public_key, ratchet, authentication.server_hash)",
+        )
+
+    def test_signing_precedes_commit(self):
+        old = "let signature = self.mldsa_identity.sign(AuthRole::Server, &hash)?;"
+        commit = "let (next_control, established_peer) = verified_pqxdh::server_commit(candidate);"
+        self.mutate_source(old, commit + "\n\t\t" + old)
 
 
 if __name__ == "__main__":

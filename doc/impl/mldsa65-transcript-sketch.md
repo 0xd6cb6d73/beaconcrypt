@@ -2,7 +2,7 @@
 
 # Mandatory ML-DSA-65 transcript authentication sketch
 
-This sketch was initially built from a local snapshot of the in-progress Lean 4.35 port (`17c62b95`) and was subsequently rebased onto the merged `vcvio` state (`248953c9`). The original port worktree is unchanged. This implementation changes Rust and the binding surfaces required by its constructor and wire-format changes. Proof files and generated proof artifacts remain unchanged; their source-fidelity checks require a subsequent proof update.
+This sketch was initially built from a local snapshot of the in-progress Lean 4.35 port (`17c62b95`) and was subsequently rebased onto the merged `vcvio` state (`248953c9`). The original port worktree is unchanged. This implementation changes Rust and the binding surfaces required by its constructor and wire-format changes. The Rust sketch left proof files and generated proof artifacts unchanged. The subsequent [authentication proof increment](mldsa65-proof-extension.md) starts their adaptation; full source refinement and global composition remain open.
 
 Both parties now have independent Ed25519 and RustCrypto `ml-dsa` 0.1.1 ML-DSA-65 identities. `Server::new` and `try_new` take separate optional Ed25519 and ML-DSA seeds; each supplied seed must be 32 uniformly generated secret bytes. `None` generates an independent identity. Beacon construction requires the server's Ed25519 and ML-DSA public keys. Unsigned registration and legacy snapshots are rejected. ML-DSA seeds are persisted in snapshot version three with zeroizing decoding buffers, and peer signing-key hashes survive restore.
 
@@ -20,7 +20,7 @@ The C/Python APIs, Go backends, and WASM ABI carry the mandatory second server k
 
 The mandatory CBOR version-two revision passed 365 runtime Rust tests across every library and integration target except `proverif_transcript_fidelity`, plus 79 Python tests in the worktree's isolated environment. Rust formatting, workspace/all-target/all-feature Clippy, separate beacon-only/server-only feature checks, the native release build, and native Go race tests passed. Clippy retains existing style warnings and the enlarged allocation-free beacon-state enum warning. The pinned EverParse regeneration check reproduced all three generated files exactly; only `transport.rs` changed because of the registration schema additions, while the generic CBOR runtimes and generated data-frame declarations remained byte-identical.
 
-The unchanged proof-fidelity target requires a subsequent proof update for the ML-DSA extension and registration schema; no Lean build, proof regeneration, or `verify-in-shell` gate was run. The existing reviewed BLAKE2b/AEAD known answers and multi-opening fixture remain unchanged by moving authentication fields into CBOR.
+At the implementation commit, the proof-fidelity target required a subsequent proof update for the ML-DSA extension and registration schema; no Lean build, proof regeneration, or `verify-in-shell` gate was run. The existing reviewed BLAKE2b/AEAD known answers and multi-opening fixture remain unchanged by moving authentication fields into CBOR.
 
 The actual WASI guest baseline passed 19 tests plus its isolated allocation-failure probe. The release WASM build, the Wazero Go test suite, and mixed native/WASM handshakes, ratchets, and snapshot transfers passed in both server-role directions.
 

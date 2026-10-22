@@ -368,5 +368,89 @@ class ClassificationTests(unittest.TestCase):
                     self.check(rows)
 
 
+class MldsaClassificationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.expected = CHECK.INVENTORY.fixture_expectations(
+            "check-mldsa-registration-auth"
+        )
+        cls.rows = [
+            row
+            for row in CHECK.read_rows(HERE / "verdict-classes.tsv")
+            if row["checker"] == "check-mldsa-registration-auth.py"
+        ]
+
+    def check(self, rows):
+        CHECK.validate(rows, self.expected)
+        CHECK.validate_mldsa_scope(rows)
+
+    def test_complete_assumed_interface_roster(self):
+        self.assertEqual(len(self.rows), 14)
+        self.check(self.rows)
+        self.assertEqual(sum(row["class"] == "security" for row in self.rows), 2)
+
+    def test_every_new_verdict_is_required(self):
+        for index in range(len(self.rows)):
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                self.check(self.rows[:index] + self.rows[index + 1 :])
+
+    def test_fixture_and_owned_key_scope_cannot_be_promoted(self):
+        for index, row in enumerate(self.rows):
+            if row["class"] == "security":
+                continue
+            changed = copy.deepcopy(self.rows)
+            changed[index]["class"] = "security"
+            with (
+                self.subTest(target=row["target"], position=row["position"]),
+                self.assertRaises(ValueError),
+            ):
+                self.check(changed)
+
+    def test_provenance_cannot_be_relabelled_or_generalized(self):
+        for index in (0, 1):
+            for field, value in [
+                ("class", "definitional"),
+                ("scope", "unconditional post-quantum protocol security"),
+            ]:
+                changed = copy.deepcopy(self.rows)
+                changed[index][field] = value
+                with (
+                    self.subTest(index=index, field=field),
+                    self.assertRaises(ValueError),
+                ):
+                    self.check(changed)
+
+    def test_assumed_primitive_and_no_enrollment_qualifications_are_pinned(self):
+        for phrase in [
+            "unrevealed",
+            "without enrollment",
+            "unforgeability",
+            "no computational/QPT",
+        ]:
+            changed = copy.deepcopy(self.rows)
+            changed[0]["scope"] = changed[0]["scope"].replace(phrase, "")
+            with self.subTest(phrase=phrase), self.assertRaises(ValueError):
+                self.check(changed)
+
+    def test_response_signature_exclusion_is_pinned(self):
+        changed = copy.deepcopy(self.rows)
+        changed[1]["scope"] = changed[1]["scope"].replace(
+            "excluding signature bytes", "including signature bytes"
+        )
+        with self.assertRaises(ValueError):
+            self.check(changed)
+
+    def test_control_status_formula_and_identity_are_pinned(self):
+        for field, value in [
+            ("status", "true"),
+            ("formula_sha256", "0" * 64),
+            ("target", "without-both-verifiers"),
+        ]:
+            changed = copy.deepcopy(self.rows)
+            changed[-1][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.check(changed)
+
+
 if __name__ == "__main__":
     unittest.main()
