@@ -15,10 +15,7 @@ pub(crate) fn mldsa_associated_data(
 	server_hash: &[u8; 64],
 	beacon_hash: &[u8; 64],
 ) -> [u8; AD_SIZE] {
-	let mut ad = *base;
-	ad[153..217].copy_from_slice(server_hash);
-	ad[217..281].copy_from_slice(beacon_hash);
-	ad
+	beaconcrypt_core::authentication::bind_associated_data(base, server_hash, beacon_hash)
 }
 
 const _: () = assert!(crypto_sign::PUBLICKEYBYTES == verified_pqxdh::SIGN_PUBLIC_KEY_SIZE);

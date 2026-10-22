@@ -2,10 +2,12 @@
 import BeaconcryptCore.Model.Pqxdh.Primitives
 
 /-!
-Exact deterministic byte constructions from `beaconcrypt/src/auth.rs` and the
-ML-DSA fingerprint slots in `beaconcrypt/src/pqxdh.rs`. Hashing remains an opaque
-function supplied by the caller; no ML-DSA algorithm or security property is
-asserted. These are unsigned decoded registration fields, not CBOR encodings.
+The production constructors live in `beaconcrypt-core/src/authentication.rs`.
+The authentication and PQXDH adapters use those constructors.
+The `Refinement/TranscriptAuth*.lean` proofs connect their extraction to this byte model.
+Hashing remains an opaque function supplied by the caller.
+No ML-DSA algorithm or security property is asserted here.
+These are unsigned decoded registration fields; CBOR encodings remain outside the model.
 Native primitive and allocation failures remain outside these pure byte functions.
 -/
 set_option autoImplicit false

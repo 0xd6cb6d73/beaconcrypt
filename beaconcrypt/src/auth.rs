@@ -2,20 +2,22 @@
 
 //! ML-DSA-65 identities and domain-separated registration transcript authentication.
 
+use beaconcrypt_core::authentication as transcript;
 use beaconcrypt_parse::{InitKex, KexResponse};
+
 use libsodium_rs::{crypto_generichash, ensure_init, random};
 use ml_dsa::{EncodedVerifyingKey, Keypair, MlDsa65, Signature, SigningKey, VerifyingKey};
+pub(crate) use transcript::AuthRole;
 use zeroize::Zeroizing;
 
+// Literal exports keep cbindgen's C size constants available to the bindings.
 pub const MLDSA_PUBLIC_KEY_LEN: usize = 1952;
 pub const MLDSA_SIGNATURE_LEN: usize = 3309;
-pub(crate) const TRANSCRIPT_HASH_LEN: usize = 64;
+const _: () = assert!(MLDSA_PUBLIC_KEY_LEN == transcript::MLDSA_PUBLIC_KEY_LEN);
+const _: () = assert!(MLDSA_SIGNATURE_LEN == transcript::MLDSA_SIGNATURE_LEN);
+pub(crate) const TRANSCRIPT_HASH_LEN: usize = transcript::TRANSCRIPT_HASH_LEN;
 
 type TranscriptHash = [u8; TRANSCRIPT_HASH_LEN];
-
-const SIGNING_CONTEXT: &[u8] = b"beaconcrypt registration auth v1";
-const INIT_TRANSCRIPT_DOMAIN: &[u8] = b"beaconcrypt ML-DSA-65 init transcript v1\0";
-const RESPONSE_TRANSCRIPT_DOMAIN: &[u8] = b"beaconcrypt ML-DSA-65 response transcript v1\0";
 
 /// A secret ML-DSA-65 identity reconstructed from a 32-byte seed.
 ///
@@ -56,34 +58,13 @@ impl MldsaIdentity {
 	pub(crate) fn sign(&self, role: AuthRole, transcript: &TranscriptHash) -> Option<Vec<u8>> {
 		self.key
 			.expanded_key()
-			.sign_deterministic(&signature_input(role, transcript), SIGNING_CONTEXT)
+			.sign_deterministic(
+				&transcript::build_signature_input(role, transcript),
+				&transcript::SIGNING_CONTEXT,
+			)
 			.ok()
 			.map(|signature| signature.encode().to_vec())
 	}
-}
-
-#[derive(Clone, Copy)]
-pub(crate) enum AuthRole {
-	Beacon,
-	Server,
-}
-
-impl AuthRole {
-	fn label(self) -> &'static [u8] {
-		match self {
-			Self::Beacon => b"beaconcrypt v1 beacon registration",
-			Self::Server => b"beaconcrypt v1 server registration",
-		}
-	}
-}
-
-fn signature_input(role: AuthRole, transcript: &TranscriptHash) -> Vec<u8> {
-	let mut input = Vec::with_capacity(64 + role.label().len() + 1 + transcript.len());
-	input.extend_from_slice(&[b' '; 64]);
-	input.extend_from_slice(role.label());
-	input.push(0);
-	input.extend_from_slice(transcript);
-	input
 }
 
 pub(crate) fn verify(
@@ -99,8 +80,8 @@ pub(crate) fn verify(
 		return false;
 	};
 	VerifyingKey::decode(encoded_key).verify_with_context(
-		&signature_input(role, transcript),
-		SIGNING_CONTEXT,
+		&transcript::build_signature_input(role, transcript),
+		&transcript::SIGNING_CONTEXT,
 		&signature,
 	)
 }
@@ -112,12 +93,6 @@ fn hash_state() -> Option<crypto_generichash::State> {
 
 fn finish_hash(mut state: crypto_generichash::State) -> Option<TranscriptHash> {
 	state.finalize().try_into().ok()
-}
-
-fn hash_field(state: &mut crypto_generichash::State, field: &[u8]) -> Option<()> {
-	state.update(&u64::try_from(field.len()).ok()?.to_le_bytes());
-	state.update(field);
-	Some(())
 }
 
 /// Fingerprint an exact ML-DSA-65 public key with unkeyed BLAKE2b-512.
@@ -137,40 +112,37 @@ pub(crate) fn init_transcript_hash(
 	pinned_server_ed: &[u8; 32],
 	server_auth_key: &[u8; MLDSA_PUBLIC_KEY_LEN],
 ) -> Option<TranscriptHash> {
+	let fields = transcript::InitFields {
+		identity_key: init.identity_key.try_into().ok()?,
+		pre_key: init.pre_key.try_into().ok()?,
+		one_time_key: init.one_time_key.try_into().ok()?,
+		pq_key: init.pq_key.try_into().ok()?,
+		mldsa_public_key: init.mldsa_public_key.try_into().ok()?,
+	};
+	let bytes =
+		transcript::build_init_transcript(fields, server_kid, pinned_server_ed, server_auth_key);
 	let mut state = hash_state()?;
-	state.update(INIT_TRANSCRIPT_DOMAIN);
-	state.update(&server_kid.to_le_bytes());
-	state.update(pinned_server_ed);
-	state.update(init.mldsa_public_key);
-	state.update(server_auth_key);
-	for field in [
-		init.identity_key,
-		init.pre_key,
-		init.one_time_key,
-		init.pq_key,
-	] {
-		hash_field(&mut state, field)?;
-	}
+	state.update(&bytes);
 	finish_hash(state)
 }
 
-/// Hash the complete decoded response after its request hash, excluding the authentication signature.
+/// Hash the core's ordered response parts, excluding the authentication signature.
 pub(crate) fn response_transcript_hash(
 	init_hash: &TranscriptHash,
 	response: &KexResponse<'_>,
 ) -> Option<TranscriptHash> {
+	let fields = transcript::ResponseFields {
+		identity_key: response.identity_key.try_into().ok()?,
+		ephemeral_key: response.ephemeral_key.try_into().ok()?,
+		kem_cipher_text: response.kem_cipher_text.try_into().ok()?,
+		app_cipher_text: response.app_cipher_text,
+		key_id: response.key_id,
+	};
+	let transcript = transcript::build_response_transcript(init_hash, fields)?;
 	let mut state = hash_state()?;
-	state.update(RESPONSE_TRANSCRIPT_DOMAIN);
-	state.update(init_hash);
-	for field in [
-		response.identity_key,
-		response.ephemeral_key,
-		response.kem_cipher_text,
-		response.app_cipher_text,
-	] {
-		hash_field(&mut state, field)?;
+	for part in transcript.parts() {
+		state.update(part);
 	}
-	state.update(&response.key_id.to_le_bytes());
 	finish_hash(state)
 }
 
@@ -240,12 +212,12 @@ mod tests {
 			&decoded
 		));
 		assert!(!verifier.verify_with_context(
-			&signature_input(AuthRole::Server, &transcript),
+			&transcript::build_signature_input(AuthRole::Server, &transcript),
 			b"different context",
 			&decoded
 		));
 		assert!(!verifier.verify_with_context(
-			&signature_input(AuthRole::Server, &transcript),
+			&transcript::build_signature_input(AuthRole::Server, &transcript),
 			&[],
 			&decoded
 		));
@@ -365,30 +337,174 @@ mod tests {
 	}
 
 	#[test]
-	fn variable_field_boundaries_are_authenticated() {
-		let public_key = [0; MLDSA_PUBLIC_KEY_LEN];
-		let hash = |identity, prekey| {
+	fn malformed_fixed_transcript_fields_are_rejected() {
+		let server_key = [7; MLDSA_PUBLIC_KEY_LEN];
+		let init_fields = [
+			vec![1; 33],
+			vec![2; 98],
+			vec![3; 98],
+			vec![4; 1249],
+			vec![6; 1952],
+		];
+		let init_hash = |fields: &[Vec<u8>; 5]| {
 			init_transcript_hash(
 				&InitKex {
-					identity_key: identity,
-					pre_key: prekey,
-					one_time_key: &[],
-					pq_key: &[],
-					mldsa_public_key: &public_key,
+					identity_key: &fields[0],
+					pre_key: &fields[1],
+					one_time_key: &fields[2],
+					pq_key: &fields[3],
+					mldsa_public_key: &fields[4],
 					signature: &[],
 				},
-				0,
-				&[0; 32],
-				&public_key,
+				42,
+				&[5; 32],
+				&server_key,
 			)
-			.unwrap()
 		};
-		assert_ne!(hash(b"ab", b"c"), hash(b"a", b"bc"));
+		assert!(init_hash(&init_fields).is_some());
+		for (index, field) in init_fields.iter().enumerate() {
+			for bad_length in [0, field.len() - 1, field.len() + 1] {
+				let mut malformed = init_fields.clone();
+				malformed[index].resize(bad_length, 0);
+				assert!(
+					init_hash(&malformed).is_none(),
+					"Init field {index}, length {bad_length}"
+				);
+			}
+		}
+		let response_fields = [vec![1; 32], vec![2; 32], vec![3; 1088]];
+		let response_hash = |fields: &[Vec<u8>; 3]| {
+			response_transcript_hash(
+				&[17; 64],
+				&KexResponse {
+					identity_key: &fields[0],
+					ephemeral_key: &fields[1],
+					kem_cipher_text: &fields[2],
+					app_cipher_text: &[],
+					key_id: 42,
+					signature: &[],
+				},
+			)
+		};
+		assert!(response_hash(&response_fields).is_some());
+		for (index, field) in response_fields.iter().enumerate() {
+			for bad_length in [0, field.len() - 1, field.len() + 1] {
+				let mut malformed = response_fields.clone();
+				malformed[index].resize(bad_length, 0);
+				assert!(
+					response_hash(&malformed).is_none(),
+					"Response field {index}, length {bad_length}"
+				);
+			}
+		}
+		let public_key = [0; MLDSA_PUBLIC_KEY_LEN];
 		let fingerprint = public_key_hash(&public_key).unwrap();
 		assert_eq!(
 			fingerprint.as_slice(),
 			crypto_generichash::generichash(&public_key, None, 64).unwrap()
 		);
 		assert!(public_key_hash(&public_key[..1951]).is_none());
+	}
+
+	#[test]
+	fn core_transcripts_preserve_independent_blake2b_known_answers_and_exclude_signatures() {
+		let init = InitKex {
+			identity_key: &[1; 33],
+			pre_key: &[2; 98],
+			one_time_key: &[3; 98],
+			pq_key: &[4; 1249],
+			mldsa_public_key: &[6; 1952],
+			signature: &[],
+		};
+		let init_hash = init_transcript_hash(&init, 42, &[5; 32], &[7; 1952]).unwrap();
+		// Independently calculated with Python hashlib.blake2b over the former adapter formula.
+		assert_eq!(
+			init_hash,
+			[
+				0x10, 0x00, 0xe9, 0xb4, 0x23, 0x18, 0x62, 0x2b, 0xcb, 0x83, 0x37, 0x6d, 0x00, 0x5e,
+				0x45, 0x2a, 0x09, 0xd6, 0xf1, 0xe8, 0x56, 0xd0, 0x6c, 0x9e, 0xb4, 0x19, 0x6f, 0xe1,
+				0x4a, 0xda, 0x33, 0x77, 0xe3, 0x27, 0xb9, 0xf0, 0xc0, 0xc8, 0x7b, 0x17, 0xb6, 0xc7,
+				0x8e, 0x9b, 0x7c, 0xee, 0xe6, 0x80, 0x3d, 0x1f, 0x43, 0x4e, 0x97, 0x51, 0xdc, 0x2f,
+				0xfd, 0xb0, 0x6d, 0xa2, 0xf0, 0x12, 0x08, 0x90
+			]
+		);
+		let mut old_init = b"beaconcrypt ML-DSA-65 init transcript v1\0".to_vec();
+		old_init.extend_from_slice(&42_u64.to_le_bytes());
+		old_init.extend_from_slice(&[5; 32]);
+		old_init.extend_from_slice(&[6; 1952]);
+		old_init.extend_from_slice(&[7; 1952]);
+		for field in [
+			init.identity_key,
+			init.pre_key,
+			init.one_time_key,
+			init.pq_key,
+		] {
+			old_init.extend_from_slice(&(field.len() as u64).to_le_bytes());
+			old_init.extend_from_slice(field);
+		}
+		assert_eq!(old_init.len(), 5495);
+		assert_eq!(
+			init_hash.as_slice(),
+			crypto_generichash::generichash(&old_init, None, 64).unwrap()
+		);
+		assert_eq!(
+			init_transcript_hash(
+				&InitKex {
+					signature: &[0x5a; 3309],
+					..init
+				},
+				42,
+				&[5; 32],
+				&[7; 1952]
+			),
+			Some(init_hash)
+		);
+
+		let response = KexResponse {
+			identity_key: &[1; 32],
+			ephemeral_key: &[2; 32],
+			kem_cipher_text: &[3; 1088],
+			app_cipher_text: &[4; 89],
+			key_id: 42,
+			signature: &[],
+		};
+		let response_hash = response_transcript_hash(&[17; 64], &response).unwrap();
+		assert_eq!(
+			response_hash,
+			[
+				0x89, 0xba, 0xd2, 0xb7, 0xee, 0x00, 0x2e, 0x96, 0x8b, 0x38, 0x6d, 0xc3, 0x61, 0x9e,
+				0xe2, 0xd4, 0xa8, 0x6f, 0xe6, 0x07, 0x31, 0x96, 0x6e, 0xee, 0x6c, 0x46, 0x2b, 0x8a,
+				0x3c, 0xfd, 0xb3, 0x0f, 0xe8, 0x5f, 0x87, 0x6e, 0x85, 0x3b, 0x7e, 0x40, 0x62, 0x71,
+				0xd7, 0x6d, 0xce, 0x63, 0x44, 0x5f, 0x6d, 0xd2, 0x2a, 0xa2, 0x09, 0x62, 0x1a, 0xb9,
+				0x70, 0x3c, 0x99, 0x27, 0x66, 0x37, 0xd3, 0xd2
+			]
+		);
+		let mut old_response = b"beaconcrypt ML-DSA-65 response transcript v1\0".to_vec();
+		old_response.extend_from_slice(&[17; 64]);
+		for field in [
+			response.identity_key,
+			response.ephemeral_key,
+			response.kem_cipher_text,
+			response.app_cipher_text,
+		] {
+			old_response.extend_from_slice(&(field.len() as u64).to_le_bytes());
+			old_response.extend_from_slice(field);
+		}
+		old_response.extend_from_slice(&42_u64.to_le_bytes());
+		assert_eq!(old_response.len(), 1390);
+		assert_eq!(
+			response_hash.as_slice(),
+			crypto_generichash::generichash(&old_response, None, 64).unwrap()
+		);
+		assert_eq!(
+			response_transcript_hash(
+				&[17; 64],
+				&KexResponse {
+					signature: &[0xa5; 3309],
+					..response
+				}
+			),
+			Some(response_hash)
+		);
 	}
 }

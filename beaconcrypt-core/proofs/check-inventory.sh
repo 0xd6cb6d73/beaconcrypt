@@ -46,16 +46,16 @@ declare -A expected_category_counts=(
 	[adapter-rust]=14
 	[adapter-schema]=1
 	[parser-rust]=6
-	[core-rust]=10
+	[core-rust]=11
 	[control]=17
-	[generated-lean]=7
+	[generated-lean]=13
 	[generated-proverif]=1
-	[handwritten-lean]=2019
+	[handwritten-lean]=2022
 	[handwritten-proverif]=296
 	[inventory]=2
-	[lean-control]=12
+	[lean-control]=13
 	[lean-dependency-overlay]=4
-	[validation]=68
+	[validation]=70
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -173,6 +173,8 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/test-verdict-classes.py \
 	proofs/pro-verif/check-mldsa-registration-auth.py \
 	proofs/pro-verif/test-mldsa-registration-auth-checker.py \
+	proofs/extract-authentication.py \
+	tests/authentication.rs \
 	tests/general_registration_admission.rs \
 	tests/proverif_transcript_fidelity.rs \
 	> "$tmp_dir/validation"
@@ -229,6 +231,12 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/Extraction/Types.lean \
 	proofs/lean/BeaconcryptCore/Extraction/TypesExternal.lean \
 	proofs/lean/BeaconcryptCore/Extraction/TypesExternal_Template.lean \
+	proofs/lean/BeaconcryptCore/AuthenticationExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AuthenticationExtraction/FunsExternal.lean \
+	proofs/lean/BeaconcryptCore/AuthenticationExtraction/FunsExternal_Template.lean \
+	proofs/lean/BeaconcryptCore/AuthenticationExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AuthenticationExtraction/TypesExternal.lean \
+	proofs/lean/BeaconcryptCore/AuthenticationExtraction/TypesExternal_Template.lean \
 	> "$tmp_dir/generated-lean"
 compare_set generated-lean "$tmp_dir/generated-lean"
 
@@ -257,6 +265,7 @@ printf '%s\n' \
 	proofs/lean/lake-manifest.json \
 	proofs/lean/lakefile.toml \
 	proofs/lean/lean-toolchain \
+	proofs/lean/BeaconcryptCore/AuthenticationExtraction/provenance.json \
 	proofs/lean/pqxdh_spec.md > "$tmp_dir/lean-control"
 compare_set lean-control "$tmp_dir/lean-control"
 
@@ -933,8 +942,8 @@ for scenario_process in \
 done
 
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 50 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_AUTH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_RECORD|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|TRANSPORT_SCHEMA|TRANSPORT_PARSER|TRANSPORT_SIZING|ADAPTER_WIRE|CBOR_REGISTRATION_MODEL|MLDSA_AUTH_MODEL|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLDSA_REGISTRATION_MODEL|MLDSA_REGISTRATION_QUERIES|MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
+require_line_count 51 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_AUTH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_AUTHENTICATION|CORE_RECORD|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|TRANSPORT_SCHEMA|TRANSPORT_PARSER|TRANSPORT_SIZING|ADAPTER_WIRE|CBOR_REGISTRATION_MODEL|MLDSA_AUTH_MODEL|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLDSA_REGISTRATION_MODEL|MLDSA_REGISTRATION_QUERIES|MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 3 '^const (CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA): &str = TRANSPORT_SCHEMA;$' \
 	"$fidelity_test" "shared CBOR schema aliases"
@@ -985,11 +994,16 @@ require_line_count 1 '^fn check_general_registration_runner_mutations\(\) \{$' \
 require_occurrence_count 1 \
 	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_ratchet_effect_driver\(snapshot\)\?;\s*validate_finite_receive_state_fixture\(snapshot\)\?;\s*validate_registration_lifecycle\(snapshot\)\?;\s*validate_initial_ratchet_fidelity\(snapshot\)\?;\s*validate_later_registration_fidelity\(snapshot\)\?;\s*validate_post_registration_fidelity\(snapshot\)\?;\s*validate_mldsa_source\(snapshot\)\?;\s*validate_mldsa_model\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
+require_line_count 1 '^fn validate_mldsa_core\(snapshot: &Snapshot\) -> Result<\(\), String> \{$' \
+	"$fidelity_test" "ML-DSA extracted core transcript/source validator"
+require_occurrence_count 1 \
+	'fn validate_mldsa_source\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_mldsa_core\(snapshot\)\?;' \
+	"ML-DSA adapter validates the exact runtime core builders" "$fidelity_test"
 require_line_count 1 '^fn validate_mldsa_source\(snapshot: &Snapshot\) -> Result<\(\), String> \{$' \
 	"$fidelity_test" "ML-DSA native transcript/source validator"
 require_line_count 1 '^fn validate_mldsa_model\(snapshot: &Snapshot\) -> Result<\(\), String> \{$' \
 	"$fidelity_test" "ML-DSA assumed-interface symbolic transcription validator"
-require_line_count 1 '^const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 71;$' \
+require_line_count 1 '^const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 90;$' \
 	"$fidelity_test" "ML-DSA exact source/model mutation count"
 require_occurrence_count 1 \
 	'(?s)fn mldsa_transcript_source_and_model_mutations_are_rejected\(\) \{.*?assert_eq!\(checked, MLDSA_TRANSCRIPT_MUTATION_COUNT\);\s*\}' \
@@ -1065,7 +1079,26 @@ for mldsa_transcript_mutation in \
 	mldsa_model_response_pin_substitution \
 	mldsa_model_response_retained_hash_substitution \
 	mldsa_model_owned_admission_query_omitted \
-	mldsa_model_compromise_control_omitted; do
+	mldsa_model_compromise_control_omitted \
+	mldsa_core_init_length \
+	mldsa_core_response_prefix_length \
+	mldsa_core_signature_input_length \
+	mldsa_core_request_identity_length \
+	mldsa_core_request_signed_key_length \
+	mldsa_core_request_pq_length \
+	mldsa_core_response_identity_length \
+	mldsa_core_response_kem_length \
+	mldsa_core_response_length_substitution \
+	mldsa_core_response_ciphertext_substitution \
+	mldsa_core_response_private_prefix \
+	mldsa_adapter_request_identity_mapping \
+	mldsa_adapter_request_signature_role_shared \
+	mldsa_adapter_request_server_pin_substitution \
+	mldsa_adapter_request_extra_hash_bytes \
+	mldsa_adapter_response_ephemeral_mapping \
+	mldsa_adapter_response_core_request_hash_substitution \
+	mldsa_adapter_response_extra_hash_bytes \
+	mldsa_adapter_ad_hashes_reversed; do
 	require_line_count 1 "^[[:space:]]*\"${mldsa_transcript_mutation}\",$" \
 		"$fidelity_test" "ML-DSA ${mldsa_transcript_mutation} source/model control"
 done

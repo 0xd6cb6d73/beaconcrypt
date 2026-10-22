@@ -130,6 +130,7 @@ PROVERIF_APPLICATION_TARGETS := \
 
 LEAN_DIR := proofs/lean
 LEAN_ROOT := $(LEAN_DIR)/BeaconcryptCore.lean
+AUTHENTICATION_EXTRACTION_WORK_DIR ?= $(abspath ../.build/proofs/authentication-extraction)
 LEAN_PROOF_PATHS := $(LEAN_DIR)/BeaconcryptCore $(LEAN_DIR)/BeaconcryptCore.lean
 LEAN_GENERATED_PATHS := \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction.lean \
@@ -138,6 +139,7 @@ LEAN_GENERATED_PATHS := \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction/FunsExternal_Template.lean \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction/Types.lean \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction/TypesExternal_Template.lean \
+	$(LEAN_DIR)/BeaconcryptCore/AuthenticationExtraction \
 	$(LEAN_DIR)/llbc
 
 # Hax creates the Lean project/root files only when they are absent.
@@ -155,6 +157,7 @@ LEAN_GENERATED_PATHS := \
 	check-proverif-transcript-fidelity check-proverif-primitive-fidelity check-proverif-active-strong-secrecy \
 	check-proverif-pending-registration check-proverif-aead-differential check-proverif-registration-provenance check-proverif-delayed-response check-proverif-exact-far check-proverif-record-origin check-proverif-tasking-origin check-proverif-application-secrecy check-proverif-exact-interface-strong \
 	check-proverif-mldsa-auth \
+	extract-authentication-lean check-generated-authentication-lean \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
 	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
 	check-proverif-extraction check-generated check-generated-lean \
@@ -173,6 +176,7 @@ verify:
 # without recursively starting Nix.
 verify-in-shell:
 	$(MAKE) check-toolchain
+	$(MAKE) check-generated-authentication-lean
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
 	$(MAKE) check-proverif-mldsa-auth
@@ -812,6 +816,16 @@ extract-lean:
 	rm -rf $(LEAN_DIR)/llbc
 	cargo hax -C --locked ';' into lean
 
+# The authentication cohort is regenerated separately while the global AD/CTX migration proceeds.
+# Both modes retain their isolated extraction evidence and preserve the historical Extraction files.
+extract-authentication-lean:
+	python3 proofs/extract-authentication.py --write \
+		--work-dir '$(AUTHENTICATION_EXTRACTION_WORK_DIR)'
+
+check-generated-authentication-lean:
+	python3 proofs/extract-authentication.py --check \
+		--work-dir '$(AUTHENTICATION_EXTRACTION_WORK_DIR)'
+
 check-lean-policy:
 	@if rg -n --pcre2 '\b(?:sorry|admit|axiom)\b|sorryAx' $(LEAN_PROOF_PATHS) \
 		--glob '*.lean'; then \
@@ -835,6 +849,7 @@ check-lean-root:
 		BeaconcryptCore.PanicFreedom.API \
 		BeaconcryptCore.Refinement.PqxdhSession \
 		BeaconcryptCore.Refinement.PqxdhCommitment \
+		BeaconcryptCore.Refinement.TranscriptAuth \
 		BeaconcryptCore.Verification.PqxdhCommitmentRefinement \
 		BeaconcryptCore.Refinement.RatchetControlRestore \
 		BeaconcryptCore.Refinement.RatchetEffectRefinement \
@@ -879,6 +894,7 @@ verify-lean:
 
 verify-lean-in-shell:
 	$(MAKE) check-toolchain
+	$(MAKE) check-generated-authentication-lean
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
 

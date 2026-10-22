@@ -72,6 +72,7 @@ const ADAPTER_RATCHET: &str = include_str!("../../beaconcrypt/src/ratchet.rs");
 const ADAPTER_SHARED: &str = include_str!("../../beaconcrypt/src/shared.rs");
 const ADAPTER_SERVER: &str = include_str!("../../beaconcrypt/src/server.rs");
 const ADAPTER_BEACON: &str = include_str!("../../beaconcrypt/src/beacon.rs");
+const CORE_AUTHENTICATION: &str = include_str!("../src/authentication.rs");
 const CORE_RECORD: &str = include_str!("../src/record.rs");
 const CORE_COMMITMENT: &str = include_str!("../src/commitment.rs");
 const CORE_PQXDH: &str = include_str!("../src/pqxdh.rs");
@@ -214,6 +215,12 @@ const EXPECTED_FACTS: &[&str] = &[
 	"mldsa.symbolic.response_origin=pinned_uncompromised_server_MLkey_and_retained_request_hash",
 	"mldsa.symbolic.controls=owned_key_admission,explicit_compromise,role_context_request_separation,AD_hash_slot_binding",
 	"mldsa.source_fidelity=reviewed_transcription_guards:not_Rust_to_ProVerif_semantic_compilation",
+	"mldsa.transcript.core=beaconcrypt-core/src/authentication.rs:pure_bytes_without_hashing_or_signing",
+	"mldsa.transcript.lengths=Init_5495,response_prefix_1293,assigned_id_8,signature_input_163",
+	"mldsa.transcript.fixed_fields=adapter_checked_slice_to_array_conversions_before_core_construction",
+	"mldsa.transcript.response=private_prefix,actual_borrowed_CTU,LE64_assigned_id:checked_actual_CTU_length",
+	"mldsa.transcript.hashing=adapter_unkeyed_BLAKE2b512_over_exact_core_Init_or_ordered_response_parts",
+	"mldsa.transcript.transport_limit=parser_codec_33554432:not_preimage_builder",
 	"transport.format=deterministic_CBOR:definite_arrays,canonical_primitive_encodings",
 	"transport.prefix.init=version:2,kind:0,array_length:8",
 	"transport.prefix.response=version:2,kind:1,array_length:8",
@@ -754,6 +761,7 @@ struct Snapshot {
 	adapter_auth: String,
 	adapter_pqxdh: String,
 	adapter_shared: String,
+	core_authentication: String,
 	core_record: String,
 	core_commitment: String,
 	core_pqxdh: String,
@@ -811,6 +819,7 @@ impl Snapshot {
 			adapter_auth: ADAPTER_AUTH.to_owned(),
 			adapter_pqxdh: ADAPTER_PQXDH.to_owned(),
 			adapter_shared: ADAPTER_SHARED.to_owned(),
+			core_authentication: CORE_AUTHENTICATION.to_owned(),
 			core_record: CORE_RECORD.to_owned(),
 			core_commitment: CORE_COMMITMENT.to_owned(),
 			core_pqxdh: CORE_PQXDH.to_owned(),
@@ -1544,47 +1553,165 @@ fn validate_phase1_source(snapshot: &Snapshot) -> Result<(), String> {
 
 // This checks the adapter's use of an assumed signature primitive. It does not
 // establish ML-DSA correctness, unforgeability, or a whole-protocol refinement.
-fn validate_mldsa_source(snapshot: &Snapshot) -> Result<(), String> {
-	let source = compact(&uncommented_rust(&snapshot.adapter_auth)?);
+
+fn validate_mldsa_core(snapshot: &Snapshot) -> Result<(), String> {
+	let source = compact(&uncommented_rust(&snapshot.core_authentication)?);
 	for wanted in [
 		"pubconstMLDSA_PUBLIC_KEY_LEN:usize=1952;",
 		"pubconstMLDSA_SIGNATURE_LEN:usize=3309;",
-		"pub(crate)constTRANSCRIPT_HASH_LEN:usize=64;",
-		"constSIGNING_CONTEXT:&[u8]=b\"beaconcryptregistrationauthv1\";",
-		"constINIT_TRANSCRIPT_DOMAIN:&[u8]=b\"beaconcryptML-DSA-65inittranscriptv1\\0\";",
-		"constRESPONSE_TRANSCRIPT_DOMAIN:&[u8]=b\"beaconcryptML-DSA-65responsetranscriptv1\\0\";",
+		"pubconstTRANSCRIPT_HASH_LEN:usize=64;",
+		"pubconstINIT_DOMAIN:[u8;41]=*b\"beaconcryptML-DSA-65inittranscriptv1\\0\";",
+		"pubconstRESPONSE_DOMAIN:[u8;45]=*b\"beaconcryptML-DSA-65responsetranscriptv1\\0\";",
+		"pubconstSIGNING_CONTEXT:[u8;32]=*b\"beaconcryptregistrationauthv1\";",
+		"pubconstINIT_TRANSCRIPT_LEN:usize=5495;",
+		"pubconstRESPONSE_PREFIX_LEN:usize=1293;",
+		"pubconstSIGNATURE_INPUT_LEN:usize=163;",
 	] {
 		require_once(&source, wanted, "MLDSA fixed primitive and domain boundary")?;
 	}
-	let labels = rust_body(&snapshot.adapter_auth, "label")?;
 	for wanted in [
-		"Self::Beacon=>b\"beaconcryptv1beaconregistration\",",
-		"Self::Server=>b\"beaconcryptv1serverregistration\",",
+		"pubconstBEACON_LABEL:[u8;34]=*b\"beaconcryptv1beaconregistration\";",
+		"pubconstSERVER_LABEL:[u8;34]=*b\"beaconcryptv1serverregistration\";",
 	] {
-		require_once(&labels, wanted, "MLDSA distinct role labels")?;
+		require_once(&source, wanted, "MLDSA distinct role labels")?;
 	}
-	let input = rust_body(&snapshot.adapter_auth, "signature_input")?;
+	let le64 = rust_body(&snapshot.core_authentication, "encode_u64_le")?;
+	require_once(
+		&le64,
+		"[valueasu8,(value>>8)asu8,(value>>16)asu8,(value>>24)asu8,(value>>32)asu8,(value>>40)asu8,(value>>48)asu8,(value>>56)asu8,]",
+		"MLDSA variable-field length framing",
+	)?;
+	let init = rust_body(&snapshot.core_authentication, "build_init_transcript")?;
+	require_ordered_once(
+		&init,
+		&[
+			"letserver_id=encode_u64_le(server_id);",
+			"letidentity_len=encode_u64_le(33);",
+			"letsigned_key_len=encode_u64_le(98);",
+			"letpq_key_len=encode_u64_le(1249);",
+			"ifi<41{INIT_DOMAIN[i]}",
+			"elseifi<49{server_id[i-41]}",
+			"elseifi<81{server_ed[i-49]}",
+			"elseifi<2033{fields.mldsa_public_key[i-81]}",
+			"elseifi<3985{server_mldsa[i-2033]}",
+			"elseifi<3993{identity_len[i-3985]}",
+			"elseifi<4026{fields.identity_key[i-3993]}",
+			"elseifi<4034{signed_key_len[i-4026]}",
+			"elseifi<4132{fields.pre_key[i-4034]}",
+			"elseifi<4140{signed_key_len[i-4132]}",
+			"elseifi<4238{fields.one_time_key[i-4140]}",
+			"elseifi<4246{pq_key_len[i-4238]}",
+			"else{fields.pq_key[i-4246]}",
+		],
+		"MLDSA request transcript field order and pins",
+	)?;
+	let response = rust_body(&snapshot.core_authentication, "build_response_prefix")?;
+	require_ordered_once(
+		&response,
+		&[
+			"letpublic_key_len=encode_u64_le(32);",
+			"letkem_len=encode_u64_le(1088);",
+			"letapp_len=encode_u64_le(app_len);",
+			"ifi<45{RESPONSE_DOMAIN[i]}",
+			"elseifi<109{init_hash[i-45]}",
+			"elseifi<117{public_key_len[i-109]}",
+			"elseifi<149{identity[i-117]}",
+			"elseifi<157{public_key_len[i-149]}",
+			"elseifi<189{ephemeral[i-157]}",
+			"elseifi<197{kem_len[i-189]}",
+			"elseifi<1285{kem[i-197]}",
+			"else{app_len[i-1285]}",
+		],
+		"MLDSA complete response transcript",
+	)?;
+	require_once(
+		&source,
+		"pubstructResponseTranscript<'a>{prefix:[u8;RESPONSE_PREFIX_LEN],application:&'a[u8],assigned_id:[u8;8],}",
+		"MLDSA private response streaming capability",
+	)?;
+	let parts = rust_body(&snapshot.core_authentication, "parts")?;
+	require_once(
+		&parts,
+		"[&self.prefix,self.application,&self.assigned_id]",
+		"MLDSA ordered response streaming parts",
+	)?;
+	let response = rust_body(&snapshot.core_authentication, "build_response_transcript")?;
+	require_ordered_once(
+		&response,
+		&[
+			"letapp_len=matchu64::try_from(fields.app_cipher_text.len()){Ok(len)=>len,Err(_)=>returnNone,};",
+			"Some(ResponseTranscript{prefix:build_response_prefix(init_hash,fields.identity_key,fields.ephemeral_key,fields.kem_cipher_text,app_len,),application:fields.app_cipher_text,assigned_id:encode_u64_le(fields.key_id),})",
+		],
+		"MLDSA response binds streamed ciphertext length and assigned identifier",
+	)?;
+	let input = rust_body(&snapshot.core_authentication, "build_signature_input")?;
 	require_ordered_once(
 		&input,
 		&[
-			"input.extend_from_slice(&[b'';64]);",
-			"input.extend_from_slice(role.label());",
-			"input.push(0);",
-			"input.extend_from_slice(transcript);",
+			"letlabel=matchrole{AuthRole::Beacon=>BEACON_LABEL,AuthRole::Server=>SERVER_LABEL,};",
+			"ifi<64{b''}",
+			"elseifi<98{label[i-64]}",
+			"elseifi==98{0}",
+			"else{digest[i-99]}",
 		],
 		"MLDSA TLS-style signed input",
 	)?;
+	let ad = rust_body(&snapshot.core_authentication, "bind_associated_data")?;
+	require_ordered_once(
+		&ad,
+		&[
+			"ifi<153{base[i]}",
+			"elseifi<217{server_hash[i-153]}",
+			"else{beacon_hash[i-217]}",
+		],
+		"MLDSA associated-data hash-slot order",
+	)?;
+	Ok(())
+}
+
+fn validate_mldsa_source(snapshot: &Snapshot) -> Result<(), String> {
+	validate_mldsa_core(snapshot)?;
+	let source = compact(&uncommented_rust(&snapshot.adapter_auth)?);
+	for wanted in [
+		"usebeaconcrypt_core::authenticationastranscript;",
+		"pub(crate)usetranscript::AuthRole;",
+		"pubconstMLDSA_PUBLIC_KEY_LEN:usize=1952;",
+		"pubconstMLDSA_SIGNATURE_LEN:usize=3309;",
+		"const_:()=assert!(MLDSA_PUBLIC_KEY_LEN==transcript::MLDSA_PUBLIC_KEY_LEN);",
+		"const_:()=assert!(MLDSA_SIGNATURE_LEN==transcript::MLDSA_SIGNATURE_LEN);",
+		"pub(crate)constTRANSCRIPT_HASH_LEN:usize=transcript::TRANSCRIPT_HASH_LEN;",
+	] {
+		require_once(
+			&source,
+			wanted,
+			"MLDSA adapter uses core transcript definitions",
+		)?;
+	}
+	for unwanted in [
+		"fn hash_field(",
+		"fn signature_input(",
+		"enum AuthRole",
+		"const INIT_TRANSCRIPT_DOMAIN",
+		"const RESPONSE_TRANSCRIPT_DOMAIN",
+		"const SIGNING_CONTEXT",
+	] {
+		forbid(
+			&snapshot.adapter_auth,
+			unwanted,
+			"MLDSA duplicate adapter transcript construction",
+		)?;
+	}
 	let sign = rust_body(&snapshot.adapter_auth, "sign")?;
 	require_once(
 		&sign,
-		".sign_deterministic(&signature_input(role,transcript),SIGNING_CONTEXT)",
+		".sign_deterministic(&transcript::build_signature_input(role,transcript),&transcript::SIGNING_CONTEXT,)",
 		"MLDSA signing context and input",
 	)?;
 	let verify = rust_body(&snapshot.adapter_auth, "verify")?;
 	for wanted in [
 		"letOk(encoded_key)=<&EncodedVerifyingKey<MlDsa65>>::try_from(public_key)else{returnfalse;};",
 		"letOk(signature)=Signature::<MlDsa65>::try_from(signature)else{returnfalse;};",
-		"VerifyingKey::decode(encoded_key).verify_with_context(&signature_input(role,transcript),SIGNING_CONTEXT,&signature,)",
+		"VerifyingKey::decode(encoded_key).verify_with_context(&transcript::build_signature_input(role,transcript),&transcript::SIGNING_CONTEXT,&signature,)",
 	] {
 		require_once(
 			&verify,
@@ -1598,15 +1725,6 @@ fn validate_mldsa_source(snapshot: &Snapshot) -> Result<(), String> {
 		"crypto_generichash::State::new(None,TRANSCRIPT_HASH_LEN).ok()",
 		"MLDSA unkeyed BLAKE2b512 transcript hash",
 	)?;
-	let field = rust_body(&snapshot.adapter_auth, "hash_field")?;
-	require_ordered_once(
-		&field,
-		&[
-			"state.update(&u64::try_from(field.len()).ok()?.to_le_bytes());",
-			"state.update(field);",
-		],
-		"MLDSA variable-field length framing",
-	)?;
 	let fingerprint = rust_body(&snapshot.adapter_auth, "public_key_hash")?;
 	require_ordered_once(
 		&fingerprint,
@@ -1618,51 +1736,47 @@ fn validate_mldsa_source(snapshot: &Snapshot) -> Result<(), String> {
 		],
 		"MLDSA public-key fingerprint",
 	)?;
-	let init_hash = rust_body(&snapshot.adapter_auth, "init_transcript_hash")?;
+	let init = rust_body(&snapshot.adapter_auth, "init_transcript_hash")?;
 	require_ordered_once(
-		&init_hash,
+		&init,
 		&[
-			"state.update(INIT_TRANSCRIPT_DOMAIN);",
-			"state.update(&server_kid.to_le_bytes());",
-			"state.update(pinned_server_ed);",
-			"state.update(init.mldsa_public_key);",
-			"state.update(server_auth_key);",
-			"forfieldin[init.identity_key,init.pre_key,init.one_time_key,init.pq_key,]{hash_field(&mutstate,field)?;}",
+			"letfields=transcript::InitFields{identity_key:init.identity_key.try_into().ok()?,pre_key:init.pre_key.try_into().ok()?,one_time_key:init.one_time_key.try_into().ok()?,pq_key:init.pq_key.try_into().ok()?,mldsa_public_key:init.mldsa_public_key.try_into().ok()?,};",
+			"letbytes=transcript::build_init_transcript(fields,server_kid,pinned_server_ed,server_auth_key);",
+			"letmutstate=hash_state()?;",
+			"state.update(&bytes);",
 			"finish_hash(state)",
 		],
 		"MLDSA request transcript field order and pins",
 	)?;
-	forbid(
-		&init_hash,
-		"init.signature",
-		"MLDSA request signature exclusion",
-	)?;
-	let response_hash = rust_body(&snapshot.adapter_auth, "response_transcript_hash")?;
+	forbid(&init, "init.signature", "MLDSA request signature exclusion")?;
+	if count(&init, "state.update(") != 1 {
+		return Err("MLDSA adapter must hash the exact core Init bytes once".to_owned());
+	}
+	let response = rust_body(&snapshot.adapter_auth, "response_transcript_hash")?;
 	require_ordered_once(
-		&response_hash,
+		&response,
 		&[
-			"state.update(RESPONSE_TRANSCRIPT_DOMAIN);",
-			"state.update(init_hash);",
-			"forfieldin[response.identity_key,response.ephemeral_key,response.kem_cipher_text,response.app_cipher_text,]{hash_field(&mutstate,field)?;}",
-			"state.update(&response.key_id.to_le_bytes());",
+			"letfields=transcript::ResponseFields{identity_key:response.identity_key.try_into().ok()?,ephemeral_key:response.ephemeral_key.try_into().ok()?,kem_cipher_text:response.kem_cipher_text.try_into().ok()?,app_cipher_text:response.app_cipher_text,key_id:response.key_id,};",
+			"lettranscript=transcript::build_response_transcript(init_hash,fields)?;",
+			"letmutstate=hash_state()?;",
+			"forpartintranscript.parts(){state.update(part);}",
 			"finish_hash(state)",
 		],
 		"MLDSA complete response transcript",
 	)?;
 	forbid(
-		&response_hash,
+		&response,
 		"response.signature",
 		"MLDSA response signature exclusion",
 	)?;
+	if count(&response, "state.update(") != 1 {
+		return Err("MLDSA adapter must hash exactly the ordered core response parts".to_owned());
+	}
 	let helper = rust_body(&snapshot.adapter_pqxdh, "mldsa_associated_data")?;
-	require_ordered_once(
+	require_once(
 		&helper,
-		&[
-			"letmutad=*base;",
-			"ad[153..217].copy_from_slice(server_hash);",
-			"ad[217..281].copy_from_slice(beacon_hash);ad",
-		],
-		"MLDSA associated-data hash-slot order",
+		"beaconcrypt_core::authentication::bind_associated_data(base,server_hash,beacon_hash)",
+		"MLDSA associated-data core delegation",
 	)?;
 	let server_source = compact(&uncommented_rust(&snapshot.adapter_server)?);
 	require_once(
@@ -22727,6 +22841,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 	if make_recipe(makefile, "verify-in-shell:")?
 		!= invoked(&[
 			"check-toolchain",
+			"check-generated-authentication-lean",
 			"extract-proverif",
 			"check-proverif",
 			"check-proverif-mldsa-auth",
@@ -24401,6 +24516,12 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 			"serial fs group recipe changed",
 		),
 		(
+			"authentication extraction freshness dropped from verify-in-shell",
+			"\t$(MAKE) check-toolchain\n\t$(MAKE) check-generated-authentication-lean\n\t$(MAKE) extract-proverif\n",
+			"\t$(MAKE) check-toolchain\n\t$(MAKE) extract-proverif\n",
+			"verify-in-shell must run check-proverif-fs",
+		),
+		(
 			"fs group dropped from verify-in-shell",
 			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) check-proverif-exact-interface-strong\n\t$(MAKE) extract-lean\n",
 			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) check-proverif-exact-interface-strong\n\t$(MAKE) extract-lean\n",
@@ -24483,7 +24604,7 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		);
 		checked += 1;
 	}
-	assert_eq!(checked, 15);
+	assert_eq!(checked, 16);
 }
 
 #[test]
@@ -26026,7 +26147,7 @@ fn serial_proverif_ci_preserves_every_gate_and_separate_group() {
 	}
 }
 
-const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 71;
+const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 90;
 
 #[test]
 fn mldsa_transcript_source_and_model_mutations_are_rejected() {
@@ -26041,7 +26162,7 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"",
 			"MLDSA_PUBLIC_KEY_LEN: usize = 1952",
 			"MLDSA_PUBLIC_KEY_LEN: usize = 1951",
-			"fixed primitive and domain",
+			"adapter uses core transcript definitions",
 		),
 		(
 			"mldsa_signature_length",
@@ -26049,11 +26170,11 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"",
 			"MLDSA_SIGNATURE_LEN: usize = 3309",
 			"MLDSA_SIGNATURE_LEN: usize = 3308",
-			"fixed primitive and domain",
+			"adapter uses core transcript definitions",
 		),
 		(
 			"mldsa_signing_context",
-			"adapter_auth",
+			"core_authentication",
 			"",
 			"b\"beaconcrypt registration auth v1\"",
 			"b\"beaconcrypt registration auth v2\"",
@@ -26061,7 +26182,7 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 		),
 		(
 			"mldsa_init_domain",
-			"adapter_auth",
+			"core_authentication",
 			"",
 			"beaconcrypt ML-DSA-65 init transcript v1",
 			"beaconcrypt ML-DSA-65 init transcript v2",
@@ -26069,7 +26190,7 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 		),
 		(
 			"mldsa_response_domain",
-			"adapter_auth",
+			"core_authentication",
 			"",
 			"beaconcrypt ML-DSA-65 response transcript v1",
 			"beaconcrypt ML-DSA-65 response transcript v2",
@@ -26077,58 +26198,58 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 		),
 		(
 			"mldsa_beacon_role_label",
-			"adapter_auth",
+			"core_authentication",
 			"",
-			"Self::Beacon => b\"beaconcrypt v1 beacon registration\"",
-			"Self::Beacon => b\"beaconcrypt v1 server registration\"",
+			"BEACON_LABEL: [u8; 34] = *b\"beaconcrypt v1 beacon registration\"",
+			"BEACON_LABEL: [u8; 34] = *b\"beaconcrypt v1 server registration\"",
 			"distinct role labels",
 		),
 		(
 			"mldsa_server_role_label",
-			"adapter_auth",
+			"core_authentication",
 			"",
-			"Self::Server => b\"beaconcrypt v1 server registration\"",
-			"Self::Server => b\"beaconcrypt v1 beacon registration\"",
+			"SERVER_LABEL: [u8; 34] = *b\"beaconcrypt v1 server registration\"",
+			"SERVER_LABEL: [u8; 34] = *b\"beaconcrypt v1 beacon registration\"",
 			"distinct role labels",
 		),
 		(
 			"mldsa_signed_spaces",
-			"adapter_auth",
-			"fn signature_input",
-			"&[b' '; 64]",
-			"&[b' '; 63]",
+			"core_authentication",
+			"fn build_signature_input",
+			"b' '",
+			"b'!'",
 			"TLS-style signed input",
 		),
 		(
 			"mldsa_signed_separator",
-			"adapter_auth",
-			"fn signature_input",
-			"input.push(0);",
-			"input.push(1);",
+			"core_authentication",
+			"fn build_signature_input",
+			"else if i == 98",
+			"else if i == 99",
 			"TLS-style signed input",
 		),
 		(
 			"mldsa_signed_hash",
-			"adapter_auth",
-			"fn signature_input",
-			"input.extend_from_slice(transcript);",
-			"input.extend_from_slice(&[0; 64]);",
+			"core_authentication",
+			"fn build_signature_input",
+			"digest[i - 99]",
+			"0",
 			"TLS-style signed input",
 		),
 		(
 			"mldsa_sign_context_substitution",
 			"adapter_auth",
 			"fn sign(",
-			".sign_deterministic(&signature_input(role, transcript), SIGNING_CONTEXT)",
-			".sign_deterministic(&signature_input(role, transcript), b\"\")",
+			"&transcript::SIGNING_CONTEXT,",
+			"&[],",
 			"signing context and input",
 		),
 		(
 			"mldsa_verify_context_substitution",
 			"adapter_auth",
 			"fn verify(",
-			"\n\t\tSIGNING_CONTEXT,",
-			"\n\t\tb\"\",",
+			"&transcript::SIGNING_CONTEXT,",
+			"&[],",
 			"canonical parsing and verification context",
 		),
 		(
@@ -26157,7 +26278,7 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 		),
 		(
 			"mldsa_transcript_hash_output_size",
-			"adapter_auth",
+			"core_authentication",
 			"",
 			"TRANSCRIPT_HASH_LEN: usize = 64",
 			"TRANSCRIPT_HASH_LEN: usize = 32",
@@ -26165,19 +26286,19 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 		),
 		(
 			"mldsa_variable_length_big_endian",
-			"adapter_auth",
-			"fn hash_field",
-			"to_le_bytes()",
-			"to_be_bytes()",
+			"core_authentication",
+			"fn encode_u64_le",
+			"(value >> 8) as u8",
+			"(value >> 56) as u8",
 			"variable-field length framing",
 		),
 		(
 			"mldsa_variable_field_bytes_substitution",
-			"adapter_auth",
-			"fn hash_field",
-			"state.update(field);",
-			"state.update(&[]);",
-			"variable-field length framing",
+			"core_authentication",
+			"fn build_init_transcript",
+			"fields.identity_key[i - 3993]",
+			"0",
+			"request transcript field order and pins",
 		),
 		(
 			"mldsa_public_key_hash_length",
@@ -26197,42 +26318,42 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 		),
 		(
 			"mldsa_request_server_id_big_endian",
-			"adapter_auth",
-			"fn init_transcript_hash",
-			"server_kid.to_le_bytes()",
-			"server_kid.to_be_bytes()",
+			"core_authentication",
+			"fn build_init_transcript",
+			"let server_id = encode_u64_le(server_id);",
+			"let server_id = server_id.to_be_bytes();",
 			"request transcript field order and pins",
 		),
 		(
 			"mldsa_request_ed_pin_omitted",
-			"adapter_auth",
-			"fn init_transcript_hash",
-			"state.update(pinned_server_ed);",
-			"state.update(&[]);",
+			"core_authentication",
+			"fn build_init_transcript",
+			"server_ed[i - 49]",
+			"0",
 			"request transcript field order and pins",
 		),
 		(
 			"mldsa_request_beacon_ml_key_omitted",
-			"adapter_auth",
-			"fn init_transcript_hash",
-			"state.update(init.mldsa_public_key);",
-			"state.update(&[]);",
+			"core_authentication",
+			"fn build_init_transcript",
+			"fields.mldsa_public_key[i - 81]",
+			"0",
 			"request transcript field order and pins",
 		),
 		(
 			"mldsa_request_server_ml_key_omitted",
-			"adapter_auth",
-			"fn init_transcript_hash",
-			"state.update(server_auth_key);",
-			"state.update(&[]);",
+			"core_authentication",
+			"fn build_init_transcript",
+			"server_mldsa[i - 2033]",
+			"0",
 			"request transcript field order and pins",
 		),
 		(
 			"mldsa_request_classical_field_order",
-			"adapter_auth",
-			"fn init_transcript_hash",
-			"init.pre_key,\n\t\tinit.one_time_key,",
-			"init.one_time_key,\n\t\tinit.pre_key,",
+			"core_authentication",
+			"fn build_init_transcript",
+			"fields.pre_key[i - 4034]",
+			"fields.one_time_key[i - 4034]",
 			"request transcript field order and pins",
 		),
 		(
@@ -26245,27 +26366,27 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 		),
 		(
 			"mldsa_response_request_hash_omitted",
-			"adapter_auth",
-			"fn response_transcript_hash",
-			"state.update(init_hash);",
-			"state.update(&[]);",
+			"core_authentication",
+			"fn build_response_prefix",
+			"init_hash[i - 45]",
+			"0",
 			"complete response transcript",
 		),
 		(
 			"mldsa_response_field_order",
-			"adapter_auth",
-			"fn response_transcript_hash",
-			"response.kem_cipher_text,\n\t\tresponse.app_cipher_text,",
-			"response.app_cipher_text,\n\t\tresponse.kem_cipher_text,",
-			"complete response transcript",
+			"core_authentication",
+			"fn parts",
+			"[&self.prefix, self.application, &self.assigned_id]",
+			"[&self.prefix, &self.assigned_id, self.application]",
+			"ordered response streaming parts",
 		),
 		(
 			"mldsa_response_assigned_id_big_endian",
-			"adapter_auth",
-			"fn response_transcript_hash",
-			"response.key_id.to_le_bytes()",
-			"response.key_id.to_be_bytes()",
-			"complete response transcript",
+			"core_authentication",
+			"fn build_response_transcript",
+			"encode_u64_le(fields.key_id)",
+			"fields.key_id.to_be_bytes()",
+			"response binds streamed ciphertext length and assigned identifier",
 		),
 		(
 			"mldsa_response_hashes_signature",
@@ -26277,18 +26398,18 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 		),
 		(
 			"mldsa_ad_server_hash_slot",
-			"adapter_pqxdh",
-			"fn mldsa_associated_data",
-			"ad[153..217].copy_from_slice(server_hash);",
-			"ad[153..217].copy_from_slice(beacon_hash);",
+			"core_authentication",
+			"fn bind_associated_data",
+			"server_hash[i - 153]",
+			"beacon_hash[i - 153]",
 			"associated-data hash-slot order",
 		),
 		(
 			"mldsa_ad_beacon_hash_slot",
-			"adapter_pqxdh",
-			"fn mldsa_associated_data",
-			"ad[217..281].copy_from_slice(beacon_hash);",
-			"ad[217..281].copy_from_slice(server_hash);",
+			"core_authentication",
+			"fn bind_associated_data",
+			"beacon_hash[i - 217]",
+			"server_hash[i - 217]",
 			"associated-data hash-slot order",
 		),
 		(
@@ -26603,9 +26724,162 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"MldsaRegistrationProfile() |",
 			"exact focused query and control roster",
 		),
+		(
+			"mldsa_core_init_length",
+			"core_authentication",
+			"",
+			"INIT_TRANSCRIPT_LEN: usize = 5495",
+			"INIT_TRANSCRIPT_LEN: usize = 5494",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_core_response_prefix_length",
+			"core_authentication",
+			"",
+			"RESPONSE_PREFIX_LEN: usize = 1293",
+			"RESPONSE_PREFIX_LEN: usize = 1292",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_core_signature_input_length",
+			"core_authentication",
+			"",
+			"SIGNATURE_INPUT_LEN: usize = 163",
+			"SIGNATURE_INPUT_LEN: usize = 162",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_core_request_identity_length",
+			"core_authentication",
+			"fn build_init_transcript",
+			"let identity_len = encode_u64_le(33);",
+			"let identity_len = encode_u64_le(32);",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_core_request_signed_key_length",
+			"core_authentication",
+			"fn build_init_transcript",
+			"let signed_key_len = encode_u64_le(98);",
+			"let signed_key_len = encode_u64_le(97);",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_core_request_pq_length",
+			"core_authentication",
+			"fn build_init_transcript",
+			"let pq_key_len = encode_u64_le(1249);",
+			"let pq_key_len = encode_u64_le(1248);",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_core_response_identity_length",
+			"core_authentication",
+			"fn build_response_prefix",
+			"let public_key_len = encode_u64_le(32);",
+			"let public_key_len = encode_u64_le(31);",
+			"complete response transcript",
+		),
+		(
+			"mldsa_core_response_kem_length",
+			"core_authentication",
+			"fn build_response_prefix",
+			"let kem_len = encode_u64_le(1088);",
+			"let kem_len = encode_u64_le(1087);",
+			"complete response transcript",
+		),
+		(
+			"mldsa_core_response_length_substitution",
+			"core_authentication",
+			"fn build_response_transcript",
+			"u64::try_from(fields.app_cipher_text.len())",
+			"u64::try_from(0_usize)",
+			"response binds streamed ciphertext length and assigned identifier",
+		),
+		(
+			"mldsa_core_response_ciphertext_substitution",
+			"core_authentication",
+			"fn build_response_transcript",
+			"application: fields.app_cipher_text,",
+			"application: &[],",
+			"response binds streamed ciphertext length and assigned identifier",
+		),
+		(
+			"mldsa_core_response_private_prefix",
+			"core_authentication",
+			"",
+			"\n\tprefix: [u8; RESPONSE_PREFIX_LEN],",
+			"\n\tpub prefix: [u8; RESPONSE_PREFIX_LEN],",
+			"private response streaming capability",
+		),
+		(
+			"mldsa_adapter_request_identity_mapping",
+			"adapter_auth",
+			"fn init_transcript_hash",
+			"identity_key: init.identity_key.try_into().ok()?,",
+			"identity_key: &[0; 33],",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_adapter_request_signature_role_shared",
+			"core_authentication",
+			"fn build_signature_input",
+			"AuthRole::Beacon => BEACON_LABEL,",
+			"AuthRole::Beacon => SERVER_LABEL,",
+			"TLS-style signed input",
+		),
+		(
+			"mldsa_adapter_request_server_pin_substitution",
+			"adapter_auth",
+			"fn init_transcript_hash",
+			"fields, server_kid, pinned_server_ed, server_auth_key",
+			"fields, server_kid, &[0; 32], server_auth_key",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_adapter_request_extra_hash_bytes",
+			"adapter_auth",
+			"fn init_transcript_hash",
+			"state.update(&bytes);",
+			"state.update(&bytes); state.update(&[0]);",
+			"exact core Init bytes once",
+		),
+		(
+			"mldsa_adapter_response_ephemeral_mapping",
+			"adapter_auth",
+			"fn response_transcript_hash",
+			"ephemeral_key: response.ephemeral_key.try_into().ok()?,",
+			"ephemeral_key: response.identity_key.try_into().ok()?,",
+			"complete response transcript",
+		),
+		(
+			"mldsa_adapter_response_core_request_hash_substitution",
+			"adapter_auth",
+			"fn response_transcript_hash",
+			"build_response_transcript(init_hash, fields)",
+			"build_response_transcript(&[0; 64], fields)",
+			"complete response transcript",
+		),
+		(
+			"mldsa_adapter_response_extra_hash_bytes",
+			"adapter_auth",
+			"fn response_transcript_hash",
+			"for part in transcript.parts() {\n\t\tstate.update(part);\n\t}",
+			"for part in transcript.parts() {\n\t\tstate.update(part);\n\t}\n\tstate.update(&[0]);",
+			"exactly the ordered core response parts",
+		),
+		(
+			"mldsa_adapter_ad_hashes_reversed",
+			"adapter_pqxdh",
+			"fn mldsa_associated_data",
+			"bind_associated_data(base, server_hash, beacon_hash)",
+			"bind_associated_data(base, beacon_hash, server_hash)",
+			"associated-data core delegation",
+		),
 	] {
 		let mut changed = baseline.clone();
 		let source = match target {
+			"core_authentication" => &mut changed.core_authentication,
 			"adapter_auth" => &mut changed.adapter_auth,
 			"adapter_server" => &mut changed.adapter_server,
 			"adapter_beacon" => &mut changed.adapter_beacon,
@@ -26626,7 +26900,7 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 				.find(from)
 				.expect("MLDSA mutation anchor missing");
 		source.replace_range(start..start + from.len(), to);
-		let result = if target.starts_with("adapter_") {
+		let result = if target.starts_with("adapter_") || target == "core_authentication" {
 			validate_mldsa_source(&changed)
 		} else {
 			validate_mldsa_model(&changed)
