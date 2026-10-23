@@ -1,0 +1,51 @@
+name: Property tests
+
+on:
+  schedule:
+    - cron: "23 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      cases:
+        description: Successful cases per property and seed
+        type: number
+        default: 256
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  properties:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        seed_offset: [104729, 130363, 155921]
+    env:
+      PROPTEST_CASES: ${{ inputs.cases || '256' }}
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Select reproducible campaign seed
+        env:
+          CAMPAIGN_RUN_ID: ${{ github.run_id }}
+          CAMPAIGN_SEED_OFFSET: ${{ matrix.seed_offset }}
+        run: |
+          campaign_seed=$((CAMPAIGN_RUN_ID + CAMPAIGN_SEED_OFFSET))
+          echo "PROPTEST_RNG_SEED=$campaign_seed" >> "$GITHUB_ENV"
+          echo "Property campaign seed: $campaign_seed"
+      - name: Codec properties
+        run: cargo test -p beaconcrypt-parse --test properties --locked
+      - name: Protocol and persistence properties
+        run: cargo test -p beaconcrypt --test ratchet_properties --test persistence_properties --test registration_properties --locked
+      - name: Preserve failure seeds
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: property-regressions-${{ matrix.seed_offset }}
+          path: |
+            beaconcrypt/proptest-regressions/*.txt
+            beaconcrypt-parse/proptest-regressions/*.txt
+          if-no-files-found: ignore

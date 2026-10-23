@@ -20,14 +20,14 @@ fi
 
 runner_dir="$(mktemp -d "${TMPDIR:-/tmp}/beaconcrypt-wasm-tests.XXXXXX")"
 trap 'rm -rf -- "$runner_dir"' EXIT
-go build -mod=readonly -o "$runner_dir/runner" ./scripts/wasm-test-runner
+go build -mod=readonly -buildvcs=false -o "$runner_dir/runner" ./scripts/wasm-test-runner
 export CARGO_TARGET_WASM32_WASIP1_RUNNER="$runner_dir/runner"
 
 if [[ "${1:-}" == --mutants ]]; then
   shift
   # A WASI runner must read its own worker's artifact after Cargo launches it.
   unset CARGO_TARGET_DIR
-  cargo mutants -p beaconcrypt-wasm --test-workspace false --copy-target true --cargo-arg "--target=$wasm_target" "$@"
+  cargo mutants -p beaconcrypt-wasm --config .cargo/mutants-wasm.toml --test-workspace false --copy-target true --cargo-arg "--target=$wasm_target" "$@"
 else
   cargo test --locked -p beaconcrypt-wasm --target "$wasm_target" "$@"
 fi

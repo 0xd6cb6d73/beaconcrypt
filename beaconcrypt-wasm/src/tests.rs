@@ -4,72 +4,6 @@ use super::*;
 use std::{cell::Cell, rc::Rc};
 use zeroize::Zeroizing;
 
-// Observe live buffers immediately before the system allocator releases them.
-// Reading after Response's Vec fields are freed would be an invalid zeroization test.
-mod drop_observer {
-	use std::{
-		alloc::{GlobalAlloc, Layout, System},
-		sync::atomic::{AtomicU8, AtomicUsize, Ordering},
-	};
-
-	pub static DATA: AtomicUsize = AtomicUsize::new(0);
-	pub static STATE: AtomicUsize = AtomicUsize::new(0);
-	pub static WIPED: AtomicU8 = AtomicU8::new(0);
-
-	pub struct ObservedAllocator;
-
-	unsafe impl GlobalAlloc for ObservedAllocator {
-		unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-			unsafe { System.alloc(layout) }
-		}
-
-		unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-			let address = ptr as usize;
-			let bit = if DATA
-				.compare_exchange(address, 0, Ordering::SeqCst, Ordering::SeqCst)
-				.is_ok()
-			{
-				1
-			} else if STATE
-				.compare_exchange(address, 0, Ordering::SeqCst, Ordering::SeqCst)
-				.is_ok()
-			{
-				2
-			} else {
-				0
-			};
-			if bit != 0 {
-				// The allocation is live until System.dealloc below.
-				// Both tracked vectors have initialized bytes throughout their exact capacity.
-				let bytes = unsafe { std::slice::from_raw_parts(ptr, layout.size()) };
-				if bytes.iter().all(|byte| *byte == 0) {
-					WIPED.fetch_or(bit, Ordering::SeqCst);
-				}
-			}
-			unsafe { System.dealloc(ptr, layout) }
-		}
-	}
-}
-
-#[global_allocator]
-static TEST_ALLOCATOR: drop_observer::ObservedAllocator = drop_observer::ObservedAllocator;
-
-#[test]
-fn response_drop_wipes_both_owned_buffers_before_release() {
-	use std::sync::atomic::Ordering;
-	let mut response = Response::success(7, 11, vec![0x91; 32]);
-	response.state = vec![0xe3; 64];
-	assert_eq!(response.data.capacity(), response.data.len());
-	assert_eq!(response.state.capacity(), response.state.len());
-	drop_observer::WIPED.store(0, Ordering::SeqCst);
-	drop_observer::DATA.store(response.data.as_ptr() as usize, Ordering::SeqCst);
-	drop_observer::STATE.store(response.state.as_ptr() as usize, Ordering::SeqCst);
-	drop(response);
-	drop_observer::DATA.store(0, Ordering::SeqCst);
-	drop_observer::STATE.store(0, Ordering::SeqCst);
-	assert_eq!(drop_observer::WIPED.load(Ordering::SeqCst), 3);
-}
-
 #[cfg(target_arch = "wasm32")]
 #[test]
 fn wasm_allocations_and_packed_replies_round_trip_exactly() {
@@ -93,150 +27,7 @@ fn wasm_allocations_and_packed_replies_round_trip_exactly() {
 	assert!(abi::copy_input(ptr, len).is_none());
 }
 
-#[cfg(target_arch = "wasm32")]
-mod wasm_store_tests {
-	use super::*;
-
-	#[link(wasm_import_module = "beaconcrypt_test")]
-	unsafe extern "C" {
-		fn configure_store(context: u32, storage: u32, reject: u32);
-		fn expected_head(context: u32, ptr: u32, len: u32);
-		fn store_count(context: u32, metric: u32) -> u32;
-	}
-
-	#[test]
-	fn host_store_loads_commits_rejects_and_releases_owned_contexts() {
-		const FIRST: u32 = 0xbc00_0001;
-		const RESTORED: u32 = 0xbc00_0002;
-		const REJECTED: u32 = 0xbc00_0003;
-		unsafe { configure_store(FIRST, FIRST, 0) };
-		let server =
-			PersistentServer::create(19, Some(&[9; 32]), Some(&[10; 32]), HostStore(FIRST))
-				.unwrap();
-		let head = server.head();
-		assert_eq!(server.snapshot().unwrap().head().unwrap(), head);
-		assert_eq!(unsafe { store_count(FIRST, 0) }, 2);
-		assert_eq!(unsafe { store_count(FIRST, 1) }, 1);
-		assert_eq!(unsafe { store_count(FIRST, 2) }, 0);
-		drop(server);
-		assert_eq!(unsafe { store_count(FIRST, 2) }, 1);
-
-		unsafe { configure_store(RESTORED, FIRST, 0) };
-		let encoded_head = encode_head(&head);
-		unsafe {
-			expected_head(
-				RESTORED,
-				encoded_head.as_ptr() as u32,
-				encoded_head.len() as u32,
-			)
-		};
-		let restored = PersistentServer::restore(HostStore(RESTORED)).unwrap();
-		assert_eq!(restored.head().generation(), head.generation() + 1);
-		assert_eq!(unsafe { store_count(RESTORED, 0) }, 2);
-		assert_eq!(unsafe { store_count(RESTORED, 1) }, 1);
-		drop(restored);
-		assert_eq!(unsafe { store_count(RESTORED, 2) }, 1);
-
-		unsafe { configure_store(REJECTED, REJECTED, 1) };
-		let failure =
-			PersistentServer::create(19, Some(&[9; 32]), Some(&[10; 32]), HostStore(REJECTED));
-		assert!(matches!(failure, Err(PersistenceError::StaleGeneration)));
-		assert_eq!(unsafe { store_count(REJECTED, 1) }, 1);
-		assert_eq!(unsafe { store_count(REJECTED, 2) }, 1);
-	}
-
-	#[test]
-	fn host_store_constructor_dispatch_preserves_both_seeds_and_requested_lineage() {
-		let ed_seed = [9; 32];
-		let ml_seed = [10; 32];
-		let seeds = [ed_seed, ml_seed].concat();
-		let expected = beaconcrypt::Server::try_new(19, Some(&ed_seed), Some(&ml_seed)).unwrap();
-		let lineage = [0x35; 32];
-		for (op, context) in [(12, 0xbc10_0001u32), (18, 0xbc10_0002u32)] {
-			unsafe { configure_store(context, context, 0) };
-			let mut metadata = context.to_le_bytes().to_vec();
-			if op == 18 {
-				metadata.extend_from_slice(&lineage);
-			}
-			metadata.push(3);
-			let owner = checked(op, 0, 19, &seeds, &metadata).handle;
-			assert_eq!(
-				checked(3, owner, 0, &[], &[]).data,
-				expected.identity_pk().as_bytes()
-			);
-			assert_eq!(
-				checked(24, owner, 0, &[], &[]).data,
-				expected.mldsa_public_key()
-			);
-			let head = decode_head(&checked(14, owner, 0, &[], &[]).data).unwrap();
-			assert_eq!(head.generation(), 0);
-			if op == 18 {
-				assert_eq!(head.lineage(), SnapshotLineage::from_bytes(lineage));
-			}
-			assert_eq!(unsafe { store_count(context, 1) }, 1);
-			assert_eq!(unsafe { store_count(context, 2) }, 0);
-			checked(9, owner, 0, &[], &[]);
-			assert_eq!(unsafe { store_count(context, 2) }, 1);
-		}
-	}
-
-	#[test]
-	fn snapshot_load_copies_one_complete_read_and_requires_its_exact_length() {
-		let server =
-			PersistentServer::create(19, Some(&[9; 32]), Some(&[10; 32]), MemoryStore::default())
-				.unwrap();
-		let snapshot = server.snapshot().unwrap();
-		for correct_length in [true, false] {
-			let mut calls = 0;
-			let loaded = store::load_snapshot(|ptr, capacity| {
-				calls += 1;
-				if calls == 1 {
-					assert_eq!((ptr, capacity), (0, 0));
-					return snapshot.as_bytes().len() as i64;
-				}
-				assert_eq!(capacity as usize, snapshot.as_bytes().len());
-				let output =
-					unsafe { std::slice::from_raw_parts_mut(ptr as *mut u8, capacity as usize) };
-				output.copy_from_slice(snapshot.as_bytes());
-				i64::from(capacity) - i64::from(!correct_length)
-			})
-			.unwrap();
-			assert_eq!(calls, 2);
-			if correct_length {
-				assert_eq!(loaded.head().unwrap(), snapshot.head().unwrap());
-			} else {
-				assert!(loaded.as_bytes().is_empty());
-				assert!(loaded.head().is_err());
-			}
-		}
-	}
-
-	#[test]
-	fn snapshot_load_rejects_unrepresentable_lengths_before_a_second_read() {
-		let mut calls = 0;
-		let invalid = store::load_snapshot(|ptr, capacity| {
-			calls += 1;
-			assert_eq!((ptr, capacity), (0, 0));
-			i64::from(i32::MAX) + 1
-		})
-		.unwrap();
-		assert_eq!(calls, 1);
-		assert!(invalid.as_bytes().is_empty());
-	}
-
-	// The WASI runner executes this probe alone and requires the allocation-failure trap.
-	// Its 256 MiB limit prevents a real multi-gigabyte allocation.
-	// Returning normally would change the guest's observable failure behavior at this bound.
-	#[test]
-	fn snapshot_load_max_length_allocation_failure_probe() {
-		let _ = store::load_snapshot(|ptr, capacity| {
-			assert_eq!((ptr, capacity), (0, 0));
-			i64::from(i32::MAX)
-		});
-	}
-}
-
-fn checked(op: u32, handle: u32, arg: u64, input: &[u8], extra: &[u8]) -> Response {
+pub(super) fn checked(op: u32, handle: u32, arg: u64, input: &[u8], extra: &[u8]) -> Response {
 	let response = dispatch(op, handle, arg, input, extra);
 	assert_eq!(response.status, 0, "operation {op}");
 	response
@@ -318,6 +109,7 @@ fn input_descriptors_require_owned_exact_allocations_and_free_is_checked() {
 #[test]
 fn guest_server_interoperates_with_native_beacon_updates_json_and_checkpoint() {
 	let owner = checked(1, 0, 19, &[9; 64], &[3]).handle;
+	assert_eq!(dispatch(17, owner, u64::MAX, &[], &[]).status, REJECTED);
 	let mut beacon = Beacon::try_new(
 		19,
 		&checked(3, owner, 0, &[], &[]).data,
@@ -378,6 +170,26 @@ fn guest_server_interoperates_with_native_beacon_updates_json_and_checkpoint() {
 		b"JSON receive"
 	);
 	assert_eq!(json["seq"], inbound.seq);
+	let skipped = beacon.encrypt_message(b"delayed native frame").unwrap();
+	let future = beacon.encrypt_message(b"future native frame").unwrap();
+	assert_eq!(
+		checked(8, owner, 0, &future.ciphertext, &[]).data,
+		b"future native frame"
+	);
+	let status = checked(17, owner, peer, &[], &[]);
+	let remote = beacon.ratchet_status().unwrap();
+	assert_eq!(status.handle, owner);
+	assert_eq!(status.key_id, peer);
+	assert_eq!(status.data.len(), 17);
+	assert_eq!(&status.data[..8], &remote.receive_sequence().to_le_bytes());
+	assert_eq!(&status.data[8..16], &remote.send_sequence().to_le_bytes());
+	assert_eq!(status.data[16], 1);
+	assert!(status.state.is_empty());
+	assert_eq!(
+		checked(8, owner, 0, &skipped.ciphertext, &[]).data,
+		b"delayed native frame"
+	);
+	assert_eq!(checked(17, owner, peer, &[], &[]).data[16], 0);
 
 	let status = checked(17, owner, peer, &[], &[]);
 	let remote_status = beacon.ratchet_status().unwrap();
@@ -422,7 +234,9 @@ fn guest_beacon_interoperates_with_native_server_and_rejects_wrong_handle_kinds(
 	]
 	.concat();
 	let beacon = checked(2, 0, 19, &public, &[]).handle;
-	assert_eq!(checked(3, beacon, 0, &[], &[]).data.len(), 32);
+	let identity = checked(3, beacon, 0, &[], &[]);
+	assert_eq!(identity.data.len(), 32);
+	assert_eq!(dispatch(17, beacon, 0, &[], &[]).status, REJECTED);
 	let registration = checked(4, beacon, 0, &[], &[]);
 	assert_eq!(&registration.data[..3], &[0x88, 2, 0]);
 	assert_eq!(registration.data.len(), 6_757);
@@ -443,6 +257,10 @@ fn guest_beacon_interoperates_with_native_server_and_rejects_wrong_handle_kinds(
 		checked(6, beacon, 0, &response.serialized, &[]).data,
 		b"native hello"
 	);
+	assert_eq!(
+		identity.data,
+		native.pk_by_kid(response.kid).unwrap().as_bytes()
+	);
 	let frame = checked(7, beacon, 0, b"guest beacon", &[]);
 	assert_eq!(
 		native.decrypt_message(&frame.data).unwrap().plaintext,
@@ -457,6 +275,9 @@ fn guest_beacon_interoperates_with_native_server_and_rejects_wrong_handle_kinds(
 	);
 	let status = checked(17, beacon, 0, &[], &[]);
 	let remote_status = native.ratchet_status(response.kid).unwrap();
+	assert_eq!(status.handle, beacon);
+	assert_eq!(status.key_id, 0);
+	assert!(status.state.is_empty());
 	assert_eq!(status.data.len(), 17);
 	assert_eq!(
 		&status.data[..8],
@@ -554,41 +375,6 @@ fn exported_call_closes_the_requested_owner() {
 }
 
 #[test]
-fn constructors_reject_nonzero_handles_and_unexpected_extra_bytes() {
-	let owner = checked(1, 0, 19, &[9; 64], &[3]).handle;
-	let public_key = checked(3, owner, 0, &[], &[]);
-	let snapshot = checked(10, owner, 0, &[], &[]);
-	for (handle, extra) in [(owner, &[][..]), (0, &[1][..])] {
-		assert_eq!(
-			dispatch(2, handle, 19, &public_key.data, extra).status,
-			INVALID_ARGUMENT
-		);
-		assert_eq!(
-			dispatch(11, handle, 0, &snapshot.data, extra).status,
-			INVALID_ARGUMENT
-		);
-		assert_eq!(dispatch(13, handle, 0, &[], extra).status, INVALID_ARGUMENT);
-	}
-	checked(9, owner, 0, &[], &[]);
-}
-
-#[test]
-fn host_store_constructors_validate_exact_context_length_and_restore_input() {
-	assert_eq!(
-		dispatch(12, 0, 19, &[9; 32], &[1; 6]).status,
-		INVALID_ARGUMENT
-	);
-	assert_eq!(
-		dispatch(13, 0, 0, b"unexpected", &[]).status,
-		INVALID_ARGUMENT
-	);
-	assert_eq!(
-		dispatch(13, 0, 0, &[], &[]).status,
-		abi::error_status(PersistenceError::MissingSnapshot)
-	);
-}
-
-#[test]
 fn snapshot_and_constructor_failures_use_production_status_codes() {
 	assert_eq!(dispatch(1, 0, 19, &[0; 31], &[1]).status, INITIALIZATION);
 	assert_eq!(dispatch(19, 0, 0, &[], &[]).status, INVALID_ARGUMENT);
@@ -602,6 +388,53 @@ fn snapshot_and_constructor_failures_use_production_status_codes() {
 	assert_eq!(dispatch(u32::MAX, 0, 0, &[], &[]).status, INVALID_ARGUMENT);
 	assert_eq!(abi::error_status(PersistenceError::NonCanonicalSnapshot), 5);
 	assert_eq!(abi::error_status(PersistenceError::OutputEncoding), 9);
+}
+
+#[test]
+fn constructors_reject_nonzero_handles_and_unexpected_extra_bytes() {
+	let owner = checked(1, 0, 19, &[9; 64], &[3]).handle;
+	let public_key = [
+		checked(3, owner, 0, &[], &[]).data.as_slice(),
+		checked(24, owner, 0, &[], &[]).data.as_slice(),
+	]
+	.concat();
+	let valid_beacon = checked(2, 0, 19, &public_key, &[]).handle;
+	checked(9, valid_beacon, 0, &[], &[]);
+	let snapshot = checked(10, owner, 0, &[], &[]);
+	// Each invalid argument must reject independently of the other argument.
+	for (handle, extra) in [(owner, &[][..]), (0, &[1][..])] {
+		assert_eq!(
+			dispatch(2, handle, 19, &public_key, extra).status,
+			INVALID_ARGUMENT
+		);
+		assert_eq!(
+			dispatch(11, handle, 0, &snapshot.data, extra).status,
+			INVALID_ARGUMENT
+		);
+		assert_eq!(dispatch(13, handle, 0, &[], extra).status, INVALID_ARGUMENT);
+	}
+	assert_eq!(checked(10, owner, 0, &[], &[]).data, snapshot.data);
+	checked(9, owner, 0, &[], &[]);
+}
+
+#[test]
+fn host_store_constructors_validate_exact_context_length_and_restore_input() {
+	// A context occupies four bytes and the independent seed flags occupy one more.
+	// Reject lengths on either side of the exact metadata width.
+	for length in [0, 1, 3, 4, 6, 36] {
+		assert_eq!(
+			dispatch(12, 0, 19, &[9; 64], &vec![1; length]).status,
+			INVALID_ARGUMENT
+		);
+	}
+	assert_eq!(
+		dispatch(13, 0, 0, b"unexpected snapshot bytes", &[]).status,
+		INVALID_ARGUMENT
+	);
+	assert_eq!(
+		dispatch(13, 0, 0, &[], &[]).status,
+		abi::error_status(PersistenceError::MissingSnapshot)
+	);
 }
 
 #[test]

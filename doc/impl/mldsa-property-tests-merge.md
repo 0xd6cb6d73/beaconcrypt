@@ -1,0 +1,15 @@
+# Merge property tests into the ML-DSA branch
+
+The merge incorporates `upstream/codex/property-based-tests` at `6b8cc5de` into `codex/mldsa65-transcript`, starting from `a9254229`. It precedes work on the joint ML-DSA ProVerif profile. The upstream validation receipts remain historical evidence for that branch.
+
+Property fixtures use mandatory ML-DSA server seeds and both pinned server public keys. Independent codec encoders use registration CBOR v2, eight-element arrays, six request byte fields and five response byte fields, with the response signature after the assigned key ID. They test exact ML-DSA field widths and rejection of v1 registration.
+
+Registration histories retain unsigned ciphertext and assigned-ID tampering to test signature rejection. Additional generated commands sign those changes with the known test server key, so the histories also reach inner ciphertext authentication, assigned-ID binding and implicit sequence-one checks. A successful registration using the test signer establishes that these fixtures can pass the signature gate. Failed completion still destroys pending secrets and subsequent attempts remain terminal.
+
+Guest tests consolidate duplicate allocator and host-store coverage while retaining the mandatory dual-seed and requested-lineage assertions. Constructor guards now use complete valid pins to isolate invalid handles and extra arguments. Snapshot metadata is five bytes under ABI v2; rejection tests exercise lengths on either side, and a successful constructor tests the exact width. The runner keeps opaque snapshot callbacks, supports upstream `--nocapture` handling and selects the single allocation-failure probe in its new module location.
+
+The lockfile is a union of the existing production ML-DSA dependencies and upstream test-only Proptest dependencies. Regeneration with the pinned isolated authentication extractor changes only the provenance record's lockfile digest; all six generated Lean files remain byte-identical. The reviewed inventory updates only that provenance record and the parser's test-dependency manifest. The 33 historical proof/source digest mismatches remain visible and are outside this test merge.
+
+Focused merge checks pass: the five native protocol/persistence tests, seven parser properties and boundary tests, 18 native guest-crate tests, and 27 real WASI tests plus the isolated allocation-failure probe. The native properties also pass a final seed-`104729` run with the original default case counts. `cargo fmt --all --check`, shell syntax and staged/working-tree whitespace checks pass. Neither the full Lean build nor `verify-in-shell` is authorized or run.
+
+Complete post-merge native and guest mutation campaigns run next, with seed `104729` and the original default property case counts. The native command includes the new `properties`, `ratchet_properties`, `persistence_properties` and `registration_properties` integration targets as well as all previously selected runtime/vector targets. Their completion receipts will be added here separately.

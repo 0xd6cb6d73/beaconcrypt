@@ -32,6 +32,15 @@ jobs:
       run: cargo check -p beaconcrypt --no-default-features --features pqxdh,beacon --lib
     - name: Run tests
       run: cargo test --verbose --workspace
+    - name: Preserve property-test failure seeds
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: property-regressions
+        path: |
+          beaconcrypt/proptest-regressions/*.txt
+          beaconcrypt-parse/proptest-regressions/*.txt
+        if-no-files-found: ignore
     - name: Test C persistence callbacks
       run: |
         cargo test -p beaconcrypt --features cbinds --lib --locked

@@ -35,11 +35,17 @@ func runGuest(args []string, stderr io.Writer) error {
 		return errors.New("usage: wasm-test-runner TEST.wasm [test arguments]")
 	}
 	threadCount := false
+	noCapture := false
 	for _, arg := range args[1:] {
 		threadCount = threadCount || strings.HasPrefix(arg, "--test-threads")
+		noCapture = noCapture || arg == "--nocapture" || arg == "--no-capture"
 	}
 	if !threadCount {
 		args = append(args, "--test-threads=1")
+	}
+	// WASI aborts on panic; print assertion diagnostics before the guest terminates.
+	if !noCapture {
+		args = append(args, "--nocapture")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
@@ -153,7 +159,7 @@ func run(args []string) error {
 			return runGuest(args, os.Stderr)
 		}
 	}
-	const probe = "tests::wasm_store_tests::snapshot_load_max_length_allocation_failure_probe"
+	const probe = "store_tests::snapshot_load_max_length_allocation_failure_probe"
 	regular := append(append([]string{}, args...), "--skip", probe)
 	if err := runGuest(regular, os.Stderr); err != nil {
 		return err
