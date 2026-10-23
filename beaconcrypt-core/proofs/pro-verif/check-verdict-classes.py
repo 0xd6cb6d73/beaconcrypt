@@ -344,9 +344,119 @@ def validate_mldsa_scope(rows):
             raise ValueError("ML-DSA assumed-interface class or exact scope differs")
 
 
+def mldsa_joint_class_scope(target, position, driver):
+    """Exact bounded execution, assumptions and target for each joint expectation."""
+    common = (
+        "bounded joint ML-DSA/PQXDH symbolic profile; "
+        "one honest Beacon request/response, two generic Server attempts with one atomic consumed-ID set; "
+        "replay ID is Ed identity plus one-time key, excluding ML keys; "
+        "initial server sequence1, one server record sequence2 and one beacon record sequence1, one receive attempt per endpoint; "
+        "public Ed25519/X25519 recovery equations, independent unrevealed honest ML signing keys and ML-KEM secret with fresh hidden KEM coins; "
+        "attacker-owned ML registrations admitted without enrollment; protected-ML challenge payload selection only after admission; "
+        "ideal ML-signature unforgeability, collision-free symbolic hash/KDF and authenticated AEAD/CTX assumed; "
+        "ML-KEM public-key binding assumed beyond generic IND-CCA; "
+        "public per-invocation assigned labels abstract concrete counter allocation order; "
+        "no computational/QPT, arbitrary schedule/cache, injective replay, failure/rollback, forward-secrecy, parser/compiler or native-library theorem; "
+    )
+    claims = (
+        (
+            "security",
+            "noninjective Init origin scoped to the exact protected honest ML key",
+        ),
+        (
+            "security",
+            "pinned-server response origin binds retained Init digest and every unsigned response field, including raw C||T||U and assigned ID, excluding ML signature bytes",
+        ),
+        (
+            "security",
+            "completed Beacon agrees with a Server commit on both ML keys, retained Init digest, unsigned response, actual derived root, ordered AD, assigned ID and initial plaintext",
+        ),
+        (
+            "security",
+            "noninjective server-to-beacon record origin for the protected ML key matches Init digest, derived root, AD, sequence, sender, receiver and plaintext",
+        ),
+        (
+            "security",
+            "noninjective beacon-to-server record origin for the protected ML key matches Init digest, derived root, AD, sequence, sender, receiver and plaintext",
+        ),
+        (
+            "security",
+            "initial canary non-deducibility under the protected-ML payload policy",
+        ),
+        (
+            "security",
+            "server-record canary non-deducibility under the protected-ML payload policy",
+        ),
+        (
+            "security",
+            "beacon-record canary non-deducibility after protected Beacon completion",
+        ),
+        (
+            "witness",
+            "honest completion of the joint KEX and initial CTX opening is reachable",
+        ),
+        (
+            "witness",
+            "one subsequent server-to-beacon record opens after honest completion",
+        ),
+        ("witness", "one beacon-to-server record opens after honest completion"),
+        (
+            "limitation",
+            "attacker-owned ML key with recovered honest Ed identity is admitted; no Ed-only enrollment or authentication guarantee",
+        ),
+        (
+            "witness",
+            "passive private observation matches insertion and rejection of the same actual registration ID in distinct Server invocations, with the rejecting invocation consuming the matching token released after insertion; no arbitrary replay-schedule theorem",
+        ),
+        (
+            "limitation",
+            "both classical Ed and DH recovery capabilities execute; no ML signing or ML-KEM recovery rule is added",
+        ),
+    )
+    controls = {
+        "without-init-verifier-origin": "Init-origin counterexample after bypassing only the Init ML verifier",
+        "without-response-verifier-origin": "response-origin counterexample after bypassing only the response ML verifier",
+        "without-response-verifier-session": "completed-session counterexample after bypassing only the response ML verifier with KEX and CTX checks retained",
+        "without-init-verifier-secrecy": "initial-canary disclosure after bypassing only the Init ML verifier with KEX and CTX construction retained",
+        "without-response-verifier-secrecy": "beacon-record canary disclosure after bypassing only the response ML verifier with KEX and CTX checks retained",
+    }
+    if target == "mldsa-joint-session" and 1 <= position <= len(claims):
+        cls, claim = claims[position - 1]
+    elif target in controls and position == 1:
+        cls = "negative-control"
+        claim = (
+            "reconstructed "
+            + controls[target]
+            + "; altered model, not a primitive break"
+        )
+    else:
+        raise ValueError("unknown joint ML-DSA verdict identity")
+    return (
+        cls,
+        common
+        + claim
+        + "; libraries="
+        + ";".join((*driver.LIBRARIES, "mldsa-joint-session.pvl"))
+        + "; queries=mldsa-joint-session.pv",
+    )
+
+
+def validate_mldsa_joint_scope(rows):
+    driver = INVENTORY.module("check-mldsa-joint-session")
+    for row in rows:
+        if row["checker"] != "check-mldsa-joint-session.py":
+            continue
+        cls, scope = mldsa_joint_class_scope(
+            row["target"], int(row["position"]), driver
+        )
+        if row["class"] != cls or row["scope"] != scope:
+            raise ValueError("joint ML-DSA class or exact bounded scope differs")
+
+
 def validate_scope(rows):
     """Pin reviewed exclusions and each fs target's actual bounds and libraries."""
     validate_mldsa_scope(rows)
+    validate_mldsa_joint_scope(rows)
     for row in rows:
         checker, target, position = row["checker"], row["target"], int(row["position"])
         if row["status"] == "unknown":

@@ -22845,6 +22845,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"extract-proverif",
 			"check-proverif",
 			"check-proverif-mldsa-auth",
+			"check-proverif-mldsa-joint",
 			"check-proverif-fs",
 			"check-proverif-primitive-fidelity",
 			"check-proverif-active-strong-secrecy",
@@ -24522,6 +24523,12 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 			"verify-in-shell must run check-proverif-fs",
 		),
 		(
+			"joint ML-DSA profile dropped from verify-in-shell",
+			"\t$(MAKE) check-proverif-mldsa-joint\n",
+			"",
+			"verify-in-shell must run check-proverif-fs",
+		),
+		(
 			"fs group dropped from verify-in-shell",
 			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) check-proverif-exact-interface-strong\n\t$(MAKE) extract-lean\n",
 			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) check-proverif-exact-interface-strong\n\t$(MAKE) extract-lean\n",
@@ -24604,7 +24611,7 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		);
 		checked += 1;
 	}
-	assert_eq!(checked, 16);
+	assert_eq!(checked, 17);
 }
 
 #[test]

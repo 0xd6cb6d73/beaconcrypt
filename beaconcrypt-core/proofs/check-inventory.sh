@@ -51,11 +51,11 @@ declare -A expected_category_counts=(
 	[generated-lean]=13
 	[generated-proverif]=1
 	[handwritten-lean]=2022
-	[handwritten-proverif]=296
+	[handwritten-proverif]=298
 	[inventory]=2
 	[lean-control]=13
 	[lean-dependency-overlay]=4
-	[validation]=70
+	[validation]=73
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -173,8 +173,11 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/test-verdict-classes.py \
 	proofs/pro-verif/check-mldsa-registration-auth.py \
 	proofs/pro-verif/test-mldsa-registration-auth-checker.py \
+	proofs/pro-verif/check-mldsa-joint-session.py \
+	proofs/pro-verif/test-mldsa-joint-session-checker.py \
 	proofs/extract-authentication.py \
 	tests/authentication.rs \
+	tests/mldsa_joint_fidelity.rs \
 	tests/general_registration_admission.rs \
 	tests/proverif_transcript_fidelity.rs \
 	> "$tmp_dir/validation"
@@ -1008,6 +1011,17 @@ require_line_count 1 '^const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 90;$' \
 require_occurrence_count 1 \
 	'(?s)fn mldsa_transcript_source_and_model_mutations_are_rejected\(\) \{.*?assert_eq!\(checked, MLDSA_TRANSCRIPT_MUTATION_COUNT\);\s*\}' \
 	"ML-DSA source/model mutation count assertion" "$fidelity_test"
+joint_fidelity_test=tests/mldsa_joint_fidelity.rs
+require_line_count 2 '^#\[test\]$' \
+	"$joint_fidelity_test" "joint ML-DSA composition tests"
+require_line_count 1 '^const JOINT_COMPOSITION_MUTATION_COUNT: usize = 37;$' \
+	"$joint_fidelity_test" "joint ML-DSA exact composition mutation count"
+for joint_fidelity_name in \
+	joint_model_connects_authentication_to_kex_and_record_state \
+	joint_model_rejects_changes_to_security_relevant_composition; do
+	require_line_count 1 "^fn ${joint_fidelity_name}\\(\\) \\{$" \
+		"$joint_fidelity_test" "joint ML-DSA composition entry point"
+done
 for mldsa_transcript_mutation in \
 	mldsa_public_key_length \
 	mldsa_signature_length \

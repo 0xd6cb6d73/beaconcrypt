@@ -150,7 +150,7 @@ def fixture_expectations(name, directory=HERE):
     driver = module(name, directory)
     rows = []
 
-    def observe_run(*args):
+    def observe_run(*args, **kwargs):
         # Each maintained driver places its output log immediately before timeout.
         return Path(args[-2]).stem
 
@@ -178,6 +178,7 @@ def expected_verdicts(directory=HERE):
         "check-registration-response",
         "check-registration-beacon",
         "check-mldsa-registration-auth",
+        "check-mldsa-joint-session",
     ):
         rows.extend(fixture_expectations(name, directory))
     for name in (

@@ -452,5 +452,120 @@ class MldsaClassificationTests(unittest.TestCase):
                 self.check(changed)
 
 
+class MldsaJointClassificationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.expected = CHECK.INVENTORY.fixture_expectations("check-mldsa-joint-session")
+        cls.rows = [
+            row
+            for row in CHECK.read_rows(HERE / "verdict-classes.tsv")
+            if row["checker"] == "check-mldsa-joint-session.py"
+        ]
+
+    def check(self, rows):
+        CHECK.validate(rows, self.expected)
+        CHECK.validate_mldsa_joint_scope(rows)
+
+    def test_complete_bounded_joint_roster(self):
+        self.assertEqual(len(self.rows), 19)
+        self.check(self.rows)
+        for cls, count in [
+            ("security", 8),
+            ("witness", 4),
+            ("limitation", 2),
+            ("negative-control", 5),
+        ]:
+            self.assertEqual(sum(row["class"] == cls for row in self.rows), count)
+
+    def test_every_joint_verdict_is_required(self):
+        for index in range(len(self.rows)):
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                self.check(self.rows[:index] + self.rows[index + 1 :])
+
+    def test_owned_key_capability_and_execution_rows_cannot_be_security(self):
+        for index, row in enumerate(self.rows):
+            if row["class"] == "security":
+                continue
+            changed = copy.deepcopy(self.rows)
+            changed[index]["class"] = "security"
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                self.check(changed)
+
+    def test_joint_security_cannot_be_relabelled_or_generalized(self):
+        for index in range(8):
+            for field, value in [
+                ("class", "definitional"),
+                ("scope", "unconditional full-protocol quantum security"),
+            ]:
+                changed = copy.deepcopy(self.rows)
+                changed[index][field] = value
+                with (
+                    self.subTest(index=index, field=field),
+                    self.assertRaises(ValueError),
+                ):
+                    self.check(changed)
+
+    def test_assumptions_and_protected_payload_policy_are_mandatory(self):
+        for phrase in [
+            "unrevealed",
+            "without enrollment",
+            "only after admission",
+            "unforgeability",
+            "ML-KEM public-key binding assumed beyond generic IND-CCA",
+            "public Ed25519/X25519 recovery",
+            "no computational/QPT",
+            "public per-invocation assigned labels abstract concrete counter allocation order",
+        ]:
+            changed = copy.deepcopy(self.rows)
+            changed[0]["scope"] = changed[0]["scope"].replace(phrase, "")
+            with self.subTest(phrase=phrase), self.assertRaises(ValueError):
+                self.check(changed)
+
+    def test_directional_bounds_and_actual_replay_identity_are_mandatory(self):
+        for old, new in [
+            ("two generic Server attempts", "arbitrary Server attempts"),
+            ("one server record sequence2", "all server records"),
+            ("one receive attempt per endpoint", "arbitrary receive schedules"),
+            (
+                "Ed identity plus one-time key, excluding ML keys",
+                "Ed identity plus ML key",
+            ),
+        ]:
+            changed = copy.deepcopy(self.rows)
+            changed[0]["scope"] = changed[0]["scope"].replace(old, new)
+            with self.subTest(old=old), self.assertRaises(ValueError):
+                self.check(changed)
+
+    def test_replay_witness_is_not_an_injective_replay_theorem(self):
+        changed = copy.deepcopy(self.rows)
+        changed[12]["scope"] = changed[12]["scope"].replace(
+            "passive private observation matches insertion and rejection of the same actual registration ID in distinct Server invocations, with the rejecting invocation consuming the matching token released after insertion; no arbitrary replay-schedule theorem",
+            "arbitrary registration and record replay is prevented injectively",
+        )
+        with self.assertRaises(ValueError):
+            self.check(changed)
+
+    def test_quantum_library_and_response_signature_exclusion_are_mandatory(self):
+        for index, old, new in [
+            (0, "quantum-capabilities.pvl", ""),
+            (1, "excluding ML signature bytes", "including ML signature bytes"),
+        ]:
+            changed = copy.deepcopy(self.rows)
+            changed[index]["scope"] = changed[index]["scope"].replace(old, new)
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                self.check(changed)
+
+    def test_control_formula_status_and_identity_are_exact(self):
+        for field, value in [
+            ("status", "unknown"),
+            ("formula_sha256", "0" * 64),
+            ("target", "without-both-verifiers"),
+        ]:
+            changed = copy.deepcopy(self.rows)
+            changed[-1][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.check(changed)
+
+
 if __name__ == "__main__":
     unittest.main()
