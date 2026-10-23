@@ -44,7 +44,7 @@ noncomputable def liftServer {Chain Metadata PeerMetadata Identity DhPair KemPai
 noncomputable def afterBeacon {Chain Metadata PeerMetadata Identity DhPair KemPair Value Result : Type} {serverCount beaconCount : Nat}
     (sender : Metadata → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (before : State Chain Metadata PeerMetadata Identity DhPair KemPair serverCount beaconCount) (index : Fin beaconCount)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
     (outside : Value → OracleComp (SourceSpec serverCount beaconCount) Result)
     (result : Value × RawCtxPendingOwnerTails.Owner Chain Unit) :
     OracleComp (Spec Chain) (Result × State Chain Metadata PeerMetadata Identity DhPair KemPair serverCount beaconCount) :=
@@ -54,7 +54,7 @@ noncomputable def afterBeacon {Chain Metadata PeerMetadata Identity DhPair KemPa
 noncomputable def liftBeacon {Chain Metadata PeerMetadata Identity DhPair KemPair Value Result : Type} {serverCount beaconCount : Nat}
     (sender : Metadata → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (before : State Chain Metadata PeerMetadata Identity DhPair KemPair serverCount beaconCount) (index : Fin beaconCount)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
     (outside : Value → OracleComp (SourceSpec serverCount beaconCount) Result)
     (work : OracleComp (Spec Chain) (Value × RawCtxPendingOwnerTails.Owner Chain Unit)) :
     OracleComp (Spec Chain) (Result × State Chain Metadata PeerMetadata Identity DhPair KemPair serverCount beaconCount) :=
@@ -74,7 +74,7 @@ inductive Tail {Chain Metadata PeerMetadata Identity DhPair KemPair Result : Typ
       Tail sender route decode query (fun reply => liftServer sender route decode before index outside (inner reply))
   | beacon (request : RawCtxMixedOwner.SourceSpec.Domain)
       (before : State Chain Metadata PeerMetadata Identity DhPair KemPair serverCount beaconCount) (index : Fin beaconCount)
-      (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+      (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
       (outside : RawCtxMixedOwner.SourceSpec.Range request → OracleComp (SourceSpec serverCount beaconCount) Result)
       (query : (Spec Chain).Domain)
       (inner : (Spec Chain).Range query → OracleComp (Spec Chain)
@@ -107,7 +107,7 @@ private theorem beacon_occurs {Chain Metadata PeerMetadata Identity DhPair KemPa
     (sender : Metadata → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (request : RawCtxMixedOwner.SourceSpec.Domain)
     (before : State Chain Metadata PeerMetadata Identity DhPair KemPair serverCount beaconCount) (index : Fin beaconCount)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize) (kernel : Kernel Chain)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize) (kernel : Kernel Chain)
     (outside : RawCtxMixedOwner.SourceSpec.Range request → OracleComp (SourceSpec serverCount beaconCount) Result)
     (outsideGood : ∀ result query next, Occurs query next (afterBeacon sender route decode before index control associatedData outside result) →
       RawCtxPendingMixedPrefix.ownerSelected query = true → Tail sender route decode query next)
@@ -154,7 +154,7 @@ theorem server_selected {Chain Metadata PeerMetadata Identity DhPair KemPair Res
 theorem beacon_selected {Chain Metadata PeerMetadata Identity DhPair KemPair Result : Type} {serverCount beaconCount : Nat}
     (sender : Metadata → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (request : RawCtxMixedOwner.SourceSpec.Domain) (index : Fin beaconCount)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize) (kernel : Kernel Chain)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize) (kernel : Kernel Chain)
     (outside : RawCtxMixedOwner.SourceSpec.Range request → OracleComp (SourceSpec serverCount beaconCount) Result)
     (state : State Chain Metadata PeerMetadata Identity DhPair KemPair serverCount beaconCount)
     (active : (state.2 index).beacon.phase = .established control associatedData kernel) :

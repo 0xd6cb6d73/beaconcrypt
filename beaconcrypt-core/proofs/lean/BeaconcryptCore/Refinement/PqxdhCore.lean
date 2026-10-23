@@ -147,10 +147,11 @@ theorem build_associated_data_call_mut (a a1 : Std.Array Std.U8 33#usize) (t : S
           else if t < 112#usize then
             t - 66#usize >>= fun i => Std.Array.index_usize pqxdh.PQXDH_INFO i >>= fun i1 =>
               ok (i1, ((a, a1) : pqxdh.build_associated_data.closure))
-          else
+          else if t < 153#usize then
             t - 112#usize >>= fun i =>
               Std.Array.index_usize pqxdh.SYM_RATCHET_INFO i >>= fun i1 =>
-                ok (i1, ((a, a1) : pqxdh.build_associated_data.closure))) := rfl
+                ok (i1, ((a, a1) : pqxdh.build_associated_data.closure))
+          else ok (0#u8, ((a, a1) : pqxdh.build_associated_data.closure))) := rfl
 
 @[simp] theorem usize_val_46 : (46#usize).val = 46 := by scalar_tac
 @[simp] theorem usize_val_41 : (41#usize).val = 41 := by scalar_tac
@@ -159,24 +160,25 @@ theorem build_associated_data_call_mut (a a1 : Std.Array Std.U8 33#usize) (t : S
 
 /-- The generated associated data is the ideal `AD` of spec §9. -/
 theorem build_associated_data_abs (ikS ikB : Std.Array Std.U8 32#usize) :
-    ∃ a : Std.Array Std.U8 153#usize,
+    ∃ a : Std.Array Std.U8 281#usize,
       pqxdh.build_associated_data ikS ikB = ok a ∧
         absBytes a = Pqxdh.assocData (absBytes ikS) (absBytes ikB) := by
   obtain ⟨es, hes, hesabs⟩ := tag_sign_key_abs ikS
   obtain ⟨eb, heb, hebabs⟩ := tag_sign_key_abs ikB
-  have hlen : (Pqxdh.assocData (absBytes ikS) (absBytes ikB)).length = (153#usize).val := by
-    rw [usize_val_153]
+  have hlen : (Pqxdh.assocData (absBytes ikS) (absBytes ikB)).length = (281#usize).val := by
+    rw [usize_val_281]
     exact Pqxdh.assocData_length (by simp) (by simp)
-  have hcall : ∀ i, i < (153#usize).val →
+  have hcall : ∀ i, i < (281#usize).val →
       pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
           ((es, eb) : pqxdh.build_associated_data.closure) ⟨BitVec.ofNat _ i⟩
         = ok ((if i < 33 then es.val[i]!
                 else if i < 66 then eb.val[i - 33]!
                 else if i < 112 then pqxdh.PQXDH_INFO.val[i - 66]!
-                else pqxdh.SYM_RATCHET_INFO.val[i - 112]!),
+                else if i < 153 then pqxdh.SYM_RATCHET_INFO.val[i - 112]!
+                else 0#u8),
               ((es, eb) : pqxdh.build_associated_data.closure)) := by
     intro i hi
-    rw [usize_val_153] at hi
+    rw [usize_val_281] at hi
     have hval : (⟨BitVec.ofNat _ i⟩ : Std.Usize).val = i := usize_mk_val i (by omega)
     have hlt : ∀ k : Std.Usize, ((⟨BitVec.ofNat _ i⟩ : Std.Usize) < k) ↔ i < k.val := by
       intro k; rw [Std.UScalar.lt_equiv, hval]
@@ -213,44 +215,57 @@ theorem build_associated_data_abs (ikS ikB : Std.Array Std.U8 32#usize) :
           rfl
         · rw [ite_eq_right (fun hc => h112 (by simpa [usize_val_112] using (hlt 112#usize).mp hc)),
             ite_eq_right h112]
-          have hsub112 : (112#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
-            rw [usize_val_112, hval]; omega
-          rw [usize_sub_eq _ _ hsub112]
-          have h1 : (⟨BitVec.ofNat _ ((⟨BitVec.ofNat _ i⟩ : Std.Usize).val - (112#usize).val)⟩ :
-              Std.Usize).val = i - 112 := by
-            rw [hval, usize_val_112]; exact usize_mk_val (i - 112) (by omega)
-          simp only [bind_tc_ok]
-          rw [index_usize_eq pqxdh.SYM_RATCHET_INFO _ (by rw [h1, usize_val_41]; omega), h1]
-          rfl
-  have hbyte : ∀ i, i < (153#usize).val →
+          by_cases h153 : i < 153
+          · rw [ite_eq_left ((hlt _).mpr (by rw [usize_val_153]; omega)), ite_eq_left h153]
+            have hsub112 : (112#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
+              rw [usize_val_112, hval]; omega
+            rw [usize_sub_eq _ _ hsub112]
+            have h1 : (⟨BitVec.ofNat _ ((⟨BitVec.ofNat _ i⟩ : Std.Usize).val - (112#usize).val)⟩ :
+                Std.Usize).val = i - 112 := by
+              rw [hval, usize_val_112]; exact usize_mk_val (i - 112) (by omega)
+            simp only [bind_tc_ok]
+            rw [index_usize_eq pqxdh.SYM_RATCHET_INFO _ (by rw [h1, usize_val_41]; omega), h1]
+            rfl
+          · rw [ite_eq_right (fun hc => h153 (by simpa using (hlt 153#usize).mp hc)),
+              ite_eq_right h153]
+  have hbyte : ∀ i, i < (281#usize).val →
       absByte (if i < 33 then es.val[i]!
                 else if i < 66 then eb.val[i - 33]!
                 else if i < 112 then pqxdh.PQXDH_INFO.val[i - 66]!
-                else pqxdh.SYM_RATCHET_INFO.val[i - 112]!)
+                else if i < 153 then pqxdh.SYM_RATCHET_INFO.val[i - 112]!
+                else 0#u8)
         = (Pqxdh.assocData (absBytes ikS) (absBytes ikB))[i]! := by
     intro i hi
-    rw [usize_val_153] at hi
-    rw [Pqxdh.assocData, getElem!_append2 _ _ 112 (by simp [Pqxdh.tagSig, Pqxdh.INFO_PQ]),
+    rw [usize_val_281] at hi
+    rw [Pqxdh.assocData,
+      getElem!_append2 _ _ 153 (by simp [Pqxdh.tagSig, Pqxdh.INFO_PQ, Pqxdh.INFO_R]),
+      getElem!_append2 _ _ 112 (by simp [Pqxdh.tagSig, Pqxdh.INFO_PQ]),
       getElem!_append2 _ _ 66 (by simp [Pqxdh.tagSig]),
       getElem!_append2 _ _ 33 (by simp [Pqxdh.tagSig])]
     by_cases h33 : i < 33
-    · simp only [ite_eq_left h33, ite_eq_left (show i < 66 by omega), ite_eq_left (show i < 112 by omega)]
+    · simp only [ite_eq_left h33, ite_eq_left (show i < 66 by omega), ite_eq_left (show i < 112 by omega), ite_eq_left (show i < 153 by omega)]
       rw [← hesabs]
       exact (absBytes_getElem! es i (by rw [usize_val_33]; omega)).symm
     · by_cases h66 : i < 66
-      · simp only [ite_eq_right h33, ite_eq_left h66, ite_eq_left (show i < 112 by omega)]
+      · simp only [ite_eq_right h33, ite_eq_left h66, ite_eq_left (show i < 112 by omega), ite_eq_left (show i < 153 by omega)]
         rw [← hebabs]
         exact (absBytes_getElem! eb (i - 33) (by rw [usize_val_33]; omega)).symm
       · by_cases h112 : i < 112
-        · simp only [ite_eq_right h33, ite_eq_right h66, ite_eq_left h112]
+        · simp only [ite_eq_right h33, ite_eq_right h66, ite_eq_left h112, ite_eq_left (show i < 153 by omega)]
           rw [← absBytes_PQXDH_INFO]
           exact (absBytes_getElem! pqxdh.PQXDH_INFO (i - 66) (by rw [usize_val_46]; omega)).symm
         · simp only [ite_eq_right h33, ite_eq_right h66, ite_eq_right h112]
-          rw [← absBytes_SYM_RATCHET_INFO]
-          exact (absBytes_getElem! pqxdh.SYM_RATCHET_INFO (i - 112)
-            (by rw [usize_val_41]; omega)).symm
+          by_cases h153 : i < 153
+          · simp only [ite_eq_left h153]
+            rw [← absBytes_SYM_RATCHET_INFO]
+            exact (absBytes_getElem! pqxdh.SYM_RATCHET_INFO (i - 112)
+              (by rw [usize_val_41]; omega)).symm
+          · simp only [ite_eq_right h153]
+            simp only [List.getElem!_eq_getElem?_getD,
+              List.getElem?_replicate_of_lt (show i - 153 < 128 by omega)]
+            rfl
   obtain ⟨a, ha, habs⟩ :=
-    from_fn_absBytes (F := pqxdh.build_associated_data.closure) 153#usize
+    from_fn_absBytes (F := pqxdh.build_associated_data.closure) 281#usize
       pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
       ((es, eb) : pqxdh.build_associated_data.closure) _ _ hlen hcall hbyte
   refine ⟨a, ?_, habs⟩

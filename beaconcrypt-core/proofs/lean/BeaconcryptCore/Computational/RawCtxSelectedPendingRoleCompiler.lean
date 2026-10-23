@@ -43,7 +43,7 @@ private theorem known_beacon (key : RootOutput)
   all_goals rw [← phase]
 
 private theorem updated_beacon (key : RootOutput) (before : NativeFamily M P I D K S B)
-    (index : Fin B) (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+    (index : Fin B) (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
     (owner : RawCtxChainOwner.State RawCtxSelectedMessageReveals.Kernel Unit) :
     mapRoles (RawCtxMaterialInterpretation.mapRefined (interpret key))
       ((mapRoles materialKnown before).1, Function.update (mapRoles materialKnown before).2 index

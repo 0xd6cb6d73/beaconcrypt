@@ -1,15 +1,15 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.AuthenticationExtraction.Funs
+import BeaconcryptCore.Extraction.Funs
 import BeaconcryptCore.Refinement.PqxdhCommitment
 import BeaconcryptCore.Model.Pqxdh.TranscriptAuth
 
 /-!
-The extracted response wrapper returns its fixed prefix, the same borrowed body whose length was checked, and its assigned-ID suffix in that order. These pure byte facts assume no hash/signature security or SDK streaming implementation. Historical refinement imports supply only checked generic byte/LE64 helpers.
+The extracted response wrapper returns its fixed prefix, the same borrowed body whose length was checked, and its assigned-ID suffix in that order. These pure byte facts assume no hash/signature security or SDK streaming implementation. Current refinement imports supply only checked generic byte/LE64 helpers.
 -/
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open RustM PqxdhRefinement beaconcrypt_authentication_core
+open RustM PqxdhRefinement beaconcrypt_core
 
 set_option autoImplicit false
 

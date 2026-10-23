@@ -38,7 +38,7 @@ The results are then:
   sequence number, or under one sender identifier, and it does not open at another.
 
 The length side conditions are exactly the ones the protocol maintains: a 32-byte
-key, a 12-byte nonce, 153 bytes of associated data (spec §9), a 16-byte Poly1305 tag
+key, a 12-byte nonce, 281 bytes of associated data (spec §9), a 16-byte Poly1305 tag
 and 64-bit sequence and sender identifiers.
 -/
 
@@ -50,15 +50,15 @@ namespace Pqxdh
 /-! ## Record contexts -/
 
 /-- The length side conditions the protocol maintains for one record context: a
-32-byte message key, a 12-byte nonce, 153 bytes of associated data, and sequence
+32-byte message key, a 12-byte nonce, 281 bytes of associated data, and sequence
 number and sender identifier both representable in 64 bits. -/
 structure RecordWf (mk : Bytes × Bytes) (ad : RecordAD) : Prop where
   /-- The ChaCha20-Poly1305 key is 32 bytes. -/
   key : mk.1.length = 32
   /-- The ChaCha20-Poly1305 nonce is 12 bytes. -/
   nonce : mk.2.length = 12
-  /-- The session associated data is 153 bytes (spec §9). -/
-  bytes : ad.bytes.length = 153
+  /-- The session associated data is 281 bytes (spec §9). -/
+  bytes : ad.bytes.length = 281
   /-- The wire sequence number fits in 64 bits. -/
   seq : ad.seq < 2 ^ 64
   /-- The sender identifier fits in 64 bits (spec §2.1). -/
@@ -71,7 +71,7 @@ theorem msgMaterial_lengths (c : Crypto) (ck : Bytes) :
   refine ⟨?_, ?_⟩ <;>
     simp [msgMaterial, ratchetOut, c.hkdf_length]
 
-/-- The associated data of a record between two 32-byte identity keys is 153 bytes,
+/-- The associated data of a record between two 32-byte identity keys is 281 bytes,
 so a session record context is well formed as soon as its sequence number and sender
 identifier are 64-bit values. -/
 theorem recordWf_of (c : Crypto) (ck ikSPub ikBPub : Bytes) (seq sid : ℕ)
@@ -85,13 +85,13 @@ theorem recordWf_of (c : Crypto) (ck ikSPub ikBPub : Bytes) (seq sid : ℕ)
 associated data has the protocol's length and its sequence number and sender
 identifier are 64-bit values. -/
 theorem recordWf_msgMaterial (c : Crypto) (ck : Bytes) {ad : RecordAD}
-    (hb : ad.bytes.length = 153) (hseq : ad.seq < 2 ^ 64) (hsid : ad.sid < 2 ^ 64) :
+    (hb : ad.bytes.length = 281) (hseq : ad.seq < 2 ^ 64) (hsid : ad.sid < 2 ^ 64) :
     RecordWf (msgMaterial c ck) ad :=
   ⟨(msgMaterial_lengths c ck).1, (msgMaterial_lengths c ck).2, hb, hseq, hsid⟩
 
 /-- The same for the key the receive ratchet derives for an arbitrary index. -/
 theorem recordWf_msgKeyAt (c : Crypto) (ck : Bytes) (i : ℕ) {ad : RecordAD}
-    (hb : ad.bytes.length = 153) (hseq : ad.seq < 2 ^ 64) (hsid : ad.sid < 2 ^ 64) :
+    (hb : ad.bytes.length = 281) (hseq : ad.seq < 2 ^ 64) (hsid : ad.sid < 2 ^ 64) :
     RecordWf (Ratchet.msgKeyAt (ratchetCrypto c) ck i) ad :=
   ⟨(msgMaterial_lengths c _).1, (msgMaterial_lengths c _).2, hb, hseq, hsid⟩
 

@@ -29,7 +29,7 @@ noncomputable def Matching (prior : Prior) (parent : Option Entry) (target : Roo
     (nonce : NonceOutput) (next : RootOutput) (read : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.Bytes)
     (owner : RawCtxChainOwner.State Kernel P) (decrypted : RawCtxWholeOwner.Decrypted) (before after : State) : Prop :=
   ∃ (frame : RawCtxReceive.DecodedFrame) (pending : Pending) (actualNonce : NonceOutput)
-    (width : owner.associatedData.length = 153) (slices : RawCtxFrameDecoding.Slices)
+    (width : owner.associatedData.length = 281) (slices : RawCtxFrameDecoding.Slices)
     (parsed : RawCtxFrameDecoding.fromPayload frame.payload = some slices) (plaintext : Pqxdh.Bytes),
     bytes.isEmpty = false ∧ read bytes = some frame ∧ RawCtxReceive.ValidFrame owner.expectedSender owner.associatedData frame ∧
     terminal prior parent target nonce next

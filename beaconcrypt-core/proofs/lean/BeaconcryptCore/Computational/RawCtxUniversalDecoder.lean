@@ -1,7 +1,7 @@
 import BeaconcryptCore.Computational.RawCtxSelectedMessageOpening
 
 /-!
-A fixed ordinary selected-key decoder supports source contexts chosen adaptively by the live owner lookup. Its private reduction framing contains the selected nonce, the exact 153-byte associated data and the original network bytes verbatim. These simulator-known inputs do not include the selected key or a proposed or recovered plaintext. The source performs its normal sender pin, frame validation and ratchet admission before this component callback. The reduction framing is not a production wire format or a network disclosure.
+A fixed ordinary selected-key decoder supports source contexts chosen adaptively by the live owner lookup. Its private reduction framing contains the selected nonce, the exact 281-byte associated data and the original network bytes verbatim. These simulator-known inputs do not include the selected key or a proposed or recovered plaintext. The source performs its normal sender pin, frame validation and ratchet admission before this component callback. The reduction framing is not a production wire format or a network disclosure.
 -/
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -13,15 +13,15 @@ open CtxRomAuth AdaptiveCtxReceive
 
 structure Envelope where
   nonce : CtxNonce
-  ad : List.Vector UInt8 153
+  ad : List.Vector UInt8 281
   raw : Pqxdh.Bytes
 
 def pack (value : Envelope) : Pqxdh.Bytes := value.nonce.toList ++ value.ad.toList ++ value.raw
 
 def unpack (bytes : Pqxdh.Bytes) : Option Envelope :=
   if nonceWidth : (bytes.take 12).length = 12 then
-    if adWidth : ((bytes.drop 12).take 153).length = 153 then
-      some ⟨⟨bytes.take 12, nonceWidth⟩, ⟨(bytes.drop 12).take 153, adWidth⟩, bytes.drop 165⟩
+    if adWidth : ((bytes.drop 12).take 281).length = 281 then
+      some ⟨⟨bytes.take 12, nonceWidth⟩, ⟨(bytes.drop 12).take 281, adWidth⟩, bytes.drop 293⟩
     else none
   else none
 
@@ -37,8 +37,8 @@ theorem pack_injective : Function.Injective pack := by
   have decoded := congrArg unpack equal
   simpa only [unpack_pack, Option.some.injEq] using decoded
 
-/-- Every component framing adds exactly the retained twelve-byte nonce and 153-byte associated data. -/
-theorem pack_length (value : Envelope) : (pack value).length = value.raw.length + 165 := by
+/-- Every component framing adds exactly the retained twelve-byte nonce and 281-byte associated data. -/
+theorem pack_length (value : Envelope) : (pack value).length = value.raw.length + 293 := by
   simp [pack, Nat.add_left_comm, Nat.add_comm]
 
 noncomputable def decodeFrame (value : Envelope) : Option RawCtxReceive.DecodedFrame → Option CtxUnclaimedAcceptance.Target
@@ -99,13 +99,13 @@ theorem decoder_payload (read : RawCtxReceive.FrameDecoder) (value : Envelope)
 
 /-- The framing contains exactly the simulator's current source nonce/AD and the original raw delivery. -/
 def envelope (nonce : CtxNonce) (context : RawCtxWholeOwner.OpenContext)
-    (width : context.associatedData.length = 153) : Envelope :=
+    (width : context.associatedData.length = 281) : Envelope :=
   ⟨nonce, ⟨context.associatedData, width⟩, context.raw⟩
 
 /-- The fixed universal decoder produces the exact native target for every reached owner context; no fixed owner/pin/AD premise is required. -/
 theorem source_target (input : RawCtxWholeOwner.OpenInput) (read : RawCtxReceive.FrameDecoder)
     (slices : RawCtxFrameDecoding.Slices)
-    (width : input.context.associatedData.length = 153)
+    (width : input.context.associatedData.length = 281)
     (nonempty : input.context.raw.isEmpty = false)
     (decoded : read input.context.raw = some input.context.frame)
     (parsed : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
@@ -121,7 +121,7 @@ theorem source_target (input : RawCtxWholeOwner.OpenInput) (read : RawCtxReceive
 theorem framed_opening (c : Pqxdh.Crypto) (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices)
     (parsed : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (width : input.context.associatedData.length = 153)
+    (width : input.context.associatedData.length = 281)
     (read : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.Bytes) (state : AdaptiveCtxCanonical.CanonicalState)
     (decoded : decoder read bytes = some (RawCtxCanonicalOpening.selectedTarget input slices parsed width)) :
     RawCtxCanonicalOpening.sourceOpening c input
@@ -137,7 +137,7 @@ theorem framed_opening (c : Pqxdh.Crypto) (input : RawCtxWholeOwner.OpenInput)
 theorem selected_open (key : PqxdhSecretInputKdf.RootOutput) (nonce : CtxNonce)
     (sequence : Std.U64) (context : RawCtxWholeOwner.OpenContext) (read : RawCtxReceive.FrameDecoder)
     (c : Pqxdh.Crypto) (state : AdaptiveCtxSharedModes.State)
-    (slices : RawCtxFrameDecoding.Slices) (width : context.associatedData.length = 153)
+    (slices : RawCtxFrameDecoding.Slices) (width : context.associatedData.length = 281)
     (nonempty : context.raw.isEmpty = false) (decoded : read context.raw = some context.frame)
     (parsed : RawCtxFrameDecoding.fromPayload context.frame.payload = some slices)
     (sequenceMatches : sequence = context.frame.sequence) :
@@ -160,8 +160,8 @@ theorem selected_open (key : PqxdhSecretInputKdf.RootOutput) (nonce : CtxNonce)
   exact congrArg (fun work =>
     (fun result => (result.1, RawCtxSharedSourceOpening.retain state result.2)) <$> work) exactOpen.symm
 
-/-- The original network bytes remain verbatim after the exactly 165-byte private prefix. -/
-theorem raw_verbatim (value : Envelope) : (pack value).drop 165 = value.raw := by
+/-- The original network bytes remain verbatim after the exactly 293-byte private prefix. -/
+theorem raw_verbatim (value : Envelope) : (pack value).drop 293 = value.raw := by
   simp [pack, List.drop_append]
 
 noncomputable def request (value : Envelope) : OracleComp ReceiveSpec (Option Pqxdh.Bytes) :=
@@ -210,10 +210,10 @@ theorem readProgram_queries (bytes : Pqxdh.Bytes) : (readProgram bytes).IsTotalQ
     · trivial
     · simp [IsTotalQueryBound]
 
-/-- The complete selected-attempt framing ledger charges all original raw bytes plus exactly 165 metadata bytes per attempt. -/
+/-- The complete selected-attempt framing ledger charges all original raw bytes plus exactly 293 metadata bytes per attempt. -/
 theorem framing_ledger (values : List Envelope) :
     (values.map (fun value => (pack value).length)).sum =
-      (values.map (fun value => value.raw.length)).sum + 165 * values.length := by
+      (values.map (fun value => value.raw.length)).sum + 293 * values.length := by
   induction values with
   | nil => simp
   | cons value tail ih =>

@@ -5,6 +5,7 @@
 import copy
 import importlib.util
 from pathlib import Path
+import tempfile
 import unittest
 
 HERE = Path(__file__).resolve().parent
@@ -31,6 +32,44 @@ class ClassificationTests(unittest.TestCase):
             sum(e.checker == "check-general-registration.py" for e in self.expected),
             2444,
         )
+
+    def test_legacy_source_scope_cannot_be_promoted(self):
+        for name in CHECK.LEGACY_SOURCE_CHECKERS:
+            with self.subTest(checker=name):
+                rows = copy.deepcopy(self.rows)
+                row = next(row for row in rows if row["checker"] == name + ".py")
+                self.assertTrue(row["scope"].startswith(CHECK.LEGACY_SOURCE_SCOPE))
+                row["scope"] = row["scope"].removeprefix(CHECK.LEGACY_SOURCE_SCOPE)
+                with self.assertRaises(ValueError):
+                    self.check(rows)
+
+    def test_legacy_checkers_require_explicit_projection_marker(self):
+        marker = (
+            "(* @beaconcrypt-fidelity-v1 legacy_profiles.scope="
+            "classical_projection:MLDSA_guards_not_globally_lifted *)"
+        )
+        original = (HERE / "production-transcript-interface.pvl").read_text()
+        self.assertEqual(original.count(marker), 1)
+        names = CHECK.LEGACY_SOURCE_CHECKERS | {"check-free-schedule"}
+        with tempfile.TemporaryDirectory() as scratch:
+            directory = Path(scratch)
+            for name in names:
+                driver = CHECK.INVENTORY.module(name)
+                for changed in (
+                    original.replace(marker, ""),
+                    original.replace(marker, "(* full ML-DSA source proof *)"),
+                    original + "\n" + marker,
+                ):
+                    (directory / "production-transcript-interface.pvl").write_text(
+                        changed
+                    )
+                    with (
+                        self.subTest(checker=name),
+                        self.assertRaisesRegex(
+                            ValueError, "reviewed classical-projection scope"
+                        ),
+                    ):
+                        driver.validate_targets(directory=directory)
 
     def test_missing_or_duplicate_verdict(self):
         for rows in (self.rows[:-1], self.rows + [self.rows[0]]):

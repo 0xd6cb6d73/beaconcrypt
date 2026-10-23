@@ -13,20 +13,20 @@ namespace BeaconcryptCore.PanicFreedom.Static
     (32#usize : Std.Usize) + 12#usize = ok 44#usize :=
   usize_add_eq _ _ _ (by simp)
 
-@[simp] private theorem add_44_153 :
-    (44#usize : Std.Usize) + 153#usize = ok 197#usize :=
+@[simp] private theorem add_44_281 :
+    (44#usize : Std.Usize) + 281#usize = ok 325#usize :=
   usize_add_eq _ _ _ (by simp)
 
-@[simp] private theorem add_197_16 :
-    (197#usize : Std.Usize) + 16#usize = ok 213#usize :=
+@[simp] private theorem add_325_16 :
+    (325#usize : Std.Usize) + 16#usize = ok 341#usize :=
   usize_add_eq _ _ _ (by simp)
 
 @[simp] private theorem mul_2_8 :
     (2#usize : Std.Usize) * 8#usize = ok 16#usize :=
   usize_mul_eq _ _ _ (by simp)
 
-@[simp] private theorem add_213_16 :
-    (213#usize : Std.Usize) + 16#usize = ok 229#usize :=
+@[simp] private theorem add_341_16 :
+    (341#usize : Std.Usize) + 16#usize = ok 357#usize :=
   usize_add_eq _ _ _ (by simp)
 
 @[simp] private theorem mul_32_2 :

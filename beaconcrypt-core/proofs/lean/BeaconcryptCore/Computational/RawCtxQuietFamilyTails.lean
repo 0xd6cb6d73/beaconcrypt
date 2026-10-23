@@ -66,7 +66,7 @@ theorem beacon_tail
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (request : RawCtxMixedOwner.SourceSpec.Domain)
     (before : RawCtxPendingFamilyTails.State RatchetChain M P I D K S B) (index : Fin B)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize) (kernel : Kernel RatchetChain)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize) (kernel : Kernel RatchetChain)
     (outside : RawCtxMixedOwner.SourceSpec.Range request → OracleComp (RawCtxPendingFamilyTails.SourceSpec S B) Result)
     (quiet : ∀ reply, (outside reply).IsTotalQueryBound 0)
     (query : (RawCtxPendingOwnerQueries.Spec RatchetChain).Domain)

@@ -27,7 +27,7 @@ example (x : Std.U64) :
 example
     (key : Std.Array Std.U8 32#usize)
     (nonce : Std.Array Std.U8 12#usize)
-    (associatedData : Std.Array Std.U8 153#usize)
+    (associatedData : Std.Array Std.U8 281#usize)
     (tag : Std.Array Std.U8 16#usize)
     (sequence senderId : Std.U64) :
     ∃ transcript : commitment.CommitmentTranscript,

@@ -47,7 +47,7 @@ inductive FamilyContext (Metadata PeerMetadata Identity DhPair KemPair Result : 
       (inner : ServerContext Metadata PeerMetadata (ServerSpec.Range request))
   | beacon (request : RawCtxMixedOwner.SourceSpec.Domain)
       (before : NativeFamily Metadata PeerMetadata Identity DhPair KemPair serverCount beaconCount) (index : Fin beaconCount)
-      (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+      (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
       (outside : RawCtxMixedOwner.SourceSpec.Range request → OracleComp (FamilySpec serverCount beaconCount) Result)
       (inner : OwnerContext Unit (RawCtxMixedOwner.SourceSpec.Range request))
 

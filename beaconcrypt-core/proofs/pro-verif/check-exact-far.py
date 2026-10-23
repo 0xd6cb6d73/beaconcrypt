@@ -126,13 +126,15 @@ TOKEN_SHA256 = {
     "fs-registration-binding.pvl": "50b006405e0a98006e2f1ebabe854b466569beed15b7338d656557bf573a679c",
     "production-transcript-interface.pvl": "27b04f004249f80c071d07b046f35e8e1932dbbe8e44b4c2af39076e5dce1edf",
 }
+# Reviewed classical projection of the ML-DSA source; see doc/impl/mldsa-source-pins.md.
+# Full authentication/AD lifting is not inferred from these whole-file tripwires.
 SOURCE_SHA256 = {
     "beaconcrypt-core/src/ratchet/control.rs": "6c17cc0dbe7445be04dc3ab123a60ecbf3d757da6337a7132d5dafd3e06f5639",
     "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
     "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
-    "beaconcrypt/src/ratchet.rs": "89e313030c12de769b7d54288b45a5e300550af330359cbb5b0c6d4ff3d2956b",
-    "beaconcrypt/src/beacon.rs": "b07624435c15761d86749064cd6fd30f6a0fefcd246b485f0be80dee79d24698",
-    "beaconcrypt/src/server.rs": "bede4addf22f32ead26815a2680aac04312b782d3449ccb931a9635433e9ab72",
+    "beaconcrypt/src/ratchet.rs": "bfe86fc2b5589a706c0513505e6cf9249741654538eabe7d2708c8213baf256b",
+    "beaconcrypt/src/beacon.rs": "880a240ccfda92565734d31ae3a7e630e988d3e1ff77666579ed31dafd15fd68",
+    "beaconcrypt/src/server.rs": "1cf58484619c712f3970f1bde06789559ee11e3af50430d42c1e3fe41fded706",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetControl.lean": "467e40094bfde41c7ebeed24761788c263d5ba12e21d3dfd86e981917b60565c",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetRefinement.lean": "813d26cedc7a82a9c19f795fdc8599809aac8d0626608000a626a2986be2c915",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetFuturePublication.lean": "b87aff9e49e929786c8e7a158e6e470d84a4f07f9fbbe9b5e65837a4065162f8",
@@ -210,6 +212,7 @@ def receive_model(source, direction, public_chain=False):
 
 
 def validate_targets(targets=TARGETS, directory=HERE, source_root=None):
+    FS.validate_legacy_scope(directory)
     if tuple(targets) != TARGETS:
         raise ValueError("exact-far roster, classes, controls or formulas changed")
     if {p.name for p in directory.glob("exact-far-*.pv")} != {t.query for t in targets}:

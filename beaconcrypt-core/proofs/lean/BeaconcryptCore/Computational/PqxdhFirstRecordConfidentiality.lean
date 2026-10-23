@@ -3225,7 +3225,7 @@ theorem send_twin (m0 m1 : Pqxdh.Bytes) (source : FixedHkdfSha512NoSaltSource) (
       simp only [RawCtxSelectedSendCompiler.deriveValue, RawCtxSelectedMessageKdf.step, address, hidden, ite_true]
     simp only [withContext, step, RawCtxSelectedSealConsumer.sealing, RawCtxSelectedSealConsumer.call,
       RawCtxInterpretedArguments.sealArguments, ready]
-    by_cases had : context.associatedData.length = 153
+    by_cases had : context.associatedData.length = 281
     · simp only [RawCtxSelectedMessageSealing.selected, had, _root_.dite_true, simulateQ_bind, simulateQ_pure, map_bind, map_pure,
         simulateQ_query, RawCtxSelectedSealConsumer.liftSelected]
       refine Twin.sealing _ _ ?_ fun r => ?_

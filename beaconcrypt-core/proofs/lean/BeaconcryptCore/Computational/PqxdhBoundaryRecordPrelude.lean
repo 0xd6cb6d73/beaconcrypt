@@ -20,7 +20,7 @@ def withReader (codec : PqxdhServerAuthExperiment.Codec Reader Response)
 
 /-- The native prelude passes the selected stored AD and real optional opening reply through the native primitive interface. -/
 noncomputable def ownerReceive (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) :
     OracleComp RawCtxMixedOwner.NativeSpec
       (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxWholeOwner.OwnerState Metadata) :=
@@ -28,7 +28,7 @@ noncomputable def ownerReceive (reader : RawCtxNativeFramePrelude.Reader Message
 
 /-- The complete native prelude equals the role's actual raw branch, retaining all primitive callbacks and the whole owner. -/
 theorem owner_exact (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (sender : Std.U64)
     (associated : state.owner.associatedData = absBytes ad) :
     ownerReceive reader ad raw state =

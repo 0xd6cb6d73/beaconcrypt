@@ -10,7 +10,7 @@ import BeaconcryptCore.Computational.PqxdhServerAuthRootSessionFields
 Two run invariants of `PqxdhDeploymentSecrecy.game` (any identity index) that let CE-A1's public pinned match be read as an agreement on ten of the eleven fields of `PqxdhServerAuthRootSession.Session`, read from the experiment's final state: each party's state and the transcript (`PqxdhDeploymentSessionFields`).
 
 - `ServerInv`: the Server key ID stays the compiled-in one; the ghost seal log (`PqxdhServerAuthExperiment.Ghost.seals`, appended only by `buildOracle`, under the built handle) and the pending tokens name only handles already issued; a pending handle has no logged seal context and its token carries the Beacon identity that `PqxdhDeploymentCompile.identityOf` reads from the accept bytes that returned the handle; and a handle with a successful build has the build's first-send context as its first logged seal context (`sealOf`), whose associated data is `Pqxdh.assocData` of the Server identity and that Beacon identity (`PqxdhServerAuthRootSessionFields.native_context`). This is the associated data the Server sealed with: Rust's `Server` recomputes it from both identities with `build_associated_data` (`server.rs`, `pqxdh.rs`).
-- `BeaconInv`: every InitSent control carries the owner's own identity key (the Phase 1 publication, `PqxdhDeploymentEligibility.bundle_candidate`); every Fresh, Fresh-with-coins and InitSent control expects the owner's pinned Server identity (`expectedPin`); every established owner stores the 153-byte associated data of its pin and its own identity key (the success branch of `PqxdhDeploymentCompileFootprint.finish_owner` with `PqxdhDeploymentHeadlinePinEnv.associatedData_array`; Rust's `Established.associated_data`, `beacon.rs`); and every owner that accepted in the registration view of the transcript (`PqxdhDeploymentServerAuthEvent.accepted`) is established.
+- `BeaconInv`: every InitSent control carries the owner's own identity key (the Phase 1 publication, `PqxdhDeploymentEligibility.bundle_candidate`); every Fresh, Fresh-with-coins and InitSent control expects the owner's pinned Server identity (`expectedPin`); every established owner stores the 281-byte associated data of its pin and its own identity key (the success branch of `PqxdhDeploymentCompileFootprint.finish_owner` with `PqxdhDeploymentHeadlinePinEnv.associatedData_array`; Rust's `Established.associated_data`, `beacon.rs`); and every owner that accepted in the registration view of the transcript (`PqxdhDeploymentServerAuthEvent.accepted`) is established.
 - Both hold initially (`inv_initial`) and after every query (`inv_step`, given `PqxdhDeploymentEligibility.Agree` for the Server identity at a build). Coins, the public HMAC and BLAKE2b oracles, the record commands and the secrecy commands keep every field the invariants read (`native_quiet`, `coinSend_kept`, through `serverInv_frame` and `beaconInv_frame`; the raw accept and the HMAC only append Extract-table touches, `accept_seals`, `hmac_seals`); create, bundle, finish, raw accept and build have their own steps (`create_step`, `bundle_step`, `finish_step`, `accept_step`, `build_step` with `build_seals`). Hence on every outcome (`inv_game`) the final Server identity is the protected binding's pin and the final state satisfies both invariants for that pin and `setup.serverKeyId`.
 
 These are support facts: no codec law, contract or security assumption is used and nothing is charged. No root is read. The touch log keeps the Server's session roots, but no field of the state is labelled as a Beacon's root: the Extract entry from which a Beacon's root is expanded sits unlabelled in the shared HMAC cache (`PqxdhServerAuthNative.sourceRoot`), and the Beacon's evolving ratchet kernel is derived from that root.
@@ -34,7 +34,7 @@ def sealOf (seals : List (Nat × RawCtxSourceSend.SealContext)) (session : Nat) 
   (seals.find? fun entry => decide (entry.1 = session)).map Prod.snd
 
 /-- The stored associated data of an established phase. -/
-def establishedAd {D K Kernel : Type} : RawCtxBeaconLifecycle.Phase D K Kernel → Option (Std.Array Std.U8 153#usize)
+def establishedAd {D K Kernel : Type} : RawCtxBeaconLifecycle.Phase D K Kernel → Option (Std.Array Std.U8 281#usize)
   | .established _ associatedData _ => some associatedData
   | _ => none
 
@@ -52,7 +52,7 @@ def expectedPin {D K Kernel : Type} : RawCtxBeaconLifecycle.Phase D K Kernel →
 
 /-- The owner fields the Beacon invariant reads: identity seed, pin, InitSent Beacon identity, expected Server identity and established associated data. -/
 def ownerKey (owner : PqxdhRegistrationSchedule.Owner KemSK) :
-    IdentitySeed × Word32 × Option Word32 × Option Word32 × Option (Std.Array Std.U8 153#usize) :=
+    IdentitySeed × Word32 × Option Word32 × Option Word32 × Option (Std.Array Std.U8 281#usize) :=
   (owner.beacon.identity, owner.beacon.serverIdentity, controlIdentity owner.beacon.phase,
     expectedPin owner.beacon.phase, establishedAd owner.beacon.phase)
 
@@ -145,7 +145,7 @@ theorem sealOf_none_of_below (seals : List (Nat × RawCtxSourceSend.SealContext)
 /-- A phase with stored associated data is established with it. -/
 theorem establishedAd_some {D K : Type}
     (phase : RawCtxBeaconLifecycle.Phase D K beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)
-    (associatedData : Std.Array Std.U8 153#usize) (found : establishedAd phase = some associatedData) :
+    (associatedData : Std.Array Std.U8 281#usize) (found : establishedAd phase = some associatedData) :
     ∃ control kernel, phase = .established control associatedData kernel := by
   cases phase with
   | established control stored kernel =>

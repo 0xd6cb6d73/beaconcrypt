@@ -1,16 +1,16 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.AuthenticationExtraction.Funs
+import BeaconcryptCore.Extraction.Funs
 import BeaconcryptCore.Refinement.PqxdhEncoding
 import BeaconcryptCore.Model.Pqxdh.TranscriptAuth
 
 /-!
-The runtime authentication constants, role-separated signing input, and associated-data overwrite refine the deterministic byte model through the current isolated Hax extraction.
+The runtime authentication constants, role-separated signing input, and associated-data overwrite refine the deterministic byte model through the current full-crate Hax extraction.
 These theorems establish byte construction only; hashing, ML-DSA security, codec parsing, and the adapter's native primitive calls remain outside this refinement.
 -/
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open RustM PqxdhRefinement beaconcrypt_authentication_core Pqxdh
+open RustM PqxdhRefinement beaconcrypt_core Pqxdh
 
 set_option autoImplicit false
 set_option maxHeartbeats 1000000

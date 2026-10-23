@@ -24,7 +24,7 @@ noncomputable def Produced (writer : RawCtxMixedShared.Writer)
   ∃ pending, RawCtxInterpretedSend.normalBegin kernel context = .requested pending ∧
     let ready := RawCtxInterpretedSend.ready pending
       (RawCtxSelectedSendCompiler.deriveValue prior parent target nonce next pending.request)
-    ∃ (actualNonce : NonceOutput) (width : ready.context.associatedData.length = 153) (record : CtxRomRecord),
+    ∃ (actualNonce : NonceOutput) (width : ready.context.associatedData.length = 281) (record : CtxRomRecord),
       ready.material = .hidden actualNonce ∧
       entry = ⟨RawCtxSelectedMessageSealing.selectedInput actualNonce ready.sequence ready.context width, record⟩ ∧
       result = some (ready.advanced, (writer ⟨ready.sequence, ready.context.senderId, record.encode⟩).map

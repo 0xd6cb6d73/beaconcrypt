@@ -16,7 +16,7 @@ variable {Kernel Other I D K Response Shared : Type}
 
 structure Staged (Kernel : Type) where
   authenticated : pqxdh.AuthenticatedBeaconRegistration
-  associatedData : Array Std.U8 153#usize
+  associatedData : Array Std.U8 281#usize
   kernel : Kernel
   opened : RawCtxWholeOwner.Decrypted
 

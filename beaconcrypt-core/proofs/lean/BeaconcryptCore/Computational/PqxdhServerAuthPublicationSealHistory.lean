@@ -93,7 +93,7 @@ theorem sealing_provenance (crypto : Pqxdh.Crypto) (writer : RawCtxMixedShared.W
         (RawCtxSelectedSealConsumer.sealing crypto writer (PqxdhServerAuthCtxSend.sealing pending)))).run before))
     (entry : CtxSuccessfulSeal) (found : entry ∈ produced after) :
     entry ∈ produced before ∨
-      ∃ (nonce : NonceOutput) (width : pending.context.associatedData.length = 153) (record : CtxRomRecord),
+      ∃ (nonce : NonceOutput) (width : pending.context.associatedData.length = 281) (record : CtxRomRecord),
         pending.material = .hidden nonce ∧
         entry = ⟨selectedInput nonce pending.sequence pending.context width, record⟩ ∧
         result = some ((writer ⟨pending.sequence, pending.context.senderId, record.encode⟩).map

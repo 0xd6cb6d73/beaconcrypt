@@ -101,7 +101,7 @@ theorem beacon_erase
     (outside : RawCtxMixedOwner.SourceSpec.Range request → OracleComp (SourceSpec S B) Result)
     (after : RawCtxMixedOwner.SourceSpec.Range request → State M P I D K S B →
       OracleComp (Spec M P I D K Result S B) (Result × State M P I D K S B))
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
     (kernel : RawCtxPendingOwnerQueries.Kernel RatchetChain)
     (active : (before.2 index).beacon.phase = .established control associatedData kernel)
     (after_erase : ∀ reply updated, simulateQ erase (after reply updated) =

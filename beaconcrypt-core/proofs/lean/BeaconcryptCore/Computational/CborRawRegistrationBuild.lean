@@ -23,7 +23,7 @@ def rawSeal (input : RawCtxSourceSend.SealInput) : OracleComp RawSealSpec (Optio
   match sealed with
   | none => pure none
   | some (body, tag) =>
-      if input.context.associatedData.length = 153 then
+      if input.context.associatedData.length = 281 then
         if tag.length = 16 then do
           let digest ← RawSealSpec.query (.inr (RawCtxSourceSeal.hashInput input tag))
           match digest with
@@ -101,7 +101,7 @@ theorem raw_render_run {κ : Type} {target : OracleSpec κ}
 theorem shared_raw_seal {Auxiliary : Type} (crypto : Pqxdh.Crypto)
     (kdf : QueryImpl RawCtxSharedPrimitive.KdfSpec
       (StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp))
-    (input : RawCtxSourceSend.SealInput) (valid : input.context.associatedData.length = 153)
+    (input : RawCtxSourceSend.SealInput) (valid : input.context.associatedData.length = 281)
     (auxiliary : Auxiliary) (cache : CtxRomAuth.CtxRO.QueryCache) :
     (simulateQ (RawCtxCanonicalSeal.sharedImpl crypto rawWriter kdf)
       (RawCtxSourceSeal.sealInput input)).run (auxiliary, cache) = (do

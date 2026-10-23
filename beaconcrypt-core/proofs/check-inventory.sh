@@ -50,7 +50,7 @@ declare -A expected_category_counts=(
 	[control]=17
 	[generated-lean]=13
 	[generated-proverif]=1
-	[handwritten-lean]=2022
+	[handwritten-lean]=2023
 	[handwritten-proverif]=298
 	[inventory]=2
 	[lean-control]=13
@@ -378,19 +378,28 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 43 \
+# The bounded ML-DSA joint profile adds one root conversion for each role.
+require_occurrence_count 2 \
+	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
+	"joint ML-DSA role root converters" proofs/pro-verif/mldsa-joint-session.pvl
+require_occurrence_count 45 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 46 '_to_bitstring' \
+require_occurrence_count 48 '_to_bitstring' \
 	"all handwritten _to_bitstring tokens including three initial-ratchet manifest facts" \
 	"${handwritten_proverif[@]}"
 
 transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
-require_line_count 522 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
+# The ML-DSA increment adds thirty facts and seven explicit scope/layout facts.
+require_line_count 559 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
 	"canonical production transcript fact"
+require_line_count 30 '^\(\* @beaconcrypt-fidelity-v1 mldsa\.' \
+	"$transcript_interface" "ML-DSA transcript fact"
+require_line_count 1 '^\(\* @beaconcrypt-fidelity-v1 legacy_profiles.scope=classical_projection:MLDSA_guards_not_globally_lifted \*\)$' \
+	"$transcript_interface" "legacy classical-projection scope"
 require_line_count 10 '^\(\* @beaconcrypt-fidelity-v1 transport\.' \
 	"$transcript_interface" "CBOR transport transcript fact"
-require_line_count 18 '^\(\* @beaconcrypt-fidelity-v1 phase1\.' \
+require_line_count 19 '^\(\* @beaconcrypt-fidelity-v1 phase1\.' \
 	"$transcript_interface" "Phase-1 InitKex transcript fact"
 require_line_count 42 '^\(\* @beaconcrypt-fidelity-v1 cryptoframe\.' \
 	"$transcript_interface" "CryptoFrame wire transcript fact"
@@ -1584,8 +1593,8 @@ require_occurrence_count 1 \
 require_line_count 1 '^pub const MAX_MESSAGE_SIZE: usize = 33_554_432;$' \
 	"$parser_dir/src/sizing.rs" "complete CBOR message size limit"
 for record in \
-	'init-kex = \[1, 0, identity-key:' \
-	'kex-response = \[1, 1, identity-key:' \
+	'init-kex = \[2, 0, identity-key:' \
+	'kex-response = \[2, 1, identity-key:' \
 	'crypto-frame = \[1, 2, seq:'; do
 	require_line_count 1 "^${record}" "$parser_dir/schema/transport.cddl" \
 		"CBOR fixed version, kind and field prefix ${record}"

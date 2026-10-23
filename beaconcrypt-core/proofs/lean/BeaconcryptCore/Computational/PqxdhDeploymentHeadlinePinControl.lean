@@ -33,22 +33,22 @@ def ServerIs (identity : RawCtxServerRouting.Identity) (control : PqxdhRecordLif
   ∃ server, control.server = some server ∧ server.identity = identity
 
 /-- Every established owner's installed shell has associated data admitted by `ok` at its owner index. -/
-def ShellsOk (ok : ℕ → Std.Array Std.U8 153#usize → Prop) (control : PqxdhRecordLiftProtocol.Control n) : Prop :=
+def ShellsOk (ok : ℕ → Std.Array Std.U8 281#usize → Prop) (control : PqxdhRecordLiftProtocol.Control n) : Prop :=
   ∀ (owner : ℕ) shell kernel, control.owners[owner]? = some (Phase.established shell kernel) →
     ok owner shell.associatedData
 
 /-- Both control facts. -/
-def ControlOk (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array Std.U8 153#usize → Prop)
+def ControlOk (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
     (control : PqxdhRecordLiftProtocol.Control n) : Prop :=
   ServerIs identity control ∧ ShellsOk ok control
 
 /-- An environment effect fits `ok`: a Beacon install carries associated data that `ok` admits at its owner index; every other effect fits. -/
-def InstallFits (ok : ℕ → Std.Array Std.U8 153#usize → Prop) : (EnvEffects n).Domain → Prop
+def InstallFits (ok : ℕ → Std.Array Std.U8 281#usize → Prop) : (EnvEffects n).Domain → Prop
   | .inr (.installBeacon owner shell _) => ok owner shell.associatedData
   | _ => True
 
 /-- An owner list extended by an inactive owner keeps every established shell. -/
-theorem shellsOk_append (ok : ℕ → Std.Array Std.U8 153#usize → Prop) (control : PqxdhRecordLiftProtocol.Control n)
+theorem shellsOk_append (ok : ℕ → Std.Array Std.U8 281#usize → Prop) (control : PqxdhRecordLiftProtocol.Control n)
     (holds : ShellsOk ok control) (phase : InactivePhase) :
     ShellsOk ok { control with owners := control.owners ++ [Phase.inactive phase] } := by
   intro owner shell kernel found
@@ -63,7 +63,7 @@ theorem shellsOk_append (ok : ℕ → Std.Array Std.U8 153#usize → Prop) (cont
       simp at found
 
 /-- Replacing an owner by an inactive phase keeps every established shell. -/
-theorem shellsOk_setInactive (ok : ℕ → Std.Array Std.U8 153#usize → Prop)
+theorem shellsOk_setInactive (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
     (control : PqxdhRecordLiftProtocol.Control n) (holds : ShellsOk ok control) (index : ℕ) (phase : InactivePhase) :
     ShellsOk ok { control with owners := control.owners.set index (Phase.inactive phase) } := by
   intro owner shell kernel found
@@ -75,7 +75,7 @@ theorem shellsOk_setInactive (ok : ℕ → Std.Array Std.U8 153#usize → Prop)
     exact holds owner shell kernel found
 
 /-- Replacing an owner by an established phase with an admitted shell keeps every established shell. -/
-theorem shellsOk_setEstablished (ok : ℕ → Std.Array Std.U8 153#usize → Prop)
+theorem shellsOk_setEstablished (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
     (control : PqxdhRecordLiftProtocol.Control n) (holds : ShellsOk ok control) (index : ℕ) (shell : BeaconShell)
     (stored : PqxdhRecordLiftWorldCompiler.StoredKernel n) (fits : ok index shell.associatedData) :
     ShellsOk ok { control with owners := control.owners.set index (Phase.established shell stored) } := by
@@ -91,7 +91,7 @@ theorem shellsOk_setEstablished (ok : ℕ → Std.Array Std.U8 153#usize → Pro
 /-! ### The compiled client's requests -/
 
 section Requests
-variable (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array Std.U8 153#usize → Prop)
+variable (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
 
 /-- A lifted private request keeps the control. -/
 theorem lift_ok (query : (PqxdhRecordLiftProtocol.ServiceSpec n).Domain) (control : PqxdhRecordLiftProtocol.Control n)
@@ -265,7 +265,7 @@ end Requests
 /-! ### Programs -/
 
 section Programs
-variable (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array Std.U8 153#usize → Prop)
+variable (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
 
 /-- An invariant kept by every step of a stateful handler at the requests a program may issue (those that are not bad) is kept by the program's simulation. -/
 theorem keep_bounded {ι₁ ι₂ σ α : Type} {spec₁ : OracleSpec ι₁} {spec₂ : OracleSpec ι₂}
@@ -309,7 +309,7 @@ end Programs
 
 section Native
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response E : Type}
-  (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array Std.U8 153#usize → Prop)
+  (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
 open PqxdhServerAuthExperiment (Setup Codec)
 open PqxdhRecordLiftWorldCompiler (Label)
 

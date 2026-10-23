@@ -13,7 +13,7 @@ open PqxdhRefinement RawCtxNativeFramePrelude
 variable {Message Root Metadata : Type}
 
 /-- Successful native preparation retains an actual borrowed payload whose extracted admission produced the exact stored context. -/
-theorem prepared_payload (reader : Reader Message Root) (ad : Std.Array Std.U8 153#usize)
+theorem prepared_payload (reader : Reader Message Root) (ad : Std.Array Std.U8 281#usize)
     (expected : Std.U64) (raw : Pqxdh.Bytes) (value : Prepared)
     (execution : prepare reader ad expected raw = ok (some value)) :
     ∃ payload : Slice Std.U8, sliceBytes payload = value.frame.payload ∧
@@ -40,10 +40,10 @@ theorem prepared_payload (reader : Reader Message Root) (ad : Std.Array Std.U8 1
             exact ⟨payload, rfl, admitted⟩
 
 /-- After actual successful preparation the production receive executor transcription runs on the same sequence, payload and associated data as the native raw program. -/
-theorem prepared_loop (reader : Reader Message Root) (ad : Std.Array Std.U8 153#usize)
+theorem prepared_loop (reader : Reader Message Root) (ad : Std.Array Std.U8 281#usize)
     (expected : Std.U64) (raw : Pqxdh.Bytes) (value : Prepared)
     (execution : prepare reader ad expected raw = ok (some value))
-    (erased : Std.Array Std.U8 229#usize) (kernel : ConcreteRatchetKernel) :
+    (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel) :
     PqxdhOpenContextBridge.executeReceiveFrom erased kernel value.frame.sequence value.context =
       (fun result => ok result) <$> simulateQ RawCtxSourceOpen.nativeAdapter
         (simulateQ RawCtxWholeOwner.adapter
@@ -62,8 +62,8 @@ theorem prepared_loop (reader : Reader Message Root) (ad : Std.Array Std.U8 153#
     (PqxdhOpenContextBridge.begin_context kernel value.frame.sequence _)
 
 /-- Complete native preparation, receive-loop transcription over extracted local steps, actual opening executor and normal-return kernel reinstallation. -/
-noncomputable def executeOwner (reader : Reader Message Root) (ad : Std.Array Std.U8 153#usize)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+noncomputable def executeOwner (reader : Reader Message Root) (ad : Std.Array Std.U8 281#usize)
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) :
     OracleComp RawCtxMixedOwner.NativeSpec
       (RustM (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxWholeOwner.OwnerState Metadata)) :=
@@ -76,8 +76,8 @@ noncomputable def executeOwner (reader : Reader Message Root) (ad : Std.Array St
             (PqxdhOpenContextBridge.executeReceiveFrom erased state.owner.kernel value.frame.sequence value.context)
 
 /-- The extracted preparation and receive executor transcription equal the complete native owner operation with every actual callback and optional opening reply. -/
-theorem executeOwner_exact (reader : Reader Message Root) (ad : Std.Array Std.U8 153#usize)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+theorem executeOwner_exact (reader : Reader Message Root) (ad : Std.Array Std.U8 281#usize)
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (associated : state.owner.associatedData = absBytes ad) :
     executeOwner reader ad erased raw state =
       (fun result => ok result) <$> PqxdhBoundaryRecordPrelude.ownerReceive reader ad raw state := by
@@ -96,7 +96,7 @@ variable {PeerMetadata : Type}
 
 /-- Server routing feeds the actual selected associated data to the extracted executor and reinstalls its complete returned kernel only on normal return. -/
 noncomputable def executeServer (reader : Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxServerRouting.State Metadata PeerMetadata) :
     OracleComp RawCtxMixedOwner.NativeSpec
       (RustM (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxServerRouting.State Metadata PeerMetadata)) :=
@@ -118,7 +118,7 @@ noncomputable def executeServer (reader : Reader Message Root)
 
 /-- Complete Server routing and the receive execution transcription give exactly the native role operation on arbitrary raw bytes and peers. -/
 theorem executeServer_exact (reader : Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxServerRouting.State Metadata PeerMetadata) :
     executeServer reader erased raw state =
       (fun result => ok result) <$> PqxdhBoundaryRecordPrelude.serverReceive reader raw state := by
@@ -136,7 +136,7 @@ variable {Identity DhPair KemPair : Type}
 
 /-- Established Beacon execution uses its stored associated data and full receive-loop transcription; other phases preserve their literal rejection result. -/
 noncomputable def executeBeacon (reader : Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxBeaconLifecycle.State Identity DhPair KemPair) :
     OracleComp RawCtxMixedOwner.NativeSpec
       (RustM (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxBeaconLifecycle.State Identity DhPair KemPair)) :=
@@ -148,7 +148,7 @@ noncomputable def executeBeacon (reader : Reader Message Root)
 
 /-- Every Beacon lifecycle phase agrees with the full native source operation, with no target-honesty or successful-opening premise. -/
 theorem executeBeacon_exact (reader : Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxBeaconLifecycle.State Identity DhPair KemPair) :
     executeBeacon reader erased raw state =
       (fun result => ok result) <$> PqxdhBoundaryRecordPrelude.beaconReceive reader raw state := by
@@ -171,7 +171,7 @@ theorem record_map_result {X Y : Type} (setup : PqxdhServerAuthExperiment.Setup 
 /-- The Server receive transcription runs in the original shared primitive state and publishes its returned peer state and frame log. -/
 noncomputable def executeServerRaw (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (raw : Pqxdh.Bytes) (state : PqxdhDeploymentNative.State KemSK) :
     ProbComp (RustM (core.option.Option RawCtxWholeOwner.Decrypted × PqxdhDeploymentNative.State KemSK)) := do
   let result ← (record setup codec (logged (executeServer reader erased raw (serverView state)))).run state.native
@@ -181,7 +181,7 @@ noncomputable def executeServerRaw (setup : PqxdhServerAuthExperiment.Setup base
 /-- Full native interpretation preserves the source Server optional plaintext, all live owners and peers, shared hash cache and logs. -/
 theorem executeServerRaw_exact (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (raw : Pqxdh.Bytes) (state : PqxdhDeploymentNative.State KemSK) :
     executeServerRaw setup codec reader erased raw state =
       (fun result => ok result) <$> (PqxdhBoundaryRecordPrelude.serverRaw setup codec reader raw).run state := by
@@ -195,7 +195,7 @@ theorem executeServerRaw_exact (setup : PqxdhServerAuthExperiment.Setup baseSpec
 /-- The Beacon receive transcription uses the actual owner lookup and reinstalls the same complete live owner, raw counter and frame log. -/
 noncomputable def executeBeaconRaw (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (index : Nat) (raw : Pqxdh.Bytes) (state : PqxdhDeploymentNative.State KemSK) :
     ProbComp (RustM (core.option.Option RawCtxWholeOwner.Decrypted × PqxdhDeploymentNative.State KemSK)) :=
   match state.native.owners[index]? with
@@ -210,7 +210,7 @@ noncomputable def executeBeaconRaw (setup : PqxdhServerAuthExperiment.Setup base
 /-- Missing-owner rejection and every Beacon phase retain the actual full native command result and state. -/
 theorem executeBeaconRaw_exact (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (index : Nat) (raw : Pqxdh.Bytes) (state : PqxdhDeploymentNative.State KemSK) :
     executeBeaconRaw setup codec reader erased index raw state =
       (fun result => ok result) <$> (PqxdhBoundaryRecordPrelude.beaconRaw setup codec reader index raw).run state := by
@@ -229,7 +229,7 @@ theorem executeBeaconRaw_exact (setup : PqxdhServerAuthExperiment.Setup baseSpec
 /-- The frozen CE raw Server command is the receive execution transcription over extracted local steps with its normal-return wrapper. -/
 theorem handler_serverRaw (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : PqxdhServerAuthExperiment.Checks) (serverSeed : PqxdhJointIdentity.IdentitySeed)
     (raw : Pqxdh.Bytes) (state : PqxdhDeploymentNative.State KemSK) :
     executeServerRaw setup codec reader erased raw state =
@@ -241,7 +241,7 @@ theorem handler_serverRaw (setup : PqxdhServerAuthExperiment.Setup baseSpec KemS
 /-- The frozen CE raw Beacon command uses the actual owner handle and receive execution transcription over extracted local steps. -/
 theorem handler_beaconRaw (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : PqxdhServerAuthExperiment.Checks) (serverSeed : PqxdhJointIdentity.IdentitySeed)
     (index : Nat) (raw : Pqxdh.Bytes) (state : PqxdhDeploymentNative.State KemSK) :
     executeBeaconRaw setup codec reader erased index raw state =

@@ -88,7 +88,7 @@ noncomputable def hiddenSampler (modes : Label n → KeyMode) (crypto : Pqxdh.Cr
     (writer : RawCtxMixedShared.Writer) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (pending : PqxdhRecordLiftProtocol.Sealing n) (state : CtxPrivate n) :
     ProbComp (Option RawCtxSourceSend.Encrypted × CtxPrivate n) :=
-  if width : (PqxdhRecordLiftIdeal.replaceContext replace pending.context).associatedData.length = 153 then do
+  if width : (PqxdhRecordLiftIdeal.replaceContext replace pending.context).associatedData.length = 281 then do
     let input := RawCtxSelectedMessageSealing.selectedInput (materialAt state.base.chain pending.material).2
       pending.sequence (PqxdhRecordLiftIdeal.replaceContext replace pending.context) width
     if modes pending.material = .random then

@@ -63,7 +63,7 @@ abbrev EnvSpec : OracleSpec EnvQuery := fun query => CommandSpec query.val
 structure BeaconShell where
   identityKeyId : Std.U64
   control : pqxdh.BeaconEstablished
-  associatedData : Std.Array Std.U8 153#usize
+  associatedData : Std.Array Std.U8 281#usize
 
 /-- Inactive phase metadata may be updated without supplying an established kernel. -/
 inductive InactivePhase where

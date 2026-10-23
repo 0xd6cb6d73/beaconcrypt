@@ -173,7 +173,7 @@ theorem service_branch (slot : Nat) (read : RawCtxReceive.FrameDecoder) (expecte
       RawCtxInterpretedArguments.openArguments pending = some input ∧
       decrypted = ⟨plaintext, input.context.frame.sender, input.sequence⟩ ∧
       ((∃ material, input.material = .known material) ∨
-        ∃ (nonce : NonceOutput) (width : input.context.associatedData.length = 153),
+        ∃ (nonce : NonceOutput) (width : input.context.associatedData.length = 281),
           input.material = .hidden nonce ∧
           after = step (.inl (.inr (RawCtxUniversalDecoder.pack
             (RawCtxUniversalDecoder.envelope nonce input.context width)))) (some plaintext) before) := by
@@ -183,7 +183,7 @@ theorem service_branch (slot : Nat) (read : RawCtxReceive.FrameDecoder) (expecte
   | known actual => exact Or.inl ⟨actual, rfl⟩
   | hidden nonce =>
     right
-    by_cases width : input.context.associatedData.length = 153
+    by_cases width : input.context.associatedData.length = 281
     · refine ⟨nonce, width, rfl, ?_⟩
       simp only [RawCtxUniversalOpening.call, material, dite_eq_left width, monitor,
         simulateQ_spec_query, handler, StateT.run, mem_support_bind_iff, mem_support_pure_iff] at reached
@@ -207,7 +207,7 @@ theorem receive_branch (prior : Prior) (parent : Option Entry) (target : RootOut
       decrypted = ⟨plaintext, context.frame.sender, sequence⟩ ∧
       kernel = (normalFinish pending (.Some decrypted)).1 ∧
       ((∃ value, material = .known value) ∨
-        ∃ (actualNonce : NonceOutput) (width : context.associatedData.length = 153),
+        ∃ (actualNonce : NonceOutput) (width : context.associatedData.length = 281),
           material = .hidden actualNonce ∧
           after = step (.inl (.inr (RawCtxUniversalDecoder.pack
             (RawCtxUniversalDecoder.envelope actualNonce context width)))) (some plaintext) before) := by
@@ -273,7 +273,7 @@ def SelectedFresh {Metadata : Type} (prior : Prior) (parent : Option Entry) (tar
       (normalBegin owner.kernel frame.sequence ⟨bytes, frame, owner.associatedData⟩) = .opening pending ∧
     RawCtxInterpretedArguments.openArguments pending =
       some ⟨.hidden actualNonce, frame.sequence, ⟨bytes, frame, owner.associatedData⟩⟩ ∧
-    ∀ (width : owner.associatedData.length = 153) (slices : RawCtxFrameDecoding.Slices)
+    ∀ (width : owner.associatedData.length = 281) (slices : RawCtxFrameDecoding.Slices)
       (parsed : RawCtxFrameDecoding.fromPayload frame.payload = some slices),
       ∀ entry ∈ before.seals, ¬(RawCtxKeyFreeDecoder.target actualNonce frame.sequence frame
         owner.associatedData slices parsed width).toLegacy.sameFullTupleAsSuccessfulSeal entry

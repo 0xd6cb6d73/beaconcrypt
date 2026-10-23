@@ -88,7 +88,7 @@ theorem native_canonical_opening {Auxiliary : Type} (c : Pqxdh.Crypto)
     (kdf : QueryImpl KdfSpec (StateT (SharedState Auxiliary) ProbComp))
     (input : RawCtxWholeOwner.OpenInput) (slices : RawCtxFrameDecoding.Slices)
     (hslices : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (had : input.context.associatedData.length = 153)
+    (had : input.context.associatedData.length = 281)
     (decode : AdaptiveCtxReceive.RawDecoder) (state : AdaptiveCtxCanonical.CanonicalState)
     (hdecode : decode input.context.raw = some (selectedTarget input slices hslices had))
     (auxiliary : Auxiliary) :

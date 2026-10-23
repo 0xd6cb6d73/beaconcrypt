@@ -41,10 +41,10 @@ theorem outerInput_eq_secretAddress_outerSuffix (key : CtxKey)
       secretAddress key (outerSuffix nonce context tag) := by
   simp [outerInput, Pqxdh.ctxPreimage, secretAddress, outerSuffix]
 
-/-- At the retained-tag width, the key-free suffix has exactly 197 bytes. -/
+/-- At the retained-tag width, the key-free suffix has exactly 325 bytes. -/
 theorem outerSuffix_length (nonce : CtxNonce) (context : CtxRecordContext)
     (tag : Pqxdh.Bytes) (htag : tag.length = 16) :
-    (outerSuffix nonce context tag).length = 197 := by
+    (outerSuffix nonce context tag).length = 325 := by
   simp [outerSuffix, context.bytesLength, htag]
 
 /-- Every reconstructed secret address is in the hidden-key-prefix domain. -/

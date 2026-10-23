@@ -25,7 +25,7 @@ theorem complete_total {Message : Type} (remaining : Slice Std.U8) (message : Me
   ⟨_, complete_input remaining message⟩
 
 /-- Every payload view construction returns a normal optional result. -/
-theorem payload_total (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
+theorem payload_total (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
     (sender : Std.U64) : ∃ result, record.OpenFrameContext.from_frame payload ad sender = ok result := by
   obtain ⟨result, equation, _⟩ := payload_views payload ad sender
   exact ⟨result, equation⟩

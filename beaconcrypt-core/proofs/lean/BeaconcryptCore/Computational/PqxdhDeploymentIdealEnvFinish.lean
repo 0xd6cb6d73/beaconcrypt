@@ -593,7 +593,7 @@ theorem hiddenOwnerEffect_abort (j : PqxdhRecordLiftInterface.Slot 2) (index : â
 theorem hiddenOwnerEffect_establish (j : PqxdhRecordLiftInterface.Slot 2) (index : â„•)
     (before after : PqxdhRegistrationSchedule.Owner KemSK)
     (initSent : PqxdhDeploymentEnvironment.inactiveTag before.beacon.phase = some .initSent)
-    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 153#usize)
+    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 281#usize)
     (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)
     (established : after.beacon.phase = .established control associatedData kernel) :
     PqxdhDeploymentEnvironment.hiddenOwnerEffect (n := 2) j index before after =

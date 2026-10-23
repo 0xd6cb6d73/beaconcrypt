@@ -25,7 +25,7 @@ theorem sealing_entry (modes : Label n → KeyMode) (ideal : ∀ label, modes la
     (supported : result ∈ support ((PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup codec (.sealing pending)).run before))
     (empty : (before.keys pending.material).1.successfulSeals = [])
     (entry : CtxSuccessfulSeal) (present : entry ∈ (result.2.keys pending.material).1.successfulSeals) :
-    ∃ (width : pending.context.associatedData.length = 153) (record : CtxRomRecord),
+    ∃ (width : pending.context.associatedData.length = 281) (record : CtxRomRecord),
       entry = ⟨RawCtxSelectedMessageSealing.selectedInput (materialAt before.base.chain pending.material).2
         pending.sequence (replaceContext replace pending.context) width, record⟩ ∧
       result.1 = (codec.frameWrite ⟨pending.sequence, pending.context.senderId, record.encode⟩).map

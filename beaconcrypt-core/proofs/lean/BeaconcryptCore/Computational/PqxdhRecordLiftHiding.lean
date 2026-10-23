@@ -367,7 +367,7 @@ theorem sealing_run (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pqx
 /-- A hidden sealing of an associated datum of the protocol width is one keyed seal request followed by the frame log and the writer result. -/
 theorem hiddenSealing_wide (writer : RawCtxMixedShared.Writer) (table : PqxdhRecordLiftChainTable.Table (Slot n))
     (replace : Pqxdh.Bytes → Pqxdh.Bytes) (pending : PqxdhRecordLiftProtocol.Sealing n)
-    (frames : PqxdhRecordLiftLoggedAdapters.Frames) (width : pending.context.associatedData.length = 153) :
+    (frames : PqxdhRecordLiftLoggedAdapters.Frames) (width : pending.context.associatedData.length = 281) :
     (hiddenSealing writer table replace pending).run frames = (do
       let reply ← ((KeyedSpec n).query (pending.material, .inl (.inr (.inr
         (RawCtxSelectedMessageSealing.selectedInput (materialAt table pending.material).2 pending.sequence
@@ -391,7 +391,7 @@ theorem sealing_couple {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Resp
       ((ctxInterpreter (fun _ => .random) replace₂ setup codec (.sealing pending)).run t) := by
   rw [sealing_run, sealing_run, related.1]
   refine Coupled.bind (Ro := fun p₁ p₂ => p₁.1 = p₂.1 ∧ PrivRel p₁.2 p₂.2) ?_ fun p₁ p₂ hp => .pure _ _ ⟨by rw [hp.1], ?_⟩
-  · by_cases width : pending.context.associatedData.length = 153
+  · by_cases width : pending.context.associatedData.length = 281
     · rw [hiddenSealing_wide _ _ _ _ _ width, hiddenSealing_wide _ _ _ _ _ width]
       simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
       have sealed := keyed_seal_couple (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto

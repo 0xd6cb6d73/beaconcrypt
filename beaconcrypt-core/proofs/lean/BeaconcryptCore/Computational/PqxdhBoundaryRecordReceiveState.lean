@@ -13,7 +13,7 @@ variable {Message Root Metadata PrimitiveState ι : Type} {base : OracleSpec ι}
 
 /-- Interpreting the complete receive transcription preserves the full owner and primitive state under the original raw game. -/
 theorem owner_interpretation (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (associated : state.owner.associatedData = absBytes ad)
     (impl : QueryImpl RawCtxMixedOwner.NativeSpec (StateT PrimitiveState (OracleComp base)))
     (primitive : PrimitiveState) :
@@ -28,7 +28,7 @@ theorem owner_interpretation (reader : RawCtxNativeFramePrelude.Reader Message R
 
 /-- Every completed interpreted receive has the same complete optional reply, owner and primitive state in the original raw game. -/
 theorem owner_supported (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (associated : state.owner.associatedData = absBytes ad)
     (impl : QueryImpl RawCtxMixedOwner.NativeSpec (StateT PrimitiveState (OracleComp base)))
     (primitive finalPrimitive : PrimitiveState)
@@ -43,7 +43,7 @@ theorem owner_supported (reader : RawCtxNativeFramePrelude.Reader Message Root)
 
 /-- Failed live receive restores the entire owned protocol state; its actual primitive/cache poststate remains separate and is not rolled back. -/
 theorem owner_failure (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state after : RawCtxWholeOwner.OwnerState Metadata) (associated : state.owner.associatedData = absBytes ad)
     (impl : QueryImpl RawCtxMixedOwner.NativeSpec (StateT PrimitiveState (OracleComp base)))
     (primitive finalPrimitive : PrimitiveState)
@@ -56,7 +56,7 @@ theorem owner_failure (reader : RawCtxNativeFramePrelude.Reader Message Root)
 
 /-- Every completed raw receive counts one attempt and retains the pinned sender, associated data and role metadata. -/
 theorem owner_metadata (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (associated : state.owner.associatedData = absBytes ad)
     (impl : QueryImpl RawCtxMixedOwner.NativeSpec (StateT PrimitiveState (OracleComp base)))
     (primitive finalPrimitive : PrimitiveState)
@@ -72,7 +72,7 @@ theorem owner_metadata (reader : RawCtxNativeFramePrelude.Reader Message Root)
 
 /-- The actual owner execution inherits the complete source receive callback caps, including rejected and failed attempts. -/
 theorem owner_bounds (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (associated : state.owner.associatedData = absBytes ad)
     (kind : RawCtxMixedOwner.CallKind) :
     (executeOwner reader ad erased raw state).IsQueryBoundP
@@ -84,7 +84,7 @@ theorem owner_bounds (reader : RawCtxNativeFramePrelude.Reader Message Root)
 
 /-- Server routing and selected-peer publication preserve the same receive callback caps for arbitrary raw bytes. -/
 theorem server_bounds {PeerMetadata : Type} (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxServerRouting.State Metadata PeerMetadata) (kind : RawCtxMixedOwner.CallKind) :
     (executeServer reader erased raw state).IsQueryBoundP
       (fun request => RawCtxMixedOwner.callKind request = kind) (RawCtxMixedOwner.receiveCost kind) := by
@@ -93,7 +93,7 @@ theorem server_bounds {PeerMetadata : Type} (reader : RawCtxNativeFramePrelude.R
 
 /-- Every Beacon lifecycle branch preserves the complete receive callback caps. -/
 theorem beacon_bounds {Identity DhPair KemPair : Type} (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxBeaconLifecycle.State Identity DhPair KemPair) (kind : RawCtxMixedOwner.CallKind) :
     (executeBeacon reader erased raw state).IsQueryBoundP
       (fun request => RawCtxMixedOwner.callKind request = kind) (RawCtxMixedOwner.receiveCost kind) := by

@@ -3,7 +3,7 @@ import BeaconcryptCore.Refinement.CommitmentSurface
 import BeaconcryptCore.Computational.CtxRomAuth
 
 /-!
-This module expands the source-selected private opening capability into its actual commitment and combined-ciphertext AEAD calls. Key/nonce come from the selected material, sequence from the same prepared request, and sender/associated data/base/tag/commitment from the retained frame context. It reuses the already checked 229-byte extracted commitment builder. Hash failure and commitment mismatch retain the real post-hash state and do not call AEAD; successful opening returns only the primitive-produced optional plaintext. The preceding owner adapter still handles missing source material without an opening call.
+This module expands the source-selected private opening capability into its actual commitment and combined-ciphertext AEAD calls. Key/nonce come from the selected material, sequence from the same prepared request, and sender/associated data/base/tag/commitment from the retained frame context. It reuses the already checked 357-byte extracted commitment builder. Hash failure and commitment mismatch retain the real post-hash state and do not call AEAD; successful opening returns only the primitive-produced optional plaintext. The preceding owner adapter still handles missing source material without an opening call.
 
 The general private hash API retains optional failure. Its native successful fixed-length BLAKE2b-512 result and unkeyed/fixed-size invocation belong to the primitive implementation contract. `romAdapter` is an explicit stronger classical shared-ROM interpretation, making that call total; this does not derive ROM behavior from collision resistance. `baseOpen` expresses the ordinary combined/detached AEAD interface contract using exactly body plus tag, without proving ChaCha20-Poly1305 internals. `sourceRecord` is an analysis-only normalization of the unique already-proved decoded protected payload. Recomputed slice/AD checks are pure normalization under source admission, not claims about equal native parser work or physical erasure of transcript temporaries.
 
@@ -58,7 +58,7 @@ def openInput (input : RawCtxWholeOwner.OpenInput) : OracleComp OpenSpec (Option
   match RawCtxFrameDecoding.fromPayload input.context.frame.payload with
   | none => pure none
   | some slices =>
-      if input.context.associatedData.length = 153 then openSlices input slices else pure none
+      if input.context.associatedData.length = 281 then openSlices input slices else pure none
 
 /-- Native combined-ciphertext framing is mapped to the ordinary detached primitive interface. -/
 def baseOpen (c : Pqxdh.Crypto) (input : BaseInput) : Option Pqxdh.Bytes :=
@@ -77,7 +77,7 @@ theorem baseOpen_combined (c : Pqxdh.Crypto) (key nonce ad body tag : Pqxdh.Byte
 /-- The private hash query equals the actual extracted commitment builder on the source arrays. -/
 theorem hashInput_extracted (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices)
-    (ad : Std.Array Std.U8 153#usize) (tag : Std.Array Std.U8 16#usize)
+    (ad : Std.Array Std.U8 281#usize) (tag : Std.Array Std.U8 16#usize)
     (had : absBytes ad = input.context.associatedData) (htag : absBytes tag = slices.tag) :
     ∃ transcript, commitment.build_commitment_transcript input.material.key.bytes
       input.material.nonce.bytes ad tag input.sequence input.context.frame.sender = ok transcript ∧
@@ -86,10 +86,10 @@ theorem hashInput_extracted (input : RawCtxWholeOwner.OpenInput)
     build_commitment_transcript_abs input.material.key.bytes input.material.nonce.bytes ad tag
       input.sequence input.context.frame.sender
 
-/-- Every source hash preimage has the exact 229-byte input width. -/
+/-- Every source hash preimage has the exact 357-byte input width. -/
 theorem hashInput_length (input : RawCtxWholeOwner.OpenInput)
-    (slices : RawCtxFrameDecoding.Slices) (had : input.context.associatedData.length = 153)
-    (htag : slices.tag.length = 16) : (hashInput input slices).length = 229 := by
+    (slices : RawCtxFrameDecoding.Slices) (had : input.context.associatedData.length = 281)
+    (htag : slices.tag.length = 16) : (hashInput input slices).length = 357 := by
   simp [hashInput, Pqxdh.ctxPreimage, absMaterial, had, htag]
 
 /-- The explicit classical-ROM/ordinary-AEAD interpretation makes the fixed-size hash call total. -/
@@ -120,7 +120,7 @@ def sourceNonce (input : RawCtxWholeOwner.OpenInput) : CtxRomAuth.CtxNonce :=
 
 /-- The typed component context uses actual prepared sequence and decoded sender, not chosen substitutes. -/
 def sourceContext (input : RawCtxWholeOwner.OpenInput)
-    (had : input.context.associatedData.length = 153) : CtxRomAuth.CtxRecordContext :=
+    (had : input.context.associatedData.length = 281) : CtxRomAuth.CtxRecordContext :=
   ⟨⟨input.context.associatedData, input.sequence.val, input.context.frame.sender.val⟩,
     had, input.sequence.bv.isLt, input.context.frame.sender.bv.isLt⟩
 
@@ -158,7 +158,7 @@ def typedOpen (c : Pqxdh.Crypto) (key : CtxRomAuth.CtxKey) (nonce : CtxRomAuth.C
 theorem openInput_typed (c : Pqxdh.Crypto) (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices)
     (hslices : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (had : input.context.associatedData.length = 153) :
+    (had : input.context.associatedData.length = 281) :
     simulateQ (romAdapter c) (openInput input) =
       typedOpen c (sourceKey input) (sourceNonce input) (sourceContext input had)
         (sourceRecord input slices hslices) := by
@@ -271,7 +271,7 @@ theorem openInput_success {PrimitiveState : Type} {ι : Type} {base : OracleSpec
     (input : RawCtxWholeOwner.OpenInput) (primitive final : PrimitiveState) (plaintext : Pqxdh.Bytes)
     (h : (some plaintext, final) ∈ support ((simulateQ impl (openInput input)).run primitive)) :
     ∃ slices afterHash, RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices ∧
-      input.context.associatedData.length = 153 ∧
+      input.context.associatedData.length = 281 ∧
       (some slices.commitment, afterHash) ∈ support ((impl (.inl (hashInput input slices))).run primitive) ∧
       (some plaintext, final) ∈ support ((impl (.inr (baseInput input slices))).run afterHash) := by
   unfold openInput at h
@@ -404,7 +404,7 @@ theorem openLift_apply {PrimitiveState : Type} {ι : Type} {base : OracleSpec ι
 theorem openInput_shared_cache (c : Pqxdh.Crypto) (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices)
     (hslices : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (had : input.context.associatedData.length = 153) (cache : CtxRomAuth.CtxRO.QueryCache) :
+    (had : input.context.associatedData.length = 281) (cache : CtxRomAuth.CtxRO.QueryCache) :
     (simulateQ CtxRomAuth.ctxRandomOracle (simulateQ (romAdapter c) (openInput input))).run cache =
       (simulateQ CtxRomAuth.ctxRandomOracle
         (typedOpen c (sourceKey input) (sourceNonce input) (sourceContext input had)

@@ -16,7 +16,7 @@ namespace BeaconcryptCore.Refinement.CommitmentSurface
 structure Fields where
   key : Std.Array Std.U8 32#usize
   nonce : Std.Array Std.U8 12#usize
-  associatedData : Std.Array Std.U8 153#usize
+  associatedData : Std.Array Std.U8 281#usize
   tag : Std.Array Std.U8 16#usize
   sequence : Std.U64
   senderId : Std.U64
@@ -25,7 +25,7 @@ noncomputable def productionTranscript (fields : Fields) : commitment.Commitment
   (build_commitment_transcript_abs fields.key fields.nonce fields.associatedData fields.tag
     fields.sequence fields.senderId).choose
 
-noncomputable def productionInput (fields : Fields) : Std.Array Std.U8 229#usize :=
+noncomputable def productionInput (fields : Fields) : Std.Array Std.U8 357#usize :=
   (productionTranscript fields).bytes
 
 /-- This pure view is precisely the extracted builder's result, on all concrete input fields. -/
@@ -67,9 +67,9 @@ theorem production_commitment_input_is_injective : Function.Injective production
     (Std.UScalar.eq_of_val_eq (congrArg Pqxdh.RecordAD.sid h.2.1))
 
 def OpeningAccepted {Ciphertext Plaintext : Type}
-    (hash : Std.Array Std.U8 229#usize → Std.Array Std.U8 64#usize)
+    (hash : Std.Array Std.U8 357#usize → Std.Array Std.U8 64#usize)
     (aeadOpen : Std.Array Std.U8 32#usize → Std.Array Std.U8 12#usize →
-      Std.Array Std.U8 153#usize → Ciphertext → Std.Array Std.U8 16#usize → core.option.Option Plaintext)
+      Std.Array Std.U8 281#usize → Ciphertext → Std.Array Std.U8 16#usize → core.option.Option Plaintext)
     (ciphertext : Ciphertext) (digest : Std.Array Std.U8 64#usize) (fields : Fields) (plaintext : Plaintext) : Prop :=
   hash (productionInput fields) = digest ∧
     aeadOpen fields.key fields.nonce fields.associatedData ciphertext fields.tag = .Some plaintext
@@ -79,18 +79,18 @@ def ExplanationsDistinct {Plaintext : Type} (left right : Fields) (leftPlaintext
     left.sequence ≠ right.sequence ∨ left.senderId ≠ right.senderId ∨ leftPlaintext ≠ rightPlaintext
 
 structure HashCollisionWitness where
-  leftInput : Std.Array Std.U8 229#usize
-  rightInput : Std.Array Std.U8 229#usize
+  leftInput : Std.Array Std.U8 357#usize
+  rightInput : Std.Array Std.U8 357#usize
 
 def ValidHashCollisionWitness
-    (hash : Std.Array Std.U8 229#usize → Std.Array Std.U8 64#usize) (witness : HashCollisionWitness) : Prop :=
+    (hash : Std.Array Std.U8 357#usize → Std.Array Std.U8 64#usize) (witness : HashCollisionWitness) : Prop :=
   witness.leftInput ≠ witness.rightInput ∧ hash witness.leftInput = hash witness.rightInput
 
 /-- Two distinct accepted explanations yield the actual pair of different production inputs with one hash output. AEAD determinism alone handles differing plaintexts. -/
 theorem ctx_distinct_openings_imply_hash_collision {Ciphertext Plaintext : Type}
-    (hash : Std.Array Std.U8 229#usize → Std.Array Std.U8 64#usize)
+    (hash : Std.Array Std.U8 357#usize → Std.Array Std.U8 64#usize)
     (aeadOpen : Std.Array Std.U8 32#usize → Std.Array Std.U8 12#usize →
-      Std.Array Std.U8 153#usize → Ciphertext → Std.Array Std.U8 16#usize → core.option.Option Plaintext)
+      Std.Array Std.U8 281#usize → Ciphertext → Std.Array Std.U8 16#usize → core.option.Option Plaintext)
     (ciphertext : Ciphertext) (digest : Std.Array Std.U8 64#usize)
     (left right : Fields) (leftPlaintext rightPlaintext : Plaintext)
     (hleft : OpeningAccepted hash aeadOpen ciphertext digest left leftPlaintext)

@@ -37,7 +37,7 @@ structure OpenContext where
 
 /-- Runtime checks, including the production exclusion of an empty encrypted body. -/
 def ValidFrame (expected : Std.U64) (ad : Pqxdh.Bytes) (frame : DecodedFrame) : Prop :=
-  frame.sender = expected ∧ 80 < frame.payload.length ∧ ad.length = 153
+  frame.sender = expected ∧ 80 < frame.payload.length ∧ ad.length = 281
 
 instance (expected : Std.U64) (ad : Pqxdh.Bytes) (frame : DecodedFrame) :
     Decidable (ValidFrame expected ad frame) := inferInstanceAs (Decidable (_ ∧ _ ∧ _))

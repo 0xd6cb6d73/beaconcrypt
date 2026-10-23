@@ -72,7 +72,7 @@ theorem erased_sealing_trace (modes : Label n → KeyMode) (ideal : ∀ label, m
   rw [PqxdhRecordFactsPrivateCacheSource.erased_sealing] at supported
   simp only [bind_pure_comp, support_map] at supported
   obtain ⟨inner, member, rfl⟩ := supported
-  by_cases width : pending.context.associatedData.length = 153
+  by_cases width : pending.context.associatedData.length = 281
   · rw [PqxdhRecordFactsOriginServices.hiddenSealing_call codec.frameWrite before.base.chain replace pending before.base.pending width] at member
     simp only [simulateQ_map, simulateQ_spec_query, StateT.run_map, support_map] at member
     obtain ⟨keyedResult, keyedMember, rfl⟩ := member
@@ -92,7 +92,7 @@ theorem erased_sealing_trace (modes : Label n → KeyMode) (ideal : ∀ label, m
       simp only [PqxdhRecordLiftCtxHybrid.sealedReply, reply]
       refine Or.inr ⟨width, record, ?_, rfl, rfl⟩
       simpa only [SealStep, reply] using step
-  · have width' : ¬ (replaceContext replace pending.context).associatedData.length = 153 := width
+  · have width' : ¬ (replaceContext replace pending.context).associatedData.length = 281 := width
     simp only [hiddenSealing, StateT.run, dite_eq_right width', simulateQ_pure] at member
     subst inner
     exact ⟨rfl, Or.inl ⟨rfl, rfl, fun _ => rfl⟩⟩

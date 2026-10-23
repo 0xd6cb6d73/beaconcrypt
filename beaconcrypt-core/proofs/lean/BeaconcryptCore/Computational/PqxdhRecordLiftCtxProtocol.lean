@@ -860,7 +860,7 @@ noncomputable def realizeCut (key : CtxKey) (state : SourceSecret n) : CutState 
 
 /-- Selection is structural and concerns only valid-width hidden sealing. Known-key equality of bytes never selects a record. -/
 def SelectedSeal (coordinate : PqxdhRecordLiftChainState.Coordinate (Slot n)) : Service n → Prop
-  | .sealing pending => pending.context.associatedData.length = 153 ∧ pending.material = coordinate
+  | .sealing pending => pending.context.associatedData.length = 281 ∧ pending.material = coordinate
   | _ => False
 
 open Classical in

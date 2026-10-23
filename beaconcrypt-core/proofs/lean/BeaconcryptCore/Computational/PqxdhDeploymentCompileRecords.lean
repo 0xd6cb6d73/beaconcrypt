@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentCompile
 
-/-! Record commands of the CE-3 trial (items b and c of the compile lemma). A Server record command reads exactly one peer: its identity, kernel and the Server identity enter only through the 153-byte associated data and the selected kernel, and the Server key ID is the only metadata read. A Beacon record command reads exactly the outer key ID, the established control's expected sender, the stored associated data, the kernel and the raw-attempt counter; it never reads the identity seed, the pinned Server identity or any private Phase 1 field. Hence a local copy that agrees on these values has the same reply and the same returned kernel and counter. -/
+/-! Record commands of the CE-3 trial (items b and c of the compile lemma). A Server record command reads exactly one peer: its identity, kernel and the Server identity enter only through the 281-byte associated data and the selected kernel, and the Server key ID is the only metadata read. A Beacon record command reads exactly the outer key ID, the established control's expected sender, the stored associated data, the kernel and the raw-attempt counter; it never reads the identity seed, the pinned Server identity or any private Phase 1 field. Hence a local copy that agrees on these values has the same reply and the same returned kernel and counter. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -76,7 +76,7 @@ theorem serverImpl_absent (senderId : Unit → Std.U64) (route : RawCtxServerRou
 
 /-- The Beacon record core on an established owner: the whole-owner send or raw receive under the outer key ID, with the control's expected sender, the stored associated data, the kernel and the counter. -/
 noncomputable def beaconCore (sender expected : Std.U64) (decode : RawCtxReceive.FrameDecoder)
-    (associatedData : Std.Array Std.U8 153#usize) (kernel : Kernel) (raw : Nat)
+    (associatedData : Std.Array Std.U8 281#usize) (kernel : Kernel) (raw : Nat)
     (query : RawCtxMixedOwner.SourceSpec.Domain) :
     OracleComp RawCtxMixedOwner.NativeSpec (RawCtxMixedOwner.SourceSpec.Range query × (Kernel × Nat)) :=
   (fun result => (result.1, (result.2.owner.kernel, result.2.rawAttempts))) <$>
@@ -86,7 +86,7 @@ noncomputable def beaconCore (sender expected : Std.U64) (decode : RawCtxReceive
 /-- An established owner's record command is the Beacon record core; only the kernel and counter are reinstalled. It reads no identity, pinned Server identity or private Phase 1 field. -/
 theorem beaconImpl_established {I D K : Type} (decode : RawCtxReceive.FrameDecoder)
     (query : RawCtxMixedOwner.SourceSpec.Domain) (state : RawCtxBeaconLifecycle.State I D K)
-    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 153#usize)
+    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 281#usize)
     (kernel : Kernel) (phase : state.beacon.phase = .established control associatedData kernel) :
     (RawCtxBeaconLifecycle.beaconImpl decode query).run state =
       (fun result => (result.1, (⟨{ state.beacon with phase := .established control associatedData result.2.1 },

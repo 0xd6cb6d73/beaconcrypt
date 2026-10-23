@@ -108,14 +108,14 @@ theorem opening_seals (modes : PqxdhRecordLiftWorldCompiler.Label n → KeyMode)
 theorem hiddenSealing_call (writer : RawCtxMixedShared.Writer)
     (table : PqxdhRecordLiftChainTable.Table (PqxdhRecordLiftInterface.Slot n))
     (replace : Pqxdh.Bytes → Pqxdh.Bytes) (pending : PqxdhRecordLiftProtocol.Sealing n)
-    (frames : PqxdhRecordLiftLoggedAdapters.Frames) (width : pending.context.associatedData.length = 153) :
+    (frames : PqxdhRecordLiftLoggedAdapters.Frames) (width : pending.context.associatedData.length = 281) :
     (hiddenSealing writer table replace pending).run frames =
       PqxdhRecordLiftCtxHybrid.sealedReply writer pending frames <$>
         ((KeyedSpec n).query (pending.material, .inl (.inr (.inr
           (RawCtxSelectedMessageSealing.selectedInput (materialAt table pending.material).2 pending.sequence
             (replaceContext replace pending.context) width)))) : OracleComp (KeyedSpec n) (Option CtxRomRecord)) := by
-  change (if width' : (replaceContext replace pending.context).associatedData.length = 153 then _ else _) = _
-  have width' : (replaceContext replace pending.context).associatedData.length = 153 := width
+  change (if width' : (replaceContext replace pending.context).associatedData.length = 281 then _ else _) = _
+  have width' : (replaceContext replace pending.context).associatedData.length = 281 := width
   rw [dite_eq_left_of_eq_true (eq_true width'), map_eq_bind_pure_comp]
   congr 1
   funext reply
@@ -128,7 +128,7 @@ def SealingTrace (writer : RawCtxMixedShared.Writer) (replace : Pqxdh.Bytes → 
   result.2.base.produced = before.base.produced ∧
     ((result.1 = none ∧ result.2.base.pending = before.base.pending ∧
         ∀ label, (result.2.keys label).1.successfulSeals = (before.keys label).1.successfulSeals) ∨
-      ∃ (width : pending.context.associatedData.length = 153) (record : CtxRomRecord),
+      ∃ (width : pending.context.associatedData.length = 281) (record : CtxRomRecord),
         (result.2.keys pending.material).1.successfulSeals =
           ⟨RawCtxSelectedMessageSealing.selectedInput (materialAt before.base.chain pending.material).2
             pending.sequence (replaceContext replace pending.context) width, record⟩ ::
@@ -152,7 +152,7 @@ theorem sealing_trace (modes : PqxdhRecordLiftWorldCompiler.Label n → KeyMode)
     pure (inner.1.1, { inner.2 with base := { inner.2.base with pending := inner.1.2 } })) at supported
   simp only [bind_pure_comp, support_map, Set.mem_image] at supported
   obtain ⟨inner, member, rfl⟩ := supported
-  by_cases width : pending.context.associatedData.length = 153
+  by_cases width : pending.context.associatedData.length = 281
   · rw [hiddenSealing_call codec.frameWrite before.base.chain replace pending before.base.pending width] at member
     simp only [simulateQ_map, simulateQ_spec_query, StateT.run_map, support_map, Set.mem_image] at member
     obtain ⟨keyedResult, keyedMember, rfl⟩ := member
@@ -180,7 +180,7 @@ theorem sealing_trace (modes : PqxdhRecordLiftWorldCompiler.Label n → KeyMode)
       right
       refine ⟨width, record, ?_, rfl, rfl⟩
       simpa only [QueryStep, SealStep, reply] using step.1
-  · have width' : ¬ (replaceContext replace pending.context).associatedData.length = 153 := width
+  · have width' : ¬ (replaceContext replace pending.context).associatedData.length = 281 := width
     simp only [hiddenSealing, StateT.run, dite_eq_right width', simulateQ_pure] at member
     subst inner
     exact ⟨rfl, Or.inl ⟨rfl, rfl, fun _ => rfl⟩⟩

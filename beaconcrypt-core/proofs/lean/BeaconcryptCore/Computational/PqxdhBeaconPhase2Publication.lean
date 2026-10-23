@@ -64,7 +64,7 @@ theorem normalAuthenticate_exact (candidate : pqxdh.BeaconRegistrationCandidate)
 /-- Staged registration data remains private until both final native pin checks pass. -/
 structure Staged where
   authenticated : pqxdh.AuthenticatedBeaconRegistration
-  associatedData : Std.Array Std.U8 153#usize
+  associatedData : Std.Array Std.U8 281#usize
   kernel : ConcreteRatchetKernel
   opened : RawCtxWholeOwner.Decrypted
 

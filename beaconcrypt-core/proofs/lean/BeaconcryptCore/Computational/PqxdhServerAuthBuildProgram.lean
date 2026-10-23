@@ -219,7 +219,7 @@ theorem sourceSealer_run (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
 theorem sealer_source (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (key : RootOutput) (read : RawCtxReceive.FrameDecoder) (pending : PqxdhServerAuthCtxSend.Pending)
     (state : RawCtxSelectedReceiveCompiler.State Log)
-    (fresh : ∀ nonce, pending.material = .hidden nonce → pending.context.associatedData.length = 153 →
+    (fresh : ∀ nonce, pending.material = .hidden nonce → pending.context.associatedData.length = 281 →
       nonce ∉ state.2.selected.1.usedNonces) :
     (fun result => (some result.1, result.2)) <$>
         (sourceSealer source writer key pending).run (RawCtxSelectedReceiveCompiler.project state) =

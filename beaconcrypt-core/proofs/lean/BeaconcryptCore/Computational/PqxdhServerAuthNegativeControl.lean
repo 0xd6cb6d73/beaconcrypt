@@ -475,7 +475,7 @@ theorem beacon_open (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (input : RawCtxWholeOwner.OpenInput) (body tag plaintext : Pqxdh.Bytes) (digest : CtxRomAuth.CtxDigest)
     (cache : CtxRomAuth.CtxRO.QueryCache)
     (hpayload : input.context.frame.payload = body ++ tag ++ digest.toList) (hbody : body ≠ [])
-    (had : input.context.associatedData.length = 153)
+    (had : input.context.associatedData.length = 281)
     (hseal : setup.source.crypto.aeadSeal (absMaterial input.material).1 (absMaterial input.material).2
       input.context.associatedData plaintext = (body, tag))
     (hcache : cache ((), Pqxdh.ctxPreimage (absMaterial input.material)
@@ -2106,10 +2106,10 @@ theorem build_published (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 
 /-! ## The Server's build publishes -/
 
-/-- Under the control laws, the Server's seal of an input with 153-byte associated data and a plaintext at least 80 bytes shorter than the bound always produces a frame. -/
+/-- Under the control laws, the Server's seal of an input with 281-byte associated data and a plaintext at least 80 bytes shorter than the bound always produces a frame. -/
 theorem seal_written (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (limit : Nat)
     (laws : ControlLaws setup codec limit) (input : RawCtxSourceSend.SealInput)
-    (hAD : input.context.associatedData.length = 153) (short : input.context.plaintext.length + 80 < limit)
+    (hAD : input.context.associatedData.length = 281) (short : input.context.plaintext.length + 80 < limit)
     (state : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
     (result : Option Pqxdh.Bytes × RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
     (supported : result ∈ support ((simulateQ (sealHandler setup codec checks)
@@ -2138,10 +2138,10 @@ theorem seal_written (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   simp only [RawCtxSourceSeal.aeadInput] at hbody ⊢
   omega
 
-/-- Under the control laws, the logging tail's seal of an input with 153-byte associated data and a short plaintext always produces a frame. -/
+/-- Under the control laws, the logging tail's seal of an input with 281-byte associated data and a short plaintext always produces a frame. -/
 theorem tail_seal_written (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (limit : Nat) (laws : ControlLaws setup codec limit) (input : RawCtxSourceSend.SealInput)
-    (hAD : input.context.associatedData.length = 153) (short : input.context.plaintext.length + 80 < limit)
+    (hAD : input.context.associatedData.length = 281) (short : input.context.plaintext.length + 80 < limit)
     (log : List RawCtxSourceSend.SealContext) (cache : CtxRomAuth.CtxRO.QueryCache)
     (result : Option Pqxdh.Bytes × RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
     (supported : result ∈ support ((PqxdhServerAuthExperiment.tailImpl setup codec checks (.inl (.inr input))).run
@@ -2162,12 +2162,12 @@ theorem tail_seal_written (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   rw [rest]
   exact Option.some_ne_none _
 
-/-- Under the control laws, the Server's first send under the logging tail always produces a record when the seal context has 153-byte associated data and a short plaintext. -/
+/-- Under the control laws, the Server's first send under the logging tail always produces a record when the seal context has 281-byte associated data and a short plaintext. -/
 theorem send_written (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (limit : Nat) (laws : ControlLaws setup codec limit)
     (root : RootOutput) (kernel : ratchet.concrete.ConcreteRatchetKernel)
     (hkernel : PqxdhRootTableInitialization.initialKernelRun setup.source false root = ok kernel)
-    (context : RawCtxSourceSend.SealContext) (hAD : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (hAD : context.associatedData.length = 281)
     (short : context.plaintext.length + 80 < limit) (log : List RawCtxSourceSend.SealContext)
     (cache : CtxRomAuth.CtxRO.QueryCache)
     (sent : (ratchet.concrete.ConcreteRatchetKernel × Option RawCtxSourceSend.Encrypted) ×

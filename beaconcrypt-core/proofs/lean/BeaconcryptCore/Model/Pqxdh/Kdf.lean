@@ -48,14 +48,14 @@ theorem rootSecret_length (c : Crypto) (ikm : Bytes) : (rootSecret c ikm).length
 
 /-! ## Associated data (spec §9) -/
 
-/-- `AD = Tag_sig(IK_S) ‖ Tag_sig(IK_B) ‖ INFO_PQ ‖ INFO_R`: server identity first,
-beacon identity second. -/
+/-- The core associated-data buffer contains the ordered identity/domain prefix followed by 128 reserved zero bytes. The authentication adapter overwrites those slots with the ordered ML-DSA key fingerprints before record operations. -/
 def assocData (ikSPub ikBPub : Bytes) : Bytes :=
-  tagSig ikSPub ++ tagSig ikBPub ++ INFO_PQ ++ INFO_R
+  tagSig ikSPub ++ tagSig ikBPub ++ INFO_PQ ++ INFO_R ++ List.replicate 128 0
 
 theorem assocData_length {ikSPub ikBPub : Bytes} (hs : ikSPub.length = 32)
-    (hb : ikBPub.length = 32) : (assocData ikSPub ikBPub).length = 153 := by
-  simp [assocData, tagSig, hs, hb, INFO_PQ, INFO_R]
+    (hb : ikBPub.length = 32) : (assocData ikSPub ikBPub).length = 281 := by
+  simp only [assocData, List.length_append, tagSig_length hs, tagSig_length hb,
+    INFO_PQ_length, INFO_R_length, List.length_replicate]
 
 /-- The associated data determines the ordered identity pair. -/
 theorem assocData_inj {a b a' b' : Bytes} (ha : a.length = 32) (hb : b.length = 32)
@@ -79,11 +79,11 @@ theorem rootChains_length (c : Crypto) (ds : Bytes) :
 
 /-! ## The BeaconCrypt record layer (spec §13) -/
 
-/-- The associated data of a single BeaconCrypt record: the 153-byte PQXDH
+/-- The associated data of a single BeaconCrypt record: the 281-byte PQXDH
 associated data together with the wire sequence number and the sender identifier,
 both of which the CTX commitment binds. -/
 structure RecordAD where
-  /-- The 153-byte associated data of the session. -/
+  /-- The 281-byte associated data of the session. -/
   bytes : Bytes
   /-- The wire sequence number of the record. -/
   seq : ℕ

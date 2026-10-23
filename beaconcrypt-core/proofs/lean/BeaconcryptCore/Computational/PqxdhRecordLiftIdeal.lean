@@ -170,7 +170,7 @@ noncomputable def hiddenOpening (seeds : PqxdhRecordLiftChainTable.Seeds (Slot n
           (PqxdhRecordLiftChainTable.chain seeds table) pending) with
     | none => pure .None
     | some input =>
-      if width : input.context.associatedData.length = 153 then
+      if width : input.context.associatedData.length = 281 then
         RawCtxSharedOpeningConsumer.apiReply input.sequence input.context <$>
           ((KeyedSpec n).query (input.material, .inr (RawCtxUniversalDecoder.pack
             (RawCtxUniversalDecoder.envelope (materialAt table input.material).2 input.context width))) :
@@ -187,7 +187,7 @@ noncomputable def hiddenSealing (writer : RawCtxMixedShared.Writer) (table : Pqx
     (replace : Pqxdh.Bytes → Pqxdh.Bytes) (pending : PqxdhRecordLiftProtocol.Sealing n) :
     StateT PqxdhRecordLiftLoggedAdapters.Frames (OracleComp (KeyedSpec n)) (Option RawCtxSourceSend.Encrypted) :=
   fun frames =>
-  if width : (replaceContext replace pending.context).associatedData.length = 153 then do
+  if width : (replaceContext replace pending.context).associatedData.length = 281 then do
     let reply ← ((KeyedSpec n).query (pending.material, .inl (.inr (.inr
       (RawCtxSelectedMessageSealing.selectedInput (materialAt table pending.material).2 pending.sequence
         (replaceContext replace pending.context) width)))) : OracleComp (KeyedSpec n) (Option CtxRomRecord))
@@ -1033,7 +1033,7 @@ theorem hiddenOpening_malformed (seeds : PqxdhRecordLiftChainTable.Seeds (Slot n
 /-- A hidden sealing with an associated datum of the wrong width makes no keyed request, logs no frame and returns none, as the source sealing does. -/
 theorem hiddenSealing_narrow (writer : RawCtxMixedShared.Writer) (table : PqxdhRecordLiftChainTable.Table (Slot n))
     (replace : Pqxdh.Bytes → Pqxdh.Bytes) (pending : PqxdhRecordLiftProtocol.Sealing n)
-    (frames : PqxdhRecordLiftLoggedAdapters.Frames) (narrow : pending.context.associatedData.length ≠ 153) :
+    (frames : PqxdhRecordLiftLoggedAdapters.Frames) (narrow : pending.context.associatedData.length ≠ 281) :
     (hiddenSealing writer table replace pending).run frames = pure (none, frames) :=
   dite_eq_right_of_eq_false (eq_false narrow)
 

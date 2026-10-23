@@ -56,7 +56,7 @@ theorem commitment_encode_u64_le_ok (value : Std.U64) :
   (commitment_encode_u64_le_abs value).imp (fun _ h => h.1)
 
 theorem build_commitment_transcript_ok (key : Std.Array Std.U8 32#usize)
-    (nonce : Std.Array Std.U8 12#usize) (associatedData : Std.Array Std.U8 153#usize)
+    (nonce : Std.Array Std.U8 12#usize) (associatedData : Std.Array Std.U8 281#usize)
     (tag : Std.Array Std.U8 16#usize) (sequence senderId : Std.U64) :
     ∃ result, commitment.build_commitment_transcript key nonce associatedData tag sequence senderId = ok result :=
   (build_commitment_transcript_abs key nonce associatedData tag sequence senderId).imp (fun _ h => h.1)

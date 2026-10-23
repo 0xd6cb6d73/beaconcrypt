@@ -138,8 +138,8 @@ theorem replay_discrepancy_iff (c : Pqxdh.Crypto) (key : CtxKey)
       simp
     simp [logged, commit, notFresh]
 
-/-- Only the exact 197-byte production suffix is queried in the private dictionary. -/
-abbrev Suffix := FixedBytes 197
+/-- Only the exact 325-byte production suffix is queried in the private dictionary. -/
+abbrev Suffix := FixedBytes 325
 abbrev PrivateSpec := Suffix →ₒ CtxDigest
 abbrev DictionarySpec := unifSpec + PrivateSpec
 

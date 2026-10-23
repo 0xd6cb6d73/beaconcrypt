@@ -25,7 +25,7 @@ abbrev GameOutcome (KemSK X : Type) :=
 
 /-- Whole-program source join: for every native-interface program and every complete deployment state, adaptive source execution is the CE native simulation at the production instance with each reply and the complete poststate, by `PqxdhBoundaryProgram.source_exact` and `PqxdhBoundaryDeploymentStep.step_exact`. -/
 theorem execute_exact {Z : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (work : OracleComp Spec Z) (state : PqxdhDeploymentNative.State KemSK) :
     PqxdhBoundaryProgram.execute (sourceStep setup codec reader erased checks serverSeed) work state =
       (fun result => (RustM.ok result.1, result.2)) <$>
@@ -36,7 +36,7 @@ theorem execute_exact {Z : Type} (setup : Setup baseSpec KemSK) (codec : Codec R
 
 /-- The adaptive classical source game: source-ordered Server birth, then adaptive source execution of the per-command source step on the adversary wrapped by CE's secrecy layer at the production codec, from the initial deployment state of the created Server. A failed initialization ends the run with no outcome and its returned runtime. -/
 noncomputable def sourceGame (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) : StateT A ProbComp (Outcome KemSK X) := fun runtime => do
   let born ← (PqxdhBoundaryBirth.serverBirth setup.joint ensureInit identityIndex setup.serverKeyId).run runtime
@@ -65,7 +65,7 @@ theorem unwrap_okMap (outcome : GameOutcome KemSK X × A) : unwrap (okMap outcom
 
 /-- PB-12/PB-14 classical join: for every setup, codec, frame reader, buffer, `checks`, initialization, identity index, bounds, mode, adversary and runtime, the source game equals the CE game `PqxdhDeploymentSecrecy.game` at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model` on the full returned value (created Server, adversary output, ledger, complete deployment state with counters and produced frames, runtime), up to the `ok` wrapper `okMap`. -/
 theorem classical (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A) :
     (sourceGame setup codec reader erased checks ensureInit identityIndex bounds mode adversary).run runtime =
@@ -86,7 +86,7 @@ theorem classical (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
 
 /-- The index-0 instance of `classical`, the identity index of the CE-12 headline games (PB-D pin #415). -/
 theorem classical_zero (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A) :
     (sourceGame setup codec reader erased checks ensureInit 0 bounds mode adversary).run runtime =
@@ -96,7 +96,7 @@ theorem classical_zero (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
 
 /-- Every supported outcome of the source game is the `okMap` image of a supported outcome of the CE game at the production instance; in particular the source game never returns a `fail` or `div` result. -/
 theorem classical_normal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (outcome : Outcome KemSK X × A)
     (supported : outcome ∈ support
@@ -110,7 +110,7 @@ theorem classical_normal (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
 
 /-- Any continuation of the source game sees exactly the CE game's returned value through `okMap`; no projection, success conditioning or event premise is introduced. -/
 theorem classical_continuation (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (next : Outcome KemSK X × A → ProbComp Y) :
     ((sourceGame setup codec reader erased checks ensureInit identityIndex bounds mode adversary).run runtime >>= next) =
@@ -121,7 +121,7 @@ theorem classical_continuation (setup : Setup baseSpec KemSK) (codec : Codec Rea
 
 /-- Generic observation transfer for item 8, in the form of the CE-12 headlines (`𝒟[decision <$> game] {true}`): for every observation `observe` of the CE game's returned value, observing the source game through `unwrap` is the same computation as observing the CE game at the production instance. -/
 theorem classical_observe {Z : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (observe : GameOutcome KemSK X × A → Z) :
     (fun outcome => observe (unwrap outcome)) <$>
@@ -133,7 +133,7 @@ theorem classical_observe {Z : Type} (setup : Setup baseSpec KemSK) (codec : Cod
 
 /-- Generic distribution transfer for item 8 without the deprecated probability API: for every observation `observe` of the CE game's returned value into a measurable space, the evaluation measure `𝒟[·]` of observing the source game through `unwrap` equals that of observing the CE game at the production instance. With `Z = Bool` and the set `{true}` this is the event form `𝒟[decision <$> game] {true}` of the CE-12 headlines; `classical_probEvent` states the same transfer for every event in the forward form `Pr{let x ← ·}[·]`. -/
 theorem classical_evalDist {Z : Type} [MeasurableSpace Z] (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (observe : GameOutcome KemSK X × A → Z) :
     𝒟[(fun outcome => observe (unwrap outcome)) <$>
@@ -144,7 +144,7 @@ theorem classical_evalDist {Z : Type} [MeasurableSpace Z] (setup : Setup baseSpe
 
 /-- Generic event transfer for item 8: for every event `event` of the CE game's returned value, its probability in the CE game at the production instance equals the probability of `event ∘ unwrap` in the source game. -/
 theorem classical_probEvent (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (event : GameOutcome KemSK X × A → Prop) :
     Pr{let x ← ((sourceGame setup codec reader erased checks ensureInit identityIndex bounds mode adversary).run

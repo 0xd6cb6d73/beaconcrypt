@@ -43,7 +43,7 @@ def concreteInputs {Response Shared : Type} (interpret : Shared → Word32) (inp
 structure Metadata where
   binding : pqxdh.ServerBinding
   assigned : Std.U64
-  associatedData : Std.Array Std.U8 153#usize
+  associatedData : Std.Array Std.U8 281#usize
 
 def candidateMetadata (candidate : pqxdh.BeaconRegistrationCandidate) : Metadata :=
   ⟨candidate.server_binding, candidate.assigned_key_id, candidate.associated_data⟩
@@ -53,7 +53,7 @@ def optionalMetadata (result : core.result.Result pqxdh.BeaconRegistrationCandid
   | .Err _ => none
   | .Ok candidate => some (candidateMetadata candidate)
 
-noncomputable def associatedData (control : pqxdh.BeaconInitSent) : Std.Array Std.U8 153#usize :=
+noncomputable def associatedData (control : pqxdh.BeaconInitSent) : Std.Array Std.U8 281#usize :=
   (BeaconcryptCore.PanicFreedom.build_associated_data_ok control.expected_server_binding.identity_public_key
     control.beacon_identity_public_key).choose
 

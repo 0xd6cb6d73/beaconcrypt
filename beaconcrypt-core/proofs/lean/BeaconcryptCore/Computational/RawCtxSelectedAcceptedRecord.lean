@@ -18,7 +18,7 @@ theorem selected_service (slot : Nat) (read : RawCtxReceive.FrameDecoder) (expec
     (pending : RawCtxInterpretedOpening.Opening RatchetChain RatchetChain Slot RawCtxWholeOwner.OpenContext)
     (nonce : NonceOutput) (sequence : Std.U64) (context : RawCtxWholeOwner.OpenContext)
     (present : openArguments pending = some ⟨.hidden nonce, sequence, context⟩)
-    (width : context.associatedData.length = 153) (before : State) :
+    (width : context.associatedData.length = 281) (before : State) :
     monitor (RawCtxSelectedOpenConsumer.service slot read expected pending) before =
       (do let reply ← AdaptiveCtxDynamicKnownKeys.Spec.query (.inl (.inr
             (RawCtxUniversalDecoder.pack (RawCtxUniversalDecoder.envelope nonce context width))))
@@ -33,7 +33,7 @@ theorem selected_service_receipt (slot : Nat) (read : RawCtxReceive.FrameDecoder
     (pending : RawCtxInterpretedOpening.Opening RatchetChain RatchetChain Slot RawCtxWholeOwner.OpenContext)
     (nonce : NonceOutput) (sequence : Std.U64) (context : RawCtxWholeOwner.OpenContext)
     (present : openArguments pending = some ⟨.hidden nonce, sequence, context⟩)
-    (width : context.associatedData.length = 153) (before : State)
+    (width : context.associatedData.length = 281) (before : State)
     (decrypted : RawCtxWholeOwner.Decrypted) (after : State)
     (supported : (.Some decrypted, after) ∈ support
       (monitor (RawCtxSelectedOpenConsumer.service slot read expected pending) before)) :
@@ -54,7 +54,7 @@ theorem selected_service_forgery (slot : Nat) (read : RawCtxReceive.FrameDecoder
     (pending : RawCtxInterpretedOpening.Opening RatchetChain RatchetChain Slot RawCtxWholeOwner.OpenContext)
     (nonce : NonceOutput) (sequence : Std.U64) (context : RawCtxWholeOwner.OpenContext)
     (present : openArguments pending = some ⟨.hidden nonce, sequence, context⟩)
-    (width : context.associatedData.length = 153) (before : State)
+    (width : context.associatedData.length = 281) (before : State)
     (nonempty : context.raw.isEmpty = false) (decoded : read context.raw = some context.frame)
     (slices : RawCtxFrameDecoding.Slices) (parsed : RawCtxFrameDecoding.fromPayload context.frame.payload = some slices)
     (decrypted : RawCtxWholeOwner.Decrypted) (after : State)
@@ -138,7 +138,7 @@ theorem native_service_erase {A : Type} (slot : Nat) (read : RawCtxReceive.Frame
 /-- A concrete native record receipt retains original network context, actual plaintext and the authentication history from that attempt. -/
 def RecordEvent (read : RawCtxReceive.FrameDecoder) (observations : State) : Prop :=
   ∃ (nonce : NonceOutput) (context : RawCtxWholeOwner.OpenContext)
-    (width : context.associatedData.length = 153) (slices : RawCtxFrameDecoding.Slices)
+    (width : context.associatedData.length = 281) (slices : RawCtxFrameDecoding.Slices)
     (parsed : RawCtxFrameDecoding.fromPayload context.frame.payload = some slices)
     (plaintext : Pqxdh.Bytes) (history : List CtxSuccessfulSeal),
     ⟨RawCtxUniversalDecoder.pack (RawCtxUniversalDecoder.envelope nonce context width), some plaintext, history⟩ ∈ observations.attempts ∧
@@ -151,7 +151,7 @@ theorem selected_service_record (slot : Nat) (read : RawCtxReceive.FrameDecoder)
     (pending : RawCtxInterpretedOpening.Opening RatchetChain RatchetChain Slot RawCtxWholeOwner.OpenContext)
     (nonce : NonceOutput) (sequence : Std.U64) (context : RawCtxWholeOwner.OpenContext)
     (present : openArguments pending = some ⟨.hidden nonce, sequence, context⟩)
-    (width : context.associatedData.length = 153) (before : State)
+    (width : context.associatedData.length = 281) (before : State)
     (nonempty : context.raw.isEmpty = false) (decoded : read context.raw = some context.frame)
     (slices : RawCtxFrameDecoding.Slices) (parsed : RawCtxFrameDecoding.fromPayload context.frame.payload = some slices)
     (decrypted : RawCtxWholeOwner.Decrypted) (after : State)
@@ -191,7 +191,7 @@ theorem selected_publication_record {Metadata : Type}
     (pending : RawCtxInterpretedOpening.Opening RatchetChain RatchetChain Slot RawCtxWholeOwner.OpenContext)
     (nonce : NonceOutput) (sequence : Std.U64) (context : RawCtxWholeOwner.OpenContext)
     (present : openArguments pending = some ⟨.hidden nonce, sequence, context⟩)
-    (width : context.associatedData.length = 153) (before : State)
+    (width : context.associatedData.length = 281) (before : State)
     (nonempty : context.raw.isEmpty = false) (decoded : read context.raw = some context.frame)
     (slices : RawCtxFrameDecoding.Slices) (parsed : RawCtxFrameDecoding.fromPayload context.frame.payload = some slices)
     (owner afterOwner : RawCtxChainOwner.State RawCtxSelectedMessageReveals.Kernel Metadata)

@@ -67,7 +67,29 @@ def validate(rows, expected):
     return Counter(row["class"] for row in rows)
 
 
+LEGACY_SOURCE_CHECKERS = {
+    "check-registration-provenance",
+    "check-delayed-response",
+    "check-exact-far",
+    "check-record-origin",
+    "check-tasking-origin",
+    "check-application-secrecy",
+    "check-exact-interface-strong",
+}
+LEGACY_SOURCE_SCOPE = (
+    "classical projection; mandatory ML-DSA guards and AD fingerprints omitted; "
+    "no full ML-DSA source lift; "
+)
+
+
 def extension_class_scope(name, target, driver):
+    cls, scope = extension_profile_scope(name, target, driver)
+    if name in LEGACY_SOURCE_CHECKERS:
+        scope = LEGACY_SOURCE_SCOPE + scope
+    return cls, scope
+
+
+def extension_profile_scope(name, target, driver):
     """Reviewed added groups with their exact interface and control scopes."""
     if name == "check-pending-registration":
         fixture, caps = {

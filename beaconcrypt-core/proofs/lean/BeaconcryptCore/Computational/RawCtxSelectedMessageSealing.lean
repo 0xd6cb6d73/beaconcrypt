@@ -97,7 +97,7 @@ theorem known_uniform (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf RawCtxSelectedMessageKey
 
 def selectedInput (nonce : NonceOutput) (sequence : Std.U64) (context : RawCtxSourceSend.SealContext)
-    (had : context.associatedData.length = 153) : CtxSealInput :=
+    (had : context.associatedData.length = 281) : CtxSealInput :=
   ⟨nonce, ⟨⟨context.associatedData, sequence.val, context.senderId.val⟩,
     had, sequence.bv.isLt, context.senderId.bv.isLt⟩, context.plaintext⟩
 
@@ -107,7 +107,7 @@ def selectedNative (key : RootOutput) (nonce : NonceOutput) (sequence : Std.U64)
 
 /-- The selected ordinary sealing input retains the same nonce, sequence, sender, AD and actual plaintext while the unavailable key stays in the native interpretation. -/
 theorem selected_input (key : RootOutput) (nonce : NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (had : context.associatedData.length = 153) :
+    (context : RawCtxSourceSend.SealContext) (had : context.associatedData.length = 281) :
     RawCtxCanonicalSeal.sourceKey (selectedNative key nonce sequence context) = key ∧
       RawCtxCanonicalSeal.sourceInput (selectedNative key nonce sequence context) had =
         selectedInput nonce sequence context had := by
@@ -132,7 +132,7 @@ inductive SealResult where
 /-- The selected key is absent from the actual source sealing adapter. -/
 noncomputable def selected (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput)
     (sequence : Std.U64) (context : RawCtxSourceSend.SealContext) : OracleComp ReceiveSpec SealResult :=
-  if had : context.associatedData.length = 153 then do
+  if had : context.associatedData.length = 281 then do
     let reply ← ReceiveSpec.query (.inl (.inr (.inr (selectedInput nonce sequence context had))))
     pure (match reply with
       | none => .repeatedNonce
@@ -164,7 +164,7 @@ set_option backward.isDefEq.respectTransparency false in
 /-- A first selected-nonce use invokes the actual inner source seal, then the original optional writer, while retaining every ledger and cache field. -/
 theorem selected_fresh (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
     (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (had : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (had : context.associatedData.length = 281)
     (state : AdaptiveCtxCanonical.CanonicalState) (fresh : nonce ∉ state.ctx.usedNonces) :
     (simulateQ (AdaptiveCtxCanonical.canonicalImpl decode c key) (selected writer nonce sequence context)).run state = (do
       let result ← (simulateQ ctxRandomOracle (ctxSeal c key (selectedInput nonce sequence context had))).run state.ctx.cache
@@ -183,7 +183,7 @@ set_option backward.isDefEq.respectTransparency false in
 /-- Actual selected nonce reuse is a separately visible stopping outcome, never a fabricated native optional failure or a free uncounted source seal. -/
 theorem selected_repeat (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
     (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (had : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (had : context.associatedData.length = 281)
     (state : AdaptiveCtxCanonical.CanonicalState) (used : nonce ∈ state.ctx.usedNonces) :
     (simulateQ (AdaptiveCtxCanonical.canonicalImpl decode c key) (selected writer nonce sequence context)).run state =
       pure (.repeatedNonce, state) := by
@@ -199,7 +199,7 @@ theorem selected_repeat (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutp
 /-- Before the recorded nonce stop, erasing only analysis histories yields the exact original source callback and shared cache, including optional writer failure. -/
 theorem selected_source (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
     (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (had : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (had : context.associatedData.length = 281)
     (state : AdaptiveCtxCanonical.CanonicalState) (fresh : nonce ∉ state.ctx.usedNonces) :
     (fun result => (result.1, result.2.ctx.cache)) <$>
       (simulateQ (AdaptiveCtxCanonical.canonicalImpl decode c key)
@@ -217,7 +217,7 @@ theorem selected_source (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutp
 /-- Every completed selected inner seal records its nonce even when the original frame writer returns None. No failed-publication retry is silently treated as a first seal. -/
 theorem selected_ledger (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
     (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (had : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (had : context.associatedData.length = 281)
     (state : AdaptiveCtxCanonical.CanonicalState) (fresh : nonce ∉ state.ctx.usedNonces)
     (result : SealResult × AdaptiveCtxCanonical.CanonicalState)
     (supported : result ∈ support ((simulateQ (AdaptiveCtxCanonical.canonicalImpl decode c key)
@@ -248,7 +248,7 @@ theorem selected_bills (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput)
 /-- Invalid source AD preserves the actual rejection without invoking the selected oracle or changing any challenger field. -/
 theorem selected_invalid (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
     (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (invalid : context.associatedData.length ≠ 153)
+    (context : RawCtxSourceSend.SealContext) (invalid : context.associatedData.length ≠ 281)
     (state : AdaptiveCtxCanonical.CanonicalState) :
     (simulateQ (AdaptiveCtxCanonical.canonicalImpl decode c key)
       (selected writer nonce sequence context)).run state = pure (.completed none, state) ∧

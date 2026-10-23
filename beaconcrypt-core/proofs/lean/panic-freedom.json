@@ -1,4 +1,59 @@
 {
+  "authentication.AuthRole.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.role_clone_total"
+  },
+  "authentication.ResponseTranscript.parts": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.response_parts_total"
+  },
+  "authentication._": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.public_key_width_total"
+  },
+  "authentication.__1": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.transcript_hash_width_total"
+  },
+  "authentication.__2": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.associated_data_width_total"
+  },
+  "authentication.bind_associated_data": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.bind_associated_data_total"
+  },
+  "authentication.build_init_transcript": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.build_init_transcript_total"
+  },
+  "authentication.build_response_prefix": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.build_response_prefix_total"
+  },
+  "authentication.build_response_transcript": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.build_response_transcript_total"
+  },
+  "authentication.build_signature_input": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.build_signature_input_total"
+  },
+  "authentication.encode_u64_le": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.encode_u64_le_total"
+  },
   "commitment.COMMITMENT_TRANSCRIPT_SIZE": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Static",

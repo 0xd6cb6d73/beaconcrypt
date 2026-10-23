@@ -1,19 +1,19 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.AuthenticationExtraction.Funs
+import BeaconcryptCore.Extraction.Funs
 import BeaconcryptCore.Refinement.PqxdhCommitment
 import BeaconcryptCore.Refinement.TranscriptAuthInputs
 import BeaconcryptCore.Refinement.TranscriptAuthParts
 import BeaconcryptCore.Model.Pqxdh.TranscriptAuth
 
 /-!
-The separately generated production authentication builders refine the exact unsigned byte transcripts. Hashing and ML-DSA remain external primitives.
+The complete production extraction's authentication builders refine the exact unsigned byte transcripts. Hashing and ML-DSA remain external primitives.
 
-The historical extraction is used only for generic byte/scalar lemmas and its identical LE64 helper, never for its old associated-data widths.
+The same current extraction supplies the generic byte/scalar lemmas, LE64 helper and AD281/CTX357 refinements. The separately generated authentication cohort remains a reproducibility check.
 -/
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open RustM PqxdhRefinement beaconcrypt_authentication_core Pqxdh
+open RustM PqxdhRefinement beaconcrypt_core Pqxdh
 
 set_option autoImplicit false
 set_option maxHeartbeats 1000000

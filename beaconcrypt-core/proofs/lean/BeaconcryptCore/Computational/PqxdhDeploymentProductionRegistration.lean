@@ -33,7 +33,7 @@ open PqxdhDeploymentInterface (FreshBounds Mode ModeSpec)
 
 /-- Support transfer for the classical game at index 0 (from `PqxdhDeploymentProductionTransfer.observe_zero` with the identity observation): every outcome of the classical production source game, read back through `unwrap`, is an outcome of the CE experiment `PqxdhDeploymentSecrecy.game` at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`. -/
 theorem support_zero (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (outcome : PqxdhBoundaryDeployment.Outcome KemSK X × A)
     (supported : outcome ∈ support
@@ -68,7 +68,7 @@ open PqxdhDeploymentServerAuthChain (seedBinding seedInput)
 
 /-- Production form of `PqxdhDeploymentServerAuth.a1_bound` (frozen: Theorem CE-A1 at one creation index `c`). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`). Everything else in the conclusion (every bound term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. The frozen theorem holds at every Server identity index; the production form is at index 0, as every production form. -/
 theorem a1_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -126,7 +126,7 @@ open PqxdhDeploymentServerAuthChain (seedBinding seedInput)
 
 /-- Production form of `PqxdhDeploymentServerAuth.a1_sum` (frozen: Theorem CE-A1 over all Beacons, in the A1At form). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`). Everything else in the conclusion (every bound term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. The frozen theorem holds at every Server identity index; the production form is at index 0, as every production form. -/
 theorem a1_sum (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -187,7 +187,7 @@ open PqxdhDeploymentServerAuthChain (seedBinding seedInput)
 
 /-- Production form of `PqxdhDeploymentServerAuth.ce_a1` (frozen: Theorem CE-A1 (plan section 10, option (b) of section 19), with the public pinned matching in place of the plan's eleven-field common session). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`). Everything else in the conclusion (every bound term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. The frozen theorem holds at every Server identity index; the production form is at index 0, as every production form. -/
 theorem ce_a1 (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -247,7 +247,7 @@ open PqxdhDeploymentServerAuthEmbed (SourceSpec Owner Emb embed freezeImpl freez
 
 /-- Production form of `PqxdhDeploymentServerAuthBills.ce_a1_billed` (frozen: Theorem CE-A1 at the transported deployment budget). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`). Everything else in the conclusion (every bound term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. The frozen theorem holds at every Server identity index; the production form is at index 0, as every production form. -/
 theorem ce_a1_billed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -305,7 +305,7 @@ open PqxdhDeploymentKemTransfer (registrations regOf)
 
 /-- Production form of `PqxdhDeploymentServerAuthInjectiveGame.injective_bound` (frozen: The injectivity loss `ε_inj` of CE-A1). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`). Everything else in the conclusion (every bound term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem injective_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)
@@ -342,7 +342,7 @@ open PqxdhDeploymentKemTransfer (registrations regOf)
 
 /-- Production form of `PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective` (frozen: Theorem CE-A1 with injectivity (plan section 10)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`). Everything else in the conclusion (every bound term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_a1_injective (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : PqxdhServerAuthSourceCosts.KemCaps)
     (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
@@ -408,7 +408,7 @@ open PqxdhRegistrationJointRevealSchedule (Spec)
 
 /-- Production form of `PqxdhDeploymentPublishedTuple.a2pub_owner_bound` (frozen: Theorem CE-A2pub per owner (published-tuple provenance at owners without a failed bundle call, no selection factor)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`). Everything else in the conclusion (every bound term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem a2pub_owner_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -445,7 +445,7 @@ open PqxdhRegistrationJointRevealSchedule (Spec)
 
 /-- Production form of `PqxdhDeploymentPublishedTuple.a2pub_bound` (frozen: Theorem CE-A2pub (published-tuple provenance, on `NoBundleFailure` runs, no selection factor)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`). Everything else in the conclusion (every bound term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem a2pub_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -482,7 +482,7 @@ open PqxdhRegistrationJointRevealSchedule (Spec)
 
 /-- Production form of `PqxdhDeploymentPublishedTuple.r1prime_owner_bound` (frozen: Theorem CE-R1' per owner (published-tuple replay at owners without a failed bundle call)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`). Everything else in the conclusion (every bound term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem r1prime_owner_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -519,7 +519,7 @@ open PqxdhRegistrationJointRevealSchedule (Spec)
 
 /-- Production form of `PqxdhDeploymentPublishedTuple.r1prime_bound` (frozen: Theorem CE-R1' (published-tuple replay, on `NoBundleFailure` runs)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`). Everything else in the conclusion (every bound term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem r1prime_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -559,7 +559,7 @@ open PqxdhDeploymentSecrecy (Ledger ledgerImpl)
 
 /-- Production form of `PqxdhDeploymentReplay.replay_game` (frozen: Theorem CE-R1 (per live Server object, deterministic, zero loss)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every outcome of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by an outcome of the classical source game `PqxdhBoundaryDeployment.sourceGame` read back through `unwrap` (`support_zero`). The conclusion is the frozen text at the production codec; the frozen theorem takes no codec law, contract or budget, and neither does the production form. Reading back through `unwrap` loses no run: the source game never returns a Rust `fail` or `div` result, every supported source outcome being the `okMap` image of a supported outcome of the CE game (`PqxdhBoundaryDeployment.classical_normal`), of which `unwrap` is a left inverse (`unwrap_okMap`), so every supported source run is covered. The frozen theorem holds at every Server identity index; the production form is at index 0, as every production form. -/
 theorem replay_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (outcome : PqxdhBoundaryDeployment.Outcome KemSK X × A)
     (supported : outcome ∈ support ((PqxdhBoundaryDeployment.sourceGame setup codec reader erased checks ensureInit 0
@@ -591,7 +591,7 @@ open PqxdhDeploymentRecordKernels (Live Finished peerKernel ownerKernel PeerStep
 
 /-- Production form of `PqxdhDeploymentRecordReplay.record_replay_game` (frozen: Theorem CE-C3 (record replay, for every owner and peer)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every outcome of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by an outcome of the classical source game `PqxdhBoundaryDeployment.sourceGame` read back through `unwrap` (`support_zero`). The conclusion is the frozen text at the production codec; the frozen theorem takes no codec law, contract or budget, and neither does the production form. Reading back through `unwrap` loses no run: the source game never returns a Rust `fail` or `div` result, every supported source outcome being the `okMap` image of a supported outcome of the CE game (`PqxdhBoundaryDeployment.classical_normal`), of which `unwrap` is a left inverse (`unwrap_okMap`), so every supported source run is covered. The frozen theorem holds at every Server identity index; the production form is at index 0, as every production form. -/
 theorem record_replay_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (outcome : PqxdhBoundaryDeployment.Outcome KemSK X × A)
     (supported : outcome ∈ support ((PqxdhBoundaryDeployment.sourceGame setup codec reader erased checks ensureInit 0
