@@ -25,8 +25,9 @@ mod lowstar {
 	}
 }
 
-mod sizing;
-pub use sizing::{MAX_MESSAGE_SIZE, encoded_frame_len, encoded_init_len, encoded_response_len};
+pub use beaconcrypt_core::transport::{
+	MAX_MESSAGE_SIZE, encoded_frame_len, encoded_init_len, encoded_response_len,
+};
 pub use transport::{cryptoframe as CryptoFrame, initkex as InitKex, kexresponse as KexResponse};
 use transport::{
 	option__·Transport_cryptoframe···Pulse_Lib_Slice_slice·uint8_t· as ParsedFrame,
@@ -39,7 +40,7 @@ use transport::{
 // Each schema has a fixed prefix and at most six primitive fields; byte strings
 // are skipped without inspecting their payload.
 fn preflight(input: &[u8], prefix: &[u8], fields: &[u8]) -> Option<()> {
-	if input.len() > MAX_MESSAGE_SIZE {
+	if !beaconcrypt_core::transport::complete_message_size_admitted(input.len()) {
 		return None;
 	}
 	let mut remaining = input.strip_prefix(prefix)?;

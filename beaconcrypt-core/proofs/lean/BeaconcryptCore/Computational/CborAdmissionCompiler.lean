@@ -158,9 +158,7 @@ theorem build_step_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
         ((build setup codec route session payload).run memory)).run native =
       (nativeHandler setup codec checks route seed (.inr (.build session payload))).run (merge memory native) := by
   rw [build_native_exact setup codec checks route seed session payload memory native good]
-  change _ = if CborProductionBoundary.allowed (.inr (.build session payload)) (merge memory native) then
-    (PqxdhDeploymentNative.handler setup codec checks route seed (.inr (.build session payload))).run (merge memory native)
-    else pure (CborProductionBoundary.reject (.inr (.build session payload)) (merge memory native))
+  simp only [nativeHandler, CborCommandFilter.handler, StateT.run]
   rw [allowed_build setup codec session payload memory native good]
   by_cases fits : CborSizing.responseLen ((payload.getD [0xff]).length + 88) (memory.lastId.val + 1) ≤
       CborSizing.maxMessageSize <;>

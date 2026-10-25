@@ -10,10 +10,7 @@ use crate::ratchet::KeyMaterial;
 use crate::ratchet::{
 	RatchetManager, RatchetStatus, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
 };
-use crate::shared::{
-	EstablishedRemote, REGISTRATION_WITNESS, deserialize_server_state, roles,
-	serialize_server_state,
-};
+use crate::shared::{EstablishedRemote, deserialize_server_state, roles, serialize_server_state};
 use beaconcrypt_core::pqxdh as verified_pqxdh;
 use beaconcrypt_core::session::ServerAuthenticationPin;
 #[cfg(test)]
@@ -40,20 +37,18 @@ pub struct RegistrationOutput {
 	registration: beaconcrypt_core::peer::ConsumedRegistration,
 }
 
+// This interpreter borrows the exact byte view already selected by core.
+fn registration_application_bytes<'a>(
+	request: &'a beaconcrypt_core::transport::RegistrationApplication<'_>,
+) -> &'a [u8] {
+	match request {
+		beaconcrypt_core::transport::RegistrationApplication::Witness(bytes) => bytes,
+		beaconcrypt_core::transport::RegistrationApplication::Provided(bytes) => bytes,
+	}
+}
+
 fn registration_response_len(application_len: usize, assigned_key_id: u64) -> Option<usize> {
-	let ciphertext_len = verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE
-		.checked_add(application_len)?
-		.checked_add(crate::ratchet::MESSAGE_OVERHEAD)?;
-	beaconcrypt_parse::encoded_response_len(
-		[
-			verified_pqxdh::SIGN_PUBLIC_KEY_SIZE,
-			verified_pqxdh::X25519_PUBLIC_KEY_SIZE,
-			verified_pqxdh::MLKEM768_CIPHERTEXT_SIZE,
-			ciphertext_len,
-			auth::MLDSA_SIGNATURE_LEN,
-		],
-		assigned_key_id,
-	)
+	beaconcrypt_core::transport::registration_response_len(application_len, assigned_key_id)
 }
 
 /// The state effect of one receive attempt.
@@ -265,7 +260,12 @@ impl Server {
 	}
 	pub(crate) fn registration_response_fits(&self, data: Option<&[u8]>) -> bool {
 		let next_key_id = self.control.last_key_id().saturating_add(1);
-		registration_response_len(data.unwrap_or(REGISTRATION_WITNESS).len(), next_key_id).is_some()
+		let application = beaconcrypt_core::transport::normalize_registration_application(data);
+		registration_response_len(
+			registration_application_bytes(&application).len(),
+			next_key_id,
+		)
+		.is_some()
 	}
 	pub(crate) fn ratchet_manager(&self, k: u64) -> Option<&RatchetManager> {
 		self.known_ids.get(&k).map(EstablishedRemote::ratchet)
@@ -443,7 +443,8 @@ impl ProviderServer for Server {
 		data: Option<&[u8]>,
 	) -> Option<RegResponse> {
 		let control = self.control;
-		let plaintext = data.unwrap_or(REGISTRATION_WITNESS);
+		let application = beaconcrypt_core::transport::normalize_registration_application(data);
+		let plaintext = registration_application_bytes(&application);
 		let RegistrationOutput { registration } = reg_out;
 		let lookup = beaconcrypt_core::peer::begin_completion_lookup(
 			control,
@@ -610,6 +611,26 @@ mod size_tests {
 			restored.consumed_registrations,
 			server.consumed_registrations
 		);
+	}
+
+	#[test]
+	fn core_application_view_interpreter_preserves_source_selected_bytes() {
+		use beaconcrypt_core::transport::{
+			RegistrationApplication, normalize_registration_application,
+		};
+		let omitted = normalize_registration_application(None);
+		assert_eq!(registration_application_bytes(&omitted), &[0xff]);
+		let empty = [];
+		let supplied_empty = normalize_registration_application(Some(&empty));
+		assert!(registration_application_bytes(&supplied_empty).is_empty());
+		let bytes = [0xff, 0x37, 0];
+		let supplied = normalize_registration_application(Some(&bytes));
+		assert!(core::ptr::eq(
+			registration_application_bytes(&supplied),
+			bytes.as_slice()
+		));
+		let request = RegistrationApplication::Witness([0x37]);
+		assert_eq!(registration_application_bytes(&request), &[0x37]);
 	}
 
 	#[test]

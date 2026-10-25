@@ -20,6 +20,8 @@ mod peer_effects;
 mod record_effects;
 #[path = "fidelity/registration_effects.rs"]
 mod registration_effects;
+#[path = "fidelity/transport.rs"]
+mod transport;
 
 const INTERFACE: &str = include_str!("../proofs/pro-verif/production-transcript-interface.pvl");
 const CRYPTO_MODEL: &str = include_str!("../proofs/pro-verif/crypto.pvl");
@@ -102,7 +104,7 @@ const LEAN_PQXDH_THEOREMS: &str =
 	include_str!("../proofs/lean/BeaconcryptCore/Model/Pqxdh/Theorems.lean");
 const TRANSPORT_SCHEMA: &str = include_str!("../../beaconcrypt-parse/schema/transport.cddl");
 const TRANSPORT_PARSER: &str = include_str!("../../beaconcrypt-parse/src/lib.rs");
-const TRANSPORT_SIZING: &str = include_str!("../../beaconcrypt-parse/src/sizing.rs");
+const TRANSPORT_SIZING: &str = include_str!("../src/transport.rs");
 const ADAPTER_WIRE: &str = include_str!("../../beaconcrypt/src/wire.rs");
 const CRYPTOFRAME_SCHEMA: &str = TRANSPORT_SCHEMA;
 const PHASE1_SCHEMA: &str = TRANSPORT_SCHEMA;
@@ -1289,8 +1291,10 @@ fn validate_cbor_registration_model(snapshot: &Snapshot) -> Result<(), String> {
 }
 
 fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
+	transport::validate(snapshot)?;
 	let parser = compact(&uncommented_rust(&snapshot.transport_parser)?);
 	for wanted in [
+		"pubusebeaconcrypt_core::transport::{MAX_MESSAGE_SIZE,encoded_frame_len,encoded_init_len,encoded_response_len,};",
 		"pubusetransport::{cryptoframeasCryptoFrame,initkexasInitKex,kexresponseasKexResponse};",
 		"preflight(input,&[0x85,1,2],&[0,0,2])?;matchvalidate_and_parse_cryptoframe(input){ParsedFrame::Some{v:(frame,[])}=>Some(frame),_=>None,}",
 		"preflight(input,&[0x88,2,0],&[2,2,2,2,2,2])?;matchvalidate_and_parse_initkex(input){ParsedInit::Some{v:(init,[])}=>Some(init),_=>None,}",
@@ -1300,7 +1304,7 @@ fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
 	}
 	let preflight = rust_body(&snapshot.transport_parser, "preflight")?;
 	for wanted in [
-		"ifinput.len()>MAX_MESSAGE_SIZE{returnNone;}",
+		"if!beaconcrypt_core::transport::complete_message_size_admitted(input.len()){returnNone;}",
 		"letmutremaining=input.strip_prefix(prefix)?;",
 		"for&majorinfields{let(argument,rest)=primitive_argument(remaining,major)?;remaining=ifmajor==2{rest.get(usize::try_from(argument).ok()?..)?}else{rest};}",
 		"remaining.is_empty().then_some(())",
@@ -1317,25 +1321,10 @@ fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
 	] {
 		require_once(&primitive, wanted, "CBOR primitive header gate")?;
 	}
-	let sizing = compact(&uncommented_rust(&snapshot.transport_sizing)?);
-	require_once(
-		&sizing,
-		"pubconstMAX_MESSAGE_SIZE:usize=33_554_432;",
-		"CBOR complete-message size limit",
-	)?;
-	let length = rust_body(&snapshot.transport_sizing, "message_len")?;
-	for wanted in [
-		"letmutlength=3usize;",
-		"length=length.checked_add(argument_len(integer))?;",
-		"length=length.checked_add(argument_len(u64::try_from(byte_length).ok()?))?.checked_add(byte_length)?;",
-		"(length<=MAX_MESSAGE_SIZE).then_some(length)",
-	] {
-		require_once(&length, wanted, "CBOR checked encoded length")?;
-	}
 	let frame_len = rust_body(&snapshot.adapter_wire, "frame_len")?;
 	require_once(
 		&frame_len,
-		"beaconcrypt_parse::encoded_frame_len(sequence,sender,plaintext_len.checked_add(crate::ratchet::MESSAGE_OVERHEAD)?,)",
+		"beaconcrypt_core::transport::protected_frame_len(plaintext_len,sequence,sender)",
 		"CBOR pre-ratchet length includes authentication",
 	)?;
 	let encoding = rust_body(&snapshot.adapter_wire, "encode_record")?;
@@ -1381,13 +1370,8 @@ fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
 	let response_len = rust_body(&snapshot.adapter_server, "registration_response_len")?;
 	require_once(
 		&response_len,
-		"letciphertext_len=verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE.checked_add(application_len)?.checked_add(crate::ratchet::MESSAGE_OVERHEAD)?;",
-		"CBOR response checked authentication length",
-	)?;
-	require_once(
-		&response_len,
-		"beaconcrypt_parse::encoded_response_len([verified_pqxdh::SIGN_PUBLIC_KEY_SIZE,verified_pqxdh::X25519_PUBLIC_KEY_SIZE,verified_pqxdh::MLKEM768_CIPHERTEXT_SIZE,ciphertext_len,auth::MLDSA_SIGNATURE_LEN,],assigned_key_id,)",
-		"CBOR complete response length",
+		"beaconcrypt_core::transport::registration_response_len(application_len,assigned_key_id)",
+		"CBOR complete response length delegates to extracted policy",
 	)?;
 	let response = rust_body(&snapshot.adapter_server, "build_registration_response")?;
 	require_ordered_once(
@@ -2026,9 +2010,8 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		&[
 			"ifdata.is_empty(){returnNone;}",
 			"letframe=decode_crypto_frame(data)?;",
-			"letkid=frame.key_id;",
-			"ifkid!=expected_sender_kid{returnNone;}",
-			"decrypt_payload_with_ratchet(frame.cipher_text,frame.seq,kid,associated_data,ratchet)",
+			"letadmitted=beaconcrypt_core::transport::admit_frame(frame.seq,frame.key_id,frame.cipher_text,expected_sender_kid,)?;",
+			"decrypt_payload_with_ratchet(admitted.ciphertext,admitted.sequence,admitted.sender,associated_data,ratchet,)",
 		],
 		"CryptoFrame parser and gate evaluation order",
 	)?;
@@ -3459,9 +3442,8 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 		&[
 			"ifdata.is_empty(){returnNone;}",
 			"decode_crypto_frame(data)",
-			"letkid=frame.key_id;",
-			"ifkid!=expected_sender_kid{returnNone;}",
-			"decrypt_payload_with_ratchet(frame.cipher_text,frame.seq,kid,associated_data,ratchet)",
+			"letadmitted=beaconcrypt_core::transport::admit_frame(frame.seq,frame.key_id,frame.cipher_text,expected_sender_kid,)?;",
+			"decrypt_payload_with_ratchet(admitted.ciphertext,admitted.sequence,admitted.sender,associated_data,ratchet,)",
 		],
 		"ratchet receive prechecks and effect start order",
 	)?;
@@ -5161,7 +5143,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	let ordinary = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
 	require_once(
 		&ordinary,
-		"decrypt_payload_with_ratchet(frame.cipher_text,frame.seq,kid,associated_data,ratchet)",
+		"decrypt_payload_with_ratchet(admitted.ciphertext,admitted.sequence,admitted.sender,associated_data,ratchet,)",
 		"later-registration adapter parsed sequence",
 	)?;
 
@@ -8962,8 +8944,8 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"later_registration_adapter_sequence_substituted",
-			"frame.cipher_text, frame.seq, kid",
-			"frame.cipher_text, expected_sender_kid, kid",
+			"admitted.ciphertext,\n\t\tadmitted.sequence,\n\t\tadmitted.sender,",
+			"admitted.ciphertext,\n\t\texpected_sender_kid,\n\t\tadmitted.sender,",
 			"later-registration adapter parsed sequence",
 		),
 		(
@@ -11316,13 +11298,13 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to) in [
 		(
 			"cbor_response_authentication_overhead",
-			".checked_add(crate::ratchet::MESSAGE_OVERHEAD)?",
-			".checked_add(0)?",
+			"bound_length.checked_add(MESSAGE_OVERHEAD)",
+			"bound_length.checked_add(0)",
 		),
 		(
 			"cbor_response_checked_binding_length",
-			".checked_add(application_len)?",
-			".checked_add(application_len).unwrap_or(0)",
+			"application_length.checked_add(8)",
+			"Some(application_length.wrapping_add(8))",
 		),
 		(
 			"cbor_response_size_precheck",
@@ -11336,7 +11318,11 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 			"CBOR"
 		};
 		assert_rejected(name, diagnostic, |snapshot| {
-			replace_once(&mut snapshot.adapter_server, from, to)
+			if name == "cbor_response_size_precheck" {
+				replace_once(&mut snapshot.adapter_server, from, to)
+			} else {
+				replace_once(&mut snapshot.transport_sizing, from, to)
+			}
 		});
 		mutation_count += 1;
 	}
@@ -11449,8 +11435,8 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cbor_preflight_size_gate",
-			"input.len() > MAX_MESSAGE_SIZE",
-			"input.len() >= MAX_MESSAGE_SIZE",
+			"!beaconcrypt_core::transport::complete_message_size_admitted(input.len())",
+			"beaconcrypt_core::transport::complete_message_size_admitted(input.len())",
 		),
 		(
 			"cbor_preflight_trailing_bytes",
@@ -11482,18 +11468,18 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		("cbor_message_size_limit", "33_554_432", "67_108_864"),
 		(
 			"cbor_length_header_overhead",
-			"let mut length = 3usize;",
-			"let mut length = 2usize;",
+			"Self { value: Some(3) }",
+			"Self { value: Some(2) }",
 		),
 		(
 			"cbor_length_integer_overflow",
-			"checked_add(argument_len(integer))?",
-			"checked_add(argument_len(integer)).unwrap_or(0)",
+			"length.checked_add(argument_len(value))",
+			"Some(length)",
 		),
 		(
 			"cbor_length_payload_overflow",
-			"checked_add(byte_length)?",
-			"checked_add(byte_length).unwrap_or(0)",
+			"length.checked_add(byte_length)",
+			"Some(length)",
 		),
 		(
 			"cbor_length_limit_gate",
@@ -11524,8 +11510,8 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cbor_frame_overhead_overflow",
-			"plaintext_len.checked_add(crate::ratchet::MESSAGE_OVERHEAD)?",
-			"plaintext_len",
+			"protected_frame_len(plaintext_len, sequence, sender)",
+			"protected_frame_len(0, sequence, sender)",
 		),
 	] {
 		assert_rejected(name, "CBOR", |snapshot| {
@@ -11542,14 +11528,14 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cbor_receive_sender_gate",
-			"if kid != expected_sender_kid {",
-			"if kid != frame.key_id {",
+			"frame.cipher_text,\n\t\texpected_sender_kid,",
+			"frame.cipher_text,\n\t\tframe.key_id,",
 			"record effects",
 		),
 		(
 			"cbor_receive_sequence",
-			"frame.cipher_text, frame.seq, kid",
-			"frame.cipher_text, 1, kid",
+			"admitted.ciphertext,\n\t\tadmitted.sequence,\n\t\tadmitted.sender,",
+			"admitted.ciphertext,\n\t\t1,\n\t\tadmitted.sender,",
 			"record effects",
 		),
 	] {
@@ -17900,7 +17886,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-common.pvl",
 		"common.kid_counter_start",
-		"beaconcrypt/src/server.rs:190-190",
+		"beaconcrypt/src/server.rs:185-185",
 	),
 	(
 		"fs-common.pvl",
@@ -18045,7 +18031,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:446-448",
+		"beaconcrypt/src/server.rs:446-447",
 	),
 	(
 		"fs-registration.pvl",
@@ -18055,7 +18041,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:467-474",
+		"beaconcrypt/src/server.rs:468-475",
 	),
 	(
 		"fs-registration.pvl",
@@ -18065,12 +18051,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:502-505",
+		"beaconcrypt/src/server.rs:503-506",
 	),
 	(
 		"fs-registration.pvl",
 		"server.token_consumed",
-		"beaconcrypt/src/server.rs:128-133",
+		"beaconcrypt/src/server.rs:123-128",
 	),
 	(
 		"fs-registration.pvl",
@@ -18235,7 +18221,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:508-518",
+		"beaconcrypt/src/server.rs:509-519",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
@@ -18265,7 +18251,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:508-518",
+		"beaconcrypt/src/server.rs:509-519",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
@@ -18275,7 +18261,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-receive.pvl",
 		"ratchet.decode_sender",
-		"beaconcrypt/src/ratchet.rs:623-632",
+		"beaconcrypt/src/ratchet.rs:623-640",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
@@ -18465,7 +18451,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:446-448",
+		"beaconcrypt/src/server.rs:446-447",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18475,7 +18461,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:467-474",
+		"beaconcrypt/src/server.rs:468-475",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18485,7 +18471,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:502-505",
+		"beaconcrypt/src/server.rs:503-506",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18580,7 +18566,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"ratchet.decrypt",
-		"beaconcrypt/src/ratchet.rs:617-651",
+		"beaconcrypt/src/ratchet.rs:617-659",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18690,7 +18676,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.decode_sender",
-		"beaconcrypt/src/ratchet.rs:623-632",
+		"beaconcrypt/src/ratchet.rs:623-640",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -18880,7 +18866,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:446-448",
+		"beaconcrypt/src/server.rs:446-447",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18890,7 +18876,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:467-474",
+		"beaconcrypt/src/server.rs:468-475",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18900,7 +18886,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:502-505",
+		"beaconcrypt/src/server.rs:503-506",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -21307,7 +21293,7 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 				replace_once(
 					&mut files.registration,
 					"src=beaconcrypt/src/server.rs:433-437",
-					"src=beaconcrypt/src/server.rs:414-416",
+					"src=beaconcrypt/src/server.rs:1-1",
 				)
 			}) as Box<dyn Fn(&mut FsFiles)>,
 			"fs fidelity annotations of fs-registration.pvl changed",

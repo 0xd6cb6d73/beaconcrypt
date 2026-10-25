@@ -147,7 +147,7 @@ let FsS2bServer(obj: bitstring) =
     server_identity,
     identity
   ) in
-  (* @beaconcrypt-fs-fidelity key=server.payload src=beaconcrypt/src/server.rs:446-448 anchor=let plaintext = data.unwrap_or(REGISTRATION_WITNESS); *)
+  (* @beaconcrypt-fs-fidelity key=server.payload src=beaconcrypt/src/server.rs:446-447 anchor=let application = beaconcrypt_core::transport::normalize_registration_application(data); *)
   new payload: bitstring;
   (* @beaconcrypt-fs-fidelity key=server.binding src=beaconcrypt-core/src/record_effects.rs:61-70 anchor=let prefix = *crate::pqxdh::registration_key_id_binding(assigned_kid).as_bytes(); *)
   let response_plaintext = registration_payload(
@@ -156,7 +156,7 @@ let FsS2bServer(obj: bitstring) =
     ),
     payload
   ) in
-  (* @beaconcrypt-fs-fidelity key=server.seal src=beaconcrypt/src/server.rs:467-474 anchor=let detached = crate::ratchet::execute_seal_request(pending.request()); *)
+  (* @beaconcrypt-fs-fidelity key=server.seal src=beaconcrypt/src/server.rs:468-475 anchor=let detached = crate::ratchet::execute_seal_request(pending.request()); *)
   let initial_frame = seal_frame(
     ratchet_material(send_chain_1),
     associated_data,
@@ -184,7 +184,7 @@ let FsS2bServer(obj: bitstring) =
     1,
     response_plaintext
   );
-  (* @beaconcrypt-fs-fidelity key=server.build_return src=beaconcrypt/src/server.rs:502-505 anchor=Some(RegResponse { *)
+  (* @beaconcrypt-fs-fidelity key=server.build_return src=beaconcrypt/src/server.rs:503-506 anchor=Some(RegResponse { *)
   out(
     c,
     kex_response(
@@ -296,7 +296,7 @@ let FsS2bBeacon() =
      pinned Server ID as expected sender admits t in 1..51; t = 0 is
      rejected before any open. *)
   (* @beaconcrypt-fs-fidelity key=beacon.receive src=beaconcrypt/src/beacon.rs:520-542 anchor=registration::BeaconInitialOpen::KdfRequested(pending) => { *)
-  (* @beaconcrypt-fs-fidelity key=ratchet.decrypt src=beaconcrypt/src/ratchet.rs:617-651 anchor=pub(crate) fn decrypt_message_with_ratchet( *)
+  (* @beaconcrypt-fs-fidelity key=ratchet.decrypt src=beaconcrypt/src/ratchet.rs:617-659 anchor=pub(crate) fn decrypt_message_with_ratchet( *)
   let crypto_frame(
     frame_cipher: bitstring,
     frame_tag: bitstring,

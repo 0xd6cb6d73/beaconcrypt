@@ -13,7 +13,7 @@
 (* @beaconcrypt-fs-fidelity key=taskings.allocate src=beaconcrypt-core/src/ratchet/concrete.rs:133-155 anchor=pub fn begin_send<Context>(kernel: ConcreteRatchetKernel, context: Context) -> SendStart<Context> { *)
 (* @beaconcrypt-fs-fidelity key=taskings.advance src=beaconcrypt-core/src/ratchet/concrete.rs:171-182 anchor=pub fn resume(mut self, response: RatchetKdfResponse) -> SendSeal<Context> { *)
 (* @beaconcrypt-fs-fidelity key=taskings.stays_advanced src=beaconcrypt-core/src/ratchet/concrete.rs:206-209 anchor=pub fn finish<Output>(self, sealed: Option<Output>) -> (ConcreteRatchetKernel, Option<Output>) { *)
-(* @beaconcrypt-fs-fidelity key=taskings.snapshot src=beaconcrypt/src/server.rs:508-518 anchor=fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<SendState> { *)
+(* @beaconcrypt-fs-fidelity key=taskings.snapshot src=beaconcrypt/src/server.rs:509-519 anchor=fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<SendState> { *)
 let FsS2bTaskings(
   server_identity: bitstring,
   beacon_identity: bitstring,

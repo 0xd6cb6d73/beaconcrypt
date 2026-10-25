@@ -42,7 +42,7 @@ let Cur(
   in(c, frame: bitstring) [precise];
   (* Decode exactly one frame and require the pinned Server ID as sender;
      anything else returns None before the ratchet is touched. *)
-  (* @beaconcrypt-fs-fidelity key=ratchet.decode_sender src=beaconcrypt/src/ratchet.rs:623-632 anchor=if data.is_empty() { *)
+  (* @beaconcrypt-fs-fidelity key=ratchet.decode_sender src=beaconcrypt/src/ratchet.rs:623-640 anchor=if data.is_empty() { *)
   (* @beaconcrypt-fs-fidelity key=record.frame_context src=beaconcrypt-core/src/record.rs:35-61 anchor=pub fn from_frame( *)
   let crypto_frame(
     frame_cipher: bitstring,

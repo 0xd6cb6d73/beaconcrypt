@@ -31,9 +31,9 @@ FIELDS = {
 # visibility. Any change requires re-review, even outside a getter body.
 SOURCE_SHA256 = {
     "beaconcrypt/src/beacon.rs": "e041cd9d18eab646e1cf4266156295cc118ddfd30dabe2e407c7a14bc3e9956b",
-    "beaconcrypt/src/server.rs": "50930c8199bc184afb00503f42a4cffc32a914f1280036b7bad919a82163cbb5",
-    "beaconcrypt/src/ratchet.rs": "91b83d6f519a9453d81911e71262a46ddaa529f8ffd1906ad50672792b6aa828",
-    "beaconcrypt/src/shared.rs": "a0b30f2cebf1c160779915c47b7df9e371d375a32dedde657dea673847f314e3",
+    "beaconcrypt/src/server.rs": "6924195a2790f663e9ab3a9bd9aee0b05b0edfae384241f933565dd3f16f63f9",
+    "beaconcrypt/src/ratchet.rs": "139db9986e11979050b85616fc02226863db593d1c2b46c56cd5c014eb5671b1",
+    "beaconcrypt/src/shared.rs": "756ef890648966d53d742ca8fd06dbe4cd1ee612bf10758cdc985b4262157d42",
     "beaconcrypt/src/cbinds.rs": "82f6680efb5cc6b145944d9a1c3e6468c3394e2ce3c94876349683d288760c36",
     "beaconcrypt/src/pybinds.rs": "6dc9a248f6eba84f6bbc6cfdf16d741b45a61ea1428caacf3a4d1302a8b19dce",
     "beaconcrypt/src/lib.rs": "612958dd4b3e1f4cdab304c5a8d3d95e9c9daa0fe9a2ceaf7490bd1b2bf59270",
@@ -52,6 +52,7 @@ SOURCE_SHA256 = {
     "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018",
     "beaconcrypt-core/src/record_effects.rs": "dbdf79661a17c8d8c128ff349a7efe906d6713912e5510c9a0476b0c3efad2b5",
     "beaconcrypt-core/src/peer.rs": "df4b0fc85a7a303f56908b13a4d90fb7d9233601040b43e035a99d341bd757bc",
+    "beaconcrypt-core/src/transport.rs": "bc3f347f251cb07e44c47699c6fa3db4c9ae8b73c6d1d54c6f9eb54911a463a9",
 }
 
 

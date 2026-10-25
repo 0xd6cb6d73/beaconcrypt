@@ -69,6 +69,9 @@ import BeaconcryptCore.Refinement.RegistrationSigningDispatch
 import BeaconcryptCore.Refinement.KeyAgreement
 import BeaconcryptCore.PanicFreedom.SessionBinding
 import BeaconcryptCore.PanicFreedom.PeerOwnership
+import BeaconcryptCore.Refinement.Transport
+import BeaconcryptCore.Computational.TransportSizingBridge
+import BeaconcryptCore.PanicFreedom.Transport
 import BeaconcryptCore.Verification.PqxdhCommitmentRefinement
 import BeaconcryptCore.Refinement.RatchetControlRestore
 import BeaconcryptCore.Refinement.RatchetCachedPublication

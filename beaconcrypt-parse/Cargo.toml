@@ -8,5 +8,8 @@ readme = "README.md"
 description = "Generated deterministic CBOR transport codecs for beaconcrypt"
 repository = "https://github.com/0xd6cb6d73/beaconcrypt"
 
+[dependencies]
+beaconcrypt-core = { version = "=0.1.1", path = "../beaconcrypt-core" }
+
 [dev-dependencies]
 proptest = { version = "1", default-features = false, features = ["std"] }

@@ -110,6 +110,7 @@ dependencies = [
 name = "beaconcrypt-parse"
 version = "0.1.0"
 dependencies = [
+ "beaconcrypt-core",
  "proptest",
 ]
 

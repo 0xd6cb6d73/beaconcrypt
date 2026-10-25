@@ -60,14 +60,14 @@ a human performed a sound review.
 The reviewed baseline has:
 
 - fourteen `adapter-rust` whole-file review units: every `../beaconcrypt/src/*.rs` file, including authentication, persistence and CBOR allocation boundaries;
-- six `parser-rust` whole-file review units: the public parser/sizing wrappers, preflight tests and three generated CBOR modules; one `adapter-schema` review unit for `../beaconcrypt-parse/schema/transport.cddl`, with the package manifest and generator provenance in the control inventory;
-- sixteen `core-rust` review units: twelve crate-root modules plus `src/ratchet/{control,refined,concrete}.rs` and `src/pqxdh/concrete.rs`, all inside the complete default Lean translation boundary;
+- five `parser-rust` whole-file review units: the public parser wrapper, preflight tests and three generated CBOR modules; one `adapter-schema` review unit for `../beaconcrypt-parse/schema/transport.cddl`, with the package manifest and generator provenance in the control inventory;
+- seventeen `core-rust` review units: thirteen crate-root modules plus `src/ratchet/{control,refined,concrete}.rs` and `src/pqxdh/concrete.rs`, all inside the complete default Lean translation boundary;
 - no `hax_lib::opaque` or `hax_lib::opaque_type` annotation in the protocol
   core;
 - zero active F* proof files or verifier gates; the thirteen predecessor proof/interface artifacts and backend Makefile remain retrievable from Git commit `a79817c`;
 - one no-exclusion generated Lean extraction, with its generated forwarding/scaffolding modules and every inventoried handwritten model, refinement, computational, assumption, and proof-root file reachable from the maintained root; this includes checked structural effect laws, phase-to-ideal refinement theorems, the ideal PQXDH model, and the VCVio CTX reductions;
 - the generated ProVerif library and all maintained handwritten models, queries, interfaces and result checkers, including the production-backed replacement fragments; the reviewed inventory records their complete current file roster and hashes;
-- eighty validation review units covering Rust integration/fidelity tests and Python model/source checkers, generators and negative controls;
+- eighty-two validation review units covering Rust integration/fidelity tests and Python model/source checkers, generators and negative controls;
 - no repository-owned Lean unfinished proof or custom axiom, no unresolved generated backend placeholder, and a signature-derived panic certificate for every extracted operation; and
 - one handwritten ProVerif result classifier that is trusted to distinguish
   required positive results, reachability witnesses, and deliberate negative
@@ -1082,3 +1082,9 @@ Native scheduling and execution of these requests, cryptographic correctness/sec
 The production server uses extracted `peer.rs` continuations for authenticated replay lookup, actual replay-insertion admission, current-counter peer lookup and final publication. A core peer owns the complete session binding and ratchet, and successful response publication transfers the actual concrete kernel and encoded bytes. The adapter installs only through `HashMap::Entry::Vacant` and publishes the core counter only after the actual insertion result resumes the retained capability. Failed response construction leaves peer/counter publication absent and never unconsumes the earlier successful registration.
 
 `Refinement.PeerOwnership` proves the source selection and publication equations; `Refinement.PeerCollections` lifts them under explicit faithful vacant-entry and replay-set laws, including no replacement and preservation of all nonselected peers. The native map/set implementation and its execution remain trusted. These facts add no cryptographic assumption and do not change the earlier classical-projection security scope. Snapshot provenance, compiler/allocator behavior, wrapping the exact concrete kernel in the native ratchet manager, physical erasure and durable crash installation remain external. The item 4 extraction checkpoint has 450 operations with unconditional panic-freedom contracts.
+
+## Extracted transport policy and parser representation
+
+The parser's handwritten wrapper delegates complete-input size admission and canonical sizing to extracted core transport operations. Native send and registration prechecks use the same core sizing helpers before key advancement or publication. Core sender admission fixes the borrowed frame metadata, and core registration normalization chooses the exact default/provided descriptor. The native byte-view interpreter is a separate trusted representation step, guarded by exact source correspondence and focused tests; the generated parser, generator artifacts and schema remain byte-identical to the original baseline.
+
+The source refinements and `Computational.TransportSizingBridge` join checked arithmetic, all headers, complete signed request/response fields and the actual protected-record/prefix overheads to the corrected CBOR size model. Its 6,757-byte request profile and response signature field reconcile downstream model admission with native limits. They do not prove generated parser/serializer execution or lift the earlier classical-projection security results to mandatory-ML or quantum security. The current aggregate covers 463 operations; the item 4 checkpoint's 450-operation receipt remains historical.

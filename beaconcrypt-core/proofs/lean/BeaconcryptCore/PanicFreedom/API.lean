@@ -21,6 +21,7 @@ import BeaconcryptCore.PanicFreedom.Restore
 import BeaconcryptCore.PanicFreedom.SessionBinding
 import BeaconcryptCore.PanicFreedom.Static
 import BeaconcryptCore.PanicFreedom.Structural
+import BeaconcryptCore.PanicFreedom.Transport
 import BeaconcryptCore.PanicFreedom.Trivial
 import BeaconcryptCore.Refinement.RatchetControl
 import BeaconcryptCore.Refinement.RatchetControlRestore
@@ -2418,5 +2419,71 @@ theorem operation_448 (self : session.SessionBinding) :
 theorem operation_449 (self : session.SessionBinding) :
     ∃ result, session.SessionBinding.impl.server_fingerprint self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_server_fingerprint_total
+
+-- Extracted operation: transport.CborLength.bytes
+theorem operation_450 (self : transport.CborLength) (byte_length : Std.Usize) :
+    ∃ result, transport.CborLength.bytes self byte_length = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.cbor_length_bytes_total
+
+-- Extracted operation: transport.CborLength.finish
+theorem operation_451 (self : transport.CborLength) :
+    ∃ result, transport.CborLength.finish self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.cbor_length_finish_total
+
+-- Extracted operation: transport.CborLength.integer
+theorem operation_452 (self : transport.CborLength) (value : Std.U64) :
+    ∃ result, transport.CborLength.integer self value = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.cbor_length_integer_total
+
+-- Extracted operation: transport.CborLength.new
+theorem operation_453  :
+    ∃ result, transport.CborLength.new  = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.cbor_length_new_total
+
+-- Extracted operation: transport.admit_frame
+theorem operation_454 (sequence : Std.U64) (sender : Std.U64) (ciphertext : Slice Std.U8)
+  (expected_sender : Std.U64) :
+    ∃ result, transport.admit_frame sequence sender ciphertext expected_sender = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.admit_frame_total
+
+-- Extracted operation: transport.argument_len
+theorem operation_455 (value : Std.U64) :
+    ∃ result, transport.argument_len value = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.argument_len_total
+
+-- Extracted operation: transport.complete_message_size_admitted
+theorem operation_456 (length : Std.Usize) :
+    ∃ result, transport.complete_message_size_admitted length = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.complete_message_size_admitted_total
+
+-- Extracted operation: transport.encoded_frame_len
+theorem operation_457 (sequence : Std.U64) (sender : Std.U64) (ciphertext_length : Std.Usize) :
+    ∃ result, transport.encoded_frame_len sequence sender ciphertext_length = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.encoded_frame_len_total
+
+-- Extracted operation: transport.encoded_init_len
+theorem operation_458 (lengths : Array Std.Usize 6#usize) :
+    ∃ result, transport.encoded_init_len lengths = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.encoded_init_len_total
+
+-- Extracted operation: transport.encoded_response_len
+theorem operation_459 (lengths : Array Std.Usize 5#usize) (assigned_key_id : Std.U64) :
+    ∃ result, transport.encoded_response_len lengths assigned_key_id = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.encoded_response_len_total
+
+-- Extracted operation: transport.normalize_registration_application
+theorem operation_460 (application : core.option.Option (Slice Std.U8)) :
+    ∃ result, transport.normalize_registration_application application = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.normalize_registration_application_total
+
+-- Extracted operation: transport.protected_frame_len
+theorem operation_461 (plaintext_length : Std.Usize) (sequence : Std.U64) (sender : Std.U64) :
+    ∃ result, transport.protected_frame_len plaintext_length sequence sender = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.protected_frame_len_total
+
+-- Extracted operation: transport.registration_response_len
+theorem operation_462 (application_length : Std.Usize) (assigned_key_id : Std.U64) :
+    ∃ result, transport.registration_response_len application_length assigned_key_id = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Transport.registration_response_len_total
 
 end BeaconcryptCore.PanicFreedom.API

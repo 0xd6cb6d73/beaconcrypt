@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RawCtxFrameDecoding
 import BeaconcryptCore.Computational.CborSizing
 
 /-!
-The transport boundary after the CBOR migration. Lengths follow `beaconcrypt-parse/src/sizing.rs`; the parser itself remains a functional library boundary. The full decoder is called before the Server can obtain a sender. Registration payloads carry no frame metadata: sequence one and the pinned Server identifier are supplied by the caller.
+The transport boundary after the CBOR migration. Lengths follow `beaconcrypt-core/src/transport.rs`; the parser itself remains a functional library boundary. The full decoder is called before the Server can obtain a sender. Registration payloads carry no frame metadata: sequence one and the pinned Server identifier are supplied by the caller.
 -/
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc

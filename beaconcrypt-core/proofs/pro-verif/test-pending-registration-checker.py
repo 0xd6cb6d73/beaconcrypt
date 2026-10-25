@@ -280,6 +280,18 @@ class NativeMovedTokenSourceGate(unittest.TestCase):
             "pending.resume(Some([0; 64])).ok()?",
         )
 
+    def test_application_normalization_uses_actual_optional_input(self):
+        self.mutate_source(
+            "normalize_registration_application(data);\n\t\tlet plaintext = registration_application_bytes(&application);",
+            "normalize_registration_application(None);\n\t\tlet plaintext = registration_application_bytes(&application);",
+        )
+
+    def test_application_uses_the_actual_normalized_view(self):
+        self.mutate_source(
+            "let plaintext = registration_application_bytes(&application);",
+            "let plaintext = &[0xff];",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

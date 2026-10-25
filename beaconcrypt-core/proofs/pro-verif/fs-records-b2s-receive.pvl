@@ -62,7 +62,7 @@ let Cur(
   (* @beaconcrypt-fs-fidelity key=server.route src=beaconcrypt/src/server.rs:294-302 anchor=let Some(k) = crate::ratchet::encrypted_frame_sender(b) else { *)
   (* @beaconcrypt-fs-fidelity key=ratchet.frame_sender src=beaconcrypt/src/ratchet.rs:355-357 anchor=pub(crate) fn encrypted_frame_sender(data: &[u8]) -> Option<u64> { *)
   (* @beaconcrypt-fs-fidelity key=server.peer_associated_data src=beaconcrypt/src/server.rs:278-280 anchor=pub(crate) fn associated_data(&self, k: u64) -> Option<[u8; AD_SIZE]> { *)
-  (* @beaconcrypt-fs-fidelity key=ratchet.decode_sender src=beaconcrypt/src/ratchet.rs:623-632 anchor=if data.is_empty() { *)
+  (* @beaconcrypt-fs-fidelity key=ratchet.decode_sender src=beaconcrypt/src/ratchet.rs:623-640 anchor=if data.is_empty() { *)
   (* @beaconcrypt-fs-fidelity key=record.frame_context src=beaconcrypt-core/src/record.rs:35-61 anchor=pub fn from_frame( *)
   let crypto_frame(
     frame_cipher: bitstring,

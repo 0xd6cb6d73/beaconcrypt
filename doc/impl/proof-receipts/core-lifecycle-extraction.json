@@ -2,12 +2,13 @@
   "baseline": "278204b921ae31a3e900cf21f690184173e531f5",
   "branch": "codex/core-lifecycle",
   "worktree": "/home/user/worktrees/beaconcrypt-core-lifecycle",
-  "updated_utc": "2026-10-25T09:06:45.609114+00:00",
+  "updated_utc": "2026-10-25T11:45:46.815590+00:00",
   "constraints": {
     "full_verify_in_shell": "not run, per owner instruction",
     "expensive_runs": "coordinated through /tmp/bc-coord",
     "all_commits": "Co-authored-by: Codex <codex@openai.com>",
-    "full_lean_build": "Only after items4and5 fully done, per owner continuation instruction"
+    "full_lean_build": "Only after items4and5 fully done, per owner continuation instruction",
+    "generated_parser": "Generated codec files, generator artifacts and schema remain byte-identical to original baseline; no parser regeneration"
   },
   "item1": {
     "commit": "ccaa4deb",
@@ -256,8 +257,14 @@
     "clippy": "passed with existing warnings",
     "role_checks_and_format": "passed",
     "native_mutations": {
-      "status": "running against frozen item4-native-source",
-      "configured": 1739
+      "status": "complete and audited",
+      "total": 1739,
+      "caught": 1127,
+      "compile_invalid": 612,
+      "missed": 0,
+      "timed_out": 0,
+      "all_invalid_logs": "actual Rust compilation errors, including three arithmetic-overflow and two uncoded parser diagnostics",
+      "outcomes_sha256": "f798087122e2e512258e4520441a2ac5960c77737e045b2d8a13d111f271a0af"
     },
     "wasi_mutations": {
       "status": "complete and audited",
@@ -296,12 +303,129 @@
       "core-rust": 16,
       "handwritten-lean": 2060,
       "validation": 80
-    }
+    },
+    "commit": "2be061d9"
   },
   "final_verification": {
-    "status": "continuation in progress",
+    "status": "complete",
     "full_verify_in_shell": "not run, per owner instruction",
-    "canonical_whole_project": "deferred until all requested implementation and proofs are complete",
-    "mutation_campaigns": "item4 native in progress; item4 WASI complete/audited; item5 staged"
+    "canonical_whole_project": "passed all 5679 jobs after all requested implementation and focused proof work was complete; initial proof-elaboration failure repaired without changing its statement/guards, then incremental whole-project replay passed",
+    "lean_policy_root_panic_preflight": "passed; all 463 contracts, 12 generator regressions",
+    "separate_inventory": "final full inventory passed; subsequent independently reviewed proof-only delta checked with full hash/category/membership prefix, exact module guards and policy/root/API preflights",
+    "runtime": "467 all-feature Rust tests; 435 Python checker tests; 42 transcript and 2 joint fidelity tests; role checks, formatting and Clippy passed",
+    "mutation_campaigns": "complete native and actual-WASI campaigns passed at both items, zero missed or timed-out mutants; every compile-invalid outcome audited as an actual Rust error",
+    "generated_parser": "all six generated Rust/artifact/schema files unchanged from both original baseline and item4 checkpoint; no regeneration",
+    "nix_garbage_collection": {
+      "status": "deferred",
+      "reason": "Pre-existing top PID2605055 in /home/user/beaconcrypt still retains IN_NIX_SHELL; cleanup forbidden while another repository process uses Nix",
+      "our_verification_leases": "none active"
+    }
+  },
+  "item5": {
+    "operation_count": 463,
+    "new_operations": 13,
+    "retired_operations": 0,
+    "new_types": 3,
+    "new_nonmonadic_constants": 2,
+    "behavioral_and_sizing_facts": 27,
+    "new_unconditional_panic_certificates": 13,
+    "extraction": "complete global and isolated authentication extraction passed; all retained function/type definitions and all generated external files unchanged; all six isolated authentication Lean outputs unchanged",
+    "full_rust_tests": 467,
+    "transcript_fidelity_tests": 42,
+    "joint_fidelity_tests": 2,
+    "python_checker_suites": 23,
+    "python_checker_tests": 435,
+    "clippy": "passed; all warnings pre-existing",
+    "role_checks_and_format": "passed",
+    "native_mutations": {
+      "status": "complete and audited",
+      "total": 1755,
+      "caught": 1139,
+      "compile_invalid": 616,
+      "missed": 0,
+      "timed_out": 0,
+      "all_invalid_logs": "actual Rust compilation errors, including three arithmetic-overflow and two uncoded parser diagnostics",
+      "outcomes_sha256": "f951771ce0f1ac65e2ce27f2914ea313e7861b217d5645306221154870c44b5a"
+    },
+    "wasi_mutations": {
+      "status": "complete and audited",
+      "total": 159,
+      "caught": 147,
+      "compile_invalid": 12,
+      "missed": 0,
+      "timed_out": 0,
+      "all_invalid_logs": "actual Rust compilation errors",
+      "outcomes_sha256": "0284dd9627b3d658633cd7d05b496bd0ecce1cf16a8802bdb43f4d1c7da0c176"
+    },
+    "wasi_tests": 27,
+    "wasi_allocation_failure_probe": "passed",
+    "transport_source_controls": 61,
+    "inventory_sensitivity_controls": 96,
+    "generated_parser": "six generated codec/artifact/schema files unchanged from 278204b9 and 2be061d9; no regeneration",
+    "model_reconciliation": {
+      "init_size_before": 1490,
+      "init_size_after": 6757,
+      "mldsa_response_signature_bytes": 3309,
+      "response_signature_header_bytes": 3,
+      "one_byte_id_large_ciphertext_boundary_before": "maxMessageSize-1168",
+      "one_byte_id_large_ciphertext_boundary_after": "maxMessageSize-4480",
+      "downstream_scope": "CborAdmissionCompiler/CborProductionBoundary now use the actual signed-response admission bound; native behavior preserved"
+    },
+    "known_boundary": "Native descriptor-to-slice representation, generated parser/serializer execution, primitives, allocation, compiler correspondence and persistence remain external. No cryptographic security-scope upgrade.",
+    "focused_new_api_contracts": 13,
+    "proofs": {
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/Transport.lean": {
+        "public_theorems": 9,
+        "exact_guards": 9,
+        "sha256": "341ca2b8336e078895d999b0c394ad9fc6be6febe04aba840bbfd6436a9d51de"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/TransportSizingBridge.lean": {
+        "public_theorems": 18,
+        "exact_guards": 18,
+        "sha256": "da8d05c03b569dd2efdd00e1a5f5b5e8a71ca482c753e1eaf73bf7fc6b997a9f"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/PanicFreedom/Transport.lean": {
+        "public_theorems": 13,
+        "exact_guards": 13,
+        "sha256": "0518c2c30af5465562252486f5d5a5087b3e1a99fdc718f206dbdedf0fefc341"
+      }
+    },
+    "additional_signed_layout_guard_controls": 15,
+    "separate_full_inventory": "passed on final tree after reviewed literal-plus checker correction and 15 new targeted controls",
+    "inventory_categories": {
+      "core-rust": 17,
+      "parser-rust": 5,
+      "handwritten-lean": 2063,
+      "validation": 82
+    },
+    "reviewed_inventory_rows": 2530,
+    "inventory_sensitivity_breakdown": {
+      "fidelity_source_guards": 81,
+      "model_transport_guards": 15
+    },
+    "final_build_proof_repair": {
+      "module": "Computational.CborAdmissionCompiler",
+      "theorem": "build_step_exact",
+      "initial_failure": "maximum recursion depth at broad change tactic; axiom guard rejected failed proof",
+      "repair": "simp only [nativeHandler, CborCommandFilter.handler, StateT.run]",
+      "unchanged": [
+        "statement",
+        "Good premise",
+        "definitions",
+        "imports",
+        "options/resource limits",
+        "all five original axiom guards"
+      ],
+      "source_sha256": "bb074eb55f2d4f2cfaf7811ac9a2c4841532cec6942f2cf51f366e4094f5dcab",
+      "focused_staged_compile": "passed with empty diagnostics",
+      "runtime_or_model_definition_change": false,
+      "focused_live_and_inventory_replay": "approved exact source; complete hash/category/membership prefix, exact module guards and all policy/root/463-operation checks passed"
+    },
+    "whole_maintained_lean": {
+      "exit": 0,
+      "jobs": 5679,
+      "source": "final complete tree after independently reviewed proof-only repair",
+      "log_sha256": "682448e05f343b0f98572c6bf0e2af753ac042fe6d77a863ba79230362f5d9e6"
+    }
   }
 }

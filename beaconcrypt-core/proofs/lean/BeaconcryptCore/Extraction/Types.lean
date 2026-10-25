@@ -1616,4 +1616,25 @@ structure registration.SignedResponseView where
   application_ciphertext : Slice Std.U8
   signature : Array Std.U8 3309#usize
 
+/-- [beaconcrypt_core::transport::CborLength]
+    Source: 'beaconcrypt-core/src/transport.rs', lines 39:0-41:1 -/
+structure transport.CborLength where
+  value : core.option.Option Std.Usize
+
+/-- [beaconcrypt_core::transport::FrameView]
+    Source: 'beaconcrypt-core/src/transport.rs', lines 142:0-146:1
+    Visibility: public -/
+structure transport.FrameView where
+  sequence : Std.U64
+  sender : Std.U64
+  ciphertext : Slice Std.U8
+
+/-- [beaconcrypt_core::transport::RegistrationApplication]
+    Source: 'beaconcrypt-core/src/transport.rs', lines 166:0-169:1
+    Visibility: public -/
+@[discriminant isize]
+inductive transport.RegistrationApplication where
+| Witness : Array Std.U8 1#usize → transport.RegistrationApplication
+| Provided : Slice Std.U8 → transport.RegistrationApplication
+
 end beaconcrypt_core
