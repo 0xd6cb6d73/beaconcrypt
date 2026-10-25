@@ -774,4 +774,33 @@ structure record.OpenedRecord (Plaintext : Type) where
   key_id : Std.U64
   seq : Std.U64
 
+/-- [beaconcrypt_core::session::ServerAuthenticationPin]
+    Source: 'beaconcrypt-core/src/session.rs', lines 16:0-20:1
+    Visibility: public -/
+structure session.ServerAuthenticationPin where
+  binding : pqxdh.ServerBinding
+  public_key : Array Std.U8 1952#usize
+  fingerprint : Array Std.U8 64#usize
+
+/-- [beaconcrypt_core::session::RegistrationBinding]
+    Source: 'beaconcrypt-core/src/session.rs', lines 53:0-59:1
+    Visibility: public -/
+structure session.RegistrationBinding where
+  server_pin : session.ServerAuthenticationPin
+  init_hash : Array Std.U8 64#usize
+  beacon_identity_public_key : Array Std.U8 32#usize
+  beacon_fingerprint : Array Std.U8 64#usize
+  associated_data : Array Std.U8 281#usize
+
+/-- [beaconcrypt_core::session::SessionBinding]
+    Source: 'beaconcrypt-core/src/session.rs', lines 121:0-128:1
+    Visibility: public -/
+structure session.SessionBinding where
+  server_binding : pqxdh.ServerBinding
+  assigned_key_id : Std.U64
+  beacon_identity_public_key : Array Std.U8 32#usize
+  server_fingerprint : Array Std.U8 64#usize
+  beacon_fingerprint : Array Std.U8 64#usize
+  associated_data : Array Std.U8 281#usize
+
 end beaconcrypt_core

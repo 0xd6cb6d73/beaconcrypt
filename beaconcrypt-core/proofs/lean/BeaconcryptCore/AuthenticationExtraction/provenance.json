@@ -14,7 +14,7 @@
   "source_sha256": {
     "beaconcrypt-core/src/authentication.rs": "794db37d54728df926e9c5f150ded8734eb7521d5781fa3fc4e2f4b2c1f5d1ef",
     "beaconcrypt-core/src/constants.rs": "748979a5b3b340b692bc10a687a27250ef5e6e2a67d43876a32585177226ef0a",
-    "beaconcrypt-core/src/lib.rs": "ab0db6ff490ccbaf95540cf1b89f2ccc813d3c61a4c52d002ee170851b064ffd",
+    "beaconcrypt-core/src/lib.rs": "2a8b4db939eb9a5eb9531eefd2323063aece167b7d9d6e82c2ce077b5cbae8fa",
     "beaconcrypt-core/Cargo.toml": "2a02a8689522b93a4969ed31a861c8d18a686c3fd7417e5b6bfeb201734a1beb",
     "Cargo.lock": "8d9d723e194500bfd73cd2e5ecc5fbc451bfe06273255f9619173ba1dfe5efc4",
     "hax.toml": "5010245f379886dba312f63d3d56f0fa9d3378c927d488106dd096d1bc7206f1"

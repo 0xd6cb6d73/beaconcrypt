@@ -340,7 +340,14 @@ struct RemotePrincipalData {
 }
 
 #[cfg(feature = "server")]
-impl<'de> Deserialize<'de> for EstablishedRemote<crypto_sign::PublicKey> {
+struct DeserializedRemote {
+	pk: crypto_sign::PublicKey,
+	ratchet: RatchetManager,
+	mldsa_public_key_hash: [u8; 64],
+}
+
+#[cfg(feature = "server")]
+impl<'de> Deserialize<'de> for DeserializedRemote {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
 		D: Deserializer<'de>,
@@ -350,7 +357,11 @@ impl<'de> Deserialize<'de> for EstablishedRemote<crypto_sign::PublicKey> {
 			.map_err(|error| D::Error::custom(error.to_string()))?;
 		let pk = crypto_sign::PublicKey::from_bytes(&decoded)
 			.map_err(|_| D::Error::custom("invalid Ed25519 public key"))?;
-		Ok(Self::new(pk, data.ratchet, *data.mldsa_public_key_hash.0))
+		Ok(Self {
+			pk,
+			ratchet: data.ratchet,
+			mldsa_public_key_hash: *data.mldsa_public_key_hash.0,
+		})
 	}
 }
 
@@ -361,7 +372,7 @@ struct ServerStateData {
 	identity_key: TypedArray<{ crypto_sign::SEEDBYTES }, systems::Ed25519, roles::IdentityKey>,
 	identity_key_kid: u64,
 	server_kid: u64,
-	known_ids: DuplicateRejectingU64Map<EstablishedRemote<crypto_sign::PublicKey>>,
+	known_ids: DuplicateRejectingU64Map<DeserializedRemote>,
 	consumed_registrations: Vec<Vec<u8>>,
 	mldsa_identity_seed: SecretBytes<32>,
 }
@@ -403,6 +414,27 @@ pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServer
 
 	let keypair = crypto_sign::KeyPair::from_seed(identity_key.buffer.0.as_slice()).ok()?;
 	let mldsa_identity = MldsaIdentity::from_seed(*mldsa_identity_seed.0);
+	let server_binding = beaconcrypt_core::pqxdh::ServerBinding {
+		identity_public_key: *keypair.public_key.as_bytes(),
+		identity_key_id: identity_key_kid,
+	};
+	let server_fingerprint = crate::auth::public_key_hash(&mldsa_identity.public_key())?;
+	let known_ids = known_ids
+		.into_iter()
+		.map(|(key_id, remote)| {
+			let binding = beaconcrypt_core::session::SessionBinding::from_trusted_metadata(
+				server_binding,
+				key_id,
+				*remote.pk.as_bytes(),
+				server_fingerprint,
+				remote.mldsa_public_key_hash,
+			);
+			(
+				key_id,
+				EstablishedRemote::new(remote.pk, remote.ratchet, binding),
+			)
+		})
+		.collect();
 
 	Some((
 		keypair,
@@ -504,8 +536,7 @@ mod tests {
 
 		#[cfg(feature = "server")]
 		{
-			type DeserializedKnownIds =
-				DuplicateRejectingU64Map<EstablishedRemote<crypto_sign::PublicKey>>;
+			type DeserializedKnownIds = DuplicateRejectingU64Map<DeserializedRemote>;
 			let known_ids_error = serde_json::from_str::<DeserializedKnownIds>("[]")
 				.err()
 				.unwrap();
@@ -579,10 +610,22 @@ mod tests {
 	fn server_value_with_peers() -> Value {
 		let mut state = serialized_server_value(9);
 		let remote = crypto_sign::KeyPair::from_seed(&[0x36; crypto_sign::SEEDBYTES]).unwrap();
+		let server =
+			crate::Server::new(9, Some(&[0x31; crypto_sign::SEEDBYTES]), Some(&[0x32; 32]));
+		let binding = beaconcrypt_core::session::SessionBinding::from_trusted_metadata(
+			beaconcrypt_core::pqxdh::ServerBinding {
+				identity_public_key: *server.identity_pk().as_bytes(),
+				identity_key_id: 9,
+			},
+			8,
+			*remote.public_key.as_bytes(),
+			crate::auth::public_key_hash(&server.mldsa_public_key()).unwrap(),
+			[0x35; 64],
+		);
 		let peer = serde_json::to_value(EstablishedRemote::new(
 			remote.public_key,
 			RatchetManager::default(),
-			[0x35; 64],
+			binding,
 		))
 		.unwrap();
 		state["known_ids"] = json!({"8": peer.clone(), "9": peer});

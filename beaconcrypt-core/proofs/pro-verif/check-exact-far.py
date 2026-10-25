@@ -133,13 +133,14 @@ SOURCE_SHA256 = {
     "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
     "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
     "beaconcrypt/src/ratchet.rs": "bfe86fc2b5589a706c0513505e6cf9249741654538eabe7d2708c8213baf256b",
-    "beaconcrypt/src/beacon.rs": "880a240ccfda92565734d31ae3a7e630e988d3e1ff77666579ed31dafd15fd68",
-    "beaconcrypt/src/server.rs": "1cf58484619c712f3970f1bde06789559ee11e3af50430d42c1e3fe41fded706",
+    "beaconcrypt/src/beacon.rs": "dc515872e23cd8a147f5a4e6ba590f3147a9a124826caab0191f93dac8acdb49",
+    "beaconcrypt/src/server.rs": "2f20a825e3400b516b844488ceb8104dc60eae05b6f772c51e65a53e78fbd18f",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetControl.lean": "467e40094bfde41c7ebeed24761788c263d5ba12e21d3dfd86e981917b60565c",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetRefinement.lean": "813d26cedc7a82a9c19f795fdc8599809aac8d0626608000a626a2986be2c915",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetFuturePublication.lean": "b87aff9e49e929786c8e7a158e6e470d84a4f07f9fbbe9b5e65837a4065162f8",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetReceiveAdmission.lean": "a54ed0972451e2075b91e792b154e5615e99bf3934e656d8a5c21d2dd78b2794",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Model/Ratchet.lean": "e9bb9592009c51a1e9246de3ec86abf66c9784901b90e3d2ff3ac2f8732c5522",
+    "beaconcrypt-core/src/session.rs": "3779c778ce4f8ec534c2fa610c0a334302ada76fc5cd601ade575802ff9c07c4"
 }
 
 

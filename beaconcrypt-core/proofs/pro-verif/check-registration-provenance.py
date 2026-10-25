@@ -122,9 +122,10 @@ TOKEN_SHA256 = {
 # Reviewed classical projection of the ML-DSA source; see doc/impl/mldsa-source-pins.md.
 # Full authentication/AD lifting is not inferred from these whole-file tripwires.
 SOURCE_SHA256 = {
-    "beaconcrypt/src/beacon.rs": "880a240ccfda92565734d31ae3a7e630e988d3e1ff77666579ed31dafd15fd68",
-    "beaconcrypt/src/server.rs": "1cf58484619c712f3970f1bde06789559ee11e3af50430d42c1e3fe41fded706",
+    "beaconcrypt/src/beacon.rs": "dc515872e23cd8a147f5a4e6ba590f3147a9a124826caab0191f93dac8acdb49",
+    "beaconcrypt/src/server.rs": "2f20a825e3400b516b844488ceb8104dc60eae05b6f772c51e65a53e78fbd18f",
     "beaconcrypt-core/src/pqxdh.rs": "2f2e1b3c8e02ad605d5078a8ca16ccf569c50a77bda6df787d84722a16806763",
+    "beaconcrypt-core/src/session.rs": "3779c778ce4f8ec534c2fa610c0a334302ada76fc5cd601ade575802ff9c07c4"
 }
 
 

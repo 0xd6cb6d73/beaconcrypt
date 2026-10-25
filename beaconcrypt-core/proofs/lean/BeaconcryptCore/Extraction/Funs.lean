@@ -5896,4 +5896,254 @@ def record.OpenAead.finish
       ({ plaintext, key_id := ofc.sender_kid, seq } : record.OpenedRecord
       Plaintext))
 
+/-- [beaconcrypt_core::session::{impl core::clone::Clone for beaconcrypt_core::session::ServerAuthenticationPin}::clone]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 15:9-15:14
+    Visibility: public -/
+def session.ServerAuthenticationPin.Insts.CoreCloneClone.clone
+  (self : session.ServerAuthenticationPin) :
+  RustM session.ServerAuthenticationPin
+  := do
+  ok self
+
+/-- Trait implementation: [beaconcrypt_core::session::{impl core::clone::Clone for beaconcrypt_core::session::ServerAuthenticationPin}]
+    Source: 'beaconcrypt-core/src/session.rs', lines 15:9-15:14 -/
+@[reducible]
+impl_def session.ServerAuthenticationPin.Insts.CoreCloneClone :
+  core.clone.Clone session.ServerAuthenticationPin := {
+  clone := session.ServerAuthenticationPin.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    session.ServerAuthenticationPin.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [beaconcrypt_core::session::{impl core::marker::Copy for beaconcrypt_core::session::ServerAuthenticationPin}]
+    Source: 'beaconcrypt-core/src/session.rs', lines 15:16-15:20 -/
+@[reducible]
+def session.ServerAuthenticationPin.Insts.CoreMarkerCopy : core.marker.Copy
+  session.ServerAuthenticationPin := {
+  cloneCloneInst := session.ServerAuthenticationPin.Insts.CoreCloneClone
+}
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::ServerAuthenticationPin}::new]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 24:4-34:5
+    Visibility: public -/
+def session.ServerAuthenticationPin.new
+  (binding : pqxdh.ServerBinding) (public_key : Array Std.U8 1952#usize)
+  (fingerprint : Array Std.U8 64#usize) :
+  RustM session.ServerAuthenticationPin
+  := do
+  ok { binding, public_key, fingerprint }
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::ServerAuthenticationPin}::binding]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 36:4-38:5
+    Visibility: public -/
+def session.ServerAuthenticationPin.impl.binding
+  (self : session.ServerAuthenticationPin) : RustM pqxdh.ServerBinding := do
+  ok self.binding
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::ServerAuthenticationPin}::public_key]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 40:4-42:5
+    Visibility: public -/
+def session.ServerAuthenticationPin.impl.public_key
+  (self : session.ServerAuthenticationPin) :
+  RustM (Array Std.U8 1952#usize)
+  := do
+  ok self.public_key
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::ServerAuthenticationPin}::fingerprint]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 44:4-46:5
+    Visibility: public -/
+def session.ServerAuthenticationPin.impl.fingerprint
+  (self : session.ServerAuthenticationPin) :
+  RustM (Array Std.U8 64#usize)
+  := do
+  ok self.fingerprint
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::new]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 63:4-84:5
+    Visibility: public -/
+def session.RegistrationBinding.new
+  (server_pin : session.ServerAuthenticationPin)
+  (init_hash : Array Std.U8 64#usize)
+  (beacon_identity_public_key : Array Std.U8 32#usize)
+  (beacon_fingerprint : Array Std.U8 64#usize) :
+  RustM session.RegistrationBinding
+  := do
+  let base ←
+    pqxdh.build_associated_data server_pin.binding.identity_public_key
+      beacon_identity_public_key
+  let a ←
+    authentication.bind_associated_data base server_pin.fingerprint
+      beacon_fingerprint
+  ok
+    {
+      server_pin,
+      init_hash,
+      beacon_identity_public_key,
+      beacon_fingerprint,
+      associated_data := a
+    }
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::init_hash]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 86:4-88:5
+    Visibility: public -/
+def session.RegistrationBinding.impl.init_hash
+  (self : session.RegistrationBinding) : RustM (Array Std.U8 64#usize) := do
+  ok self.init_hash
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::server_pin]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 90:4-92:5
+    Visibility: public -/
+def session.RegistrationBinding.impl.server_pin
+  (self : session.RegistrationBinding) :
+  RustM session.ServerAuthenticationPin
+  := do
+  ok self.server_pin
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::associated_data]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 94:4-96:5
+    Visibility: public -/
+def session.RegistrationBinding.impl.associated_data
+  (self : session.RegistrationBinding) : RustM (Array Std.U8 281#usize) := do
+  ok self.associated_data
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::matches_server]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 99:4-104:5
+    Visibility: public -/
+def session.RegistrationBinding.matches_server
+  (self : session.RegistrationBinding)
+  (current : session.ServerAuthenticationPin) :
+  RustM Bool
+  := do
+  if self.server_pin.binding.identity_key_id = current.binding.identity_key_id
+  then
+    let b ←
+      core.Array.Insts.CoreCmpPartialEqArray.eq
+        core.U8.Insts.CoreCmpPartialEqU8
+        self.server_pin.binding.identity_public_key
+        current.binding.identity_public_key
+    if b
+    then
+      let b1 ←
+        core.Array.Insts.CoreCmpPartialEqArray.eq
+          core.U8.Insts.CoreCmpPartialEqU8 self.server_pin.public_key
+          current.public_key
+      if b1
+      then
+        core.Array.Insts.CoreCmpPartialEqArray.eq
+          core.U8.Insts.CoreCmpPartialEqU8 self.server_pin.fingerprint
+          current.fingerprint
+      else ok false
+    else ok false
+  else ok false
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::finish]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 107:4-116:5
+    Visibility: public -/
+def session.RegistrationBinding.finish
+  (self : session.RegistrationBinding) (assigned_key_id : Std.U64) :
+  RustM session.SessionBinding
+  := do
+  ok
+    {
+      server_binding := self.server_pin.binding,
+      assigned_key_id,
+      beacon_identity_public_key := self.beacon_identity_public_key,
+      server_fingerprint := self.server_pin.fingerprint,
+      beacon_fingerprint := self.beacon_fingerprint,
+      associated_data := self.associated_data
+    }
+
+/-- [beaconcrypt_core::session::{impl core::clone::Clone for beaconcrypt_core::session::SessionBinding}::clone]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 120:9-120:14
+    Visibility: public -/
+def session.SessionBinding.Insts.CoreCloneClone.clone
+  (self : session.SessionBinding) : RustM session.SessionBinding := do
+  ok self
+
+/-- Trait implementation: [beaconcrypt_core::session::{impl core::clone::Clone for beaconcrypt_core::session::SessionBinding}]
+    Source: 'beaconcrypt-core/src/session.rs', lines 120:9-120:14 -/
+@[reducible]
+impl_def session.SessionBinding.Insts.CoreCloneClone : core.clone.Clone
+  session.SessionBinding := {
+  clone := session.SessionBinding.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    session.SessionBinding.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [beaconcrypt_core::session::{impl core::marker::Copy for beaconcrypt_core::session::SessionBinding}]
+    Source: 'beaconcrypt-core/src/session.rs', lines 120:16-120:20 -/
+@[reducible]
+def session.SessionBinding.Insts.CoreMarkerCopy : core.marker.Copy
+  session.SessionBinding := {
+  cloneCloneInst := session.SessionBinding.Insts.CoreCloneClone
+}
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::from_trusted_metadata]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 135:4-154:5
+    Visibility: public -/
+def session.SessionBinding.from_trusted_metadata
+  (server_binding : pqxdh.ServerBinding) (assigned_key_id : Std.U64)
+  (beacon_identity_public_key : Array Std.U8 32#usize)
+  (server_fingerprint : Array Std.U8 64#usize)
+  (beacon_fingerprint : Array Std.U8 64#usize) :
+  RustM session.SessionBinding
+  := do
+  let base ←
+    pqxdh.build_associated_data server_binding.identity_public_key
+      beacon_identity_public_key
+  let a ←
+    authentication.bind_associated_data base server_fingerprint
+      beacon_fingerprint
+  ok
+    {
+      server_binding,
+      assigned_key_id,
+      beacon_identity_public_key,
+      server_fingerprint,
+      beacon_fingerprint,
+      associated_data := a
+    }
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::server_binding]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 156:4-158:5
+    Visibility: public -/
+def session.SessionBinding.impl.server_binding
+  (self : session.SessionBinding) : RustM pqxdh.ServerBinding := do
+  ok self.server_binding
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::assigned_key_id]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 160:4-162:5
+    Visibility: public -/
+def session.SessionBinding.impl.assigned_key_id
+  (self : session.SessionBinding) : RustM Std.U64 := do
+  ok self.assigned_key_id
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::beacon_identity_public_key]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 164:4-166:5
+    Visibility: public -/
+def session.SessionBinding.impl.beacon_identity_public_key
+  (self : session.SessionBinding) : RustM (Array Std.U8 32#usize) := do
+  ok self.beacon_identity_public_key
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::server_fingerprint]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 168:4-170:5
+    Visibility: public -/
+def session.SessionBinding.impl.server_fingerprint
+  (self : session.SessionBinding) : RustM (Array Std.U8 64#usize) := do
+  ok self.server_fingerprint
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::beacon_fingerprint]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 172:4-174:5
+    Visibility: public -/
+def session.SessionBinding.impl.beacon_fingerprint
+  (self : session.SessionBinding) : RustM (Array Std.U8 64#usize) := do
+  ok self.beacon_fingerprint
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::associated_data]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 176:4-178:5
+    Visibility: public -/
+def session.SessionBinding.impl.associated_data
+  (self : session.SessionBinding) : RustM (Array Std.U8 281#usize) := do
+  ok self.associated_data
+
 end beaconcrypt_core

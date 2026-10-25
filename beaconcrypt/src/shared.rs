@@ -441,7 +441,7 @@ pub trait SignaturePk {}
 pub struct EstablishedRemote<PkType: SignaturePk> {
 	pk: PkType,
 	ratchet: RatchetManager,
-	mldsa_public_key_hash: [u8; 64],
+	binding: beaconcrypt_core::session::SessionBinding,
 }
 
 #[cfg(any(feature = "server", test))]
@@ -449,16 +449,20 @@ impl<PkType: SignaturePk> EstablishedRemote<PkType> {
 	pub(crate) fn new(
 		pk: PkType,
 		ratchet: RatchetManager,
-		mldsa_public_key_hash: [u8; 64],
+		binding: beaconcrypt_core::session::SessionBinding,
 	) -> Self {
 		Self {
 			pk,
 			ratchet,
-			mldsa_public_key_hash,
+			binding,
 		}
 	}
 	pub(crate) fn mldsa_public_key_hash(&self) -> &[u8; 64] {
-		&self.mldsa_public_key_hash
+		self.binding.beacon_fingerprint()
+	}
+
+	pub(crate) fn binding(&self) -> &beaconcrypt_core::session::SessionBinding {
+		&self.binding
 	}
 
 	pub fn pk(&self) -> &PkType {
@@ -1688,7 +1692,16 @@ mod tests {
 		let mut principal = EstablishedRemote::new(
 			TestPublicKey([1, 2, 3, 4]),
 			RatchetManager::default(),
-			[7; 64],
+			beaconcrypt_core::session::SessionBinding::from_trusted_metadata(
+				beaconcrypt_core::pqxdh::ServerBinding {
+					identity_public_key: [2; 32],
+					identity_key_id: 3,
+				},
+				5,
+				[6; 32],
+				[7; 64],
+				[8; 64],
+			),
 		);
 		assert_eq!(principal.pk().0, [1, 2, 3, 4]);
 		assert!(principal.ratchet().recv_key(1).is_none());

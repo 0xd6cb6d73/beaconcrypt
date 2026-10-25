@@ -130,13 +130,13 @@ class NativeResponseSourceGate(unittest.TestCase):
 
     def test_token_server_key_binding_preserved(self):
         self.mutate_source(
-            "if auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
-            "if false && auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
+            "if !authentication.matches_server(&self.authentication_pin()?)",
+            "if false && !authentication.matches_server(&self.authentication_pin()?)",
         )
 
     def test_response_uses_accepted_request_hash(self):
         self.mutate_source(
-            "auth::response_transcript_hash(&authentication.init_hash, &response)",
+            "auth::response_transcript_hash(authentication.init_hash(), &response)",
             "auth::response_transcript_hash(&[0; 64], &response)",
         )
 
@@ -160,7 +160,7 @@ class NativeResponseSourceGate(unittest.TestCase):
 
     def test_peer_auth_hash_preserved(self):
         self.mutate_source(
-            "EstablishedRemote::new(public_key, ratchet, authentication.beacon_hash)",
+            "EstablishedRemote::new(public_key, ratchet, authentication.finish(remote_kid))",
             "EstablishedRemote::new(public_key, ratchet, authentication.server_hash)",
         )
 

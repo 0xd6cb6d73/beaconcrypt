@@ -41,6 +41,8 @@ import BeaconcryptCore.Extraction
 import BeaconcryptCore.Refinement.PqxdhSession
 import BeaconcryptCore.Refinement.PqxdhCommitment
 import BeaconcryptCore.Refinement.TranscriptAuth
+import BeaconcryptCore.Refinement.SessionBinding
+import BeaconcryptCore.PanicFreedom.SessionBinding
 import BeaconcryptCore.Verification.PqxdhCommitmentRefinement
 import BeaconcryptCore.Refinement.RatchetControlRestore
 import BeaconcryptCore.Refinement.RatchetCachedPublication
