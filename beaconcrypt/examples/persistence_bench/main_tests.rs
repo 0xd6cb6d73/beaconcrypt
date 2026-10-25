@@ -333,6 +333,31 @@ fn validate_serial_report(path: &std::path::Path, backend: &str) {
 	assert_eq!(report["backend"], backend);
 	assert_eq!(report["mythic_reference_commit"], MYTHIC_REFERENCE);
 	assert_eq!(report["fixtures"].as_array().unwrap().len(), 18);
+	let mut lineages = BTreeSet::new();
+	for fixture in report["fixtures"].as_array().unwrap() {
+		assert!(lineages.insert(fixture["lineage"].to_string()));
+		assert_eq!(fixture["lineage"].as_array().unwrap().len(), 32);
+		let peers = fixture["peers"].as_u64().unwrap();
+		let arm = fixture["arm"].as_str().unwrap();
+		assert_eq!(fixture["cache_fill_database"]["transactions"], 2);
+		assert_eq!(fixture["warm_database"]["transactions"], 4);
+		assert_eq!(
+			fixture["footprint"]["rows"],
+			if arm == "snapshot" {
+				1
+			} else {
+				2 + 2 * peers + 1
+			}
+		);
+		if arm == "cached_row" {
+			assert_eq!(fixture["cached_peers_at_measurement_start"], 1);
+			assert_eq!(fixture["cache_capacity"], 1);
+		}
+		assert!(fixture["warm_database_open_ns"].as_u64().unwrap() > 0);
+		if backend == "sqlite" {
+			assert!(fixture["footprint"]["main_file_bytes"].as_u64().unwrap() > 0);
+		}
+	}
 	let results = report["results"].as_array().unwrap();
 	assert_eq!(results.len(), 180);
 	let mut keys = BTreeSet::new();
@@ -358,6 +383,9 @@ fn validate_serial_report(path: &std::path::Path, backend: &str) {
 			messages
 		);
 		assert!(result["server_batch_ns"].as_u64().unwrap() > 0);
+		assert!(
+			result["wire_bytes"].as_u64().unwrap() > result["plaintext_bytes"].as_u64().unwrap()
+		);
 		assert_eq!(result["database"]["writes"], messages);
 		assert_eq!(result["database"]["transactions"], messages);
 		assert_eq!(
