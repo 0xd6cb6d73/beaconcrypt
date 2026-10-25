@@ -101,6 +101,13 @@ jobs:
               print(f"Validated parser and license files in {path}")
           PY
 
+      - name: Build wheel from unpacked source distribution
+        run: |
+          source_dir="$(mktemp -d)"
+          tar -xzf dist/*.tar.gz -C "$source_dir"
+          cd "$source_dir"/beaconcrypt-*
+          uv run --no-project --with 'maturin>=1.14,<2.0' maturin build --release --locked --interpreter python3 --out "$RUNNER_TEMP/sdist-wheels"
+
       - name: Upload source distribution
         uses: actions/upload-artifact@v7
         with:

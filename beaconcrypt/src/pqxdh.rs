@@ -4,7 +4,7 @@
 use crate::shared::SignaturePk;
 use crate::shared::{DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret};
 use beaconcrypt_core::pqxdh as verified_pqxdh;
-use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
+use beaconcrypt_crypto::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 use zeroize::Zeroize;
 
 pub const PQXDH_INFO: &[u8; 46] = verified_pqxdh::PQXDH_INFO;
@@ -79,8 +79,8 @@ pub fn build_associated_data(
 
 #[cfg(all(test, feature = "beacon", feature = "server"))]
 mod tests {
+	use beaconcrypt_crypto::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 	use beaconcrypt_parse::{InitKex, decode_init};
-	use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 
 	use super::{
 		AD_SIZE, PQXDH_INFO, build_associated_data, derive_root_key_input, verified_pqxdh,
@@ -257,7 +257,10 @@ mod tests {
 		assert_eq!(signed[0], u8::from(KemType::X25519));
 		assert_eq!(signed[1], verified_pqxdh::KEY_ROLE_ONE_TIME);
 		assert_eq!(&signed[2..], expected);
-		assert_eq!(beacon.get_onetime_pk().unwrap().as_bytes(), expected);
+		assert_eq!(
+			beacon.get_onetime_pk().unwrap().as_bytes().as_slice(),
+			expected
+		);
 		assert!(beacon.get_onetime_sk().is_some());
 		assert!(beacon.get_registration_bundle().is_none());
 	}

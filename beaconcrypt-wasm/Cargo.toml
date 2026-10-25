@@ -11,7 +11,7 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-beaconcrypt = { path = "../beaconcrypt", default-features = false, features = ["beacon", "server", "pqxdh"] }
+beaconcrypt = { path = "../beaconcrypt", default-features = false, features = ["std", "beacon", "server", "pqxdh"] }
 zeroize = "1.9"
 
 [dev-dependencies]

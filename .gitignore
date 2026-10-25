@@ -1,4 +1,5 @@
 /target
+/target-*/
 /internal/wasm/beaconcrypt.wasm
 /internal/wasm/beaconcrypt.build.json
 /.build/

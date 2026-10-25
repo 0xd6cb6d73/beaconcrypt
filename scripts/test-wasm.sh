@@ -6,15 +6,11 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_dir="$(cd -- "$script_dir/.." && pwd)"
 cd -- "$repo_dir"
 
-read -r expected_rust expected_zig wasm_target < <(
-  python3 -c 'import json; p=json.load(open("scripts/wasm-toolchain.json")); print(p["rust"], p["zig"], p["target"])'
+read -r expected_rust wasm_target < <(
+  python3 -c 'import json; p=json.load(open("scripts/wasm-toolchain.json")); print(p["rust"], p["target"])'
 )
 if [[ "$(rustc --version)" != "rustc $expected_rust "* ]]; then
   printf 'Wasm tests require Rust %s\n' "$expected_rust" >&2
-  exit 1
-fi
-if [[ "$(zig version)" != "$expected_zig" ]]; then
-  printf 'Wasm tests require Zig %s\n' "$expected_zig" >&2
   exit 1
 fi
 

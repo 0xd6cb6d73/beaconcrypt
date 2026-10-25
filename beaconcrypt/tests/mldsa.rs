@@ -4,8 +4,8 @@ use beaconcrypt::{
 	Beacon, MLDSA_PUBLIC_KEY_LEN, MLDSA_SIGNATURE_LEN, MldsaIdentity, PersistentServer,
 	ProviderBeacon, ProviderServer, Server, ServerSnapshot, SnapshotHead, SnapshotStore,
 };
+use beaconcrypt_crypto::crypto_generichash;
 use beaconcrypt_parse::{InitKex, KexResponse};
-use libsodium_rs::crypto_generichash;
 
 mod common;
 
