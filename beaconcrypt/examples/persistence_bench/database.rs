@@ -6,13 +6,23 @@ use beaconcrypt::{
 	RowError, RowStore, RowTransaction, ServerSnapshot, SnapshotHead, SnapshotLineage,
 	SnapshotStore,
 };
-use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior};
+use rusqlite::{Connection, OptionalExtension, TransactionBehavior};
+
+use super::buffered::Buffered;
 use serde::Serialize;
 
 pub const SQL_SETTINGS: &str = "journal_mode=WAL;synchronous=FULL;page_size=4096;cache_size=-20000;wal_autocheckpoint=1000;busy_timeout_ms=5000";
 
 #[derive(Default)]
 pub struct Counters {
+	pub network_exchanges: Cell<u64>,
+	pub sql_calls: Cell<u64>,
+	pub validation_bytes_sent: Cell<u64>,
+	pub validation_rows: Cell<u64>,
+	pub value_bytes_expected: Cell<u64>,
+	pub stores: Cell<u64>,
+	pub expects: Cell<u64>,
+	pub loads: Cell<u64>,
 	pub reads: Cell<u64>,
 	pub writes: Cell<u64>,
 	pub transactions: Cell<u64>,
@@ -21,8 +31,16 @@ pub struct Counters {
 	pub head_bytes_read: Cell<u64>,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct Counts {
+	pub network_exchanges: u64,
+	pub sql_calls: u64,
+	pub validation_bytes_sent: u64,
+	pub validation_rows: u64,
+	pub value_bytes_expected: u64,
+	pub stores: u64,
+	pub expects: u64,
+	pub loads: u64,
 	reads: u64,
 	writes: u64,
 	transactions: u64,
@@ -34,6 +52,14 @@ pub struct Counts {
 impl Counters {
 	pub fn take(&self) -> Counts {
 		Counts {
+			network_exchanges: self.network_exchanges.replace(0),
+			sql_calls: self.sql_calls.replace(0),
+			validation_bytes_sent: self.validation_bytes_sent.replace(0),
+			validation_rows: self.validation_rows.replace(0),
+			value_bytes_expected: self.value_bytes_expected.replace(0),
+			stores: self.stores.replace(0),
+			expects: self.expects.replace(0),
+			loads: self.loads.replace(0),
 			reads: self.reads.replace(0),
 			writes: self.writes.replace(0),
 			transactions: self.transactions.replace(0),
@@ -84,6 +110,7 @@ impl SqlSnapshotStore {
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
 	) -> rusqlite::Result<bool> {
+		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
 		let tx = self
 			.connection
 			.transaction_with_behavior(TransactionBehavior::Immediate)?;
@@ -91,6 +118,7 @@ impl SqlSnapshotStore {
 			.transactions
 			.set(self.counts.transactions.get() + 1);
 		self.counts.reads.set(self.counts.reads.get() + 1);
+		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
 		let stored: Option<(Vec<u8>, Vec<u8>, Vec<u8>)> = tx
 			.query_row(
 				"SELECT lineage, generation, digest FROM snapshot WHERE id=1",
@@ -114,6 +142,7 @@ impl SqlSnapshotStore {
 		let next = replacement
 			.validate_successor(expected)
 			.expect("valid snapshot successor");
+		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
 		tx.execute(
 			"INSERT INTO snapshot (id,lineage,generation,digest,value) VALUES (1,?1,?2,?3,?4)
 			 ON CONFLICT(id) DO UPDATE SET lineage=excluded.lineage,
@@ -129,6 +158,7 @@ impl SqlSnapshotStore {
 		self.counts
 			.value_bytes_written
 			.set(self.counts.value_bytes_written.get() + replacement.as_bytes().len() as u64);
+		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
 		tx.commit()?;
 		Ok(true)
 	}
@@ -136,6 +166,7 @@ impl SqlSnapshotStore {
 
 impl SnapshotStore for SqlSnapshotStore {
 	fn load(&self) -> Option<ServerSnapshot> {
+		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
 		self.counts.reads.set(self.counts.reads.get() + 1);
 		let bytes: Option<Vec<u8>> = self
 			.connection
@@ -184,62 +215,82 @@ fn storage(error: rusqlite::Error) -> RowError {
 	RowError::Storage(error.to_string())
 }
 
-struct Rows<'a, 'connection> {
-	tx: &'a Transaction<'connection>,
-	counts: &'a Counters,
-}
-
-impl RowTransaction for Rows<'_, '_> {
-	fn load(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>, RowError> {
-		self.counts.reads.set(self.counts.reads.get() + 1);
-		let value: Option<Vec<u8>> = self
-			.tx
-			.query_row("SELECT value FROM peer_rows WHERE key=?1", [key], |row| {
-				row.get(0)
-			})
-			.optional()
-			.map_err(storage)?;
-		if let Some(value) = &value {
-			self.counts
-				.value_bytes_read
-				.set(self.counts.value_bytes_read.get() + value.len() as u64);
-		}
-		Ok(value)
-	}
-
-	fn store(&mut self, key: &[u8], value: &[u8]) -> Result<(), RowError> {
-		self.tx
-			.execute(
-				"INSERT INTO peer_rows (key,value) VALUES (?1,?2)
-			 ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-				[key, value],
-			)
-			.map_err(storage)?;
-		self.counts.writes.set(self.counts.writes.get() + 1);
-		self.counts
-			.value_bytes_written
-			.set(self.counts.value_bytes_written.get() + value.len() as u64);
-		Ok(())
-	}
-}
-
 impl RowStore for SqlRowStore {
 	fn transaction(
 		&mut self,
 		operation: &mut dyn FnMut(&mut dyn RowTransaction) -> Result<(), RowError>,
 	) -> Result<(), RowError> {
+		let mut pending = Buffered::new(
+			|key: &[u8]| {
+				self.counts.reads.set(self.counts.reads.get() + 1);
+				self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
+				let value: Option<Vec<u8>> = self
+					.connection
+					.query_row("SELECT value FROM peer_rows WHERE key=?1", [key], |row| {
+						row.get(0)
+					})
+					.optional()
+					.map_err(storage)?;
+				self.counts.value_bytes_read.set(
+					self.counts.value_bytes_read.get()
+						+ value.as_ref().map_or(0, |v| v.len() as u64),
+				);
+				Ok(value)
+			},
+			&self.counts,
+		);
+		operation(&mut pending)?;
+		if let Some(error) = pending.failure {
+			return Err(error);
+		}
+		let reads = pending.reads;
+		let writes = pending.writes;
+		self.counts
+			.transactions
+			.set(self.counts.transactions.get() + 1);
+		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
 		let tx = self
 			.connection
 			.transaction_with_behavior(TransactionBehavior::Immediate)
 			.map_err(storage)?;
+		self.counts.validation_bytes_sent.set(
+			self.counts.validation_bytes_sent.get()
+				+ reads
+					.values()
+					.filter_map(Option::as_ref)
+					.map(|v| v.len() as u64)
+					.sum::<u64>(),
+		);
+		for (key, expected) in &reads {
+			self.counts
+				.validation_rows
+				.set(self.counts.validation_rows.get() + 1);
+			self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
+			let matches: bool = tx
+				.query_row(
+					"SELECT (SELECT value FROM peer_rows WHERE key=?1) IS ?2",
+					rusqlite::params![key, expected],
+					|row| row.get(0),
+				)
+				.map_err(storage)?;
+			if !matches {
+				return Err(RowError::Conflict);
+			}
+		}
+		for (key, value) in &writes {
+			self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
+			tx.execute("INSERT INTO peer_rows(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value", [key, value]).map_err(storage)?;
+		}
+		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
+		tx.commit().map_err(storage)?;
 		self.counts
-			.transactions
-			.set(self.counts.transactions.get() + 1);
-		operation(&mut Rows {
-			tx: &tx,
-			counts: &self.counts,
-		})?;
-		tx.commit().map_err(storage)
+			.writes
+			.set(self.counts.writes.get() + writes.len() as u64);
+		self.counts.value_bytes_written.set(
+			self.counts.value_bytes_written.get()
+				+ writes.values().map(|v| v.len() as u64).sum::<u64>(),
+		);
+		Ok(())
 	}
 }
 

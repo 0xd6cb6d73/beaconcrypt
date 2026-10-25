@@ -2,23 +2,30 @@
 
 //! Controlled persistence-component benchmark. See doc/impl/row-persistence-benchmark.md.
 
+#[cfg(test)]
+mod adapter_tests;
+mod buffered;
 mod database;
+#[cfg(test)]
+mod native_postgres_tests;
+mod postgres;
 
 use std::{
 	error::Error,
 	fs::{File, OpenOptions},
 	io::{Seek, Write},
-	path::{Path, PathBuf},
+	path::PathBuf,
 	process::Command,
 	rc::Rc,
 	time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
+use self::postgres::{PgFixture, PgRowStore, PgSnapshotStore};
 use beaconcrypt::{
-	Beacon, Decrypted, Encrypted, PersistentServer, ProviderBeacon, RegResponse, RowServer,
-	SnapshotLineage,
+	Beacon, CachedRowServer, Decrypted, Encrypted, PersistentServer, ProviderBeacon, RegResponse,
+	RowServer, RowStore, SnapshotLineage, SnapshotStore,
 };
-use database::{Counters, SqlRowStore, SqlSnapshotStore};
+use database::{Counters, Counts, SqlRowStore, SqlSnapshotStore};
 use serde::Serialize;
 use serde_json::{Value, json};
 
@@ -28,6 +35,7 @@ const SERVER_ID: u64 = 19;
 
 #[derive(Clone, Serialize)]
 struct Config {
+	backend: String,
 	peer_counts: Vec<usize>,
 	trials: usize,
 	extra_registrations: usize,
@@ -46,6 +54,7 @@ struct Config {
 impl Default for Config {
 	fn default() -> Self {
 		Self {
+			backend: "sqlite".into(),
 			peer_counts: vec![1, 100, 1000],
 			trials: 3,
 			extra_registrations: 0,
@@ -93,9 +102,10 @@ fn options() -> Result<Option<Options>> {
 		if matches!(arg.as_str(), "--help" | "-h") {
 			println!(
 				"persistence_bench --run --output REPORT.json [options]\n\
-This is a durable SQLite component benchmark, not a Mythic end-to-end benchmark.\n\
+This is a durable SQLite/PostgreSQL component benchmark, not a Mythic end-to-end benchmark.\n\
 Run only in an explicitly approved quiet window with no other active coordination leases.\n\
-Options: --peers 1,100,1000 --trials 3 --extra-registrations 0 --active-peers N\n\
+Options: --backend sqlite|postgres (PostgreSQL DSN: BEACONCRYPT_BENCH_POSTGRES)\n\
+         --peers 1,100,1000 --trials 3 --extra-registrations 0 --active-peers N\n\
          --small-bytes 1024 --small-messages 1024 --large-bytes 65536 --large-messages 128\n\
          --mixed-messages 1024 --large-every 16 --burst-chunk-bytes 512000\n\
          --burst-chunks 64,256,512 --warmup-messages 16 --database-directory DIR\n\
@@ -113,6 +123,7 @@ Reports refuse to overwrite an existing file. Database fixtures are temporary, e
 			.ok_or_else(|| format!("missing value after {arg}"))?;
 		match arg.as_str() {
 			"--output" => output = value.into(),
+			"--backend" => config.backend = value,
 			"--database-directory" => database_directory = Some(value.into()),
 			"--peers" => config.peer_counts = parse_list(&value)?,
 			"--trials" => config.trials = value.parse()?,
@@ -134,6 +145,9 @@ Reports refuse to overwrite an existing file. Database fixtures are temporary, e
 		return Err(
 			"execution requires --run after arranging an approved quiet benchmark window".into(),
 		);
+	}
+	if !matches!(config.backend.as_str(), "sqlite" | "postgres") {
+		return Err("--backend must be sqlite or postgres".into());
 	}
 	if config.trials == 0
 		|| config.peer_counts.is_empty()
@@ -174,6 +188,7 @@ Reports refuse to overwrite an existing file. Database fixtures are temporary, e
 enum Arm {
 	Snapshot,
 	Row,
+	Cached,
 }
 
 impl Arm {
@@ -181,107 +196,181 @@ impl Arm {
 		match self {
 			Self::Snapshot => "snapshot",
 			Self::Row => "row",
+			Self::Cached => "cached_row",
+		}
+	}
+	fn index(self) -> usize {
+		match self {
+			Self::Snapshot => 0,
+			Self::Row => 1,
+			Self::Cached => 2,
+		}
+	}
+}
+
+enum Location {
+	Sqlite(PathBuf),
+	Postgres(Rc<PgFixture>),
+}
+impl Location {
+	fn new(backend: &str, path: PathBuf, lineage: SnapshotLineage) -> Result<Self> {
+		Ok(match backend {
+			"sqlite" => Self::Sqlite(path),
+			"postgres" => Self::Postgres(PgFixture::create(
+				&std::env::var("BEACONCRYPT_BENCH_POSTGRES").map_err(
+					|_| "set BEACONCRYPT_BENCH_POSTGRES to a dedicated loopback TCP database",
+				)?,
+				lineage,
+			)?),
+			_ => unreachable!(),
+		})
+	}
+	fn snapshot(&self, counts: Rc<Counters>) -> Result<Box<dyn SnapshotStore>> {
+		Ok(match self {
+			Self::Sqlite(path) => Box::new(SqlSnapshotStore::open(path, counts)?),
+			Self::Postgres(fixture) => Box::new(PgSnapshotStore::open(Rc::clone(fixture), counts)?),
+		})
+	}
+	fn rows(&self, counts: Rc<Counters>) -> Result<Box<dyn RowStore>> {
+		Ok(match self {
+			Self::Sqlite(path) => Box::new(SqlRowStore::open(path, counts)?),
+			Self::Postgres(fixture) => Box::new(PgRowStore::open(Rc::clone(fixture), counts)?),
+		})
+	}
+	fn checkpoint(&self) -> Result<()> {
+		match self {
+			Self::Sqlite(path) => Ok(database::checkpoint(path)?),
+			Self::Postgres(fixture) => fixture.checkpoint(),
+		}
+	}
+	fn footprint(&self, arm: Arm) -> Result<Value> {
+		match self {
+			Self::Sqlite(path) => Ok(database::footprint(path, !matches!(arm, Arm::Snapshot))?),
+			Self::Postgres(fixture) => fixture.footprint(!matches!(arm, Arm::Snapshot)),
+		}
+	}
+	fn settings(&self) -> Value {
+		match self {
+			Self::Sqlite(_) => {
+				json!({"settings":database::SQL_SETTINGS,"transport":"in-process SQLite","row_adapter":"optimistic buffered validation at commit"})
+			}
+			Self::Postgres(fixture) => fixture.settings.clone(),
 		}
 	}
 }
 
 enum Backend {
-	Snapshot(PersistentServer<SqlSnapshotStore>),
-	Row(RowServer<SqlRowStore>),
+	Snapshot(PersistentServer<Box<dyn SnapshotStore>>),
+	Row(RowServer<Box<dyn RowStore>>),
+	Cached(CachedRowServer<Box<dyn RowStore>>),
 }
-
 impl Backend {
 	fn create(
 		arm: Arm,
-		path: &Path,
+		location: &Location,
 		counts: Rc<Counters>,
 		lineage: SnapshotLineage,
+		capacity: usize,
 	) -> Result<Self> {
 		Ok(match arm {
 			Arm::Snapshot => Self::Snapshot(PersistentServer::create_with_lineage(
 				SERVER_ID,
 				Some(&[0x52; 32]),
 				Some(&[0x53; 32]),
-				SqlSnapshotStore::open(path, counts)?,
+				location.snapshot(counts)?,
 				lineage,
 			)?),
 			Arm::Row => Self::Row(RowServer::create(
 				SERVER_ID,
 				Some(&[0x52; 32]),
 				Some(&[0x53; 32]),
-				SqlRowStore::open(path, counts)?,
+				location.rows(counts)?,
 				lineage,
+			)?),
+			Arm::Cached => Self::Cached(CachedRowServer::create(
+				SERVER_ID,
+				Some(&[0x52; 32]),
+				Some(&[0x53; 32]),
+				location.rows(counts)?,
+				lineage,
+				capacity,
 			)?),
 		})
 	}
-
 	fn open(
 		arm: Arm,
-		path: &Path,
+		location: &Location,
 		counts: Rc<Counters>,
 		lineage: SnapshotLineage,
+		capacity: usize,
 	) -> Result<(Self, u64)> {
-		// Connection establishment and SQLite PRAGMA setup are not native restoration costs.
+		// Prepare connections and SQL statements before measuring native restoration.
 		match arm {
 			Arm::Snapshot => {
-				let store = SqlSnapshotStore::open(path, counts)?;
+				let store = location.snapshot(counts)?;
 				let start = Instant::now();
 				let server = PersistentServer::restore(store)?;
 				Ok((Self::Snapshot(server), nanos(start.elapsed())))
 			}
 			Arm::Row => {
-				let store = SqlRowStore::open(path, counts)?;
+				let store = location.rows(counts)?;
 				let start = Instant::now();
 				let server = RowServer::open(store, lineage)?;
 				Ok((Self::Row(server), nanos(start.elapsed())))
 			}
+			Arm::Cached => {
+				let store = location.rows(counts)?;
+				let start = Instant::now();
+				let server = CachedRowServer::open(store, lineage, capacity)?;
+				Ok((Self::Cached(server), nanos(start.elapsed())))
+			}
 		}
 	}
-
 	fn beacon(&self) -> Result<Beacon> {
 		let (public, mldsa) = match self {
-			Self::Snapshot(server) => (server.identity_pk(), server.mldsa_public_key()),
-			Self::Row(server) => (server.identity_pk(), server.mldsa_public_key()),
+			Self::Snapshot(s) => (s.identity_pk(), s.mldsa_public_key()),
+			Self::Row(s) => (s.identity_pk(), s.mldsa_public_key()),
+			Self::Cached(s) => (s.identity_pk(), s.mldsa_public_key()),
 		};
 		Ok(Beacon::try_new(SERVER_ID, public.as_bytes(), &mldsa)?)
 	}
-
 	fn register(&mut self, request: &[u8], data: Option<&[u8]>) -> Result<Option<RegResponse>> {
 		Ok(match self {
-			Self::Snapshot(server) => match server.get_shared_secret(request)? {
-				Some(pending) => server.build_registration_response(pending, data)?,
+			Self::Snapshot(s) => match s.get_shared_secret(request)? {
+				Some(pending) => s.build_registration_response(pending, data)?,
 				None => None,
 			},
-			Self::Row(server) => server.register_beacon(request, data)?,
+			Self::Row(s) => s.register_beacon(request, data)?,
+			Self::Cached(s) => s.register_beacon(request, data)?,
 		})
 	}
-
 	fn encrypt(&mut self, bytes: &[u8], kid: u64) -> Result<Encrypted> {
-		match self {
-			Self::Snapshot(server) => server
-				.encrypt_message(bytes, kid)?
-				.ok_or_else(|| "send rejected".into()),
-			Self::Row(server) => server
-				.encrypt_message(bytes, kid)?
-				.ok_or_else(|| "send rejected".into()),
-		}
+		let output = match self {
+			Self::Snapshot(s) => s.encrypt_message(bytes, kid)?,
+			Self::Row(s) => s.encrypt_message(bytes, kid)?,
+			Self::Cached(s) => s.encrypt_message(bytes, kid)?,
+		};
+		output.ok_or_else(|| "send rejected".into())
 	}
-
 	fn decrypt(&mut self, bytes: &[u8]) -> Result<Decrypted> {
+		let output = match self {
+			Self::Snapshot(s) => s.decrypt_message(bytes)?,
+			Self::Row(s) => s.decrypt_message(bytes)?,
+			Self::Cached(s) => s.decrypt_message(bytes)?,
+		};
+		output.ok_or_else(|| "receive rejected".into())
+	}
+	fn cached_peers(&self) -> Option<usize> {
 		match self {
-			Self::Snapshot(server) => server
-				.decrypt_message(bytes)?
-				.ok_or_else(|| "receive rejected".into()),
-			Self::Row(server) => server
-				.decrypt_message(bytes)?
-				.ok_or_else(|| "receive rejected".into()),
+			Self::Cached(s) => Some(s.cached_peer_count()),
+			_ => None,
 		}
 	}
 }
 
 struct Fixture {
 	arm: Arm,
-	path: PathBuf,
+	location: Location,
 	lineage: SnapshotLineage,
 	server: Backend,
 	beacons: Vec<Beacon>,
@@ -291,6 +380,9 @@ struct Fixture {
 	counts: Rc<Counters>,
 	setup_ns: u64,
 	warm_database_open_ns: u64,
+	cold_open_counts: Counts,
+	cache_fill_counts: Counts,
+	warm_counts: Counts,
 }
 
 impl Fixture {
@@ -301,7 +393,9 @@ impl Fixture {
 		libsodium_rs::random::fill_bytes(&mut lineage_bytes);
 		let lineage = SnapshotLineage::from_bytes(lineage_bytes);
 		let counts = Rc::new(Counters::default());
-		let mut server = Backend::create(arm, &path, Rc::clone(&counts), lineage)?;
+		let active = config.active_peers.unwrap_or(peers).min(peers);
+		let location = Location::new(&config.backend, path, lineage)?;
+		let mut server = Backend::create(arm, &location, Rc::clone(&counts), lineage, active)?;
 		let mut beacons = Vec::with_capacity(peers);
 		let mut kids = Vec::with_capacity(peers);
 		for _ in 0..peers {
@@ -328,40 +422,59 @@ impl Fixture {
 			assert!(server.register(&request, Some(b""))?.is_none());
 		}
 		drop(server);
+		counts.take();
 		let (server, warm_database_open_ns) =
-			Backend::open(arm, &path, Rc::clone(&counts), lineage)?;
+			Backend::open(arm, &location, Rc::clone(&counts), lineage, active)?;
+		let cold_open_counts = counts.take();
 		let mut result = Self {
 			arm,
-			path,
+			location,
 			lineage,
 			server,
 			beacons,
 			kids,
 			send_sequences: vec![1; peers],
 			receive_sequences: vec![0; peers],
+			cache_fill_counts: counts.take(),
+			warm_counts: counts.take(),
+			cold_open_counts,
 			counts,
 			setup_ns: nanos(start.elapsed()),
 			warm_database_open_ns,
 		};
+		for peer in 0..active {
+			result.warm_exchange(peer)?;
+		}
+		result.cache_fill_counts = result.counts.take();
 		for i in 0..config.warmup_messages {
-			let peer = i % peers;
-			let encrypted = result.server.encrypt(b"warmup", result.kids[peer])?;
-			let received = result.beacons[peer]
-				.decrypt_message(&encrypted.ciphertext)
-				.ok_or("warmup send invalid")?;
-			assert_eq!(received.plaintext, b"warmup");
-			result.send_sequences[peer] += 1;
-			let encrypted = result.beacons[peer]
-				.encrypt_message(b"warmup")
-				.ok_or("warmup client failed")?;
+			result.warm_exchange(i % active)?;
+		}
+		result.warm_counts = result.counts.take();
+		if let Some(cached) = result.server.cached_peers() {
 			assert_eq!(
-				result.server.decrypt(&encrypted.ciphertext)?.plaintext,
-				b"warmup"
+				cached, active,
+				"all eligible peers must be cached before measurements"
 			);
-			result.receive_sequences[peer] += 1;
 		}
 		result.counts.take();
 		Ok(result)
+	}
+	fn warm_exchange(&mut self, peer: usize) -> Result<()> {
+		let encrypted = self.server.encrypt(b"warmup", self.kids[peer])?;
+		let received = self.beacons[peer]
+			.decrypt_message(&encrypted.ciphertext)
+			.ok_or("warmup send invalid")?;
+		assert_eq!(received.plaintext, b"warmup");
+		self.send_sequences[peer] += 1;
+		let encrypted = self.beacons[peer]
+			.encrypt_message(b"warmup")
+			.ok_or("warmup client failed")?;
+		assert_eq!(
+			self.server.decrypt(&encrypted.ciphertext)?.plaintext,
+			b"warmup"
+		);
+		self.receive_sequences[peer] += 1;
+		Ok(())
 	}
 }
 
@@ -492,8 +605,8 @@ fn measure(
 	let plaintext_bytes: usize = (0..scenario.messages)
 		.map(|i| scenario.bytes(i, config, payloads).len())
 		.sum();
-	database::checkpoint(&fixture.path)?;
-	let footprint_before = database::footprint(&fixture.path, matches!(fixture.arm, Arm::Row))?;
+	fixture.location.checkpoint()?;
+	let footprint_before = fixture.location.footprint(fixture.arm)?;
 	fixture.counts.take();
 	let mut incoming = frames.iter();
 	let started = Instant::now();
@@ -518,7 +631,7 @@ fn measure(
 	}
 	let batch_ns = nanos(started.elapsed());
 	let counts = fixture.counts.take();
-	let footprint_after = database::footprint(&fixture.path, matches!(fixture.arm, Arm::Row))?;
+	let footprint_after = fixture.location.footprint(fixture.arm)?;
 	let wire_bytes: usize = match direction {
 		Direction::Send => outputs.iter().map(|value| value.0.len()).sum(),
 		Direction::Receive => frames.iter().map(Vec::len).sum(),
@@ -635,7 +748,9 @@ fn main() -> Result<()> {
 		"stat",
 		&["-f", "-c", "%T", &directory.path().to_string_lossy()],
 	);
-	if matches!(filesystem_type.as_deref(), Some("tmpfs" | "ramfs")) {
+	if options.config.backend == "sqlite"
+		&& matches!(filesystem_type.as_deref(), Some("tmpfs" | "ramfs"))
+	{
 		return Err("use --database-directory on persistent storage, not tmpfs or ramfs".into());
 	}
 	let config = options.config;
@@ -646,14 +761,15 @@ fn main() -> Result<()> {
 	};
 	let scenarios = scenarios(&config);
 	let mut report = json!({
-		"schema_version": 1, "status": "running", "component": "native durable persistence",
+		"schema_version": 2, "arms": ["snapshot","row","cached_row"], "backend": config.backend, "status": "running", "component": "native durable persistence",
 		"mythic_reference_commit": MYTHIC_REFERENCE, "config": config,
-		"environment": source_environment, "database_settings": database::SQL_SETTINGS,
-		"database_directory": directory.path(),
-		"filesystem_type": filesystem_type,
+		"environment": source_environment, "database_settings": "Actual settings recorded per fixture; SQL and connection preparation outside timing",
+		"fixture_workspace": directory.path(),
+		"database_directory": (config.backend == "sqlite").then_some(directory.path()),
+		"filesystem_type": if config.backend == "sqlite" { filesystem_type } else { None },
 		"scope": "Resident native APIs, one worker, no HTTP/AMQP/CGO/JSON-RPC/provider metadata or result journal. No artificial full restore on each snapshot operation.",
 		"timing": "Unpaced server batches. Client encryption, registration, verification and checkpoint preparation are outside timing; automatic WAL checkpoints inside batches remain included.",
-		"byte_metrics": "Value bytes count opaque values read/written by SQL adapters. Snapshot CAS reads a separate 72-byte head. Counts exclude SQL pages/indexes/keys and are not physical disk I/O; WAL file sizes are footprints, not cumulative writes.",
+		"byte_metrics": "Opaque fetched/written value bytes; validation_bytes_sent counts expected values/heads supplied for commit checks. All are logical bytes, not physical disk/network I/O. SQLite snapshot reads a 72-byte head; PostgreSQL uses a conditional update. network_exchanges counts prepared query/ack calls, not packets. SQL calls count explicit client calls, not statements inside the commit function.",
 		"memory": "Payloads/frames/results are retained outside and across batches for exact verification; process memory includes this harness and is not a server-memory comparison.",
 		"fixtures": [], "results": [],
 	});
@@ -661,12 +777,9 @@ fn main() -> Result<()> {
 	let outcome = (|| -> Result<()> {
 		for (peer_index, &peers) in config.peer_counts.iter().enumerate() {
 			for trial in 1..=config.trials {
-				let mut fixtures = Vec::with_capacity(2);
-				let arms = if (trial + peer_index).is_multiple_of(2) {
-					[Arm::Snapshot, Arm::Row]
-				} else {
-					[Arm::Row, Arm::Snapshot]
-				};
+				let mut fixtures = Vec::with_capacity(3);
+				let mut arms = [Arm::Snapshot, Arm::Row, Arm::Cached];
+				arms.rotate_left((trial - 1 + peer_index) % 3);
 				for arm in arms {
 					let path = directory.path().join(format!(
 						"{}-axis{peer_index}-peers{peers}-trial{trial}.sqlite",
@@ -677,19 +790,24 @@ fn main() -> Result<()> {
 						"arm": arm.label(), "peers": peers, "trial": trial,
 						"lineage": fixture.lineage.as_bytes(),
 						"setup_ns": fixture.setup_ns, "warm_database_open_ns": fixture.warm_database_open_ns,
+						"cold_open_database":fixture.cold_open_counts,"cache_fill_database":fixture.cache_fill_counts,"warm_database":fixture.warm_counts,
+						"cached_peers_at_measurement_start":fixture.server.cached_peers(),"cache_capacity":fixture.server.cached_peers().map(|_|config.active_peers.unwrap_or(peers).min(peers)),
+						"database_settings":fixture.location.settings(),
 						"warm_open_definition": "Native restore/open after connection setup; OS database cache is warm. Snapshot includes activation commit; row open is read-only.",
-						"footprint": database::footprint(&fixture.path, matches!(arm, Arm::Row))?,
+						"footprint": fixture.location.footprint(arm)?,
 					}));
 					fixtures.push(fixture);
 				}
+				fixtures.sort_by_key(|fixture| fixture.arm.index());
 				for (scenario_index, scenario) in scenarios.iter().enumerate() {
 					for (direction_index, direction) in [Direction::Send, Direction::Receive]
 						.into_iter()
 						.enumerate()
 					{
-						// Fixture order already alternates by trial. Do not cancel that alternation.
-						let first = (scenario_index + direction_index) % 2;
-						for (pair_order, index) in [first, 1 - first].into_iter().enumerate() {
+						// Rotate three arms: over three trials each arm occupies every position.
+						let first = (trial - 1 + peer_index + scenario_index + direction_index) % 3;
+						for pair_order in 0..3 {
+							let index = (first + pair_order) % 3;
 							let result = measure(
 								&mut fixtures[index],
 								scenario,
@@ -710,7 +828,7 @@ fn main() -> Result<()> {
 					}
 				}
 				// Reporting between paired arms would bias the following arm with filesystem activity.
-				// Save raw results after both arms finish every workload for this fresh trial.
+				// Save raw results after all arms finish every workload for this fresh trial.
 				write_report(&mut output, &report)?;
 			}
 		}

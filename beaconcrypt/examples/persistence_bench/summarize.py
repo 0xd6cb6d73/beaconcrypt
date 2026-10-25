@@ -80,13 +80,79 @@ def matrix(config):
     return peers, trials, cases, expected
 
 
-def validate_arm(result):
+def validate_counters(database, version):
+    names = [
+        "reads",
+        "writes",
+        "transactions",
+        "value_bytes_read",
+        "value_bytes_written",
+        "head_bytes_read",
+    ]
+    if version == 2:
+        names += [
+            "loads",
+            "expects",
+            "stores",
+            "network_exchanges",
+            "sql_calls",
+            "validation_bytes_sent",
+            "validation_rows",
+            "value_bytes_expected",
+        ]
+    for name in names:
+        integer(database[name], f"database.{name}")
+
+
+def validate_fixtures(report, arms, peers, trials):
+    expected = {
+        (peer, trial, arm)
+        for peer in peers
+        for trial in range(1, trials + 1)
+        for arm in arms
+    }
+    seen = set()
+    lineages = set()
+    for fixture in report["fixtures"]:
+        key = (fixture["peers"], fixture["trial"], fixture["arm"])
+        require(
+            key in expected and key not in seen,
+            f"unexpected or duplicate fixture: {key!r}",
+        )
+        seen.add(key)
+        lineage = fixture["lineage"]
+        require(
+            isinstance(lineage, list)
+            and len(lineage) == 32
+            and all(type(value) is int and 0 <= value <= 255 for value in lineage),
+            "invalid fixture lineage",
+        )
+        require(tuple(lineage) not in lineages, "reused independent fixture lineage")
+        lineages.add(tuple(lineage))
+        active = min(
+            report["config"]["active_peers"] or fixture["peers"], fixture["peers"]
+        )
+        cached = active if fixture["arm"] == "cached_row" else None
+        require(
+            fixture["cache_capacity"] == cached
+            and fixture["cached_peers_at_measurement_start"] == cached,
+            "cache was not fully warmed or capacity mismatches",
+        )
+        for phase in ("cold_open_database", "cache_fill_database", "warm_database"):
+            validate_counters(fixture[phase], 2)
+    require(seen == expected, f"missing fixtures: {sorted(expected - seen)!r}")
+
+
+def validate_arm(result, arms, version):
     messages = integer(result["messages"], "messages", 1)
     duration = integer(result["server_batch_ns"], "server_batch_ns", 1)
     plaintext = integer(result["plaintext_bytes"], "plaintext_bytes", 1)
     integer(result["wire_bytes"], "wire_bytes", plaintext)
     require(result["outputs_verified"] is True, "outputs were not verified")
-    require(integer(result["pair_order"], "pair_order") in (0, 1), "invalid pair_order")
+    require(
+        integer(result["pair_order"], "pair_order") in range(len(arms)),
+        "invalid pair_order",
+    )
     latencies = result["operation_latencies_ns"]
     require(
         isinstance(latencies, list) and len(latencies) == messages,
@@ -114,15 +180,7 @@ def validate_arm(result):
     close(result["operations_per_second"], operations, "operations_per_second")
     close(result["plaintext_mib_per_second"], mib, "plaintext_mib_per_second")
     database = result["database"]
-    for name in (
-        "reads",
-        "writes",
-        "transactions",
-        "value_bytes_read",
-        "value_bytes_written",
-        "head_bytes_read",
-    ):
-        integer(database[name], f"database.{name}")
+    validate_counters(database, version)
     return {
         "server_batch_ns": duration,
         "operations_per_second": operations,
@@ -133,19 +191,29 @@ def validate_arm(result):
 
 
 def summarize(report):
-    require(
-        integer(report["schema_version"], "schema_version") == 1,
-        "unsupported report schema",
-    )
+    version = integer(report["schema_version"], "schema_version")
+    require(version in (1, 2), "unsupported report schema")
     require(report["status"] == "complete", "report is not complete")
     config = report["config"]
+    arms = ("snapshot", "row") if version == 1 else ("snapshot", "row", "cached_row")
+    comparisons = [("snapshot", "row")]
+    if version == 2:
+        require(report["arms"] == list(arms), "invalid configured arms")
+        require(
+            report["backend"] in ("sqlite", "postgres")
+            and report["backend"] == config["backend"],
+            "mismatched backend",
+        )
+        comparisons.extend((("snapshot", "cached_row"), ("row", "cached_row")))
     peers, trials, cases, expected = matrix(config)
+    if version == 2:
+        validate_fixtures(report, arms, peers, trials)
     results = report["results"]
     require(isinstance(results, list) and results, "empty result matrix")
     pairs = {}
     for result in results:
         arm = result["arm"]
-        require(arm in ("snapshot", "row"), f"unknown arm {arm!r}")
+        require(arm in arms, f"unknown arm {arm!r}")
         peer = integer(result["peers"], "peers", 1)
         trial = integer(result["trial"], "trial", 1)
         key = (peer, trial, result["scenario"], result["direction"])
@@ -165,7 +233,7 @@ def summarize(report):
                 type(result[field]) is int and result[field] == value,
                 f"mismatched {field} in {key!r}/{arm}",
             )
-        pair[arm] = (result, validate_arm(result))
+        pair[arm] = (result, validate_arm(result, arms, version))
     missing = expected - pairs.keys()
     require(not missing, f"missing matrix entries: {sorted(missing)!r}")
     groups = []
@@ -176,31 +244,41 @@ def summarize(report):
                 for trial in range(1, trials + 1):
                     key = (peer, trial, scenario, direction)
                     pair = pairs[key]
+                    require(set(pair) == set(arms), f"missing paired arm: {key!r}")
+                    snapshot = pair["snapshot"][0]
                     require(
-                        set(pair) == {"snapshot", "row"}, f"missing paired arm: {key!r}"
-                    )
-                    snapshot, row = pair["snapshot"][0], pair["row"][0]
-                    require(
-                        {snapshot["pair_order"], row["pair_order"]} == {0, 1},
+                        {pair[arm][0]["pair_order"] for arm in arms}
+                        == set(range(len(arms))),
                         f"invalid paired order for {key!r}",
                     )
                     require(
-                        snapshot["wire_bytes"] == row["wire_bytes"],
+                        len({pair[arm][0]["wire_bytes"] for arm in arms}) == 1,
                         f"wire byte mismatch: {key!r}",
                     )
-                    entries.append(
-                        {
-                            "trial": trial,
-                            "first_arm": (
-                                "snapshot" if snapshot["pair_order"] == 0 else "row"
-                            ),
-                            "snapshot": pair["snapshot"][1],
-                            "row": pair["row"][1],
-                            "snapshot_over_row_batch_ratio": snapshot["server_batch_ns"]
-                            / row["server_batch_ns"],
-                        }
-                    )
-                ratios = [entry["snapshot_over_row_batch_ratio"] for entry in entries]
+                    order = sorted(arms, key=lambda arm: pair[arm][0]["pair_order"])
+                    entry = {
+                        "trial": trial,
+                        "first_arm": order[0],
+                        **{arm: pair[arm][1] for arm in arms},
+                    }
+                    for numerator, denominator in comparisons:
+                        entry[f"{numerator}_over_{denominator}_batch_ratio"] = (
+                            pair[numerator][0]["server_batch_ns"]
+                            / pair[denominator][0]["server_batch_ns"]
+                        )
+                    if version == 2:
+                        entry["arm_order"] = order
+                    entries.append(entry)
+                ratio_summaries = {}
+                for numerator, denominator in comparisons:
+                    name = f"{numerator}_over_{denominator}"
+                    ratios = [entry[f"{name}_batch_ratio"] for entry in entries]
+                    ratio_summaries[name] = {
+                        "count": len(ratios),
+                        "median": statistics.median(ratios),
+                        "min": min(ratios),
+                        "max": max(ratios),
+                    }
                 groups.append(
                     {
                         "peers": peer,
@@ -213,27 +291,39 @@ def summarize(report):
                         "plaintext_bytes": snapshot["plaintext_bytes"],
                         "wire_bytes": snapshot["wire_bytes"],
                         "trials": entries,
-                        "paired_batch_ratio": {
-                            "count": len(ratios),
-                            "median": statistics.median(ratios),
-                            "min": min(ratios),
-                            "max": max(ratios),
-                        },
+                        "paired_batch_ratio": ratio_summaries["snapshot_over_row"],
+                        **(
+                            {"paired_batch_ratios": ratio_summaries}
+                            if version == 2
+                            else {}
+                        ),
                     }
                 )
     return {
-        "schema_version": 1,
+        "schema_version": version,
         "input_schema_version": report["schema_version"],
         "config": config,
         "source_environment": report.get("environment", {}),
         "ratio_definition": "snapshot batch duration / row batch duration; above 1 means the row batch finished sooner in this paired trial",
         "latency_definition": "Per-trial operation percentiles; trials are never pooled",
-        "storage_definition": "Logical SQL value/head bytes, not physical disk I/O or cumulative WAL writes",
+        "storage_definition": "Logical SQL value/head/expected bytes, not physical disk or network I/O or cumulative WAL writes",
+        **(
+            {
+                "arms": list(arms),
+                "backend": report["backend"],
+                "fixtures": report["fixtures"],
+                "comparison_definition": "For each numerator_over_denominator comparison, divide paired batch durations; above 1 means denominator finished sooner",
+            }
+            if version == 2
+            else {}
+        ),
         "groups": groups,
     }
 
 
 def markdown(summary):
+    if summary["schema_version"] == 2:
+        return markdown_three_arms(summary)
     lines = [
         "# Native persistence benchmark report",
         "",
@@ -284,6 +374,74 @@ def markdown(summary):
                 f"| {entry['trial']} | {snapshot['value_bytes_read']} / {snapshot['value_bytes_written']} | "
                 f"{row['value_bytes_read']} / {row['value_bytes_written']} | {snapshot['head_bytes_read']} |"
             )
+        lines.append("")
+    return "\n".join(lines)
+
+
+def markdown_three_arms(summary):
+    lines = [
+        "# Native persistence benchmark report",
+        "",
+        f"Input: `{summary['input_path']}`",
+        "",
+        f"Input SHA-256: `{summary['input_sha256']}`",
+        "",
+        f"Backend: **{summary['backend']}**. Ratios divide paired batch durations; above 1 means the denominator arm finished sooner. Latencies remain per trial, never pooled. Logical bytes and query exchanges are not physical I/O or network packet counts. Application request/result journaling and provider transport are excluded.",
+        "",
+    ]
+    for group in summary["groups"]:
+        lines.extend(
+            [
+                f"## {group['scenario']} / {group['direction']} / {group['peers']} peers",
+                "",
+                f"Eligible/touched peers: {group['active_peers']}/{group['touched_peers']}; consumed registrations: {group['consumed_registrations']}; messages: {group['messages']}; plaintext bytes: {group['plaintext_bytes']}; wire bytes: {group['wire_bytes']}.",
+                "",
+                "| Trial | Order | Arm | Batch ms | Ops/s | MiB/s | p95 / p99 / max µs |",
+                "| ---: | ---: | --- | ---: | ---: | ---: | ---: |",
+            ]
+        )
+        for entry in group["trials"]:
+            for order, arm in enumerate(entry["arm_order"]):
+                value = entry[arm]
+                tail = value["latency_ns"]
+                lines.append(
+                    f"| {entry['trial']} | {order} | {arm} | {value['server_batch_ns']/1e6:.3f} | {value['operations_per_second']:.1f} | {value['plaintext_mib_per_second']:.2f} | {tail['p95']/1e3:.3f} / {tail['p99']/1e3:.3f} / {tail['max']/1e3:.3f} |"
+                )
+        lines.extend(
+            [
+                "",
+                "| Trial | Snapshot / row | Snapshot / cached row | Row / cached row |",
+                "| ---: | ---: | ---: | ---: |",
+            ]
+        )
+        for entry in group["trials"]:
+            lines.append(
+                f"| {entry['trial']} | {entry['snapshot_over_row_batch_ratio']:.3f} | {entry['snapshot_over_cached_row_batch_ratio']:.3f} | {entry['row_over_cached_row_batch_ratio']:.3f} |"
+            )
+        lines.extend(
+            [
+                "",
+                "| Paired comparison | Median | Min | Max | Trials |",
+                "| --- | ---: | ---: | ---: | ---: |",
+            ]
+        )
+        for name, ratio in group["paired_batch_ratios"].items():
+            lines.append(
+                f"| {name} | {ratio['median']:.3f} | {ratio['min']:.3f} | {ratio['max']:.3f} | {ratio['count']} |"
+            )
+        lines.extend(
+            [
+                "",
+                "| Trial | Arm | Loads / expects / stores | Fetch queries / validation rows | SQL calls / TCP query exchanges | Logical value bytes read / written / expected | Commit validation bytes supplied | Head bytes read |",
+                "| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+            ]
+        )
+        for entry in group["trials"]:
+            for arm in summary["arms"]:
+                value = entry[arm]["database"]
+                lines.append(
+                    f"| {entry['trial']} | {arm} | {value['loads']} / {value['expects']} / {value['stores']} | {value['reads']} / {value['validation_rows']} | {value['sql_calls']} / {value['network_exchanges']} | {value['value_bytes_read']} / {value['value_bytes_written']} / {value['value_bytes_expected']} | {value['validation_bytes_sent']} | {value['head_bytes_read']} |"
+                )
         lines.append("")
     return "\n".join(lines)
 

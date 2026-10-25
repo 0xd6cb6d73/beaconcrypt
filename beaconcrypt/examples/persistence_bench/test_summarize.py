@@ -4,7 +4,7 @@
 import copy
 import unittest
 
-from summarize import matrix, summarize
+from summarize import markdown, matrix, summarize
 
 
 def synthetic_report():
@@ -125,6 +125,117 @@ class SummaryTests(unittest.TestCase):
         report["results"][0]["latency_ns"]["p99"] = 6
         with self.assertRaisesRegex(ValueError, "latency p99"):
             summarize(report)
+
+    def test_three_arms_preserve_legacy_ratio_and_every_tail(self):
+        report = synthetic_three_arm_report()
+        result = summarize(report)
+        self.assertEqual(result["backend"], "postgres")
+        for group in result["groups"]:
+            ratios = group["paired_batch_ratios"]
+            self.assertEqual(ratios["snapshot_over_row"], group["paired_batch_ratio"])
+            self.assertEqual(
+                ratios["snapshot_over_cached_row"],
+                {"count": 3, "median": 8, "min": 4, "max": 16},
+            )
+            self.assertEqual(
+                ratios["row_over_cached_row"],
+                {"count": 3, "median": 2, "min": 2, "max": 2},
+            )
+            for entry in group["trials"]:
+                self.assertEqual(len(set(entry["arm_order"])), 3)
+                self.assertEqual(entry["cached_row"]["latency_ns"]["p99"], 5)
+        result.update(
+            input_path="synthetic (not a measurement)", input_sha256="fixture"
+        )
+        rendered = markdown(result)
+        self.assertIn("snapshot_over_cached_row", rendered)
+        self.assertIn("TCP query exchanges", rendered)
+
+    def test_three_arm_missing_cached_or_bad_order_backend_counter_is_rejected(self):
+        report = synthetic_three_arm_report()
+        report["results"] = [
+            entry for entry in report["results"] if entry["arm"] != "cached_row"
+        ]
+        with self.assertRaisesRegex(ValueError, "missing paired arm"):
+            summarize(report)
+        for mutation in (
+            lambda report: report.update(backend="sqlite"),
+            lambda report: report["results"][0].update(pair_order=3),
+            lambda report: report["results"][0]["database"].update(
+                network_exchanges=-1
+            ),
+        ):
+            report = synthetic_three_arm_report()
+            mutation(report)
+            with self.assertRaises(ValueError):
+                summarize(report)
+
+    def test_missing_fixture_reused_lineage_and_incomplete_warm_cache_are_rejected(
+        self,
+    ):
+        for mutation in (
+            lambda report: report["fixtures"].pop(),
+            lambda report: report["fixtures"][1].update(
+                lineage=report["fixtures"][0]["lineage"]
+            ),
+            lambda report: next(
+                fixture
+                for fixture in report["fixtures"]
+                if fixture["arm"] == "cached_row"
+            ).update(cached_peers_at_measurement_start=0),
+        ):
+            report = synthetic_three_arm_report()
+            mutation(report)
+            with self.assertRaises(ValueError):
+                summarize(report)
+
+
+def synthetic_three_arm_report():
+    report = synthetic_report()
+    report.update(
+        schema_version=2, arms=["snapshot", "row", "cached_row"], backend="postgres"
+    )
+    report["config"]["backend"] = "postgres"
+    added = []
+    for entry in report["results"]:
+        entry["database"].update(
+            loads=0,
+            expects=0,
+            stores=0,
+            network_exchanges=1,
+            sql_calls=1,
+            validation_bytes_sent=0,
+            validation_rows=0,
+            value_bytes_expected=0,
+        )
+        if entry["arm"] == "row":
+            cached = copy.deepcopy(entry)
+            cached.update(arm="cached_row", pair_order=2)
+            cached["server_batch_ns"] //= 2
+            cached["operations_per_second"] *= 2
+            cached["plaintext_mib_per_second"] *= 2
+            added.append(cached)
+    report["results"].extend(added)
+    report["fixtures"] = []
+    for peer in report["config"]["peer_counts"]:
+        for trial in range(1, report["config"]["trials"] + 1):
+            for arm in report["arms"]:
+                counts = {key: 0 for key in report["results"][0]["database"]}
+                cached = peer if arm == "cached_row" else None
+                report["fixtures"].append(
+                    {
+                        "arm": arm,
+                        "peers": peer,
+                        "trial": trial,
+                        "lineage": [len(report["fixtures"]) + 1] * 32,
+                        "cache_capacity": cached,
+                        "cached_peers_at_measurement_start": cached,
+                        "cold_open_database": counts.copy(),
+                        "cache_fill_database": counts.copy(),
+                        "warm_database": counts.copy(),
+                    }
+                )
+    return report
 
 
 if __name__ == "__main__":
