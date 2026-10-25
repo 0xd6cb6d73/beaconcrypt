@@ -17,23 +17,46 @@ fn job(id: usize, peer: usize, bytes: usize) -> Scheduled {
 
 #[test]
 fn byte_limit_blocks_admission_until_the_old_job_leaves() {
-	let queue = Arc::new(Queue::new(2, 4, 1));
+	for (slots, byte_limit, first_bytes, second_bytes) in
+		[(2, 4, 3, 3), (2, usize::MAX, usize::MAX, 1), (1, 100, 1, 1)]
+	{
+		assert_blocked_admission(slots, byte_limit, first_bytes, second_bytes);
+	}
+}
+
+fn assert_blocked_admission(
+	slots: usize,
+	byte_limit: usize,
+	first_bytes: usize,
+	second_bytes: usize,
+) {
+	let queue = Arc::new(Queue::new(slots, byte_limit, 1));
 	let cancelled = Arc::new(AtomicBool::new(false));
 	let epoch = Instant::now();
 	let deadline = epoch + Duration::from_secs(10);
 	queue
-		.push(&job(0, 0, 3), epoch, deadline, &cancelled)
+		.push(&job(0, 0, first_bytes), epoch, deadline, &cancelled)
 		.unwrap();
 	let worker_queue = Arc::clone(&queue);
 	let worker_cancelled = Arc::clone(&cancelled);
+	let (attempt_tx, attempt_rx) = mpsc::channel();
+	let (admitted_tx, admitted_rx) = mpsc::channel();
 	let producer = thread::spawn(move || {
 		let _finished = ProducerFinished(Arc::clone(&worker_queue));
+		attempt_tx.send(()).unwrap();
 		worker_queue
-			.push(&job(1, 0, 3), epoch, deadline, &worker_cancelled)
+			.push(&job(1, 0, second_bytes), epoch, deadline, &worker_cancelled)
 			.unwrap();
+		admitted_tx.send(()).unwrap();
 	});
+	attempt_rx.recv_timeout(Duration::from_secs(5)).unwrap();
+	assert_eq!(
+		admitted_rx.recv_timeout(Duration::from_millis(100)),
+		Err(mpsc::RecvTimeoutError::Timeout)
+	);
 	let before_pop = nanos(epoch.elapsed());
 	assert_eq!(queue.pop().unwrap().id, 0);
+	admitted_rx.recv_timeout(Duration::from_secs(5)).unwrap();
 	producer.join().unwrap();
 	let admitted = queue.pop().unwrap();
 	assert_eq!(admitted.id, 1);
@@ -41,7 +64,7 @@ fn byte_limit_blocks_admission_until_the_old_job_leaves() {
 	assert!(queue.pop().is_none());
 	let report = queue.report();
 	assert_eq!(report["high_water_jobs"], 1);
-	assert_eq!(report["high_water_bytes"], 3);
+	assert_eq!(report["high_water_bytes"], first_bytes.max(second_bytes));
 }
 
 #[test]
@@ -431,4 +454,84 @@ fn sqlite_measure_runtime_checks_all_arms_and_queued_duplex_outputs() {
 #[ignore = "requires dedicated durable PostgreSQL over loopback TCP"]
 fn postgres_measure_runtime_checks_all_arms_and_queued_duplex_outputs() {
 	runtime_smoke("postgres");
+}
+
+#[test]
+fn case_plan_rejects_invalid_resources_before_database_construction() {
+	let config = super::super::Config::default();
+	let base = Config::default();
+	assert!(cases(&config, &base, 0).is_err());
+	for change in [
+		(|c: &mut Config| c.workers = 0) as fn(&mut Config),
+		|c| c.queue_capacity = 0,
+		|c| c.queue_bytes = 0,
+		|c| c.period_ms.clear(),
+		|c| c.period_ms.push(0),
+		|c| c.arrival_ms = 0,
+		|c| c.deadline_ms = 0,
+		|c| c.drain_ms = 0,
+		|c| c.max_offered = 0,
+		|c| c.max_precomputed_bytes = 0,
+		|c| c.arrival_ms = u64::MAX,
+		|c| c.deadline_ms = u64::MAX,
+		|c| c.drain_ms = u64::MAX,
+		|c| c.arrival_ms = u64::MAX / 1_000_000,
+		|c| c.queue_capacity = 7,
+		|c| c.queue_bytes = 8 * 512_000 - 1,
+		|c| c.max_offered = 12_799,
+	] {
+		let mut invalid = base.clone();
+		change(&mut invalid);
+		assert!(cases(&config, &invalid, 32).is_err());
+	}
+	let exact_queue = Config {
+		queue_capacity: 8,
+		queue_bytes: 8 * 512_000,
+		..base
+	};
+	assert!(cases(&config, &exact_queue, 32).is_ok());
+}
+
+#[test]
+fn case_plan_accounts_for_every_default_arrival_and_retained_byte_budget() {
+	let config = super::super::Config::default();
+	for (active, expected_operations) in [(1, 2080), (32, 45_680)] {
+		let plans = cases(&config, &Config::default(), active).unwrap();
+		assert_eq!(plans.len(), 13);
+		assert_eq!(
+			plans.iter().map(|p| p.schedule.len()).sum::<usize>(),
+			expected_operations
+		);
+		for count in [64, 256, 512] {
+			let name = format!("burst_{count}");
+			let burst = plans.iter().find(|p| p.name == name).unwrap();
+			assert_eq!(burst.schedule.len(), count);
+			assert_eq!(burst.horizon_ns, 0);
+			assert!(
+				burst
+					.schedule
+					.iter()
+					.all(|job| job.scheduled_ns == 0 && job.plaintext_bytes == 512_000)
+			);
+		}
+		let regular = plans.iter().find(|p| p.name == "regular_large").unwrap();
+		assert_eq!(regular.schedule.len(), active * 2);
+		assert!(
+			regular
+				.schedule
+				.iter()
+				.all(|job| job.plaintext_bytes == 65_536)
+		);
+	}
+	// Two retained frame/output allowances plus 1 KiB metadata for each of 512 chunks.
+	let mut bounded = Config {
+		max_precomputed_bytes: 524_812_288,
+		..Config::default()
+	};
+	assert!(cases(&config, &bounded, 32).is_ok());
+	bounded.max_precomputed_bytes -= 1;
+	assert!(cases(&config, &bounded, 32).is_err());
+	let last_ms = u64::MAX / 1_000_000;
+	assert_eq!(ns(last_ms).unwrap(), last_ms * 1_000_000);
+	assert!(ns(last_ms + 1).is_err());
 }

@@ -75,7 +75,8 @@ struct Case {
 }
 
 fn cases(config: &super::Config, concurrent: &Config, active: usize) -> Result<Vec<Case>> {
-	if concurrent.workers == 0
+	if active == 0
+		|| concurrent.workers == 0
 		|| concurrent.queue_capacity == 0
 		|| concurrent.queue_bytes == 0
 		|| concurrent.period_ms.is_empty()
@@ -88,6 +89,11 @@ fn cases(config: &super::Config, concurrent: &Config, active: usize) -> Result<V
 			"concurrent worker, queue, arrival, deadline and period values must be positive".into(),
 		);
 	}
+	let horizon = ns(concurrent.arrival_ms)?;
+	let _deadline = ns(concurrent.deadline_ms)?;
+	horizon
+		.checked_add(ns(concurrent.drain_ms)?)
+		.ok_or("arrival horizon plus drain duration overflows nanoseconds")?;
 	let workers = concurrent.workers.min(active);
 	if concurrent.queue_capacity < workers
 		|| concurrent.queue_bytes / workers
