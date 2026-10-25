@@ -46,16 +46,16 @@ declare -A expected_category_counts=(
 	[adapter-rust]=14
 	[adapter-schema]=1
 	[parser-rust]=6
-	[core-rust]=15
+	[core-rust]=16
 	[control]=17
 	[generated-lean]=13
 	[generated-proverif]=1
-	[handwritten-lean]=2057
+	[handwritten-lean]=2060
 	[handwritten-proverif]=298
 	[inventory]=2
 	[lean-control]=13
 	[lean-dependency-overlay]=4
-	[validation]=79
+	[validation]=80
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -186,6 +186,7 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	tests/proverif_transcript_fidelity.rs \
 	tests/fidelity/registration_effects.rs \
 	tests/fidelity/record_effects.rs \
+	tests/fidelity/peer_effects.rs \
 	> "$tmp_dir/validation"
 compare_set validation "$tmp_dir/validation"
 
@@ -965,9 +966,15 @@ require_line_count 1 '^mod record_effects;$' tests/proverif_transcript_fidelity.
 require_line_count 1 '^[[:space:]]*core_record_effects: String,$' tests/proverif_transcript_fidelity.rs "mutable core record source"
 require_line_count 1 '^[[:space:]]*core_record_effects: CORE_RECORD_EFFECTS\.to_owned\(\),$' tests/proverif_transcript_fidelity.rs "production core record snapshot"
 require_line_count 3 '^#\[test\]$' "$record_fidelity_effects" "record fidelity tests"
+peer_fidelity_effects=tests/fidelity/peer_effects.rs
+require_line_count 1 '^#\[path = "fidelity/peer_effects\.rs"\]$' tests/proverif_transcript_fidelity.rs "peer fidelity module import"
+require_line_count 1 '^mod peer_effects;$' tests/proverif_transcript_fidelity.rs "peer fidelity module binding"
+require_line_count 1 '^[[:space:]]*core_peer: String,$' tests/proverif_transcript_fidelity.rs "mutable core peer source"
+require_line_count 1 '^[[:space:]]*core_peer: CORE_PEER\.to_owned\(\),$' tests/proverif_transcript_fidelity.rs "production core peer snapshot"
+require_line_count 2 '^#\[test\]$' "$peer_fidelity_effects" "peer fidelity tests"
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 55 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_AUTH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_AUTHENTICATION|CORE_SESSION|CORE_REGISTRATION|CORE_AGREEMENT|CORE_RECORD|CORE_RECORD_EFFECTS|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|TRANSPORT_SCHEMA|TRANSPORT_PARSER|TRANSPORT_SIZING|ADAPTER_WIRE|CBOR_REGISTRATION_MODEL|MLDSA_AUTH_MODEL|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLDSA_REGISTRATION_MODEL|MLDSA_REGISTRATION_QUERIES|MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
+require_line_count 56 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_AUTH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_AUTHENTICATION|CORE_SESSION|CORE_REGISTRATION|CORE_AGREEMENT|CORE_PEER|CORE_RECORD|CORE_RECORD_EFFECTS|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|TRANSPORT_SCHEMA|TRANSPORT_PARSER|TRANSPORT_SIZING|ADAPTER_WIRE|CBOR_REGISTRATION_MODEL|MLDSA_AUTH_MODEL|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLDSA_REGISTRATION_MODEL|MLDSA_REGISTRATION_QUERIES|MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 3 '^const (CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA): &str = TRANSPORT_SCHEMA;$' \
 	"$fidelity_test" "shared CBOR schema aliases"
@@ -1465,7 +1472,7 @@ for registration_source in registration agreement; do
 	require_line_count 1 "^[[:space:]]*core_${registration_source}: CORE_${registration_source^^}\\.to_owned\\(\\),$" \
 		"$fidelity_test" "production core ${registration_source} source snapshot"
 done
-python3 - "$fidelity_test" "$fidelity_effects" "$record_fidelity_effects" <<'PY_REGISTRATION_FIDELITY'
+python3 - "$fidelity_test" "$fidelity_effects" "$record_fidelity_effects" "$peer_fidelity_effects" <<'PY_REGISTRATION_FIDELITY'
 import ast
 import hashlib
 import json
@@ -1476,6 +1483,7 @@ import sys
 main = Path(sys.argv[1]).read_text()
 source = Path(sys.argv[2]).read_text()
 records = Path(sys.argv[3]).read_text()
+peers = Path(sys.argv[4]).read_text()
 
 def require(condition, label):
     if not condition:
@@ -1713,7 +1721,7 @@ selected_additional = [('core-pqxdh',
  ('server',
   '',
   'get_shared_secret',
-  'verified_pqxdh::validate_registration_status(status).ok()?;',
+  'lookup.resume(consumed)',
   'registration Server replay-status gate'),
  ('server',
   '',
@@ -1863,23 +1871,27 @@ selected_additional = [('core-pqxdh',
  ('server',
   '',
   'build_registration_response',
-  'letremote_kid=binding.assigned_key_id();',
+  'letremote_kid=pending.request();',
   'registration assigned target comes from published binding'),
  ('server',
   '',
   'build_registration_response',
-  'crypto_sign::PublicKey::from_bytes(binding.beacon_identity_public_key()).ok()?',
+  'crypto_sign::PublicKey::from_bytes(peer.binding().beacon_identity_public_key()).ok()?',
   'registration established peer identity comes from binding'),
  ('server',
   '',
   'build_registration_response',
-  'self.known_ids.insert(remote_kid,EstablishedRemote::new(public_key,RatchetManager::from_kernel(kernel),binding),)',
+  'entry.insert(EstablishedRemote::from_peer(public_key,peer));',
   'registration established peer retains exact identity kernel and binding'),
  ('server',
   '',
   'build_registration_response',
   'Some(RegResponse{serialized:buffer,kid:remote_kid,})',
   'registration returned target and serialized payload')]
+# Keep the original extracted agreement replay-status rejection as well as the new owned lookup.
+selected_additional.append(('agreement', '', 'begin_server_agreement',
+    'ifpqxdh::validate_registration_status(status).is_err(){returnAgreementEffect::Rejected(None);}',
+    'registration core replay status gate'))
 for row in selected_additional:
     require(tables["ADDITIONAL"].count(row) == 1, f"actual core/native handoff: {row[4]}")
 
@@ -1926,9 +1938,9 @@ for statement in [
     "contracts.extend_from_slice(ADDITIONAL);", "inAUTHENTICATION.iter().chain(COMPLETION)",
     "inAGREEMENT", "inNATIVE_AUTHENTICATION", "inBEACON_LIFECYCLE", "inDH_REQUESTS", "inNATIVE_AGREEMENT",
     "ifwanted.contains(from)", "wanted.replacen(from,to,1)",
-    'assert_eq!(count,511,"reviewedregistrationcoverageunexpectedlychanged");',
+    'assert_eq!(count,507,"reviewedregistrationcoverageunexpectedlychanged");',
 ]:
-    once(matrix, statement, f"511 exact operand/continuation controls: {statement}")
+    once(matrix, statement, f"507 exact operand/continuation controls: {statement}")
 once(function(source, "registration_failure_bypass_and_publication_order_controls_are_rejected"), "assert_eq!(count,28);", "28 failure/bypass/order controls")
 once(function(source, "registration_wire_fields_and_attached_signature_roles_cannot_be_substituted"), "assert_eq!(checked,54);", "54 field/signature-role substitution controls")
 capabilities = function(source, "registration_capabilities_keep_private_provenance_and_native_erasure")
@@ -1980,7 +1992,41 @@ for statement in ["inMIGRATED{", "super::registration_effects::replace_contract(
 for name, count in [("BODY_MUTATION_COUNT", 116), ("DECLARATION_MUTATION_COUNT", 11), ("MIGRATED_CONTROL_COUNT", 87)]:
     once(records, f"const {name}: usize = {count};", f"reviewed exact record count {name}")
 
-print("Registration/record fidelity inventory: 55 synchronized inputs, 32+4+3 tests, 597 registration plus 214 record negative controls; 87 old names retained")
+
+# Core peer owners bind actual replay and vacant-insertion replies to one-use continuations.
+# The native collection implementation remains an explicit boundary; retain exact handoffs.
+peer_pins = {'BODIES': {'count': 30,
+            'sha256': 'c43a187993358b3d2be4ed90521cb973ff980d77e7735dced2daad19ff1eb0ce'},
+ 'DECLARATIONS': {'count': 10,
+                  'sha256': '498b374eb32ee0e41abccf9c656f4965058ee2766bffbe8483f2ee358eb7567a'}}
+for name, pin in peer_pins.items():
+    found = re.search(r"^const " + name + r":.*?= &\[(.*?)^\];", peers, re.M | re.S)
+    require(found is not None, f"reviewed peer {name} table")
+    rows = ast.literal_eval("[" + found[1] + "]")
+    require(len(rows) == pin["count"], f"reviewed peer {name} count")
+    digest = hashlib.sha256(json.dumps(rows, separators=(",", ":")).encode()).hexdigest()
+    require(digest == pin["sha256"], f"reviewed peer {name} operands/order/ownership")
+once(function(source, "lifecycle"), "super::peer_effects::validate(snapshot)?;", "registration lifecycle composes peer collection effects")
+for name, prefix in [("source", "&snapshot"), ("source_mut", "&mutsnapshot")]:
+    once(function(source, name), '"peer"=>' + prefix + '.core_peer,', f"{name} selects actual core peer source")
+for name, prefix in [("source", "&snapshot"), ("replace_once", "&mutsnapshot")]:
+    text = function(peers, name)
+    for selected, field in [("peer", "core_peer"), ("shared", "adapter_shared"), ("server", "adapter_server")]:
+        once(text, '"' + selected + '"=>' + prefix + '.' + field + ',', f"peer {name} selects {selected}")
+peer_validator = function(peers, "validate")
+for statement in ["inBODIES{", "actual.matches(expected).count()==1", "actual==expected", "if!exact{", "inDECLARATIONS{", "raw.matches(declaration).count()!=1", 'raw.contains("usealloc::")', 'raw.contains("usestd::")', 'raw.contains("#[derive(Clone")', 'raw.contains("#[derive(Copy")']:
+    once(peer_validator, statement, f"peer validator remains active: {statement}")
+once(function(peers, "selected_body"), "rust_body(raw,function)", "peer validator inspects actual Rust bodies")
+once(function(peers, "replace_once"), "raw.replace_range(", "peer mutations change actual source")
+peer_bodies = function(peers, "peer_controller_and_interpreter_omission_duplication_and_bypass_are_rejected")
+for statement in ["validate(&baseline).unwrap();", "inBODIES{", "String::new()", 'format!("{expected}{expected}")', '"panic!(\\"peerbypass\\")".to_owned()', "replace_once(&mutchanged,name,scope,expected,&replacement);", "validate(&changed).is_err()", "assert_eq!(checked,90);"]:
+    once(peer_bodies, statement, f"90 peer omission/duplication/body controls: {statement}")
+peer_declarations = function(peers, "peer_tokens_and_stored_metadata_cannot_expose_mutable_public_fields")
+for statement in ["validate(&baseline).unwrap();", "inDECLARATIONS{", 'format!("{}pub{}",&declaration[..start],&declaration[start..])', 'replace_once(&mutchanged,name,"",declaration,&altered);', "assert_eq!(checked,10);", '"#[derive(Clone)]"', '"#[derive(Copy)]"', '"usealloc::vec::Vec;"', '"usestd::collections::HashMap;"', "changed.core_peer.insert_str(0,prefix);"]:
+    once(peer_declarations, statement, f"peer private-field/escape control: {statement}")
+require(peer_declarations.count("validate(&changed).is_err()") == 2, "both peer field and ownership-escape matrices reject mutations")
+
+print("Registration/record/peer fidelity inventory: 56 synchronized inputs, 32+4+3+2 tests, 593 registration plus 214 record plus 104 peer negative controls; 87 old names retained")
 PY_REGISTRATION_FIDELITY
 
 require_line_count 1 \

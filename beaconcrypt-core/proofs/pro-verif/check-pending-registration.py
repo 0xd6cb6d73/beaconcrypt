@@ -244,7 +244,7 @@ def check_source(directory=HERE):
     )
     if (
         output
-        != "pubstructRegistrationOutput{agreement:beaconcrypt_core::agreement::ServerAgreement,}"
+        != "pubstructRegistrationOutput{registration:beaconcrypt_core::peer::ConsumedRegistration,}"
     ):
         raise ValueError(
             "opaque authenticated agreement no longer owns the complete pending token"
@@ -256,10 +256,11 @@ def check_source(directory=HERE):
         [
             "let control = self.control;",
             "let plaintext = data.unwrap_or(REGISTRATION_WITNESS);",
-            "let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;",
+            "let RegistrationOutput { registration } = reg_out;",
+            "beaconcrypt_core::peer::begin_completion_lookup(control, self.authentication_pin()?, registration, plaintext,)",
+            "let next_key_id = lookup.request();",
             "registration_response_len(plaintext.len(), next_key_id)?;",
-            "let RegistrationOutput { agreement } = reg_out;",
-            "registration::begin_server_completion(control, &self.authentication_pin()?, availability, agreement, plaintext,)",
+            "lookup.resume(self.known_ids.contains_key(&next_key_id))",
             "crate::ratchet::ratchet_hkdf(pending.request())",
             "crate::ratchet::execute_seal_request(pending.request())",
             "pending.resume(detached_view).ok()?",
@@ -268,7 +269,8 @@ def check_source(directory=HERE):
             "crate::ratchet::execute_write_request(pending.request())",
             "pending.resume(ciphertext.as_deref()).ok()?",
             "crate::wire::encode_response(KexResponse {",
-            "ready.publish(buffer).ok()?.into_parts()",
+            "beaconcrypt_core::peer::begin_peer_insert(control, ready.publish(buffer).ok()?).ok()?;",
+            "finish.finish(inserted).ok()?.into_parts()",
             "self.control = next_control;",
             "Some(RegResponse",
         ],

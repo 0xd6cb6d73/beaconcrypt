@@ -17,13 +17,13 @@ use zeroize::Zeroizing;
 
 use crate::ratchet::KDF_STATE_SIZE;
 #[cfg(any(feature = "server", test))]
-use crate::ratchet::RatchetManager;
+use crate::ratchet::{RatchetKernel, RatchetManager};
 
 #[cfg(test)]
 use crate::ratchet::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, AEAD_TAG_LEN, AeadKey, AeadNonce, COMMITMENT_SIZE,
 	KDF_RATCHET_OUTPUT_LEN, KdfRecvState, KdfSendState, KeyMaterial, MESSAGE_OVERHEAD,
-	RATCHET_MAX_GAP, RatchetKernel, SendChain, build_commitment, decrypt_message_with_ratchet,
+	RATCHET_MAX_GAP, SendChain, build_commitment, decrypt_message_with_ratchet,
 	encrypt_message_with_ratchet, ratchet_hkdf,
 };
 #[cfg(test)]
@@ -454,8 +454,7 @@ pub trait SignaturePk {}
 #[cfg(any(feature = "server", test))]
 pub struct EstablishedRemote<PkType: SignaturePk> {
 	pk: PkType,
-	ratchet: RatchetManager,
-	binding: beaconcrypt_core::session::SessionBinding,
+	peer: beaconcrypt_core::peer::Peer<RatchetManager>,
 }
 
 #[cfg(any(feature = "server", test))]
@@ -467,16 +466,23 @@ impl<PkType: SignaturePk> EstablishedRemote<PkType> {
 	) -> Self {
 		Self {
 			pk,
-			ratchet,
-			binding,
+			peer: beaconcrypt_core::peer::Peer::from_trusted_parts(binding, ratchet),
 		}
 	}
+
+	pub(crate) fn from_peer(pk: PkType, peer: beaconcrypt_core::peer::Peer<RatchetKernel>) -> Self {
+		Self {
+			pk,
+			peer: map_peer_ratchet(peer),
+		}
+	}
+
 	pub(crate) fn mldsa_public_key_hash(&self) -> &[u8; 64] {
-		self.binding.beacon_fingerprint()
+		self.peer.binding().beacon_fingerprint()
 	}
 
 	pub(crate) fn binding(&self) -> &beaconcrypt_core::session::SessionBinding {
-		&self.binding
+		self.peer.binding()
 	}
 
 	pub fn pk(&self) -> &PkType {
@@ -484,12 +490,20 @@ impl<PkType: SignaturePk> EstablishedRemote<PkType> {
 	}
 
 	pub(crate) fn ratchet(&self) -> &RatchetManager {
-		&self.ratchet
+		self.peer.ratchet()
 	}
 
 	pub(crate) fn ratchet_mut(&mut self) -> &mut RatchetManager {
-		&mut self.ratchet
+		self.peer.ratchet_mut()
 	}
+}
+
+#[cfg(any(feature = "server", test))]
+fn map_peer_ratchet(
+	peer: beaconcrypt_core::peer::Peer<RatchetKernel>,
+) -> beaconcrypt_core::peer::Peer<RatchetManager> {
+	let (binding, kernel) = peer.into_parts();
+	beaconcrypt_core::peer::Peer::from_trusted_parts(binding, RatchetManager::from_kernel(kernel))
 }
 
 #[derive(Debug, Eq, PartialEq)]

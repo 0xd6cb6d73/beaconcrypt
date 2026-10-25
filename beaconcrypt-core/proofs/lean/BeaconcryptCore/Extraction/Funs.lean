@@ -1892,6 +1892,430 @@ def commitment.build_commitment_transcript
       (key, nonce, associated_data, tag, sequence1, sender_id1)
   ok { bytes }
 
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::Peer<Ratchet>}::from_trusted_parts]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 26:4-28:5
+    Visibility: public -/
+def peer.Peer.from_trusted_parts
+  {Ratchet : Type} (binding : session.SessionBinding) (ratchet1 : Ratchet) :
+  RustM (peer.Peer Ratchet)
+  := do
+  ok { binding, ratchet := ratchet1 }
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::assigned_key_id]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 160:4-162:5
+    Visibility: public -/
+def session.SessionBinding.impl.assigned_key_id
+  (self : session.SessionBinding) : RustM Std.U64 := do
+  ok self.assigned_key_id
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::Peer<Ratchet>}::key_id]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 30:4-32:5
+    Visibility: public -/
+def peer.Peer.key_id
+  {Ratchet : Type} (self : peer.Peer Ratchet) : RustM Std.U64 := do
+  session.SessionBinding.impl.assigned_key_id self.binding
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::Peer<Ratchet>}::binding]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 34:4-36:5
+    Visibility: public -/
+def peer.Peer.impl.binding
+  {Ratchet : Type} (self : peer.Peer Ratchet) :
+  RustM session.SessionBinding
+  := do
+  ok self.binding
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::Peer<Ratchet>}::ratchet]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 38:4-40:5
+    Visibility: public -/
+def peer.Peer.impl.ratchet
+  {Ratchet : Type} (self : peer.Peer Ratchet) : RustM Ratchet := do
+  ok self.ratchet
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::Peer<Ratchet>}::ratchet_mut]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 42:4-44:5
+    Visibility: public -/
+def peer.Peer.ratchet_mut
+  {Ratchet : Type} (self : peer.Peer Ratchet) :
+  RustM (Ratchet × (Ratchet → peer.Peer Ratchet))
+  := do
+  let back := fun t => { self with ratchet := t }
+  ok (self.ratchet, back)
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::Peer<Ratchet>}::into_parts]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 46:4-48:5
+    Visibility: public -/
+def peer.Peer.into_parts
+  {Ratchet : Type} (self : peer.Peer Ratchet) :
+  RustM (session.SessionBinding × Ratchet)
+  := do
+  ok (self.binding, self.ratchet)
+
+/-- [beaconcrypt_core::peer::begin_registration_lookup]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 57:0-65:1
+    Visibility: public -/
+def peer.begin_registration_lookup
+  (control : pqxdh.ServerState)
+  (authenticated : registration.AuthenticatedInit) :
+  RustM peer.RegistrationLookup
+  := do
+  ok { control, authenticated }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::AuthenticatedInit}::registration_id]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 357:4-359:5
+    Visibility: public -/
+def registration.AuthenticatedInit.registration_id
+  (self : registration.AuthenticatedInit) : RustM pqxdh.RegistrationId := do
+  pqxdh.registration_id self.registration
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::RegistrationLookup}::request]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 68:4-70:5
+    Visibility: public -/
+def peer.RegistrationLookup.request
+  (self : peer.RegistrationLookup) : RustM pqxdh.RegistrationId := do
+  registration.AuthenticatedInit.registration_id self.authenticated
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::RegistrationLookup}::resume]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 72:4-81:5
+    Visibility: public -/
+def peer.RegistrationLookup.resume
+  (self : peer.RegistrationLookup) (consumed : Bool) :
+  RustM agreement.AgreementEffect
+  := do
+  if consumed
+  then ok (agreement.AgreementEffect.Rejected core.option.Option.None)
+  else
+    agreement.begin_server_agreement self.control
+      pqxdh.RegistrationStatus.Fresh self.authenticated
+
+/-- [beaconcrypt_core::peer::begin_registration_insert]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 89:0-91:1
+    Visibility: public -/
+def peer.begin_registration_insert
+  (agreement1 : agreement.ServerAgreement) :
+  RustM peer.RegistrationInsert
+  := do
+  ok { agreement := agreement1 }
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::RegistrationInsert}::request]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 94:4-96:5
+    Visibility: public -/
+def peer.RegistrationInsert.request
+  (self : peer.RegistrationInsert) : RustM pqxdh.RegistrationId := do
+  agreement.ServerAgreement.registration_id self.agreement
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::RegistrationInsert}::resume]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 99:4-106:5
+    Visibility: public -/
+def peer.RegistrationInsert.resume
+  (self : peer.RegistrationInsert) (inserted : Bool) :
+  RustM (core.option.Option peer.ConsumedRegistration)
+  := do
+  if inserted
+  then ok (core.option.Option.Some { agreement := self.agreement })
+  else ok core.option.Option.None
+
+/-- [beaconcrypt_core::pqxdh::server_next_key_id]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 845:0-851:1
+    Visibility: public -/
+def pqxdh.server_next_key_id
+  (state : pqxdh.ServerState) :
+  RustM (core.result.Result Std.U64 pqxdh.RegistrationError)
+  := do
+  if state.last_key_id = core.num.U64.MAX
+  then ok (core.result.Result.Err pqxdh.RegistrationError.KeyIdExhausted)
+  else let i ← state.last_key_id + 1#u64
+       ok (core.result.Result.Ok i)
+
+/-- [beaconcrypt_core::peer::begin_completion_lookup]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 123:0-140:1
+    Visibility: public -/
+def peer.begin_completion_lookup
+  (control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin)
+  (registration1 : peer.ConsumedRegistration) (application : Slice Std.U8) :
+  RustM (core.result.Result peer.CompletionLookup pqxdh.ServerState)
+  := do
+  let r ← pqxdh.server_next_key_id control
+  match r with
+  | core.result.Result.Ok key_id =>
+    ok (core.result.Result.Ok
+      { control, pin, registration := registration1, application, key_id })
+  | core.result.Result.Err _ => ok (core.result.Result.Err control)
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::CompletionLookup<'a>}::request]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 143:4-145:5
+    Visibility: public -/
+def peer.CompletionLookup.request
+  (self : peer.CompletionLookup) : RustM Std.U64 := do
+  ok self.key_id
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::matches_server]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 99:4-104:5
+    Visibility: public -/
+def session.RegistrationBinding.matches_server
+  (self : session.RegistrationBinding)
+  (current : session.ServerAuthenticationPin) :
+  RustM Bool
+  := do
+  if self.server_pin.binding.identity_key_id = current.binding.identity_key_id
+  then
+    let b ←
+      core.Array.Insts.CoreCmpPartialEqArray.eq
+        core.U8.Insts.CoreCmpPartialEqU8
+        self.server_pin.binding.identity_public_key
+        current.binding.identity_public_key
+    if b
+    then
+      let b1 ←
+        core.Array.Insts.CoreCmpPartialEqArray.eq
+          core.U8.Insts.CoreCmpPartialEqU8 self.server_pin.public_key
+          current.public_key
+      if b1
+      then
+        core.Array.Insts.CoreCmpPartialEqArray.eq
+          core.U8.Insts.CoreCmpPartialEqU8 self.server_pin.fingerprint
+          current.fingerprint
+      else ok false
+    else ok false
+  else ok false
+
+/-- [beaconcrypt_core::pqxdh::server_prepare_commit]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 854:0-889:1
+    Visibility: public -/
+def pqxdh.server_prepare_commit
+  (state : pqxdh.ServerState) (pending : pqxdh.PendingServerRegistration)
+  (current_server_binding : pqxdh.ServerBinding)
+  (key_id_availability : pqxdh.KeyIdAvailability) :
+  RustM (core.result.Result pqxdh.ServerRegistrationCandidate
+    pqxdh.RegistrationError)
+  := do
+  if pending.server_binding.identity_key_id =
+    current_server_binding.identity_key_id
+  then
+    let b ←
+      core.Array.Insts.CoreCmpPartialEqArray.eq
+        core.U8.Insts.CoreCmpPartialEqU8
+        pending.server_binding.identity_public_key
+        current_server_binding.identity_public_key
+    if b
+    then
+      let r ← pqxdh.server_next_key_id state
+      match r with
+      | core.result.Result.Ok value =>
+        let b1 ←
+          match key_id_availability with
+          | pqxdh.KeyIdAvailability.Available => ok false
+          | pqxdh.KeyIdAvailability.Occupied => ok true
+        if b1
+        then ok (core.result.Result.Err pqxdh.RegistrationError.KeyIdCollision)
+        else
+          let a ←
+            pqxdh.build_associated_data
+              current_server_binding.identity_public_key
+              pending.beacon_identity_public_key
+          ok (core.result.Result.Ok
+            {
+              previous_state := state,
+              next_state := { last_key_id := value },
+              key_id := value,
+              beacon_identity_public_key := pending.beacon_identity_public_key,
+              server_identity_public_key :=
+                current_server_binding.identity_public_key,
+              server_identity_key_id := current_server_binding.identity_key_id,
+              ephemeral_public_key := pending.ephemeral_public_key,
+              kem_ciphertext := pending.kem_ciphertext,
+              associated_data := a
+            })
+      | core.result.Result.Err err => ok (core.result.Result.Err err)
+    else ok (core.result.Result.Err pqxdh.RegistrationError.IdentityMismatch)
+  else ok (core.result.Result.Err pqxdh.RegistrationError.IdentityMismatch)
+
+/-- [beaconcrypt_core::ratchet::RATCHET_CHAIN_SIZE]
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 53:0-53:41
+    Visibility: public -/
+@[global_simps, irreducible]
+def ratchet.RATCHET_CHAIN_SIZE : Std.Usize := 32#usize
+
+/-- [beaconcrypt_core::pqxdh::RATCHET_CHAIN_SIZE]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 28:0-28:73
+    Visibility: public -/
+@[global_simps, irreducible]
+def pqxdh.RATCHET_CHAIN_SIZE : Std.Usize := ratchet.RATCHET_CHAIN_SIZE
+
+/-- [beaconcrypt_core::pqxdh::SERVER_RATCHETS]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 439:0-442:2 -/
+@[global_simps, irreducible]
+def pqxdh.SERVER_RATCHETS : RustM pqxdh.RatchetInitialization := do
+  let i ← lift (UScalar.cast .U8 pqxdh.RATCHET_CHAIN_SIZE)
+  ok { send_offset := 0#u8, receive_offset := i }
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerRegistrationCandidate}::ratchet_initialization]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 828:4-830:5
+    Visibility: public -/
+def pqxdh.ServerRegistrationCandidate.ratchet_initialization
+  (self : pqxdh.ServerRegistrationCandidate) :
+  RustM pqxdh.RatchetInitialization
+  := do
+  pqxdh.SERVER_RATCHETS
+
+/-- [beaconcrypt_core::ratchet::{beaconcrypt_core::ratchet::SymmetricRatchetKdfRequest}::new]:
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 168:4-173:5 -/
+def ratchet.SymmetricRatchetKdfRequest.new
+  (input : Array Std.U8 32#usize) :
+  RustM ratchet.SymmetricRatchetKdfRequest
+  := do
+  ok { input, info := ratchet.SYM_RATCHET_INFO }
+
+/-- [beaconcrypt_core::pqxdh::concrete::start_initial_ratchet_kdf]:
+    Source: 'beaconcrypt-core/src/pqxdh/concrete.rs', lines 64:0-72:1
+    Visibility: public -/
+def pqxdh.concrete.start_initial_ratchet_kdf
+  (root : Array Std.U8 32#usize) (initialization : pqxdh.RatchetInitialization)
+  :
+  RustM pqxdh.concrete.InitialRatchetKdfPending
+  := do
+  let srkr ← ratchet.SymmetricRatchetKdfRequest.new root
+  ok { request := srkr, initialization }
+
+/-- [beaconcrypt_core::pqxdh::concrete::start_server_candidate_ratchet_kdf]:
+    Source: 'beaconcrypt-core/src/pqxdh/concrete.rs', lines 110:0-115:1
+    Visibility: public -/
+def pqxdh.concrete.start_server_candidate_ratchet_kdf
+  (candidate : pqxdh.ServerRegistrationCandidate)
+  (root : Array Std.U8 32#usize) :
+  RustM pqxdh.concrete.InitialRatchetKdfPending
+  := do
+  let ri ← pqxdh.ServerRegistrationCandidate.ratchet_initialization candidate
+  pqxdh.concrete.start_initial_ratchet_kdf root ri
+
+/-- [beaconcrypt_core::registration::begin_server_completion]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1011:0-1039:1
+    Visibility: public -/
+def registration.begin_server_completion
+  (control : pqxdh.ServerState) (current_pin : session.ServerAuthenticationPin)
+  (availability : pqxdh.KeyIdAvailability)
+  (agreement1 : agreement.ServerAgreement) (application : Slice Std.U8) :
+  RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState)
+  := do
+  let b ← core.slice.Slice.is_empty application
+  if b
+  then ok (core.result.Result.Err control)
+  else
+    let b1 ←
+      session.RegistrationBinding.matches_server agreement1.binding current_pin
+    if b1
+    then
+      let sb ← session.ServerAuthenticationPin.impl.binding current_pin
+      let r ←
+        pqxdh.server_prepare_commit control agreement1.pending sb availability
+      match r with
+      | core.result.Result.Ok candidate =>
+        let a ← ratchet.RatchetChain.as_bytes agreement1.root
+        let pending ←
+          pqxdh.concrete.start_server_candidate_ratchet_kdf candidate a
+        ok (core.result.Result.Ok
+          { candidate, binding := agreement1.binding, application, pending })
+      | core.result.Result.Err _ => ok (core.result.Result.Err control)
+    else ok (core.result.Result.Err control)
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::CompletionLookup<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 148:4-161:5
+    Visibility: public -/
+def peer.CompletionLookup.resume
+  (self : peer.CompletionLookup) (occupied : Bool) :
+  RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState)
+  := do
+  let availability ←
+    if occupied
+    then ok pqxdh.KeyIdAvailability.Occupied
+    else ok pqxdh.KeyIdAvailability.Available
+  registration.begin_server_completion self.control self.pin availability
+    self.registration.agreement self.application
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::PublishedServerResponse<Encoded>}::into_parts]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1348:4-1357:5
+    Visibility: public -/
+def registration.PublishedServerResponse.into_parts
+  {Encoded : Type} (self : registration.PublishedServerResponse Encoded) :
+  RustM (pqxdh.ServerState × session.SessionBinding ×
+    ratchet.concrete.ConcreteRatchetKernel × Encoded)
+  := do
+  ok (self.control, self.binding, self.kernel, self.encoded)
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerState}::last_key_id]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 712:4-714:5
+    Visibility: public -/
+def pqxdh.ServerState.impl.last_key_id
+  (self : pqxdh.ServerState) : RustM Std.U64 := do
+  ok self.last_key_id
+
+/-- [beaconcrypt_core::peer::begin_peer_insert]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 172:0-190:1
+    Visibility: public -/
+def peer.begin_peer_insert
+  {Encoded : Type} (control : pqxdh.ServerState)
+  (published : registration.PublishedServerResponse Encoded) :
+  RustM (core.result.Result (peer.PeerInsert Encoded) pqxdh.ServerState)
+  := do
+  let r ← pqxdh.server_next_key_id control
+  match r with
+  | core.result.Result.Ok key_id =>
+    let (next, binding, kernel, encoded) ←
+      registration.PublishedServerResponse.into_parts published
+    let i ← pqxdh.ServerState.impl.last_key_id next
+    if i != key_id
+    then ok (core.result.Result.Err control)
+    else
+      let p ← peer.Peer.from_trusted_parts binding kernel
+      ok (core.result.Result.Ok
+        { previous := control, next, peer := p, encoded })
+  | core.result.Result.Err _ => ok (core.result.Result.Err control)
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::PeerInsert<Encoded>}::request]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 193:4-195:5
+    Visibility: public -/
+def peer.PeerInsert.request
+  {Encoded : Type} (self : peer.PeerInsert Encoded) : RustM Std.U64 := do
+  peer.Peer.key_id self.peer
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::PeerInsert<Encoded>}::into_parts]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 198:4-209:5
+    Visibility: public -/
+def peer.PeerInsert.into_parts
+  {Encoded : Type} (self : peer.PeerInsert Encoded) :
+  RustM ((peer.Peer ratchet.concrete.ConcreteRatchetKernel) ×
+    (peer.PublicationFinish Encoded))
+  := do
+  let key_id ← peer.Peer.key_id self.peer
+  ok (self.peer,
+    {
+      previous := self.previous,
+      next := self.next,
+      key_id,
+      encoded := self.encoded
+    })
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::PublicationFinish<Encoded>}::finish]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 221:4-230:5
+    Visibility: public -/
+def peer.PublicationFinish.finish
+  {Encoded : Type} (self : peer.PublicationFinish Encoded) (inserted : Bool) :
+  RustM (core.result.Result (peer.PublishedPeer Encoded) pqxdh.ServerState)
+  := do
+  if inserted
+  then
+    ok (core.result.Result.Ok
+      { control := self.next, key_id := self.key_id, encoded := self.encoded })
+  else ok (core.result.Result.Err self.previous)
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::PublishedPeer<Encoded>}::into_parts]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 240:4-242:5
+    Visibility: public -/
+def peer.PublishedPeer.into_parts
+  {Encoded : Type} (self : peer.PublishedPeer Encoded) :
+  RustM (pqxdh.ServerState × Std.U64 × Encoded)
+  := do
+  ok (self.control, self.key_id, self.encoded)
+
 /-- [beaconcrypt_core::pqxdh::concrete::{beaconcrypt_core::pqxdh::concrete::InitialRatchetKdfPending}::request]:
     Source: 'beaconcrypt-core/src/pqxdh/concrete.rs', lines 33:4-35:5
     Visibility: public -/
@@ -1918,25 +2342,6 @@ def pqxdh.concrete.InitialRatchetKdfResponse.as_bytes
   RustM (Array Std.U8 64#usize)
   := do
   ok self.bytes
-
-/-- [beaconcrypt_core::ratchet::{beaconcrypt_core::ratchet::SymmetricRatchetKdfRequest}::new]:
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 168:4-173:5 -/
-def ratchet.SymmetricRatchetKdfRequest.new
-  (input : Array Std.U8 32#usize) :
-  RustM ratchet.SymmetricRatchetKdfRequest
-  := do
-  ok { input, info := ratchet.SYM_RATCHET_INFO }
-
-/-- [beaconcrypt_core::pqxdh::concrete::start_initial_ratchet_kdf]:
-    Source: 'beaconcrypt-core/src/pqxdh/concrete.rs', lines 64:0-72:1
-    Visibility: public -/
-def pqxdh.concrete.start_initial_ratchet_kdf
-  (root : Array Std.U8 32#usize) (initialization : pqxdh.RatchetInitialization)
-  :
-  RustM pqxdh.concrete.InitialRatchetKdfPending
-  := do
-  let srkr ← ratchet.SymmetricRatchetKdfRequest.new root
-  ok { request := srkr, initialization }
 
 /-- [beaconcrypt_core::ratchet::refined::empty_material_slots]:
     Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 38:0-48:1 -/
@@ -2027,18 +2432,6 @@ def ratchet.concrete.ConcreteRatchetKernel.new
   := do
   ratchet.concrete.ConcreteRatchetKernel.from_counters 0#u64 0#u64 send_chain
     receive_chain
-
-/-- [beaconcrypt_core::ratchet::RATCHET_CHAIN_SIZE]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 53:0-53:41
-    Visibility: public -/
-@[global_simps, irreducible]
-def ratchet.RATCHET_CHAIN_SIZE : Std.Usize := 32#usize
-
-/-- [beaconcrypt_core::pqxdh::RATCHET_CHAIN_SIZE]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 28:0-28:73
-    Visibility: public -/
-@[global_simps, irreducible]
-def pqxdh.RATCHET_CHAIN_SIZE : Std.Usize := ratchet.RATCHET_CHAIN_SIZE
 
 /-- [beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::closure#1<'_0>}::call_mut]:
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 482:37-482:71 -/
@@ -2202,13 +2595,6 @@ def pqxdh.concrete.start_beacon_ratchet_kdf
   let ri ← pqxdh.BEACON_RATCHETS
   pqxdh.concrete.start_initial_ratchet_kdf root ri
 
-/-- [beaconcrypt_core::pqxdh::SERVER_RATCHETS]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 439:0-442:2 -/
-@[global_simps, irreducible]
-def pqxdh.SERVER_RATCHETS : RustM pqxdh.RatchetInitialization := do
-  let i ← lift (UScalar.cast .U8 pqxdh.RATCHET_CHAIN_SIZE)
-  ok { send_offset := 0#u8, receive_offset := i }
-
 /-- [beaconcrypt_core::pqxdh::concrete::start_server_ratchet_kdf]:
     Source: 'beaconcrypt-core/src/pqxdh/concrete.rs', lines 95:0-97:1
     Visibility: public -/
@@ -2237,26 +2623,6 @@ def pqxdh.concrete.start_beacon_candidate_ratchet_kdf
   RustM pqxdh.concrete.InitialRatchetKdfPending
   := do
   let ri ← pqxdh.BeaconRegistrationCandidate.ratchet_initialization candidate
-  pqxdh.concrete.start_initial_ratchet_kdf root ri
-
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerRegistrationCandidate}::ratchet_initialization]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 828:4-830:5
-    Visibility: public -/
-def pqxdh.ServerRegistrationCandidate.ratchet_initialization
-  (self : pqxdh.ServerRegistrationCandidate) :
-  RustM pqxdh.RatchetInitialization
-  := do
-  pqxdh.SERVER_RATCHETS
-
-/-- [beaconcrypt_core::pqxdh::concrete::start_server_candidate_ratchet_kdf]:
-    Source: 'beaconcrypt-core/src/pqxdh/concrete.rs', lines 110:0-115:1
-    Visibility: public -/
-def pqxdh.concrete.start_server_candidate_ratchet_kdf
-  (candidate : pqxdh.ServerRegistrationCandidate)
-  (root : Array Std.U8 32#usize) :
-  RustM pqxdh.concrete.InitialRatchetKdfPending
-  := do
-  let ri ← pqxdh.ServerRegistrationCandidate.ratchet_initialization candidate
   pqxdh.concrete.start_initial_ratchet_kdf root ri
 
 /-- [beaconcrypt_core::pqxdh::X25519_PUBLIC_KEY_SIZE]
@@ -3518,13 +3884,6 @@ def pqxdh.ServerState.new
   (last_key_id : Std.U64) : RustM pqxdh.ServerState := do
   ok { last_key_id }
 
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerState}::last_key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 712:4-714:5
-    Visibility: public -/
-def pqxdh.ServerState.impl.last_key_id
-  (self : pqxdh.ServerState) : RustM Std.U64 := do
-  ok self.last_key_id
-
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::ServerCoins}::clone]:
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 718:9-718:14
     Visibility: public -/
@@ -3651,69 +4010,6 @@ def pqxdh.KeyIdAvailability.Insts.CoreMarkerCopy : core.marker.Copy
   pqxdh.KeyIdAvailability := {
   cloneCloneInst := pqxdh.KeyIdAvailability.Insts.CoreCloneClone
 }
-
-/-- [beaconcrypt_core::pqxdh::server_next_key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 845:0-851:1
-    Visibility: public -/
-def pqxdh.server_next_key_id
-  (state : pqxdh.ServerState) :
-  RustM (core.result.Result Std.U64 pqxdh.RegistrationError)
-  := do
-  if state.last_key_id = core.num.U64.MAX
-  then ok (core.result.Result.Err pqxdh.RegistrationError.KeyIdExhausted)
-  else let i ← state.last_key_id + 1#u64
-       ok (core.result.Result.Ok i)
-
-/-- [beaconcrypt_core::pqxdh::server_prepare_commit]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 854:0-889:1
-    Visibility: public -/
-def pqxdh.server_prepare_commit
-  (state : pqxdh.ServerState) (pending : pqxdh.PendingServerRegistration)
-  (current_server_binding : pqxdh.ServerBinding)
-  (key_id_availability : pqxdh.KeyIdAvailability) :
-  RustM (core.result.Result pqxdh.ServerRegistrationCandidate
-    pqxdh.RegistrationError)
-  := do
-  if pending.server_binding.identity_key_id =
-    current_server_binding.identity_key_id
-  then
-    let b ←
-      core.Array.Insts.CoreCmpPartialEqArray.eq
-        core.U8.Insts.CoreCmpPartialEqU8
-        pending.server_binding.identity_public_key
-        current_server_binding.identity_public_key
-    if b
-    then
-      let r ← pqxdh.server_next_key_id state
-      match r with
-      | core.result.Result.Ok value =>
-        let b1 ←
-          match key_id_availability with
-          | pqxdh.KeyIdAvailability.Available => ok false
-          | pqxdh.KeyIdAvailability.Occupied => ok true
-        if b1
-        then ok (core.result.Result.Err pqxdh.RegistrationError.KeyIdCollision)
-        else
-          let a ←
-            pqxdh.build_associated_data
-              current_server_binding.identity_public_key
-              pending.beacon_identity_public_key
-          ok (core.result.Result.Ok
-            {
-              previous_state := state,
-              next_state := { last_key_id := value },
-              key_id := value,
-              beacon_identity_public_key := pending.beacon_identity_public_key,
-              server_identity_public_key :=
-                current_server_binding.identity_public_key,
-              server_identity_key_id := current_server_binding.identity_key_id,
-              ephemeral_public_key := pending.ephemeral_public_key,
-              kem_ciphertext := pending.kem_ciphertext,
-              associated_data := a
-            })
-      | core.result.Result.Err err => ok (core.result.Result.Err err)
-    else ok (core.result.Result.Err pqxdh.RegistrationError.IdentityMismatch)
-  else ok (core.result.Result.Err pqxdh.RegistrationError.IdentityMismatch)
 
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::EstablishedPeer}::clone]:
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 891:9-891:14
@@ -6000,13 +6296,13 @@ def ratchet.control.PeerRatchetState.Insts.CoreMarkerCopy : core.marker.Copy
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 536:0-549:1
     Visibility: public -/
 def ratchet.control.replace_ratchet_for_peer
-  (requested_peer : Std.U64) (peer : ratchet.control.PeerRatchetState)
+  (requested_peer : Std.U64) (peer1 : ratchet.control.PeerRatchetState)
   (replacement : ratchet.control.RatchetState) :
   RustM ratchet.control.PeerRatchetState
   := do
-  if requested_peer = peer.peer_id
-  then ok { peer with ratchet := replacement }
-  else ok peer
+  if requested_peer = peer1.peer_id
+  then ok { peer1 with ratchet := replacement }
+  else ok peer1
 
 /-- [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::PeerSendAdvance}::clone]:
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 552:9-552:14
@@ -6038,19 +6334,19 @@ def ratchet.control.PeerSendAdvance.Insts.CoreMarkerCopy : core.marker.Copy
 /-- [beaconcrypt_core::ratchet::control::advance_send_for_peer]:
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 565:0-583:1 -/
 def ratchet.control.advance_send_for_peer
-  (requested_peer : Std.U64) (peer : ratchet.control.PeerRatchetState) :
+  (requested_peer : Std.U64) (peer1 : ratchet.control.PeerRatchetState) :
   RustM ratchet.control.PeerSendAdvance
   := do
-  if requested_peer = peer.peer_id
+  if requested_peer = peer1.peer_id
   then
-    let advanced ← ratchet.control.advance_send peer.ratchet
+    let advanced ← ratchet.control.advance_send peer1.ratchet
     let prs ←
-      ratchet.control.replace_ratchet_for_peer requested_peer peer
+      ratchet.control.replace_ratchet_for_peer requested_peer peer1
         advanced.state
     ok { peer := prs, sequence := advanced.sequence, key := advanced.key }
   else
     let sk ← ratchet.control.SendKey.unavailable
-    ok { peer, sequence := core.option.Option.None, key := sk }
+    ok { peer := peer1, sequence := core.option.Option.None, key := sk }
 
 /-- [beaconcrypt_core::ratchet::refined::{beaconcrypt_core::ratchet::refined::RefinedRatchet<SendChain, ReceiveChain, Material>}::new]:
     Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 111:4-113:5
@@ -7221,13 +7517,6 @@ def registration.InitBeaconFingerprint.resume
     ok (registration.InitAuthentication.Accepted
       { registration := self.registration, binding })
 
-/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::AuthenticatedInit}::registration_id]:
-    Source: 'beaconcrypt-core/src/registration.rs', lines 357:4-359:5
-    Visibility: public -/
-def registration.AuthenticatedInit.registration_id
-  (self : registration.AuthenticatedInit) : RustM pqxdh.RegistrationId := do
-  pqxdh.registration_id self.registration
-
 /-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ResponsePacket<'a>}::from_slices]:
     Source: 'beaconcrypt-core/src/registration.rs', lines 374:4-404:5
     Visibility: public -/
@@ -7922,66 +8211,6 @@ def registration.CompletedBeacon.into_parts
   := do
   ok (self.control, self.binding, self.kernel, self.application)
 
-/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::matches_server]:
-    Source: 'beaconcrypt-core/src/session.rs', lines 99:4-104:5
-    Visibility: public -/
-def session.RegistrationBinding.matches_server
-  (self : session.RegistrationBinding)
-  (current : session.ServerAuthenticationPin) :
-  RustM Bool
-  := do
-  if self.server_pin.binding.identity_key_id = current.binding.identity_key_id
-  then
-    let b ←
-      core.Array.Insts.CoreCmpPartialEqArray.eq
-        core.U8.Insts.CoreCmpPartialEqU8
-        self.server_pin.binding.identity_public_key
-        current.binding.identity_public_key
-    if b
-    then
-      let b1 ←
-        core.Array.Insts.CoreCmpPartialEqArray.eq
-          core.U8.Insts.CoreCmpPartialEqU8 self.server_pin.public_key
-          current.public_key
-      if b1
-      then
-        core.Array.Insts.CoreCmpPartialEqArray.eq
-          core.U8.Insts.CoreCmpPartialEqU8 self.server_pin.fingerprint
-          current.fingerprint
-      else ok false
-    else ok false
-  else ok false
-
-/-- [beaconcrypt_core::registration::begin_server_completion]:
-    Source: 'beaconcrypt-core/src/registration.rs', lines 1011:0-1039:1
-    Visibility: public -/
-def registration.begin_server_completion
-  (control : pqxdh.ServerState) (current_pin : session.ServerAuthenticationPin)
-  (availability : pqxdh.KeyIdAvailability)
-  (agreement1 : agreement.ServerAgreement) (application : Slice Std.U8) :
-  RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState)
-  := do
-  let b ← core.slice.Slice.is_empty application
-  if b
-  then ok (core.result.Result.Err control)
-  else
-    let b1 ←
-      session.RegistrationBinding.matches_server agreement1.binding current_pin
-    if b1
-    then
-      let sb ← session.ServerAuthenticationPin.impl.binding current_pin
-      let r ←
-        pqxdh.server_prepare_commit control agreement1.pending sb availability
-      match r with
-      | core.result.Result.Ok candidate =>
-        let a ← ratchet.RatchetChain.as_bytes agreement1.root
-        let pending ←
-          pqxdh.concrete.start_server_candidate_ratchet_kdf candidate a
-        ok (core.result.Result.Ok
-          { candidate, binding := agreement1.binding, application, pending })
-      | core.result.Result.Err _ => ok (core.result.Result.Err control)
-    else ok (core.result.Result.Err control)
-
 /-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerInitialKdf<'a>}::request]:
     Source: 'beaconcrypt-core/src/registration.rs', lines 1048:4-1050:5
     Visibility: public -/
@@ -8310,16 +8539,6 @@ def registration.ServerResponseReady.publish
     ok (core.result.Result.Ok
       { control, binding, kernel := self.kernel, encoded := encoded1 })
 
-/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::PublishedServerResponse<Encoded>}::into_parts]:
-    Source: 'beaconcrypt-core/src/registration.rs', lines 1348:4-1357:5
-    Visibility: public -/
-def registration.PublishedServerResponse.into_parts
-  {Encoded : Type} (self : registration.PublishedServerResponse Encoded) :
-  RustM (pqxdh.ServerState × session.SessionBinding ×
-    ratchet.concrete.ConcreteRatchetKernel × Encoded)
-  := do
-  ok (self.control, self.binding, self.kernel, self.encoded)
-
 /-- [beaconcrypt_core::session::{impl core::clone::Clone for beaconcrypt_core::session::ServerAuthenticationPin}::clone]:
     Source: 'beaconcrypt-core/src/session.rs', lines 15:9-15:14
     Visibility: public -/
@@ -8413,13 +8632,6 @@ def session.SessionBinding.from_trusted_metadata
 def session.SessionBinding.impl.server_binding
   (self : session.SessionBinding) : RustM pqxdh.ServerBinding := do
   ok self.server_binding
-
-/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::assigned_key_id]:
-    Source: 'beaconcrypt-core/src/session.rs', lines 160:4-162:5
-    Visibility: public -/
-def session.SessionBinding.impl.assigned_key_id
-  (self : session.SessionBinding) : RustM Std.U64 := do
-  ok self.assigned_key_id
 
 /-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::beacon_identity_public_key]:
     Source: 'beaconcrypt-core/src/session.rs', lines 164:4-166:5
