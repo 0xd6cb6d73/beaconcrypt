@@ -1,0 +1,109 @@
+{
+  "started": "2026-10-25T10:02:21.016114+00:00",
+  "finished": "2026-10-25T10:10:19.919348+00:00",
+  "fresh": true,
+  "iterate": false,
+  "copy_target": false,
+  "lease_mib": 3072,
+  "commands": [
+    {
+      "command": [
+        "bash",
+        "scripts/test-wasm.sh"
+      ],
+      "start": "2026-10-25T10:02:21.840363+00:00",
+      "finish": "2026-10-25T10:02:38.620375+00:00",
+      "exit": 0,
+      "disk_before": "CLEAN 63.8 501.9"
+    },
+    {
+      "command": [
+        "cargo",
+        "mutants",
+        "-p",
+        "beaconcrypt-wasm",
+        "--test-workspace=false",
+        "--config",
+        ".cargo/mutants-wasm.toml",
+        "--list",
+        "--json"
+      ],
+      "start": "2026-10-25T10:02:38.674423+00:00",
+      "finish": "2026-10-25T10:02:38.878333+00:00",
+      "exit": 0,
+      "disk_before": "CLEAN 63.4 501.9"
+    },
+    {
+      "command": [
+        "cargo",
+        "mutants",
+        "-p",
+        "beaconcrypt-wasm",
+        "--test-workspace=false",
+        "--no-config",
+        "--list",
+        "--json"
+      ],
+      "start": "2026-10-25T10:02:38.914695+00:00",
+      "finish": "2026-10-25T10:02:39.198514+00:00",
+      "exit": 0,
+      "disk_before": "CLEAN 63.5 501.9"
+    },
+    {
+      "command": [
+        "go",
+        "build",
+        "-mod=readonly",
+        "-buildvcs=false",
+        "-o",
+        "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/wasm-audit/runner",
+        "./scripts/wasm-test-runner"
+      ],
+      "start": "2026-10-25T10:02:39.253055+00:00",
+      "finish": "2026-10-25T10:02:40.907560+00:00",
+      "exit": 0,
+      "disk_before": "CLEAN 63.5 501.9"
+    },
+    {
+      "command": [
+        "cargo",
+        "mutants",
+        "-p",
+        "beaconcrypt-wasm",
+        "--test-workspace=false",
+        "--config",
+        ".cargo/mutants-wasm.toml",
+        "--copy-target=false",
+        "--cargo-arg=--target=wasm32-wasip1",
+        "--baseline=run",
+        "--cap-lints=false",
+        "--jobs=1",
+        "--jobserver-tasks=1",
+        "--timeout=300",
+        "--build-timeout=900",
+        "--output",
+        "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/wasm-audit/mutations"
+      ],
+      "start": "2026-10-25T10:02:40.939429+00:00",
+      "finish": "2026-10-25T10:10:19.852683+00:00",
+      "exit": 0,
+      "disk_before": "CLEAN 63.6 501.9"
+    }
+  ],
+  "regular_wasi_tests_passed": 27,
+  "isolated_allocation_probe_passed": 1,
+  "complete_catalog": 162,
+  "selected_catalog": 159,
+  "documented_equivalence_exclusions": 3,
+  "mutation_counts": {
+    "total_mutants": 159,
+    "caught": 147,
+    "unviable": 12,
+    "missed": 0,
+    "timeout": 0
+  },
+  "mutations_start": "2026-10-25T10:02:41.036107024Z",
+  "mutations_end": "2026-10-25T10:10:19.846918237Z",
+  "source_drift": [],
+  "unviable_compiler_errors_reviewed": true
+}

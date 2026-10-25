@@ -1,0 +1,205 @@
+{
+  "passed": 40,
+  "cases": [
+    {
+      "name": "reviewed_header_0",
+      "expected": "source_compile_error",
+      "actual": "source_compile_error"
+    },
+    {
+      "name": "missing_location_0",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "wrong_exit_0",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "test_failure_0",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "extra_unknown_error_0",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "disk_overrides_source_0",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "memory_overrides_source_0",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "compiler_ice_overrides_source_0",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "compiler_panic_overrides_source_0",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "build_signal_overrides_source_0",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "linker_overrides_source_0",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "network_overrides_source_0",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "reviewed_header_1",
+      "expected": "source_compile_error",
+      "actual": "source_compile_error"
+    },
+    {
+      "name": "missing_location_1",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "wrong_exit_1",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "test_failure_1",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "extra_unknown_error_1",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "disk_overrides_source_1",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "memory_overrides_source_1",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "compiler_ice_overrides_source_1",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "compiler_panic_overrides_source_1",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "build_signal_overrides_source_1",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "linker_overrides_source_1",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "network_overrides_source_1",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "reviewed_header_2",
+      "expected": "source_compile_error",
+      "actual": "source_compile_error"
+    },
+    {
+      "name": "missing_location_2",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "wrong_exit_2",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "test_failure_2",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "extra_unknown_error_2",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "disk_overrides_source_2",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "memory_overrides_source_2",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "compiler_ice_overrides_source_2",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "compiler_panic_overrides_source_2",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "build_signal_overrides_source_2",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "linker_overrides_source_2",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "network_overrides_source_2",
+      "expected": "infrastructure_failure",
+      "actual": "infrastructure_failure"
+    },
+    {
+      "name": "nonmatching_header_0",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "nonmatching_header_1",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "nonmatching_header_2",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    },
+    {
+      "name": "nonmatching_header_3",
+      "expected": "unclassified_requires_review",
+      "actual": "unclassified_requires_review"
+    }
+  ]
+}

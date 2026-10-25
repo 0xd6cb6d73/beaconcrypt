@@ -1,0 +1,114 @@
+{
+  "started": "2026-10-25T12:23:09.487541+00:00",
+  "source_commit": "6a89a4c7624453c471c3f148a7a8b4e24a7ee6dd",
+  "scope": "Formatting checks and summarizer correctness/legacy compatibility only. No compilation or benchmark collection.",
+  "environment": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "BLACK_NUM_WORKERS": "1"
+  },
+  "commands": [
+    {
+      "argv": [
+        "/home/user/worktrees/beaconcrypt-row-persistence/.venv/bin/python",
+        "-m",
+        "black",
+        "--check",
+        "--target-version",
+        "py314",
+        "beaconcrypt.pyi",
+        "tests/test_row_cached.py",
+        "tests/test_row_persistence.py",
+        "tests/test_row_transactions.py",
+        "beaconcrypt/examples/persistence_bench/summarize.py",
+        "beaconcrypt/examples/persistence_bench/test_summarize.py"
+      ],
+      "cwd": "/home/user/worktrees/beaconcrypt-row-persistence",
+      "started": "2026-10-25T12:23:09.489709+00:00",
+      "finished": "2026-10-25T12:23:09.703039+00:00",
+      "exit": 0,
+      "require_empty_output": false,
+      "output_sha256": "7657c5ec367da2c8d4deead1b5f1f8eca9c1b89120ad13df7f855ca4005696b6",
+      "passed": true
+    },
+    {
+      "argv": [
+        "gofmt",
+        "-l",
+        "persistence_cgo.go",
+        "persistence_types.go",
+        "row_cached_cgo_test.go",
+        "row_persistence_cgo.go",
+        "row_persistence_cgo_test.go",
+        "row_persistence_types.go",
+        "row_persistence_wazero.go",
+        "row_persistence_wazero_test.go",
+        "row_session_cgo.go",
+        "row_session_cgo_test.go"
+      ],
+      "cwd": "/home/user/worktrees/beaconcrypt-row-persistence",
+      "started": "2026-10-25T12:23:09.707810+00:00",
+      "finished": "2026-10-25T12:23:09.721886+00:00",
+      "exit": 0,
+      "require_empty_output": true,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "passed": true
+    },
+    {
+      "argv": [
+        "/home/user/worktrees/beaconcrypt-row-persistence/.venv/bin/python",
+        "-B",
+        "-m",
+        "unittest",
+        "-v",
+        "test_summarize"
+      ],
+      "cwd": "/home/user/worktrees/beaconcrypt-row-persistence/beaconcrypt/examples/persistence_bench",
+      "started": "2026-10-25T12:23:09.721917+00:00",
+      "finished": "2026-10-25T12:23:09.797392+00:00",
+      "exit": 0,
+      "require_empty_output": false,
+      "output_sha256": "b15696d27d24ac2d52caaea0a6c277f63edc72f021a695631e71b2874c7c7879",
+      "passed": true
+    }
+  ],
+  "legacy_reports": [
+    {
+      "path": "doc/impl/row-persistence-results/2026-10-25/persistence-reduced.json.gz",
+      "compressed_sha256": "50674fe338627114fccbb7a6a99544fa39c7342d6676bd5b9dc1bc3b17e72f46",
+      "input_sha256": "aed3531acd1498221afc50b8b90df354d287b19d3812f18a4d33d588e40011d7",
+      "schema_version": 1,
+      "groups": 16,
+      "passed": true
+    },
+    {
+      "path": "doc/impl/row-persistence-results/2026-10-25/persistence-peers-1.json.gz",
+      "compressed_sha256": "d32b654426d5ac034b2c5e94350611be4b993820da455c28b32e56f8645aa07d",
+      "input_sha256": "b3ead15ab9d157594ff66f15d9dd7a794461862afad181dd28f2aef49e679cf2",
+      "schema_version": 1,
+      "groups": 12,
+      "passed": true
+    },
+    {
+      "path": "doc/impl/row-persistence-results/2026-10-25/persistence-peers-100.json.gz",
+      "compressed_sha256": "471427d06c62c2c1f82d3fb0aea1114742725f9a28633f24d1a7a26e7d3d0c7a",
+      "input_sha256": "e6c3c38c58d1facd698553c783956f1bb0b01e56a637f09bd50633986ad5ff4f",
+      "schema_version": 1,
+      "groups": 12,
+      "passed": true
+    },
+    {
+      "path": "doc/impl/row-persistence-results/2026-10-25/persistence-peers-1000.json.gz",
+      "compressed_sha256": "1eac1b519cf6c3f4bc5373fedfe98b9a5634ff0ad7e858be3648f17d9a4aa4d0",
+      "input_sha256": "28736f08cf30e39d3d84d5e20a2196d398f6332f60f68594bc92b0e31ba5ba90",
+      "schema_version": 1,
+      "groups": 12,
+      "passed": true
+    }
+  ],
+  "summarizer_source_sha256": "8df3345bb2997e0898df7ed3c50eeeed4634a1f2746531852d716146230eb555",
+  "finished": "2026-10-25T12:23:09.853769+00:00",
+  "passed": true,
+  "log_sha256": "a6509933064139a9811dbf51c38cc803e0a263b1a70b528c646b20dd9d782639",
+  "driver_sha256": "4de5b80067268bf489cd959b99fdb21e66430e1e0ddda75fe57a931a00827366",
+  "synthetic_summarizer_tests": 7
+}

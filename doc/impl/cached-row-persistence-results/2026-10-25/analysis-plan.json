@@ -1,0 +1,10 @@
+{
+  "declared_utc": "2026-10-25T12:20:38.951268+00:00",
+  "timings_inspected": false,
+  "selection": "Only first complete validated attempts under the v2 quiet-VM plan; older stricter collection preserved but excluded. No fastest-trial selection.",
+  "primary_unit": "Paired per-trial batch duration ratio within backend, peer count, scenario, direction. Three balanced trials; publish all ratios and min/median/max. No pooled operation percentiles or significance claims.",
+  "full_tables": "All 72 backend/peer/scenario/direction groups, with per-trial rates, latencies and counters, plus machine-readable CSV.",
+  "concise_display": "Small stream and largest burst, both directions, all peer counts and backends; discuss regular larger/mixed and smaller burst observations using the full tables. These display cases were chosen before viewing timing data.",
+  "noise": "Summarize sampled host-steal, exact controller instrumentation CPU, unknown VM CPU, swapping and guard status. Host-steal telemetry is not complete physical-host interference measurement.",
+  "scope": "Native single-worker, resident handles, warm eligible peer cache, durable commit per successful operation, localhost PostgreSQL and file-backed SQLite; excludes Mythic transport/application journaling. No end-to-end integration speedup claim."
+}
