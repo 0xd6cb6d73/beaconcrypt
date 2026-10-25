@@ -1,0 +1,22 @@
+{
+  "recorded_utc": "2026-10-25T12:25:50.303461+00:00",
+  "reviewer": "/root/cached_review",
+  "result": "No concrete findings",
+  "scope": "Exact live PID/start_ticks/executable/cgroup controller identity, no descendants/name exemptions; distinct CPU accounting with complete baseline/counter gates; record-only host steal; unchanged unknown VM CPU/swap/leases/tickets/process/socket/disk/gap safeguards; new immutable collection policy with all six axes rerun and no timing selection.",
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v test_hybrid_guard",
+    "run_by": "root",
+    "passed": 16
+  },
+  "timing_values_inspected": false,
+  "sha256": {
+    "hybrid_guard.py": "768a4ff08a33ee21870597d46a186b2b03c82a9c26635e312991cf6c9f8b27db",
+    "prepare-quiet-hybrid.py": "d82b8d9f3b29a28d704d31252232a294faa9760045e63abb0180b8bacaae4560",
+    "run-quiet-hybrid.py": "ddfa13438771ba9a605c30891368c33ddc60cf3226e0c60e7200f80038713dc9",
+    "wait-quiet-hybrid.py": "7cd9e3e61bfb904f7ea7ac81ae675f742aa3ca080d2ef16d8f2fb1d73b22a657",
+    "test_hybrid_guard.py": "87c37979098b2ee61c7860efef95910efd5c3a856b7b25d3481575e96c728079",
+    "quiet-vm-policy.json": "7fc1bfbdf0bd3b7bb597d87d6ad3d52ea857538910e429a886387a0bfd6b964d",
+    "collection-policy-revision.json": "199e79e4fd1cef28df6aaa9c4db1ab08d14a55b5a84a5c38988cea52ccfaf59c",
+    "quiet-vm-guard-tests.log": "8060e51a02fdb2d774146f5a72194b64f20c25cd30ce83c0a33259cf28dbfd58"
+  }
+}

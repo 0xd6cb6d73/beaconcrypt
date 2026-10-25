@@ -1,0 +1,57 @@
+[
+  {
+    "classification": "unclassified_requires_review",
+    "kind": "unviable_requires_review",
+    "name": "beaconcrypt-core/src/authentication.rs:149:3: replace ResponseTranscript<'_>::parts -> [&[u8]; 3] with [Vec::leak(vec![0]); 3]"
+  },
+  {
+    "classification": "unclassified_requires_review",
+    "kind": "unviable_requires_review",
+    "name": "beaconcrypt-core/src/authentication.rs:149:3: replace ResponseTranscript<'_>::parts -> [&[u8]; 3] with [Vec::leak(vec![1]); 3]"
+  },
+  {
+    "classification": "unclassified_requires_review",
+    "kind": "unviable_requires_review",
+    "name": "beaconcrypt-core/src/pqxdh.rs:396:36: replace + with - in build_root_key_input"
+  },
+  {
+    "classification": "unclassified_requires_review",
+    "kind": "unviable_requires_review",
+    "name": "beaconcrypt-core/src/pqxdh.rs:398:36: replace + with - in build_root_key_input"
+  },
+  {
+    "classification": "unclassified_requires_review",
+    "kind": "unviable_requires_review",
+    "name": "beaconcrypt-core/src/pqxdh.rs:400:36: replace + with - in build_root_key_input"
+  },
+  {
+    "classification": "unclassified_requires_review",
+    "kind": "unviable_requires_review",
+    "name": "beaconcrypt-core/src/ratchet/control.rs:32:41: replace >= with < in SequenceCache::append"
+  },
+  {
+    "classification": "unclassified_requires_review",
+    "kind": "unviable_requires_review",
+    "name": "beaconcrypt-core/src/ratchet/refined.rs:508:28: replace >= with < in receive_control_prefix_matches"
+  },
+  {
+    "classification": "unclassified_requires_review",
+    "kind": "unviable_requires_review",
+    "name": "beaconcrypt-parse/src/lib.rs:58:2: replace primitive_argument -> Option<(u64, &[u8])> with Some((0, Vec::leak(vec![0])))"
+  },
+  {
+    "classification": "unclassified_requires_review",
+    "kind": "unviable_requires_review",
+    "name": "beaconcrypt-parse/src/lib.rs:58:2: replace primitive_argument -> Option<(u64, &[u8])> with Some((0, Vec::leak(vec![1])))"
+  },
+  {
+    "classification": "unclassified_requires_review",
+    "kind": "unviable_requires_review",
+    "name": "beaconcrypt-parse/src/lib.rs:58:2: replace primitive_argument -> Option<(u64, &[u8])> with Some((1, Vec::leak(vec![0])))"
+  },
+  {
+    "classification": "unclassified_requires_review",
+    "kind": "unviable_requires_review",
+    "name": "beaconcrypt-parse/src/lib.rs:58:2: replace primitive_argument -> Option<(u64, &[u8])> with Some((1, Vec::leak(vec![1])))"
+  }
+]

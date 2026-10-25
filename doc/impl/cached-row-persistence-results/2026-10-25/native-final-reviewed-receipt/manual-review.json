@@ -1,0 +1,137 @@
+{
+  "cases": [
+    {
+      "group": "missing_alloc_macro_and_type",
+      "log_path": "log/beaconcrypt-core__src__authentication.rs_line_149_col_3_001.log",
+      "log_sha256": "e588e2465bbbb6e25103ee4fccf881c2f9c8dc1e567c4a52e2823a6fd8c32c7e",
+      "name": "beaconcrypt-core/src/authentication.rs:149:3: replace ResponseTranscript<'_>::parts -> [&[u8]; 3] with [Vec::leak(vec![0]); 3]",
+      "prior_classification": "unclassified_requires_review",
+      "reason": "The mutation inserts Vec and vec! into a no_std crate where neither is in scope. Rust reports the exact macro diagnostic and E0433 at the mutated expression.",
+      "reviewed_classification": "source_compile_error",
+      "reviewed_header": "error: cannot find macro `vec` in this scope"
+    },
+    {
+      "group": "missing_alloc_macro_and_type",
+      "log_path": "log/beaconcrypt-core__src__authentication.rs_line_149_col_3_002.log",
+      "log_sha256": "e6caa5b686826236403a7de8d820457595dedd3a9175f28d7b2744fe170b65a8",
+      "name": "beaconcrypt-core/src/authentication.rs:149:3: replace ResponseTranscript<'_>::parts -> [&[u8]; 3] with [Vec::leak(vec![1]); 3]",
+      "prior_classification": "unclassified_requires_review",
+      "reason": "The mutation inserts Vec and vec! into a no_std crate where neither is in scope. Rust reports the exact macro diagnostic and E0433 at the mutated expression.",
+      "reviewed_classification": "source_compile_error",
+      "reviewed_header": "error: cannot find macro `vec` in this scope"
+    },
+    {
+      "group": "constant_unsigned_underflow",
+      "log_path": "log/beaconcrypt-core__src__pqxdh.rs_line_396_col_36.log",
+      "log_sha256": "6f7fe78956287a16e58bdca93f531d48a9ae0a36263e3a21f27f3b9ea041c68a",
+      "name": "beaconcrypt-core/src/pqxdh.rs:396:36: replace + with - in build_root_key_input",
+      "prior_classification": "unclassified_requires_review",
+      "reason": "The mutation replaces + with - in a known-size PQXDH input bound, producing 32usize minus 64/96/128usize. The arithmetic_overflow deny lint rejects the expression.",
+      "reviewed_classification": "source_compile_error",
+      "reviewed_header": "error: this arithmetic operation will overflow"
+    },
+    {
+      "group": "constant_unsigned_underflow",
+      "log_path": "log/beaconcrypt-core__src__pqxdh.rs_line_398_col_36.log",
+      "log_sha256": "16ac500bda0550aaf7b4aec1796d1d2368aefcdd0cc9766f9e7f5d677216899c",
+      "name": "beaconcrypt-core/src/pqxdh.rs:398:36: replace + with - in build_root_key_input",
+      "prior_classification": "unclassified_requires_review",
+      "reason": "The mutation replaces + with - in a known-size PQXDH input bound, producing 32usize minus 64/96/128usize. The arithmetic_overflow deny lint rejects the expression.",
+      "reviewed_classification": "source_compile_error",
+      "reviewed_header": "error: this arithmetic operation will overflow"
+    },
+    {
+      "group": "constant_unsigned_underflow",
+      "log_path": "log/beaconcrypt-core__src__pqxdh.rs_line_400_col_36.log",
+      "log_sha256": "e7659038d8a8d7642243699e069f51c0af23dba1c7c0c5e88787331cd1198500",
+      "name": "beaconcrypt-core/src/pqxdh.rs:400:36: replace + with - in build_root_key_input",
+      "prior_classification": "unclassified_requires_review",
+      "reason": "The mutation replaces + with - in a known-size PQXDH input bound, producing 32usize minus 64/96/128usize. The arithmetic_overflow deny lint rejects the expression.",
+      "reviewed_classification": "source_compile_error",
+      "reviewed_header": "error: this arithmetic operation will overflow"
+    },
+    {
+      "group": "cast_comparison_parse_error",
+      "log_path": "log/beaconcrypt-core__src__ratchet__control.rs_line_32_col_41.log",
+      "log_sha256": "fb2c8d8fbb4ec96ef08cc99b953f991b96b8e44c260dd9320c4b2ab1a4b1f696",
+      "name": "beaconcrypt-core/src/ratchet/control.rs:32:41: replace >= with < in SequenceCache::append",
+      "prior_classification": "unclassified_requires_review",
+      "reason": "The mutation changes >= to < immediately after an unparenthesized as usize cast. Rust parses < as generic arguments; its diagnostic suggests parenthesizing the cast.",
+      "reviewed_classification": "source_compile_error",
+      "reviewed_header": "error: `<` is interpreted as a start of generic arguments for `usize`, not a comparison"
+    },
+    {
+      "group": "cast_comparison_parse_error",
+      "log_path": "log/beaconcrypt-core__src__ratchet__refined.rs_line_508_col_28.log",
+      "log_sha256": "d111239c6c5d9ddc9188af65834ea81856166d2efd5226737220f8c83ddca353",
+      "name": "beaconcrypt-core/src/ratchet/refined.rs:508:28: replace >= with < in receive_control_prefix_matches",
+      "prior_classification": "unclassified_requires_review",
+      "reason": "The mutation changes >= to < immediately after an unparenthesized as usize cast. Rust parses < as generic arguments; its diagnostic suggests parenthesizing the cast.",
+      "reviewed_classification": "source_compile_error",
+      "reviewed_header": "error: `<` is interpreted as a start of generic arguments for `usize`, not a comparison"
+    },
+    {
+      "group": "missing_alloc_macro_and_type",
+      "log_path": "log/beaconcrypt-parse__src__lib.rs_line_58_col_2_002.log",
+      "log_sha256": "fed8d7f852f33568d5091b1ce6a9b71c3ba9a85ad63f65730018ef00bc0c73d6",
+      "name": "beaconcrypt-parse/src/lib.rs:58:2: replace primitive_argument -> Option<(u64, &[u8])> with Some((0, Vec::leak(vec![0])))",
+      "prior_classification": "unclassified_requires_review",
+      "reason": "The mutation inserts Vec and vec! into a no_std crate where neither is in scope. Rust reports the exact macro diagnostic and E0433 at the mutated expression.",
+      "reviewed_classification": "source_compile_error",
+      "reviewed_header": "error: cannot find macro `vec` in this scope"
+    },
+    {
+      "group": "missing_alloc_macro_and_type",
+      "log_path": "log/beaconcrypt-parse__src__lib.rs_line_58_col_2_003.log",
+      "log_sha256": "1f5db2aac7dca89a0e84b6ac3d91f0686cbba839e68f745beece2646b370cde7",
+      "name": "beaconcrypt-parse/src/lib.rs:58:2: replace primitive_argument -> Option<(u64, &[u8])> with Some((0, Vec::leak(vec![1])))",
+      "prior_classification": "unclassified_requires_review",
+      "reason": "The mutation inserts Vec and vec! into a no_std crate where neither is in scope. Rust reports the exact macro diagnostic and E0433 at the mutated expression.",
+      "reviewed_classification": "source_compile_error",
+      "reviewed_header": "error: cannot find macro `vec` in this scope"
+    },
+    {
+      "group": "missing_alloc_macro_and_type",
+      "log_path": "log/beaconcrypt-parse__src__lib.rs_line_58_col_2_005.log",
+      "log_sha256": "de27476fae9921f9400b95ce46ba6a7546bca9b5d644c76947e8ffecfef3720d",
+      "name": "beaconcrypt-parse/src/lib.rs:58:2: replace primitive_argument -> Option<(u64, &[u8])> with Some((1, Vec::leak(vec![0])))",
+      "prior_classification": "unclassified_requires_review",
+      "reason": "The mutation inserts Vec and vec! into a no_std crate where neither is in scope. Rust reports the exact macro diagnostic and E0433 at the mutated expression.",
+      "reviewed_classification": "source_compile_error",
+      "reviewed_header": "error: cannot find macro `vec` in this scope"
+    },
+    {
+      "group": "missing_alloc_macro_and_type",
+      "log_path": "log/beaconcrypt-parse__src__lib.rs_line_58_col_2_006.log",
+      "log_sha256": "c6a9caf1092b80c6a7a3a5d835a4fcedcad10fde68214e9ff8b904a622e51b1e",
+      "name": "beaconcrypt-parse/src/lib.rs:58:2: replace primitive_argument -> Option<(u64, &[u8])> with Some((1, Vec::leak(vec![1])))",
+      "prior_classification": "unclassified_requires_review",
+      "reason": "The mutation inserts Vec and vec! into a no_std crate where neither is in scope. Rust reports the exact macro diagnostic and E0433 at the mutated expression.",
+      "reviewed_classification": "source_compile_error",
+      "reviewed_header": "error: cannot find macro `vec` in this scope"
+    }
+  ],
+  "classifier_examples_passed": 40,
+  "groups": {
+    "cast_comparison_parse_error": 2,
+    "constant_unsigned_underflow": 3,
+    "missing_alloc_macro_and_type": 6
+  },
+  "infrastructure_failures": 0,
+  "prior_receipt": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/native-final-receipt",
+  "prior_receipt_file_sha256": {
+    "SHA256SUMS": "d3851978bf84a5383463f857b697f698a46339d4c197f63c235416f08c0790d0",
+    "artifact-manifest.json": "5617323b899004c8f3ac6d7e499c411a840db77a9faf0baeb3e95dcfbedeb02e",
+    "artifact-manifest.json.gz": "7db7be0dc9cd4fe9bfb301484bb93aea079fd7f5453747962484dafe4d17643a",
+    "catalog.json.gz": "d1c704e2d707fffc266c837af5342ec81cf90286ee89ccea58017e5afb27a770",
+    "findings.json": "4db1a9044f46da00f155e15eb7b568f30497f22aed012258f511e8db40f1ff57",
+    "findings.json.gz": "ce67075325d941cb9b0ee6b5b944dfe1c01bde74ddb45dc3632ca5ca696cc289",
+    "outcomes.json.gz": "fc4b9b612906a362ec7275f34d2c2a7c39c2a6201539f4a0dd1272102182a603",
+    "run-catalog.json.gz": "d1c704e2d707fffc266c837af5342ec81cf90286ee89ccea58017e5afb27a770",
+    "summary.json": "2fa28909597cf5578b751c4d31d09fda63fb6628d36d904669ce347e69b11671",
+    "summary.json.gz": "793b5e4e745b803bebb7a770cb505e5356e724d7abc9e70fb7553f94f487f877",
+    "unviable-diagnostics.json": "f832c3dc835f4326a796b63d9d840e38b002d1849cf20294c3f25222baaf1346",
+    "unviable-diagnostics.json.gz": "4d05475914d48d84ecd5779882b38f0466d95aa53f9f3342d826f1480dafa33d"
+  },
+  "reviewed_cases": 11
+}
