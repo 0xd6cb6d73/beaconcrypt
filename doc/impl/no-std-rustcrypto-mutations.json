@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "scope": "Native handwritten-source mutation catalog; WASI mutations are a separate partition.",
+  "base_commit": "278204b921ae31a3e900cf21f690184173e531f5",
+  "cargo_mutants_version": "27.1.0",
+  "nextest_version": "0.9.149",
+  "completed_at_utc": "2026-10-25T01:43:11.409409119Z",
+  "catalog": {
+    "unique_mutants": 1600,
+    "names_sha256": "7cccbe90851bd5e031a569142d189ddc59bff683586ecd1510be734008559199",
+    "diffs_sha256": "b7fb996b262a1934756156efdd1eee8fa790a18b76cf447c64fd49650c714955",
+    "packaging_catalog_ids_and_diffs_identical": true
+  },
+  "coverage": {
+    "previously_validated_unique": 1022,
+    "scheduled_remaining": 578,
+    "final_report_unique": 582,
+    "explicit_previously_validated_reruns": 4,
+    "resolved_unique": 1600,
+    "missing": 0,
+    "unexpected": 0
+  },
+  "totals": {
+    "tested_unique": 1600,
+    "caught": 1137,
+    "unviable": 463,
+    "missed": 0,
+    "timed_out": 0
+  },
+  "packages": {
+    "beaconcrypt": {
+      "total": 543,
+      "caught": 375,
+      "unviable": 168,
+      "missed": 0,
+      "timed_out": 0
+    },
+    "beaconcrypt-core": {
+      "total": 916,
+      "caught": 676,
+      "unviable": 240,
+      "missed": 0,
+      "timed_out": 0
+    },
+    "beaconcrypt-crypto": {
+      "total": 83,
+      "caught": 37,
+      "unviable": 46,
+      "missed": 0,
+      "timed_out": 0
+    },
+    "beaconcrypt-parse": {
+      "total": 58,
+      "caught": 49,
+      "unviable": 9,
+      "missed": 0,
+      "timed_out": 0
+    }
+  },
+  "validated_reports": [
+    {
+      "id": "initial",
+      "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/native-before-nextest/initial/outcomes.json",
+      "sha256": "ae4e83f1b668176b046e0b709274f40a7c8889b26ee13eeb330bc038a4cb45b7",
+      "selected_valid_outcomes": 327,
+      "raw_report_totals": {
+        "total_mutants": 400,
+        "caught": 271,
+        "missed": 1,
+        "timeout": 0,
+        "unviable": 128
+      }
+    },
+    {
+      "id": "resumed",
+      "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/native-before-nextest/resumed/outcomes.json",
+      "sha256": "9f166efc41d2628c14423047796878884f419bb0f8a8508777b3d95bb71874d8",
+      "selected_valid_outcomes": 612,
+      "raw_report_totals": {
+        "total_mutants": 612,
+        "caught": 452,
+        "missed": 0,
+        "timeout": 0,
+        "unviable": 160
+      }
+    },
+    {
+      "id": "backend-validated",
+      "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/native-before-nextest/backend-validated/outcomes.json",
+      "sha256": "2f0247a2725804ac81521b2a8a5c4bd4059b3aa141445f5e499b80fbd0915390",
+      "selected_valid_outcomes": 82,
+      "raw_report_totals": {
+        "total_mutants": 83,
+        "caught": 37,
+        "missed": 0,
+        "timeout": 0,
+        "unviable": 46
+      }
+    },
+    {
+      "id": "nextest-probe",
+      "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/native-before-nextest/nextest-probe/outcomes.json",
+      "sha256": "6065c9aad304500f44981f953837f36e3290fbbdd9756a5359b4e726d92205d1",
+      "selected_valid_outcomes": 1,
+      "raw_report_totals": {
+        "total_mutants": 1,
+        "caught": 1,
+        "missed": 0,
+        "timeout": 0,
+        "unviable": 0
+      }
+    },
+    {
+      "id": "final-nextest",
+      "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/native-nextest/mutants.out/outcomes.json",
+      "sha256": "f38b49f7b988d7440e212a8f4aba195cfbdb7ba06e1f2aec9bea356898079b6e",
+      "selected_valid_outcomes": 582,
+      "raw_report_totals": {
+        "total_mutants": 582,
+        "caught": 438,
+        "missed": 0,
+        "timeout": 0,
+        "unviable": 144
+      }
+    }
+  ],
+  "evidence_files": {
+    "catalog-before-packaging": {
+      "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/current-native-catalog.json",
+      "sha256": "e64e9e6d8723f26cf79912c2e7d9fd7c451fe26ee03f0da506477beb5ec61f14"
+    },
+    "catalog-after-packaging": {
+      "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/packaging-native-catalog.json",
+      "sha256": "e64e9e6d8723f26cf79912c2e7d9fd7c451fe26ee03f0da506477beb5ec61f14"
+    },
+    "known-valid-outcomes": {
+      "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/known-native-mutations.json",
+      "sha256": "b1f98336413a88d148c83331a0749726c81f8fa38b90aa3c58b60747ec8e70b3"
+    },
+    "repository-mutation-config": {
+      "path": ".cargo/mutants.toml",
+      "sha256": "8055baa5c9c25666dfe3d1fc2e2bdc011fcf26cadcff472bed8224ffd01bada4"
+    },
+    "final-run-scheduling-config": {
+      "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/native-nextest-mutants.toml",
+      "sha256": "063b55310d65d89d9331af93ded8aa317842198ee50c5ffd709a61f77df1a9c7"
+    },
+    "nextest-profile": {
+      "path": "doc/impl/no-std-rustcrypto-nextest.toml",
+      "sha256": "ef5cbcb7374811c0e545678e32c9848fb0f8d35d90b6229535df0adc490d0a18"
+    },
+    "nextest-baseline-test-identities": {
+      "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/nextest-baseline-cargo-identities.json",
+      "sha256": "b74cb72d230107aa43e11fd3328aff2ce76d597655a35054620015e5741672d4"
+    }
+  },
+  "deferred_proof_source_guards": [
+    "free_schedule_rust_fidelity_annotations_are_exact",
+    "mldsa_transcript_source_and_model_mutations_are_rejected",
+    "production_manifest_symbolic_model_and_adapters_are_exact",
+    "proverif_verdict_classes_cover_every_checker_and_profile",
+    "registration_lifecycle_mutation_matrix_is_complete_and_rejected"
+  ],
+  "notes": [
+    "Every known ID was matched to its named report with the recorded valid classification. Genuine Cargo-test catches include the literal test-harness separator before --skip.",
+    "The initial report contains one missed keyed-hasher mutation. Its missed classification is not counted; the current regression catches that ID in a later validated report.",
+    "The final scheduling config excludes the exact 1022 previously validated catalog IDs plus repository rules. The final report covers the remaining 578 IDs and four explicit field-mutation reruns already present in known results. Counts deduplicate those four overlaps.",
+    "Exploratory backend reports with malformed Cargo test-argument forwarding are excluded from every count and evidence report listed here.",
+    "The native FFI package compiles the identical adapter source. Its duplicate source paths are excluded by repository mutation config; before/after packaging catalog IDs and complete diffs are identical.",
+    "Proof sources and artifacts were not modified or reverified. The five deferred source guards are excluded by exact test identities in the copied Nextest profile."
+  ]
+}

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 
+use alloc::vec::Vec;
+
 #[cfg(test)]
 use crate::auth::AuthRole;
 use crate::auth::{self, MLDSA_PUBLIC_KEY_LEN, MldsaIdentity};
@@ -22,11 +24,13 @@ struct RegistrationAuthentication {
 use beaconcrypt_core::pqxdh as verified_pqxdh;
 use beaconcrypt_core::registration::BeaconPending;
 use beaconcrypt_core::session::{ServerAuthenticationPin, SessionBinding};
-use beaconcrypt_parse::{InitKex, decode_response};
 #[cfg(test)]
-use libsodium_rs::crypto_scalarmult;
-use libsodium_rs::{crypto_kem, crypto_kx, crypto_sign, ensure_init};
+use beaconcrypt_crypto::crypto_scalarmult;
+use beaconcrypt_crypto::{TryCryptoRng, crypto_kem, crypto_kx, crypto_sign};
+use beaconcrypt_parse::{InitKex, decode_response};
 
+// Keep owned fixed-size keys and ratchets inline; callers choose the handle's storage location.
+#[allow(clippy::large_enum_variant)]
 enum BeaconState {
 	Fresh {
 		control: verified_pqxdh::BeaconFresh,
@@ -65,26 +69,42 @@ pub struct Beacon {
 }
 
 pub trait ProviderBeacon {
+	#[cfg(feature = "std")]
 	fn get_registration_bundle(&mut self) -> Option<Vec<u8>>;
 	fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>>;
 }
 
 impl Beacon {
-	/// Construct a beacon, panicking if initialization, input validation or key generation fails.
+	/// Construct a beacon, panicking if input validation or key generation fails.
 	/// Use [`Self::try_new`] when inputs or dependency failures must be recoverable.
+	#[cfg(feature = "std")]
 	pub fn new(server_kid: u64, server_id_pk: &[u8], server_mldsa_pk: &[u8]) -> Self {
 		Self::try_new(server_kid, server_id_pk, server_mldsa_pk)
 			.expect("Failed to construct beacon")
 	}
 
-	/// Construct a beacon without panicking on reported initialization, key-length or key-generation errors.
-	/// Allocation failure and failures inside the native RNG remain process-level failures.
+	/// Construct a beacon with operating-system entropy, returning input or RNG failures.
+	#[cfg(feature = "std")]
 	pub fn try_new(
 		server_kid: u64,
 		server_id_pk: &[u8],
 		server_mldsa_pk: &[u8],
 	) -> Result<Self, crate::KeyGenError> {
-		ensure_init().map_err(|_| crate::KeyGenError)?;
+		Self::try_new_with_rng(
+			server_kid,
+			server_id_pk,
+			server_mldsa_pk,
+			&mut beaconcrypt_crypto::OsRng,
+		)
+	}
+
+	/// Construct a beacon with caller-provided cryptographic entropy.
+	pub fn try_new_with_rng<R: TryCryptoRng + ?Sized>(
+		server_kid: u64,
+		server_id_pk: &[u8],
+		server_mldsa_pk: &[u8],
+		rng: &mut R,
+	) -> Result<Self, crate::KeyGenError> {
 		let id =
 			crypto_sign::PublicKey::from_bytes(server_id_pk).map_err(|_| crate::KeyGenError)?;
 		let server_public_key = server_mldsa_pk.try_into().map_err(|_| crate::KeyGenError)?;
@@ -93,17 +113,19 @@ impl Beacon {
 			identity_key_id: server_kid,
 		};
 		let authentication = RegistrationAuthentication {
-			identity: MldsaIdentity::generate()?,
+			identity: MldsaIdentity::generate_with_rng(rng)?,
 			server_pin: auth::fingerprint_pin(server_binding, server_public_key)
 				.ok_or(crate::KeyGenError)?,
 		};
 		Ok(Self {
-			identity_key: crypto_sign::KeyPair::generate().map_err(|_| crate::KeyGenError)?,
+			identity_key: crypto_sign::KeyPair::generate_with_rng(rng)
+				.map_err(|_| crate::KeyGenError)?,
 			identity_key_kid: server_kid,
 			state: BeaconState::Fresh {
 				control: verified_pqxdh::BeaconFresh::new(server_binding),
-				prekey: crypto_kx::KeyPair::generate().map_err(|_| crate::KeyGenError)?,
-				pq_key: crypto_kem::mlkem768::KeyPair::generate()
+				prekey: crypto_kx::KeyPair::generate_with_rng(rng)
+					.map_err(|_| crate::KeyGenError)?,
+				pq_key: crypto_kem::mlkem768::KeyPair::generate_with_rng(rng)
 					.map_err(|_| crate::KeyGenError)?,
 			},
 			server_id: id,
@@ -245,8 +267,17 @@ impl Beacon {
 	///
 	/// This compatibility helper preserves the former public API while keeping
 	/// the key in a dedicated fresh phase rather than an unrelated `Option`.
+	#[cfg(feature = "std")]
 	pub fn new_onetime_keypair(&mut self) -> Option<()> {
-		let onetime_key = crypto_kx::KeyPair::generate().ok()?;
+		self.new_onetime_keypair_with_rng(&mut beaconcrypt_crypto::OsRng)
+	}
+
+	/// Pre-generate one-time registration coins with caller-provided entropy.
+	pub fn new_onetime_keypair_with_rng<R: TryCryptoRng + ?Sized>(
+		&mut self,
+		rng: &mut R,
+	) -> Option<()> {
+		let onetime_key = crypto_kx::KeyPair::generate_with_rng(rng).ok()?;
 		if let BeaconState::FreshWithCoins {
 			onetime_key: current,
 			..
@@ -262,7 +293,7 @@ impl Beacon {
 		let fallback = BeaconState::Aborted {
 			control: verified_pqxdh::beacon_abort_fresh(control),
 		};
-		let previous = std::mem::replace(&mut self.state, fallback);
+		let previous = core::mem::replace(&mut self.state, fallback);
 		match previous {
 			BeaconState::Fresh { prekey, pq_key, .. } => {
 				self.state = BeaconState::FreshWithCoins {
@@ -282,7 +313,7 @@ impl Beacon {
 
 	pub fn delete_onetime_keypair(&mut self) {
 		let server_kid = self.server_kid();
-		let phase = std::mem::replace(
+		let phase = core::mem::replace(
 			&mut self.state,
 			BeaconState::Aborted {
 				control: verified_pqxdh::BeaconAborted::new(server_kid),
@@ -320,10 +351,14 @@ impl Beacon {
 	}
 }
 
-impl ProviderBeacon for Beacon {
-	fn get_registration_bundle(&mut self) -> Option<Vec<u8>> {
+impl Beacon {
+	/// Build the one-use registration bundle using caller-provided entropy.
+	pub fn get_registration_bundle_with_rng<R: TryCryptoRng + ?Sized>(
+		&mut self,
+		rng: &mut R,
+	) -> Option<Vec<u8>> {
 		let mut generated_onetime = if matches!(&self.state, BeaconState::Fresh { .. }) {
-			Some(crypto_kx::KeyPair::generate().ok()?)
+			Some(crypto_kx::KeyPair::generate_with_rng(rng).ok()?)
 		} else {
 			None
 		};
@@ -334,14 +369,9 @@ impl ProviderBeacon for Beacon {
 				pq_key,
 			} => (
 				*control,
-				prekey.public_key.as_bytes().try_into().ok()?,
+				*prekey.public_key.as_bytes(),
 				*pq_key.public_key.as_bytes(),
-				generated_onetime
-					.as_ref()?
-					.public_key
-					.as_bytes()
-					.try_into()
-					.ok()?,
+				*generated_onetime.as_ref()?.public_key.as_bytes(),
 			),
 			BeaconState::FreshWithCoins {
 				control,
@@ -350,9 +380,9 @@ impl ProviderBeacon for Beacon {
 				pq_key,
 			} => (
 				*control,
-				prekey.public_key.as_bytes().try_into().ok()?,
+				*prekey.public_key.as_bytes(),
 				*pq_key.public_key.as_bytes(),
-				onetime_key.public_key.as_bytes().try_into().ok()?,
+				*onetime_key.public_key.as_bytes(),
 			),
 			_ => return None,
 		};
@@ -413,7 +443,7 @@ impl ProviderBeacon for Beacon {
 		let fallback = BeaconState::Aborted {
 			control: pending.aborted_state(),
 		};
-		let previous = std::mem::replace(&mut self.state, fallback);
+		let previous = core::mem::replace(&mut self.state, fallback);
 		match previous {
 			BeaconState::Fresh { prekey, pq_key, .. } => {
 				let Some(onetime_key) = generated_onetime.take() else {
@@ -451,6 +481,13 @@ impl ProviderBeacon for Beacon {
 		}
 		Some(buffer)
 	}
+}
+
+impl ProviderBeacon for Beacon {
+	#[cfg(feature = "std")]
+	fn get_registration_bundle(&mut self) -> Option<Vec<u8>> {
+		self.get_registration_bundle_with_rng(&mut beaconcrypt_crypto::OsRng)
+	}
 
 	fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {
 		use beaconcrypt_core::agreement::{self, AgreementEffect};
@@ -460,7 +497,7 @@ impl ProviderBeacon for Beacon {
 			_ => return None,
 		};
 		let previous =
-			std::mem::replace(&mut self.state, BeaconState::Aborted { control: aborted });
+			core::mem::replace(&mut self.state, BeaconState::Aborted { control: aborted });
 		let BeaconState::InitSent {
 			pending,
 			prekey,
@@ -487,7 +524,7 @@ impl ProviderBeacon for Beacon {
 				return None;
 			}
 		};
-		let effect = crate::pqxdh::execute_agreement(
+		let effect = crate::pqxdh::execute_beacon_agreement(
 			agreement::begin_beacon_agreement(authenticated),
 			crate::pqxdh::RegistrationKeys {
 				identity_secret: self.identity_sk(),
@@ -525,9 +562,10 @@ impl ProviderBeacon for Beacon {
 					let commitment =
 						crate::ratchet::execute_commitment_hash(pending.transcript_mut());
 					let matches = match commitment {
-						Some(commitment) => {
-							libsodium_rs::utils::memcmp(&commitment, pending.supplied_commitment())
-						}
+						Some(commitment) => beaconcrypt_crypto::utils::memcmp(
+							&commitment,
+							pending.supplied_commitment(),
+						),
 						None => false,
 					};
 					pending.resume(matches)
@@ -567,6 +605,90 @@ impl ProviderBeacon for Beacon {
 mod tests {
 	use super::*;
 	use crate::{ProviderServer, Server};
+
+	#[test]
+	fn caller_entropy_failures_preserve_registration_state() {
+		use crate::auth::TestRng;
+
+		let mut server =
+			Server::try_new_with_rng(19, Some(&[7; 32]), Some(&[8; 32]), &mut TestRng::new(0))
+				.unwrap();
+		for fail_after in 0..4 {
+			assert!(
+				Beacon::try_new_with_rng(
+					19,
+					server.identity_pk().as_bytes(),
+					&server.mldsa_public_key(),
+					&mut TestRng::new(fail_after),
+				)
+				.is_err(),
+				"constructor entropy draw {fail_after}"
+			);
+		}
+		let mut rng = TestRng::new(usize::MAX);
+		let mut beacon = Beacon::try_new_with_rng(
+			19,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+			&mut rng,
+		)
+		.unwrap();
+		assert_eq!(rng.calls, 4);
+		assert!(
+			beacon
+				.get_registration_bundle_with_rng(&mut TestRng::new(0))
+				.is_none()
+		);
+		assert!(matches!(beacon.state, BeaconState::Fresh { .. }));
+		assert!(beacon.get_onetime_pk().is_none());
+		beacon.new_onetime_keypair_with_rng(&mut rng).unwrap();
+		let onetime = *beacon.get_onetime_pk().unwrap().as_bytes();
+		assert!(
+			beacon
+				.new_onetime_keypair_with_rng(&mut TestRng::new(0))
+				.is_none()
+		);
+		assert_eq!(beacon.get_onetime_pk().unwrap().as_bytes(), &onetime);
+		let bundle = beacon
+			.get_registration_bundle_with_rng(&mut TestRng::new(0))
+			.unwrap();
+		let before = server.serialize_state().unwrap();
+		for fail_after in 0..2 {
+			assert!(
+				server
+					.get_shared_secret_with_rng(&bundle, &mut TestRng::new(fail_after))
+					.is_none()
+			);
+			assert_eq!(server.serialize_state().unwrap(), before);
+		}
+		let registration = server
+			.get_shared_secret_with_rng(&bundle, &mut rng)
+			.unwrap();
+		let response = server
+			.build_registration_response(registration, Some(b"welcome"))
+			.unwrap();
+		assert_eq!(
+			beacon.finish_registration(&response.serialized).unwrap(),
+			b"welcome"
+		);
+		assert!(
+			server
+				.get_shared_secret_with_rng(&bundle, &mut rng)
+				.is_none()
+		);
+		let frame = beacon.encrypt_message(b"portable beacon").unwrap();
+		assert_eq!(
+			server.decrypt_message(&frame.ciphertext).unwrap().plaintext,
+			b"portable beacon"
+		);
+		let frame = server
+			.encrypt_message(b"portable server", response.kid)
+			.unwrap();
+		assert_eq!(
+			beacon.decrypt_message(&frame.ciphertext).unwrap().plaintext,
+			b"portable server"
+		);
+	}
 
 	#[test]
 	fn first_sequence_still_requires_nonempty_bound_plaintext() {

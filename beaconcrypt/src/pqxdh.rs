@@ -5,7 +5,7 @@ use crate::shared::SignaturePk;
 #[cfg(test)]
 use crate::shared::{DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret};
 use beaconcrypt_core::pqxdh as verified_pqxdh;
-use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
+use beaconcrypt_crypto::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 #[cfg(test)]
 use zeroize::Zeroize;
 
@@ -84,21 +84,22 @@ pub fn build_associated_data(
 	verified_pqxdh::build_associated_data(*server_id.as_bytes(), *beacon_id.as_bytes())
 }
 
-// Native key handles belong only to this synchronous registration interpreter.
+// Backend key handles belong only to this synchronous registration interpreter.
 
 pub(crate) struct RegistrationKeys<'a> {
-	pub identity_secret: &'a libsodium_rs::crypto_sign::SecretKey,
-	pub beacon_prekey: Option<&'a libsodium_rs::crypto_kx::SecretKey>,
-	pub beacon_one_time: Option<&'a libsodium_rs::crypto_kx::SecretKey>,
-	pub beacon_kem: Option<&'a libsodium_rs::crypto_kem::mlkem768::SecretKey>,
+	pub identity_secret: &'a beaconcrypt_crypto::crypto_sign::SecretKey,
+	pub beacon_prekey: Option<&'a beaconcrypt_crypto::crypto_kx::SecretKey>,
+	pub beacon_one_time: Option<&'a beaconcrypt_crypto::crypto_kx::SecretKey>,
+	pub beacon_kem: Option<&'a beaconcrypt_crypto::crypto_kem::mlkem768::SecretKey>,
 }
 
-pub(crate) fn execute_agreement<'a>(
+pub(crate) fn execute_agreement<'a, R: beaconcrypt_crypto::TryCryptoRng + ?Sized>(
 	mut effect: beaconcrypt_core::agreement::AgreementEffect<'a>,
 	keys: RegistrationKeys<'_>,
+	rng: &mut R,
 ) -> beaconcrypt_core::agreement::AgreementEffect<'a> {
 	use beaconcrypt_core::agreement::{AgreementEffect, DhSecretRole};
-	use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign};
+	use beaconcrypt_crypto::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign};
 	use zeroize::Zeroizing;
 	let mut local_identity: Option<Zeroizing<[u8; 32]>> = None;
 	let mut server_ephemeral: Option<crypto_kx::KeyPair> = None;
@@ -120,17 +121,18 @@ pub(crate) fn execute_agreement<'a>(
 				pending.resume(local_identity.is_some())
 			}
 			AgreementEffect::GenerateEphemeral(pending) => {
-				server_ephemeral = crypto_kx::KeyPair::generate().ok();
+				server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok();
 				let public = server_ephemeral
 					.as_ref()
-					.and_then(|key| key.public_key.as_bytes().try_into().ok());
+					.map(|key| *key.public_key.as_bytes());
 				pending.resume(public)
 			}
 			AgreementEffect::Encapsulate(pending) => {
 				let result = (|| {
 					let key =
 						crypto_kem::mlkem768::PublicKey::from_bytes(pending.public_key()?).ok()?;
-					let (ciphertext, shared) = crypto_kem::mlkem768::encapsulate(&key).ok()?;
+					let (ciphertext, shared) =
+						crypto_kem::mlkem768::encapsulate_with_rng(&key, rng).ok()?;
 					Some((*ciphertext.as_bytes(), *shared.as_bytes()))
 				})();
 				pending.resume(result)
@@ -153,9 +155,13 @@ pub(crate) fn execute_agreement<'a>(
 					}
 					DhSecretRole::ServerEphemeral => server_ephemeral
 						.as_ref()
-						.map(|key| key.secret_key.as_bytes()),
-					DhSecretRole::BeaconPrekey => keys.beacon_prekey.map(|key| key.as_bytes()),
-					DhSecretRole::BeaconOneTime => keys.beacon_one_time.map(|key| key.as_bytes()),
+						.map(|key| key.secret_key.as_bytes().as_slice()),
+					DhSecretRole::BeaconPrekey => {
+						keys.beacon_prekey.map(|key| key.as_bytes().as_slice())
+					}
+					DhSecretRole::BeaconOneTime => {
+						keys.beacon_one_time.map(|key| key.as_bytes().as_slice())
+					}
 				};
 				let shared = secret.and_then(|secret| {
 					crypto_scalarmult::scalarmult(secret, request.public_key).ok()
@@ -177,10 +183,43 @@ pub(crate) fn execute_agreement<'a>(
 	}
 }
 
+// Beacon completion uses retained keys only. An unexpected entropy request fails
+// closed instead of obtaining randomness or synthesizing predictable key material.
+#[cfg(feature = "beacon")]
+pub(crate) fn execute_beacon_agreement<'a>(
+	effect: beaconcrypt_core::agreement::AgreementEffect<'a>,
+	keys: RegistrationKeys<'_>,
+) -> beaconcrypt_core::agreement::AgreementEffect<'a> {
+	execute_agreement(effect, keys, &mut NoEntropy)
+}
+
+#[cfg(feature = "beacon")]
+struct NoEntropy;
+
+#[cfg(feature = "beacon")]
+impl beaconcrypt_crypto::TryRng for NoEntropy {
+	type Error = beaconcrypt_crypto::CryptoError;
+
+	fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
+		Err(beaconcrypt_crypto::CryptoError)
+	}
+
+	fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+		Err(beaconcrypt_crypto::CryptoError)
+	}
+
+	fn try_fill_bytes(&mut self, _bytes: &mut [u8]) -> Result<(), Self::Error> {
+		Err(beaconcrypt_crypto::CryptoError)
+	}
+}
+
+#[cfg(feature = "beacon")]
+impl beaconcrypt_crypto::TryCryptoRng for NoEntropy {}
+
 #[cfg(all(test, feature = "beacon", feature = "server"))]
 mod tests {
+	use beaconcrypt_crypto::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 	use beaconcrypt_parse::{InitKex, decode_init};
-	use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 
 	use super::{
 		AD_SIZE, PQXDH_INFO, build_associated_data, derive_root_key_input, verified_pqxdh,
@@ -357,7 +396,10 @@ mod tests {
 		assert_eq!(signed[0], u8::from(KemType::X25519));
 		assert_eq!(signed[1], verified_pqxdh::KEY_ROLE_ONE_TIME);
 		assert_eq!(&signed[2..], expected);
-		assert_eq!(beacon.get_onetime_pk().unwrap().as_bytes(), expected);
+		assert_eq!(
+			beacon.get_onetime_pk().unwrap().as_bytes().as_slice(),
+			expected
+		);
 		assert!(beacon.get_onetime_sk().is_some());
 		assert!(beacon.get_registration_bundle().is_none());
 	}

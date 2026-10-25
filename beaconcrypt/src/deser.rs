@@ -4,20 +4,23 @@
 use super::{EstablishedRemote, SignType, decode_sign};
 #[cfg(feature = "server")]
 use crate::auth::MldsaIdentity;
+use crate::collections::{HashMap, HashSet, map_with_key, set_with_key};
 use crate::ratchet::{AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, RatchetManager};
 use crate::shared::{roles, systems};
+use alloc::{
+	format,
+	string::{String, ToString},
+	vec::Vec,
+};
 use beaconcrypt_core::ratchet as verified_ratchet;
 #[cfg(feature = "server")]
-use libsodium_rs::crypto_sign;
+use beaconcrypt_crypto::crypto_sign;
+use core::{fmt, marker::PhantomData};
+use hashbrown::hash_map::Entry;
 use serde::de::MapAccess;
 use serde::{
 	Deserialize, Deserializer,
 	de::{self, Error as _, IgnoredAny, SeqAccess, Visitor},
-};
-use std::{
-	collections::{HashMap, HashSet, hash_map::Entry},
-	fmt,
-	marker::PhantomData,
 };
 use zeroize::{Zeroize, Zeroizing};
 
@@ -227,7 +230,11 @@ where
 	where
 		A: MapAccess<'de>,
 	{
-		let mut values = HashMap::with_capacity(map.size_hint().unwrap_or(0));
+		// Snapshot input belongs to the trusted store; operational tables are rekeyed below.
+		let mut values = map_with_key(b"trusted snapshot decoder");
+		values
+			.try_reserve(map.size_hint().unwrap_or(0))
+			.map_err(|_| A::Error::custom("map capacity exhausted"))?;
 		while let Some(CanonicalU64(key)) = map.next_key()? {
 			match values.entry(key) {
 				Entry::Occupied(_) => {
@@ -404,7 +411,9 @@ pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServer
 	{
 		return None;
 	}
-	let mut consumed = HashSet::with_capacity(consumed_registrations.len());
+	let keypair = crypto_sign::KeyPair::from_seed(identity_key.buffer.0.as_slice()).ok()?;
+	let mut consumed = set_with_key(keypair.secret_key.as_bytes());
+	consumed.try_reserve(consumed_registrations.len()).ok()?;
 	for registration_id in consumed_registrations {
 		let registration_id = registration_id.as_slice().try_into().ok()?;
 		if !consumed.insert(registration_id) {
@@ -412,7 +421,6 @@ pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServer
 		}
 	}
 
-	let keypair = crypto_sign::KeyPair::from_seed(identity_key.buffer.0.as_slice()).ok()?;
 	let mldsa_identity = MldsaIdentity::from_seed(*mldsa_identity_seed.0);
 	let server_binding = beaconcrypt_core::pqxdh::ServerBinding {
 		identity_public_key: *keypair.public_key.as_bytes(),
@@ -420,28 +428,27 @@ pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServer
 	};
 	let server_fingerprint =
 		*crate::auth::fingerprint_pin(server_binding, mldsa_identity.public_key())?.fingerprint();
-	let known_ids = known_ids
-		.into_iter()
-		.map(|(key_id, remote)| {
-			let binding = beaconcrypt_core::session::SessionBinding::from_trusted_metadata(
-				server_binding,
-				key_id,
-				*remote.pk.as_bytes(),
-				server_fingerprint,
-				remote.mldsa_public_key_hash,
-			);
-			(
-				key_id,
-				EstablishedRemote::new(remote.pk, remote.ratchet, binding),
-			)
-		})
-		.collect();
+	let mut restored_known_ids = map_with_key(keypair.secret_key.as_bytes());
+	restored_known_ids.try_reserve(known_ids.len()).ok()?;
+	restored_known_ids.extend(known_ids.into_iter().map(|(key_id, remote)| {
+		let binding = beaconcrypt_core::session::SessionBinding::from_trusted_metadata(
+			server_binding,
+			key_id,
+			*remote.pk.as_bytes(),
+			server_fingerprint,
+			remote.mldsa_public_key_hash,
+		);
+		(
+			key_id,
+			EstablishedRemote::new(remote.pk, remote.ratchet, binding),
+		)
+	}));
 
 	Some((
 		keypair,
 		identity_key_kid,
 		server_kid,
-		known_ids,
+		restored_known_ids,
 		consumed,
 		mldsa_identity,
 	))
@@ -550,7 +557,7 @@ mod tests {
 	}
 
 	fn populated_manager() -> RatchetManager {
-		libsodium_rs::ensure_init().unwrap();
+		beaconcrypt_crypto::ensure_init().unwrap();
 		let mut manager = RatchetManager::default();
 		manager.init_ratchets(
 			&[0x42; KDF_STATE_SIZE],
@@ -601,7 +608,7 @@ mod tests {
 	fn serialized_server_value(server_kid: u64) -> Value {
 		let server = crate::Server::new(
 			server_kid,
-			Some(&[0x31; libsodium_rs::crypto_sign::SEEDBYTES]),
+			Some(&[0x31; beaconcrypt_crypto::crypto_sign::SEEDBYTES]),
 			Some(&[0x32; 32]),
 		);
 		serde_json::from_str(&server.serialize_state().unwrap()).unwrap()

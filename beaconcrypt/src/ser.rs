@@ -4,22 +4,26 @@
 use super::{EstablishedRemote, SignType, encode_sign};
 #[cfg(feature = "server")]
 use crate::auth::MldsaIdentity;
+use crate::collections::{HashMap, HashSet};
 #[cfg(test)]
 use crate::ratchet::RatchetKernel;
 use crate::ratchet::{AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, RatchetManager};
 #[cfg(feature = "server")]
 use crate::server::{RatchetSnapshot, StateUpdate};
 use crate::shared::{roles, systems};
+use alloc::{
+	string::{String, ToString},
+	vec::Vec,
+};
 #[cfg(feature = "server")]
-use libsodium_rs::crypto_sign;
+use beaconcrypt_crypto::crypto_sign;
+use core::marker::PhantomData;
 #[cfg(feature = "server")]
 use serde::ser::Error as _;
 use serde::{
 	Serialize, Serializer,
 	ser::{SerializeMap, SerializeSeq, SerializeStruct, SerializeTuple},
 };
-use std::collections::{HashMap, HashSet};
-use std::marker::PhantomData;
 #[cfg(feature = "server")]
 use zeroize::Zeroizing;
 
