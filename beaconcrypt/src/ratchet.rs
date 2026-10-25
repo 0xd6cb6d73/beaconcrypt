@@ -624,11 +624,19 @@ pub(crate) fn decrypt_message_with_ratchet(
 		return None;
 	}
 	let frame = decode_crypto_frame(data)?;
-	let kid = frame.key_id;
-	if kid != expected_sender_kid {
-		return None;
-	}
-	decrypt_payload_with_ratchet(frame.cipher_text, frame.seq, kid, associated_data, ratchet)
+	let admitted = beaconcrypt_core::transport::admit_frame(
+		frame.seq,
+		frame.key_id,
+		frame.cipher_text,
+		expected_sender_kid,
+	)?;
+	decrypt_payload_with_ratchet(
+		admitted.ciphertext,
+		admitted.sequence,
+		admitted.sender,
+		associated_data,
+		ratchet,
+	)
 }
 
 fn decrypt_payload_with_ratchet(

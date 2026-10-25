@@ -255,7 +255,8 @@ def check_source(directory=HERE):
         "fn build_registration_response(",
         [
             "let control = self.control;",
-            "let plaintext = data.unwrap_or(REGISTRATION_WITNESS);",
+            "let application = beaconcrypt_core::transport::normalize_registration_application(data);",
+            "let plaintext = registration_application_bytes(&application);",
             "let RegistrationOutput { registration } = reg_out;",
             "beaconcrypt_core::peer::begin_completion_lookup(control, self.authentication_pin()?, registration, plaintext,)",
             "let next_key_id = lookup.request();",

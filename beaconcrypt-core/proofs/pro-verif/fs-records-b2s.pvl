@@ -161,7 +161,7 @@ let FsB2sServer(obj: bitstring) =
   (* @beaconcrypt-fs-fidelity key=server.associated_data src=beaconcrypt-core/src/registration.rs:1066-1066 anchor=self.binding.associated_data(), *)
   (* @beaconcrypt-fs-fidelity key=core.prepare_commit_ad src=beaconcrypt-core/src/pqxdh.rs:884-887 anchor=associated_data: build_associated_data( *)
   let associated_data = fs_associated_data(server_identity, identity) in
-  (* @beaconcrypt-fs-fidelity key=server.payload src=beaconcrypt/src/server.rs:446-448 anchor=let plaintext = data.unwrap_or(REGISTRATION_WITNESS); *)
+  (* @beaconcrypt-fs-fidelity key=server.payload src=beaconcrypt/src/server.rs:446-447 anchor=let application = beaconcrypt_core::transport::normalize_registration_application(data); *)
   new payload: bitstring;
   (* @beaconcrypt-fs-fidelity key=server.binding src=beaconcrypt-core/src/record_effects.rs:61-70 anchor=let prefix = *crate::pqxdh::registration_key_id_binding(assigned_kid).as_bytes(); *)
   let response_plaintext = registration_payload(
@@ -170,7 +170,7 @@ let FsB2sServer(obj: bitstring) =
     ),
     payload
   ) in
-  (* @beaconcrypt-fs-fidelity key=server.seal src=beaconcrypt/src/server.rs:467-474 anchor=let detached = crate::ratchet::execute_seal_request(pending.request()); *)
+  (* @beaconcrypt-fs-fidelity key=server.seal src=beaconcrypt/src/server.rs:468-475 anchor=let detached = crate::ratchet::execute_seal_request(pending.request()); *)
   let initial_frame = seal_frame(
     ratchet_material(send_chain_1),
     associated_data,
@@ -199,7 +199,7 @@ let FsB2sServer(obj: bitstring) =
     1,
     response_plaintext
   );
-  (* @beaconcrypt-fs-fidelity key=server.build_return src=beaconcrypt/src/server.rs:502-505 anchor=Some(RegResponse { *)
+  (* @beaconcrypt-fs-fidelity key=server.build_return src=beaconcrypt/src/server.rs:503-506 anchor=Some(RegResponse { *)
   out(
     c,
     kex_response(

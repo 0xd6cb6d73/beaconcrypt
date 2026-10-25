@@ -880,6 +880,9 @@ check-lean-root:
 		BeaconcryptCore.Refinement.PeerCollections \
 		BeaconcryptCore.Refinement.PeerOwnership \
 		BeaconcryptCore.PanicFreedom.PeerOwnership \
+		BeaconcryptCore.Refinement.Transport \
+		BeaconcryptCore.Computational.TransportSizingBridge \
+		BeaconcryptCore.PanicFreedom.Transport \
 		BeaconcryptCore.Refinement.KeyAgreement \
 		BeaconcryptCore.Refinement.RegistrationInputs \
 		BeaconcryptCore.Refinement.RegistrationBytePrimitives \

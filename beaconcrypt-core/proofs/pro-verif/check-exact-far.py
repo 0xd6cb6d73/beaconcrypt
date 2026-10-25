@@ -131,9 +131,9 @@ SOURCE_SHA256 = {
     "beaconcrypt-core/src/ratchet/control.rs": "6c17cc0dbe7445be04dc3ab123a60ecbf3d757da6337a7132d5dafd3e06f5639",
     "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
     "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
-    "beaconcrypt/src/ratchet.rs": "91b83d6f519a9453d81911e71262a46ddaa529f8ffd1906ad50672792b6aa828",
+    "beaconcrypt/src/ratchet.rs": "139db9986e11979050b85616fc02226863db593d1c2b46c56cd5c014eb5671b1",
     "beaconcrypt/src/beacon.rs": "e041cd9d18eab646e1cf4266156295cc118ddfd30dabe2e407c7a14bc3e9956b",
-    "beaconcrypt/src/server.rs": "50930c8199bc184afb00503f42a4cffc32a914f1280036b7bad919a82163cbb5",
+    "beaconcrypt/src/server.rs": "6924195a2790f663e9ab3a9bd9aee0b05b0edfae384241f933565dd3f16f63f9",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetControl.lean": "467e40094bfde41c7ebeed24761788c263d5ba12e21d3dfd86e981917b60565c",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetRefinement.lean": "813d26cedc7a82a9c19f795fdc8599809aac8d0626608000a626a2986be2c915",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetFuturePublication.lean": "b87aff9e49e929786c8e7a158e6e470d84a4f07f9fbbe9b5e65837a4065162f8",
@@ -147,6 +147,7 @@ SOURCE_SHA256 = {
     "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018",
     "beaconcrypt-core/src/record_effects.rs": "dbdf79661a17c8d8c128ff349a7efe906d6713912e5510c9a0476b0c3efad2b5",
     "beaconcrypt-core/src/peer.rs": "df4b0fc85a7a303f56908b13a4d90fb7d9233601040b43e035a99d341bd757bc",
+    "beaconcrypt-core/src/transport.rs": "bc3f347f251cb07e44c47699c6fa3db4c9ae8b73c6d1d54c6f9eb54911a463a9",
 }
 
 

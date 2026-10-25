@@ -45,17 +45,17 @@ done < "$manifest"
 declare -A expected_category_counts=(
 	[adapter-rust]=14
 	[adapter-schema]=1
-	[parser-rust]=6
-	[core-rust]=16
+	[parser-rust]=5
+	[core-rust]=17
 	[control]=17
 	[generated-lean]=13
 	[generated-proverif]=1
-	[handwritten-lean]=2060
+	[handwritten-lean]=2063
 	[handwritten-proverif]=298
 	[inventory]=2
 	[lean-control]=13
 	[lean-dependency-overlay]=4
-	[validation]=80
+	[validation]=82
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -181,11 +181,13 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	tests/agreement.rs \
 	tests/registration.rs \
 	tests/record_effects.rs \
+	tests/transport.rs \
 	tests/mldsa_joint_fidelity.rs \
 	tests/general_registration_admission.rs \
 	tests/proverif_transcript_fidelity.rs \
 	tests/fidelity/registration_effects.rs \
 	tests/fidelity/record_effects.rs \
+	tests/fidelity/transport.rs \
 	tests/fidelity/peer_effects.rs \
 	> "$tmp_dir/validation"
 compare_set validation "$tmp_dir/validation"
@@ -972,6 +974,13 @@ require_line_count 1 '^mod peer_effects;$' tests/proverif_transcript_fidelity.rs
 require_line_count 1 '^[[:space:]]*core_peer: String,$' tests/proverif_transcript_fidelity.rs "mutable core peer source"
 require_line_count 1 '^[[:space:]]*core_peer: CORE_PEER\.to_owned\(\),$' tests/proverif_transcript_fidelity.rs "production core peer snapshot"
 require_line_count 2 '^#\[test\]$' "$peer_fidelity_effects" "peer fidelity tests"
+transport_fidelity_effects=tests/fidelity/transport.rs
+require_line_count 1 '^#\[path = "fidelity/transport\.rs"\]$' tests/proverif_transcript_fidelity.rs "transport fidelity module import"
+require_line_count 1 '^mod transport;$' tests/proverif_transcript_fidelity.rs "transport fidelity module binding"
+require_line_count 1 '^const TRANSPORT_SIZING: &str = include_str!\("\.\./src/transport\.rs"\);$' tests/proverif_transcript_fidelity.rs "mutable transport snapshot selects extracted core policy"
+require_line_count 1 '^[[:space:]]*transport_sizing: String,$' tests/proverif_transcript_fidelity.rs "mutable transport source"
+require_line_count 1 '^[[:space:]]*transport_sizing: TRANSPORT_SIZING\.to_owned\(\),$' tests/proverif_transcript_fidelity.rs "production transport source snapshot"
+require_line_count 1 '^#\[test\]$' "$transport_fidelity_effects" "transport fidelity tests"
 fidelity_test=tests/proverif_transcript_fidelity.rs
 require_line_count 56 \
 	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_AUTH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_AUTHENTICATION|CORE_SESSION|CORE_REGISTRATION|CORE_AGREEMENT|CORE_PEER|CORE_RECORD|CORE_RECORD_EFFECTS|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|TRANSPORT_SCHEMA|TRANSPORT_PARSER|TRANSPORT_SIZING|ADAPTER_WIRE|CBOR_REGISTRATION_MODEL|MLDSA_AUTH_MODEL|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLDSA_REGISTRATION_MODEL|MLDSA_REGISTRATION_QUERIES|MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
@@ -1202,10 +1211,10 @@ for cbor_mutation in \
 	cbor_receive_sequence \
 	cbor_registration_implicit_sequence \
 	cbor_registration_pinned_sender; do
-	# This one control is named once in its matrix and once in the diagnostic routing
-	# for the core-owned publication gate that now detects its preflight bypass.
+	# This control retains its matrix, diagnostic and native/core mutation routing.
+	# The latter routes the size-preflight mutation to the actual native delegate.
 	if [[ "$cbor_mutation" == cbor_response_size_precheck ]]; then
-		require_occurrence_count 2 "$cbor_mutation" "CBOR ${cbor_mutation} mutation and diagnostic" "$fidelity_test"
+		require_occurrence_count 3 "$cbor_mutation" "CBOR ${cbor_mutation} mutation, diagnostic and source routing" "$fidelity_test"
 	else
 		require_occurrence_count 1 "$cbor_mutation" "CBOR ${cbor_mutation} mutation" "$fidelity_test" "$record_fidelity_effects"
 	fi
@@ -1472,7 +1481,7 @@ for registration_source in registration agreement; do
 	require_line_count 1 "^[[:space:]]*core_${registration_source}: CORE_${registration_source^^}\\.to_owned\\(\\),$" \
 		"$fidelity_test" "production core ${registration_source} source snapshot"
 done
-python3 - "$fidelity_test" "$fidelity_effects" "$record_fidelity_effects" "$peer_fidelity_effects" <<'PY_REGISTRATION_FIDELITY'
+python3 - "$fidelity_test" "$fidelity_effects" "$record_fidelity_effects" "$peer_fidelity_effects" "$transport_fidelity_effects" <<'PY_REGISTRATION_FIDELITY'
 import ast
 import hashlib
 import json
@@ -1484,6 +1493,7 @@ main = Path(sys.argv[1]).read_text()
 source = Path(sys.argv[2]).read_text()
 records = Path(sys.argv[3]).read_text()
 peers = Path(sys.argv[4]).read_text()
+transport = Path(sys.argv[5]).read_text()
 
 def require(condition, label):
     if not condition:
@@ -1953,11 +1963,11 @@ require(source.count("lifecycle(&changed).is_err()") == 6, "all six new negative
 # Actual core-owned record continuations supersede the complete-record callback seam.
 # Pin every reviewed body/field/mutation tuple, plus execution of all validators and controls.
 record_pins = {'BODIES': {'count': 58,
-            'sha256': '6999c3e6a6d9ba8a601bcdcdbad540463af306a5e3ef5e30189c635fa28b5fb9'},
+            'sha256': '27ac54347b73b9856c5bc9957ee3814af7975d7e8a1da86e7d67646fac6cd0af'},
  'DECLARATIONS': {'count': 11,
                   'sha256': 'd146e391f621db1b6c2ad9794486fd5da41470811b93474bcae8dbbedf0c81b2'},
  'MIGRATED': {'count': 87,
-              'sha256': '9cce464f100fe9d74765e87a76c6b8efa7820b0cbf688cda8d3f715757016c00'}}
+              'sha256': 'ffb1d20d8b6799e9a5c2f932c81018bc7acad629015ce9741665b69f277bb142'}}
 for name, pin in record_pins.items():
     found = re.search(r"^const " + name + r":.*?= &\[(.*?)^\];", records, re.M | re.S)
     require(found is not None, f"reviewed record {name} table")
@@ -2026,7 +2036,39 @@ for statement in ["validate(&baseline).unwrap();", "inDECLARATIONS{", 'format!("
     once(peer_declarations, statement, f"peer private-field/escape control: {statement}")
 require(peer_declarations.count("validate(&changed).is_err()") == 2, "both peer field and ownership-escape matrices reject mutations")
 
-print("Registration/record/peer fidelity inventory: 56 synchronized inputs, 32+4+3+2 tests, 593 registration plus 214 record plus 104 peer negative controls; 87 old names retained")
+
+# Exact extracted transport policy, including every length slot and native admission call.
+transport_pin = {'count': 13, 'sha256': '68e389d1524f8d9b6b52fb35bfa737acda8c9b0a3795002fc5d4e30682dffd28'}
+found = re.search(r"^const CONTRACTS:.*?= &\[(.*?)^\];", transport, re.M | re.S)
+require(found is not None, "reviewed transport contracts")
+rows = ast.literal_eval("[" + found[1] + "]")
+require(len(rows) == transport_pin["count"], "reviewed transport contract count")
+require(hashlib.sha256(json.dumps(rows, separators=(",", ":")).encode()).hexdigest() == transport_pin["sha256"], "reviewed transport exact operands and field order")
+once(function(main, "validate_cryptoframe_source"), "validate_cbor_transport(snapshot)?;", "frame validation composes complete transport admission")
+once(function(main, "validate_cbor_transport"), "transport::validate(snapshot)?;", "CBOR validation delegates exact extracted transport bodies")
+once(function(main, "cryptoframe_wire_mutation_matrix_is_complete_and_rejected"),
+    'ifname=="cbor_response_size_precheck"{replace_once(&mutsnapshot.adapter_server,from,to)}else{replace_once(&mutsnapshot.transport_sizing,from,to)}',
+    "response preflight control retains actual native/core mutation routing")
+transport_validator = function(transport, "validate")
+for statement in ["inCONTRACTS{", "rust_body(&snapshot.transport_sizing,name)?!=expected", '"pubconstMAX_MESSAGE_SIZE:usize=33_554_432;"', '"pubconstREGISTRATION_WITNESS:[u8;1]=[0xff];"']:
+    once(transport_validator, statement, f"transport validator remains active: {statement}")
+transport_controls = function(transport, "extracted_transport_policy_bypass_controls_are_rejected")
+for statement in ["validate(&original).unwrap();", "incontrols{", "expected.matches(from).count()", "expected.replacen(from,to,1)", "replace_body(&mutchanged.transport_sizing,name,&changed_body);", "checked+=1;", "assert_eq!(checked,TRANSPORT_MUTATION_COUNT);"]:
+    require(statement in transport_controls, f"actual transport source control execution: {statement}")
+for statement in ['"complete-messageconstant"', '"registrationwitnessconstant"', '[("encoded_init_len",6),("encoded_response_len",5)]', "forfieldin0..fields{", 'format!(".bytes(lengths[{field}])")', 'format!(".bytes(lengths[{}])",(field+1)%fields)', 'forreplacementin[String::new(),', 'forreplacementin["",substitute]', 'inCONTRACTS{', '"panic!(\\"transportbypass\\")"']:
+    once(transport_controls, statement, f"all transport field/bypass controls execute: {statement}")
+require(transport_controls.count("validate(&changed).unwrap_err().contains(\"CBOR\")") == 8, "all eight transport source-control families reject mutants")
+once(transport, "const TRANSPORT_MUTATION_COUNT: usize = 61;", "61 transport method, constant, every-field and native-view controls")
+once(transport, 'const RENDER_BODY: &str = "matchrequest{beaconcrypt_core::transport::RegistrationApplication::Witness(bytes)=>bytes,beaconcrypt_core::transport::RegistrationApplication::Provided(bytes)=>bytes,}";', "native view interpreter retains both exact source-selected byte arrays")
+for statement in ['rust_body(&snapshot.adapter_server,"registration_application_bytes")?!=RENDER_BODY', '"registration_application_bytes(&application).len()"', '"letplaintext=registration_application_bytes(&application);"']:
+    once(transport_validator, statement, f"actual native representation checks remain active: {statement}")
+for statement in ['"RegistrationApplication::Provided(bytes)=>bytes"', '"RegistrationApplication::Witness(bytes)=>bytes"', 'RENDER_BODY.replacen(from,to,1)', 'replace_body(&mutchanged.adapter_server,"registration_application_bytes",&body,);', 'replace_body(&mutchanged.adapter_server,function,&body);', '"panic!(\\"viewbypass\\")"']:
+    once(transport_controls, statement, f"native view rendering/control mutation executes: {statement}")
+for statement in ["if!declaration{breakstart;}", "b';'ifparentheses==0&&brackets==0=>{declaration=true;break;}", "search_start=start+marker.len();"]:
+    once(function(transport, "replace_body"), statement, f"transport source mutation skips trait declarations: {statement}")
+once(function(transport, "replace_body"), "source.replace_range(open+1..end-1,body);", "transport mutations replace the actual Rust body")
+
+print("Registration/record/peer/transport fidelity inventory: 56 synchronized inputs, 32+4+3+2+1 tests, 593 registration plus 214 record plus 104 peer plus 61 transport negative controls; 87 old names retained")
 PY_REGISTRATION_FIDELITY
 
 require_line_count 1 \
@@ -2145,7 +2187,7 @@ require_occurrence_count 1 \
 	'let key_id = self\.opening\.context\(\)\.sender_kid;\s*let seq = self\.opening\.sequence\(\);\s*let opened = OpenedRecord \{\s*plaintext,\s*key_id,\s*seq,\s*\};\s*self\.opening\.finish\(Some\(opened\)\)' \
 	'record metadata comes from the selected opening context and sequence before kernel publication' src/record.rs
 require_line_count 1 '^pub const MAX_MESSAGE_SIZE: usize = 33_554_432;$' \
-	"$parser_dir/src/sizing.rs" "complete CBOR message size limit"
+	src/transport.rs "complete CBOR message size limit"
 for record in \
 	'init-kex = \[2, 0, identity-key:' \
 	'kex-response = \[2, 1, identity-key:' \
@@ -49485,6 +49527,41 @@ require_line_count 1 '^theorem accept_footprint([[:space:]]|$)' "$selected_sourc
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationAccept\.accept_footprint$' "$selected_source_module" "PqxdhBoundaryRegistrationAccept dependency accept_footprint"
 require_line_count 1 '^theorem collect_replay([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationAccept theorem collect_replay"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationAccept\.collect_replay$' "$selected_source_module" "PqxdhBoundaryRegistrationAccept dependency collect_replay"
+
+# Source-owned CBOR size, sender and application admission.
+require_occurrence_count 1 \
+	'pub use beaconcrypt_core::transport::\{\s*MAX_MESSAGE_SIZE, encoded_frame_len, encoded_init_len, encoded_response_len,\s*\};' \
+	'parser reexports the actual extracted sizing policies' "$parser_dir/src/lib.rs"
+require_occurrence_count 1 \
+	'if !beaconcrypt_core::transport::complete_message_size_admitted\(input\.len\(\)\) \{\s*return None;\s*\}' \
+	'parser applies the extracted complete-message admission before scanning' "$parser_dir/src/lib.rs"
+require_occurrence_count 1 \
+	'pub const fn complete_message_size_admitted\(length: usize\) -> bool \{\s*length <= MAX_MESSAGE_SIZE\s*\}' \
+	'core complete-message admission is inclusive' src/transport.rs
+require_line_count 1 '^pub const REGISTRATION_WITNESS: \[u8; 1\] = \[0xff\];$' \
+	src/transport.rs 'core normalized registration witness'
+require_line_count 1 '^[[:space:]]*None => RegistrationApplication::Witness\(REGISTRATION_WITNESS\),$' \
+	src/transport.rs 'only an omitted application selects the owned witness request'
+require_line_count 1 '^[[:space:]]*Some\(bytes\) => RegistrationApplication::Provided\(bytes\),$' \
+	src/transport.rs 'provided request retains empty bytes and the original borrowing'
+require_line_count 2 '^[[:space:]]*beaconcrypt_core::transport::RegistrationApplication::(Witness|Provided)\(bytes\) => bytes,$' \
+	"$adapter_dir/src/server.rs" 'native view renderer borrows both exact source-selected variants'
+require_occurrence_count 1 \
+	'beaconcrypt_core::transport::protected_frame_len\(plaintext_len, sequence, sender\)' \
+	'native frame preflight delegates exact metadata and plaintext length' "$adapter_dir/src/wire.rs"
+require_occurrence_count 1 \
+	'beaconcrypt_core::transport::registration_response_len\(application_len, assigned_key_id\)' \
+	'native response preflight delegates complete signed response sizing' "$adapter_dir/src/server.rs"
+require_occurrence_count 2 \
+	'let application = beaconcrypt_core::transport::normalize_registration_application\(data\);' \
+	'both response preflight and construction use core normalization' "$adapter_dir/src/server.rs"
+require_occurrence_count 1 \
+	'let admitted = beaconcrypt_core::transport::admit_frame\(\s*frame\.seq,\s*frame\.key_id,\s*frame\.cipher_text,\s*expected_sender_kid,\s*\)\?;\s*decrypt_payload_with_ratchet\(\s*admitted\.ciphertext,\s*admitted\.sequence,\s*admitted\.sender,\s*associated_data,\s*ratchet,\s*\)' \
+	'core sender admission precedes receive and retains all parsed frame fields' "$adapter_dir/src/ratchet.rs"
+require_line_count 1 '^theorem init_size : initLen = 6757 := by$' \
+	proofs/lean/BeaconcryptCore/Computational/CborSizing.lean 'current mandatory-ML registration request size'
+require_line_count 1 '^    byteStringLen payload \+ argumentLen assigned \+ byteStringLen 3309$' \
+	proofs/lean/BeaconcryptCore/Computational/CborSizing.lean 'current response size includes mandatory ML signature'
 
 # CBOR transport extension: complete-message admission and implicit registration metadata.
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborSizing.lean

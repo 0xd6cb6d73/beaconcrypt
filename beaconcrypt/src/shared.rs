@@ -51,9 +51,6 @@ const _: () = assert!(KEX_KDF_OUT_LEN == KDF_STATE_SIZE);
 pub const DH_OUT_LEN: usize = 32;
 #[cfg(feature = "pqxdh")]
 pub const ED25519_SEED_SIZE: usize = 32;
-#[cfg(feature = "server")]
-/// Byte sequence used to test successful keychain derivation during registration. Used only if the server doesn't provide an initial message
-pub const REGISTRATION_WITNESS: &[u8; 1] = &[0xFF; 1];
 
 #[repr(u8)]
 #[derive(PartialEq)]

@@ -537,7 +537,7 @@ const BODIES: &[(&str, &str, &str, &str, &str, &str, &str)] = &[
 		"decrypt_message_with_ratchet",
 		"",
 		"",
-		"ifdata.is_empty(){returnNone;}letframe=decode_crypto_frame(data)?;letkid=frame.key_id;ifkid!=expected_sender_kid{returnNone;}decrypt_payload_with_ratchet(frame.cipher_text,frame.seq,kid,associated_data,ratchet)",
+		"ifdata.is_empty(){returnNone;}letframe=decode_crypto_frame(data)?;letadmitted=beaconcrypt_core::transport::admit_frame(frame.seq,frame.key_id,frame.cipher_text,expected_sender_kid,)?;decrypt_payload_with_ratchet(admitted.ciphertext,admitted.sequence,admitted.sender,associated_data,ratchet,)",
 		"ratchet::decrypt_message_with_ratchet",
 	),
 ];
@@ -1390,8 +1390,8 @@ const MIGRATED: &[(&str, &str, &str, &str, &str, &str, &str)] = &[
 		"ratchet",
 		"",
 		"decrypt_message_with_ratchet",
-		"ifkid!=expected_sender_kid{returnNone;}decrypt_payload_with_ratchet(frame.cipher_text,frame.seq,kid,associated_data,ratchet)",
-		"letopened=decrypt_payload_with_ratchet(frame.cipher_text,frame.seq,kid,associated_data,ratchet)?;ifkid!=expected_sender_kid{returnNone;}Some(opened)",
+		"letadmitted=beaconcrypt_core::transport::admit_frame(frame.seq,frame.key_id,frame.cipher_text,expected_sender_kid,)?;decrypt_payload_with_ratchet(admitted.ciphertext,admitted.sequence,admitted.sender,associated_data,ratchet,)",
+		"letopened=decrypt_payload_with_ratchet(frame.cipher_text,frame.seq,frame.key_id,associated_data,ratchet)?;let_admitted=beaconcrypt_core::transport::admit_frame(frame.seq,frame.key_id,frame.cipher_text,expected_sender_kid,)?;Some(opened)",
 		"record effects",
 	),
 	(

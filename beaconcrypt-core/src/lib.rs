@@ -14,6 +14,7 @@ pub mod record;
 pub mod record_effects;
 pub mod registration;
 pub mod session;
+pub mod transport;
 
 pub use ratchet::{
 	CachedReceiveKey, ConcreteRatchetKernel, ConcreteRatchetRestore, PeerRatchetState,

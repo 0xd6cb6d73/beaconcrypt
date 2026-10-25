@@ -30,11 +30,7 @@ pub(crate) fn encode_frame(frame: CryptoFrame<'_>) -> Option<Vec<u8>> {
 
 /// Exact on-wire length before deriving a key or allocating ciphertext.
 pub(crate) fn frame_len(plaintext_len: usize, sequence: u64, sender: u64) -> Option<usize> {
-	beaconcrypt_parse::encoded_frame_len(
-		sequence,
-		sender,
-		plaintext_len.checked_add(crate::ratchet::MESSAGE_OVERHEAD)?,
-	)
+	beaconcrypt_core::transport::protected_frame_len(plaintext_len, sequence, sender)
 }
 
 #[cfg(any(feature = "beacon", test))]

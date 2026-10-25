@@ -8661,4 +8661,203 @@ def session.SessionBinding.impl.associated_data
   (self : session.SessionBinding) : RustM (Array Std.U8 281#usize) := do
   ok self.associated_data
 
+/-- [beaconcrypt_core::transport::MAX_MESSAGE_SIZE]
+    Source: 'beaconcrypt-core/src/transport.rs', lines 14:0-14:47
+    Visibility: public -/
+@[global_simps, irreducible]
+def transport.MAX_MESSAGE_SIZE : Std.Usize := 33554432#usize
+
+/-- [beaconcrypt_core::transport::REGISTRATION_WITNESS]
+    Source: 'beaconcrypt-core/src/transport.rs', lines 17:0-17:49
+    Visibility: public -/
+@[global_simps, irreducible]
+def transport.REGISTRATION_WITNESS : Array Std.U8 1#usize :=
+  Array.make 1#usize [ 255#u8 ]
+
+/-- [beaconcrypt_core::transport::complete_message_size_admitted]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 20:0-22:1
+    Visibility: public -/
+def transport.complete_message_size_admitted
+  (length : Std.Usize) : RustM Bool := do
+  ok (length <= transport.MAX_MESSAGE_SIZE)
+
+/-- [beaconcrypt_core::transport::argument_len]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 25:0-37:1
+    Visibility: public -/
+def transport.argument_len (value : Std.U64) : RustM Std.Usize := do
+  if value <= 23#u64
+  then ok 1#usize
+  else
+    if value <= 255#u64
+    then ok 2#usize
+    else
+      if value <= 65535#u64
+      then ok 3#usize
+      else if value <= 4294967295#u64
+           then ok 5#usize
+           else ok 9#usize
+
+/-- [beaconcrypt_core::transport::{beaconcrypt_core::transport::CborLength}::new]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 44:4-47:5 -/
+def transport.CborLength.new : RustM transport.CborLength := do
+  ok { value := (core.option.Option.Some 3#usize) }
+
+/-- [beaconcrypt_core::transport::{beaconcrypt_core::transport::CborLength}::integer]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 49:4-56:5 -/
+def transport.CborLength.integer
+  (self : transport.CborLength) (value : Std.U64) :
+  RustM transport.CborLength
+  := do
+  match self.value with
+  | core.option.Option.None => ok { value := core.option.Option.None }
+  | core.option.Option.Some length =>
+    let i ← transport.argument_len value
+    let o ← core.num.Usize.checked_add length i
+    ok { value := o }
+
+/-- [beaconcrypt_core::transport::{beaconcrypt_core::transport::CborLength}::bytes]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 58:4-67:5 -/
+def transport.CborLength.bytes
+  (self : transport.CborLength) (byte_length : Std.Usize) :
+  RustM transport.CborLength
+  := do
+  let i ← lift (UScalar.cast .U64 byte_length)
+  let with_header ← transport.CborLength.integer self i
+  match with_header.value with
+  | core.option.Option.None => ok { value := core.option.Option.None }
+  | core.option.Option.Some length =>
+    let o ← core.num.Usize.checked_add length byte_length
+    ok { value := o }
+
+/-- [beaconcrypt_core::transport::{beaconcrypt_core::transport::CborLength}::finish]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 69:4-74:5 -/
+def transport.CborLength.finish
+  (self : transport.CborLength) : RustM (core.option.Option Std.Usize) := do
+  match self.value with
+  | core.option.Option.None => ok core.option.Option.None
+  | core.option.Option.Some length =>
+    let b ← transport.complete_message_size_admitted length
+    if b
+    then ok self.value
+    else ok core.option.Option.None
+
+/-- [beaconcrypt_core::transport::encoded_frame_len]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 78:0-84:1
+    Visibility: public -/
+def transport.encoded_frame_len
+  (sequence : Std.U64) (sender : Std.U64) (ciphertext_length : Std.Usize) :
+  RustM (core.option.Option Std.Usize)
+  := do
+  let cl ← transport.CborLength.new
+  let cl1 ← transport.CborLength.integer cl sequence
+  let cl2 ← transport.CborLength.integer cl1 sender
+  let cl3 ← transport.CborLength.bytes cl2 ciphertext_length
+  transport.CborLength.finish cl3
+
+/-- [beaconcrypt_core::transport::encoded_init_len]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 87:0-96:1
+    Visibility: public -/
+def transport.encoded_init_len
+  (lengths : Array Std.Usize 6#usize) :
+  RustM (core.option.Option Std.Usize)
+  := do
+  let cl ← transport.CborLength.new
+  let i ← Array.index_usize lengths 0#usize
+  let cl1 ← transport.CborLength.bytes cl i
+  let i1 ← Array.index_usize lengths 1#usize
+  let cl2 ← transport.CborLength.bytes cl1 i1
+  let i2 ← Array.index_usize lengths 2#usize
+  let cl3 ← transport.CborLength.bytes cl2 i2
+  let i3 ← Array.index_usize lengths 3#usize
+  let cl4 ← transport.CborLength.bytes cl3 i3
+  let i4 ← Array.index_usize lengths 4#usize
+  let cl5 ← transport.CborLength.bytes cl4 i4
+  let i5 ← Array.index_usize lengths 5#usize
+  let cl6 ← transport.CborLength.bytes cl5 i5
+  transport.CborLength.finish cl6
+
+/-- [beaconcrypt_core::transport::encoded_response_len]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 99:0-108:1
+    Visibility: public -/
+def transport.encoded_response_len
+  (lengths : Array Std.Usize 5#usize) (assigned_key_id : Std.U64) :
+  RustM (core.option.Option Std.Usize)
+  := do
+  let cl ← transport.CborLength.new
+  let i ← Array.index_usize lengths 0#usize
+  let cl1 ← transport.CborLength.bytes cl i
+  let i1 ← Array.index_usize lengths 1#usize
+  let cl2 ← transport.CborLength.bytes cl1 i1
+  let i2 ← Array.index_usize lengths 2#usize
+  let cl3 ← transport.CborLength.bytes cl2 i2
+  let i3 ← Array.index_usize lengths 3#usize
+  let cl4 ← transport.CborLength.bytes cl3 i3
+  let cl5 ← transport.CborLength.integer cl4 assigned_key_id
+  let i4 ← Array.index_usize lengths 4#usize
+  let cl6 ← transport.CborLength.bytes cl5 i4
+  transport.CborLength.finish cl6
+
+/-- [beaconcrypt_core::transport::protected_frame_len]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 111:0-117:1
+    Visibility: public -/
+def transport.protected_frame_len
+  (plaintext_length : Std.Usize) (sequence : Std.U64) (sender : Std.U64) :
+  RustM (core.option.Option Std.Usize)
+  := do
+  let i ← record.MESSAGE_OVERHEAD
+  let o ← core.num.Usize.checked_add plaintext_length i
+  match o with
+  | core.option.Option.None => ok core.option.Option.None
+  | core.option.Option.Some length =>
+    transport.encoded_frame_len sequence sender length
+
+/-- [beaconcrypt_core::transport::registration_response_len]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 120:0-139:1
+    Visibility: public -/
+def transport.registration_response_len
+  (application_length : Std.Usize) (assigned_key_id : Std.U64) :
+  RustM (core.option.Option Std.Usize)
+  := do
+  let o ← core.num.Usize.checked_add application_length 8#usize
+  match o with
+  | core.option.Option.None => ok core.option.Option.None
+  | core.option.Option.Some length =>
+    let i ← record.MESSAGE_OVERHEAD
+    let o1 ← core.num.Usize.checked_add length i
+    match o1 with
+    | core.option.Option.None => ok core.option.Option.None
+    | core.option.Option.Some length1 =>
+      transport.encoded_response_len
+        (Array.make 5#usize [
+          pqxdh.SIGN_PUBLIC_KEY_SIZE, pqxdh.X25519_PUBLIC_KEY_SIZE,
+          pqxdh.MLKEM768_CIPHERTEXT_SIZE, length1,
+          authentication.MLDSA_SIGNATURE_LEN
+          ]) assigned_key_id
+
+/-- [beaconcrypt_core::transport::admit_frame]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 149:0-163:1
+    Visibility: public -/
+def transport.admit_frame
+  (sequence : Std.U64) (sender : Std.U64) (ciphertext : Slice Std.U8)
+  (expected_sender : Std.U64) :
+  RustM (core.option.Option transport.FrameView)
+  := do
+  if sender != expected_sender
+  then ok core.option.Option.None
+  else ok (core.option.Option.Some { sequence, sender, ciphertext })
+
+/-- [beaconcrypt_core::transport::normalize_registration_application]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 171:0-178:1
+    Visibility: public -/
+def transport.normalize_registration_application
+  (application : core.option.Option (Slice Std.U8)) :
+  RustM transport.RegistrationApplication
+  := do
+  match application with
+  | core.option.Option.None =>
+    ok (transport.RegistrationApplication.Witness
+      transport.REGISTRATION_WITNESS)
+  | core.option.Option.Some bytes =>
+    ok (transport.RegistrationApplication.Provided bytes)
+
 end beaconcrypt_core
