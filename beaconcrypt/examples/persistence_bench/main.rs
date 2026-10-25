@@ -9,6 +9,8 @@ mod concurrency;
 mod concurrency_schedule;
 mod database;
 #[cfg(test)]
+mod main_tests;
+#[cfg(test)]
 mod native_postgres_tests;
 mod postgres;
 
@@ -96,14 +98,13 @@ fn parse_list(value: &str) -> Result<Vec<usize>> {
 		.collect()
 }
 
-fn options() -> Result<Option<Options>> {
+fn options(mut args: impl Iterator<Item = String>) -> Result<Option<Options>> {
 	let mut config = Config::default();
 	let mut output = PathBuf::from("row-persistence-benchmark.json");
 	let mut database_directory = None;
 	let mut concurrent = false;
 	let mut concurrency = concurrency::Config::default();
 	let mut run = false;
-	let mut args = std::env::args().skip(1);
 	while let Some(arg) = args.next() {
 		if matches!(arg.as_str(), "--help" | "-h") {
 			println!(
@@ -754,15 +755,23 @@ fn write_report(file: &mut File, report: &Value) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-	let Some(options) = options()? else {
+	let Some(options) = options(std::env::args().skip(1))? else {
 		return Ok(());
 	};
-	if cfg!(debug_assertions) {
+	dispatch(options, cfg!(debug_assertions))
+}
+
+fn dispatch(options: Options, debug_assertions: bool) -> Result<()> {
+	if debug_assertions {
 		return Err("build this benchmark with --release; debug timings are not accepted".into());
 	}
 	if options.concurrent {
 		return concurrency::run(options);
 	}
+	run_serial(options)
+}
+
+fn run_serial(options: Options) -> Result<()> {
 	// Capture source status before generated report/database files can dirty this checkout.
 	let source_environment = environment();
 	let mut output = OpenOptions::new()
