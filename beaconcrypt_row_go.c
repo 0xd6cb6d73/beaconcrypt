@@ -34,3 +34,22 @@ void beaconcrypt_go_deliver_row(void *opaque, const uint8_t *bytes, uintptr_t le
 	row_delivery *delivery = (row_delivery *)opaque;
 	delivery->sink(delivery->context, bytes, len);
 }
+
+static bool row_transaction(void *context, beaconcrypt_RowSessionHandle *session, void *sink_context, void (*sink)(void *, const uint8_t *, uintptr_t)) {
+	row_delivery delivery = {sink, sink_context};
+	return beaconcryptGoRowTransaction((uintptr_t)context, session, &delivery);
+}
+static int32_t row_acceptance(void *context, beaconcrypt_RowSessionHandle *session, void *sink_context, void (*sink)(void *, const uint8_t *, uintptr_t)) {
+	row_delivery delivery = {sink, sink_context};
+	return beaconcryptGoRowAcceptance((uintptr_t)context, session, &delivery);
+}
+static bool row_completion(void *context, beaconcrypt_RowSessionHandle *session, const uint8_t *accepted, uintptr_t accepted_len, void *sink_context, void (*sink)(void *, const uint8_t *, uintptr_t)) {
+	row_delivery delivery = {sink, sink_context};
+	return beaconcryptGoRowCompletion((uintptr_t)context, session, (uint8_t *)accepted, accepted_len, &delivery);
+}
+beaconcrypt_Buffer beaconcrypt_go_row_transaction(beaconcrypt_RowServerHandle *server, uintptr_t token) {
+	return beaconcrypt_row_server_transaction(server, (void *)token, row_transaction);
+}
+beaconcrypt_Buffer beaconcrypt_go_row_registration_transaction(beaconcrypt_RowServerHandle *server, uintptr_t token, uint32_t *phase) {
+	return beaconcrypt_row_server_registration_transaction(server, (void *)token, row_acceptance, row_completion, phase);
+}

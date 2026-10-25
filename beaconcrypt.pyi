@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Final, Literal, Protocol, final
+from typing import Callable, Final, Literal, Protocol, final
 
 MAX_MESSAGE_SIZE: Final[int]
 """Maximum complete encoded transport message in bytes; snapshots and JSON state are uncapped."""
@@ -150,6 +150,7 @@ class RowPersistenceError(ValueError):
         "conflict",
         "missing_identity",
         "invalid_row",
+        "invalid_session",
         "generation_exhausted",
         "initialization",
         "encoding",
@@ -163,6 +164,51 @@ class _RowStore(Protocol):
     def store(self, key: bytes, value: bytes) -> None: ...
     def commit(self) -> None: ...
     def rollback(self) -> None: ...
+
+@final
+class RowMessage:
+    """Message bytes with authenticated peer and consumed-sequence metadata; session callback results remain pending until the outer call succeeds."""
+
+    @property
+    def data(self) -> bytes: ...
+    @property
+    def key_id(self) -> int: ...
+    @property
+    def seq(self) -> int: ...
+
+class RowRegistrationError(RowPersistenceError):
+    """A failed registration phase; completion means acceptance definitely committed."""
+
+    phase: Literal["acceptance", "completion"]
+
+@final
+class RowTransition:
+    """Pending native effect inside a trusted transaction callback."""
+
+    @property
+    def message(self) -> RowMessage | None: ...
+    @property
+    def changed(self) -> bool: ...
+
+@final
+class RowRegistrationDecision:
+    @staticmethod
+    def return_result(data: bytes) -> RowRegistrationDecision: ...
+    @staticmethod
+    def continue_registration(data: bytes) -> RowRegistrationDecision: ...
+
+@final
+class RowSession:
+    """Callback-scoped access to isolated application rows and zero or one native attempt. Do not publish pending outputs before the outer call succeeds, or reenter the owning server. Methods reject use after callback return."""
+
+    def load(self, key: bytes) -> bytes | None: ...
+    def store(self, key: bytes, value: bytes) -> None: ...
+    def encrypt_to_beacon(self, data: bytes, kid: int) -> RowTransition: ...
+    def decrypt_beacon_message(self, data: bytes) -> RowTransition: ...
+    def accept_registration(self, data: bytes) -> bool: ...
+    def complete_registration(
+        self, initial_message: bytes | None = None
+    ) -> RowTransition: ...
 
 @final
 class BeaconCryptRowServer:
@@ -189,3 +235,15 @@ class BeaconCryptRowServer:
     ) -> RegResponse | None: ...
     def encrypt_to_beacon(self, data: Sequence[int], kid: int) -> bytes | None: ...
     def decrypt_beacon_message(self, data: Sequence[int]) -> bytes | None: ...
+    def encrypt_to_beacon_with_metadata(
+        self, data: Sequence[int], kid: int
+    ) -> RowMessage | None: ...
+    def decrypt_beacon_message_with_metadata(
+        self, data: Sequence[int]
+    ) -> RowMessage | None: ...
+    def transaction(self, callback: Callable[[RowSession], bytes]) -> bytes: ...
+    def registration_transaction(
+        self,
+        accept: Callable[[RowSession], RowRegistrationDecision],
+        complete: Callable[[RowSession, bytes], bytes],
+    ) -> bytes: ...

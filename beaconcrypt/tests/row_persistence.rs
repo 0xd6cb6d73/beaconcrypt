@@ -3,7 +3,7 @@ use std::{
 	path::Path,
 	sync::{
 		Arc, Barrier, Mutex,
-		atomic::{AtomicBool, Ordering},
+		atomic::{AtomicBool, AtomicUsize, Ordering},
 	},
 	thread,
 };
@@ -12,6 +12,7 @@ use beaconcrypt::{
 	Beacon, ProviderBeacon, RowError, RowServer, RowStore, RowTransaction, SnapshotLineage,
 };
 use rusqlite::Connection;
+use zeroize::Zeroizing;
 
 #[path = "../examples/sqlite/store.rs"]
 mod store;
@@ -415,6 +416,165 @@ fn competing_receives_publish_plaintext_once() {
 		outputs.into_iter().flatten().next().unwrap().plaintext,
 		b"only once"
 	);
+}
+
+#[test]
+fn concurrent_composed_receives_recover_one_exact_receipt_after_reopen() {
+	fn process(
+		server: &mut RowServer<SqliteRowStore>,
+		input: &[u8],
+		kid: u64,
+		native_calls: &AtomicUsize,
+	) -> Result<Zeroizing<Vec<u8>>, RowError> {
+		server.transaction(|session| {
+			if let Some(receipt) = session.load_application(b"requests/receive-123")? {
+				return Ok(receipt);
+			}
+			native_calls.fetch_add(1, Ordering::SeqCst);
+			let transition = session.decrypt_message(input)?;
+			assert!(transition.changed);
+			let message = transition.message.ok_or(RowError::Conflict)?;
+			assert_eq!(message.key_id(), kid);
+			let mut response = Zeroizing::new(
+				format!("received {}/{}:", message.key_id(), message.sequence()).into_bytes(),
+			);
+			response.extend_from_slice(message.data());
+			session
+				.store_application(b"metadata/last-received", &message.sequence().to_le_bytes())?;
+			session.store_application(b"requests/receive-123", &response)?;
+			Ok(response)
+		})
+	}
+
+	let directory = tempfile::tempdir().unwrap();
+	let path = directory.path().join("composed-receive-race.sqlite");
+	let mut initial = create(&path);
+	let (mut beacon, kid) = register(&mut initial);
+	let input = beacon
+		.encrypt_message(b"one durable application result")
+		.unwrap()
+		.ciphertext;
+	drop(initial);
+	let native_calls = Arc::new(AtomicUsize::new(0));
+	let barrier = Arc::new(Barrier::new(2));
+	let workers = [open(&path), open(&path)]
+		.into_iter()
+		.map(|mut worker| {
+			let input = input.clone();
+			let native_calls = Arc::clone(&native_calls);
+			let barrier = Arc::clone(&barrier);
+			thread::spawn(move || {
+				barrier.wait();
+				process(&mut worker, &input, kid, &native_calls).unwrap()
+			})
+		})
+		.collect::<Vec<_>>();
+	let results = workers
+		.into_iter()
+		.map(|worker| worker.join().unwrap())
+		.collect::<Vec<_>>();
+	let expected = format!("received {kid}/1:one durable application result").into_bytes();
+	assert_eq!(results[0].as_slice(), expected);
+	assert_eq!(results[1].as_slice(), expected);
+	assert_eq!(native_calls.load(Ordering::SeqCst), 1);
+
+	let committed = rows(&path);
+	let mut reopened = open(&path);
+	let recovered = process(&mut reopened, &input, kid, &native_calls).unwrap();
+	assert_eq!(recovered.as_slice(), expected);
+	assert_eq!(native_calls.load(Ordering::SeqCst), 1);
+	reopened
+		.transaction(|session| {
+			assert_eq!(
+				session
+					.load_application(b"metadata/last-received")?
+					.unwrap()
+					.as_slice(),
+				1u64.to_le_bytes()
+			);
+			Ok(())
+		})
+		.unwrap();
+	assert!(reopened.decrypt_message(&input).unwrap().is_none());
+	assert_eq!(rows(&path), committed);
+}
+
+#[test]
+fn authenticated_peer_mismatch_rolls_back_application_and_ratchet_before_valid_retry() {
+	fn process(
+		server: &mut RowServer<SqliteRowStore>,
+		input: &[u8],
+	) -> Result<Zeroizing<Vec<u8>>, RowError> {
+		server.transaction(|session| {
+			let routing = session
+				.load_application(b"routing/authorized-peer")?
+				.ok_or(RowError::Conflict)?;
+			let expected_kid = u64::from_le_bytes(routing.as_slice().try_into().unwrap());
+			session.store_application(b"requests/authorized-receive", b"pending authorization")?;
+			let transition = session.decrypt_message(input)?;
+			assert!(transition.changed);
+			let message = transition.message.ok_or(RowError::Conflict)?;
+			if message.key_id() != expected_kid {
+				return Err(RowError::Storage(
+					"authenticated peer does not match routed session".into(),
+				));
+			}
+			let response = Zeroizing::new(message.data().to_vec());
+			session.store_application(b"requests/authorized-receive", &response)?;
+			Ok(response)
+		})
+	}
+
+	let directory = tempfile::tempdir().unwrap();
+	let path = directory
+		.path()
+		.join("composed-receive-authorization.sqlite");
+	let mut server = create(&path);
+	let (mut first, first_kid) = register(&mut server);
+	let (_, second_kid) = register(&mut server);
+	server
+		.transaction(|session| {
+			session.store_application(b"routing/authorized-peer", &second_kid.to_le_bytes())
+		})
+		.unwrap();
+	let input = first
+		.encrypt_message(b"authenticated application message")
+		.unwrap()
+		.ciphertext;
+	let before = rows(&path);
+	assert_eq!(
+		process(&mut server, &input).err(),
+		Some(RowError::Storage(
+			"authenticated peer does not match routed session".into()
+		))
+	);
+	assert_eq!(rows(&path), before);
+	drop(server);
+
+	let mut server = open(&path);
+	server
+		.transaction(|session| {
+			assert!(
+				session
+					.load_application(b"requests/authorized-receive")?
+					.is_none()
+			);
+			session.store_application(b"routing/authorized-peer", &first_kid.to_le_bytes())
+		})
+		.unwrap();
+	assert_eq!(
+		process(&mut server, &input).unwrap().as_slice(),
+		b"authenticated application message"
+	);
+	drop(server);
+
+	let mut reopened = open(&path);
+	let receipt = reopened
+		.transaction(|session| session.load_application(b"requests/authorized-receive"))
+		.unwrap()
+		.unwrap();
+	assert_eq!(receipt.as_slice(), b"authenticated application message");
+	assert!(reopened.decrypt_message(&input).unwrap().is_none());
 }
 
 #[test]

@@ -156,6 +156,60 @@ func TestRowBindingsRestartReplayAndSinglePeerWrite(t *testing.T) {
 	}
 }
 
+func TestRowBindingsAuthenticatedMetadataAndCachedReceive(t *testing.T) {
+	server, store, _ := newRowTestServer(t)
+	first, firstID, _ := registerRowBeacon(t, server)
+	second, secondID, _ := registerRowBeacon(t, server)
+	outbound, err := server.EncryptToBeaconWithMetadata(firstID, []byte("outbound"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if outbound.KeyID != firstID || outbound.Seq != 2 {
+		t.Fatalf("outbound metadata: %+v", outbound)
+	}
+	plain, err := first.DecryptServerMessage(outbound.Data)
+	if err != nil || string(plain) != "outbound" {
+		t.Fatalf("outbound data: %q %v", plain, err)
+	}
+
+	makeMessage := func(beacon *Beacon, value string) []byte {
+		t.Helper()
+		message, err := beacon.EncryptToServer([]byte(value))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return message
+	}
+	older := makeMessage(first, "older")
+	newer := makeMessage(first, "newer")
+	other := makeMessage(second, "other peer")
+	for _, test := range []struct {
+		message []byte
+		plain   string
+		kid     uint64
+		seq     uint64
+	}{
+		{newer, "newer", firstID, 2},
+		{other, "other peer", secondID, 1},
+		{older, "older", firstID, 1},
+	} {
+		value, err := server.DecryptBeaconMessageWithMetadata(test.message)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(value.Data) != test.plain || value.KeyID != test.kid || value.Seq != test.seq {
+			t.Fatalf("receive metadata: %+v; want peer %d sequence %d data %q", value, test.kid, test.seq, test.plain)
+		}
+	}
+	if value, err := server.DecryptBeaconMessageWithMetadata(older); value != nil || !errors.Is(err, ErrCrypto) {
+		t.Fatalf("replay released metadata: %+v %v", value, err)
+	}
+	store.failCommit = true
+	if value, err := server.EncryptToBeaconWithMetadata(firstID, []byte("uncommitted")); value != nil || !errors.Is(err, errRowCommit) {
+		t.Fatalf("failed commit released metadata: %+v %v", value, err)
+	}
+}
+
 func TestRowBindingsRollbackUncertainCommitAndCallbackPanic(t *testing.T) {
 	server, store, _ := newRowTestServer(t)
 	beacon, _, _ := registerRowBeacon(t, server)

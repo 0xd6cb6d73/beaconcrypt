@@ -28,6 +28,8 @@ pub enum RowError {
 	GenerationExhausted,
 	Initialization,
 	OutputEncoding,
+	/// The callback attempted an operation outside its phase or used its native transition twice.
+	InvalidSession,
 }
 
 impl fmt::Display for RowError {
@@ -40,6 +42,7 @@ impl fmt::Display for RowError {
 			Self::GenerationExhausted => f.write_str("row generation exhausted"),
 			Self::Initialization => f.write_str("failed to initialize server identity"),
 			Self::OutputEncoding => f.write_str("failed to encode persistence row"),
+			Self::InvalidSession => f.write_str("invalid operation in row transaction session"),
 		}
 	}
 }
@@ -153,16 +156,17 @@ struct Row<'a> {
 
 fn decode_row<'a>(key: &[u8], bytes: &'a [u8]) -> Result<Row<'a>, RowError> {
 	const HEADER: usize = 16 + 1 + 8 + 32 + 2;
-	if bytes.len() < HEADER || &bytes[..16] != MAGIC || bytes[16] != VERSION {
+	let header = bytes.get(..HEADER).ok_or(RowError::InvalidRow)?;
+	if &header[..16] != MAGIC || header[16] != VERSION {
 		return Err(RowError::InvalidRow);
 	}
-	let key_len = u16::from_le_bytes(bytes[57..59].try_into().unwrap()) as usize;
+	let key_len = u16::from_le_bytes(header[57..59].try_into().unwrap()) as usize;
 	if bytes.get(HEADER..HEADER + key_len) != Some(key) {
 		return Err(RowError::InvalidRow);
 	}
 	Ok(Row {
-		generation: u64::from_le_bytes(bytes[17..25].try_into().unwrap()),
-		identity: bytes[25..57].try_into().unwrap(),
+		generation: u64::from_le_bytes(header[17..25].try_into().unwrap()),
+		identity: header[25..57].try_into().unwrap(),
 		payload: &bytes[HEADER + key_len..],
 	})
 }
@@ -189,6 +193,110 @@ fn decode_peer(payload: &[u8]) -> Result<EstablishedRemote<crypto_sign::PublicKe
 		return Err(RowError::InvalidRow);
 	}
 	Ok(peer)
+}
+
+/// Message material available to a trusted transaction callback before commit.
+///
+/// The owned buffer is wiped on drop, including when commit fails. Copies made by the application
+/// remain its responsibility. Do not publish this message outside the transaction before commit.
+pub struct RowMessage {
+	data: Zeroizing<Vec<u8>>,
+	key_id: u64,
+	sequence: u64,
+}
+
+impl RowMessage {
+	pub fn data(&self) -> &[u8] {
+		&self.data
+	}
+	pub const fn key_id(&self) -> u64 {
+		self.key_id
+	}
+	pub const fn sequence(&self) -> u64 {
+		self.sequence
+	}
+}
+
+/// The effect of one native operation in the current transaction.
+///
+/// A rejected operation has no message and `changed == false`. A send that consumed a key but
+/// failed to produce a message has `changed == true`; an application can record that terminal
+/// outcome without accidentally treating it as an unchanged rejection.
+pub struct RowTransition {
+	pub message: Option<RowMessage>,
+	pub changed: bool,
+}
+
+impl RowTransition {
+	fn unchanged() -> Self {
+		Self {
+			message: None,
+			changed: false,
+		}
+	}
+}
+
+/// Choose an application result after registration preflight, or continue after durable acceptance.
+pub enum RowRegistrationDecision<A, T> {
+	/// Commit the current application writes and return without constructing a registration response.
+	Return(T),
+	/// Commit an accepted registration and carry application context into the completion callback.
+	Continue(A),
+}
+
+/// The transaction that reported a registration failure.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RowRegistrationPhase {
+	/// Acceptance was not confirmed. A storage error may still mean the first commit succeeded.
+	Acceptance,
+	/// Acceptance definitely committed; completion did not report a confirmed successful commit.
+	Completion,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RowRegistrationError {
+	pub phase: RowRegistrationPhase,
+	pub source: RowError,
+}
+
+impl fmt::Display for RowRegistrationError {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "registration {:?} failed: {}", self.phase, self.source)
+	}
+}
+
+impl Error for RowRegistrationError {
+	fn source(&self) -> Option<&(dyn Error + 'static)> {
+		Some(&self.source)
+	}
+}
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum SessionPhase {
+	Message,
+	Acceptance,
+	Completion,
+}
+
+/// A callback-scoped view of one trusted storage transaction.
+///
+/// Application rows are isolated from beaconcrypt's private keys. A session permits zero or one
+/// native operation, including rejected attempts. Any method error aborts the transaction even if
+/// the callback catches it. Native ratchets never leave the session and are not retained afterward.
+///
+/// The callback is part of the trusted persistence boundary: it may encode and store pending
+/// results, but must not publish them or perform irreversible external effects before commit.
+/// Library-owned message buffers are wiped on failure; application-created copies and callback
+/// return values need their own erasure policy, such as `Zeroizing` for secret byte buffers.
+pub struct RowSession<'a> {
+	identity: &'a Server,
+	identity_digest: &'a [u8; 32],
+	lineage: SnapshotLineage,
+	transaction: &'a mut dyn RowTransaction,
+	phase: SessionPhase,
+	native_used: bool,
+	failure: Option<RowError>,
+	pending_registration: Option<crate::RegistrationOutput>,
 }
 
 /// A database-independent server that loads and commits only the affected peer.
@@ -296,6 +404,94 @@ impl<S: RowStore> RowServer<S> {
 		self.identity.mldsa_public_key()
 	}
 
+	/// Compose application preflight, at most one message transition, and application writes.
+	///
+	/// The callback's result is returned only after the outer durable commit. Its session methods
+	/// cannot be used afterward. A callback error rolls back all writes; any pending native output
+	/// is discarded. Do not publish tentative output or irreversible effects from the callback.
+	pub fn transaction<T>(
+		&mut self,
+		operation: impl FnOnce(&mut RowSession<'_>) -> Result<T, RowError>,
+	) -> Result<T, RowError> {
+		transact(&mut self.store, |transaction| {
+			let mut session = RowSession::new(
+				&self.identity,
+				&self.identity_digest,
+				self.lineage,
+				transaction,
+				SessionPhase::Message,
+				None,
+			);
+			let output = operation(&mut session);
+			session.finish(output)
+		})
+	}
+
+	/// Compose registration across its separate acceptance and completion commits.
+	///
+	/// The first callback may return a cached or terminal result without accepting anything. To
+	/// continue, it must call `accept_registration` successfully and return `Continue(context)`.
+	/// Its application writes and replay marker then commit together. Only a confirmed commit
+	/// transfers the private, one-use pending material into the second callback.
+	///
+	/// Completion may revalidate authorization, construct one response, and store its exact result
+	/// and application metadata with the new peer. It may instead commit a terminal application
+	/// result without constructing a response. A completion failure never removes the acceptance
+	/// marker. No pending material is persisted or returned; a crash between phases requires the
+	/// application's incomplete receipt policy, not a retry of the accepted InitKex.
+	pub fn registration_transaction<A, T>(
+		&mut self,
+		accept: impl FnOnce(&mut RowSession<'_>) -> Result<RowRegistrationDecision<A, T>, RowError>,
+		complete: impl FnOnce(&mut RowSession<'_>, A) -> Result<T, RowError>,
+	) -> Result<T, RowRegistrationError> {
+		let accepted = transact(&mut self.store, |transaction| {
+			let mut session = RowSession::new(
+				&self.identity,
+				&self.identity_digest,
+				self.lineage,
+				transaction,
+				SessionPhase::Acceptance,
+				None,
+			);
+			let decision = accept(&mut session);
+			let decision = session.finish(decision)?;
+			match decision {
+				RowRegistrationDecision::Return(output) => Ok(Ok(output)),
+				RowRegistrationDecision::Continue(context) => {
+					let pending = session
+						.pending_registration
+						.take()
+						.ok_or(RowError::InvalidSession)?;
+					Ok(Err((pending, context)))
+				}
+			}
+		})
+		.map_err(|source| RowRegistrationError {
+			phase: RowRegistrationPhase::Acceptance,
+			source,
+		})?;
+		let (pending, context) = match accepted {
+			Ok(output) => return Ok(output),
+			Err(continuation) => continuation,
+		};
+		transact(&mut self.store, |transaction| {
+			let mut session = RowSession::new(
+				&self.identity,
+				&self.identity_digest,
+				self.lineage,
+				transaction,
+				SessionPhase::Completion,
+				Some(pending),
+			);
+			let output = complete(&mut session, context);
+			session.finish(output)
+		})
+		.map_err(|source| RowRegistrationError {
+			phase: RowRegistrationPhase::Completion,
+			source,
+		})
+	}
+
 	/// Accept an InitKex, durably consume its replay marker, then commit its response and peer.
 	///
 	/// These are two transactions: the consumed marker survives response failure and crashes. Pending
@@ -305,76 +501,32 @@ impl<S: RowStore> RowServer<S> {
 		bytes: &[u8],
 		data: Option<&[u8]>,
 	) -> Result<Option<RegResponse>, RowError> {
-		if bytes.len() > crate::MAX_MESSAGE_SIZE {
-			return Ok(None);
-		}
+		// Preserve the convenience API's validation before any database access. Composed callbacks
+		// instead choose their own preflight inside the acceptance transaction.
 		let mut session = self.identity.row_session(self.identity_key_kid());
 		let Some(pending) = session.get_shared_secret(bytes) else {
 			return Ok(None);
 		};
-		let replay_key = storage_key(self.lineage, REGISTRATION, &pending.row_registration_id());
 		let accepted = transact(&mut self.store, |transaction| {
-			if let Some(bytes) = transaction.load(&replay_key)? {
-				let bytes = Zeroizing::new(bytes);
-				let row = bound_row(&replay_key, &bytes, &self.identity_digest)?;
-				if row.generation != 0 || !row.payload.is_empty() {
-					return Err(RowError::InvalidRow);
-				}
-				return Ok(false);
-			}
-			transaction.store(
-				&replay_key,
-				&encode_row(&replay_key, 0, &self.identity_digest, &[]),
-			)?;
-			Ok(true)
+			consume_registration_marker(transaction, self.lineage, &self.identity_digest, &pending)
 		})?;
 		if !accepted {
 			return Ok(None);
 		}
-		let allocator_key = storage_key(self.lineage, ALLOCATOR, &[]);
-		transact(&mut self.store, |transaction| {
-			let bytes = Zeroizing::new(
-				transaction
-					.load(&allocator_key)?
-					.ok_or(RowError::InvalidRow)?,
-			);
-			let row = bound_row(&allocator_key, &bytes, &self.identity_digest)?;
-			let last =
-				u64::from_le_bytes(row.payload.try_into().map_err(|_| RowError::InvalidRow)?);
-			if last < self.identity.identity_key_kid() {
-				return Err(RowError::InvalidRow);
-			}
-			let Some(kid) = last.checked_add(1) else {
-				return Ok(None);
-			};
-			let peer_key = storage_key(self.lineage, PEER, &kid.to_le_bytes());
-			if transaction.load(&peer_key)?.is_some() {
-				return Err(RowError::Conflict);
-			}
-			let mut session = self.identity.row_session(last);
-			let Some(response) = session.build_registration_response(pending, data) else {
-				return Ok(None);
-			};
-			let peer = session.take_row_peer(kid).ok_or(RowError::InvalidRow)?;
-			let generation = row
-				.generation
-				.checked_add(1)
-				.ok_or(RowError::GenerationExhausted)?;
-			transaction.store(
-				&allocator_key,
-				&encode_row(
-					&allocator_key,
-					generation,
-					&self.identity_digest,
-					&kid.to_le_bytes(),
-				),
-			)?;
-			transaction.store(
-				&peer_key,
-				&encode_row(&peer_key, 0, &self.identity_digest, &encode_peer(&peer)?),
-			)?;
-			Ok(Some(response))
-		})
+		let output = transact(&mut self.store, |transaction| {
+			complete_registration(
+				&self.identity,
+				&self.identity_digest,
+				self.lineage,
+				transaction,
+				pending,
+				data,
+			)
+		})?;
+		Ok(output.message.map(|mut message| RegResponse {
+			serialized: std::mem::take(&mut *message.data),
+			kid: message.key_id,
+		}))
 	}
 
 	/// Encrypt and durably commit only this peer. A consumed send key is saved even on seal failure.
@@ -383,78 +535,332 @@ impl<S: RowStore> RowServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<Encrypted>, RowError> {
-		if bytes.is_empty() || bytes.len() > crate::MAX_MESSAGE_SIZE {
+		if !send_input_fits(bytes, self.identity_key_kid()) {
 			return Ok(None);
 		}
-		self.with_peer(kid, |session| {
-			let before = session
-				.ratchet_status(kid)
-				.ok_or(RowError::InvalidRow)?
-				.send_sequence();
-			let encrypted = session.encrypt_message(bytes, kid);
-			let after = session
-				.ratchet_status(kid)
-				.ok_or(RowError::InvalidRow)?
-				.send_sequence();
-			Ok((encrypted, before != after))
-		})
+		let output = self.transaction(|session| session.encrypt_message(bytes, kid))?;
+		Ok(output.message.map(|mut message| Encrypted {
+			ciphertext: std::mem::take(&mut *message.data),
+			key_id: message.key_id,
+			seq: message.sequence,
+		}))
 	}
 
 	/// Authenticate once and commit the resulting peer before releasing plaintext. Rejection writes nothing.
 	pub fn decrypt_message(&mut self, bytes: &[u8]) -> Result<Option<Decrypted>, RowError> {
-		let Some(kid) = crate::ratchet::encrypted_frame_sender(bytes) else {
+		if crate::ratchet::encrypted_frame_sender(bytes).is_none() {
 			return Ok(None);
-		};
-		// Keep tentative plaintext in a wiping buffer until the outer transaction has committed.
-		let pending = self.with_peer(kid, |session| {
-			let decrypted = session
-				.decrypt_message(bytes)
-				.map(|value| (Zeroizing::new(value.plaintext), value.key_id, value.seq));
-			let changed = decrypted.is_some();
-			Ok((decrypted, changed))
-		})?;
-		Ok(pending.map(|(mut plaintext, key_id, seq)| Decrypted {
-			plaintext: std::mem::take(&mut *plaintext),
-			key_id,
-			seq,
+		}
+		let output = self.transaction(|session| session.decrypt_message(bytes))?;
+		Ok(output.message.map(|mut message| Decrypted {
+			plaintext: std::mem::take(&mut *message.data),
+			key_id: message.key_id,
+			seq: message.sequence,
 		}))
 	}
+}
 
-	fn with_peer<T>(
+fn send_input_fits(bytes: &[u8], sender: u64) -> bool {
+	// Sequence one gives a conservative minimum framing size. The actual sequence is checked
+	// by the native encryptor after loading the peer, before deriving any message key.
+	!bytes.is_empty() && crate::wire::frame_len(bytes.len(), 1, sender).is_some()
+}
+
+impl<'a> RowSession<'a> {
+	fn new(
+		identity: &'a Server,
+		identity_digest: &'a [u8; 32],
+		lineage: SnapshotLineage,
+		transaction: &'a mut dyn RowTransaction,
+		phase: SessionPhase,
+		pending_registration: Option<crate::RegistrationOutput>,
+	) -> Self {
+		Self {
+			identity,
+			identity_digest,
+			lineage,
+			transaction,
+			phase,
+			native_used: false,
+			failure: None,
+			pending_registration,
+		}
+	}
+
+	fn finish<T>(&self, output: Result<T, RowError>) -> Result<T, RowError> {
+		match &self.failure {
+			Some(error) => Err(error.clone()),
+			None => output,
+		}
+	}
+
+	fn checked<T>(
 		&mut self,
-		kid: u64,
-		operation: impl FnOnce(&mut Server) -> Result<(Option<T>, bool), RowError>,
-	) -> Result<Option<T>, RowError> {
-		let key = storage_key(self.lineage, PEER, &kid.to_le_bytes());
-		transact(&mut self.store, |transaction| {
-			let Some(bytes) = transaction.load(&key)? else {
-				return Ok(None);
-			};
-			let bytes = Zeroizing::new(bytes);
-			let row = bound_row(&key, &bytes, &self.identity_digest)?;
-			let peer = decode_peer(row.payload)?;
-			let mut session = self.identity.row_session(self.identity.identity_key_kid());
-			session.put_row_peer(kid, peer);
-			let (output, changed) = operation(&mut session)?;
-			if changed {
-				let peer = session.take_row_peer(kid).ok_or(RowError::InvalidRow)?;
-				let generation = row
-					.generation
-					.checked_add(1)
-					.ok_or(RowError::GenerationExhausted)?;
-				transaction.store(
-					&key,
-					&encode_row(
-						&key,
-						generation,
-						&self.identity_digest,
-						&encode_peer(&peer)?,
-					),
-				)?;
-			}
-			Ok(output)
+		operation: impl FnOnce(&mut Self) -> Result<T, RowError>,
+	) -> Result<T, RowError> {
+		if let Some(error) = &self.failure {
+			return Err(error.clone());
+		}
+		let output = operation(self);
+		if let Err(error) = &output {
+			self.failure = Some(error.clone());
+		}
+		output
+	}
+
+	fn begin_native(&mut self, phase: SessionPhase) -> Result<(), RowError> {
+		if self.phase != phase || self.native_used {
+			return Err(RowError::InvalidSession);
+		}
+		self.native_used = true;
+		Ok(())
+	}
+
+	fn application_key(&self, key: &[u8]) -> Vec<u8> {
+		let mut namespaced = b"beaconcrypt/application/v1/".to_vec();
+		namespaced.extend_from_slice(self.lineage.as_bytes());
+		namespaced.extend_from_slice(key);
+		namespaced
+	}
+
+	/// Load application bytes from this lineage's separate application namespace.
+	pub fn load_application(&mut self, key: &[u8]) -> Result<Option<Zeroizing<Vec<u8>>>, RowError> {
+		self.checked(|session| {
+			let key = session.application_key(key);
+			session
+				.transaction
+				.load(&key)
+				.map(|value| value.map(Zeroizing::new))
 		})
 	}
+
+	/// Stage application bytes in the same transaction as the native state transition.
+	pub fn store_application(&mut self, key: &[u8], value: &[u8]) -> Result<(), RowError> {
+		self.checked(|session| {
+			let key = session.application_key(key);
+			session.transaction.store(&key, value)
+		})
+	}
+
+	pub fn encrypt_message(&mut self, bytes: &[u8], kid: u64) -> Result<RowTransition, RowError> {
+		self.checked(|session| {
+			session.begin_native(SessionPhase::Message)?;
+			if !send_input_fits(bytes, session.identity.identity_key_kid()) {
+				return Ok(RowTransition::unchanged());
+			}
+			with_peer(
+				session.identity,
+				session.identity_digest,
+				session.lineage,
+				session.transaction,
+				kid,
+				|server| {
+					let before = server
+						.ratchet_status(kid)
+						.ok_or(RowError::InvalidRow)?
+						.send_sequence();
+					let encrypted = server.encrypt_message(bytes, kid);
+					let after = server
+						.ratchet_status(kid)
+						.ok_or(RowError::InvalidRow)?
+						.send_sequence();
+					Ok(RowTransition {
+						message: encrypted.map(|message| RowMessage {
+							data: Zeroizing::new(message.ciphertext),
+							key_id: message.key_id,
+							sequence: message.seq,
+						}),
+						changed: before != after,
+					})
+				},
+			)
+		})
+	}
+
+	pub fn decrypt_message(&mut self, bytes: &[u8]) -> Result<RowTransition, RowError> {
+		self.checked(|session| {
+			session.begin_native(SessionPhase::Message)?;
+			let Some(kid) = crate::ratchet::encrypted_frame_sender(bytes) else {
+				return Ok(RowTransition::unchanged());
+			};
+			with_peer(
+				session.identity,
+				session.identity_digest,
+				session.lineage,
+				session.transaction,
+				kid,
+				|server| {
+					let message = server.decrypt_message(bytes).map(|message| RowMessage {
+						data: Zeroizing::new(message.plaintext),
+						key_id: message.key_id,
+						sequence: message.seq,
+					});
+					Ok(RowTransition {
+						changed: message.is_some(),
+						message,
+					})
+				},
+			)
+		})
+	}
+
+	/// Accept once in the first registration phase; the private token cannot leave this session.
+	pub fn accept_registration(&mut self, bytes: &[u8]) -> Result<bool, RowError> {
+		self.checked(|session| {
+			session.begin_native(SessionPhase::Acceptance)?;
+			let mut server = session
+				.identity
+				.row_session(session.identity.identity_key_kid());
+			let Some(pending) = server.get_shared_secret(bytes) else {
+				return Ok(false);
+			};
+			if !consume_registration_marker(
+				session.transaction,
+				session.lineage,
+				session.identity_digest,
+				&pending,
+			)? {
+				return Ok(false);
+			}
+			session.pending_registration = Some(pending);
+			Ok(true)
+		})
+	}
+
+	/// Construct once in the completion phase; response, peer and application rows share one commit.
+	pub fn complete_registration(
+		&mut self,
+		data: Option<&[u8]>,
+	) -> Result<RowTransition, RowError> {
+		self.checked(|session| {
+			session.begin_native(SessionPhase::Completion)?;
+			let pending = session
+				.pending_registration
+				.take()
+				.ok_or(RowError::InvalidSession)?;
+			complete_registration(
+				session.identity,
+				session.identity_digest,
+				session.lineage,
+				session.transaction,
+				pending,
+				data,
+			)
+		})
+	}
+}
+
+fn consume_registration_marker(
+	transaction: &mut dyn RowTransaction,
+	lineage: SnapshotLineage,
+	identity_digest: &[u8; 32],
+	pending: &crate::RegistrationOutput,
+) -> Result<bool, RowError> {
+	let replay_key = storage_key(lineage, REGISTRATION, &pending.row_registration_id());
+	if let Some(bytes) = transaction.load(&replay_key)? {
+		let bytes = Zeroizing::new(bytes);
+		let row = bound_row(&replay_key, &bytes, identity_digest)?;
+		if row.generation != 0 || !row.payload.is_empty() {
+			return Err(RowError::InvalidRow);
+		}
+		return Ok(false);
+	}
+	transaction.store(
+		&replay_key,
+		&encode_row(&replay_key, 0, identity_digest, &[]),
+	)?;
+	Ok(true)
+}
+
+fn complete_registration(
+	identity: &Server,
+	identity_digest: &[u8; 32],
+	lineage: SnapshotLineage,
+	transaction: &mut dyn RowTransaction,
+	pending: crate::RegistrationOutput,
+	data: Option<&[u8]>,
+) -> Result<RowTransition, RowError> {
+	let allocator_key = storage_key(lineage, ALLOCATOR, &[]);
+	let bytes = Zeroizing::new(
+		transaction
+			.load(&allocator_key)?
+			.ok_or(RowError::InvalidRow)?,
+	);
+	let row = bound_row(&allocator_key, &bytes, identity_digest)?;
+	let last = u64::from_le_bytes(row.payload.try_into().map_err(|_| RowError::InvalidRow)?);
+	if last < identity.identity_key_kid() {
+		return Err(RowError::InvalidRow);
+	}
+	let Some(kid) = last.checked_add(1) else {
+		return Ok(RowTransition::unchanged());
+	};
+	let peer_key = storage_key(lineage, PEER, &kid.to_le_bytes());
+	if transaction.load(&peer_key)?.is_some() {
+		return Err(RowError::Conflict);
+	}
+	let mut server = identity.row_session(last);
+	let Some(response) = server.build_registration_response(pending, data) else {
+		return Ok(RowTransition::unchanged());
+	};
+	let peer = server.take_row_peer(kid).ok_or(RowError::InvalidRow)?;
+	let sequence = peer.ratchet().status().send_sequence();
+	let generation = row
+		.generation
+		.checked_add(1)
+		.ok_or(RowError::GenerationExhausted)?;
+	transaction.store(
+		&allocator_key,
+		&encode_row(
+			&allocator_key,
+			generation,
+			identity_digest,
+			&kid.to_le_bytes(),
+		),
+	)?;
+	transaction.store(
+		&peer_key,
+		&encode_row(&peer_key, 0, identity_digest, &encode_peer(&peer)?),
+	)?;
+	Ok(RowTransition {
+		message: Some(RowMessage {
+			data: Zeroizing::new(response.serialized),
+			key_id: response.kid,
+			sequence,
+		}),
+		changed: true,
+	})
+}
+
+fn with_peer(
+	identity: &Server,
+	identity_digest: &[u8; 32],
+	lineage: SnapshotLineage,
+	transaction: &mut dyn RowTransaction,
+	kid: u64,
+	operation: impl FnOnce(&mut Server) -> Result<RowTransition, RowError>,
+) -> Result<RowTransition, RowError> {
+	let key = storage_key(lineage, PEER, &kid.to_le_bytes());
+	let Some(bytes) = transaction.load(&key)? else {
+		return Ok(RowTransition::unchanged());
+	};
+	let bytes = Zeroizing::new(bytes);
+	let row = bound_row(&key, &bytes, identity_digest)?;
+	let peer = decode_peer(row.payload)?;
+	let mut server = identity.row_session(identity.identity_key_kid());
+	server.put_row_peer(kid, peer);
+	let output = operation(&mut server)?;
+	if output.changed {
+		let peer = server.take_row_peer(kid).ok_or(RowError::InvalidRow)?;
+		let generation = row
+			.generation
+			.checked_add(1)
+			.ok_or(RowError::GenerationExhausted)?;
+		transaction.store(
+			&key,
+			&encode_row(&key, generation, identity_digest, &encode_peer(&peer)?),
+		)?;
+	}
+	Ok(output)
 }
 
 #[cfg(test)]
@@ -874,6 +1280,10 @@ mod tests {
 				"failed to initialize server identity",
 			),
 			(RowError::OutputEncoding, "failed to encode persistence row"),
+			(
+				RowError::InvalidSession,
+				"invalid operation in row transaction session",
+			),
 		] {
 			assert_eq!(error.to_string(), expected);
 			assert!(error.source().is_none());
@@ -881,7 +1291,7 @@ mod tests {
 	}
 
 	#[cfg(feature = "beacon")]
-	fn registration(server: &RowServer<TestStore>) -> Vec<u8> {
+	fn registration<S: RowStore>(server: &RowServer<S>) -> Vec<u8> {
 		use crate::ProviderBeacon;
 		let mut beacon = crate::Beacon::new(
 			server.identity_key_kid(),
@@ -1002,5 +1412,611 @@ mod tests {
 			);
 			assert_eq!(server.store.rows, before);
 		}
+	}
+
+	#[test]
+	fn invalid_send_sizes_are_rejected_without_requiring_available_storage() {
+		let mut server = server();
+		let transactions = server.store.transactions;
+		server.store.fail_load = true;
+		assert!(server.encrypt_message(&[], PEER_KID).unwrap().is_none());
+		let oversized = vec![0; crate::MAX_MESSAGE_SIZE + 1];
+		assert!(
+			server
+				.encrypt_message(&oversized[..crate::MAX_MESSAGE_SIZE], PEER_KID)
+				.unwrap()
+				.is_none()
+		);
+		assert!(
+			server
+				.encrypt_message(&oversized, PEER_KID)
+				.unwrap()
+				.is_none()
+		);
+		assert_eq!(server.store.transactions, transactions);
+	}
+
+	#[test]
+	fn composed_send_commits_application_receipt_and_cached_preflight_skips_native_work() {
+		let mut server = server();
+		let peer_key = install_peer(&mut server, 0);
+		let before = server.store.rows.clone();
+		let ciphertext = server
+			.transaction(|session| {
+				assert!(session.load_application(b"request").unwrap().is_none());
+				let transition = session.encrypt_message(b"application request", PEER_KID)?;
+				assert!(transition.changed);
+				let message = transition.message.unwrap();
+				assert_eq!(message.key_id(), PEER_KID);
+				assert_eq!(message.sequence(), 1);
+				assert!(!message.data().is_empty());
+				session.store_application(b"request", message.data())?;
+				// Even an application key equal to a private storage key uses a separate namespace.
+				session.store_application(&peer_key, b"application metadata")?;
+				Ok(message)
+			})
+			.unwrap();
+		assert_eq!(server.store.rows.len(), before.len() + 2);
+		assert_ne!(server.store.rows[&peer_key], before[&peer_key]);
+		let committed = server.store.rows.clone();
+		let cached = server
+			.transaction(|session| {
+				assert_eq!(
+					session.load_application(&peer_key)?.unwrap().as_slice(),
+					b"application metadata"
+				);
+				if let Some(receipt) = session.load_application(b"request")? {
+					return Ok(receipt);
+				}
+				panic!("the receipt must prevent a second native transition")
+			})
+			.unwrap();
+		assert_eq!(cached.as_slice(), ciphertext.data());
+		assert_eq!(server.store.rows, committed);
+		assert_eq!(
+			server
+				.encrypt_message(b"next request", PEER_KID)
+				.unwrap()
+				.unwrap()
+				.seq,
+			2
+		);
+	}
+
+	#[test]
+	fn composed_finalizer_and_commit_failures_roll_back_native_and_application_rows() {
+		let mut server = server();
+		install_peer(&mut server, 0);
+		let before = server.store.rows.clone();
+		let failure = RowError::Storage("application finalizer failed".into());
+		assert_eq!(
+			server
+				.transaction::<()>(|session| {
+					let message = session
+						.encrypt_message(b"withheld", PEER_KID)?
+						.message
+						.unwrap();
+					session.store_application(b"receipt", message.data())?;
+					Err(failure.clone())
+				})
+				.err(),
+			Some(failure)
+		);
+		assert_eq!(server.store.rows, before);
+		server.store.fail_commit = true;
+		assert!(matches!(
+			server.transaction(|session| {
+				let message = session
+					.encrypt_message(b"also withheld", PEER_KID)?
+					.message
+					.unwrap();
+				session.store_application(b"receipt", message.data())?;
+				Ok(message)
+			}),
+			Err(RowError::Storage(_))
+		));
+		assert_eq!(server.store.rows, before);
+		server.store.fail_commit = false;
+		assert_eq!(
+			server
+				.encrypt_message(b"fresh", PEER_KID)
+				.unwrap()
+				.unwrap()
+				.seq,
+			1
+		);
+	}
+
+	#[test]
+	fn rejected_native_attempts_still_use_the_single_allowance_and_errors_are_sticky() {
+		let mut server = server();
+		install_peer(&mut server, 0);
+		let before = server.store.rows.clone();
+		assert_eq!(
+			server.transaction(|session| {
+				session.store_application(b"tentative", b"must roll back")?;
+				let rejected = session.decrypt_message(b"malformed")?;
+				assert!(!rejected.changed);
+				assert!(rejected.message.is_none());
+				assert_eq!(
+					session.encrypt_message(b"second", PEER_KID).err(),
+					Some(RowError::InvalidSession)
+				);
+				assert_eq!(
+					session.load_application(b"tentative").err(),
+					Some(RowError::InvalidSession)
+				);
+				assert_eq!(
+					session.store_application(b"late", b"blocked").err(),
+					Some(RowError::InvalidSession)
+				);
+				Ok(())
+			}),
+			Err(RowError::InvalidSession)
+		);
+		assert_eq!(server.store.rows, before);
+		assert_eq!(
+			server.transaction(|session| {
+				assert_eq!(
+					session.accept_registration(b"wrong phase"),
+					Err(RowError::InvalidSession)
+				);
+				Ok(())
+			}),
+			Err(RowError::InvalidSession)
+		);
+		assert_eq!(
+			server.transaction(|session| {
+				assert_eq!(
+					session.complete_registration(None).err(),
+					Some(RowError::InvalidSession)
+				);
+				Ok(())
+			}),
+			Err(RowError::InvalidSession)
+		);
+		assert_eq!(server.store.rows, before);
+	}
+
+	#[test]
+	fn caught_storage_failure_blocks_later_io_and_prevents_commit() {
+		struct Observed<'a> {
+			loads: &'a AtomicUsize,
+			stores: &'a AtomicUsize,
+		}
+		impl RowTransaction for Observed<'_> {
+			fn load(&mut self, _: &[u8]) -> Result<Option<Vec<u8>>, RowError> {
+				self.loads.fetch_add(1, Ordering::SeqCst);
+				Err(RowError::Storage("read failed".into()))
+			}
+			fn store(&mut self, _: &[u8], _: &[u8]) -> Result<(), RowError> {
+				self.stores.fetch_add(1, Ordering::SeqCst);
+				Ok(())
+			}
+		}
+		let server = server();
+		let loads = AtomicUsize::new(0);
+		let stores = AtomicUsize::new(0);
+		let mut transaction = Observed {
+			loads: &loads,
+			stores: &stores,
+		};
+		let mut session = RowSession::new(
+			&server.identity,
+			&server.identity_digest,
+			LINEAGE,
+			&mut transaction,
+			SessionPhase::Message,
+			None,
+		);
+		let failure = RowError::Storage("read failed".into());
+		assert_eq!(
+			session.load_application(b"request").err(),
+			Some(failure.clone())
+		);
+		assert_eq!(
+			session.load_application(b"again").err(),
+			Some(failure.clone())
+		);
+		assert_eq!(
+			session.store_application(b"write", b"blocked"),
+			Err(failure.clone())
+		);
+		assert_eq!(
+			session.encrypt_message(b"native", PEER_KID).err(),
+			Some(failure.clone())
+		);
+		assert_eq!(session.finish(Ok(())), Err(failure));
+		assert_eq!(loads.load(Ordering::SeqCst), 1);
+		assert_eq!(stores.load(Ordering::SeqCst), 0);
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn composed_receive_withholds_failed_output_and_recovers_only_the_committed_application_result()
+	{
+		use crate::ProviderBeacon;
+		let mut server = server();
+		let mut beacon = crate::Beacon::new(
+			SERVER_KID,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+		);
+		let request = beacon.get_registration_bundle().unwrap();
+		let response = server
+			.register_beacon(&request, Some(b"registered"))
+			.unwrap()
+			.unwrap();
+		beacon.finish_registration(&response.serialized).unwrap();
+		let first = beacon.encrypt_message(b"delayed").unwrap();
+		let second = beacon.encrypt_message(b"received").unwrap();
+		let before = server.store.rows.clone();
+		server.store.fail_commit = true;
+		let failed = server.transaction(|session| {
+			let transition = session.decrypt_message(&second.ciphertext)?;
+			assert!(transition.changed);
+			let message = transition.message.unwrap();
+			assert_eq!(message.data(), b"received");
+			session.store_application(b"receive receipt", message.data())?;
+			// The pending native message retains its wiping buffer through the outer commit gate.
+			Ok(message)
+		});
+		assert!(matches!(failed, Err(RowError::Storage(_))));
+		assert_eq!(server.store.rows, before);
+		server.store.fail_commit = false;
+		let received = server
+			.transaction(|session| {
+				assert!(session.load_application(b"receive receipt")?.is_none());
+				let transition = session.decrypt_message(&second.ciphertext)?;
+				assert!(transition.changed);
+				let message = transition.message.unwrap();
+				assert_eq!(message.key_id(), PEER_KID);
+				assert_eq!(message.sequence(), 2);
+				session.store_application(b"receive receipt", message.data())?;
+				Ok(message)
+			})
+			.unwrap();
+		assert_eq!(received.data(), b"received");
+		let committed = server.store.rows.clone();
+		let cached = server
+			.transaction(|session| {
+				if let Some(receipt) = session.load_application(b"receive receipt")? {
+					return Ok(receipt);
+				}
+				panic!("cached receipt must bypass the now-consumed receive key")
+			})
+			.unwrap();
+		assert_eq!(cached.as_slice(), received.data());
+		assert_eq!(server.store.rows, committed);
+		let replay = server
+			.transaction(|session| session.decrypt_message(&second.ciphertext))
+			.unwrap();
+		assert!(!replay.changed);
+		assert!(replay.message.is_none());
+		assert_eq!(server.store.rows, committed);
+		let delayed = server
+			.transaction(|session| session.decrypt_message(&first.ciphertext))
+			.unwrap();
+		assert!(delayed.changed);
+		let delayed = delayed.message.unwrap();
+		assert_eq!(delayed.data(), b"delayed");
+		assert_eq!(delayed.sequence(), 1);
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn composed_registration_commits_each_phase_and_returns_exact_cached_application_result() {
+		use crate::ProviderBeacon;
+		let mut server = server();
+		let mut beacon = crate::Beacon::new(
+			SERVER_KID,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+		);
+		let request = beacon.get_registration_bundle().unwrap();
+		let transactions = server.store.transactions;
+		let output = server
+			.registration_transaction(
+				|session| {
+					assert!(session.load_application(b"registration")?.is_none());
+					assert!(session.accept_registration(&request)?);
+					session.store_application(b"registration", b"accepted/incomplete")?;
+					Ok(RowRegistrationDecision::<_, RowMessage>::Continue(
+						b"chosen session reference".to_vec(),
+					))
+				},
+				|session, context| {
+					assert_eq!(
+						session
+							.load_application(b"registration")?
+							.unwrap()
+							.as_slice(),
+						b"accepted/incomplete"
+					);
+					let transition = session.complete_registration(Some(b"registered"))?;
+					assert!(transition.changed);
+					let message = transition.message.unwrap();
+					assert_eq!(message.key_id(), PEER_KID);
+					assert_eq!(message.sequence(), 1);
+					session.store_application(b"session", &context)?;
+					session.store_application(b"registration", message.data())?;
+					Ok(message)
+				},
+			)
+			.unwrap();
+		assert_eq!(server.store.transactions, transactions + 2);
+		assert_eq!(
+			beacon.finish_registration(output.data()).unwrap(),
+			b"registered"
+		);
+		let before = server.store.rows.clone();
+		let cached = server
+			.registration_transaction(
+				|session| {
+					assert_eq!(
+						session.load_application(b"session")?.unwrap().as_slice(),
+						b"chosen session reference"
+					);
+					Ok(RowRegistrationDecision::<(), _>::Return(
+						session.load_application(b"registration")?.unwrap(),
+					))
+				},
+				|_, ()| panic!("cached application result must not accept or complete again"),
+			)
+			.unwrap();
+		assert_eq!(cached.as_slice(), output.data());
+		assert_eq!(server.store.rows, before);
+		assert_eq!(server.store.transactions, transactions + 3);
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn acceptance_callback_failure_rolls_back_marker_and_does_not_release_a_pending_token() {
+		let mut server = server();
+		let request = registration(&server);
+		let before = server.store.rows.clone();
+		let failure = RowError::Storage("acceptance finalizer failed".into());
+		let result = server.registration_transaction::<(), ()>(
+			|session| {
+				assert!(session.accept_registration(&request)?);
+				session.store_application(b"request", b"incomplete")?;
+				Err(failure.clone())
+			},
+			|_, _| panic!("uncommitted acceptance must not reach completion"),
+		);
+		assert_eq!(
+			result,
+			Err(RowRegistrationError {
+				phase: RowRegistrationPhase::Acceptance,
+				source: failure
+			})
+		);
+		assert_eq!(server.store.rows, before);
+		assert!(
+			server
+				.register_beacon(&request, Some(b"retry unaccepted request"))
+				.unwrap()
+				.is_some()
+		);
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn completion_callback_failure_retains_acceptance_but_rolls_back_peer_and_result() {
+		let mut server = server();
+		let request = registration(&server);
+		let before = server.store.rows.clone();
+		let failure = RowError::Storage("completion finalizer failed".into());
+		let result = server.registration_transaction::<(), ()>(
+			|session| {
+				assert!(session.accept_registration(&request)?);
+				session.store_application(b"request", b"incomplete")?;
+				Ok(RowRegistrationDecision::Continue(()))
+			},
+			|session, ()| {
+				let message = session
+					.complete_registration(Some(b"withheld"))?
+					.message
+					.unwrap();
+				session.store_application(b"request", message.data())?;
+				session.store_application(b"session", b"must roll back")?;
+				Err(failure.clone())
+			},
+		);
+		let error = result.unwrap_err();
+		assert_eq!(error.phase, RowRegistrationPhase::Completion);
+		assert_eq!(error.source, failure);
+		assert!(error.to_string().contains("completion finalizer failed"));
+		assert!(Error::source(&error).is_some());
+		assert_eq!(server.store.rows.len(), before.len() + 2);
+		for (key, value) in before {
+			assert_eq!(server.store.rows[&key], value);
+		}
+		server
+			.transaction(|session| {
+				assert_eq!(
+					session.load_application(b"request")?.unwrap().as_slice(),
+					b"incomplete"
+				);
+				assert!(session.load_application(b"session")?.is_none());
+				Ok(())
+			})
+			.unwrap();
+		assert!(server.register_beacon(&request, None).unwrap().is_none());
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn registration_continuation_requires_acceptance_and_completion_can_record_terminal_policy() {
+		let mut server = server();
+		let before = server.store.rows.clone();
+		let result = server.registration_transaction::<(), ()>(
+			|session| {
+				session.store_application(b"invalid continuation", b"must roll back")?;
+				assert!(!session.accept_registration(b"malformed")?);
+				Ok(RowRegistrationDecision::Continue(()))
+			},
+			|_, _| panic!("there is no accepted pending token"),
+		);
+		assert_eq!(
+			result,
+			Err(RowRegistrationError {
+				phase: RowRegistrationPhase::Acceptance,
+				source: RowError::InvalidSession
+			})
+		);
+		assert_eq!(server.store.rows, before);
+		let request = registration(&server);
+		let result = server
+			.registration_transaction(
+				|session| {
+					assert!(session.accept_registration(&request)?);
+					Ok(RowRegistrationDecision::Continue(()))
+				},
+				|session, ()| {
+					session.store_application(b"request", b"revoked before completion")?;
+					Ok("terminal policy result")
+				},
+			)
+			.unwrap();
+		assert_eq!(result, "terminal policy result");
+		assert_eq!(server.store.rows.len(), before.len() + 2);
+		for (key, value) in before {
+			assert_eq!(server.store.rows[&key], value);
+		}
+		assert!(server.register_beacon(&request, None).unwrap().is_none());
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn unknown_registration_commit_is_resolved_from_application_receipts_without_reusing_tokens() {
+		use crate::ProviderBeacon;
+		struct UncertainStore {
+			inner: TestStore,
+			calls: usize,
+			lose_acknowledgement: usize,
+		}
+		impl RowStore for UncertainStore {
+			fn transaction(
+				&mut self,
+				operation: &mut dyn FnMut(&mut dyn RowTransaction) -> Result<(), RowError>,
+			) -> Result<(), RowError> {
+				self.calls += 1;
+				self.inner.transaction(operation)?;
+				if self.calls == self.lose_acknowledgement {
+					return Err(RowError::Storage("commit acknowledgement lost".into()));
+				}
+				Ok(())
+			}
+		}
+		for (lose_acknowledgement, phase) in [
+			(2, RowRegistrationPhase::Acceptance),
+			(3, RowRegistrationPhase::Completion),
+		] {
+			let mut server = RowServer::create(
+				SERVER_KID,
+				Some(&[0x62; 32]),
+				Some(&[0x63; 32]),
+				UncertainStore {
+					inner: TestStore::default(),
+					calls: 0,
+					lose_acknowledgement,
+				},
+				LINEAGE,
+			)
+			.unwrap();
+			let mut beacon = crate::Beacon::new(
+				SERVER_KID,
+				server.identity_pk().as_bytes(),
+				&server.mldsa_public_key(),
+			);
+			let request = beacon.get_registration_bundle().unwrap();
+			let mut completed = false;
+			let result = server.registration_transaction(
+				|session| {
+					assert!(session.accept_registration(&request)?);
+					session.store_application(b"request", b"incomplete")?;
+					Ok(RowRegistrationDecision::Continue(()))
+				},
+				|session, ()| {
+					completed = true;
+					let message = session
+						.complete_registration(Some(b"registered"))?
+						.message
+						.unwrap();
+					let mut response = Zeroizing::new(b"application response:".to_vec());
+					response.extend_from_slice(message.data());
+					session.store_application(b"session", &message.key_id().to_le_bytes())?;
+					session.store_application(b"request", &response)?;
+					Ok(response)
+				},
+			);
+			assert_eq!(
+				result.err(),
+				Some(RowRegistrationError {
+					phase,
+					source: RowError::Storage("commit acknowledgement lost".into()),
+				})
+			);
+			assert_eq!(completed, phase == RowRegistrationPhase::Completion);
+			let committed = server.store.inner.rows.clone();
+			let cached = server
+				.registration_transaction(
+					|session| {
+						Ok(RowRegistrationDecision::<(), _>::Return(
+							session.load_application(b"request")?.unwrap(),
+						))
+					},
+					|_, ()| panic!("receipt lookup must not reconstruct a pending registration"),
+				)
+				.unwrap();
+			if phase == RowRegistrationPhase::Acceptance {
+				assert_eq!(cached.as_slice(), b"incomplete");
+				assert!(!server.store.inner.rows.contains_key(&storage_key(
+					LINEAGE,
+					PEER,
+					&PEER_KID.to_le_bytes()
+				)));
+			} else {
+				assert_eq!(
+					beacon
+						.finish_registration(cached.strip_prefix(b"application response:").unwrap())
+						.unwrap(),
+					b"registered"
+				);
+			}
+			assert_eq!(server.store.inner.rows, committed);
+			assert!(server.register_beacon(&request, None).unwrap().is_none());
+			assert_eq!(server.store.inner.rows, committed);
+		}
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn response_construction_rejection_can_commit_an_application_terminal_result() {
+		let mut server = server();
+		let request = registration(&server);
+		let before = server.store.rows.clone();
+		let output = server
+			.registration_transaction(
+				|session| {
+					assert!(session.accept_registration(&request)?);
+					Ok(RowRegistrationDecision::Continue(()))
+				},
+				|session, ()| {
+					let transition = session.complete_registration(Some(b""))?;
+					assert!(!transition.changed);
+					assert!(transition.message.is_none());
+					session.store_application(b"request", b"terminal response failure")?;
+					Ok("terminal response failure")
+				},
+			)
+			.unwrap();
+		assert_eq!(output, "terminal response failure");
+		assert_eq!(server.store.rows.len(), before.len() + 2);
+		for (key, value) in before {
+			assert_eq!(server.store.rows[&key], value);
+		}
+		assert!(server.register_beacon(&request, None).unwrap().is_none());
 	}
 }

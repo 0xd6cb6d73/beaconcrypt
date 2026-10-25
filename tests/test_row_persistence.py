@@ -4,7 +4,12 @@ import weakref
 
 import pytest
 
-from beaconcrypt import BeaconCryptBeacon, BeaconCryptRowServer, RowPersistenceError
+from beaconcrypt import (
+    BeaconCryptBeacon,
+    BeaconCryptRowServer,
+    RowMessage,
+    RowPersistenceError,
+)
 
 
 class Database:
@@ -130,6 +135,33 @@ def test_authentication_replay_and_commit_rollback(tmp_path):
     assert server.decrypt_beacon_message(message) == b"payload"
     assert server.decrypt_beacon_message(message) is None
     assert server.register_beacon(request) is None
+
+
+def test_authenticated_metadata_and_cached_receive(tmp_path):
+    server, database = create(tmp_path / "state.db")
+    first, first_id, _ = register(server)
+    second, second_id, _ = register(server)
+    outbound = server.encrypt_to_beacon_with_metadata(b"outbound", first_id)
+    assert isinstance(outbound, RowMessage)
+    assert (outbound.key_id, outbound.seq) == (first_id, 2)
+    assert first.decrypt_server_message(outbound.data) == b"outbound"
+    with pytest.raises(AttributeError):
+        outbound.key_id = second_id
+
+    older = first.encrypt_message_to_server(b"older")
+    newer = first.encrypt_message_to_server(b"newer")
+    other = second.encrypt_message_to_server(b"other peer")
+    for message, data, peer_id, seq in [
+        (newer, b"newer", first_id, 2),
+        (other, b"other peer", second_id, 1),
+        (older, b"older", first_id, 1),
+    ]:
+        result = server.decrypt_beacon_message_with_metadata(message)
+        assert (result.data, result.key_id, result.seq) == (data, peer_id, seq)
+    assert server.decrypt_beacon_message_with_metadata(older) is None
+    database.fail_commit = True
+    with pytest.raises(RowPersistenceError):
+        server.encrypt_to_beacon_with_metadata(b"uncommitted", first_id)
 
 
 def test_unknown_commit_does_not_release_or_reuse_consumed_receive(tmp_path):

@@ -147,24 +147,52 @@ func (s *RowServer) RegisterBeacon(registration, initialMessage []byte) (*Regist
 	})
 }
 func (s *RowServer) EncryptToBeacon(kid uint64, data []byte) ([]byte, error) {
-	return rowCall(s, true, func(handle *C.beaconcrypt_RowServerHandle) ([]byte, error) {
+	message, err := s.EncryptToBeaconWithMetadata(kid, data)
+	if err != nil {
+		return nil, err
+	}
+	return message.Data, nil
+}
+
+// EncryptToBeaconWithMetadata returns committed ciphertext with the recipient
+// peer ID and sequence. Metadata is released only after durable commit.
+func (s *RowServer) EncryptToBeaconWithMetadata(kid uint64, data []byte) (*RowMessage, error) {
+	return rowCall(s, true, func(handle *C.beaconcrypt_RowServerHandle) (*RowMessage, error) {
 		if len(data) == 0 {
 			return nil, ErrEmptyData
 		}
 		ptr, free := cBytes(data)
 		defer free()
-		return copyBuffer(C.beaconcrypt_row_server_encrypt(handle, ptr, C.uintptr_t(len(data)), C.uint64_t(kid)))
+		return copyRowMessage(C.beaconcrypt_row_server_encrypt_with_metadata(handle, ptr, C.uintptr_t(len(data)), C.uint64_t(kid)))
 	})
 }
 func (s *RowServer) DecryptBeaconMessage(data []byte) ([]byte, error) {
-	return rowCall(s, true, func(handle *C.beaconcrypt_RowServerHandle) ([]byte, error) {
+	message, err := s.DecryptBeaconMessageWithMetadata(data)
+	if err != nil {
+		return nil, err
+	}
+	return message.Data, nil
+}
+
+// DecryptBeaconMessageWithMetadata returns committed plaintext with its
+// authenticated sender peer ID and the consumed sequence, including cached keys.
+func (s *RowServer) DecryptBeaconMessageWithMetadata(data []byte) (*RowMessage, error) {
+	return rowCall(s, true, func(handle *C.beaconcrypt_RowServerHandle) (*RowMessage, error) {
 		if len(data) == 0 {
 			return nil, ErrEmptyData
 		}
 		ptr, free := cBytes(data)
 		defer free()
-		return copyBuffer(C.beaconcrypt_row_server_decrypt(handle, ptr, C.uintptr_t(len(data))))
+		return copyRowMessage(C.beaconcrypt_row_server_decrypt_with_metadata(handle, ptr, C.uintptr_t(len(data))))
 	})
+}
+
+func copyRowMessage(value C.beaconcrypt_RowMessageBuffer) (*RowMessage, error) {
+	data, err := copyBuffer(value.data)
+	if err != nil {
+		return nil, err
+	}
+	return &RowMessage{Data: data, KeyID: uint64(value.key_id), Seq: uint64(value.seq)}, nil
 }
 
 func callbackRow(token C.uintptr_t, operation func(*rowContext) error) (ok C.bool) {

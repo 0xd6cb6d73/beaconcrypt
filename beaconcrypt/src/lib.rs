@@ -84,7 +84,10 @@ pub use ratchet::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_RATCHET_OUTPUT_LEN, KDF_STATE_SIZE, RatchetStatus,
 };
 #[cfg(feature = "server")]
-pub use row_persistence::{RowError, RowServer, RowStore, RowTransaction};
+pub use row_persistence::{
+	RowError, RowMessage, RowRegistrationDecision, RowRegistrationError, RowRegistrationPhase,
+	RowServer, RowSession, RowStore, RowTransaction, RowTransition,
+};
 #[cfg(all(feature = "pqxdh", feature = "server"))]
 pub use server::Server;
 #[cfg(feature = "server")]
@@ -118,5 +121,8 @@ mod beaconcrypt {
 	};
 
 	#[pymodule_export]
-	use crate::row_pybinds::{RowPersistenceError, RowServerPy};
+	use crate::row_pybinds::{
+		RowMessagePy, RowPersistenceError, RowRegistrationDecisionPy, RowRegistrationError,
+		RowServerPy, RowSessionPy, RowTransitionPy,
+	};
 }
