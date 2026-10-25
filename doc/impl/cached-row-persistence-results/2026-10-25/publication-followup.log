@@ -1,0 +1,28 @@
+COMMAND ["/home/user/worktrees/beaconcrypt-row-persistence/.venv/bin/python", "-m", "black", "--check", "--target-version", "py314", "beaconcrypt.pyi", "tests/test_row_cached.py", "tests/test_row_persistence.py", "tests/test_row_transactions.py", "beaconcrypt/examples/persistence_bench/summarize.py", "beaconcrypt/examples/persistence_bench/test_summarize.py"]
+CWD /home/user/worktrees/beaconcrypt-row-persistence
+All done! ✨ 🍰 ✨
+6 files would be left unchanged.
+EXIT 0
+COMMAND ["gofmt", "-l", "persistence_cgo.go", "persistence_types.go", "row_cached_cgo_test.go", "row_persistence_cgo.go", "row_persistence_cgo_test.go", "row_persistence_types.go", "row_persistence_wazero.go", "row_persistence_wazero_test.go", "row_session_cgo.go", "row_session_cgo_test.go"]
+CWD /home/user/worktrees/beaconcrypt-row-persistence
+EXIT 0
+COMMAND ["/home/user/worktrees/beaconcrypt-row-persistence/.venv/bin/python", "-B", "-m", "unittest", "-v", "test_summarize"]
+CWD /home/user/worktrees/beaconcrypt-row-persistence/beaconcrypt/examples/persistence_bench
+test_complete_pairs_preserve_trials_and_ratios (test_summarize.SummaryTests.test_complete_pairs_preserve_trials_and_ratios) ... ok
+test_duplicate_arm_and_inconsistent_tail_latency_are_rejected (test_summarize.SummaryTests.test_duplicate_arm_and_inconsistent_tail_latency_are_rejected) ... ok
+test_mismatched_axes_zero_duration_and_incomplete_run_are_rejected (test_summarize.SummaryTests.test_mismatched_axes_zero_duration_and_incomplete_run_are_rejected) ... ok
+test_missing_fixture_reused_lineage_and_incomplete_warm_cache_are_rejected (test_summarize.SummaryTests.test_missing_fixture_reused_lineage_and_incomplete_warm_cache_are_rejected) ... ok
+test_missing_single_arm_or_entire_pair_is_rejected (test_summarize.SummaryTests.test_missing_single_arm_or_entire_pair_is_rejected) ... ok
+test_three_arm_missing_cached_or_bad_order_backend_counter_is_rejected (test_summarize.SummaryTests.test_three_arm_missing_cached_or_bad_order_backend_counter_is_rejected) ... ok
+test_three_arms_preserve_legacy_ratio_and_every_tail (test_summarize.SummaryTests.test_three_arms_preserve_legacy_ratio_and_every_tail) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.009s
+
+OK
+EXIT 0
+LEGACY_SCHEMA1 {"compressed_sha256": "50674fe338627114fccbb7a6a99544fa39c7342d6676bd5b9dc1bc3b17e72f46", "groups": 16, "input_sha256": "aed3531acd1498221afc50b8b90df354d287b19d3812f18a4d33d588e40011d7", "passed": true, "path": "doc/impl/row-persistence-results/2026-10-25/persistence-reduced.json.gz", "schema_version": 1}
+LEGACY_SCHEMA1 {"compressed_sha256": "d32b654426d5ac034b2c5e94350611be4b993820da455c28b32e56f8645aa07d", "groups": 12, "input_sha256": "b3ead15ab9d157594ff66f15d9dd7a794461862afad181dd28f2aef49e679cf2", "passed": true, "path": "doc/impl/row-persistence-results/2026-10-25/persistence-peers-1.json.gz", "schema_version": 1}
+LEGACY_SCHEMA1 {"compressed_sha256": "471427d06c62c2c1f82d3fb0aea1114742725f9a28633f24d1a7a26e7d3d0c7a", "groups": 12, "input_sha256": "e6c3c38c58d1facd698553c783956f1bb0b01e56a637f09bd50633986ad5ff4f", "passed": true, "path": "doc/impl/row-persistence-results/2026-10-25/persistence-peers-100.json.gz", "schema_version": 1}
+LEGACY_SCHEMA1 {"compressed_sha256": "1eac1b519cf6c3f4bc5373fedfe98b9a5634ff0ad7e858be3648f17d9a4aa4d0", "groups": 12, "input_sha256": "28736f08cf30e39d3d84d5e20a2196d398f6332f60f68594bc92b0e31ba5ba90", "passed": true, "path": "doc/impl/row-persistence-results/2026-10-25/persistence-peers-1000.json.gz", "schema_version": 1}
+PASS Black, gofmt, seven synthetic summarizer tests, and four archived schema-1 reports. No new timings inspected.

@@ -267,7 +267,7 @@ pub struct EncryptState {
 	pub seq: u64,
 }
 
-fn empty_buffer() -> Buffer {
+pub(crate) fn empty_buffer() -> Buffer {
 	Buffer {
 		ptr: std::ptr::null_mut(),
 		len: 0,
@@ -275,7 +275,7 @@ fn empty_buffer() -> Buffer {
 	}
 }
 
-fn into_buffer(mut data: Vec<u8>) -> Buffer {
+pub(crate) fn into_buffer(mut data: Vec<u8>) -> Buffer {
 	let buffer = Buffer {
 		ptr: data.as_mut_ptr(),
 		len: data.len(),

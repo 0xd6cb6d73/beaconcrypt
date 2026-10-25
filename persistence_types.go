@@ -66,6 +66,8 @@ func (e *PersistenceError) Error() string {
 		StatusInitialization:       "initialization failed",
 		StatusDigest:               "snapshot digest failed",
 		StatusPoisoned:             "persistent server is poisoned",
+		StatusStorage:              "database transaction failed",
+		StatusInvalidSession:       "invalid transaction session operation",
 	}[e.Code]
 	if message == "" {
 		message = fmt.Sprintf("persistence status %d", e.Code)

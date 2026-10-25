@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "description": "Portable artifact inventory. Paths are relative to this directory; original paths preserve provenance. Hashes cover exact archived bytes, with separate uncompressed hashes for gzip files. README.md and this manifest are not self-hashed.",
+  "measurement_source_commit": "f0b53c634c48cb77db636b1cd01060cae075375b",
+  "binary_sha256": "750c85fa44e7015ce33fb149e24062476cf06b8a965315cf43044ffd5cb32aef",
+  "full_reports": [
+    "persistence-peers-1.json.gz",
+    "persistence-peers-100.json.gz",
+    "persistence-peers-1000.json.gz"
+  ],
+  "functional_report_excluded_from_comparison": "persistence-reduced.json.gz",
+  "files": [
+    {
+      "path": "persistence-peers-1.json.gz",
+      "sha256": "d32b654426d5ac034b2c5e94350611be4b993820da455c28b32e56f8645aa07d",
+      "bytes": 165882,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-1.json",
+      "uncompressed_sha256": "b3ead15ab9d157594ff66f15d9dd7a794461862afad181dd28f2aef49e679cf2",
+      "uncompressed_bytes": 733233
+    },
+    {
+      "path": "persistence-peers-1-summary.md",
+      "sha256": "d5fc0baf955a88583a86c24efdc5f9104abddbf7153ffeea988b68d10439336a",
+      "bytes": 13671,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-1-summary.md",
+      "original_sha256": "8f044fcef4a552f53d1b741ced6f659eebcb5b24fb68212f9ce55bba909b2af8",
+      "transformation": "Removed surplus final blank line from generated Markdown; numerical content is unchanged."
+    },
+    {
+      "path": "persistence-peers-1-summary.json.gz",
+      "sha256": "1eac36a227310c8659214e5b8bb1503659f101fcb022122693e254697d7133e9",
+      "bytes": 10286,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-1-summary.json",
+      "uncompressed_sha256": "bbc6d52181679fe10c829b6994a498a2537b455d8c6c59f1bea20b10af5b4354",
+      "uncompressed_bytes": 79365
+    },
+    {
+      "path": "persistence-peers-100.json.gz",
+      "sha256": "471427d06c62c2c1f82d3fb0aea1114742725f9a28633f24d1a7a26e7d3d0c7a",
+      "bytes": 169287,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-100.json",
+      "uncompressed_sha256": "e6c3c38c58d1facd698553c783956f1bb0b01e56a637f09bd50633986ad5ff4f",
+      "uncompressed_bytes": 735861
+    },
+    {
+      "path": "persistence-peers-100-summary.md",
+      "sha256": "def2a0edd0d3a920bd5a3172ec5cc7590f30aa82a1683ea874c37550705c5584",
+      "bytes": 13853,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-100-summary.md",
+      "original_sha256": "f3887ebdbaead35224e8679430dfa4ce654e17d6f6e4eb851ce27a72c0f69f09",
+      "transformation": "Removed surplus final blank line from generated Markdown; numerical content is unchanged."
+    },
+    {
+      "path": "persistence-peers-100-summary.json.gz",
+      "sha256": "028785469f4bcbd66c864fb8eabde841db447137fa80ed127e4644da5a0f7e8c",
+      "bytes": 10394,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-100-summary.json",
+      "uncompressed_sha256": "92102420a9d8635b2f7c5cd48cda9c7a5ffc520c8d8b2c4681350a1602a404e6",
+      "uncompressed_bytes": 79563
+    },
+    {
+      "path": "persistence-peers-1000.json.gz",
+      "sha256": "1eac1b519cf6c3f4bc5373fedfe98b9a5634ff0ad7e858be3648f17d9a4aa4d0",
+      "bytes": 177309,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-1000.json",
+      "uncompressed_sha256": "28736f08cf30e39d3d84d5e20a2196d398f6332f60f68594bc92b0e31ba5ba90",
+      "uncompressed_bytes": 753227
+    },
+    {
+      "path": "persistence-peers-1000-summary.md",
+      "sha256": "94be33a75f9894ca306f5590548177040c46c96d942bd1235715050c292feb30",
+      "bytes": 13915,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-1000-summary.md",
+      "original_sha256": "a1503b6a724f62e37083bab9ab4e5005c5096fb9fe08fa300127360f0527c489",
+      "transformation": "Removed surplus final blank line from generated Markdown; numerical content is unchanged."
+    },
+    {
+      "path": "persistence-peers-1000-summary.json.gz",
+      "sha256": "b3064f1b234687cb60519d77ca91c64530f83209c6dc179d86a95d7aa3841016",
+      "bytes": 10508,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-1000-summary.json",
+      "uncompressed_sha256": "dab64948943f2a74178a070cd2a28b87cb66bcf01b8928153a584776d49a7c0a",
+      "uncompressed_bytes": 79722
+    },
+    {
+      "path": "persistence-reduced.json.gz",
+      "sha256": "50674fe338627114fccbb7a6a99544fa39c7342d6676bd5b9dc1bc3b17e72f46",
+      "bytes": 17161,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-reduced.json",
+      "uncompressed_sha256": "aed3531acd1498221afc50b8b90df354d287b19d3812f18a4d33d588e40011d7",
+      "uncompressed_bytes": 129834
+    },
+    {
+      "path": "persistence-reduced-summary.md",
+      "sha256": "d81838b4a1a239244acfcbeb7c699c3c451d283e1425d88c27e5d00b72597e57",
+      "bytes": 15099,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-reduced-summary.md",
+      "original_sha256": "94f1467db46fbd00860ac48cee1f9f77b49b783a23c79a7e170e4fe32b8c13dd",
+      "transformation": "Removed surplus final blank line from generated Markdown; numerical content is unchanged."
+    },
+    {
+      "path": "benchmark-build.json",
+      "sha256": "74b71209de53170731a41b6d861df7ddcf1e9a68db95706b7412a60ba1246f96",
+      "bytes": 11203,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-build.json"
+    },
+    {
+      "path": "benchmark-final-build.log",
+      "sha256": "36f7bb02925457f8c9804fe8177e9fed0206d03ed56a4ba3993cbeed96b0c9d7",
+      "bytes": 19801,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-final-build.log"
+    },
+    {
+      "path": "benchmark-retained.json",
+      "sha256": "430e6627dddf0d8c67e35f8e314f69b960ab581851d1e8abac721c51030cb358",
+      "bytes": 1607,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-retained.json"
+    },
+    {
+      "path": "benchmark-environment-validation.json",
+      "sha256": "ab929751f737495e3651f64a38677080ecc9980ee1065f7f92902fa5e4e0b16e",
+      "bytes": 8771,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-environment-validation.json"
+    },
+    {
+      "path": "row-validation-summary.json",
+      "sha256": "f32a49c01e1d5cfbb148fd7bc60b61ed02e995920e39575c1e7ff94f5cd45cbc",
+      "bytes": 1412,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/row-validation-summary.json"
+    },
+    {
+      "path": "native-catalog-reconciliation.json",
+      "sha256": "494a609592f44af7312fe4ff4c3a267418584d3621aac439a3f6bb4c85d303da",
+      "bytes": 298,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/native-catalog-reconciliation.json"
+    },
+    {
+      "path": "native-complete-catalog.json.gz",
+      "sha256": "324ff24fba822fc6b415e906413565301781601e51e486f38014dabd2b9b9119",
+      "bytes": 152159,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/native-complete-catalog.json.gz",
+      "uncompressed_sha256": "2566c7374dd857713e1439ab4c70f84f9add7a9afddfcd6c1cca5398601ddb65",
+      "uncompressed_bytes": 2650897
+    },
+    {
+      "path": "native-current-outcomes.json.gz",
+      "sha256": "9d8c2f31ea30c1c4480075414e15ee13b5e4a8e11d7a74c4885cce0ded6d53e1",
+      "bytes": 117401,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/native-current-outcomes.json.gz",
+      "uncompressed_sha256": "d2a53b49e737ed533788277506d71eca5e3d3ea12255889c8f94ffa4ee9c0e49",
+      "uncompressed_bytes": 5507750
+    },
+    {
+      "path": "quiet-window-3.jsonl.gz",
+      "sha256": "0d959c4f8520491c998161e3f2ef8c63e1444ecfddb673ae78cf4d17b6c0ce58",
+      "bytes": 65657,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-3/benchmark-quiet-window.jsonl",
+      "uncompressed_sha256": "7418b51c0acc1efbc32b4ba0ed0ffeb026663f12bef487bdb96117b3e82bccff",
+      "uncompressed_bytes": 960090
+    },
+    {
+      "path": "quiet-window-3.log",
+      "sha256": "fa653346a83da39f470308d3919853379e84f44019d9b68c33da8b48ed95d135",
+      "bytes": 1465,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-3/benchmark-window.log"
+    },
+    {
+      "path": "quiet-window-5.jsonl.gz",
+      "sha256": "50253472780cccd3e6461092cc1b8f4fc18189791a5f70c9807026244c8a0455",
+      "bytes": 123220,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-5/benchmark-quiet-window.jsonl",
+      "uncompressed_sha256": "453e39d95620e3ba8819ab3acdebc0e0777d37e42402c827c96ed0d0a4d5f57c",
+      "uncompressed_bytes": 1949493
+    },
+    {
+      "path": "quiet-window-5.log",
+      "sha256": "401576d3b4cbf1394fa2227c9f546acad08a4bd44545303511729dfe1f4a32f6",
+      "bytes": 1070,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-5/benchmark-window.log"
+    },
+    {
+      "path": "quiet-window-5-guard.py.txt",
+      "sha256": "b9ee1a9f8b60ce8a5c17623eb6e59ecbaff4033ef5956b35f7e4a6af47c8889a",
+      "bytes": 8302,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-5/guard.py"
+    },
+    {
+      "path": "benchmark-peers-1.log",
+      "sha256": "f3b6feda2f50b52f9b0515e80a84590f05015deb26cc2e6dea83a0ff5d4bf765",
+      "bytes": 2736,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-3/benchmark-peers-1.log"
+    },
+    {
+      "path": "benchmark-peers-100.log",
+      "sha256": "1ca713f4b7ec12fcbac192a20d5733bdefce7bf2959a46930f1a425fc381aff6",
+      "bytes": 2808,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-5/benchmark-peers-100.log"
+    },
+    {
+      "path": "benchmark-peers-1000.log",
+      "sha256": "24097299bf1aac6efa50fb4626a0cdba3212f43277282ca9f66c689ff0f656d3",
+      "bytes": 2844,
+      "original_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-5/benchmark-peers-1000.log"
+    }
+  ]
+}

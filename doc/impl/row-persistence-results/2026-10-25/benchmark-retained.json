@@ -1,0 +1,34 @@
+[
+  {
+    "case": "reduced",
+    "report": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-reduced.json",
+    "sha256": "aed3531acd1498221afc50b8b90df354d287b19d3812f18a4d33d588e40011d7",
+    "start_unix": 1792896846.5835392,
+    "finish_unix": 1792896856.9101071,
+    "quiet_receipt": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-3/benchmark-quiet-window.jsonl"
+  },
+  {
+    "case": "peers-1",
+    "report": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-1.json",
+    "sha256": "b3ead15ab9d157594ff66f15d9dd7a794461862afad181dd28f2aef49e679cf2",
+    "start_unix": 1792896857.0092838,
+    "finish_unix": 1792897107.3115222,
+    "quiet_receipt": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-3/benchmark-quiet-window.jsonl"
+  },
+  {
+    "case": "peers-100",
+    "report": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-100.json",
+    "sha256": "e6c3c38c58d1facd698553c783956f1bb0b01e56a637f09bd50633986ad5ff4f",
+    "start_unix": 1792906213.903185,
+    "finish_unix": 1792906494.752579,
+    "quiet_receipt": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-5/benchmark-quiet-window.jsonl"
+  },
+  {
+    "case": "peers-1000",
+    "report": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-1000.json",
+    "sha256": "28736f08cf30e39d3d84d5e20a2196d398f6332f60f68594bc92b0e31ba5ba90",
+    "start_unix": 1792906494.8525643,
+    "finish_unix": 1792907010.5121298,
+    "quiet_receipt": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-5/benchmark-quiet-window.jsonl"
+  }
+]

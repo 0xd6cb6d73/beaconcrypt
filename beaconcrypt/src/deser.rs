@@ -373,6 +373,23 @@ impl<'de> Deserialize<'de> for DeserializedRemote {
 }
 
 #[cfg(feature = "server")]
+pub(crate) fn deserialize_row_peer(
+	payload: &[u8],
+	pin: beaconcrypt_core::session::ServerAuthenticationPin,
+	key_id: u64,
+) -> Option<EstablishedRemote<crypto_sign::PublicKey>> {
+	let remote: DeserializedRemote = serde_json::from_slice(payload).ok()?;
+	let binding = beaconcrypt_core::session::SessionBinding::from_trusted_metadata(
+		pin.binding(),
+		key_id,
+		*remote.pk.as_bytes(),
+		*pin.fingerprint(),
+		remote.mldsa_public_key_hash,
+	);
+	Some(EstablishedRemote::new(remote.pk, remote.ratchet, binding))
+}
+
+#[cfg(feature = "server")]
 #[derive(Deserialize)]
 #[serde(rename = "BeaconCryptPqxdh", deny_unknown_fields)]
 struct ServerStateData {

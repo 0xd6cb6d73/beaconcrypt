@@ -75,13 +75,18 @@ jobs:
 
   no-std-downstream:
     runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        target: [thumbv7em-none-eabihf, thumbv6m-none-eabi]
+    env:
+      BEACONCRYPT_NO_STD_TARGET: ${{ matrix.target }}
     permissions:
       contents: read
     steps:
     - uses: actions/checkout@v7
     - name: Install Rust 1.96 and portable target
       run: |
-        rustup toolchain install 1.96.0 --profile minimal --target thumbv7em-none-eabihf
+        rustup toolchain install 1.96.0 --profile minimal --target "${{ matrix.target }}"
         echo 'RUSTUP_TOOLCHAIN=1.96.0' >> "$GITHUB_ENV"
     - name: Build independent no_std consumers
       run: bash scripts/check-no-std.sh

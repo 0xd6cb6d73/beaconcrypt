@@ -1,0 +1,65 @@
+{
+  "recorded": "2026-10-25T10:26:46.279883+00:00",
+  "native_cache_and_bindings": {
+    "reviewer": "cached_review",
+    "result": "No concrete findings",
+    "scope": [
+      "ABI compatibility",
+      "callback lifetimes and reentrancy",
+      "absence versus empty values",
+      "error propagation",
+      "Python GC",
+      "Go synchronization",
+      "commit-gated cache publication"
+    ],
+    "method": "read-only review; no tests run by reviewer"
+  },
+  "database_adapter_review": {
+    "reviewer": "row_core",
+    "result": "No concrete transaction isolation flaw",
+    "requested_followups": [
+      "PostgreSQL post-advisory-lock fresh snapshot test",
+      "concurrent cached workers with one application receipt"
+    ],
+    "followups": "Both tests implemented and passed within18 example tests"
+  },
+  "collection_guard": {
+    "reviewer": "cached_review",
+    "initial_findings": [
+      "postmaster child exemption included foreign clients",
+      "schema-difference cleanup could delete unrelated schemas",
+      "failed startup could stop an unowned postmaster",
+      "mutable plan could mix collection axes"
+    ],
+    "fixes": [
+      "TCP socket inode ownership against benchmark process descriptors, Unix sockets disabled",
+      "removed schema-difference cleanup",
+      "direct owned postmaster child and exact identity checks before signaling",
+      "pin plan digest through watcher, runner, resume and receipts"
+    ],
+    "rereview": "No remaining concrete findings",
+    "synthetic_tests_passed": 13,
+    "reviewed_hashes": {
+      "hybrid_guard.py": "fae4a860826b551998ec64f7e76f7ebdc99d8c70adddaf150551f460206c53e9",
+      "prepare-quiet-hybrid.py": "e3e13b2b37a62f0156bd935a5413dae5a8e7498e0051e3749fe1b1de04af98eb",
+      "run-quiet-hybrid.py": "761a22c77d08bf20b06a4e7f89ffd6d6d373d8fac0d9e3573b52cf6247ab499d",
+      "wait-quiet-hybrid.py": "fed4645755de25c989aa80d033d82ee1fcc9cd3a4d953ef359cdd9f581532b90",
+      "test_hybrid_guard.py": "3f438cceddda2c16843ea81b78bc15f324b74410e0ba120bd7d075906f44558e"
+    },
+    "additional_review": {
+      "findings": [
+        "unrecognized CPU activity was not enforced",
+        "historical CPU exemption needed narrowing to zombies",
+        "short sample boundaries needed a separate CPU anchor"
+      ],
+      "fixes": [
+        "all-visible-PID CPU accounting with fixed per-process/aggregate limits; steal and swap limits",
+        "identity change invalidates live-process exemption; only historical zombie identity retained",
+        "separate >=1s CPU anchor covers short start/finish boundaries; missing older baseline fails closed"
+      ],
+      "rereview": "No remaining concrete findings",
+      "reviewed_tests": 13,
+      "limits": "Five-second sampling cannot rule out wholly unobserved short-lived work, below-threshold activity or host noise."
+    }
+  }
+}

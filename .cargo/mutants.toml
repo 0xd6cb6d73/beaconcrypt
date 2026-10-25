@@ -20,6 +20,10 @@ exclude_globs = [
 	"beaconcrypt-parse/src/generated/**",
 	"beaconcrypt/src/cbinds.rs",
 	"beaconcrypt/src/pybinds.rs",
+	# Shared dispatch is compiled only by those same language-binding features.
+	"beaconcrypt/src/row_binding_server.rs",
+	"beaconcrypt/src/row_cbinds.rs",
+	"beaconcrypt/src/row_pybinds.rs",
 ]
 
 # The core mutations below differ only for states that the public constructors and persistence validation cannot create: out-of-range private ratchet offsets, inconsistent results from pure core transitions, or out-of-range private cache indices.

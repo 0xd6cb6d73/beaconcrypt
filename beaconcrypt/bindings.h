@@ -82,9 +82,30 @@
 #define beaconcrypt_STATUS_POISONED 12
 
 /**
+ * A storage failure, including an uncertain commit outcome. No operation output is released.
+ */
+#define beaconcrypt_ROW_STATUS_STORAGE 13
+
+#define beaconcrypt_ROW_STATUS_INVALID_SESSION 14
+
+#define beaconcrypt_ROW_PHASE_ACCEPTANCE 1
+
+#define beaconcrypt_ROW_PHASE_COMPLETION 2
+
+/**
  * Opaque beacon handle exposed by the C API and owned by its caller.
  */
 typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;
+
+/**
+ * A database-backed row server. Serialize calls on one handle and never reenter it from callbacks.
+ */
+typedef struct beaconcrypt_RowServerHandle beaconcrypt_RowServerHandle;
+
+/**
+ * A trusted callback-scoped transaction session. The pointer and any calls using it must remain on the callback's thread and must not escape that callback. Recursive session calls are rejected and abort the transaction. Session outputs are pending and must not be published before the outer server call succeeds. Do not reenter the owning server.
+ */
+typedef struct beaconcrypt_RowSessionHandle beaconcrypt_RowSessionHandle;
 
 /**
  * Opaque server handle owned by the C caller.
@@ -178,6 +199,44 @@ typedef struct beaconcrypt_EncryptState {
    */
   uint64_t seq;
 } beaconcrypt_EncryptState;
+
+/**
+ * A serializable database transaction interface. `begin`, `store` and `commit` return true on success. `commit` must durably commit the outer transaction before returning true. `rollback` must safely discard any active transaction or do nothing if none exists; it is called after failed begin or commit callbacks. `load` returns 0 for absence, 1 after synchronously calling the sink exactly once, and -1 on error. Protect every read, including absence, with locks or atomic read-set validation at commit. Values are secret, opaque bytes; keys must be stored exactly. Constructors consume context immediately, and invoke destroy exactly once, including on failure. Borrowed pointers and sinks must not escape callbacks. Callbacks must not unwind or reenter the handle. The database must protect integrity, provenance and rollback resistance.
+ */
+typedef struct beaconcrypt_RowStoreCallbacks {
+  void *context;
+  bool (*begin)(void*);
+  int32_t (*load)(void*, const uint8_t*, uintptr_t, void*, void(*)(void*, const uint8_t*, uintptr_t));
+  bool (*store)(void*, const uint8_t*, uintptr_t, const uint8_t*, uintptr_t);
+  bool (*commit)(void*);
+  void (*rollback)(void*);
+  void (*destroy)(void*);
+} beaconcrypt_RowStoreCallbacks;
+
+/**
+ * Optional cached-peer expectation support. `expect` returns 1 after protecting the exact expected bytes (or absence when present is false) through the final atomic commit, 0 for a conflict, and -1 for a storage failure. It may stage a CAS condition instead of loading the row. A null callback falls back to load and compare. Context ownership and transaction callbacks are inherited unchanged from store.
+ */
+typedef struct beaconcrypt_CachedRowStoreCallbacks {
+  struct beaconcrypt_RowStoreCallbacks store;
+  int32_t (*expect)(void*, const uint8_t*, uintptr_t, const uint8_t*, uintptr_t, bool);
+} beaconcrypt_CachedRowStoreCallbacks;
+
+/**
+ * A committed row message and authenticated peer/sequence metadata. Free `data` with `beaconcrypt_free_buffer`; it contains ciphertext for encrypt and plaintext for decrypt. Failure returns an empty buffer and zero metadata; inspect the server's last status.
+ */
+typedef struct beaconcrypt_RowMessageBuffer {
+  struct beaconcrypt_Buffer data;
+  uint64_t key_id;
+  uint64_t seq;
+} beaconcrypt_RowMessageBuffer;
+
+/**
+ * The effect of an operation inside a transaction. `message.data` is null when no message was produced. `changed` can be true even without a message. Free a non-null message buffer with `beaconcrypt_free_buffer`. These bytes are pending until the outer transaction succeeds.
+ */
+typedef struct beaconcrypt_RowTransitionBuffer {
+  struct beaconcrypt_RowMessageBuffer message;
+  bool changed;
+} beaconcrypt_RowTransitionBuffer;
 
 #ifdef __cplusplus
 extern "C" {
@@ -454,6 +513,165 @@ struct beaconcrypt_Buffer beaconcrypt_encrypt_to_server(struct beaconcrypt_Beaco
 struct beaconcrypt_Buffer beaconcrypt_decrypt_server_message(struct beaconcrypt_Beacon *handle,
                                                              const uint8_t *ptr,
                                                              uintptr_t len);
+
+/**
+ * Create a server in an empty database namespace. Lineage must have 32 bytes; each optional seed has zero or 32 bytes. Store context is consumed even on invalid arguments.
+ */
+struct beaconcrypt_RowServerHandle *beaconcrypt_row_server_create(uint64_t kid,
+                                                                  const uint8_t *seed,
+                                                                  uintptr_t seed_len,
+                                                                  const uint8_t *mldsa,
+                                                                  uintptr_t mldsa_len,
+                                                                  struct beaconcrypt_RowStoreCallbacks callbacks,
+                                                                  const uint8_t *lineage,
+                                                                  uintptr_t lineage_len,
+                                                                  uint32_t *status_out);
+
+/**
+ * Open an existing namespace without loading peers or advancing their state. Store context is consumed even on failure.
+ */
+struct beaconcrypt_RowServerHandle *beaconcrypt_row_server_open(struct beaconcrypt_RowStoreCallbacks callbacks,
+                                                                const uint8_t *lineage,
+                                                                uintptr_t lineage_len,
+                                                                uint32_t *status_out);
+
+/**
+ * Create a row server with a bounded decoded-peer cache. Capacity zero disables caching. Existing row operations, composition callbacks and free functions accept the returned handle. The database remains authoritative and every cached predecessor is validated in the transaction. Store context is consumed even on invalid arguments.
+ */
+struct beaconcrypt_RowServerHandle *beaconcrypt_cached_row_server_create(uint64_t kid,
+                                                                         const uint8_t *seed,
+                                                                         uintptr_t seed_len,
+                                                                         const uint8_t *mldsa,
+                                                                         uintptr_t mldsa_len,
+                                                                         struct beaconcrypt_CachedRowStoreCallbacks callbacks,
+                                                                         const uint8_t *lineage,
+                                                                         uintptr_t lineage_len,
+                                                                         uintptr_t cache_capacity,
+                                                                         uint32_t *status_out);
+
+/**
+ * Open an existing row namespace with a bounded decoded-peer cache, initially empty. Store context is consumed even on failure.
+ */
+struct beaconcrypt_RowServerHandle *beaconcrypt_cached_row_server_open(struct beaconcrypt_CachedRowStoreCallbacks callbacks,
+                                                                       const uint8_t *lineage,
+                                                                       uintptr_t lineage_len,
+                                                                       uintptr_t cache_capacity,
+                                                                       uint32_t *status_out);
+
+/**
+ * Return zero for an uncached handle.
+ */
+uintptr_t beaconcrypt_row_server_cache_capacity(const struct beaconcrypt_RowServerHandle *handle);
+
+uintptr_t beaconcrypt_row_server_cached_peer_count(const struct beaconcrypt_RowServerHandle *handle);
+
+/**
+ * Discard local decoded peers without changing the database. Serialize with all other handle calls.
+ */
+void beaconcrypt_row_server_clear_cache(struct beaconcrypt_RowServerHandle *handle);
+
+void beaconcrypt_row_server_free(struct beaconcrypt_RowServerHandle *handle);
+
+uint32_t beaconcrypt_row_server_last_status(const struct beaconcrypt_RowServerHandle *handle);
+
+/**
+ * A null message with zero length omits the initial payload; a non-null zero-length message supplies an empty payload and rejects response construction after consuming the registration.
+ */
+struct beaconcrypt_RegistrationResponse beaconcrypt_row_server_register(struct beaconcrypt_RowServerHandle *handle,
+                                                                        const uint8_t *registration,
+                                                                        uintptr_t registration_len,
+                                                                        const uint8_t *message,
+                                                                        uintptr_t message_len);
+
+struct beaconcrypt_Buffer beaconcrypt_row_server_encrypt(struct beaconcrypt_RowServerHandle *handle,
+                                                         const uint8_t *data,
+                                                         uintptr_t len,
+                                                         uint64_t kid);
+
+struct beaconcrypt_RowMessageBuffer beaconcrypt_row_server_encrypt_with_metadata(struct beaconcrypt_RowServerHandle *handle,
+                                                                                 const uint8_t *data,
+                                                                                 uintptr_t len,
+                                                                                 uint64_t kid);
+
+struct beaconcrypt_Buffer beaconcrypt_row_server_decrypt(struct beaconcrypt_RowServerHandle *handle,
+                                                         const uint8_t *data,
+                                                         uintptr_t len);
+
+struct beaconcrypt_RowMessageBuffer beaconcrypt_row_server_decrypt_with_metadata(struct beaconcrypt_RowServerHandle *handle,
+                                                                                 const uint8_t *data,
+                                                                                 uintptr_t len);
+
+struct beaconcrypt_Buffer beaconcrypt_row_server_identity_pk(const struct beaconcrypt_RowServerHandle *handle);
+
+struct beaconcrypt_Buffer beaconcrypt_row_server_mldsa_public_key(const struct beaconcrypt_RowServerHandle *handle);
+
+/**
+ * Compose application rows and at most one native transition in one durable transaction. The callback returns true after calling its supplied sink exactly once, including for an empty result; false aborts. The sink copies bytes synchronously and must not escape the callback. Context is borrowed for this call; no destructor is invoked. The callback is trusted not to publish pending results. Only this function's returned buffer is commit-gated; an error returns a null buffer and sets last_status.
+ */
+struct beaconcrypt_Buffer beaconcrypt_row_server_transaction(struct beaconcrypt_RowServerHandle *handle,
+                                                             void *context,
+                                                             bool (*callback)(void*,
+                                                                              struct beaconcrypt_RowSessionHandle*,
+                                                                              void*,
+                                                                              void(*)(void*,
+                                                                                      const uint8_t*,
+                                                                                      uintptr_t)));
+
+/**
+ * Compose the two registration commits. Acceptance returns 0 for a final result, 1 to continue, or -1 to abort; it calls its sink exactly once for 0 or 1, supplying final-result or completion-context bytes respectively. Completion returns true and calls its sink exactly once with final-result bytes, or returns false to abort. All sinks copy synchronously and must not escape their callback. The acceptance callback can return a cached result without accepting, or accept once and continue with application context. Completion runs only after confirmed acceptance commit. On error, phase_out is ACCEPTANCE or COMPLETION; completion means acceptance definitely committed. Unknown commits require authoritative application-row lookup. Context and callbacks are borrowed only for this call.
+ */
+struct beaconcrypt_Buffer beaconcrypt_row_server_registration_transaction(struct beaconcrypt_RowServerHandle *handle,
+                                                                          void *context,
+                                                                          int32_t (*accept)(void*,
+                                                                                            struct beaconcrypt_RowSessionHandle*,
+                                                                                            void*,
+                                                                                            void(*)(void*,
+                                                                                                    const uint8_t*,
+                                                                                                    uintptr_t)),
+                                                                          bool (*finish)(void*,
+                                                                                         struct beaconcrypt_RowSessionHandle*,
+                                                                                         const uint8_t*,
+                                                                                         uintptr_t,
+                                                                                         void*,
+                                                                                         void(*)(void*,
+                                                                                                 const uint8_t*,
+                                                                                                 uintptr_t)),
+                                                                          uint32_t *phase_out);
+
+uint32_t beaconcrypt_row_session_last_status(const struct beaconcrypt_RowSessionHandle *handle);
+
+/**
+ * Application keys are scoped separately from native records. A null result with STATUS_REJECTED is absence; a non-null zero-length buffer is a present empty value.
+ */
+struct beaconcrypt_Buffer beaconcrypt_row_session_load(struct beaconcrypt_RowSessionHandle *handle,
+                                                       const uint8_t *key,
+                                                       uintptr_t key_len);
+
+bool beaconcrypt_row_session_store(struct beaconcrypt_RowSessionHandle *handle,
+                                   const uint8_t *key,
+                                   uintptr_t key_len,
+                                   const uint8_t *value,
+                                   uintptr_t value_len);
+
+struct beaconcrypt_RowTransitionBuffer beaconcrypt_row_session_encrypt(struct beaconcrypt_RowSessionHandle *handle,
+                                                                       const uint8_t *data,
+                                                                       uintptr_t len,
+                                                                       uint64_t kid);
+
+struct beaconcrypt_RowTransitionBuffer beaconcrypt_row_session_decrypt(struct beaconcrypt_RowSessionHandle *handle,
+                                                                       const uint8_t *data,
+                                                                       uintptr_t len);
+
+bool beaconcrypt_row_session_accept_registration(struct beaconcrypt_RowSessionHandle *handle,
+                                                 const uint8_t *data,
+                                                 uintptr_t len);
+
+/**
+ * A null initial message uses the protocol witness; a non-null empty one attempts an empty payload. This function is valid only in the completion callback.
+ */
+struct beaconcrypt_RowTransitionBuffer beaconcrypt_row_session_complete_registration(struct beaconcrypt_RowSessionHandle *handle,
+                                                                                     const uint8_t *message,
+                                                                                     uintptr_t len);
 
 #ifdef __cplusplus
 }  // extern "C"

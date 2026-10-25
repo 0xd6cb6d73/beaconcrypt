@@ -23,6 +23,8 @@ mod persistence;
 mod pqxdh;
 mod ratchet;
 #[cfg(feature = "server")]
+mod row_persistence;
+#[cfg(feature = "server")]
 mod server;
 mod shared;
 mod wire;
@@ -48,6 +50,11 @@ pub use persistence::{
 pub use ratchet::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_RATCHET_OUTPUT_LEN, KDF_STATE_SIZE, RatchetStatus,
 };
+#[cfg(feature = "server")]
+pub use row_persistence::{
+	CachedRowServer, RowError, RowMessage, RowRegistrationDecision, RowRegistrationError,
+	RowRegistrationPhase, RowServer, RowSession, RowStore, RowTransaction, RowTransition,
+};
 #[cfg(all(feature = "pqxdh", feature = "server"))]
 pub use server::Server;
 #[cfg(feature = "server")]
@@ -64,6 +71,13 @@ mod cbinds;
 #[cfg(feature = "pybinds")]
 mod pybinds;
 
+#[cfg(any(feature = "cbinds", feature = "gobinds", feature = "pybinds"))]
+mod row_binding_server;
+#[cfg(any(feature = "cbinds", feature = "gobinds"))]
+mod row_cbinds;
+#[cfg(feature = "pybinds")]
+mod row_pybinds;
+
 #[cfg(feature = "pybinds")]
 #[pyo3::pymodule]
 mod beaconcrypt {
@@ -75,5 +89,11 @@ mod beaconcrypt {
 	use crate::pybinds::{
 		Beacon, EncryptStatePy, PersistenceError, RegResponsePy, Server, SnapshotHeadPy,
 		snapshot_head, validate_snapshot_successor,
+	};
+
+	#[pymodule_export]
+	use crate::row_pybinds::{
+		CachedRowServerPy, RowMessagePy, RowPersistenceError, RowRegistrationDecisionPy,
+		RowRegistrationError, RowServerPy, RowSessionPy, RowTransitionPy,
 	};
 }

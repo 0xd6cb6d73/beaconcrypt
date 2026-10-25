@@ -1,0 +1,94 @@
+{
+  "status": "passed",
+  "worktree": "/home/user/worktrees/beaconcrypt-core-row-merge",
+  "base_HEAD": "eda5a18424d816d9e1f5ba86eafbdae5da788411",
+  "merge_HEAD": "2b38ad523f6e4b67f4a38f431636101f4a14be6a",
+  "shared_target": "/tmp/bc-arc-scratch/core-row-merge/target",
+  "environment_file": "/tmp/bc-arc-scratch/core-row-merge/env.sh",
+  "environment_sha256": "549a892af77cffa5678c6779630c884e8df8eec7738e1b60dfbee64f7e61938f",
+  "source_map": "source-after-validation.json",
+  "source_map_sha256": "39abf29823118c61d32627635e2a2328d39e67d8405ae25146aad725382c3c46",
+  "source_map_timing": "Captured immediately after completed binding validation; merge still uncommitted",
+  "phases": {
+    "release-gobinds": {
+      "exit_code": 0,
+      "command": "cargo build --release -p beaconcrypt-ffi --features gobinds --locked",
+      "log_sha256": "0b5fe2277fd2b29cc111b76604c482f8ec516047dbc0954657203c5614f4e4db"
+    },
+    "header-unchanged": {
+      "exit_code": 0,
+      "command": "cmp /tmp/bc-arc-scratch/core-row-merge/bindings/header-staged.h beaconcrypt/bindings.h",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "go-race": {
+      "exit_code": 0,
+      "command": "go test -race -p 3 ./...",
+      "log_sha256": "aa16079ad60ca3f9cc41a814556049b0968a2dd29d479b7a7ce2161de1d00276"
+    },
+    "c-persistence-build": {
+      "exit_code": 0,
+      "command": "cc -std=c11 -Wall -Wextra -Werror -Ibeaconcrypt beaconcrypt/tests/c_persistence.c -L/tmp/bc-arc-scratch/core-row-merge/target/release -lbeaconcrypt -Wl\\,-rpath\\,/tmp/bc-arc-scratch/core-row-merge/target/release -o /tmp/bc-arc-scratch/core-row-merge/bindings/c-persistence",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "c-persistence": {
+      "exit_code": 0,
+      "command": "/tmp/bc-arc-scratch/core-row-merge/bindings/c-persistence",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "python-environment": {
+      "exit_code": 0,
+      "command": "uv sync --locked --no-install-project",
+      "log_sha256": "cf3073b40aa19d311a99198d8d542c1ac6f23861b58c716d8ea9ba49f4d8731c"
+    },
+    "python-extension": {
+      "exit_code": 0,
+      "command": "uv run maturin develop --uv --locked",
+      "log_sha256": "463d80f9929fcdbdad554663d306475da57c80145b8dd9cf6cfd2d57c981f809"
+    },
+    "python-tests": {
+      "exit_code": 0,
+      "command": "uv run pytest tests",
+      "log_sha256": "6c247e87776ee91dbf19389bb68d49b2c7c1a8337cbd9eb382a275e7056d4a4c"
+    },
+    "packaging-tests": {
+      "exit_code": 0,
+      "command": "python3 scripts/test_package_wasm.py",
+      "log_sha256": "b5267b5d5fbe405fccfd846aff0ce9e4fe5ec5849eccdb102120a4ae2665b0b0"
+    },
+    "final-header-unchanged": {
+      "exit_code": 0,
+      "command": "cmp /tmp/bc-arc-scratch/core-row-merge/bindings/header-staged.h beaconcrypt/bindings.h",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "counts": {
+    "python_tests_passed": 97,
+    "packaging_tests_passed": 8
+  },
+  "native_go_race": true,
+  "c_harness": "existing beaconcrypt/tests/c_persistence.c; strict C11 warnings as errors; linked built release shared library",
+  "python": "local scratch venv; Maturin beaconcrypt-ffi; CPython3.14.7 abi3-py311",
+  "artifacts_sha256": {
+    "/tmp/bc-arc-scratch/core-row-merge/target/release/libbeaconcrypt.a": "003c00eb8113ce64745e96e87dd84a768a205cb69e4a7753c6e230fcdee7c607",
+    "/tmp/bc-arc-scratch/core-row-merge/target/release/libbeaconcrypt.so": "f1b7aeecd146be959d67ccb6e1194e596b0df20b251d155cb2af0c7b507c9aa0",
+    "/tmp/bc-arc-scratch/core-row-merge/bindings/c-persistence": "03d1da7ce33c70b2787eb6b28aaafe7bc23f00058bffbb82179752489ef37c8b",
+    "/tmp/bc-arc-scratch/core-row-merge/bindings/venv/lib/python3.14/site-packages/beaconcrypt/beaconcrypt.abi3.so": "c9e7be339dd73aa5024d212514f3e4d78cab69a06313b84252f0eee97cef27b6"
+  },
+  "header": {
+    "final_matches_staged": true,
+    "sha256": "c4914adb0d81b310ec0f9a9386557481becdc10ee5cc728843ecb93c178e07f2",
+    "initial_incoming_staged_sha256": "7061e8ec8bcf5ebf4a5860b0f46379e415525287d224c6864e55bcc20d3d4d38",
+    "generated_diff_sha256": "483ebfbecaa3a120adaf346f6d159b5b9961ee7cbd675228ea0c237a4c5550a4",
+    "reviewed_delta": "Removed exactly two blank lines before extern C; no declarations or ABI changed; generated whitespace staged"
+  },
+  "initial_attempt": "initial-header-generation preserves passed release build and expected stopped comparison against incoming whitespace",
+  "peak_bytes": 785240064,
+  "lease": "00002892",
+  "lease_released": true,
+  "services_started": false,
+  "limits": [
+    "No proof tools or benchmarks run",
+    "Portable Thumb and WASI validation owned by parent",
+    "No new tests or harness introduced; no commits"
+  ]
+}

@@ -1,0 +1,2 @@
+# Retained regression seed for the empty registration-response boundary in the caller-entropy property test.
+cc bcfcedec6f20ad433139f85e8e8925028bc788204dbe44094a6eea770d2637fd # shrinks to cached = false, fail_after = 0, payload = []

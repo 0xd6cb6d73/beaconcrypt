@@ -42,7 +42,7 @@ mod deser;
 #[path = "ser.rs"]
 mod ser;
 #[cfg(feature = "server")]
-pub(crate) use deser::deserialize_server_state;
+pub(crate) use deser::{deserialize_row_peer, deserialize_server_state};
 #[cfg(feature = "server")]
 pub(crate) use ser::serialize_server_state;
 

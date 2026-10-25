@@ -39,7 +39,7 @@ jobs:
       - name: Codec properties
         run: cargo test -p beaconcrypt-parse --test properties --locked
       - name: Protocol and persistence properties
-        run: cargo test -p beaconcrypt --test ratchet_properties --test persistence_properties --test registration_properties --locked
+        run: cargo test -p beaconcrypt --test ratchet_properties --test persistence_properties --test registration_properties --test cached_row_persistence --test row_rng --locked
       - name: Preserve failure seeds
         if: failure()
         uses: actions/upload-artifact@v7

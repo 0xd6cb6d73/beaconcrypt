@@ -1,0 +1,2622 @@
+{
+  "status": "passed",
+  "archive": "wasm-complete-audit.tar.gz",
+  "archive_sha256": "7498d8b86d4533739fa17309ae6a499c143f5f47d6a02e88327aba408e47b94e",
+  "files": 522,
+  "uncompressed_bytes": 6651648,
+  "excluded": [
+    "wasm-audit/runner"
+  ],
+  "manifest": [
+    {
+      "path": "wasm-audit/README.md",
+      "size": 1306,
+      "sha256": "26a44c9eadd0537ad5061b6d9dc47e9cabc1de6eaa944ab7b1a963201e547bc5"
+    },
+    {
+      "path": "wasm-audit/SHA256SUMS",
+      "size": 72906,
+      "sha256": "9263404ce7d4b4c5b42edb316e2fa6fc3cb1225a632a19bc23e6a50a10ff7452"
+    },
+    {
+      "path": "wasm-audit/commands.json",
+      "size": 3056,
+      "sha256": "451416cf0a042ca31755f63f2978b37d0812ed591ff9653c90b1cc394d351687"
+    },
+    {
+      "path": "wasm-audit/complete-catalog.json",
+      "size": 262239,
+      "sha256": "997c806ac1c2d17c513b820e7e4504561c2aa341d1d04ef410b5c3fe1b7e7ce2"
+    },
+    {
+      "path": "wasm-audit/complete-catalog.json.gz",
+      "size": 15343,
+      "sha256": "10e4fe6d135fe0e7ae5f06518ce46f8c817b74787b5c4408f3bffc8a92399e95"
+    },
+    {
+      "path": "wasm-audit/diagnostic_classifier.py",
+      "size": 16406,
+      "sha256": "d3e879e2d05a8b7dec0fd511777ec05e3c7ae6d7defd76e2bd21911b7ae0c985"
+    },
+    {
+      "path": "wasm-audit/final-receipt/SHA256SUMS",
+      "size": 943,
+      "sha256": "c9028eb6ec5cd0947e63d50dfd5c2d3559c55106a9a8fa5bd1488e2a647b2396"
+    },
+    {
+      "path": "wasm-audit/final-receipt/artifact-manifest.json",
+      "size": 57124,
+      "sha256": "0bffcda598abd9e6b13b30e3e3ee456b936da111132039e46090751588023676"
+    },
+    {
+      "path": "wasm-audit/final-receipt/artifact-manifest.json.gz",
+      "size": 15465,
+      "sha256": "5f408239280eb6d42ad0d359c0deb93708c7ad939b9825befea72213be566baa"
+    },
+    {
+      "path": "wasm-audit/final-receipt/catalog.json.gz",
+      "size": 15278,
+      "sha256": "b862f6820a3312a023a688afc415516fa1ebf11fdd3c0ac96575c0ec446771e6"
+    },
+    {
+      "path": "wasm-audit/final-receipt/findings.json",
+      "size": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "wasm-audit/final-receipt/findings.json.gz",
+      "size": 23,
+      "sha256": "abc129be8d26e8d4afe9ce45f9d5a73c8ed9aa62810ca24ee789fe4581dc4a80"
+    },
+    {
+      "path": "wasm-audit/final-receipt/outcomes.json.gz",
+      "size": 9146,
+      "sha256": "ab44be142164e66cf466086ca05577b991cbe7d70f8e0f7b17bdc362e52963b7"
+    },
+    {
+      "path": "wasm-audit/final-receipt/run-catalog.json.gz",
+      "size": 15278,
+      "sha256": "b862f6820a3312a023a688afc415516fa1ebf11fdd3c0ac96575c0ec446771e6"
+    },
+    {
+      "path": "wasm-audit/final-receipt/summary.json",
+      "size": 1550,
+      "sha256": "e32567984adee5540ba0fcd361588e2ff6263df809634455d3a35500bf939455"
+    },
+    {
+      "path": "wasm-audit/final-receipt/summary.json.gz",
+      "size": 740,
+      "sha256": "f2fcc148d664af3598d4ff7918bc32b09cdf52a9080923890baef85d8cf6fda8"
+    },
+    {
+      "path": "wasm-audit/final-receipt/unviable-diagnostics.json",
+      "size": 7522,
+      "sha256": "e78b506be1e98216967ef03e16e39b3ae41e0e2bc74a3d8040382ee7d34a10da"
+    },
+    {
+      "path": "wasm-audit/final-receipt/unviable-diagnostics.json.gz",
+      "size": 724,
+      "sha256": "0bd6bce60082564033da957f98b9e3f97bdb77eb960a2628e7c799ecf7151927"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/caught.txt",
+      "size": 11972,
+      "sha256": "64526c7618ecbe25863b205b25db50d993fd1dbc952f4af80e5173a8fb45a8c5"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/debug.log",
+      "size": 834898,
+      "sha256": "0c875280632107a6d47d150976e88cec8e1b0df1abd16f5fadd38647b0a50ce4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/debug.log.gz",
+      "size": 27017,
+      "sha256": "ca3c12dfddbd29db686c997e33ee4e63617ffe5d69314eb90728faf236f3e9c7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_103_col_2.diff",
+      "size": 794,
+      "sha256": "cd070cc7934df342123206607e8f02ce154516c2df8ca42775f7824a86062eb9"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_103_col_2_001.diff",
+      "size": 800,
+      "sha256": "c2bd8ff31233ef79a6b9159e5ae0cea6ef39cee60f8cf190aa354ec737ba819c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_103_col_2_002.diff",
+      "size": 800,
+      "sha256": "96631bea965746c624c708996e298329c3847d79841f9c95a940d85c10466c41"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_113_col_2.diff",
+      "size": 1022,
+      "sha256": "5f305fbcf2547a25297e342375bbecff8f4e74421a143f191979d34592707da0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_113_col_2_001.diff",
+      "size": 1058,
+      "sha256": "8135e9f4f2f066408028e71a1a3efd139f76cbcbe62ced2a6501f803d21f95d4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_113_col_2_002.diff",
+      "size": 1086,
+      "sha256": "54f4a589a5cc015ea973eaf0b75df2ff6e31daad68e37623dae569ef0c6febd3"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_113_col_2_003.diff",
+      "size": 1070,
+      "sha256": "5e6e5e23413ed2e57e3f41a9dbf9c427fa4690f990821283cc6c70914b2be35b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_113_col_2_004.diff",
+      "size": 1072,
+      "sha256": "a1141a8f650bc4139a14bb6744f7d5cf9e18b0b81bc4495c29cc49d88e5985af"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_113_col_2_005.diff",
+      "size": 1088,
+      "sha256": "278425f0fed5d380843f9518fcb6474690d06d603ef97f68be7aabfee629f495"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_113_col_2_006.diff",
+      "size": 1072,
+      "sha256": "72d21bc20d6d4410bea4238cb9615b83fdac13d39f7d9cbd629cca7c3a77c875"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_113_col_2_007.diff",
+      "size": 1074,
+      "sha256": "d1bfa36251fe93d379acdf920fb758fcf35664560016a2883cf5281936bed9fa"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_113_col_2_008.diff",
+      "size": 1088,
+      "sha256": "aa7c36b66e36c4223cc9d4ee2c304e239e63a487d5581929a93cc431d027c2db"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_113_col_2_009.diff",
+      "size": 1072,
+      "sha256": "9be162ca622eee25881130391aaf745f5976b0f4baf5127327e5d1deaa09eb23"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_113_col_2_010.diff",
+      "size": 1074,
+      "sha256": "48d96d925e244659c94048818a71c36ef4a9bdeaf55283b3e498b11390c176fe"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_113_col_9.diff",
+      "size": 645,
+      "sha256": "d1b94d438c28f05bb046d936f55c1643f18d3f5f3e9810141c8090b22788ec9a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_114_col_15.diff",
+      "size": 652,
+      "sha256": "6e845f30177b9f67a1c2df01c49f43e1d1c375fbb23dc9d97e9a2caa9cecd911"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_116_col_9.diff",
+      "size": 534,
+      "sha256": "5a42f366d994e355b1d2a81d6ff1aeed6f53344196435ec39b26ff28022b2ac1"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_121_col_16.diff",
+      "size": 797,
+      "sha256": "483e6f4d097137ff1b369de9c08b7c747206c2a8a8480e29b837385216e9edca"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_130_col_14.diff",
+      "size": 723,
+      "sha256": "70f11c24bba8859e811264c2ad4fb946480fa2c9103b09eb0e3c5092bc2ddd19"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_130_col_2.diff",
+      "size": 950,
+      "sha256": "98916e5989b49e7972b43065240abd364192f563017deada78f4cc129f0d2de4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_130_col_21.diff",
+      "size": 721,
+      "sha256": "2381f6b6846200ec2cb24ad85bd578b74fff576d11a2af19c39e6ad68e710c8e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_130_col_2_001.diff",
+      "size": 950,
+      "sha256": "488f170c4c28f01a619534051b0cd1b4e314e1e268c973e0d91372060311756d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_130_col_9.diff",
+      "size": 723,
+      "sha256": "e59d3f1c5c4cabf69fa8f493b3e788dc4a0ed7696cb1a2221bfa659c9401b568"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_144_col_2.diff",
+      "size": 754,
+      "sha256": "75eda8646c8e0f1798060cec4d74b15985bebd00eb5c881e1ec0b13c8c771a09"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_147_col_37.diff",
+      "size": 660,
+      "sha256": "7711916c644e4cfdd2a4af474e16c4995a40457b5412a14d9de4bae2c6ac8f19"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_14_col_2.diff",
+      "size": 964,
+      "sha256": "64294ce198e7cbfc82bdb7bd6404074a32cdebac65bd685589284559e572f5d7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_14_col_2_001.diff",
+      "size": 964,
+      "sha256": "99b52ff2e238a85210e0c03a8e52ed3b7fb6e1d3af9bbe3660ec458b47caebb2"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_155_col_2.diff",
+      "size": 516,
+      "sha256": "0ac1f94c496d2838fe34b79c975a37b587d2234bdaf52195d6b10126565aac2e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_155_col_2_001.diff",
+      "size": 516,
+      "sha256": "0455b6c654455c7be4a709d9369bcafb7c5ccbc9789ae3e775a13a72f88457ca"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_161_col_50.diff",
+      "size": 473,
+      "sha256": "79d3563e2a466ad78afd66f2edb78ad5ba2db815a9d795d07169bd7ccfc57865"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_161_col_57.diff",
+      "size": 471,
+      "sha256": "6eaa66a73adf4a9fa82fee1f7f1a9b667a3ddd8e9d96456148c48b182b7219d8"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_40_col_3.diff",
+      "size": 548,
+      "sha256": "77e2da58741c840daec9a7f42a001d38e6af7bd7bf81aab60c6b083491848569"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_51_col_3.diff",
+      "size": 575,
+      "sha256": "5e4f46589e91de239029334acce81a3e4b489012cb859baf74628f5206b4689c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_62_col_3.diff",
+      "size": 642,
+      "sha256": "b85288abfd4c9c73c65de2687a5f70332dac2f9298548216efcfe62bdce1bfe4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_68_col_3.diff",
+      "size": 716,
+      "sha256": "5ca2d59a4655d1ab78372520afd9d09731a00a6ea9dc96e9dcf043d31db714f4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_72_col_3.diff",
+      "size": 1164,
+      "sha256": "043be3385e6809c61fb6696f5b78111940e818bf009089b03ee58e57e978ea10"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_72_col_3_001.diff",
+      "size": 1200,
+      "sha256": "7e7b8b8710a5f95e1d1ea2456a75fa58bca1c03bd617b5380f6b9c2be66f9848"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_72_col_3_002.diff",
+      "size": 1228,
+      "sha256": "763a2d5884d2d1fed60fc229027253bcc672bd13d64535c77c4c19655373a2e7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_72_col_3_003.diff",
+      "size": 1212,
+      "sha256": "cc14e784914390e77974fd8dff1d3e95f1c9088774579d8a56fb8ab6862dc6f0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_72_col_3_004.diff",
+      "size": 1214,
+      "sha256": "312ba957ce6e701fa0c3ee3fd9208a318bb06d5a1ae3a6d426321c6df4b46a83"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_72_col_3_005.diff",
+      "size": 1230,
+      "sha256": "73287ecd5f2c1e93263bedaeca35a9bb568b98bc4ad6add5ffd2e7362c7adc14"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_72_col_3_006.diff",
+      "size": 1214,
+      "sha256": "4ac2bad01bce0230c7eb5bdc6b43e7213f22b6ddae59b2add54712d5656446a2"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_72_col_3_007.diff",
+      "size": 1216,
+      "sha256": "f67f83d7251110db717ad7c349521231ad7e6b725bdafa454a07a92f9d1cc13b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_72_col_3_008.diff",
+      "size": 1230,
+      "sha256": "70e088256d80ea6949a2ddfdbae373a428414c327dd25fe308e694cd6bdac8fe"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_72_col_3_009.diff",
+      "size": 1214,
+      "sha256": "8bf7fe03b553e7933179cec3862affcf6737ca0a53992cbffdb22369bca84c7b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_72_col_3_010.diff",
+      "size": 1216,
+      "sha256": "2330f7c103eead99e4a11b124eaf8daa0e6e6e8e12c74661f436dc56b326bb1d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__abi.rs_line_93_col_3.diff",
+      "size": 552,
+      "sha256": "c1dfceafb5e9c7905c75b5b618e959cdd7c4bd65aca2d591be9133dcbf42cf64"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_106_col_2.diff",
+      "size": 792,
+      "sha256": "db5bbbfb12b2ccdfb7a4864b5850c4e48c1fc954051e00c80dbef9c123c9f666"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_114_col_2.diff",
+      "size": 8748,
+      "sha256": "70067816c3f977a92e5fc0f51395d6be0fb8a2dc1c7107b5832e97d5ed55036e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_115_col_13.diff",
+      "size": 702,
+      "sha256": "981a7541c690f0083fa51b480b8fc77a27c4f1db444a4a11fd23cd4b46aa03a0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_115_col_18.diff",
+      "size": 702,
+      "sha256": "78f2f521b0ceb9a398432987180870b05105a051c333da9055aaa18f17015703"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_119_col_22.diff",
+      "size": 636,
+      "sha256": "fdfb5f5a7ec5980c7fdb4fe3bd0aa301a1f52837d22b552f862180a3225569bb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_120_col_7.diff",
+      "size": 667,
+      "sha256": "6ebd088676f29d5e0105a33e16a12ffd9cdc9fe5f0bbfdf81f44a0c5d47fcf2b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_145_col_4.diff",
+      "size": 1981,
+      "sha256": "dcd6a85f71e7de808c3507b27fddb5964966a3761a687da04c99c829a0143fb9"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_146_col_15.diff",
+      "size": 592,
+      "sha256": "7117fe8acf2af7aa71c864523700fbbbb1b99ca784089628d1ab213585e6c7fc"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_149_col_47.diff",
+      "size": 696,
+      "sha256": "b84fc129aefe79c4a861d739c912c3eb3dbba3889d4bd13621f5723e162c042c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_150_col_21.diff",
+      "size": 628,
+      "sha256": "9c118f4c24d656278d315344fcdffeec48b5b90851b942b4458a40d99a2d8345"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_164_col_6.diff",
+      "size": 650,
+      "sha256": "3fce967384b3994c6c5125f1dad2224171938cb1c944fcc5dedfcb6ff1feddfe"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_165_col_6.diff",
+      "size": 642,
+      "sha256": "d00b212b00a3d13a641b474904ec611838441194ea5df762eef3f317424a3b83"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_168_col_20.diff",
+      "size": 628,
+      "sha256": "b452929029e49d8dcd551116d5e2c8e14827b25db5f9a8ad526c4a8a388152c9"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_171_col_68.diff",
+      "size": 719,
+      "sha256": "f42529229c8f4ffca5303d54bdc2d03da581456f2a4ec371b5dd549b6d21a495"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_171_col_68_001.diff",
+      "size": 719,
+      "sha256": "948934b4e7a5a14e259765a5562727beec8ca3f25eec38b8965facb34160aee0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_174_col_18.diff",
+      "size": 684,
+      "sha256": "6d42f1c4216664c0953288098a397998612209a389f0fefb209cced1d0524469"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_192_col_4.diff",
+      "size": 1036,
+      "sha256": "436087b05138385ed265c49b0e9d9471bee9343ef5a7b68363732568d53aa173"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_193_col_15.diff",
+      "size": 764,
+      "sha256": "6e8a7c81e95993fc85a5f6394a64a6754f5ff2eb36b5ee55d863e008121b7779"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_193_col_20.diff",
+      "size": 764,
+      "sha256": "995f59317e23efcc8f3fc4045d320b92c5384dc9db20462e64f0c2797bfe7708"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_193_col_23.diff",
+      "size": 753,
+      "sha256": "473bc01e3d5eb205dc5f16c362a58636d7fd9effe20766fb17b1bc6ecbd75533"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_204_col_4.diff",
+      "size": 1434,
+      "sha256": "b53d02dd4dfe13112b2f43b61ff748b5e0836f8796ac152da31936267377b230"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_205_col_15.diff",
+      "size": 779,
+      "sha256": "ea72bbba579d193e0019c8996a90865bd3b63e7fc6b0f81293a6746a9662a85d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_205_col_20.diff",
+      "size": 779,
+      "sha256": "e77bfc330630af6dfaed16da587fa801acb462e4e64c060c4845092f29c9b99d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_205_col_23.diff",
+      "size": 768,
+      "sha256": "5c08df0bf856bb30f1bc8870eed41a5b6f7ca928566d212997565e30c186229b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_208_col_47.diff",
+      "size": 730,
+      "sha256": "339682f5749406b40be80b4ab26098ac14b434ad3ee9fec56db2707fb65823cb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_212_col_9.diff",
+      "size": 698,
+      "sha256": "8244211229b84af376c8b199935b2277499f4b74a86318111407abc59a53672d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_229_col_24.diff",
+      "size": 687,
+      "sha256": "4bffc0bef4ed343c91ef8622b832e17bdd1bbee85d7557ee9612a604ebe20f8d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_229_col_30.diff",
+      "size": 687,
+      "sha256": "e1d9e7888f3e617a6002b7049d15799bd6ce5f78918e954df0cb63519c91ecd8"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_229_col_6.diff",
+      "size": 676,
+      "sha256": "f37a52bdaeb1b19319885e67e5179f7bf1790be8563981f9a865afdd6fdb9ef7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_232_col_55.diff",
+      "size": 746,
+      "sha256": "5201dadcc4bf76b6e703f2c3846aed1dfaba9aaecb71f21c562695ac39ef6763"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_232_col_58.diff",
+      "size": 735,
+      "sha256": "4f83bedcb12e8c3e26a84d1d524e63d97ace978602e422e521e9f0e0faf7c2f2"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_235_col_36.diff",
+      "size": 709,
+      "sha256": "99942c24788ec14de4c6892f30b23c5b3dd7d65d8bf020cd29789b9a11537c36"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_238_col_9.diff",
+      "size": 727,
+      "sha256": "35cf70c4612a28dc8c1a138a14858dc5d35ba9c21a25299f3f75a5304f44d1d5"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_249_col_4.diff",
+      "size": 764,
+      "sha256": "f3c722191daa800d8cbc6f220171d3abde43213940549a5262a5ace766b7469d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_254_col_4.diff",
+      "size": 785,
+      "sha256": "0be0ae21695b674d2f3ee24b63c0dcca62a62335f7ed369a236fae14bbbe5274"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_259_col_4.diff",
+      "size": 863,
+      "sha256": "fd0d470e2f47aedaf2ef07cca34658e534c437670554aa2b182b03ae386202f4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_264_col_4.diff",
+      "size": 902,
+      "sha256": "58d61dfd98d7ea004c7d45af25bd7560c4ef5e270c2685b6a86a10c9484e51b2"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_269_col_4.diff",
+      "size": 895,
+      "sha256": "1ff362961bf88fcd072634ffe265eaba860623c94ff011cf84bec94bfb05e10a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_273_col_4.diff",
+      "size": 1249,
+      "sha256": "87c6c7cdc26cbd22f64ca94469320810bc100e89027fa2a7f2d080207048df2f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_286_col_4.diff",
+      "size": 919,
+      "sha256": "3da528c5e6a451c123402a0da06458cd0add4c1b2c7baf28f199c451090cba3e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_290_col_4.diff",
+      "size": 1026,
+      "sha256": "e31b2a477be6ba85b5ba7679675076804f1c8b823ca4dfe7dfa5855855e51b0a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_295_col_4.diff",
+      "size": 1084,
+      "sha256": "fdb3c05e7ed4d8c03fca23939fd290df665bdf9d929aaa4fdc66d5a18c9cb4a9"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_301_col_4.diff",
+      "size": 951,
+      "sha256": "fe5a08ba4896787d41f420881f940e1882e74c81f32edc98e1afaf9c954b8bb9"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_304_col_4.diff",
+      "size": 1065,
+      "sha256": "34a12ab655c45951437ad0a15b687ab639127248ba65c52fa8b7d0dddf865bc0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_310_col_4.diff",
+      "size": 950,
+      "sha256": "eb9b9574a5e4fe4911f10c9f5dffce45f43a85c9141a97912f3a9d2c20b43d93"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_314_col_4.diff",
+      "size": 891,
+      "sha256": "d307a80b87a535559512c6f043dbcc37a8cdb9b707f6c27129fe901a11256fe3"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_317_col_4.diff",
+      "size": 853,
+      "sha256": "628c88d64db371f90052b558ffdf1d57cd341a1022025ab09517f488cf9fe6b1"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_320_col_4.diff",
+      "size": 1281,
+      "sha256": "7328462be2f1cd62a8172ac6cea77163c55c3bc22dc3c1bcc16a22378398a245"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_336_col_4.diff",
+      "size": 1133,
+      "sha256": "85381f8e12f4ffdac3b9f1fdbb2397c635c2c6c555a4a0dd1a26cec1ce784c2a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_344_col_4.diff",
+      "size": 1059,
+      "sha256": "e74b7e86cff870e427c1217f689ca14b748d98c1b8e0ed428ddcd972251b1a2d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_350_col_4.diff",
+      "size": 843,
+      "sha256": "78d3a5dbdcd1468926eb17dce02a3086690e462356bce62a4c7d11b698386782"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_355_col_4.diff",
+      "size": 676,
+      "sha256": "52ff6fc96c70e104fcc3409ca741a4f3b9716dd8eafebc0a706a01ea8cad4b02"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_374_col_2.diff",
+      "size": 625,
+      "sha256": "9bb549c8a149a8c9337eff3f656913f6ace497a7c2c7e18cbe130472809214f2"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_378_col_3.diff",
+      "size": 525,
+      "sha256": "abda04896109e259b20cf1687c666ee0ba8fb3a9ca4d953f44231e3083262431"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_393_col_2.diff",
+      "size": 410,
+      "sha256": "bf75d25167fda25eb47e2a8861e16571f768c2b469cb3c4d2de430dceaab05be"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_393_col_2_001.diff",
+      "size": 410,
+      "sha256": "7e66a93826466a9feced3ca06bb2bef93ece6a0fb886350e51dd45efd1de1a94"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_58_col_3.diff",
+      "size": 754,
+      "sha256": "e252f975e1d9c8985e0505f5fd36abf1076861d7830c4a2082688db952bc1e83"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_67_col_3.diff",
+      "size": 713,
+      "sha256": "b8206dead5fb2a8603bcd34c4f4abe25ac9483da25269e4e49269578ce4bdf92"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_78_col_2.diff",
+      "size": 477,
+      "sha256": "9d4766e6acc27334e4b1da54d0c6a1b6cea765cdbe9f680e00af282c59f8e8ac"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_78_col_2_001.diff",
+      "size": 477,
+      "sha256": "2f51545fc1a33325b8b0e11ca0e9cc15c3dc30e56f9961c60340f84276cbc232"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_83_col_2.diff",
+      "size": 487,
+      "sha256": "30d9be0ec2db2860219aa8050346dcdf3b9f0fceeed3d34536cfb17ac7c984a3"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_83_col_2_001.diff",
+      "size": 487,
+      "sha256": "ef4760f828c36f68d4ed4cab9419888661f0a6cc57e9c5b04944dddce1e6bac7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_87_col_2.diff",
+      "size": 634,
+      "sha256": "63d4b4715f0e00d5dc93c755368d57819fb29a2c1e3ae29de10da41377ec109e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_87_col_2_001.diff",
+      "size": 680,
+      "sha256": "cbfda27cf6f487b97523b7233ba481be847b11d2a0d4aaa796030e60d3f4b080"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_87_col_2_002.diff",
+      "size": 674,
+      "sha256": "0d222358461c78be2f504abfd4e13b9c828c47badb4c1fcf60089c536e36f89f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_87_col_2_003.diff",
+      "size": 674,
+      "sha256": "0b110bfb252873d444f2e062e1d65a0d16d56a654bb0cff4f714342da33f74ff"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_87_col_3.diff",
+      "size": 642,
+      "sha256": "362148f2c54a9db17b4f4075d82eaa8c0205c8518022d78182b9051fa14e1e86"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_93_col_2.diff",
+      "size": 802,
+      "sha256": "89fb71c958db2b0b8088e9340e8271e901f5a90ce71dbf9156d8e515becafd50"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_93_col_2_001.diff",
+      "size": 842,
+      "sha256": "28f2ff39036c904ae763f5046cf5972eb70c5315572083a217230fe4ea479c33"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_93_col_33.diff",
+      "size": 642,
+      "sha256": "ed2eb1883fe7d1222aefc0ce5069b47764a13b2ef6e26017687d4d70fafab3d1"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_93_col_33_001.diff",
+      "size": 642,
+      "sha256": "7b5d80a238c00bc29d0612ee4c1a818e3157b337573bc085abcd2f18eba7eaa4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_93_col_37.diff",
+      "size": 644,
+      "sha256": "372c50a3e8048bd2f2803e6c513c0082a85ea1ccf566660c7ecb2b67a7d7bd8e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_93_col_43.diff",
+      "size": 642,
+      "sha256": "4c529ef2abe8dfbf81dc221f95f6b00cf7e02a1da89dbdba31b7ad6dcad6941a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_93_col_43_001.diff",
+      "size": 642,
+      "sha256": "fa3c263a78c5a7b1d8b183dc4ed357d3fe1f2c3e4c57169315f7203aa64b28fe"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_94_col_33.diff",
+      "size": 657,
+      "sha256": "d4beb3bab17331c45aba7084e92023a6379fb51360c3e7e8b7c681544296c4f3"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_94_col_33_001.diff",
+      "size": 657,
+      "sha256": "9d4d095fd844bad9a2afe2efafb2e07b7a981ab9777d353f8db239c6a1eba8b6"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_94_col_37.diff",
+      "size": 659,
+      "sha256": "29da92fe9b5b884ab4bb41c9aefb2742ad1408d0de2d4cdbeeee564e40efa85a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_94_col_43.diff",
+      "size": 657,
+      "sha256": "0e4b1ee0e846bc459a960b04531833a17c8fb6d8093d992f50dfce46c51bf01f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_94_col_43_001.diff",
+      "size": 657,
+      "sha256": "6708c7c1b876a29366827ed6154046b13c87c3c0d4d1a272e2d4fd7f301bc071"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_95_col_11.diff",
+      "size": 662,
+      "sha256": "fba9ec7da630b45472df972956a50751ec700415c74911d26a0a975a60ae499c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_95_col_11_001.diff",
+      "size": 660,
+      "sha256": "4f949ff7aa59e854dd6d81a8b8501890c375611f634d370166dbf80e66ea9a22"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_95_col_11_002.diff",
+      "size": 662,
+      "sha256": "2ac12776fd5be30018831d7699c30e1111004d03c6ce9d8e882b2dfb6843d3ea"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_95_col_15.diff",
+      "size": 662,
+      "sha256": "b903268785d9fc31fa57d31d2bd9ad181ada80f17364c7671cd917e81cdea845"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_95_col_30.diff",
+      "size": 662,
+      "sha256": "a6d6e088c716ca8f0fcff15c8100f983cea6b4f66fb37f7a3a08563800e30299"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_95_col_40.diff",
+      "size": 660,
+      "sha256": "cb2629ce9a7d99b2414f3531337a16d40002c4b7f74e93379ace1710ce015c05"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__lib.rs_line_95_col_40_001.diff",
+      "size": 660,
+      "sha256": "201a08e91161b9a4bb880ac6c249517745ed6bbeff62607cb96f91f292b604c0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_107_col_3.diff",
+      "size": 921,
+      "sha256": "e9629d4b6e9c917ddaddcd555e9f9f14479d4542d28fa494b6e7938e4ec8c8cc"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_107_col_3_001.diff",
+      "size": 923,
+      "sha256": "ab4844ceed406f93827dfdb321a17f8a7a0c257882c6fe257969ef7e56851f5f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_120_col_7.diff",
+      "size": 537,
+      "sha256": "9e488341ec25ff9eec4ea3063ee95cefcf7937df0108a3386bdf6ecc767e6030"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_133_col_3.diff",
+      "size": 669,
+      "sha256": "45d29ffb208bf551c0dd9f85cb1711cf614d8cbee678d982b97d06166cf7f136"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_143_col_2.diff",
+      "size": 730,
+      "sha256": "1019058413e4d87b078e3fbff6ac573ea584b12629c015203dfb56a470b0428f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_143_col_2_001.diff",
+      "size": 732,
+      "sha256": "fed0f850a8d84add434d8a5f89f3f5de42526c61f5320ca0b5f4b24c97fbf93f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_143_col_2_002.diff",
+      "size": 732,
+      "sha256": "33e574a4135e1e238af1e24a37a2098419a08e580f14a39bcd74c09c454bf82d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_151_col_17.diff",
+      "size": 670,
+      "sha256": "b469125ba1eb17df78ec41b1948c6c27f52a15779879107e025346911ea12828"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_151_col_2.diff",
+      "size": 672,
+      "sha256": "1ceec9272d57980cedac393dcf2aee5487e6958fcd1e3814be1aec9212a2aa84"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_151_col_2_001.diff",
+      "size": 712,
+      "sha256": "49daa038f93c34944f500180d5b018da5fde0b0bca1c61367b92270cb47b7506"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_16_col_3.diff",
+      "size": 807,
+      "sha256": "73fd0df4995c80517693fcfe8d75964b31ced34b2c7678c282256d35690ec70e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_27_col_3.diff",
+      "size": 631,
+      "sha256": "964e7d60c64d7b84dc341d1a0cc309918994f757b5ab33b3d153f922b8e38591"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_27_col_3_001.diff",
+      "size": 671,
+      "sha256": "b616af9ebb0795e2ad152407064d11f55003ac5b8ffb84c662e1c74ee2d0d141"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_37_col_25.diff",
+      "size": 657,
+      "sha256": "d4f1a50173ffec20050ae5e0c92cbd60f7058be109bdf82969684e6c394e612b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_37_col_3.diff",
+      "size": 926,
+      "sha256": "daf4656c1606d1d8da809dad0034f3af44aa2b27f73e2972cff471d9e7db163a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_37_col_3_001.diff",
+      "size": 928,
+      "sha256": "05a03b9c6c38439c5e5d5be4bb8881b6f0914e256ba31da1666f09af26301681"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_73_col_2.diff",
+      "size": 1272,
+      "sha256": "53b7237f60c5ab1277107a316528855ad20b45dd7daa6a2b42f608cd8735889e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_73_col_2_001.diff",
+      "size": 1312,
+      "sha256": "946c4c2086e15686af9fba14fb27d418d69c4f2b74dbc57985ff04966f387e0a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_82_col_14.diff",
+      "size": 821,
+      "sha256": "91e42a826a18938088bd0dd8e9506d0beb6a1915da3a1ef2c6c273b7d1462c66"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_82_col_21.diff",
+      "size": 821,
+      "sha256": "9900f6ce81652b5ba70d024209d37e9efbb1ad961c4997bc0827cf8a1033749f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_82_col_21_001.diff",
+      "size": 819,
+      "sha256": "e6a75260ff75c8b25a9b30cc3263fa65c972c9597a2b75728049d4bfd1ab8674"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_82_col_21_002.diff",
+      "size": 821,
+      "sha256": "ef234181d6b5870251d7f38ac3046ccceda7198f598c81f087ec511a64ce6696"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_82_col_9.diff",
+      "size": 821,
+      "sha256": "771215d0b966751919bfc993a32b45e9d7cd7fc69c1f779a72c3a25d6f160c05"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_86_col_42.diff",
+      "size": 762,
+      "sha256": "e86fb1c5768c247ce2b5c82bcc8caa8947a6ba6f6a61eebec0c9ec3aca8e8c8c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_94_col_3.diff",
+      "size": 782,
+      "sha256": "bc2a68fe82863b22f59dc7e3d0168576a636e2366c5f01d73ee0c63094f579c0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/diff/beaconcrypt-wasm__src__store.rs_line_94_col_3_001.diff",
+      "size": 822,
+      "sha256": "25db3b23b2bce276d357d731d420cbe999aa0693f3ad0b8a3296020550ee5627"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/lock.json",
+      "size": 134,
+      "sha256": "fb9e4fd6e39d8ff77c1366fa7a8fd34ae0fffe406391f1da20d569b1ddf86894"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/baseline.log",
+      "size": 245280,
+      "sha256": "36bf8f787a3ed957039d5f84fe3c006b28c98bfe80dcb8560e4a403513f0168d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/baseline.log.gz",
+      "size": 21209,
+      "sha256": "ae9027642ff6606a20eb05b9378f3682cccb4abd8e3cf57c332099a8e0cf0444"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_103_col_2.log",
+      "size": 20230,
+      "sha256": "94cbda7f716651ad516ca79ec65f5f4a78d84b1578f2dfffff73f096d8df87a2"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_103_col_2.log.gz",
+      "size": 3970,
+      "sha256": "a5cd68303c35d0412e4c65f9ac3bdd943b90a7617a241c9ab23500295f9a20b7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_103_col_2_001.log",
+      "size": 20074,
+      "sha256": "324f3465560e36f83111ddc0531997098ff2e59671bb1f0f6df32970a3e8d94b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_103_col_2_001.log.gz",
+      "size": 3930,
+      "sha256": "ab0583abf2fca96192a8dcb7110388710d4f32161d273e6fb71021cf1f891401"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_103_col_2_002.log",
+      "size": 19943,
+      "sha256": "aa705a540ff414704d700a46524038c46035730d5afe7cb3a8ab78171a94cffb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_103_col_2_002.log.gz",
+      "size": 3880,
+      "sha256": "891978351320c42ddf2031ae13c7481ad02a7ccfcf4d74fed3eefa0c455770e2"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2.log",
+      "size": 19768,
+      "sha256": "31044de196b7366fe5f4635ccb1e900dfd0e46f5d7bb43c7f9900ad15c9adc94"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2.log.gz",
+      "size": 3853,
+      "sha256": "bc1e9570542dadcff1fe4afff78a8556e1c063ddc2c391cb51e0c82fb46bc208"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_001.log",
+      "size": 13977,
+      "sha256": "3c8ce0b1a01326fe6b86e1a337f9d6a2b6b5742ba0aca653311250a7949eb1bb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_001.log.gz",
+      "size": 2817,
+      "sha256": "7fa2f19848eabec8a72eea59a3f894d13f444b035f6caed1bd38d8228a410141"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_002.log",
+      "size": 13886,
+      "sha256": "6edeb66e6e50ffd9cf505e94b63d5f81161bd0be541842e09a7bd89202e3f433"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_002.log.gz",
+      "size": 2833,
+      "sha256": "f61001d4dbcb4676494cffd7c7e3ba8ec2fe2d39b916d5b3c9d913d965659a41"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_003.log",
+      "size": 19927,
+      "sha256": "5f2f140ea6b8cc053402b391517203946334d9de500ec666c0c7724f05746f67"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_003.log.gz",
+      "size": 3859,
+      "sha256": "64f27d858c87883166c0216c54fea194c9f8cab3deca822e4dde92cae147ae6f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_004.log",
+      "size": 20034,
+      "sha256": "8db8588cd927b0c678326971f82670275393786d16b45de4114a49414ac57584"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_004.log.gz",
+      "size": 3911,
+      "sha256": "09d814941916c17bd7da9be19a0487e893e42866921eab8b8f83488fc4525a61"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_005.log",
+      "size": 13890,
+      "sha256": "ff3840344bcd8ade7be424f51a833ee3e8becb7d44e329ce8c5eca840a586e44"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_005.log.gz",
+      "size": 2826,
+      "sha256": "8db612e246c7eac1308ee67294fea4ae9a378afcdbc7f8792241d935a467d1fd"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_006.log",
+      "size": 19791,
+      "sha256": "e4b9dae37545d7b47d6809f45e2761cd29f1de8cda1c9668785af4f671fb6c1d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_006.log.gz",
+      "size": 3830,
+      "sha256": "48613a1cd730aa710813fc01bd6f4e416733c1a829fb9854db60439c998a5c01"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_007.log",
+      "size": 20106,
+      "sha256": "5ec2e67c8a6b69a06511b6095770b7c71a596c7401f20d49431e008d08e401ba"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_007.log.gz",
+      "size": 3886,
+      "sha256": "2ce687baf2fb56f44712daecd908766d9b7b3ca325ce3bc84414234d9d33800e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_008.log",
+      "size": 13890,
+      "sha256": "8daf14de22d1c1984ead1b6d6f1bcf01cacb7dcf50f0bb670b4604ee5663a0eb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_008.log.gz",
+      "size": 2825,
+      "sha256": "1a9e1edb4d5c89821dc92f995e1eee43ff20e4bc99e1ad24632761eaf14b963e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_009.log",
+      "size": 19895,
+      "sha256": "6814bdda77b64337932433058935bf3a0b9bbd7ed3cd5fc4e02499c9724dd0e8"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_009.log.gz",
+      "size": 3912,
+      "sha256": "d84a6d88300d277419ac5e7e1fab6b2d302a6729895010eed67c98c8d28f5e0e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_010.log",
+      "size": 19950,
+      "sha256": "dcbced8d566facdb8ad8c9681dcf85053dc138334b216c9a761f4cec45712ba0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_2_010.log.gz",
+      "size": 3891,
+      "sha256": "88fb89543301ff633b4128c05212c6fa1fee1d78ee880561c7123d60fec4a736"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_9.log",
+      "size": 17659,
+      "sha256": "8ba25a355429ca688f0f86df247351f80e5a154a2542e14b0536918b0ee7572f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_113_col_9.log.gz",
+      "size": 3407,
+      "sha256": "b3bceef2218e0154f97833e0a76b9131c5ba345c18422bc8465d6f0202153296"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_114_col_15.log",
+      "size": 17676,
+      "sha256": "fd337e3b280514704a0e5509a4f094be16631e826ed0a5326c7ced2ac337bd5c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_114_col_15.log.gz",
+      "size": 3387,
+      "sha256": "a672f425d22d2a7bb3ae7c2ed8046a305edd22b145b90fccea4afc3cf4940a3b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_116_col_9.log",
+      "size": 17781,
+      "sha256": "67e6dc5a00a73e1a13ee22eb20a1eff6bf8b85349599fba81675257a34e344c4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_116_col_9.log.gz",
+      "size": 3465,
+      "sha256": "2efd52c83a61298b21fd916271df00bc6bc23be7ef22342ec61817d2ac684069"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_121_col_16.log",
+      "size": 18045,
+      "sha256": "f119ed2aa3671d248b3407d7da415bbda8fedb79f1d259b8a373fc2fccdf981f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_121_col_16.log.gz",
+      "size": 3605,
+      "sha256": "d5a76ef02ac20c7c33a580b8edb37d68c8c8790120e36657d33ab076361118b3"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_130_col_14.log",
+      "size": 18071,
+      "sha256": "93ee7d37b7c014f5e662b83da0d1d366583da63b73209f606fb6b1e390e7c5b5"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_130_col_14.log.gz",
+      "size": 3584,
+      "sha256": "9758b9b14c492625f22a10c7a9ce4c9649bd912cebcc4bb11434656ea806f1ba"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_130_col_2.log",
+      "size": 19518,
+      "sha256": "251dc813d85f9dbc4c98e060cfb14364958da0f7abbb212bcad3a0d29c27e520"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_130_col_2.log.gz",
+      "size": 3920,
+      "sha256": "ceb89846a9d91fba667942fe3cb937a2b278210efb7a8d715a7b88a7935eedfb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_130_col_21.log",
+      "size": 18304,
+      "sha256": "2549ae688b22c2ef164de87f6db4f9f95dfdee3b4719c99970eb598af291678e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_130_col_21.log.gz",
+      "size": 3630,
+      "sha256": "7405dc80bc2ea285df7b93639a866af06d7e9f6b57e70730dfd123ef73a313c8"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_130_col_2_001.log",
+      "size": 19387,
+      "sha256": "56b06209882ce0a6b103df3934fd8f654e92d20ffeb3ae4b6d5d5f39fdf1160e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_130_col_2_001.log.gz",
+      "size": 3941,
+      "sha256": "11c3d54f1e5207237e9ea01b8f07c0cea08718b27d37297d5124388ffd2b1272"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_130_col_9.log",
+      "size": 18255,
+      "sha256": "82e2632ae395274fba1da79547056bb87ba02b37583114d335216df1b1f3187e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_130_col_9.log.gz",
+      "size": 3635,
+      "sha256": "887bc5ded960da4736aa66b2ec9cd3183fa843b5bfecc4b76bd2e4e6398c89a7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_144_col_2.log",
+      "size": 19457,
+      "sha256": "8a6d5608e08ede82af2996842198c232483d40e2b954ed272b9ff51eedc6bb6b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_144_col_2.log.gz",
+      "size": 3811,
+      "sha256": "14fee328beffc0f0c70b0570a71bbb4d40c599bd0ea8fa9e802a0dea6c7d492d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_147_col_37.log",
+      "size": 17933,
+      "sha256": "8553e86853304348472bffa513c0642c163a8b26c1155eb491b87348bc745739"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_147_col_37.log.gz",
+      "size": 3557,
+      "sha256": "e2f8e66277f11c4ced7186160ec4faf4fc9f649b567f30cd0d1d7f157fa45ed2"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_14_col_2.log",
+      "size": 20514,
+      "sha256": "0533d7f67d4e44cc430ed8a8a6e21f623e5e597caabd152bf34b7876908a8e72"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_14_col_2.log.gz",
+      "size": 4169,
+      "sha256": "898234cf32156a26b4891873d5bb60a2b80cb711dabc753a0f2d42ef3a69010a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_14_col_2_001.log",
+      "size": 20514,
+      "sha256": "cd8f7fc3b053fb77dd792acbe4fa21824cda080b0ef1725da40fec8de95d1e6f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_14_col_2_001.log.gz",
+      "size": 4151,
+      "sha256": "4630a3e438d96a77012cd88f231c2c9cdba7c06a9e5edbb6c6e8cff663cc6a75"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_155_col_2.log",
+      "size": 20701,
+      "sha256": "60159033b5450b415c11920672386bf0e8d1572fa8302ff976393c0db75a484e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_155_col_2.log.gz",
+      "size": 3990,
+      "sha256": "4de1494d7fe605705ae7b065b4083e56d79d11a7ef0fc3facf46fa719d69356f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_155_col_2_001.log",
+      "size": 20692,
+      "sha256": "afb416a8e56e255961ec9f8c380e7c31e7eab15cfc45bdce3f06138bc717d0f1"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_155_col_2_001.log.gz",
+      "size": 4002,
+      "sha256": "6fda99af86dee2ae8c57f97342765bdc6ccb82649bd441ef75516512e5a109c4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_161_col_50.log",
+      "size": 18348,
+      "sha256": "f84240c65bf084d0d72febd7b68dacc39afe5fa313484f5c56770b32d5854831"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_161_col_50.log.gz",
+      "size": 3534,
+      "sha256": "54a8dbef3452170de14e949a8f7019d7dcc63bfae068b3681cca4ed3963c5df8"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_161_col_57.log",
+      "size": 18344,
+      "sha256": "8d52d5500f083c5ebb1a09dfde6c388d9dff043171811e107c3aad35d2f72839"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_161_col_57.log.gz",
+      "size": 3527,
+      "sha256": "0cf4d0a4f1624b56f256821057a48ad5371d064da50cca339e6347dbe4e9f630"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_40_col_3.log",
+      "size": 20434,
+      "sha256": "d61ed308f55bfa07895cd8a70caba307e805dcf6f65a1981b9f03182a179cc90"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_40_col_3.log.gz",
+      "size": 3726,
+      "sha256": "5818c2ec03be8f23ef4633528b5f9c54d398a9d34c4b501a91e45601dd42af39"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_51_col_3.log",
+      "size": 18676,
+      "sha256": "3ce4c0341726016e17cad1b74496be1923286f66f2f5f07127614bc27feccd82"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_51_col_3.log.gz",
+      "size": 3549,
+      "sha256": "086acf9917f7be3dcb6b558ccc5a2299aaf48416989d847bc181f5868b3b574e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_62_col_3.log",
+      "size": 21068,
+      "sha256": "8f4eb8e8631a61c753ccef7a46ff979da5932dac82ed70e05c6bef464c4c53cb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_62_col_3.log.gz",
+      "size": 3877,
+      "sha256": "21526ef2f4d2cf7b495dd856a177b7e5cdfe283f68417421f8638fd9c9e1eb07"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_68_col_3.log",
+      "size": 20873,
+      "sha256": "73d2ce80c5b27d502f2ec57b39878e3211fabfc64e04083a889434ccb97c33f2"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_68_col_3.log.gz",
+      "size": 4209,
+      "sha256": "8da72b68b8bc5bac070dadd2319c106e46ce5a79ebea48b4ae25606eddfd5012"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3.log",
+      "size": 19950,
+      "sha256": "ec9e6d7ade23856179248391fbff02d7a6ad401290ca31acce5375a44f34cade"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3.log.gz",
+      "size": 3913,
+      "sha256": "25b0580c67ff7f32285ca72b117481d2e95d29b2a9ffed07983e267ebf935813"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_001.log",
+      "size": 13983,
+      "sha256": "04cbd2320b3e4d3c2e4c84cc09fca2fb0b5b17fee81c4f959f844c8047564f40"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_001.log.gz",
+      "size": 2655,
+      "sha256": "e1deab8659b9f35afbda36921572e0d726a0ac1e45d2fd0bc9900d0e6dfefb56"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_002.log",
+      "size": 14040,
+      "sha256": "523edbd2fd86c610a23d7dfa9e4b0bd9226da783352cef90df319f4cf325973b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_002.log.gz",
+      "size": 2692,
+      "sha256": "35b2e4c3c818cdae5ca9c302d2a8ad7bd5ae311c9f654a823de62e06515a3c06"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_003.log",
+      "size": 19640,
+      "sha256": "219a5ee2e4f0ac0379664e7f840d34b3da72a638283e9d13045d1a6a8b5e186b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_003.log.gz",
+      "size": 3825,
+      "sha256": "026f51da50180bba29328adc8fa9da48e6deaf9d9878f135940063be651838c4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_004.log",
+      "size": 19652,
+      "sha256": "fe608df4fb15672e29c7416abd4aff7811037d141619776474f52e1b142ced4e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_004.log.gz",
+      "size": 3826,
+      "sha256": "baf8b100d51c14f813fc37c2ab0059908eeaf9707ce3a9c93b69c58eb236f651"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_005.log",
+      "size": 14044,
+      "sha256": "a7b3b1b40dec023195e2f0c478695f2814fd559c5080816144cffd2228fc0a19"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_005.log.gz",
+      "size": 2695,
+      "sha256": "a2f75b69170c558ac6c57183232acf01580f437bbd9a2e8b439dfa4fe9681f67"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_006.log",
+      "size": 19747,
+      "sha256": "5f539a79c0923124f85ffc585409688396add346b2dbf702cffe816b15c055f7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_006.log.gz",
+      "size": 3855,
+      "sha256": "fb8e1d5eb4a2127ee421e05d9d0e6c866b2ba903e4225f0f00e877c6291fee12"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_007.log",
+      "size": 19759,
+      "sha256": "d767ead8aff786ca33f1ee08c09d20d1207640d66e95ef13bafc7e15d6a6543d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_007.log.gz",
+      "size": 3854,
+      "sha256": "8fc0d02764c6523764690c91c874d3c89d5d3b50f41b16076858344f626d7c2b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_008.log",
+      "size": 14200,
+      "sha256": "dc72fab4ac4db9a54013c435699c5a8626e3d8845d1cbe16e5afa4904f801923"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_008.log.gz",
+      "size": 2716,
+      "sha256": "e779f3f74fd3f67a95dcec64b6432259d906fe9cda01da6432797f4c508aaec5"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_009.log",
+      "size": 19695,
+      "sha256": "89589f9f1a6897f0b3f03269570abe7118ace759eb6c021f4545ac715ae2dc46"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_009.log.gz",
+      "size": 3859,
+      "sha256": "9079a1f896916be6c1c423c884ededb3eec3331b98e33b72d958a9b0925afc67"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_010.log",
+      "size": 19759,
+      "sha256": "e39dc96fa92a82bfd3113d768d2359dbda4956c597f27479786acc194b42df39"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_72_col_3_010.log.gz",
+      "size": 3857,
+      "sha256": "f3458a4e9b9278d5c0b3619b7515e2c5beaf22a3bced2d09a67694ef3adb3e71"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_93_col_3.log",
+      "size": 18669,
+      "sha256": "75834a07c3fe773526ab4eba90758b4f105b46d576f0664f48faeec71a16980d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__abi.rs_line_93_col_3.log.gz",
+      "size": 3669,
+      "sha256": "5e32c4a75b9253446ce04aa298ddfd30f9375f9dc9a526ac9a4ef0fa0a656062"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_106_col_2.log",
+      "size": 19758,
+      "sha256": "517a8c5630b7fedba91242260dafb0f07a6734b858971ec8ad42a6dc2d0464ef"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_106_col_2.log.gz",
+      "size": 3884,
+      "sha256": "d5d441530f67b07ee177968561cb74754519049eee000d48467b1a803f70184a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_114_col_2.log",
+      "size": 42274,
+      "sha256": "557747d86b27c1de00f892c078365f898d3d55982224867ba0739011abfa8712"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_114_col_2.log.gz",
+      "size": 6767,
+      "sha256": "527446a4fa93dd59a0235fc022073cd7c7dd252f6c612539eec471f38939c871"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_115_col_13.log",
+      "size": 19594,
+      "sha256": "be451a5b7b40bf45b3382dfa977c3411d39a442a715a6fbb7c378c3b0b5a0326"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_115_col_13.log.gz",
+      "size": 4006,
+      "sha256": "f769a8df61a93c41117cab074c308076f66fe62b6eda29980211121b2041a5a7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_115_col_18.log",
+      "size": 19943,
+      "sha256": "ec7d3926034776d80cd5131cac253a65a2cfce09645ea4b9af17f4a17c0e7b75"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_115_col_18.log.gz",
+      "size": 4114,
+      "sha256": "46f97bd7b546826a340fa7e92f03419152d0f96a18975e6a87cad93a5e9218a7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_119_col_22.log",
+      "size": 19632,
+      "sha256": "9ce022be38f4e027b8a9da52b31663c9030164de3b553227516c9e40ff60d0dd"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_119_col_22.log.gz",
+      "size": 4041,
+      "sha256": "13da2da4ce0ba673149ec3a57cff79c26e072e73bea950dae4554b0ffc31a4ba"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_120_col_7.log",
+      "size": 19600,
+      "sha256": "f1183e7f43ac43193398520d5b728bcc3c792d7a028e35e15612979be80cb400"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_120_col_7.log.gz",
+      "size": 3997,
+      "sha256": "f43c564ea2b8b3145a2e06552877e85ec2ec0f2a9be7d0fbff80522dbdca5dd0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_145_col_4.log",
+      "size": 21011,
+      "sha256": "0557dbb062b8bc12eb586037f2069cb92769d77c2b6c31defcd231e9f0d49bee"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_145_col_4.log.gz",
+      "size": 4115,
+      "sha256": "0584b4cc7bb470225ceedf33e5c89b478fa7566e482b4470d51edfde037fc45e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_146_col_15.log",
+      "size": 17605,
+      "sha256": "672caad32aeab4d9d84605ad80fa6e7021096d8f6e19306251a063d82ec34cf9"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_146_col_15.log.gz",
+      "size": 3394,
+      "sha256": "4cee8afff4ee6c45bbe0aa90c28873a7bae38725dbf98e34bd5dcf840bdd3d01"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_149_col_47.log",
+      "size": 17709,
+      "sha256": "e07050b52a242fc4a14e80a38ab8d39ed91ed132e651533c225531a8150b964d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_149_col_47.log.gz",
+      "size": 3421,
+      "sha256": "e9905e7e537ad30af600cf3a22abff76916bd0a057a963f83f2f72851e1583b3"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_150_col_21.log",
+      "size": 17650,
+      "sha256": "8c45b334aa8291fbf2e6a5b5e9f90108ad5adafaf53cf73796f4d3abb08a3f79"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_150_col_21.log.gz",
+      "size": 3386,
+      "sha256": "0c6eea1868cadd14868eba4bc410eba7c21583e176fd572541ea485f7573006d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_164_col_6.log",
+      "size": 17662,
+      "sha256": "ceec291e0884355b6646dc26fdc1a62cc15e57f470c2961b832c81fa37545ebf"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_164_col_6.log.gz",
+      "size": 3394,
+      "sha256": "671ae541aa6b0e76f6073cf000aca855a2b901955cdf703461a8f557d715e981"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_165_col_6.log",
+      "size": 18580,
+      "sha256": "2c58650cf4755dd658b3ae18c2cac566dffff544c9200e70f938ca4246f0ee80"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_165_col_6.log.gz",
+      "size": 3704,
+      "sha256": "f2f4ac64b074f87f849d8f8fac025889bb880ea5c86a1fe51ef5e845e1eda45a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_168_col_20.log",
+      "size": 17641,
+      "sha256": "60805120ea5642d72ec6bddfcd8a1f63f10203eab40a5225e345dc1587d6356c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_168_col_20.log.gz",
+      "size": 3393,
+      "sha256": "1a3ab5d5e7ba0d1d06aff173f9fdd8a7576b602727b30728452bf47e867dfb84"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_171_col_68.log",
+      "size": 18200,
+      "sha256": "d00203e773bd353341059763bad254f4db86fb74bfc27a528fca487a9f751e8c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_171_col_68.log.gz",
+      "size": 3481,
+      "sha256": "cec572e79080bd78f8908f6a30113120fbeb8031b590f293711734c6c4acab12"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_171_col_68_001.log",
+      "size": 18209,
+      "sha256": "5c7eb462087a08a7891eb9c78bc4832144580530c80d1ad6ca63a637958e65a1"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_171_col_68_001.log.gz",
+      "size": 3527,
+      "sha256": "e601229ecd8ee40d8d5328610a0b226ceacf2bc587eb1448b5842429367c5c3f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_174_col_18.log",
+      "size": 17697,
+      "sha256": "8e40262a91dd9a3e2269b5b30d8bdbd8e69d5c2c8481c08bc5f988aef7d10d03"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_174_col_18.log.gz",
+      "size": 3437,
+      "sha256": "0872937482cfc686bcd4b9eb0c205bf4e0fb8dccce118ed004982c760fb08054"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_192_col_4.log",
+      "size": 20173,
+      "sha256": "5e2c0434f9b8cbddbaed50fa5c449f5605a2e6a820b9dda45b06a677df6bd011"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_192_col_4.log.gz",
+      "size": 4166,
+      "sha256": "a6a78e47ec5adf894908b8b7331416d723ecb5d9da675a6c1561683b6176bba8"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_193_col_15.log",
+      "size": 19040,
+      "sha256": "27be95a4f293f3e3d371d5b3c2a003d92df3cc1cd4027c517e7e762487baab3c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_193_col_15.log.gz",
+      "size": 3869,
+      "sha256": "75e156a68780c56b5acb624943dc48157807c7c37875ca854ee0eeb21ff17130"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_193_col_20.log",
+      "size": 19118,
+      "sha256": "724c1665125aaacfcb39ac7ccc41f2ce3481357db513205808bbfe8ccab7699f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_193_col_20.log.gz",
+      "size": 3879,
+      "sha256": "8b6207314869b8e99fb3a86154e4462fca8b9faead7e739d6962cd4d11b8686c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_193_col_23.log",
+      "size": 19019,
+      "sha256": "b877656c7864dfe8bdf920f50ec4438993c949e5771d87e72aeccaf9e49c9aa5"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_193_col_23.log.gz",
+      "size": 3862,
+      "sha256": "1ba468ed78aad005a5f4938c1ab1b5f1d7ea923e86e2299de0c27614689ba91a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_204_col_4.log",
+      "size": 21193,
+      "sha256": "6ace8bbd12100765bf8bfbbcd37a24d4c29236934885eb0012598484906228f8"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_204_col_4.log.gz",
+      "size": 4410,
+      "sha256": "92af213b81d781d5422be515d35919893ed834226c11d7dec53e1cedc30b83e7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_205_col_15.log",
+      "size": 19133,
+      "sha256": "055b1200ad5a8e10ae2c4979c54853118118d34bc5897566de643bcff104e1b9"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_205_col_15.log.gz",
+      "size": 3866,
+      "sha256": "73aec658df57b6c9bed4a8a5073a887d8f1297dedb9aeb4795bff2d3eec056fa"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_205_col_20.log",
+      "size": 19133,
+      "sha256": "4de31c9e36683ea408fb8a1dc7aa6746330019d2c81e7fa0981893455b92cbf9"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_205_col_20.log.gz",
+      "size": 3890,
+      "sha256": "351597c597c581c40f9b82cefebc47dadee57a8f54679be4d5773fde03ddddf1"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_205_col_23.log",
+      "size": 19268,
+      "sha256": "ffa5b8c2060d4350c118345a8c97f2b5972e9103de1d4d4ebe15adfd4ef769b1"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_205_col_23.log.gz",
+      "size": 3901,
+      "sha256": "5a3ea2321c109d78a46354aefc5ee819cda4b3185b9ed0b11b9577ca6a04ddcb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_208_col_47.log",
+      "size": 19622,
+      "sha256": "7a3a87f187d973c9cdae6dd129c8f87c43d2451f67c5af0e4b30a7a294fe6466"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_208_col_47.log.gz",
+      "size": 3942,
+      "sha256": "96a7d24d731d0935e873c8d90bda3a14a5a4a503bbcbb24f63cc3de14ab27496"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_212_col_9.log",
+      "size": 19562,
+      "sha256": "1fe409b840750ee3ab87b30e20c09995080aaee253a53e636949c97a2965ac45"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_212_col_9.log.gz",
+      "size": 3979,
+      "sha256": "3e91432fa4eef3b3261e902fef9bcb32bd87f00503f910eca06a9101105ca70e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_229_col_24.log",
+      "size": 17840,
+      "sha256": "f01e3a0da32b7b3f3bf329dba81006c01970837fca32e67dd9644af8832a9544"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_229_col_24.log.gz",
+      "size": 3422,
+      "sha256": "f3b85c364a6df41c4186b93af4fa54089d62699cca399dbbcdcf271a6629faab"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_229_col_30.log",
+      "size": 18172,
+      "sha256": "8c9fb126aef389cfc5acde7ede64df30eae5c00c43e6b1d72592d1c9ad7dbd71"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_229_col_30.log.gz",
+      "size": 3511,
+      "sha256": "45cc61d098344c3e701ac8ee3c009f778690ef3269152b8f9e8953e76c7dfc59"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_229_col_6.log",
+      "size": 17827,
+      "sha256": "6d702ab10fe3cac599b4705e707e5c9b732d104755de71b99fd5ed942a1a9708"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_229_col_6.log.gz",
+      "size": 3413,
+      "sha256": "70f7dccedf8884c920736f387c37591ae8cb37ca884ebeebf240d54a552a4b81"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_232_col_55.log",
+      "size": 17951,
+      "sha256": "55fa3694807f991cfd72fb1ca44f437f6edbe80024a863a67d01db8a0273cda4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_232_col_55.log.gz",
+      "size": 3452,
+      "sha256": "b33c0d4cca46da08b2d76aee2b023773c83204d21c5ca1d1f64dbcad2356dc73"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_232_col_58.log",
+      "size": 17878,
+      "sha256": "56e50b16c7466c3c0e257566de3d80d5958fdeb5cfc45dba4186207d8d542a05"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_232_col_58.log.gz",
+      "size": 3425,
+      "sha256": "07bb1ce76f58179ca9d298f32af1c825b4a602beb7a51879740555fea991e7a4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_235_col_36.log",
+      "size": 17966,
+      "sha256": "55228857c7d6fef3d14a459d8aefa490556ad038e3ef6ba936b4a8448f785c85"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_235_col_36.log.gz",
+      "size": 3441,
+      "sha256": "610deba9c1f704ffb199bf2bb339d4f43224049a048a2178368301374fd65e2a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_238_col_9.log",
+      "size": 17739,
+      "sha256": "44daccd995abed76f4f70481297be2f32bf5c0d14f88406eddeeddcd1ae724a1"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_238_col_9.log.gz",
+      "size": 3388,
+      "sha256": "a253e8b689986eda2182a44a34c1b321da2c852ebe9ac86e706f30c89933884f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_249_col_4.log",
+      "size": 17942,
+      "sha256": "367f317ba6f982be361da4d63aab0ad3ce4cba2177aac80730e116eec2efe02d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_249_col_4.log.gz",
+      "size": 3408,
+      "sha256": "117602cb41e87f02457b778fd3ac17dcfd0d2d14acebe30487a278d5c20be816"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_254_col_4.log",
+      "size": 19617,
+      "sha256": "7b5b446592f7a7991f0ca2071ce746ba58d4ea29b43fd29bd54b6e19d044fbb2"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_254_col_4.log.gz",
+      "size": 3879,
+      "sha256": "db9bfba698b30add61c4ae5ebe4f2d0b40855d29c667eaab58b3566e8d0133eb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_259_col_4.log",
+      "size": 18374,
+      "sha256": "c5b0c478f864dd6ae856fe18181ba3c6756fc92aa1d3fb36f8a08e5532872bd6"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_259_col_4.log.gz",
+      "size": 3507,
+      "sha256": "845ff84a709c2040da57b13a6dbd45ef1c503adba921e216017e9c47711493d7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_264_col_4.log",
+      "size": 19380,
+      "sha256": "da0ed14489a4cbdb6971c27490aec0523bff1aa35cd55b9c6fa95f581bb994d4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_264_col_4.log.gz",
+      "size": 3854,
+      "sha256": "cd50411fe412e2aa21c40200535ea961dee19a196c35772aa9cfd3c14090de2d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_269_col_4.log",
+      "size": 19727,
+      "sha256": "6b19ed385cd04335bb4a5babc840ff0e54520ccdef65cf322799db4bb73b4caf"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_269_col_4.log.gz",
+      "size": 4009,
+      "sha256": "6dead23976b7ac4d81a376188c28c0a7362c83455a783a8e2feaf02b4d75ef11"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_273_col_4.log",
+      "size": 18759,
+      "sha256": "388cdfe7e6baf07c6df6ebe9c71aefbedf21da9cd531a945d88790d41ed9aeda"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_273_col_4.log.gz",
+      "size": 3676,
+      "sha256": "26cd978ee6b67b59cf517022e27567d681b5af313ee8c085bb80d12c5fa70084"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_286_col_4.log",
+      "size": 19751,
+      "sha256": "e9e8993c86302b97f6bf8713f5a1002fd9c7bd265f2bb48555ebeff62b280e6a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_286_col_4.log.gz",
+      "size": 4000,
+      "sha256": "ad005c47393374bdc37db24ca154df650db85dea0aa576e281574a0086784c30"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_290_col_4.log",
+      "size": 18588,
+      "sha256": "9adcf29cb9918af12a717a05d124df1d26f3bb638cfbc4f20327b6cd2db847f2"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_290_col_4.log.gz",
+      "size": 3591,
+      "sha256": "4f3e2a6d475977ca285d7098e1905b60549069468880c55b11658640cf32a8ea"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_295_col_4.log",
+      "size": 19916,
+      "sha256": "19839e5428c017921ba7e5ceac8511f3d68690dffd97586c5bf15820f5347fb9"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_295_col_4.log.gz",
+      "size": 3932,
+      "sha256": "398a9fd84e61ef293d9fe9e1c7fb56b10da5be2f1e0ba60552f7a61283ecb063"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_301_col_4.log",
+      "size": 18461,
+      "sha256": "7654eedcc68d10450ac2924ee1eb428ee0ae2384dff8dc2e39ca4ea8f554a2da"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_301_col_4.log.gz",
+      "size": 3536,
+      "sha256": "a52b9ab2c7d4270f2beeec5bbdfabd504ffc1f6b90404812af9898d532751306"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_304_col_4.log",
+      "size": 19897,
+      "sha256": "0700de03b9aa49e672e238c7c6483ac38efb10b4ac01c68cdf1cd1613d8662e1"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_304_col_4.log.gz",
+      "size": 3996,
+      "sha256": "dfa70ee8dd4e87f1b2dc704563e22921ecb53cf57e2120f0a530ece9366cc485"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_310_col_4.log",
+      "size": 19507,
+      "sha256": "c973ba4fb4008fb52551fc6bbc6dfa6bfef9527b70d3fe142400299318a07571"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_310_col_4.log.gz",
+      "size": 3954,
+      "sha256": "490dd0cc42d98de087cda58ba3e0b019c69b358ce54725750b5d53eaba3df60e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_314_col_4.log",
+      "size": 18907,
+      "sha256": "daa3b0aa6ce1c5834e28eee0fddd43be91d129c8637b1c23ad5471fe769c5bcc"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_314_col_4.log.gz",
+      "size": 3740,
+      "sha256": "d2e804d621a94fee2a47ab1a86bf86492f07f6775e81efc8ff945de60628edd3"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_317_col_4.log",
+      "size": 19644,
+      "sha256": "48828c8d621b21b580ad5821c4e8df11c8091527416814ecc19935101129d182"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_317_col_4.log.gz",
+      "size": 3964,
+      "sha256": "3767dbba675d0ac2464af01f9e8e63aed2cd0ce7a7924010fba21d2a00c68c5d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_320_col_4.log",
+      "size": 19973,
+      "sha256": "89c4bdd863116d5b714461189529378393b83292150b5ec880412278f4ebb687"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_320_col_4.log.gz",
+      "size": 4123,
+      "sha256": "8a9d140eb197b9595e7d3bdbffc367f756fa829158d57346f33023ca6af556cf"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_336_col_4.log",
+      "size": 19643,
+      "sha256": "d792296e8b0ff7543a168e3f16498e3ea73af3a38db266b3e9b383a135194ab5"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_336_col_4.log.gz",
+      "size": 3918,
+      "sha256": "dfd7326d0497195c9b046be26406a1ee64f8fb5f7c1ac85c1154395cd8d74fa4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_344_col_4.log",
+      "size": 19977,
+      "sha256": "63ebfdedf0a33dd864e56990cc18b5b7695cd3d321652827ae5139caa8016e80"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_344_col_4.log.gz",
+      "size": 3947,
+      "sha256": "921ab386e85bf4cf1f2c4d780005281ad36e937e70809e498e8e7b8d608a9c32"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_350_col_4.log",
+      "size": 19761,
+      "sha256": "cc9f605133b9384d2e933f520c1080a7c84cca5bd8c297d80c9ebaaf94e11998"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_350_col_4.log.gz",
+      "size": 3987,
+      "sha256": "4f9433957c51624369d8eaa5eadc4c0cbc4a0235e00700e275ff6d4db83e24a7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_355_col_4.log",
+      "size": 19573,
+      "sha256": "12987cfcc2b4d0cd37fd791748b6d7152dc8c1f1f1f27ad002f2e4a775b5ec29"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_355_col_4.log.gz",
+      "size": 3949,
+      "sha256": "43392810d9464b34b810b4f5517c6c98dfef0fe74b1153dca171abd2c22c9fec"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_374_col_2.log",
+      "size": 31347,
+      "sha256": "9eb514127ed74c9f15edd0233e975aeb8d124cd25a3ccfe6d0b796a391fce142"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_374_col_2.log.gz",
+      "size": 4965,
+      "sha256": "452a578c7056c29b41de09e9ffdd3329f681119c7a2a56f785f2a1799fdb4563"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_378_col_3.log",
+      "size": 28762,
+      "sha256": "ff3d3979149fdb28d428dbc0c2f021287cf2018ca45cb64c25bfaee0ed55e507"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_378_col_3.log.gz",
+      "size": 4792,
+      "sha256": "f60b5cad786351073c74415828e238b3cd63a32bf966d1f3b1048e991ba8994f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_393_col_2.log",
+      "size": 32287,
+      "sha256": "7dea8e979f2adad3016a2b4a7034d156311f459e8479c81dd18532df427083e6"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_393_col_2.log.gz",
+      "size": 5003,
+      "sha256": "5cdc38ac474a8192567e9c6280b30f9b5f98c4571279e9a193912c3ea9dac781"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_393_col_2_001.log",
+      "size": 32183,
+      "sha256": "0ecba32d6b7ee1c6078e74368fd920bf7afe720e0cf873d81891e81cb2666e00"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_393_col_2_001.log.gz",
+      "size": 5021,
+      "sha256": "9b6cae522dd20ab857215fda955f2a47cc45f1b7a253b1904db71ead4ac72c0e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_58_col_3.log",
+      "size": 19609,
+      "sha256": "a12cfd0e813f025e255316c0e72d24929319ccfed39732e5bc10c1d0d9e59d81"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_58_col_3.log.gz",
+      "size": 3794,
+      "sha256": "e69a011bfa77365973e72a2c3a02cb77985e13f3cf49a6a334c53ec22d614a8a"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_67_col_3.log",
+      "size": 19554,
+      "sha256": "918ce3a440ca07fb476b0e31dac6a523398541983b05282452b05358dec42992"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_67_col_3.log.gz",
+      "size": 3807,
+      "sha256": "15286700bd88fcd50a4cf97fc73637e0d8a7b69189c5f3d03cb25a5f3f813571"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_78_col_2.log",
+      "size": 19515,
+      "sha256": "cb074412ae0eddff1e1d4aab61b7ce77f949dea3059ba525a334065eabbcd484"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_78_col_2.log.gz",
+      "size": 3966,
+      "sha256": "c5469a60ef17375c6d7f2aba106248d2cce26526ae5065292bba4680ce73f8cb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_78_col_2_001.log",
+      "size": 19515,
+      "sha256": "edb9d326cf342ccb80e3828685dee7a537c7c8e5fc98f5456e2a54ea7f6c39fd"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_78_col_2_001.log.gz",
+      "size": 3993,
+      "sha256": "f73212059e95b2b60acc4d2809c3888d6dbc5b03745ff01bb7ac47f7b89617a8"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_83_col_2.log",
+      "size": 19537,
+      "sha256": "ce20b4991099f303d5ab7fcad0879d1d581fae581fa09e1339dd38bc8ef05bf7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_83_col_2.log.gz",
+      "size": 3978,
+      "sha256": "0e1bdaf8cbf86714029632045ac0570f43a57b7b5c8f3b10c1a675d54bfd1ceb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_83_col_2_001.log",
+      "size": 19537,
+      "sha256": "dd7bfe86cb78741d0a8cf7e58fdbed4506161c20e1ec7afee3b9a81fddd4a7e5"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_83_col_2_001.log.gz",
+      "size": 4009,
+      "sha256": "6394db4b96181a48b0b5bbb433f22d41a4a0037478eafad489e87dfeb35bb191"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_87_col_2.log",
+      "size": 19361,
+      "sha256": "cf7406c738badefc2555f4a318042ca3f012f52b3e6851c2d488a144cdf85fe3"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_87_col_2.log.gz",
+      "size": 3844,
+      "sha256": "04e187fd1648630bd53611647da3ee420b65761c59d9059864eb92dbf1473afb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_87_col_2_001.log",
+      "size": 18730,
+      "sha256": "a6a32d119842cbc9e3b645abd5fbea7221ac14ee79dbe6496119483aa9e16849"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_87_col_2_001.log.gz",
+      "size": 3633,
+      "sha256": "c4bee8a4406e3e929d595b69b17133a27414e40914b8adadef225e32e4c888a7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_87_col_2_002.log",
+      "size": 18721,
+      "sha256": "b243ae283876a8e5d755354f4bd78268f25de7e9b330e0bbe457697741ffd719"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_87_col_2_002.log.gz",
+      "size": 3624,
+      "sha256": "006c93c906015c32ef8e424ba5982685d194bc03d6ac5d7e5adf81bcd633496d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_87_col_2_003.log",
+      "size": 18721,
+      "sha256": "9bfc238db9ef1a5bd88021346f65999e4c3aebe92fa6578e0d4dedfc2b9b2fb0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_87_col_2_003.log.gz",
+      "size": 3612,
+      "sha256": "34ef212d72e5d83f524d39c6421763591c10410404de848afe70c59644b14b95"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_87_col_3.log",
+      "size": 18292,
+      "sha256": "4d58696e976059186765082945e9ba701c44e4add9f8358e8bea1941f8ccbc3e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_87_col_3.log.gz",
+      "size": 3623,
+      "sha256": "cf6bd1e8757ff06de8122de636e504637f378d6af7520ef32b5ffef7c86967f8"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_2.log",
+      "size": 19386,
+      "sha256": "027d1e63be1e75927dcb4c7f0b8b1310f4db00b43999130522d7edaa3b869acf"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_2.log.gz",
+      "size": 3692,
+      "sha256": "aa9f8b7524bd80df2932ff66cd769cdabd8b5e87f0c01eccaeddd6cabdf87a5d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_2_001.log",
+      "size": 20534,
+      "sha256": "2658aa174f3e3683a2015955128385122a7cc31a422c2859b68c0c9b88e03fc9"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_2_001.log.gz",
+      "size": 4126,
+      "sha256": "ae236b62a947053929aab62c93ee34c91447f33cc3711d90dbec60a33167f093"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_33.log",
+      "size": 19914,
+      "sha256": "a515319f91c437fbc2a5709ac21aa053f86700a56153e144cb5ded9eb4b5d2b4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_33.log.gz",
+      "size": 4090,
+      "sha256": "e0b34f0432b5e42692be10f7a9217f3684a79fdde8fa491c978132fabeffe5c0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_33_001.log",
+      "size": 19905,
+      "sha256": "b2312d1e48502505f9e52c08cb9c4ceb801524a00b2de471a77641b0c999ea3c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_33_001.log.gz",
+      "size": 4076,
+      "sha256": "fd2f02028ff47e059a7ffec25e6ee96074311024c7ac513c78b07e08160c8108"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_37.log",
+      "size": 17819,
+      "sha256": "b2fbba21f9317a89d1ca2849cc7414044fe715000b18c1121b98c7892ca76950"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_37.log.gz",
+      "size": 3424,
+      "sha256": "a050cfdff01cf35e54b3d5268731c33b76691ca51079fc4efd4377e1c0df1d2c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_43.log",
+      "size": 17650,
+      "sha256": "fd96660b4df71b6870c4e922f589c3bd94620cefbe1be5cff9f306e7fe66d650"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_43.log.gz",
+      "size": 3350,
+      "sha256": "2661a31fa4d3b6dcb1c38547b3a23b39d74954a982b29dadc7f449ba48406a5c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_43_001.log",
+      "size": 17650,
+      "sha256": "8e8564f271cd378c4fe5793f05a2b3792694f73424172013fe261a4e8d8373a8"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_93_col_43_001.log.gz",
+      "size": 3376,
+      "sha256": "ac2104fbe1f5289c2e990b15f5b081fe0d42e67c7a8b960bf424cfbe2485f154"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_94_col_33.log",
+      "size": 19929,
+      "sha256": "1712bf08fdde9a71f5dc4e53e74db8fbcdc64cc79ca88037161b9dc2b92548ad"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_94_col_33.log.gz",
+      "size": 4122,
+      "sha256": "32df6c76ad46d847b3f23a615940d0bc53b078ccec2ec5e1e948d7663a9407e3"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_94_col_33_001.log",
+      "size": 19920,
+      "sha256": "b2a130299cfb1dcda9df4b2c0cf71b534d096cfbdd426e9159044f31b0a2e29e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_94_col_33_001.log.gz",
+      "size": 4134,
+      "sha256": "fc6ae9ff85c62461c1cc13a68e91b437328d2fbc2797862ced62b1571381d16d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_94_col_37.log",
+      "size": 17669,
+      "sha256": "d4c26583675e35f7453cb69004364af1d40ac391a5621e1b4eff566973b79aea"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_94_col_37.log.gz",
+      "size": 3411,
+      "sha256": "8124760758a3977d297219ba919d7062b0fd42006bcd0c1f9227cc8d428ae406"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_94_col_43.log",
+      "size": 17665,
+      "sha256": "635b719c9079f05ea754231a313e4dc9001bfbbb1f47ab9a6188f8b0cad2ad63"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_94_col_43.log.gz",
+      "size": 3398,
+      "sha256": "2f1aafbf8bfc26967c7506d9bed9ec1abd13a310d08f273f09e7aee7d30602b1"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_94_col_43_001.log",
+      "size": 17665,
+      "sha256": "0e9f8fc023ffb672b85b7785ce1782b93e997613d6dc183617d7a9a988682072"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_94_col_43_001.log.gz",
+      "size": 3417,
+      "sha256": "9582e017d6270a0919b9a4abfed798a52e971d2e769f9ce7281156c19a2a2513"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_11.log",
+      "size": 17671,
+      "sha256": "3a2d3a3ef996e827cde2ce75ff2c1fe62d9c825cccef54164d7714df565b81f5"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_11.log.gz",
+      "size": 3412,
+      "sha256": "a8015a7f13c5e2b77104815528ae3e2d5435b2f9048d1add2b5440a2af0bff1d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_11_001.log",
+      "size": 19932,
+      "sha256": "31603e5a5ba49254542c155dff807032f97adadf055ccd0712f74ce9556de210"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_11_001.log.gz",
+      "size": 4134,
+      "sha256": "e3d6c24709b5e3a4e047657913b045480feebc9f12173c1d2e2f69e84bb767c3"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_11_002.log",
+      "size": 17671,
+      "sha256": "ef3933cf1399e3cbb217a86a5d9c6f7b65054d202db2a188169debf877a16a70"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_11_002.log.gz",
+      "size": 3424,
+      "sha256": "ed00ab5ddcc95a3d5dadb0af8fb25fc5f3c0eee82a6ea449d0b69f7867465b2e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_15.log",
+      "size": 19547,
+      "sha256": "cdac89590871b76dd66e3d6a3ea354216062e1d5a70384429138357707f26e0b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_15.log.gz",
+      "size": 4043,
+      "sha256": "0677ace74a302c9724df8e103c3f53fd6c7dd8ad66889c47df5d3206bbe0171b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_30.log",
+      "size": 17681,
+      "sha256": "ac83d6188dd1d517a1bd1b1be5b80fa1ac2d9d881e19f6814725435b5fc57cb6"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_30.log.gz",
+      "size": 3405,
+      "sha256": "2450e1ca42df00d608ff77d7a04b2aa0d025818ac134eef8003475dc2aef6cfe"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_40.log",
+      "size": 17668,
+      "sha256": "6e9dc860e303a90a9abfd8ee05821c59e3cae72796ec2bd459cbc3e4720b7218"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_40.log.gz",
+      "size": 3375,
+      "sha256": "144e152ead491eb36d7be85f6edcee167a520689d6b543bccf7f8c4bb646748d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_40_001.log",
+      "size": 17668,
+      "sha256": "52109c058a09109ff55f5d11d32cb0156d1aa9654b149a931cfc24a5e6d09901"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__lib.rs_line_95_col_40_001.log.gz",
+      "size": 3445,
+      "sha256": "dad006aa0e2f45890956f64dbbcab34c46c7dbf1fa34783b0417109a5df6c012"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_107_col_3.log",
+      "size": 20685,
+      "sha256": "5e1921f54cc0f3e5d0ca4fabe128f655156d622653194a8c7b302df8c51bbeac"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_107_col_3.log.gz",
+      "size": 4037,
+      "sha256": "42b41c66a15b9324facf4b46f9f7f589d3927159e34f1f78e39a717bbf85f15f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_107_col_3_001.log",
+      "size": 20963,
+      "sha256": "55c85d3774a9f879d2c20d01f5126f1a3248c48da839668eab7ea9131ee0dc42"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_107_col_3_001.log.gz",
+      "size": 4094,
+      "sha256": "ba683b9c3e7450ad36bbcf279a194001ead9d326e0c8598df4c7b1dc21ab11be"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_120_col_7.log",
+      "size": 18678,
+      "sha256": "eb78bf8552fa4089bee628b8a7b5262ab45f57fa3915324996782cfe2960a814"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_120_col_7.log.gz",
+      "size": 3685,
+      "sha256": "8b64340302a36e38b66cc56fbad65cb58e18a3f1e8d705f6e232655312c46cd8"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_133_col_3.log",
+      "size": 19314,
+      "sha256": "8fab52b7e9d08d3f6564cd880e42e25b143fe7d65460fcc82397ab959f1169cc"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_133_col_3.log.gz",
+      "size": 3860,
+      "sha256": "fd5d475a68512100377a6050b89b39cb09c7cba056276eef4ef474673ee500be"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_143_col_2.log",
+      "size": 19482,
+      "sha256": "6132078091af71bd1788cd37a4aa9ced68e2c61ac9cf2b501ea0463b5b5e2259"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_143_col_2.log.gz",
+      "size": 3856,
+      "sha256": "b0da3034037d3b8132521a272c2ea49df801a7fa7b497b1432c74bfdc8ced974"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_143_col_2_001.log",
+      "size": 19641,
+      "sha256": "7c49fb5cbfd583799ba1c89a2b35dd9c013eb27ad0899d8f1133bb8a288c33c3"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_143_col_2_001.log.gz",
+      "size": 3921,
+      "sha256": "507fa8ad55774f726d7228c0a352f1c9d1ca04a937cfea3d7506ddcb9d710712"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_143_col_2_002.log",
+      "size": 19641,
+      "sha256": "589390900e87a9737bcf76571b796561bef48b65ed05cdf1ea2baf7534e8ac1f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_143_col_2_002.log.gz",
+      "size": 3902,
+      "sha256": "4f80cbf4528939b8e8330bd7a4fecf2dbefdf8e489d13c330bdcea235875c126"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_151_col_17.log",
+      "size": 18498,
+      "sha256": "c4929d95c50dc7a717b4a36285c2becb51b20fd87b35512bfafe5bafa025e81d"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_151_col_17.log.gz",
+      "size": 3663,
+      "sha256": "a520c97971b60be9a4bf65abc722d9b2e7163859d2b79cd50d19c77feb365084"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_151_col_2.log",
+      "size": 20177,
+      "sha256": "a5d8cc6249befd766f4970da3bb9fe666577881fa53b1d1640130a3e72efb496"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_151_col_2.log.gz",
+      "size": 3913,
+      "sha256": "4ca4c11420120d7931d0815949021000c5d59a24ceefed54e0dcab0ddb271b6c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_151_col_2_001.log",
+      "size": 13748,
+      "sha256": "dc218b25e86b0fb7615649ca75544397022a1ad72367a7c0898eb9f1a4d8f384"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_151_col_2_001.log.gz",
+      "size": 2620,
+      "sha256": "2aac5de59b56dad544d3ac376cdd4f44dca22a2f28322a342be97df787989900"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_16_col_3.log",
+      "size": 19865,
+      "sha256": "bd86d9dc41828ec432131d19be8c658a4266659d2b5fc98a3fe3e5bc4d4cc215"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_16_col_3.log.gz",
+      "size": 3955,
+      "sha256": "7c6d50d63878c7f457a22b120f9c6b8ab24b1e8049d1819f824cb4ca72282a62"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_27_col_3.log",
+      "size": 18546,
+      "sha256": "fcc72613d5dca32f9bcb85fb3f0b807f5bd004a124fb078a15ddeb0f07ee02c3"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_27_col_3.log.gz",
+      "size": 3687,
+      "sha256": "8850efb271a7d4358b54eb58de226c639dc2e501dbe186f932254760050e54bd"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_27_col_3_001.log",
+      "size": 13435,
+      "sha256": "95a8051d6531b6ad5f1d77c6635fedbb2e3f76ec4601406b7fb9f7c8e6965840"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_27_col_3_001.log.gz",
+      "size": 2443,
+      "sha256": "9edc648b3275b08e5b25fc5e61e26d29777c7fbde43cab54192a08930a6aec15"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_37_col_25.log",
+      "size": 17875,
+      "sha256": "36b18b2a0af5f64eb31eb09daca20e0f214dcd556802c64fff45573569699567"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_37_col_25.log.gz",
+      "size": 3459,
+      "sha256": "96ce982a6c41e1458a7303eb1ca7cfa4b3df2e22d261f04be84da9684dbb8471"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_37_col_3.log",
+      "size": 21067,
+      "sha256": "8750fc935b2fc721736186b54cea002108263fe50678035001495c0a813612f0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_37_col_3.log.gz",
+      "size": 4212,
+      "sha256": "0c3e6930241df8fab72f7f9ba1d451b49b63523d9ad6a60fb795408b4beff67e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_37_col_3_001.log",
+      "size": 20278,
+      "sha256": "77ba3848f943c6ba2fe64267a1cf0dd8098e2d05123936138930ea602b27eb56"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_37_col_3_001.log.gz",
+      "size": 3936,
+      "sha256": "14478c13c3d7db42bc785c69b5fb6498d0e3c2410074ece7ade4ae9c85e20811"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_73_col_2.log",
+      "size": 21051,
+      "sha256": "c36eeb4fac6d7c09bb7e117dfb0bcaa2b2029a5f7c5f5afff5c0b3d804624152"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_73_col_2.log.gz",
+      "size": 4211,
+      "sha256": "321f7c98305c3885b274e664b2fbab31e85822e3ac1ab8884e2c4b020f185eb4"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_73_col_2_001.log",
+      "size": 14031,
+      "sha256": "7a0f880b9e143107a7b650a4fdd40218f707cd025ad4c0d2cc7159911a78d60e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_73_col_2_001.log.gz",
+      "size": 2720,
+      "sha256": "99f100e8d0be868365504c639407d12b41999df8254148a9e854f07f80c9698e"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_82_col_14.log",
+      "size": 19360,
+      "sha256": "f29f172bcbf197531f4ac3005209be61ec9faebe98679c571c54f0d412b69eae"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_82_col_14.log.gz",
+      "size": 3968,
+      "sha256": "b00b33d3e185ff01f638f595d2f94255e0724d417353232d7a947c92bd2d2892"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_82_col_21.log",
+      "size": 19411,
+      "sha256": "b0a3be47383264210b7e5980260df7f0928e3e5487c6053cb273c953cf4156cb"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_82_col_21.log.gz",
+      "size": 4004,
+      "sha256": "31839d3595108a9996c50df99a5e8d230957809e6bde118e4616e61b2acbe933"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_82_col_21_001.log",
+      "size": 18507,
+      "sha256": "4d656b91879179480120944b5c70c89290c224cbb982f466fcf4e752cbd4d50b"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_82_col_21_001.log.gz",
+      "size": 3747,
+      "sha256": "657e96f7d88a1da45646d447b2be910b26cae12ac0ec6aff0cbc735dd40278fe"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_82_col_21_002.log",
+      "size": 16906,
+      "sha256": "7366d16979e0348048173af426ebca4087904e40bc2b4dbbc193a2765373373f"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_82_col_21_002.log.gz",
+      "size": 3588,
+      "sha256": "576eb35fed9434d4396471e13ca87099c994f13912cafc861a8ea07ebc52ae80"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_82_col_9.log",
+      "size": 18770,
+      "sha256": "b45df5bb43d596eb0b1b1acf596d382d2717aebe97c6aa2f295b8b83c870110c"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_82_col_9.log.gz",
+      "size": 3753,
+      "sha256": "35634a67bf8159b3040c2d35663b884b7633fa56f6375dc97a929a3e71e823b8"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_86_col_42.log",
+      "size": 18764,
+      "sha256": "f4a5211acfff342943038b799ec8a58ad5ce12f489ce920cab568160acf1b245"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_86_col_42.log.gz",
+      "size": 3713,
+      "sha256": "0e8fcf5d018db8f8faab8a93726e437475673286071ad98159d20f4609aab2c0"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_94_col_3.log",
+      "size": 20466,
+      "sha256": "232da7d6e12618425fc42a58a9496448d6bf78c640f07fd6f2c1c3e5f5890985"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_94_col_3.log.gz",
+      "size": 3956,
+      "sha256": "666643a3fe4720933ac4c123c9fbe5d3fc5969587dd11dd6dc3eb227b3f1bc98"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_94_col_3_001.log",
+      "size": 13792,
+      "sha256": "d39d31c701e47627ec01ccf98abc6763c2d90a5a52362f4f36222d8fbed28467"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/log/beaconcrypt-wasm__src__store.rs_line_94_col_3_001.log.gz",
+      "size": 2540,
+      "sha256": "0cdc1da6cc15adccfc36cab77774bd53dd510b0ec2aecd87c62d1aa35dc3c616"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/missed.txt",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/mutants.json",
+      "size": 258249,
+      "sha256": "3670cc9d1a299e7b78a4cd16ef8f7ba093265979bd67c42f762f246fa10e3d63"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/mutants.json.gz",
+      "size": 15278,
+      "sha256": "b862f6820a3312a023a688afc415516fa1ebf11fdd3c0ac96575c0ec446771e6"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/outcomes.json",
+      "size": 310030,
+      "sha256": "d8f8fd294e2a583ddf7db0d51f531c823b4802f8573f012410f630b2602065b5"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/outcomes.json.gz",
+      "size": 9146,
+      "sha256": "ab44be142164e66cf466086ca05577b991cbe7d70f8e0f7b17bdc362e52963b7"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/timeout.txt",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "wasm-audit/mutations/mutants.out/unviable.txt",
+      "size": 1513,
+      "sha256": "a2ca5069b7d2c8aefeb927fcaa899e4c6aa6cca18cd4484da460f081b9b447ef"
+    },
+    {
+      "path": "wasm-audit/run.log",
+      "size": 10157,
+      "sha256": "249acef5688c8f2694f854d3d850ecf63d68ed1922c8f76ac8bbdeedfdffc0fd"
+    },
+    {
+      "path": "wasm-audit/run.log.gz",
+      "size": 3483,
+      "sha256": "f3f4e3ecfe28b3b94637a37d70211358ec9a58545a6e5191423f17338bfdc329"
+    },
+    {
+      "path": "wasm-audit/run.py",
+      "size": 5980,
+      "sha256": "b6d52d285c36585c0fe3b845187edb1849d6423e2aaecdde4403da360a707a55"
+    },
+    {
+      "path": "wasm-audit/selected-catalog-final.json",
+      "size": 258249,
+      "sha256": "3670cc9d1a299e7b78a4cd16ef8f7ba093265979bd67c42f762f246fa10e3d63"
+    },
+    {
+      "path": "wasm-audit/selected-catalog-final.json.gz",
+      "size": 15278,
+      "sha256": "b862f6820a3312a023a688afc415516fa1ebf11fdd3c0ac96575c0ec446771e6"
+    },
+    {
+      "path": "wasm-audit/selected-catalog.json",
+      "size": 258249,
+      "sha256": "3670cc9d1a299e7b78a4cd16ef8f7ba093265979bd67c42f762f246fa10e3d63"
+    },
+    {
+      "path": "wasm-audit/selected-catalog.json.gz",
+      "size": 15278,
+      "sha256": "b862f6820a3312a023a688afc415516fa1ebf11fdd3c0ac96575c0ec446771e6"
+    },
+    {
+      "path": "wasm-audit/selection-receipt.json",
+      "size": 4294,
+      "sha256": "ebd0639702d81f37c01a5c8e952724f3a058567ba9817b427b7de1dc6bbeaaa8"
+    },
+    {
+      "path": "wasm-audit/source-diff.patch",
+      "size": 48236,
+      "sha256": "6a23b3eb6db756d9d6273dd28595b5df43a0a280f50992830c82a1f9d4c0198e"
+    },
+    {
+      "path": "wasm-audit/source-hashes-final.json",
+      "size": 5352,
+      "sha256": "ff9eb01e210e5b8a18b523b9ff149f75acae7c7cfa36805e7f8d3af3f8cd454c"
+    },
+    {
+      "path": "wasm-audit/source-hashes.json",
+      "size": 5352,
+      "sha256": "ff9eb01e210e5b8a18b523b9ff149f75acae7c7cfa36805e7f8d3af3f8cd454c"
+    },
+    {
+      "path": "wasm-audit/source-status.txt",
+      "size": 701,
+      "sha256": "606848393ac9071cf5d36d4522de6fe722363d5243aaf1c9a170a9fb097ab88d"
+    },
+    {
+      "path": "wasm-audit/summary.json",
+      "size": 3495,
+      "sha256": "eeda603f75bcffb9dab11951e3690065f2675ed6c78fb07df860706ec2f72a6f"
+    },
+    {
+      "path": "wasm-audit/validation-receipt.json",
+      "size": 1120,
+      "sha256": "f62ed1324d8a1459ea98edcb1e971a3b39112a91186e5c153340d6c287e30104"
+    }
+  ]
+}
