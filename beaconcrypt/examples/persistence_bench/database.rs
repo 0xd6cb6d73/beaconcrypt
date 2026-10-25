@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: 0BSD
 
-use std::{cell::Cell, path::Path, rc::Rc, time::Duration};
+use std::{
+	cell::{Cell, RefCell},
+	path::Path,
+	rc::Rc,
+	time::{Duration, Instant},
+};
 
 use beaconcrypt::{
 	RowError, RowStore, RowTransaction, ServerSnapshot, SnapshotHead, SnapshotLineage,
@@ -15,6 +20,7 @@ pub const SQL_SETTINGS: &str = "journal_mode=WAL;synchronous=FULL;page_size=4096
 
 #[derive(Default)]
 pub struct Counters {
+	trace: RefCell<Option<(Instant, Vec<DatabaseSpan>)>>,
 	pub network_exchanges: Cell<u64>,
 	pub sql_calls: Cell<u64>,
 	pub validation_bytes_sent: Cell<u64>,
@@ -29,6 +35,35 @@ pub struct Counters {
 	pub value_bytes_read: Cell<u64>,
 	pub value_bytes_written: Cell<u64>,
 	pub head_bytes_read: Cell<u64>,
+}
+
+/// A client-side database call interval, including lock/network/commit waits, not server CPU time.
+#[derive(Debug, Serialize)]
+pub struct DatabaseSpan {
+	pub kind: &'static str,
+	pub start_ns: u64,
+	pub end_ns: u64,
+}
+
+pub struct DatabaseCall<'a> {
+	counts: &'a Counters,
+	start: Option<Instant>,
+	kind: &'static str,
+}
+
+impl Drop for DatabaseCall<'_> {
+	fn drop(&mut self) {
+		if let Some(start) = self.start {
+			let end = Instant::now();
+			if let Some((epoch, spans)) = self.counts.trace.borrow_mut().as_mut() {
+				spans.push(DatabaseSpan {
+					kind: self.kind,
+					start_ns: super::nanos(start.duration_since(*epoch)),
+					end_ns: super::nanos(end.duration_since(*epoch)),
+				});
+			}
+		}
+	}
 }
 
 #[derive(Debug, Serialize)]
@@ -50,6 +85,23 @@ pub struct Counts {
 }
 
 impl Counters {
+	pub fn enable_trace(&self, epoch: Instant, capacity: usize) {
+		*self.trace.borrow_mut() = Some((epoch, Vec::with_capacity(capacity)));
+	}
+	pub fn take_trace(&self) -> Vec<DatabaseSpan> {
+		self.trace
+			.borrow_mut()
+			.take()
+			.map_or_else(Vec::new, |(_, spans)| spans)
+	}
+	pub fn call(&self, kind: &'static str) -> DatabaseCall<'_> {
+		let start = self.trace.borrow().as_ref().map(|_| Instant::now());
+		DatabaseCall {
+			counts: self,
+			start,
+			kind,
+		}
+	}
 	pub fn take(&self) -> Counts {
 		Counts {
 			network_exchanges: self.network_exchanges.replace(0),
@@ -110,6 +162,7 @@ impl SqlSnapshotStore {
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
 	) -> rusqlite::Result<bool> {
+		let _call = self.counts.call("snapshot_commit");
 		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
 		let tx = self
 			.connection
@@ -166,6 +219,7 @@ impl SqlSnapshotStore {
 
 impl SnapshotStore for SqlSnapshotStore {
 	fn load(&self) -> Option<ServerSnapshot> {
+		let _call = self.counts.call("snapshot_load");
 		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
 		self.counts.reads.set(self.counts.reads.get() + 1);
 		let bytes: Option<Vec<u8>> = self
@@ -222,6 +276,7 @@ impl RowStore for SqlRowStore {
 	) -> Result<(), RowError> {
 		let mut pending = Buffered::new(
 			|key: &[u8]| {
+				let _call = self.counts.call("row_load");
 				self.counts.reads.set(self.counts.reads.get() + 1);
 				self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
 				let value: Option<Vec<u8>> = self
@@ -245,6 +300,7 @@ impl RowStore for SqlRowStore {
 		}
 		let reads = pending.reads;
 		let writes = pending.writes;
+		let _call = self.counts.call("row_commit");
 		self.counts
 			.transactions
 			.set(self.counts.transactions.get() + 1);

@@ -5,6 +5,8 @@
 #[cfg(test)]
 mod adapter_tests;
 mod buffered;
+mod concurrency;
+mod concurrency_schedule;
 mod database;
 #[cfg(test)]
 mod native_postgres_tests;
@@ -74,6 +76,8 @@ impl Default for Config {
 
 struct Options {
 	config: Config,
+	concurrent: bool,
+	concurrency: concurrency::Config,
 	output: PathBuf,
 	database_directory: Option<PathBuf>,
 }
@@ -96,6 +100,8 @@ fn options() -> Result<Option<Options>> {
 	let mut config = Config::default();
 	let mut output = PathBuf::from("row-persistence-benchmark.json");
 	let mut database_directory = None;
+	let mut concurrent = false;
+	let mut concurrency = concurrency::Config::default();
 	let mut run = false;
 	let mut args = std::env::args().skip(1);
 	while let Some(arg) = args.next() {
@@ -109,6 +115,10 @@ Options: --backend sqlite|postgres (PostgreSQL DSN: BEACONCRYPT_BENCH_POSTGRES)\
          --small-bytes 1024 --small-messages 1024 --large-bytes 65536 --large-messages 128\n\
          --mixed-messages 1024 --large-every 16 --burst-chunk-bytes 512000\n\
          --burst-chunks 64,256,512 --warmup-messages 16 --database-directory DIR\n\
+         --mode serial|concurrent --workers 8 --period-ms 1000,100,10,5\n\
+         --arrival-ms 2000 --queue-capacity 256 --queue-bytes 16777216\n\
+         --deadline-ms 1000 --drain-ms 600000 --max-offered 20000\n\
+         --max-precomputed-bytes 536870912\n\
 All measured payloads are deterministic and generated before timing. Outputs are checked afterward.\n\
 Reports refuse to overwrite an existing file. Database fixtures are temporary, even when DIR is given."
 			);
@@ -122,6 +132,22 @@ Reports refuse to overwrite an existing file. Database fixtures are temporary, e
 			.next()
 			.ok_or_else(|| format!("missing value after {arg}"))?;
 		match arg.as_str() {
+			"--mode" => {
+				concurrent = match value.as_str() {
+					"serial" => false,
+					"concurrent" => true,
+					_ => return Err("--mode must be serial or concurrent".into()),
+				}
+			}
+			"--workers" => concurrency.workers = value.parse()?,
+			"--period-ms" => concurrency.period_ms = parse_list(&value)?,
+			"--arrival-ms" => concurrency.arrival_ms = value.parse()?,
+			"--queue-capacity" => concurrency.queue_capacity = value.parse()?,
+			"--queue-bytes" => concurrency.queue_bytes = value.parse()?,
+			"--deadline-ms" => concurrency.deadline_ms = value.parse()?,
+			"--drain-ms" => concurrency.drain_ms = value.parse()?,
+			"--max-offered" => concurrency.max_offered = value.parse()?,
+			"--max-precomputed-bytes" => concurrency.max_precomputed_bytes = value.parse()?,
 			"--output" => output = value.into(),
 			"--backend" => config.backend = value,
 			"--database-directory" => database_directory = Some(value.into()),
@@ -179,6 +205,8 @@ Reports refuse to overwrite an existing file. Database fixtures are temporary, e
 	}
 	Ok(Some(Options {
 		config,
+		concurrent,
+		concurrency,
 		output,
 		database_directory,
 	}))
@@ -720,6 +748,8 @@ fn write_report(file: &mut File, report: &Value) -> Result<()> {
 	serde_json::to_writer_pretty(&mut *file, report)?;
 	file.write_all(b"\n")?;
 	file.flush()?;
+	// Finish report writeback before preparing the next measured trial.
+	file.sync_all()?;
 	Ok(())
 }
 
@@ -729,6 +759,9 @@ fn main() -> Result<()> {
 	};
 	if cfg!(debug_assertions) {
 		return Err("build this benchmark with --release; debug timings are not accepted".into());
+	}
+	if options.concurrent {
+		return concurrency::run(options);
 	}
 	// Capture source status before generated report/database files can dirty this checkout.
 	let source_environment = environment();
