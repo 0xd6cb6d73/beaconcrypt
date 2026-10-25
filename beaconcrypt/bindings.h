@@ -82,9 +82,19 @@
 #define beaconcrypt_STATUS_POISONED 12
 
 /**
+ * A storage failure, including an uncertain commit outcome. No operation output is released.
+ */
+#define beaconcrypt_ROW_STATUS_STORAGE 13
+
+/**
  * Opaque beacon handle exposed by the C API and owned by its caller.
  */
 typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;
+
+/**
+ * A database-backed row server. Serialize calls on one handle and never reenter it from callbacks.
+ */
+typedef struct beaconcrypt_RowServerHandle beaconcrypt_RowServerHandle;
 
 /**
  * Opaque server handle owned by the C caller.
@@ -178,6 +188,19 @@ typedef struct beaconcrypt_EncryptState {
    */
   uint64_t seq;
 } beaconcrypt_EncryptState;
+
+/**
+ * A serializable database transaction interface. `begin`, `store` and `commit` return true on success. `commit` must durably commit the outer transaction before returning true. `rollback` must safely discard any active transaction or do nothing if none exists; it is called after failed begin or commit callbacks. `load` returns 0 for absence, 1 after synchronously calling the sink exactly once, and -1 on error. Loads must lock rows or otherwise prevent concurrent lost updates, including absent-key insertion races. Values are secret, opaque bytes; keys must be stored exactly. Constructors consume context immediately, and invoke destroy exactly once, including on failure. Borrowed pointers and sinks must not escape callbacks. Callbacks must not unwind or reenter the handle. The database must protect integrity, provenance and rollback resistance.
+ */
+typedef struct beaconcrypt_RowStoreCallbacks {
+  void *context;
+  bool (*begin)(void*);
+  int32_t (*load)(void*, const uint8_t*, uintptr_t, void*, void(*)(void*, const uint8_t*, uintptr_t));
+  bool (*store)(void*, const uint8_t*, uintptr_t, const uint8_t*, uintptr_t);
+  bool (*commit)(void*);
+  void (*rollback)(void*);
+  void (*destroy)(void*);
+} beaconcrypt_RowStoreCallbacks;
 
 
 
@@ -456,6 +479,53 @@ struct beaconcrypt_Buffer beaconcrypt_encrypt_to_server(struct beaconcrypt_Beaco
 struct beaconcrypt_Buffer beaconcrypt_decrypt_server_message(struct beaconcrypt_Beacon *handle,
                                                              const uint8_t *ptr,
                                                              uintptr_t len);
+
+/**
+ * Create a server in an empty database namespace. Lineage must have 32 bytes; each optional seed has zero or 32 bytes. Store context is consumed even on invalid arguments.
+ */
+struct beaconcrypt_RowServerHandle *beaconcrypt_row_server_create(uint64_t kid,
+                                                                  const uint8_t *seed,
+                                                                  uintptr_t seed_len,
+                                                                  const uint8_t *mldsa,
+                                                                  uintptr_t mldsa_len,
+                                                                  struct beaconcrypt_RowStoreCallbacks callbacks,
+                                                                  const uint8_t *lineage,
+                                                                  uintptr_t lineage_len,
+                                                                  uint32_t *status_out);
+
+/**
+ * Open an existing namespace without loading peers or advancing their state. Store context is consumed even on failure.
+ */
+struct beaconcrypt_RowServerHandle *beaconcrypt_row_server_open(struct beaconcrypt_RowStoreCallbacks callbacks,
+                                                                const uint8_t *lineage,
+                                                                uintptr_t lineage_len,
+                                                                uint32_t *status_out);
+
+void beaconcrypt_row_server_free(struct beaconcrypt_RowServerHandle *handle);
+
+uint32_t beaconcrypt_row_server_last_status(const struct beaconcrypt_RowServerHandle *handle);
+
+/**
+ * A null message with zero length omits the initial payload; a non-null zero-length message supplies an empty payload and rejects response construction after consuming the registration.
+ */
+struct beaconcrypt_RegistrationResponse beaconcrypt_row_server_register(struct beaconcrypt_RowServerHandle *handle,
+                                                                        const uint8_t *registration,
+                                                                        uintptr_t registration_len,
+                                                                        const uint8_t *message,
+                                                                        uintptr_t message_len);
+
+struct beaconcrypt_Buffer beaconcrypt_row_server_encrypt(struct beaconcrypt_RowServerHandle *handle,
+                                                         const uint8_t *data,
+                                                         uintptr_t len,
+                                                         uint64_t kid);
+
+struct beaconcrypt_Buffer beaconcrypt_row_server_decrypt(struct beaconcrypt_RowServerHandle *handle,
+                                                         const uint8_t *data,
+                                                         uintptr_t len);
+
+struct beaconcrypt_Buffer beaconcrypt_row_server_identity_pk(const struct beaconcrypt_RowServerHandle *handle);
+
+struct beaconcrypt_Buffer beaconcrypt_row_server_mldsa_public_key(const struct beaconcrypt_RowServerHandle *handle);
 
 #ifdef __cplusplus
 }  // extern "C"

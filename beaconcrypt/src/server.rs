@@ -2,6 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 use std::marker::PhantomData;
+use std::sync::Arc;
 
 use crate::auth::{self, AuthRole, MLDSA_PUBLIC_KEY_LEN, MldsaIdentity};
 use crate::pqxdh::mldsa_associated_data;
@@ -29,10 +30,14 @@ struct RegistrationAuthentication {
 	beacon_hash: [u8; 64],
 }
 
-pub struct Server {
+struct ServerIdentity {
 	identity_key: crypto_sign::KeyPair,
 	mldsa_identity: MldsaIdentity,
 	identity_key_kid: u64,
+}
+
+pub struct Server {
+	identity: Arc<ServerIdentity>,
 	control: verified_pqxdh::ServerState,
 	known_ids: HashMap<u64, EstablishedRemote<crypto_sign::PublicKey>>,
 	consumed_registrations: HashSet<[u8; verified_pqxdh::REGISTRATION_ID_SIZE]>,
@@ -47,6 +52,12 @@ pub struct RegistrationOutput {
 	pub(crate) derived_secret: KexDerivedSecret,
 	pub(crate) control: beaconcrypt_core::pqxdh::PendingServerRegistration,
 	authentication: RegistrationAuthentication,
+}
+
+impl RegistrationOutput {
+	pub(crate) fn row_registration_id(&self) -> [u8; verified_pqxdh::REGISTRATION_ID_SIZE] {
+		*self.control.registration_id().as_bytes()
+	}
 }
 
 fn registration_response_len(application_len: usize, assigned_key_id: u64) -> Option<usize> {
@@ -193,9 +204,11 @@ impl Server {
 			None => MldsaIdentity::generate()?,
 		};
 		Ok(Self {
-			identity_key,
-			mldsa_identity,
-			identity_key_kid: server_kid,
+			identity: Arc::new(ServerIdentity {
+				identity_key,
+				mldsa_identity,
+				identity_key_kid: server_kid,
+			}),
 			control: verified_pqxdh::ServerState::new(server_kid),
 			known_ids: HashMap::new(),
 			consumed_registrations: HashSet::new(),
@@ -203,7 +216,7 @@ impl Server {
 	}
 	/// Provision this signing key alongside the Ed25519 server identity.
 	pub fn mldsa_public_key(&self) -> [u8; MLDSA_PUBLIC_KEY_LEN] {
-		self.mldsa_identity.public_key()
+		self.identity.mldsa_identity.public_key()
 	}
 
 	/// Hash of the key authenticated by InitKex; authorization remains the caller's responsibility.
@@ -213,19 +226,52 @@ impl Server {
 
 	#[cfg(test)]
 	pub(crate) fn set_identity_kid(&mut self, k: u64) {
-		self.identity_key_kid = k
+		Arc::get_mut(&mut self.identity)
+			.expect("test identity has no outstanding row session")
+			.identity_key_kid = k
 	}
 	pub fn identity_key_kid(&self) -> u64 {
-		self.identity_key_kid
+		self.identity.identity_key_kid
 	}
 	pub fn identity_pk(&self) -> &crypto_sign::PublicKey {
-		&self.identity_key.public_key
+		&self.identity.identity_key.public_key
 	}
 	pub fn identity_sk(&self) -> &crypto_sign::SecretKey {
-		&self.identity_key.secret_key
+		&self.identity.identity_key.secret_key
 	}
 	pub fn server_kid(&self) -> u64 {
 		self.control.last_key_id()
+	}
+
+	/// Create operation-local state while retaining the already expanded immutable identity.
+	/// Peers and registration history are supplied by the surrounding database transaction.
+	pub(crate) fn row_session(&self, last_key_id: u64) -> Self {
+		Self {
+			identity: Arc::clone(&self.identity),
+			control: verified_pqxdh::ServerState::new(last_key_id),
+			known_ids: HashMap::new(),
+			consumed_registrations: HashSet::new(),
+		}
+	}
+
+	pub(crate) fn put_row_peer(
+		&mut self,
+		kid: u64,
+		peer: EstablishedRemote<crypto_sign::PublicKey>,
+	) -> Option<EstablishedRemote<crypto_sign::PublicKey>> {
+		self.known_ids.insert(kid, peer)
+	}
+
+	pub(crate) fn take_row_peer(
+		&mut self,
+		kid: u64,
+	) -> Option<EstablishedRemote<crypto_sign::PublicKey>> {
+		self.known_ids.remove(&kid)
+	}
+
+	/// Encode only the immutable identity using the existing checked snapshot payload codec.
+	pub(crate) fn serialize_row_identity(&self) -> Option<String> {
+		self.row_session(self.identity_key_kid()).serialize_state()
 	}
 	#[cfg(test)]
 	pub(crate) fn add_known_kid(&mut self, k: u64, pk: crypto_sign::PublicKey) {
@@ -276,7 +322,7 @@ impl Server {
 	}
 	pub fn encrypt_message(&mut self, b: &[u8], k: u64) -> Option<crate::Encrypted> {
 		let ad = self.associated_data(k)?;
-		let sender = self.identity_key_kid;
+		let sender = self.identity_key_kid();
 		encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)
 	}
 	pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> {
@@ -330,12 +376,12 @@ impl Server {
 
 	pub(crate) fn serialize_state(&self) -> Option<String> {
 		serialize_server_state(
-			&self.identity_key,
-			self.identity_key_kid,
+			&self.identity.identity_key,
+			self.identity_key_kid(),
 			self.control.last_key_id(),
 			&self.known_ids,
 			&self.consumed_registrations,
-			&self.mldsa_identity,
+			&self.identity.mldsa_identity,
 		)
 	}
 
@@ -350,9 +396,11 @@ impl Server {
 			mldsa_identity,
 		) = deserialize_server_state(server_state)?;
 		Some(Self {
-			identity_key: id_keypair,
-			mldsa_identity,
-			identity_key_kid,
+			identity: Arc::new(ServerIdentity {
+				identity_key: id_keypair,
+				mldsa_identity,
+				identity_key_kid,
+			}),
 			control: verified_pqxdh::ServerState::new(server_kid),
 			known_ids,
 			consumed_registrations,
@@ -397,7 +445,7 @@ impl ProviderServer for Server {
 		let server_key = self.mldsa_public_key();
 		let init_hash = auth::init_transcript_hash(
 			&registration,
-			self.identity_key_kid,
+			self.identity_key_kid(),
 			self.identity_pk().as_bytes(),
 			&server_key,
 		)?;
@@ -478,7 +526,7 @@ impl ProviderServer for Server {
 			registration_status,
 			verified_pqxdh::ServerBinding {
 				identity_public_key: *self.identity_pk().as_bytes(),
-				identity_key_id: self.identity_key_kid,
+				identity_key_id: self.identity_key_kid(),
 			},
 			verified_pqxdh::ServerCoins {
 				ephemeral_public_key: ephemeral.public_key.as_bytes().try_into().ok()?,
@@ -528,7 +576,7 @@ impl ProviderServer for Server {
 			pending,
 			verified_pqxdh::ServerBinding {
 				identity_public_key: *self.identity_pk().as_bytes(),
-				identity_key_id: self.identity_key_kid,
+				identity_key_id: self.identity_key_kid(),
 			},
 			key_id_availability,
 		)
@@ -575,7 +623,7 @@ impl ProviderServer for Server {
 			signature: &[],
 		};
 		let hash = auth::response_transcript_hash(&authentication.init_hash, &response)?;
-		let signature = self.mldsa_identity.sign(AuthRole::Server, &hash)?;
+		let signature = self.identity.mldsa_identity.sign(AuthRole::Server, &hash)?;
 		let buffer = crate::wire::encode_response(KexResponse {
 			signature: &signature,
 			..response
@@ -627,6 +675,50 @@ impl ProviderServer for Server {
 					.expect("an accepted receive update must be serializable as JSON")
 			})
 			.into_option()
+	}
+}
+
+#[cfg(test)]
+mod row_tests {
+	use super::*;
+
+	#[test]
+	fn row_sessions_retain_identity_without_copying_protocol_state() {
+		let mut server = Server::new(7, Some(&[11; 32]), Some(&[12; 32]));
+		let peer_key = crypto_sign::KeyPair::from_seed(&[13; 32]).unwrap();
+		server.add_known_kid(8, peer_key.public_key.clone());
+		server.consumed_registrations.insert([14; 64]);
+		server.control = verified_pqxdh::ServerState::new(99);
+		let original = server.serialize_state().unwrap();
+
+		let mut session = server.row_session(42);
+		assert!(Arc::ptr_eq(&server.identity, &session.identity));
+		assert_eq!(session.server_kid(), 42);
+		assert_eq!(session.identity_key_kid(), 7);
+		assert!(session.pk_by_kid(8).is_none());
+		assert!(session.consumed_registrations.is_empty());
+		let peer = server.take_row_peer(8).unwrap();
+		assert!(server.take_row_peer(8).is_none());
+		assert!(session.put_row_peer(8, peer).is_none());
+		assert_eq!(session.pk_by_kid(8), Some(&peer_key.public_key));
+		let peer = session.take_row_peer(8).unwrap();
+		assert!(server.put_row_peer(8, peer).is_none());
+		assert_eq!(server.serialize_state().unwrap(), original);
+
+		let identity = server.serialize_row_identity().unwrap();
+		let restored = Server::deserialize_state(&identity).unwrap();
+		assert_eq!(restored.identity_key_kid(), 7);
+		assert_eq!(restored.server_kid(), 7);
+		assert_eq!(restored.identity_pk(), server.identity_pk());
+		assert_eq!(
+			restored.identity_sk().as_bytes(),
+			server.identity_sk().as_bytes()
+		);
+		assert_eq!(restored.mldsa_public_key(), server.mldsa_public_key());
+		assert!(restored.known_ids.is_empty());
+		assert!(restored.consumed_registrations.is_empty());
+		assert_eq!(restored.serialize_state().unwrap(), identity);
+		assert_eq!(server.serialize_state().unwrap(), original);
 	}
 }
 

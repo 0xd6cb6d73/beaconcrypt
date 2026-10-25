@@ -6,6 +6,79 @@ Snapshots contain the server identity seeds and all ratchet state in plaintext. 
 
 # Usage
 
+Applications with a database can use `RowServer<S>` and the database-independent `RowStore` interface described below. `PersistentServer<S>` and the binding snapshot constructors remain available for applications that want a complete checkpoint. Row storage and snapshot storage are separate formats and ownership models; a row server never reconstructs the complete peer map for a message operation.
+
+## Database row API
+
+`RowServer` retains immutable identity keys and an application-supplied store. Each message operation reads one peer row inside a database transaction, executes the existing ratchet transition, and saves only that peer when its state changes. The peer includes its Ed25519 public key, ML-DSA public-key hash, both ratchet chains, counters, and bounded skipped-key cache. Peer state is discarded after every operation. Different handles can operate on the same lineage through separate connections to the same authoritative database; no global generation is updated for ordinary messages. `open` loads only the immutable identity row and performs no activation write.
+
+The library has no database driver dependency. An application implements these interfaces using its own connection or pool:
+
+```rust
+pub trait RowTransaction {
+    fn load(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>, RowError>;
+    fn store(&mut self, key: &[u8], value: &[u8]) -> Result<(), RowError>;
+}
+
+pub trait RowStore {
+    fn transaction(
+        &mut self,
+        operation: &mut dyn FnMut(&mut dyn RowTransaction) -> Result<(), RowError>,
+    ) -> Result<(), RowError>;
+}
+
+let mut server = RowServer::create(server_kid, Some(&ed25519_seed), Some(&mldsa_seed), store, lineage)?;
+let response = server.register_beacon(registration, Some(initial_message))?;
+let plaintext = server.decrypt_message(frame)?;
+let ciphertext = server.encrypt_message(message, peer_kid)?;
+// Another worker/restart supplies a new connection to the same authoritative database.
+let server = RowServer::open(another_store, lineage)?;
+```
+
+`transaction` invokes the callback exactly once, rolls back on its error, and returns success only after the outer transaction commits durably. Do not retry the callback or return success for a savepoint whose enclosing transaction can still roll back. Use serializable isolation with conflict detection, or equivalent locking and conditional insertion that protects every read, including absent rows. A normal read followed by an unconditional upsert at read-committed isolation is insufficient: two workers could both accept an absent replay marker or overwrite the same peer predecessor. A serialization failure is an error for this attempt; a new message attempt reloads current state. Database errors must not be mapped to missing rows.
+
+The following logical records use opaque byte keys and versioned byte values:
+
+| Record | Scope | Write behaviour |
+| --- | --- | --- |
+| Identity | One per lineage | Created once; includes both identity seeds |
+| Allocator | One per lineage | Updated with the new peer at registration completion |
+| Peer | One per assigned peer ID and lineage | Replaced only for that peer's state-changing operation |
+| Consumed registration | One per accepted registration ID and lineage | Inserted once and retained permanently |
+
+Keys and values must be stored byte-for-byte, for example in binary columns. Values bind their complete storage key, format version, independent generation, and identity digest. Peer payloads reuse the canonical checked codec, including the ML-DSA hash and receive-cache validation. Generations are storage revisions, not protocol sequence numbers: a cached receive can remove a key without advancing the receive counter. These checks do not authenticate untrusted storage or detect restoration of a stale database backup. The application must protect the database, WAL, replicas and backups as secret state and provide the same integrity, provenance, freshness and durability guarantees as snapshot storage. A lineage must never be made authoritative in two independent databases.
+
+Registration deliberately uses two transactions. The first commits the consumed registration marker before the pending cryptographic material can be used to build a response. The second reads the allocator, checks the next peer ID is absent, constructs the response, and atomically writes the allocator and new peer. A dropped pending attempt, failed response, transaction conflict, or crash does not remove the first marker. A rejected or interrupted registration therefore needs a fresh beacon registration attempt. Ordinary messages never read the allocator or replay history.
+
+An authentic receive commits consumption before releasing plaintext. A rejected receive writes no row. Send failure after key consumption still saves the advanced chain. On a database error, including a lost commit acknowledgement, the method releases no output and discards its tentative peer state; the next attempt reads the authoritative row. The handle remains usable because it retains no mutable ratchet cache. A crash after commit can still lose result delivery: this API supplies atomic cryptographic state, not an application inbox/outbox or exactly-once delivery. The storage callback does not expose pending message output, so durable result recording in the same commit would require a separate API extension. Do not return success from `RowStore` before an enclosing application transaction commits.
+
+The [SQLite example](../beaconcrypt/examples/sqlite/main.rs) implements the storage interface entirely in application code and can be run with `cargo run -p beaconcrypt --example sqlite -- /path/to/server.sqlite`. Its file-backed integration tests cover restart, transaction rollback, lost commit acknowledgement, concurrent workers, replay, and bounded receive-cache recovery. SQLite is a development-only dependency for this example and tests. Its database-wide writer lock is a backend property; a database with row locking can let unrelated peers commit independently through the same interface.
+
+Existing full-snapshot exports cannot be passed to `RowServer::open`, and inert `RatchetSnapshot` values cannot be activated as peers. This API creates new row lineages; snapshot import tooling is not provided. A future migration API would need to fence all old snapshot writers, validate the authoritative snapshot, transfer its identities, allocator, every peer and all consumed registrations, and establish the new store as the sole authority before serving requests. Applications must not reimplement private row encodings to bypass this boundary or keep both stores operational.
+
+## Database row bindings
+
+Python exposes `BeaconCryptRowServer` and a separate `RowPersistenceError`. Supply a database object with `begin()`, `load(key) -> bytes | None`, `store(key, value)`, `commit()`, and `rollback()` methods. Methods other than `load` return `None`; failures must raise an exception. `begin` starts the outer transaction, `commit` durably completes it, and `rollback` must safely clean up after a begin, operation or commit failure, including when no transaction is active. The original callback exception is retained as `__cause__`. The [Python row tests](../tests/test_row_persistence.py) contain a complete file-backed `sqlite3` adapter.
+
+```python
+from beaconcrypt import BeaconCryptRowServer
+
+server = BeaconCryptRowServer.create(server_kid, ed25519_seed, mldsa_seed, database, lineage)
+response = server.register_beacon(registration, initial_message)
+ciphertext = server.encrypt_to_beacon(message, response.key_id())
+server.close()
+server = BeaconCryptRowServer.open(another_database_connection, lineage)
+plaintext = server.decrypt_beacon_message(frame)
+```
+
+Go exposes `RowStore` with `Begin() error`, `Load(key []byte) ([]byte, error)`, `Store(key, value []byte) error`, `Commit() error`, and `Rollback() error`. An absent row is `nil, nil`, and a database failure is an error. `NewRowServer(kid, seed, mldsaSeed, store, lineage)` creates the namespace; `OpenRowServer(store, lineage)` opens it. Handles provide `IdentityPK`, `MLDSAPublicKey`, `RegisterBeacon`, `EncryptToBeacon`, `DecryptBeaconMessage`, and `Close`. Operations use the existing `PersistenceError` status codes; callback failures carry `StatusStorage` and their original error as `Cause`. Calls on one Go handle are serialized. Use separate handles and transaction connections for independent concurrent workers. The WASM backend currently supports snapshot storage only; its row constructors return `ErrPersistenceUnsupported` without calling the store.
+
+C exposes `beaconcrypt_row_server_create`, `beaconcrypt_row_server_open`, and `beaconcrypt_row_server_free` with a separate opaque `RowServerHandle`. `RowStoreCallbacks` supplies `begin`, `load`, `store`, `commit`, `rollback`, and optional `destroy` callbacks. The load callback returns `0` for absence, `1` after calling its borrowed sink exactly once, or `-1` for a storage error. The other fallible callbacks return a Boolean success flag. Constructors consume the callback context immediately; `destroy` runs exactly once on construction failure or handle destruction. Read operation status with `beaconcrypt_row_server_last_status`; `ROW_STATUS_STORAGE` denotes a database callback failure or uncertain commit. A row-encoding failure uses `STATUS_ENCODING` and occurs before commit; Python reports its code as `encoding`. Other codes retain their snapshot equivalents: missing identity uses `STATUS_MISSING_SNAPSHOT`, invalid row uses `STATUS_INVALID_SNAPSHOT`, and conflict uses `STATUS_STALE_GENERATION`. All calls on one C handle must be serialized, and callbacks must not reenter it or retain borrowed pointers. Release returned buffers with `beaconcrypt_free_buffer`.
+
+Across these row bindings, an omitted registration response payload uses the protocol witness. An explicitly empty payload rejects response construction after registration acceptance: Python uses `b""`, Go uses a non-nil empty slice, and C uses a non-null pointer with zero length. The consumed registration marker remains committed. Rejected messages return `None` in Python, `ErrCrypto` in Go, or empty output with `STATUS_REJECTED` in C. Database failure never releases tentative output, and subsequent calls load current peer state again rather than continuing a failed tentative ratchet.
+
+## Snapshot API
+
 Rust, C, Go, and Python can all use an application-supplied snapshot store. Its load operation returns only the trusted current snapshot, or no snapshot when the store is empty. Its compare-and-swap operation atomically compares the complete expected head and durably stores the replacement before reporting success. An absent expected head means that creation must fail if the store is already occupied. The store must provide integrity, provenance, rollback resistance, durability, and coordination between concurrent owners; snapshot parsing and successor validation do not supply these properties.
 
 Python storage objects implement `load() -> bytes | None` and `compare_and_swap(expected: SnapshotHead | None, replacement: bytes) -> bool`:
