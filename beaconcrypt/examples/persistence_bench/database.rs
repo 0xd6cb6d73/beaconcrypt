@@ -16,7 +16,7 @@ use rusqlite::{Connection, OptionalExtension, TransactionBehavior};
 use super::buffered::Buffered;
 use serde::Serialize;
 
-pub const SQL_SETTINGS: &str = "journal_mode=WAL;synchronous=FULL;page_size=4096;cache_size=-20000;wal_autocheckpoint=1000;busy_timeout_ms=5000";
+pub const SQL_SETTINGS: &str = "journal_mode=WAL;synchronous=FULL;page_size=4096;cache_size=-20000;wal_autocheckpoint=1000;busy_timeout_ms=600000";
 
 #[derive(Default)]
 pub struct Counters {
@@ -129,7 +129,9 @@ impl Counters {
 
 fn open(path: &Path) -> rusqlite::Result<Connection> {
 	let connection = Connection::open(path)?;
-	connection.busy_timeout(Duration::from_secs(5))?;
+	// Let the concurrent collection's ten-minute drain budget expose writer waiting in latency.
+	// This waits for SQLite's lock; it never retries a native ratchet operation.
+	connection.busy_timeout(Duration::from_secs(600))?;
 	connection.pragma_update(None, "page_size", 4096)?;
 	connection.pragma_update(None, "journal_mode", "WAL")?;
 	connection.pragma_update(None, "synchronous", "FULL")?;
@@ -409,7 +411,7 @@ mod tests {
 			// A negative value declares KiB; positive 20000 would mean 20000 pages.
 			("cache_size", -20_000),
 			("wal_autocheckpoint", 1000),
-			("busy_timeout", 5000),
+			("busy_timeout", 600_000),
 		] {
 			let actual: i64 = connection
 				.pragma_query_value(None, pragma, |row| row.get(0))

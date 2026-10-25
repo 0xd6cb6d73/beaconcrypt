@@ -16,6 +16,8 @@ The planned primary matrix uses SQLite WAL with FULL synchronization and Postgre
 
 The raw report records actual worker and database-client-call overlap. Overlapping calls include lock, network and commit waiting; they do not demonstrate simultaneous database CPU execution or physical writes. Logical bytes and query exchanges are not physical disk or network traffic. Saturated runs must report deadline misses, queue backlog and response latency alongside throughput rather than describing native service time alone as application latency.
 
+The first concurrent SQLite collection exposed writer starvation beyond its original five-second busy timeout. The follow-up uses a 600-second SQLite busy timeout for all three arms, matching the collection's drain allowance. Lock waiting remains inside measured response latency; the one-second completion deadline, offered workload and native no-retry policy are unchanged. The failed attempt is preserved separately. PostgreSQL settings and implementation are unchanged, so its already completed measurements are retained with their original source and binary provenance.
+
 ## Correctness evidence
 
 Validation covers checked schedule arithmetic and allocation limits, property-based schedule and timing invariants, queue byte/job bounds, concurrent feeder accounting and peer order, failure and cancellation paths, duplex native ratchets on every arm, and malformed report rejection. Existing native, binding and database persistence checks remain relevant to the unchanged library implementation. Required mutation testing must identify its exact source catalog; example-only code is not implicitly covered by a library-only mutation run.
