@@ -111,7 +111,6 @@ END $body$;
 		)
 	}
 
-	#[cfg(test)]
 	pub fn worker_copy(&self) -> Self {
 		Self {
 			config: self.config.clone(),
@@ -211,6 +210,7 @@ impl PgSnapshotStore {
 
 impl SnapshotStore for PgSnapshotStore {
 	fn load(&self) -> Option<ServerSnapshot> {
+		let _call = self.counts.call("snapshot_load");
 		request(&self.counts);
 		self.counts.reads.set(self.counts.reads.get() + 1);
 		self.client
@@ -246,6 +246,7 @@ impl SnapshotStore for PgSnapshotStore {
 			&digest.as_slice(),
 			&replacement.as_bytes(),
 		];
+		let call = self.counts.call("snapshot_commit");
 		let changed = match expected {
 			None => self.client.borrow_mut().execute(&self.insert, &params),
 			Some(previous) => {
@@ -270,6 +271,7 @@ impl SnapshotStore for PgSnapshotStore {
 			}
 		}
 		.expect("benchmark snapshot commit failed");
+		drop(call);
 		if changed == 1 {
 			self.counts.writes.set(self.counts.writes.get() + 1);
 			self.counts
@@ -316,6 +318,7 @@ impl RowStore for PgRowStore {
 	) -> std::result::Result<(), RowError> {
 		let mut pending = Buffered::new(
 			|key: &[u8]| {
+				let _call = self.counts.call("row_load");
 				request(&self.counts);
 				self.counts.reads.set(self.counts.reads.get() + 1);
 				let value = self
@@ -352,11 +355,13 @@ impl RowStore for PgRowStore {
 					.map(|v| v.len() as u64)
 					.sum::<u64>(),
 		);
+		let call = self.counts.call("row_commit");
 		let committed: bool = self
 			.client
 			.query_one(&self.commit, &[&read_keys, &expected, &write_keys, &values])
 			.map_err(storage)?
 			.get(0);
+		drop(call);
 		if !committed {
 			return Err(RowError::Conflict);
 		}
