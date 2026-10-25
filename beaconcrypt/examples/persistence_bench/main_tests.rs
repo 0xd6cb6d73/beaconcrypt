@@ -21,6 +21,29 @@ fn axis_lists_preserve_distinct_values_and_reject_ambiguous_input() {
 }
 
 #[test]
+fn bounded_payload_generation_finishes_for_empty_and_partial_blocks() {
+	let (sender, receiver) = std::sync::mpsc::channel();
+	let worker = std::thread::spawn(move || {
+		let values = [0, 1, 8, 9, 17]
+			.into_iter()
+			.map(|length| payload(length, 0))
+			.collect::<Vec<_>>();
+		let _ = sender.send(values);
+	});
+	let values = receiver.recv_timeout(Duration::from_secs(5)).expect(
+		"finite payload lengths must terminate, including an empty payload and an exact block boundary",
+	);
+	worker.join().unwrap();
+	let expected = [
+		0xaf, 0xcd, 0x1d, 0x7b, 0x39, 0xa8, 0x20, 0xe2, 0xf4, 0x65, 0xb9, 0xa1, 0x6a, 0x9e, 0x78,
+		0x6e, 0x4f,
+	];
+	for (value, length) in values.iter().zip([0, 1, 8, 9, 17]) {
+		assert_eq!(value, &expected[..length]);
+	}
+}
+
+#[test]
 fn cli_requires_explicit_run_and_handles_help_without_running() {
 	assert!(parse(&[]).is_err());
 	assert!(parse(&["--peers", "1"]).is_err());
@@ -334,11 +357,61 @@ fn validate_serial_report(path: &std::path::Path, backend: &str) {
 	assert_eq!(report["mythic_reference_commit"], MYTHIC_REFERENCE);
 	assert_eq!(report["fixtures"].as_array().unwrap().len(), 18);
 	let mut lineages = BTreeSet::new();
-	for fixture in report["fixtures"].as_array().unwrap() {
+	for (creation_position, fixture) in report["fixtures"].as_array().unwrap().iter().enumerate() {
 		assert!(lineages.insert(fixture["lineage"].to_string()));
 		assert_eq!(fixture["lineage"].as_array().unwrap().len(), 32);
 		let peers = fixture["peers"].as_u64().unwrap();
 		let arm = fixture["arm"].as_str().unwrap();
+		let peer_index = if peers == 1 { 0 } else { 1 };
+		let trial = fixture["trial"].as_u64().unwrap() as usize;
+		let expected_first = (trial - 1 + peer_index) % 3;
+		assert_eq!(
+			arm,
+			["snapshot", "row", "cached_row"][(expected_first + creation_position % 3) % 3],
+			"fixture construction must follow its separately declared balanced rotation"
+		);
+		let settings = &fixture["database_settings"];
+		if backend == "sqlite" {
+			assert_eq!(settings["transport"], "in-process SQLite");
+			assert_eq!(
+				settings["row_adapter"],
+				"optimistic buffered validation at commit"
+			);
+			let declared: BTreeSet<_> = settings["settings"].as_str().unwrap().split(';').collect();
+			for setting in [
+				"journal_mode=WAL",
+				"synchronous=FULL",
+				"page_size=4096",
+				"cache_size=-20000",
+				"wal_autocheckpoint=1000",
+				"busy_timeout_ms=5000",
+			] {
+				assert!(
+					declared.contains(setting),
+					"missing declared SQLite setting {setting}"
+				);
+			}
+		} else {
+			for key in ["fsync", "synchronous_commit", "full_page_writes"] {
+				assert_eq!(settings[key], "on");
+			}
+			assert_eq!(settings["isolation"], "read committed");
+			assert!(matches!(
+				settings["address"].as_str(),
+				Some("127.0.0.1" | "::1")
+			));
+			assert!(settings["port"].as_u64().unwrap() > 0);
+			assert!(
+				settings["server_version"]
+					.as_str()
+					.unwrap()
+					.starts_with("PostgreSQL ")
+			);
+			assert_eq!(
+				settings["transport"],
+				"loopback TCP, prepared statements, one connection per resident owner"
+			);
+		}
 		assert_eq!(fixture["cache_fill_database"]["transactions"], 2);
 		assert_eq!(fixture["warm_database"]["transactions"], 4);
 		assert_eq!(
@@ -361,10 +434,34 @@ fn validate_serial_report(path: &std::path::Path, backend: &str) {
 	let results = report["results"].as_array().unwrap();
 	assert_eq!(results.len(), 180);
 	let mut keys = BTreeSet::new();
-	for result in results {
+	for (position, result) in results.iter().enumerate() {
 		assert_eq!(result["outputs_verified"], true);
 		let messages = result["messages"].as_u64().unwrap();
 		let arm = result["arm"].as_str().unwrap();
+		let peer_index = if result["peers"] == 1 { 0 } else { 1 };
+		let scenario_index = [
+			"small_stream",
+			"large_stream",
+			"mixed_stream",
+			"burst_1",
+			"burst_4",
+		]
+		.iter()
+		.position(|name| result["scenario"] == *name)
+		.unwrap();
+		let direction_index = match result["direction"].as_str().unwrap() {
+			"send" => 0,
+			"receive" => 1,
+			_ => panic!("unexpected direction"),
+		};
+		let trial = result["trial"].as_u64().unwrap() as usize;
+		let expected_first = (trial - 1 + peer_index + scenario_index + direction_index) % 3;
+		assert_eq!(result["pair_order"], position % 3);
+		assert_eq!(
+			arm,
+			["snapshot", "row", "cached_row"][(expected_first + position % 3) % 3],
+			"actual arm order must match the declared balanced rotation"
+		);
 		assert!(keys.insert((
 			result["peers"].as_u64().unwrap(),
 			result["trial"].as_u64().unwrap(),
@@ -428,6 +525,39 @@ fn validate_serial_report(path: &std::path::Path, backend: &str) {
 }
 
 #[test]
+fn location_checkpoint_truncates_committed_wal_without_losing_data() {
+	let directory = tempfile::tempdir().unwrap();
+	let path = directory.path().join("checkpoint.sqlite");
+	let writer = rusqlite::Connection::open(&path).unwrap();
+	writer.pragma_update(None, "journal_mode", "WAL").unwrap();
+	writer.pragma_update(None, "synchronous", "FULL").unwrap();
+	writer.pragma_update(None, "wal_autocheckpoint", 0).unwrap();
+	writer.execute_batch("CREATE TABLE checkpoint_probe(value BLOB NOT NULL); INSERT INTO checkpoint_probe VALUES(zeroblob(8192));").unwrap();
+	let mut wal_path = path.as_os_str().to_os_string();
+	wal_path.push("-wal");
+	assert!(std::fs::metadata(&wal_path).unwrap().len() > 0);
+	// Keep the writer alive: closing the last connection would independently checkpoint the WAL.
+	Location::Sqlite(path.clone()).checkpoint().unwrap();
+	assert_eq!(std::fs::metadata(&wal_path).unwrap().len(), 0);
+	let reader = rusqlite::Connection::open(&path).unwrap();
+	let (rows, bytes): (i64, i64) = reader
+		.query_row(
+			"SELECT count(*),sum(length(value)) FROM checkpoint_probe",
+			[],
+			|row| Ok((row.get(0)?, row.get(1)?)),
+		)
+		.unwrap();
+	assert_eq!((rows, bytes), (1, 8192));
+	let missing_parent = directory.path().join("missing").join("database.sqlite");
+	assert!(
+		Location::Sqlite(missing_parent.clone())
+			.checkpoint()
+			.is_err()
+	);
+	assert!(!missing_parent.exists());
+}
+
+#[test]
 fn serial_full_report_smoke_checks_all_arms_directions_axes_and_orders() {
 	let directory = tempfile::tempdir().unwrap();
 	let opts = small_options(directory.path(), "sqlite");
@@ -464,8 +594,8 @@ fn dispatcher_runs_the_concurrent_mode_and_exports_a_valid_complete_matrix() {
 	let mut opts = small_options(directory.path(), "sqlite");
 	let path = opts.output.clone();
 	opts.concurrent = true;
-	opts.config.peer_counts = vec![2];
-	opts.config.trials = 1;
+	opts.config.peer_counts = vec![2, 3];
+	opts.config.trials = 3;
 	opts.config.extra_registrations = 0;
 	opts.config.active_peers = Some(2);
 	opts.config.warmup_messages = 0;
@@ -485,7 +615,42 @@ fn dispatcher_runs_the_concurrent_mode_and_exports_a_valid_complete_matrix() {
 	let report: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
 	assert_eq!(report["schema_version"], 3);
 	assert_eq!(report["status"], "complete");
-	assert_eq!(report["results"].as_array().unwrap().len(), 15);
+	let results = report["results"].as_array().unwrap();
+	assert_eq!(results.len(), 90);
+	let arm_cycle = ["snapshot", "row", "cached_row"];
+	let mut fixture_index = 0;
+	let mut result_index = 0;
+	for (peer_index, peers) in [2, 3].into_iter().enumerate() {
+		for trial in 1..=3 {
+			let first_fixture = trial - 1 + peer_index;
+			for arm in arm_cycle.iter().cycle().skip(first_fixture).take(3) {
+				let fixture = &report["fixtures"][fixture_index];
+				assert_eq!(fixture["arm"], *arm);
+				assert_eq!(fixture["peers"], peers);
+				assert_eq!(fixture["trial"], trial);
+				fixture_index += 1;
+			}
+			for case_index in 0..5 {
+				let first_result = trial - 1 + peer_index + case_index;
+				for (order, arm) in arm_cycle
+					.iter()
+					.cycle()
+					.skip(first_result)
+					.take(3)
+					.enumerate()
+				{
+					let result = &results[result_index];
+					assert_eq!(result["arm"], *arm);
+					assert_eq!(result["peers"], peers);
+					assert_eq!(result["trial"], trial);
+					assert_eq!(result["pair_order"], order);
+					result_index += 1;
+				}
+			}
+		}
+	}
+	assert_eq!(report["fixtures"].as_array().unwrap().len(), fixture_index);
+	assert_eq!(result_index, results.len());
 	assert!(
 		report["results"]
 			.as_array()
@@ -508,7 +673,7 @@ fn dispatcher_runs_the_concurrent_mode_and_exports_a_valid_complete_matrix() {
 		String::from_utf8_lossy(&checked.stderr)
 	);
 	let summary: Value = serde_json::from_slice(&checked.stdout).unwrap();
-	assert_eq!(summary["groups"].as_array().unwrap().len(), 5);
+	assert_eq!(summary["groups"].as_array().unwrap().len(), 10);
 }
 
 #[test]
@@ -523,4 +688,49 @@ fn serial_native_rejection_records_failed_status_instead_of_a_complete_report() 
 	let report: Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
 	assert_eq!(report["status"], "failed");
 	assert!(report["error"].as_str().unwrap().contains("rejected"));
+}
+
+#[test]
+#[cfg(target_os = "linux")]
+fn database_fixtures_reject_owned_tmpfs_before_database_work() {
+	for concurrent in [false, true] {
+		tmpfs_fixture_rejection(concurrent);
+	}
+}
+
+#[cfg(target_os = "linux")]
+fn tmpfs_fixture_rejection(concurrent: bool) {
+	let directory = tempfile::Builder::new()
+		.prefix("beaconcrypt-tmpfs-gate-")
+		.tempdir_in("/dev/shm")
+		.expect("Linux correctness fixture requires owned /dev/shm space");
+	assert_eq!(
+		command(
+			"stat",
+			&["-f", "-c", "%T", &directory.path().to_string_lossy()]
+		)
+		.as_deref(),
+		Some("tmpfs")
+	);
+	let mut opts = small_options(directory.path(), "sqlite");
+	opts.concurrent = concurrent;
+	opts.config.peer_counts = vec![1];
+	opts.config.trials = 1;
+	opts.config.extra_registrations = 0;
+	opts.config.warmup_messages = 0;
+	opts.config.small_messages = 1;
+	opts.config.large_messages = 1;
+	opts.config.mixed_messages = 1;
+	opts.config.burst_chunks = vec![1];
+	let path = opts.output.clone();
+	let error = dispatch(opts, false)
+		.expect_err("a memory-backed filesystem must not be labeled a durable database experiment");
+	assert!(error.to_string().contains("persistent storage"));
+	// The reserved output is created before the filesystem check, but no running report or DB survives.
+	assert_eq!(std::fs::metadata(&path).unwrap().len(), 0);
+	let remaining = std::fs::read_dir(directory.path())
+		.unwrap()
+		.map(|entry| entry.unwrap().path())
+		.collect::<Vec<_>>();
+	assert_eq!(remaining, vec![path]);
 }

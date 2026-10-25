@@ -326,6 +326,7 @@ fn producer_panic_closes_its_queue_and_signals_cancellation() {
 fn oversized_declared_capacity_reserves_only_the_finite_offered_work() {
 	let queue = Queue::new(usize::MAX, 8, 1);
 	queue.reserve(2);
+	assert!(queue.state.lock().unwrap().jobs.capacity() >= 2);
 	assert!(queue.state.lock().unwrap().jobs.capacity() < 16);
 	let now = Instant::now();
 	let cancelled = AtomicBool::new(false);
@@ -339,10 +340,16 @@ fn oversized_declared_capacity_reserves_only_the_finite_offered_work() {
 }
 
 fn runtime_smoke(backend: &str) {
+	for (population, active) in [(4, 4), (5, 3)] {
+		runtime_smoke_population(backend, population, active);
+	}
+}
+
+fn runtime_smoke_population(backend: &str, population: usize, active: usize) {
 	let directory = tempfile::tempdir().unwrap();
 	let config = super::super::Config {
 		backend: backend.into(),
-		active_peers: Some(4),
+		active_peers: Some(active),
 		warmup_messages: 0,
 		small_bytes: 32,
 		large_bytes: 128,
@@ -362,7 +369,7 @@ fn runtime_smoke(backend: &str) {
 		max_offered: 64,
 		max_precomputed_bytes: 1024 * 1024,
 	};
-	let plans = cases(&config, &concurrent, 4).unwrap();
+	let plans = cases(&config, &concurrent, active).unwrap();
 	let payloads = Arc::new(Payloads {
 		small: payload(32, 1),
 		large: payload(128, 2),
@@ -372,7 +379,7 @@ fn runtime_smoke(backend: &str) {
 		let mut fixture = ConcurrentFixture::new(
 			arm,
 			directory.path().join(format!("{}.sqlite", arm.label())),
-			4,
+			population,
 			&config,
 		)
 		.unwrap();
@@ -391,8 +398,20 @@ fn runtime_smoke(backend: &str) {
 			assert_eq!(result["status"], "complete");
 			assert_eq!(result["outputs_verified"], true);
 			assert_eq!(result["drain_expired"], false);
-			assert_eq!(result["offered"], 8);
-			assert_eq!(result["messages"], 8);
+			let expected_messages = if name == "burst_8" { 8 } else { active * 2 };
+			assert_eq!(result["offered"], expected_messages);
+			assert_eq!(result["messages"], expected_messages);
+			assert_eq!(result["peers"], population);
+			assert_eq!(result["active_peers"], active);
+			assert_eq!(result["touched_peers"], active);
+			assert_eq!(
+				fixture
+					.peers
+					.iter()
+					.map(|peer| peer.index)
+					.collect::<Vec<_>>(),
+				(0..population).collect::<Vec<_>>()
+			);
 			assert_eq!(result["failures"], json!([]));
 			assert_eq!(result["logical_feeder_lanes"], 2);
 			let owners = if matches!(arm, Arm::Snapshot) { 1 } else { 2 };
@@ -403,10 +422,16 @@ fn runtime_smoke(backend: &str) {
 					.iter()
 					.map(|entry| entry["id"].as_u64().unwrap())
 					.collect::<Vec<_>>(),
-				(0..8).collect::<Vec<_>>()
+				(0..expected_messages as u64).collect::<Vec<_>>()
 			);
 			for worker in result["workers"].as_array().unwrap() {
 				let worker_id = worker["worker"].as_u64().unwrap();
+				let expected_peers: Vec<_> = if matches!(arm, Arm::Snapshot) {
+					(0..active).collect()
+				} else {
+					(worker_id as usize..active).step_by(2).collect()
+				};
+				assert_eq!(worker["peers"], json!(expected_peers));
 				let completed = observations
 					.iter()
 					.filter(|entry| entry["worker"].as_u64() == Some(worker_id))
@@ -425,7 +450,7 @@ fn runtime_smoke(backend: &str) {
 					}
 				);
 				if matches!(arm, Arm::Cached) {
-					assert_eq!(worker["cached_peers"], 2);
+					assert_eq!(worker["cached_peers"], expected_peers.len());
 					assert_eq!(worker["database"]["loads"], 0);
 					assert_eq!(worker["database"]["expects"], completed);
 				}
@@ -534,4 +559,215 @@ fn case_plan_accounts_for_every_default_arrival_and_retained_byte_budget() {
 	let last_ms = u64::MAX / 1_000_000;
 	assert_eq!(ns(last_ms).unwrap(), last_ms * 1_000_000);
 	assert!(ns(last_ms + 1).is_err());
+}
+
+#[test]
+fn invalid_positive_parameters_report_the_preflight_error_before_dependent_limits() {
+	let config = super::super::Config::default();
+	for change in [
+		(|c: &mut Config| c.queue_capacity = 0) as fn(&mut Config),
+		|c| c.queue_bytes = 0,
+		|c| c.arrival_ms = 0,
+		|c| c.period_ms.clear(),
+		|c| c.period_ms.push(0),
+	] {
+		let mut invalid = Config::default();
+		change(&mut invalid);
+		let error = cases(&config, &invalid, 32)
+			.err()
+			.expect("invalid input accepted");
+		assert!(
+			error
+				.to_string()
+				.starts_with("concurrent worker, queue, arrival, deadline and period"),
+			"invalid positive parameter produced a downstream error instead of its preflight diagnostic: {error}"
+		);
+	}
+}
+
+#[test]
+fn queue_reserves_the_finite_backlog_before_admission_without_growing_during_it() {
+	for (capacity, offered) in [(7, 3), (3, 7), (1, 1), (4, 0)] {
+		let queue = Queue::new(capacity, 64, 1);
+		queue.reserve(offered);
+		let admitted = capacity.min(offered);
+		let allocated = queue.state.lock().unwrap().jobs.capacity();
+		assert!(allocated >= admitted);
+		let epoch = Instant::now();
+		let cancelled = AtomicBool::new(false);
+		for id in 0..admitted {
+			queue
+				.push(
+					&job(id, 0, 1),
+					epoch,
+					epoch + Duration::from_secs(5),
+					&cancelled,
+				)
+				.unwrap();
+			assert_eq!(queue.state.lock().unwrap().jobs.capacity(), allocated);
+		}
+		queue.producer_finished();
+		for id in 0..admitted {
+			assert_eq!(queue.pop().unwrap().id, id);
+		}
+		assert!(queue.pop().is_none());
+	}
+}
+
+#[test]
+fn queue_close_liveness_guard_drains_fifo_and_waits_for_the_last_producer() {
+	bounded_failure_check(|| {
+		for producers in [1, 2, 3] {
+			let queue = Arc::new(Queue::new(2, 4, producers));
+			let producer_guards: Vec<_> = (0..producers)
+				.map(|_| ProducerFinished(Arc::clone(&queue)))
+				.collect();
+			let epoch = Instant::now();
+			let cancelled = AtomicBool::new(false);
+			for id in 0..2 {
+				queue
+					.push(
+						&job(id, 0, 1),
+						epoch,
+						epoch + Duration::from_secs(5),
+						&cancelled,
+					)
+					.unwrap();
+			}
+			drop(producer_guards);
+			for id in 0..2 {
+				assert_eq!(queue.pop().unwrap().id, id);
+				assert_eq!(queue.state.lock().unwrap().bytes, 1 - id);
+			}
+			assert!(queue.pop().is_none());
+			assert!(queue.pop().is_none());
+		}
+
+		let queue = Arc::new(Queue::new(1, 4, 2));
+		queue.producer_finished();
+		let (started_tx, started_rx) = mpsc::channel();
+		let (output_tx, output_rx) = mpsc::channel();
+		let consumer_queue = Arc::clone(&queue);
+		let consumer = thread::spawn(move || {
+			started_tx.send(()).unwrap();
+			output_tx
+				.send(consumer_queue.pop().map(|entry| entry.id))
+				.unwrap();
+		});
+		started_rx.recv_timeout(Duration::from_secs(1)).unwrap();
+		assert_eq!(
+			output_rx.recv_timeout(Duration::from_millis(100)),
+			Err(mpsc::RecvTimeoutError::Timeout)
+		);
+		let epoch = Instant::now();
+		queue
+			.push(
+				&job(7, 0, 1),
+				epoch,
+				epoch + Duration::from_secs(1),
+				&AtomicBool::new(false),
+			)
+			.unwrap();
+		assert_eq!(output_rx.recv_timeout(Duration::from_secs(1)), Ok(Some(7)));
+		consumer.join().unwrap();
+		queue.producer_finished();
+		assert!(queue.pop().is_none());
+	});
+}
+
+#[test]
+fn payload_classes_preserve_declared_bytes_and_lengths() {
+	let payloads = Payloads {
+		small: vec![3, 1, 4],
+		large: vec![9, 2, 6, 5, 3, 5, 8],
+		chunk: vec![0xa5; 19],
+	};
+	assert_eq!(bytes(&payloads, PayloadClass::Small), &[3, 1, 4]);
+	assert_eq!(
+		bytes(&payloads, PayloadClass::Large),
+		&[9, 2, 6, 5, 3, 5, 8]
+	);
+	assert_eq!(bytes(&payloads, PayloadClass::Burst), &[0xa5; 19]);
+}
+
+#[test]
+fn native_commit_panic_is_reported_and_remaining_callbacks_are_cancelled() {
+	bounded_failure_check(|| {
+		let directory = tempfile::tempdir().unwrap();
+		let path = directory.path().join("panic.sqlite");
+		let config = super::super::Config::default();
+		let fixture = ConcurrentFixture::new(Arm::Snapshot, path.clone(), 1, &config).unwrap();
+		let jobs = Arc::new(vec![job(0, 0, 3), job(1, 0, 3)]);
+		let queue = Arc::new(Queue::new(2, 6, 1));
+		let gate = Arc::new(StartGate::default());
+		let verification = Arc::new(StartGate::default());
+		let cancelled = Arc::new(AtomicBool::new(false));
+		let (ready_tx, ready_rx) = mpsc::channel();
+		let (finished_tx, finished_rx) = mpsc::channel();
+		let worker = Worker {
+			index: 0,
+			arm: Arm::Snapshot,
+			location: WorkerLocation::copy(&fixture.location),
+			lineage: fixture.lineage,
+			peers: fixture.peers,
+			jobs: Arc::clone(&jobs),
+			payloads: Arc::new(Payloads {
+				small: vec![2, 3, 5],
+				large: vec![],
+				chunk: vec![],
+			}),
+			queue: Arc::clone(&queue),
+			gate: Arc::clone(&gate),
+			finished: finished_tx,
+			verification: Arc::clone(&verification),
+			cancelled: Arc::clone(&cancelled),
+			deadline_budget_ns: 1_000_000_000,
+			finish_budget_ns: 5_000_000_000,
+			logical_lanes: 1,
+		};
+		let thread = thread::spawn(move || worker.run(ready_tx));
+		assert_eq!(ready_rx.recv_timeout(Duration::from_secs(3)), Ok(Ok(())));
+		let connection = rusqlite::Connection::open(&path).unwrap();
+		let saved: (Vec<u8>, Vec<u8>, Vec<u8>) = connection
+			.query_row("SELECT generation,digest,value FROM snapshot", [], |row| {
+				Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+			})
+			.unwrap();
+		// Corrupt only the owned fixture after successful preparation. The real store's
+		// fixed-width lineage decode now panics inside the measured native operation.
+		connection
+			.execute("UPDATE snapshot SET lineage=x'00'", [])
+			.unwrap();
+		let epoch = Instant::now();
+		for job in jobs.iter() {
+			queue
+				.push(job, epoch, epoch + Duration::from_secs(3), &cancelled)
+				.unwrap();
+		}
+		queue.producer_finished();
+		gate.release(Ok(epoch));
+		assert_eq!(finished_rx.recv_timeout(Duration::from_secs(3)), Ok(false));
+		verification.release(Ok(epoch));
+		let result = thread.join().unwrap().unwrap();
+		assert!(cancelled.load(Ordering::Acquire));
+		assert!(result.observations.is_empty());
+		assert_eq!(result.wire_bytes, 0);
+		assert_eq!(result.failures.len(), 2);
+		assert_eq!(result.failures[0]["id"], 0);
+		assert_eq!(result.failures[0]["outcome"], "failed");
+		assert_eq!(result.failures[0]["error"], "native operation panicked");
+		assert_eq!(result.failures[0]["conflicts"], 0);
+		assert_eq!(result.failures[0]["retries"], 0);
+		assert_eq!(result.failures[1]["id"], 1);
+		assert_eq!(result.failures[1]["outcome"], "cancelled");
+		let after: (Vec<u8>, Vec<u8>, Vec<u8>) = connection
+			.query_row("SELECT generation,digest,value FROM snapshot", [], |row| {
+				Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+			})
+			.unwrap();
+		assert_eq!(
+			saved, after,
+			"a panicked callback must not persist a candidate"
+		);
+	});
 }

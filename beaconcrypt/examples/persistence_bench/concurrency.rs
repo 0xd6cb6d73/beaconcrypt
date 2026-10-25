@@ -24,6 +24,9 @@ use beaconcrypt::{Beacon, RowError, SnapshotLineage};
 use serde::Serialize;
 use serde_json::{Value, json};
 
+use super::concurrency_contracts::{
+	Completion, measurement_epoch, metadata_matches, owned_job_count, owner_for_peer, pacing_delay,
+};
 use super::concurrency_schedule::{
 	CompletedTiming, Flow, PayloadClass, ScheduleConfig, Scheduled, Workload, peer_period_phase,
 	schedule, timings,
@@ -598,7 +601,7 @@ impl Worker {
 			}
 			let job = &self.jobs[id];
 			let input = inputs[id].as_ref().unwrap();
-			if kid != input.kid || seq != input.sequence {
+			if !metadata_matches((kid, seq), (input.kid, input.sequence)) {
 				return Err("peer/sequence verification failed".into());
 			}
 			let plaintext = match job.flow {
@@ -607,7 +610,7 @@ impl Worker {
 						.beacon
 						.decrypt_message(&output)
 						.ok_or("client output authentication failed")?;
-					if decoded.key_id != SERVER_ID || decoded.seq != seq {
+					if !metadata_matches((decoded.key_id, decoded.seq), (SERVER_ID, seq)) {
 						return Err("client output metadata mismatch".into());
 					}
 					decoded.plaintext
@@ -695,11 +698,12 @@ fn measure(
 		})
 		.collect();
 	for (owner, queue) in queues.iter().enumerate() {
-		let offered = case
-			.schedule
-			.iter()
-			.filter(|job| owners == 1 || job.peer % lanes == owner)
-			.count();
+		let offered = owned_job_count(
+			case.schedule.iter().map(|job| job.peer),
+			active,
+			owners,
+			owner,
+		);
 		queue.reserve(offered);
 	}
 	let gate = Arc::new(StartGate::default());
@@ -710,8 +714,7 @@ fn measure(
 	let mut partitions: Vec<Vec<Peer>> = (0..owners).map(|_| Vec::new()).collect();
 	let mut inactive = Vec::new();
 	for peer in fixture.peers.drain(..) {
-		if peer.index < active {
-			let owner = if owners == 1 { 0 } else { peer.index % lanes };
+		if let Some(owner) = owner_for_peer(peer.index, active, owners) {
 			partitions[owner].push(peer);
 		} else {
 			inactive.push(peer);
@@ -798,12 +801,11 @@ fn measure(
 			let mut failures = Vec::new();
 			for job in jobs.iter().filter(|job| job.peer % lanes == lane) {
 				let scheduled = epoch + Duration::from_nanos(job.scheduled_ns);
-				while Instant::now() < scheduled && !cancelled.load(Ordering::Acquire) {
-					thread::sleep(
-						scheduled
-							.saturating_duration_since(Instant::now())
-							.min(Duration::from_millis(50)),
-					);
+				while !cancelled.load(Ordering::Acquire) {
+					let Some(delay) = pacing_delay(Instant::now(), scheduled) else {
+						break;
+					};
+					thread::sleep(delay);
 				}
 				if let Err(error) = queue.push(job, epoch, deadline, &cancelled) {
 					failures.push(
@@ -814,7 +816,7 @@ fn measure(
 			failures
 		}));
 	}
-	let epoch = Instant::now() + Duration::from_millis(50);
+	let epoch = measurement_epoch(Instant::now());
 	gate.release(Ok(epoch));
 	let mut failures = Vec::new();
 	let mut thread_error = None;
@@ -896,9 +898,17 @@ fn measure(
 		.map(|job| job.plaintext_bytes as u64)
 		.sum();
 	let lane_load:Vec<_>=(0..lanes).map(|lane|json!({"lane":lane,"offered":case.schedule.iter().filter(|job|job.peer%lanes==lane).count(),"plaintext_bytes":case.schedule.iter().filter(|job|job.peer%lanes==lane).map(|job|job.plaintext_bytes as u64).sum::<u64>()})).collect();
-	let outputs_verified = failures.is_empty() && observations.len() == case.schedule.len();
-	let drain_expired = batch_ns > finish_budget_ns;
-	let complete = outputs_verified && !drain_expired;
+	let Completion {
+		outputs_verified,
+		drain_expired,
+		complete,
+	} = Completion::new(
+		case.schedule.len(),
+		observations.len(),
+		failures.len(),
+		batch_ns,
+		finish_budget_ns,
+	);
 	Ok(
 		json!({"arm":fixture.arm.label(),"trial":trial,"pair_order":pair_order,"peers":fixture.peers.len(),"active_peers":active,
 		"touched_peers":case.schedule.iter().map(|job|job.peer).collect::<std::collections::BTreeSet<_>>().len(),"scenario":case.name,"direction":"duplex",
