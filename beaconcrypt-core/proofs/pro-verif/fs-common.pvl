@@ -32,8 +32,8 @@
    last + 1 without wrapping.  Distinct n give distinct IDs, and no fs_kid(n)
    equals the Server's own ID SERVER_KEY_ID.  fs_seq(t) is the u64 frame
    sequence t, so sequence_le64(fs_seq(t)) is the CTX sequence field. *)
-(* @beaconcrypt-fs-fidelity key=common.kid_counter_start src=beaconcrypt/src/server.rs:193-193 anchor=control: verified_pqxdh::ServerState::new(server_kid), *)
-(* @beaconcrypt-fs-fidelity key=common.kid_next src=beaconcrypt-core/src/pqxdh.rs:838-844 anchor=pub const fn server_next_key_id(state: ServerState) -> Result<u64, RegistrationError> { *)
+(* @beaconcrypt-fs-fidelity key=common.kid_counter_start src=beaconcrypt/src/server.rs:191-191 anchor=control: verified_pqxdh::ServerState::new(server_kid), *)
+(* @beaconcrypt-fs-fidelity key=common.kid_next src=beaconcrypt-core/src/pqxdh.rs:845-851 anchor=pub const fn server_next_key_id(state: ServerState) -> Result<u64, RegistrationError> { *)
 fun fs_kid(nat): key_id [data].
 fun fs_seq(nat): sequence [data].
 

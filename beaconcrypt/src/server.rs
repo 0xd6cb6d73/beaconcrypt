@@ -3,24 +3,24 @@
 use std::collections::{HashMap, HashSet};
 use std::marker::PhantomData;
 
-use crate::auth::{self, AuthRole, MLDSA_PUBLIC_KEY_LEN, MldsaIdentity};
-use crate::pqxdh::{AD_SIZE, derive_root_key_input, shared_secrets, zeroize_shared_secrets};
+use crate::auth::{self, MLDSA_PUBLIC_KEY_LEN, MldsaIdentity};
+use crate::pqxdh::AD_SIZE;
 #[cfg(test)]
 use crate::ratchet::KeyMaterial;
 use crate::ratchet::{
 	RatchetManager, RatchetStatus, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
-	encrypt_registration_message_with_ratchet, finish_initial_ratchet_kdf,
+	encrypt_registration_message_with_ratchet,
 };
 use crate::shared::{
-	DhSecret, EstablishedRemote, KexDerivedSecret, REGISTRATION_WITNESS, deserialize_server_state,
-	roles, serialize_server_state,
+	EstablishedRemote, REGISTRATION_WITNESS, deserialize_server_state, roles,
+	serialize_server_state,
 };
-use beaconcrypt_core::pqxdh::{self as verified_pqxdh, start_server_candidate_ratchet_kdf};
+use beaconcrypt_core::pqxdh as verified_pqxdh;
+use beaconcrypt_core::session::ServerAuthenticationPin;
 #[cfg(test)]
 use beaconcrypt_core::session::SessionBinding;
-use beaconcrypt_core::session::{RegistrationBinding, ServerAuthenticationPin};
 use beaconcrypt_parse::{KexResponse, decode_init};
-use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init};
+use libsodium_rs::{crypto_sign, ensure_init};
 use zeroize::{Zeroize, Zeroizing};
 
 pub struct Server {
@@ -38,9 +38,7 @@ pub struct RegResponse {
 }
 
 pub struct RegistrationOutput {
-	pub(crate) derived_secret: KexDerivedSecret,
-	pub(crate) control: beaconcrypt_core::pqxdh::PendingServerRegistration,
-	authentication: RegistrationBinding,
+	agreement: beaconcrypt_core::agreement::ServerAgreement,
 }
 
 fn registration_response_len(application_len: usize, assigned_key_id: u64) -> Option<usize> {
@@ -201,15 +199,13 @@ impl Server {
 	}
 
 	fn authentication_pin(&self) -> Option<ServerAuthenticationPin> {
-		let public_key = self.mldsa_public_key();
-		Some(ServerAuthenticationPin::new(
+		auth::fingerprint_pin(
 			verified_pqxdh::ServerBinding {
 				identity_public_key: *self.identity_pk().as_bytes(),
 				identity_key_id: self.identity_key_kid,
 			},
-			public_key,
-			auth::public_key_hash(&public_key)?,
-		))
+			self.mldsa_public_key(),
+		)
 	}
 
 	/// Hash of the key authenticated by InitKex; authorization remains the caller's responsibility.
@@ -400,209 +396,124 @@ impl Server {
 
 impl ProviderServer for Server {
 	fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput> {
+		use beaconcrypt_core::agreement::{self, AgreementEffect};
+		use beaconcrypt_core::registration::InitPacket;
 		let control = self.control;
 		let registration = decode_init(buffer)?;
-		let public_key = registration.mldsa_public_key;
-		let server_key = self.mldsa_public_key();
-		let init_hash = auth::init_transcript_hash(
-			&registration,
-			self.identity_key_kid,
-			self.identity_pk().as_bytes(),
-			&server_key,
-		)?;
-		if !auth::verify(
-			public_key,
-			AuthRole::Beacon,
-			&init_hash,
+		let packet = InitPacket::from_slices(
+			registration.identity_key,
+			registration.pre_key,
+			registration.one_time_key,
+			registration.pq_key,
+			registration.mldsa_public_key,
 			registration.signature,
-		) {
-			return None;
-		}
-		let encoded_identity: [u8; verified_pqxdh::ENCODED_SIGN_PUBLIC_KEY_SIZE] =
-			registration.identity_key.try_into().ok()?;
-		if encoded_identity[0] != verified_pqxdh::SIGN_TYPE_ED25519 {
-			return None;
-		}
-		let remote_id = crypto_sign::PublicKey::from_bytes(&encoded_identity[1..]).ok()?;
-		let pq_verified = crypto_sign::verify(registration.pq_key, &remote_id)?;
-		let prekey_verified = crypto_sign::verify(registration.pre_key, &remote_id)?;
-		let onetime_verified = crypto_sign::verify(registration.one_time_key, &remote_id)?;
-		let init_kex = verified_pqxdh::InitKex::from_encoded(
-			encoded_identity,
-			prekey_verified.as_slice().try_into().ok()?,
-			onetime_verified.as_slice().try_into().ok()?,
-			pq_verified.as_slice().try_into().ok()?,
-		);
-		let verified_registration = verified_pqxdh::validate_init_kex(init_kex).ok()?;
-		let authentication = RegistrationBinding::new(
-			ServerAuthenticationPin::new(
-				verified_pqxdh::ServerBinding {
-					identity_public_key: *self.identity_pk().as_bytes(),
-					identity_key_id: self.identity_key_kid,
-				},
-				server_key,
-				auth::public_key_hash(&server_key)?,
-			),
-			init_hash,
-			*verified_registration.beacon_identity_public_key(),
-			auth::public_key_hash(public_key)?,
-		);
-		let registration_id = *verified_pqxdh::registration_id(&verified_registration).as_bytes();
-		let registration_status = if self.consumed_registrations.contains(&registration_id) {
+		)?;
+		let authenticated = auth::authenticate_init(self.authentication_pin()?, packet)?;
+		let registration_id = *authenticated.registration_id().as_bytes();
+		let status = if self.consumed_registrations.contains(&registration_id) {
 			verified_pqxdh::RegistrationStatus::Consumed
 		} else {
 			verified_pqxdh::RegistrationStatus::Fresh
 		};
-		verified_pqxdh::validate_registration_status(registration_status).ok()?;
+		verified_pqxdh::validate_registration_status(status).ok()?;
 		self.consumed_registrations.try_reserve(1).ok()?;
-		let beacon_prekey =
-			crypto_kx::PublicKey::from_bytes(verified_registration.beacon_prekey_public_key())
-				.ok()?;
-		let beacon_onetime =
-			crypto_kx::PublicKey::from_bytes(verified_registration.beacon_one_time_public_key())
-				.ok()?;
-		let ephemeral = crypto_kx::KeyPair::generate().ok()?;
-		let pq_pub = crypto_kem::mlkem768::PublicKey::from_bytes(
-			verified_registration.beacon_pq_public_key(),
-		)
-		.ok()?;
-		let (kem_ciphertext, kem_shared) = crypto_kem::mlkem768::encapsulate(&pq_pub).ok()?;
-		let remote_id_kex = crypto_sign::ed25519_pk_to_curve25519(&remote_id).ok()?;
-		let id_kex_sk = crypto_sign::ed25519_sk_to_curve25519(self.identity_sk()).ok()?;
-		let dh1: DhSecret = crypto_scalarmult::scalarmult(&id_kex_sk, beacon_prekey.as_bytes())
-			.ok()?
-			.into();
-		let dh2: DhSecret =
-			crypto_scalarmult::scalarmult(ephemeral.secret_key.as_bytes(), &remote_id_kex)
-				.ok()?
-				.into();
-		let dh3: DhSecret = crypto_scalarmult::scalarmult(
-			ephemeral.secret_key.as_bytes(),
-			beacon_prekey.as_bytes(),
-		)
-		.ok()?
-		.into();
-		let dh4: DhSecret = crypto_scalarmult::scalarmult(
-			ephemeral.secret_key.as_bytes(),
-			beacon_onetime.as_bytes(),
-		)
-		.ok()?
-		.into();
-		let mut secrets = shared_secrets(dh1, dh2, dh3, dh4, &kem_shared)?;
-		let accepted = verified_pqxdh::server_accept(
-			control,
-			verified_registration,
-			registration_status,
-			verified_pqxdh::ServerBinding {
-				identity_public_key: *self.identity_pk().as_bytes(),
-				identity_key_id: self.identity_key_kid,
+		let effect = crate::pqxdh::execute_agreement(
+			agreement::begin_server_agreement(control, status, authenticated),
+			crate::pqxdh::RegistrationKeys {
+				identity_secret: self.identity_sk(),
+				beacon_prekey: None,
+				beacon_one_time: None,
+				beacon_kem: None,
 			},
-			verified_pqxdh::ServerCoins {
-				ephemeral_public_key: ephemeral.public_key.as_bytes().try_into().ok()?,
-				kem_ciphertext: *kem_ciphertext.as_bytes(),
-			},
-			&secrets,
 		);
-		zeroize_shared_secrets(&mut secrets);
-		let (unchanged, mut pending) = accepted.ok()?;
-		debug_assert_eq!(unchanged, control);
-		debug_assert_eq!(pending.registration_id().as_bytes(), &registration_id);
-		let derived_secret = derive_root_key_input(pending.root_key_input_mut())?;
+		let agreement = match effect {
+			AgreementEffect::ServerComplete(agreement) => agreement,
+			_ => return None,
+		};
+		debug_assert_eq!(agreement.registration_id().as_bytes(), &registration_id);
 		let inserted = self.consumed_registrations.insert(registration_id);
 		debug_assert!(inserted);
-
-		Some(RegistrationOutput {
-			derived_secret,
-			control: pending,
-			authentication,
-		})
-	} // ephemeral and kem
+		Some(RegistrationOutput { agreement })
+	}
 
 	fn build_registration_response(
 		&mut self,
 		reg_out: RegistrationOutput,
 		data: Option<&[u8]>,
 	) -> Option<RegResponse> {
+		use beaconcrypt_core::registration;
 		let control = self.control;
 		let plaintext = data.unwrap_or(REGISTRATION_WITNESS);
 		let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;
 		registration_response_len(plaintext.len(), next_key_id)?;
-		let RegistrationOutput {
-			derived_secret,
-			control: pending,
-			authentication,
-		} = reg_out;
-		if !authentication.matches_server(&self.authentication_pin()?) {
-			return None;
-		}
-		let key_id_availability = if self.known_ids.contains_key(&next_key_id) {
+		let RegistrationOutput { agreement } = reg_out;
+		let availability = if self.known_ids.contains_key(&next_key_id) {
 			verified_pqxdh::KeyIdAvailability::Occupied
 		} else {
 			verified_pqxdh::KeyIdAvailability::Available
 		};
-		let candidate = verified_pqxdh::server_prepare_commit(
+		let pending = registration::begin_server_completion(
 			control,
-			pending,
-			verified_pqxdh::ServerBinding {
-				identity_public_key: *self.identity_pk().as_bytes(),
-				identity_key_id: self.identity_key_kid,
-			},
-			key_id_availability,
+			&self.authentication_pin()?,
+			availability,
+			agreement,
+			plaintext,
 		)
 		.ok()?;
-		let remote_kid = candidate.key_id();
-		debug_assert_eq!(remote_kid, next_key_id);
-		let public_key =
-			crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key()).ok()?;
-		debug_assert!(!self.known_ids.contains_key(&remote_kid));
 		self.known_ids.try_reserve(1).ok()?;
-		let pending = start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array());
-		let mut ratchet = RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));
-		let associated_data = authentication.associated_data();
-		if plaintext.is_empty() {
-			return None;
-		}
-		let authenticated_len =
-			verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE.checked_add(plaintext.len())?;
+		let response = verified_pqxdh::InitialRatchetKdfResponse::from_bytes(
+			crate::ratchet::initial_ratchet_hkdf(pending.request()),
+		);
+		let mut pending = pending.resume(Some(response)).ok()?;
+		let mut ratchet = RatchetManager::from_kernel(pending.take_kernel()?);
+		let request = pending.request();
+		let length = request.plaintext[0]
+			.len()
+			.checked_add(request.plaintext[1].len())?;
 		let mut authenticated_plaintext = Vec::new();
-		authenticated_plaintext
-			.try_reserve_exact(authenticated_len)
-			.ok()?;
-		authenticated_plaintext.extend_from_slice(candidate.key_id_binding().as_bytes());
-		authenticated_plaintext.extend_from_slice(plaintext);
+		authenticated_plaintext.try_reserve_exact(length).ok()?;
+		for part in request.plaintext {
+			authenticated_plaintext.extend_from_slice(part);
+		}
 		let encrypted = encrypt_registration_message_with_ratchet(
 			&authenticated_plaintext,
-			remote_kid,
-			candidate.server_identity_key_id(),
-			associated_data,
+			request.target_key_id,
+			request.sender_key_id,
+			request.associated_data,
 			&mut ratchet,
 		);
 		authenticated_plaintext.zeroize();
-		let encrypted = encrypted?;
-		let response = KexResponse {
-			key_id: remote_kid,
-			ephemeral_key: candidate.ephemeral_public_key(),
-			identity_key: candidate.server_identity_public_key(),
-			kem_cipher_text: candidate.kem_ciphertext(),
-			app_cipher_text: &encrypted.ciphertext,
-			signature: &[],
-		};
-		let hash = auth::response_transcript_hash(authentication.init_hash(), &response)?;
-		let signature = self.mldsa_identity.sign(AuthRole::Server, &hash)?;
+		let sequence = encrypted.as_ref().map_or(0, |encrypted| encrypted.seq);
+		let pending = pending
+			.resume(
+				ratchet.into_kernel(),
+				sequence,
+				encrypted
+					.as_ref()
+					.map(|encrypted| encrypted.ciphertext.as_slice()),
+			)
+			.ok()?;
+		let hash = auth::execute_hash(&pending.request());
+		let pending = pending.resume(hash).ok()?;
+		let signature = self.mldsa_identity.sign_requested(&pending.request());
+		let ready = pending.resume(signature.as_deref()).ok()?;
+		let message = ready.message();
 		let buffer = crate::wire::encode_response(KexResponse {
-			signature: &signature,
-			..response
-		})?;
-		let (next_control, established_peer) = verified_pqxdh::server_commit(candidate);
-		debug_assert_eq!(established_peer.key_id, remote_kid);
-		debug_assert_eq!(
-			&established_peer.associated_data[..153],
-			&associated_data[..153]
-		);
-		debug_assert_eq!(&established_peer.identity_public_key, public_key.as_bytes());
+			identity_key: message.identity_key,
+			ephemeral_key: message.ephemeral_key,
+			kem_cipher_text: message.kem_cipher_text,
+			key_id: message.key_id,
+			app_cipher_text: message.application_ciphertext,
+			signature: message.signature,
+		});
+		let (next_control, binding, kernel, buffer) = ready.publish(buffer).ok()?.into_parts();
+		let remote_kid = binding.assigned_key_id();
+		let public_key =
+			crypto_sign::PublicKey::from_bytes(binding.beacon_identity_public_key()).ok()?;
+		debug_assert_eq!(remote_kid, next_key_id);
 		let old = self.known_ids.insert(
 			remote_kid,
-			EstablishedRemote::new(public_key, ratchet, authentication.finish(remote_kid)),
+			EstablishedRemote::new(public_key, RatchetManager::from_kernel(kernel), binding),
 		);
 		debug_assert!(old.is_none());
 		self.control = next_control;

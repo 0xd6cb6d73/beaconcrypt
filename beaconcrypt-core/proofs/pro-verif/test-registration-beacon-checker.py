@@ -6,6 +6,7 @@ import importlib.util
 from pathlib import Path
 import re
 import unittest
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 SPEC = importlib.util.spec_from_file_location(
@@ -137,6 +138,65 @@ class ExactBeaconGate(unittest.TestCase):
 
     def test_reviewed_source_and_plan_anchors(self):
         CHECKER.check_source_order()
+
+
+class InterpretedBeaconSourceGate(unittest.TestCase):
+    def mutate_source(self, relative, old, new):
+        path = CHECKER.HERE.parents[2] / relative
+        original = Path.read_text
+        source = original(path)
+        self.assertEqual(source.count(old), 1)
+        changed = source.replace(old, new, 1)
+
+        def read_text(candidate, *args, **kwargs):
+            return (
+                changed if candidate == path else original(candidate, *args, **kwargs)
+            )
+
+        with patch.object(Path, "read_text", read_text), self.assertRaises(ValueError):
+            CHECKER.check_source_order()
+
+    def test_initial_open_metadata_is_the_actual_record_result(self):
+        self.mutate_source(
+            "beaconcrypt/src/beacon.rs", "sequence: opened.seq,", "sequence: 0,"
+        )
+
+    def test_private_one_time_handle_is_not_replaced_with_the_prekey(self):
+        self.mutate_source(
+            "beaconcrypt/src/beacon.rs",
+            "beacon_one_time: Some(&onetime_key.secret_key),",
+            "beacon_one_time: Some(&prekey.secret_key),",
+        )
+
+    def test_initial_application_suffix_is_nonempty(self):
+        self.mutate_source(
+            "beaconcrypt-core/src/registration.rs",
+            "opened.plaintext.len() <= crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE",
+            "opened.plaintext.len() < crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE",
+        )
+
+    def test_first_sequence_gate_is_preserved(self):
+        self.mutate_source(
+            "beaconcrypt-core/src/registration.rs",
+            "opened.sequence != 1",
+            "opened.sequence != 2",
+        )
+
+    def test_post_dh_pin_rejection_is_not_moved_before_dh(self):
+        old = "let pinned = binding.server_pin().binding();"
+        self.mutate_source(
+            "beaconcrypt-core/src/agreement.rs",
+            old,
+            old
+            + "\n\tif response.identity_key != pinned.identity_public_key { return AgreementEffect::Rejected(Some(pqxdh::beacon_abort_init(control))); }",
+        )
+
+    def test_native_terminal_state_comes_from_the_pending_capability(self):
+        self.mutate_source(
+            "beaconcrypt/src/beacon.rs",
+            "BeaconState::InitSent { pending, .. } => pending.aborted_state(),",
+            "BeaconState::InitSent { pending, .. } => verified_pqxdh::BeaconAborted::new(0),",
+        )
 
 
 if __name__ == "__main__":

@@ -141,10 +141,17 @@ def render(definitions: dict, certificates: dict) -> str:
     ]
     for index, name in enumerate(sorted(operations)):
         declaration, certificate = definitions[name], certificates[name]
+        # The output witness must not capture an extracted input or operation name.
+        identifiers = set(
+            re.findall(r"[A-Za-z_][A-Za-z_0-9]*", f'{name} {declaration["binders"]}')
+        )
+        result_name = "result"
+        while result_name in identifiers:
+            result_name += "_"
         lines += [
             f"-- Extracted operation: {name}",
             f'theorem operation_{index:03d} {declaration["binders"]} :',
-            f'    ∃ result, {name} {declaration["arguments"]} = ok result := by',
+            f'    ∃ {result_name}, {name} {declaration["arguments"]} = ok {result_name} := by',
         ]
         if certificate["form"] == "exists":
             lines += [f'  apply {certificate["theorem"]}']

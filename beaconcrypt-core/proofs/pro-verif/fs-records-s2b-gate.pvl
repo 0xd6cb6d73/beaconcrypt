@@ -4,8 +4,8 @@
    2..T_max).  The sequence-one gate aborts the Beacon for good, so nothing
    follows.  Exactly one of this file and the negative control
    fs-control-nogate.pvl is loaded. *)
-(* @beaconcrypt-fs-fidelity key=gate.sequence_one src=beaconcrypt/src/beacon.rs:529-531 anchor=if decrypted.seq != 1 { *)
-(* @beaconcrypt-fs-fidelity key=gate.abort src=beaconcrypt/src/beacon.rs:549-552 anchor=let Some((authenticated, ratchet, plaintext)) = staged else { *)
+(* @beaconcrypt-fs-fidelity key=gate.sequence_one src=beaconcrypt-core/src/registration.rs:892-896 anchor=if opened.sequence != 1 *)
+(* @beaconcrypt-fs-fidelity key=gate.abort src=beaconcrypt/src/beacon.rs:535-542 anchor=let completed = match result { *)
 let FsS2bFinishLater(
   server_identity: bitstring,
   beacon_identity: bitstring,

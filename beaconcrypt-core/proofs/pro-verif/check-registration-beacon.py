@@ -83,50 +83,135 @@ def ordered(text, tokens, label):
 
 def check_source_order():
     """Reviewed drift check, not a Rust/applied-pi compiler."""
-    source = (HERE.parents[2] / "beaconcrypt/src/beacon.rs").read_text()
-    begin = source.index(
-        "fn finish_registration(&mut self, bytes: &[u8])",
-        source.index("impl ProviderBeacon for Beacon {"),
-    )
-    body = source[begin : source.index("\n\t}\n}", begin)]
-    ordered(
-        body,
+    BASE.check_source_order()
+    root = HERE.parents[2]
+    body = BASE.source_order(
+        root,
+        "beaconcrypt/src/beacon.rs",
+        "fn finish_registration(&mut self, bytes:",
         [
-            "let control = match &self.state",
-            "let response = decode_response(bytes)?;",
-            "response.kem_cipher_text",
-            "response.ephemeral_key",
-            "response.identity_key",
-            "ed25519_pk_to_curve25519",
-            "ed25519_sk_to_curve25519",
-            "mlkem768::decapsulate",
-            "let dh1:",
-            "let dh2:",
-            "let dh3:",
-            "let dh4:",
-            "response.key_id",
-            "beacon_prepare_finish",
-            "zeroize_shared_secrets",
-            "derive_root_key_input",
-            "start_beacon_candidate_ratchet_kdf",
-            "finish_initial_ratchet_kdf",
-            "decrypt_registration_message_with_ratchet(",
-            "response.app_cipher_text",
-            "if decrypted.seq != 1",
-            "authenticated_plaintext.len() <=",
-            "authenticated_plaintext.split_off",
-            "authenticate_registration_key_id_binding",
-            "let Some((authenticated",
-            "if self.server_kid()",
-            "if self.server_id.as_bytes()",
-            "self.identity_key_kid =",
+            "BeaconState::InitSent { pending, .. } => pending.aborted_state()",
+            "std::mem::replace(&mut self.state, BeaconState::Aborted { control: aborted })",
+            "BeaconState::InitSent { pending, prekey, onetime_key, pq_key, } = previous",
+            "decode_response(bytes).and_then(|response| { ResponsePacket::from_slices(response.identity_key, response.ephemeral_key, response.kem_cipher_text, response.key_id, response.app_cipher_text, response.signature,)",
+            "auth::authenticate_response(pending, packet)",
+            "crate::pqxdh::execute_agreement(agreement::begin_beacon_agreement(authenticated), crate::pqxdh::RegistrationKeys { identity_secret: self.identity_sk(), beacon_prekey: Some(&prekey.secret_key), beacon_one_time: Some(&onetime_key.secret_key), beacon_kem: Some(&pq_key.secret_key), },)",
+            "AgreementEffect::BeaconComplete(agreement) => agreement,",
+            "AgreementEffect::Rejected(Some(control)) => { self.state = BeaconState::Aborted { control }; return None; }",
+            "registration::begin_beacon_completion(agreement)",
+            "crate::ratchet::initial_ratchet_hkdf(pending.request())",
+            "pending.resume(Some(response))",
+            "pending.take_kernel()?",
+            "let request = pending.request();",
+            "decrypt_registration_message_with_ratchet(request.ciphertext, request.sender_key_id, request.associated_data, &mut ratchet,)",
+            "pending.resume(ratchet.into_kernel(), opened.as_ref().map(|opened| InitialOpened { plaintext: &opened.plaintext, sequence: opened.seq, sender_key_id: opened.key_id, }),)",
+            "completed.into_parts()",
+            "self.identity_key_kid = binding.assigned_key_id();",
             "self.state = BeaconState::Established",
             "Some(plaintext)",
         ],
-        "Beacon source",
+        "impl ProviderBeacon for Beacon {",
     )
-    if body.count("self.abort_registration(control)") != 3:
-        raise ValueError("active source failure/outer-pin abort changed")
+    if (
+        body.count(
+            "Err(control)=>{self.state=BeaconState::Aborted{control};returnNone;}"
+        )
+        != 3
+    ):
+        raise ValueError("active core terminal failure installation changed")
+    BASE.source_order(
+        root,
+        "beaconcrypt/src/auth.rs",
+        "pub(crate) fn authenticate_response",
+        [
+            "registration::begin_response_authentication(pending, packet)?",
+            "execute_hash(&pending.request())",
+            "pending.resume(digest)?",
+            "verify_requested(&pending.request())",
+            "pending.resume(verified)",
+        ],
+    )
+    begin = BASE.rust_body(
+        root, "beaconcrypt-core/src/agreement.rs", "pub fn begin_beacon_agreement"
+    )
+    if "response.identity_key!=pinned.identity_public_key" in begin:
+        raise ValueError(
+            "outer Ed identity rejection moved ahead of the reviewed DH trace"
+        )
+    BASE.source_order(
+        root,
+        "beaconcrypt-core/src/agreement.rs",
+        "pub fn begin_beacon_agreement",
+        [
+            "authenticated.into_parts()",
+            "control.expected_server_binding()",
+            "binding.server_pin().binding()",
+            "AgreementEffect::ConvertPublic",
+        ],
+    )
+    BASE.source_order(
+        root,
+        "beaconcrypt-core/src/agreement.rs",
+        "fn finish_dh(",
+        [
+            "dh1: *state.dh1.as_bytes()",
+            "dh2: *state.dh2.as_bytes()",
+            "dh3: *state.dh3.as_bytes()",
+            "dh4: *state.dh4.as_bytes()",
+            "kem_shared_secret: *state.kem.as_bytes()",
+            "AgreementInput::Beacon",
+            "response_server_identity: response.identity_key",
+            "assigned_key_id: response.key_id",
+            "pqxdh::beacon_prepare_finish(control, &inputs)",
+            "AgreementCandidate::Beacon",
+            "AgreementEffect::RootKdf",
+        ],
+    )
+    BASE.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn begin_beacon_completion",
+        [
+            "crate::pqxdh::start_beacon_candidate_ratchet_kdf(&agreement.candidate, agreement.root.as_bytes(),)",
+            "BeaconInitialKdf { agreement, pending }",
+        ],
+    )
+    BASE.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn request(&self)",
+        [
+            "ciphertext: self.agreement.application_ciphertext",
+            "associated_data: self.agreement.binding.associated_data()",
+            "sequence: 1",
+            "sender_key_id: self.agreement.candidate.server_key_id()",
+        ],
+        "impl BeaconInitialOpen<'_>",
+    )
+    BASE.source_order(
+        root,
+        "beaconcrypt/src/ratchet.rs",
+        "pub(crate) fn decrypt_registration_message_with_ratchet(",
+        [
+            "decrypt_payload_with_ratchet(ciphertext, 1, sender_kid, associated_data, ratchet)",
+        ],
+    )
+    BASE.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn resume<'a>(",
+        [
+            "let server_key_id = self.agreement.candidate.server_key_id();",
+            "self.kernel.is_some() || kernel.send_sequence() != 0 || kernel.receive_sequence() != 1 || kernel.receive_cache_len() != 0",
+            "opened.sequence != 1 || opened.plaintext.len() <= crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE",
+            "split_at(crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE)",
+            "crate::pqxdh::authenticate_registration_key_id_binding(self.agreement.candidate, opened.sender_key_id, prefix,)",
+            "self.agreement.binding.finish(authenticated.assigned_key_id())",
+            "crate::pqxdh::beacon_commit(authenticated)",
+            "kernel, application,",
+        ],
+        "impl BeaconInitialOpen<'_>",
+    )
     model = (HERE / "registration-beacon-admission.pvl").read_text()
     owner = model[model.index("let RegistrationBeaconOwner(") :]
     ordered(

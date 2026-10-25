@@ -30,10 +30,10 @@ FIELDS = {
 # Filled with reviewed complete source files, including lifecycle and adapter
 # visibility. Any change requires re-review, even outside a getter body.
 SOURCE_SHA256 = {
-    "beaconcrypt/src/beacon.rs": "dc515872e23cd8a147f5a4e6ba590f3147a9a124826caab0191f93dac8acdb49",
-    "beaconcrypt/src/server.rs": "2f20a825e3400b516b844488ceb8104dc60eae05b6f772c51e65a53e78fbd18f",
-    "beaconcrypt/src/ratchet.rs": "bfe86fc2b5589a706c0513505e6cf9249741654538eabe7d2708c8213baf256b",
-    "beaconcrypt/src/shared.rs": "1443ecc0f2b8c61c34a54c534a503bdbab22eedacf61a2b1aa8a82432ac4ad7d",
+    "beaconcrypt/src/beacon.rs": "28fdde51b14eb4c7d44552dd5828cb036b4ad845a0434d9b5dfb84a628d43734",
+    "beaconcrypt/src/server.rs": "fe723eba1b1f8b84c37a1272a9326b93d6a5d987b2b6288df47bbf1e1e302bc3",
+    "beaconcrypt/src/ratchet.rs": "7aa3675eb4f340523da263b26294af9d10e060c2ded34226d0789aaa7c9c7ce4",
+    "beaconcrypt/src/shared.rs": "29367e958808b0c11d75b5ee1659dd518ea8f7d5379c94fcddb287cfc122183d",
     "beaconcrypt/src/cbinds.rs": "82f6680efb5cc6b145944d9a1c3e6468c3394e2ce3c94876349683d288760c36",
     "beaconcrypt/src/pybinds.rs": "6dc9a248f6eba84f6bbc6cfdf16d741b45a61ea1428caacf3a4d1302a8b19dce",
     "beaconcrypt/src/lib.rs": "612958dd4b3e1f4cdab304c5a8d3d95e9c9daa0fe9a2ceaf7490bd1b2bf59270",
@@ -44,7 +44,12 @@ SOURCE_SHA256 = {
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedMessageFreshness.lean": "b62c79fa6a4716de40e138534117b023841fc3f7bc74928a47afb2f8401905de",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedMessageReveals.lean": "5759dc6718dc7e5fc6e26f173deabb45d7dce988c27b5aa65091880dd293a911",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentity.lean": "d9b9c25ac490e14743fe77ebfe6ae476d01fd22b8e5dba763f3e5faacf0c1a37",
-    "beaconcrypt-core/src/session.rs": "3779c778ce4f8ec534c2fa610c0a334302ada76fc5cd601ade575802ff9c07c4"
+    "beaconcrypt-core/src/session.rs": "3779c778ce4f8ec534c2fa610c0a334302ada76fc5cd601ade575802ff9c07c4",
+    "beaconcrypt/src/auth.rs": "e4119ce56650add757b83144f728aabc84904219e4f3fc3678fdce7028ebca29",
+    "beaconcrypt/src/pqxdh.rs": "4d786bf9f42a8f05204bc871f987f2b93440238672120af16c02f6837b11c52d",
+    "beaconcrypt-core/src/agreement.rs": "cd4f62dab7d18c9237ad7ce46480ae76faf8e9983b97a9f7af34473550acbabb",
+    "beaconcrypt-core/src/registration.rs": "a27884eb8e09752c84f997472652ad54362444d99bf4c104caef0367dbe49f1d",
+    "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018"
 }
 
 

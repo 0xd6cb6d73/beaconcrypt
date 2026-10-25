@@ -4,11 +4,15 @@
 use crate::error::DecodingError;
 #[cfg(any(feature = "server", test))]
 use crate::error::EncodingError;
+#[cfg(test)]
 use libsodium_rs::utils::memcmp;
+#[cfg(test)]
 use std::any::TypeId;
+#[cfg(test)]
 use std::marker::{PhantomData, PhantomPinned};
 #[cfg(any(feature = "server", test))]
 use std::vec;
+#[cfg(test)]
 use zeroize::Zeroizing;
 
 use crate::ratchet::KDF_STATE_SIZE;
@@ -173,7 +177,7 @@ pub fn decode_kem(encoded_pk: &[u8], expected: KemType) -> Result<Vec<u8>, Decod
 }
 
 pub(crate) mod systems {
-	#[cfg(feature = "pqxdh")]
+	#[cfg(all(test, feature = "pqxdh"))]
 	#[derive(PartialEq)]
 	pub struct X25519;
 	#[cfg(feature = "server")]
@@ -182,6 +186,7 @@ pub(crate) mod systems {
 	#[cfg(any(feature = "server", test))]
 	#[derive(PartialEq)]
 	pub struct HkdfSha512;
+	#[cfg(test)]
 	#[derive(PartialEq)]
 	pub struct Pqxdh;
 	#[cfg(feature = "server")]
@@ -245,6 +250,7 @@ pub(crate) mod systems {
 pub mod roles {
 	#[cfg(feature = "server")]
 	pub trait ChainKey {}
+	#[cfg(test)]
 	#[derive(PartialEq)]
 	pub struct DerivedSecret;
 	#[cfg(any(feature = "server", test))]
@@ -340,6 +346,7 @@ pub mod roles {
 }
 
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
+#[cfg(test)]
 pub struct SecretArr<const S: usize, System, Role> {
 	data: Zeroizing<[u8; S]>,
 	// what cryptosystem this is used in (X25519, ML-KEM...)
@@ -349,6 +356,7 @@ pub struct SecretArr<const S: usize, System, Role> {
 	_pin: PhantomPinned,
 }
 
+#[cfg(test)]
 impl<const S: usize, System: 'static, Role: 'static, OtherSystem: 'static, OtherRole: 'static>
 	PartialEq<SecretArr<S, OtherSystem, OtherRole>> for SecretArr<S, System, Role>
 {
@@ -361,6 +369,7 @@ impl<const S: usize, System: 'static, Role: 'static, OtherSystem: 'static, Other
 	}
 }
 
+#[cfg(test)]
 impl<const S: usize, System, Role> From<[u8; S]> for SecretArr<S, System, Role> {
 	fn from(value: [u8; S]) -> Self {
 		SecretArr {
@@ -373,6 +382,7 @@ impl<const S: usize, System, Role> From<[u8; S]> for SecretArr<S, System, Role> 
 }
 
 /// `value` MUST be exactly the size expected by the type
+#[cfg(test)]
 impl<const S: usize, System, Role> From<Vec<u8>> for SecretArr<S, System, Role> {
 	fn from(value: Vec<u8>) -> Self {
 		if value.len() == S {
@@ -388,6 +398,7 @@ impl<const S: usize, System, Role> From<Vec<u8>> for SecretArr<S, System, Role> 
 	}
 }
 
+#[cfg(test)]
 impl<const S: usize, System, Role> Default for SecretArr<S, System, Role> {
 	fn default() -> Self {
 		SecretArr {
@@ -399,6 +410,7 @@ impl<const S: usize, System, Role> Default for SecretArr<S, System, Role> {
 	}
 }
 
+#[cfg(test)]
 impl<const S: usize, System, Role> SecretArr<S, System, Role> {
 	pub fn as_slice(&self) -> &[u8] {
 		self.data.as_slice()
@@ -419,6 +431,7 @@ impl<const S: usize, System, Role> SecretArr<S, System, Role> {
 	}
 }
 
+#[cfg(test)]
 impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 	fn clone(&self) -> Self {
 		Self {
@@ -430,8 +443,9 @@ impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 	}
 }
 
-#[cfg(feature = "pqxdh")]
+#[cfg(all(test, feature = "pqxdh"))]
 pub type DhSecret = SecretArr<DH_OUT_LEN, systems::X25519, roles::DerivedSecret>;
+#[cfg(test)]
 pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
 
 #[cfg(any(feature = "server", test))]

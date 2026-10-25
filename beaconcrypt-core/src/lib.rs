@@ -3,12 +3,14 @@
 #![no_std]
 #![forbid(unsafe_code)]
 
+pub mod agreement;
 pub mod authentication;
 pub mod commitment;
 pub mod constants;
 pub mod pqxdh;
 pub mod ratchet;
 pub mod record;
+pub mod registration;
 pub mod session;
 
 pub use ratchet::{

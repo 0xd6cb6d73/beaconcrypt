@@ -106,6 +106,7 @@ pub(crate) fn initial_ratchet_hkdf(
 	symmetric_ratchet_hkdf(request)
 }
 
+#[cfg(test)]
 pub(crate) fn finish_initial_ratchet_kdf(
 	pending: beaconcrypt_core::pqxdh::InitialRatchetKdfPending,
 ) -> verified_ratchet::ConcreteRatchetKernel {
@@ -195,6 +196,10 @@ impl RatchetManager {
 		Self {
 			refined: RatchetKernelSlot::new(refined),
 		}
+	}
+
+	pub(crate) fn into_kernel(mut self) -> RatchetKernel {
+		self.refined.take()
 	}
 
 	pub(crate) fn status(&self) -> RatchetStatus {

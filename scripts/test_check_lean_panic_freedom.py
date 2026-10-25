@@ -54,6 +54,34 @@ class PanicBoundaryTests(unittest.TestCase):
         self.assertIn("theorem operation_000 {T : Type} (x y : T)", after)
         self.assertIn("∃ result, f (T := T) x y = ok result", after)
 
+    def test_output_witness_does_not_capture_extracted_inputs(self):
+        source = "def f {result : Type} (result_ result__ : result) : RustM result := ok result_\n"
+        generated = checker.render(checker.declarations(source), self.certificate)
+        self.assertIn(
+            "∃ result___, f (result := result) result_ result__ = ok result___",
+            generated,
+        )
+
+    def test_same_typed_inputs_remain_free_in_output_contract(self):
+        source = "def f (result result_ result_1 : Nat) : RustM Nat := ok result\n"
+        generated = checker.render(checker.declarations(source), self.certificate)
+        self.assertIn(
+            "∃ result__, f result result_ result_1 = ok result__",
+            generated,
+        )
+
+    def test_output_witness_does_not_capture_operation_name(self):
+        source = "def result (x : Nat) : RustM Nat := ok x\n"
+        certificate = {
+            "result": {
+                "module": "Proof",
+                "theorem": "Proof.result_total",
+                "form": "exists",
+            }
+        }
+        generated = checker.render(checker.declarations(source), certificate)
+        self.assertIn("∃ result_, result x = ok result_", generated)
+
     def test_source_loop_names_remain_in_boundary(self):
         declarations = checker.declarations(
             "def application_loop : RustM Unit := ok ()\n"

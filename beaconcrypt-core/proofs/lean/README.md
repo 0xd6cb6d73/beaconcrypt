@@ -460,22 +460,27 @@ The no-exclusion Lean translation boundary is:
 
 ```text
 beaconcrypt-core
+├── agreement                  extracted
+├── authentication             extracted
 ├── commitment                 extracted
 ├── pqxdh                      extracted
 │   └── concrete               extracted
-└── ratchet
-    ├── control                extracted
-    ├── concrete               extracted
-    └── refined                extracted
+├── ratchet
+│   ├── control                extracted
+│   ├── concrete               extracted
+│   └── refined                extracted
+├── record                     extracted
+├── registration               extracted
+└── session                    extracted
 ```
 
-“Extracted” here means translated by Charon/Aeneas. The maintained root additionally checks all 290 unconditional panic-freedom contracts, exact phase semantics, complete cached and future publication, finite send/receive driver composition, structural validity and replay properties, conditional ideal and paired-session preservation, and generic plus conditional canonical restoration. Structural theorems need only valid control/material alignment; ideal provenance theorems state their stronger chain/key assumptions explicitly. The primitive, adapter, compiler, and persistence boundaries above remain external.
+“Extracted” here means translated by Charon/Aeneas. The maintained root additionally checks all 391 unconditional panic-freedom contracts, exact phase semantics, complete cached and future publication, finite send/receive driver composition, structural validity and replay properties, conditional ideal and paired-session preservation, and generic plus conditional canonical restoration. Structural theorems need only valid control/material alignment; ideal provenance theorems state their stronger chain/key assumptions explicitly. The primitive, adapter, compiler, and persistence boundaries above remain external.
 
 Any change that reintroduces higher-order executor plumbing or unsupported mutable-array operations should be expected to require source-level normalization. Reintroducing exclusions would reduce production coverage and must be documented as a trust-boundary regression rather than treated as a routine extractor workaround.
 
 ## Extracted-core panic freedom
 
-`BeaconcryptCore.PanicFreedom.API` contains normal-return certificates for all 290 non-helper `RustM` operations in the current default extraction, universally over their complete typed inputs. The eleven authentication operations add transcript construction, ordered parts, signing input, AD overwrite, LE64 encoding, role cloning and three width assertions to the previous 279 operations. The generated contracts have no state-validity or faithful-response premises. Their manifest is `panic-freedom.json`; regenerate the aggregate module with `python3 scripts/check_lean_panic_freedom.py --write` from the repository root after reviewing an extraction change. `make -C beaconcrypt-core check-lean` checks coverage, signatures, checker regressions, policy, and compilation. The current baseline still pins twelve reviewed model files, including the HB-88 response-encoding witness, HB-95 sequence-one transition and admission theorem, and additive ML-DSA transcript byte model. The audit migration changes `Pqxdh/Kdf.lean`, `Commit.lean` and `InstanceCommit.lean` to the current AD281/CTX357 layout; the remaining nine files are unchanged. The reviewed aggregate digest is `c7acbc9e3aa1b262a31fdcc68838de236bd6f52294e8e53f5ee9c3134f917518`. The transcript model retains its 19 guarded facts, and the migration adds no cryptographic axiom or weaker certificate premise. The earlier 279-operation build receipt is historical; the new coordinated validation results are recorded separately in the audit repair record.
+`BeaconcryptCore.PanicFreedom.API` contains normal-return certificates for all 391 non-helper `RustM` operations in the current default extraction, universally over their complete typed inputs. The surface includes the original 279 operations, eleven authentication constructors, nineteen session-binding operations, and eighty-two registration/agreement/root-erasure operations. The generated contracts have no state-validity or faithful-response premises. Their manifest is `panic-freedom.json`; regenerate the aggregate module with `python3 scripts/check_lean_panic_freedom.py --write` from the repository root after reviewing an extraction change. `make -C beaconcrypt-core check-lean` checks coverage, signatures, checker regressions, policy, and compilation. The current baseline still pins twelve reviewed model files, including the HB-88 response-encoding witness, HB-95 sequence-one transition and admission theorem, and additive ML-DSA transcript byte model. The audit migration changes `Pqxdh/Kdf.lean`, `Commit.lean` and `InstanceCommit.lean` to the current AD281/CTX357 layout; the remaining nine files are unchanged. The reviewed aggregate digest is `c7acbc9e3aa1b262a31fdcc68838de236bd6f52294e8e53f5ee9c3134f917518`. The transcript model retains its 19 guarded facts, and the migration adds no cryptographic axiom or weaker certificate premise. The earlier 279-operation build receipt is historical; the new coordinated validation results are recorded separately in the audit repair record.
 
 See [`../../../doc/formal-verification-analysis.md`](../../../doc/formal-verification-analysis.md) for proof scope and validation, and [`../../../doc/impl/ratchet-fstar-coverage.md`](../../../doc/impl/ratchet-fstar-coverage.md) for the historical F* declaration comparison. Runtime/compiler correspondence and adapter or primitive panics remain outside the extracted-core guarantee.
 
