@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["beaconcrypt", "beaconcrypt-core", "beaconcrypt-parse", "beaconcrypt-wasm"]
+members = ["beaconcrypt", "beaconcrypt-core", "beaconcrypt-crypto", "beaconcrypt-ffi", "beaconcrypt-parse", "beaconcrypt-wasm"]
 default-members = ["beaconcrypt"]
 
 [profile.release]

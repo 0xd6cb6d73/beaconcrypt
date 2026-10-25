@@ -1549,7 +1549,7 @@ fn registration_response_field_length_rejection_is_terminal() {
 #[test]
 fn mldsa_rejects_changed_prekeys_even_with_valid_ed25519_signatures() {
 	use beaconcrypt_core::pqxdh::{KEM_TYPE_X25519, KEY_ROLE_PREKEY};
-	use libsodium_rs::{crypto_kx, crypto_sign};
+	use beaconcrypt_crypto::{crypto_kx, crypto_sign};
 
 	let seed = [0x4a; 32];
 	let mut server = Server::new(SERVER_KID, Some(&seed), None);

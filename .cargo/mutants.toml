@@ -9,6 +9,9 @@ gitignore = true
 # These feature-gated adapters are tested through Go and Python rather than cargo test.
 # cargo-mutants does not evaluate cfg predicates, so default-feature runs would otherwise report mutations in these files as missed without compiling them.
 exclude_globs = [
+	# The native package compiles beaconcrypt's exact source with different crate types.
+	# Mutate that shared source once through the tested Rust package above.
+	"beaconcrypt-ffi/**",
 	# Linear-memory pointers and host imports require the actual WASI runner.
 	# Run the complete guest mutation suite with scripts/test-wasm.sh --mutants.
 	"beaconcrypt-wasm/src/**",

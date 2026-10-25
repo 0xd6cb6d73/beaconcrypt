@@ -2,11 +2,13 @@
 
 //! ML-DSA-65 identities and domain-separated registration transcript authentication.
 
+use alloc::vec::Vec;
+
 use beaconcrypt_core::authentication as transcript;
 #[cfg(test)]
 use beaconcrypt_parse::{InitKex, KexResponse};
 
-use libsodium_rs::{crypto_generichash, ensure_init, random};
+use beaconcrypt_crypto::{TryCryptoRng, crypto_generichash};
 use ml_dsa::{EncodedVerifyingKey, Keypair, MlDsa65, Signature, SigningKey, VerifyingKey};
 #[cfg(test)]
 pub(crate) use transcript::AuthRole;
@@ -29,11 +31,19 @@ pub struct MldsaIdentity {
 }
 
 impl MldsaIdentity {
-	/// Generate an identity with libsodium's cryptographic random generator.
+	/// Generate an identity with the operating system's cryptographic random generator.
+	#[cfg(feature = "std")]
 	pub fn generate() -> Result<Self, crate::KeyGenError> {
-		ensure_init().map_err(|_| crate::KeyGenError)?;
+		Self::generate_with_rng(&mut beaconcrypt_crypto::OsRng)
+	}
+
+	/// Generate an identity with caller-provided cryptographic entropy.
+	pub fn generate_with_rng<R: TryCryptoRng + ?Sized>(
+		rng: &mut R,
+	) -> Result<Self, crate::KeyGenError> {
 		let mut seed = Zeroizing::new([0; 32]);
-		random::fill_bytes(seed.as_mut());
+		rng.try_fill_bytes(seed.as_mut())
+			.map_err(|_| crate::KeyGenError)?;
 		Ok(Self::from_seed(*seed))
 	}
 
@@ -91,7 +101,6 @@ pub(crate) fn verify(
 }
 
 fn hash_state() -> Option<crypto_generichash::State> {
-	ensure_init().ok()?;
 	crypto_generichash::State::new(None, TRANSCRIPT_HASH_LEN).ok()
 }
 
@@ -212,6 +221,7 @@ impl MldsaIdentity {
 	}
 }
 
+#[cfg(feature = "server")]
 pub(crate) fn authenticate_init(
 	pin: beaconcrypt_core::session::ServerAuthenticationPin,
 	packet: beaconcrypt_core::registration::InitPacket<'_>,
@@ -234,9 +244,9 @@ pub(crate) fn authenticate_init(
 				let request = pending.request();
 				let opened = (|| {
 					let public_key =
-						libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key)
+						beaconcrypt_crypto::crypto_sign::PublicKey::from_bytes(request.public_key)
 							.ok()?;
-					libsodium_rs::crypto_sign::verify(request.signed, &public_key)
+					beaconcrypt_crypto::crypto_sign::verify(request.signed, &public_key)
 				})();
 				pending.resume(opened.as_deref())
 			}
@@ -252,6 +262,7 @@ pub(crate) fn authenticate_init(
 	}
 }
 
+#[cfg(feature = "beacon")]
 pub(crate) fn authenticate_response<'a>(
 	pending: beaconcrypt_core::registration::BeaconPending,
 	packet: Option<beaconcrypt_core::registration::ResponsePacket<'a>>,
@@ -265,6 +276,54 @@ pub(crate) fn authenticate_response<'a>(
 	let verified = verify_requested(&pending.request());
 	pending.resume(verified)
 }
+
+/// Deterministic bytes and injected failures for entropy-routing tests only.
+#[cfg(test)]
+pub(crate) struct TestRng {
+	pub(crate) calls: usize,
+	fail_after: usize,
+}
+
+#[cfg(test)]
+impl TestRng {
+	pub(crate) fn new(fail_after: usize) -> Self {
+		Self {
+			calls: 0,
+			fail_after,
+		}
+	}
+}
+
+#[cfg(test)]
+impl beaconcrypt_crypto::TryRng for TestRng {
+	type Error = beaconcrypt_crypto::CryptoError;
+
+	fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
+		let mut bytes = [0; 4];
+		self.try_fill_bytes(&mut bytes)?;
+		Ok(u32::from_le_bytes(bytes))
+	}
+
+	fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+		let mut bytes = [0; 8];
+		self.try_fill_bytes(&mut bytes)?;
+		Ok(u64::from_le_bytes(bytes))
+	}
+
+	fn try_fill_bytes(&mut self, bytes: &mut [u8]) -> Result<(), Self::Error> {
+		if self.calls >= self.fail_after {
+			return Err(beaconcrypt_crypto::CryptoError);
+		}
+		self.calls += 1;
+		for (offset, byte) in bytes.iter_mut().enumerate() {
+			*byte = (offset as u8).wrapping_add(self.calls as u8);
+		}
+		Ok(())
+	}
+}
+
+#[cfg(test)]
+impl TryCryptoRng for TestRng {}
 
 #[cfg(test)]
 mod tests {
@@ -330,6 +389,19 @@ mod tests {
 					.is_none()
 			);
 		}
+	}
+
+	#[test]
+	fn identity_generation_uses_fallible_caller_entropy() {
+		assert!(MldsaIdentity::generate_with_rng(&mut TestRng::new(0)).is_err());
+		let mut rng = TestRng::new(1);
+		let identity = MldsaIdentity::generate_with_rng(&mut rng).unwrap();
+		let seed = core::array::from_fn(|offset| offset as u8 + 1);
+		assert_eq!(
+			identity.public_key(),
+			MldsaIdentity::from_seed(seed).public_key()
+		);
+		assert_eq!(rng.calls, 1);
 	}
 
 	#[test]

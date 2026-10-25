@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 
+use alloc::vec::Vec;
+
 use crate::shared::{Decrypted, Encrypted};
 #[cfg(test)]
 use crate::shared::{SecretArr, roles, systems};
@@ -17,10 +19,10 @@ use beaconcrypt_core::pqxdh::{RatchetInitialization, start_initial_ratchet_kdf};
 use beaconcrypt_core::ratchet as verified_ratchet;
 use beaconcrypt_core::record as verified_record;
 use beaconcrypt_core::record_effects as records;
+use beaconcrypt_crypto::utils::memcmp;
+use beaconcrypt_crypto::{crypto_aead, crypto_generichash, crypto_kdf};
 use beaconcrypt_parse::{CryptoFrame, decode_frame};
-use libsodium_rs::utils::memcmp;
-use libsodium_rs::{crypto_aead, crypto_generichash, crypto_kdf};
-use std::ops::{Deref, DerefMut};
+use core::ops::{Deref, DerefMut};
 use zeroize::{Zeroize, Zeroizing};
 
 pub const KDF_STATE_SIZE: usize = 32usize;
@@ -787,7 +789,7 @@ mod initial_kdf_tests {
 
 	#[test]
 	fn initial_ratchet_hkdf_matches_known_answer_and_orders_complementary_chains() {
-		libsodium_rs::ensure_init().unwrap();
+		beaconcrypt_crypto::ensure_init().unwrap();
 		// Independently reproduced by both KAT generators' [ratchet] step 1: HKDF's
 		// 64-byte expansion is the prefix of that step's 76-byte expansion.
 		let expected_hex = concat!(
@@ -818,7 +820,7 @@ mod record_fixture_tests {
 
 	#[test]
 	fn fixture_sealing_matches_record_requests_and_wire_bytes() {
-		libsodium_rs::ensure_init().unwrap();
+		beaconcrypt_crypto::ensure_init().unwrap();
 		let material = verified_ratchet::RatchetMaterial::from_bytes([0x31; 32], [0x52; 12]);
 		let associated_data = [0x73; AD_SIZE];
 		let sender = 0x8877_6655_4433_2211;

@@ -1,7 +1,7 @@
 use beaconcrypt::*;
 use beaconcrypt_parse::{CryptoFrame, decode_frame};
 
-use libsodium_rs::crypto_sign;
+use beaconcrypt_crypto::crypto_sign;
 use std::sync::{Arc, Barrier, Mutex};
 use std::thread;
 

@@ -1,0 +1,55 @@
+[package]
+name = "beaconcrypt-ffi"
+version = "0.6.1"
+edition = "2024"
+license-file = "../LICENSE"
+readme = "../README.md"
+description = "Cryptographic transport for C2 channels"
+rust-version = "1.96"
+repository = "https://github.com/0xd6cb6d73/beaconcrypt"
+
+publish = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+# Compile the same adapter source with hosted native artifact types. The Rust
+# package stays rlib-only so ordinary no_std downstream dependencies can compile.
+[lib]
+name = "beaconcrypt"
+path = "../beaconcrypt/src/lib.rs"
+crate-type = ["cdylib", "staticlib"]
+test = false
+doctest = false
+bench = false
+
+[build-dependencies]
+cbindgen = { version = "0.29", optional = true }
+
+# Keep dependencies and features synchronized with beaconcrypt/Cargo.toml.
+[dependencies]
+beaconcrypt-core = { version = "0.1.1", path = "../beaconcrypt-core" }
+beaconcrypt-parse = { version = "0.1.0", path = "../beaconcrypt-parse" }
+beaconcrypt-crypto = { version = "0.1.0", path = "../beaconcrypt-crypto", default-features = false }
+hashbrown = { version = "0.17.1", default-features = false, features = ["inline-more"], optional = true }
+siphasher = { version = "1", default-features = false, optional = true }
+ml-dsa = { version = "0.1.1", default-features = false, features = ["alloc", "zeroize"] }
+zeroize = "1.9"
+pyo3 = { version = "0.30.1", features = ["abi3-py311", "experimental-inspect"], optional = true }
+serde = { version = "1", default-features = false, features = ["alloc", "derive"], optional = true }
+serde_json = { version = "1", default-features = false, features = ["alloc"], optional = true }
+
+[features]
+default = ["std", "beacon", "server", "pqxdh"]
+std = ["beaconcrypt-crypto/std", "serde?/std", "serde_json?/std"]
+server = ["pqxdh", "dep:serde", "dep:serde_json", "dep:hashbrown", "dep:siphasher"]
+beacon = ["pqxdh"]
+pqxdh = []
+gobinds = ["cbinds"]
+cbinds = ["std", "dep:cbindgen", "beacon", "server", "pqxdh"]
+pybinds = ["std", "dep:pyo3", "beacon", "server", "pqxdh"]
+all = ["gobinds", "pybinds", "cbinds"]
+
+[package.metadata.maturin]
+name = "beaconcrypt"
+bindings = "pyo3"

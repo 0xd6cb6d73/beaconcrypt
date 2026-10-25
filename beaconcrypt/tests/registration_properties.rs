@@ -4,8 +4,8 @@
 
 use beaconcrypt::*;
 use beaconcrypt_core::authentication as transcript;
+use beaconcrypt_crypto::crypto_generichash;
 use beaconcrypt_parse::{KexResponse, decode_frame, decode_init, decode_response};
-use libsodium_rs::crypto_generichash;
 use ml_dsa::{Keypair, MlDsa65, SigningKey};
 use proptest::prelude::*;
 use proptest::test_runner::FileFailurePersistence;

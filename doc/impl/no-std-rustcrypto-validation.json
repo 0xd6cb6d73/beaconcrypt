@@ -1,0 +1,371 @@
+{
+  "scope": "Final native functional validation after portable/native packaging split",
+  "base_commit": "278204b921ae31a3e900cf21f690184173e531f5",
+  "rust": "1.96.0",
+  "host": "x86_64-unknown-linux-gnu",
+  "environment": {
+    "RUSTFLAGS": "-C linker-features=-lld",
+    "CARGO_BUILD_JOBS": "2",
+    "GOMAXPROCS": "2"
+  },
+  "resource_lease": {
+    "ticket": "00002679",
+    "mib": 3072
+  },
+  "runtime_tests": {
+    "passed": 432,
+    "deferred_proof_source_guards": 5,
+    "nextest_profile": "no-std-rustcrypto-nextest.toml"
+  },
+  "c_binding_unit_tests_passed": 138,
+  "c_persistence_harness_passed": true,
+  "go_race_tests_passed": true,
+  "python_tests_passed": 79,
+  "c_abi": {
+    "header_unchanged": true,
+    "exported_function_names_unchanged": true,
+    "exported_function_count": 31,
+    "exported_names_sha256": "3c04de0bb1bfa90dfb79a9cb0d0aef1d5376b86fdf34bb649538c5437e815cf1"
+  },
+  "commands": [
+    {
+      "label": "fmt",
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--check"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "elapsed_s": 0.891,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-fmt.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "release-ffi",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "beaconcrypt-ffi",
+        "--release",
+        "--features",
+        "gobinds",
+        "--locked"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "elapsed_s": 44.514,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-release-ffi.log",
+      "log_sha256": "75c6f8cee593083c3eb836607c5aca552eccb995081ab8789b43ce31637bfa6a"
+    },
+    {
+      "label": "release-rust",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "beaconcrypt",
+        "--release",
+        "--features",
+        "gobinds",
+        "--locked"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "elapsed_s": 23.955,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-release-rust.log",
+      "log_sha256": "f0e21cac78afd8cbaccf6b97f9efc78f5ba68425fbbda8499949981611b071cc"
+    },
+    {
+      "label": "release-cli",
+      "command": [
+        "cargo",
+        "rustc",
+        "-p",
+        "beaconcrypt-ffi",
+        "--release",
+        "-Z",
+        "build-std=std,panic_abort",
+        "--no-default-features",
+        "--features",
+        "gobinds",
+        "--crate-type=staticlib",
+        "--locked"
+      ],
+      "environment": {
+        "PATH": "/home/user/.rustup/toolchains/nightly-2026-08-18-x86_64-unknown-linux-gnu/bin:/home/user/.rustup/toolchains/1.96.0-x86_64-unknown-linux-gnu/bin:/home/user/.cargo/bin:/nix/store/9wyldz5qids294k9h5qcg1f72i52jidi-gnumake-4.4.1/bin:/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/codex-path:/home/user/.codex/tmp/arg0-linux/codex-arg0IQCqhV:/nix/store/pvh5hvndqbhr9l89ikd7gkqbgjvkf1vq-ripgrep-15.1.0/bin:/nix/store/kxcgm56aqlvgffr88i2d76zhiklxj3r7-bubblewrap-0.11.2/bin:/run/wrappers/bin:/home/user/.nix-profile/bin:/nix/profile/bin:/home/user/.local/state/nix/profile/bin:/etc/profiles/per-user/user/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin",
+        "CARGO_TARGET_DIR": "/home/user/worktrees/beaconcrypt-no-std/target-release-cli"
+      },
+      "exit_code": 0,
+      "elapsed_s": 43.703,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-release-cli.log",
+      "log_sha256": "50cb018ded2e2e51beebf9ffb2bdd985ee6655c94169213836f1ce9d9d1428b2"
+    },
+    {
+      "label": "release-beacon",
+      "command": [
+        "cargo",
+        "rustc",
+        "-p",
+        "beaconcrypt-ffi",
+        "--release",
+        "-Z",
+        "build-std=std,panic_abort",
+        "--no-default-features",
+        "--features",
+        "std,beacon",
+        "--crate-type=staticlib",
+        "--locked"
+      ],
+      "environment": {
+        "PATH": "/home/user/.rustup/toolchains/nightly-2026-08-18-x86_64-unknown-linux-gnu/bin:/home/user/.rustup/toolchains/1.96.0-x86_64-unknown-linux-gnu/bin:/home/user/.cargo/bin:/nix/store/9wyldz5qids294k9h5qcg1f72i52jidi-gnumake-4.4.1/bin:/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/codex-path:/home/user/.codex/tmp/arg0-linux/codex-arg0IQCqhV:/nix/store/pvh5hvndqbhr9l89ikd7gkqbgjvkf1vq-ripgrep-15.1.0/bin:/nix/store/kxcgm56aqlvgffr88i2d76zhiklxj3r7-bubblewrap-0.11.2/bin:/run/wrappers/bin:/home/user/.nix-profile/bin:/nix/profile/bin:/home/user/.local/state/nix/profile/bin:/etc/profiles/per-user/user/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin",
+        "CARGO_TARGET_DIR": "/home/user/worktrees/beaconcrypt-no-std/target-release-beacon"
+      },
+      "exit_code": 0,
+      "elapsed_s": 17.945,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-release-beacon.log",
+      "log_sha256": "0e538e91f430f054afe8127da5e1712da8a3eeb65c962d7bf4b5d881d0591ea4"
+    },
+    {
+      "label": "clippy-workspace",
+      "command": [
+        "cargo",
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--all-features",
+        "--locked"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "elapsed_s": 89.314,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-clippy-workspace.log",
+      "log_sha256": "cb64e2f6ef8ddd14724e3b9364abcf5628b36dd0bb4b2281b6bd83d9961f829c"
+    },
+    {
+      "label": "clippy-adapter",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "beaconcrypt",
+        "--all-targets",
+        "--all-features",
+        "--no-deps",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "elapsed_s": 78.661,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-clippy-adapter.log",
+      "log_sha256": "4e2e84c457801579060379dd586caff81a760ef9164ddac493ac14abc598cf3d"
+    },
+    {
+      "label": "clippy-backend",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "beaconcrypt-crypto",
+        "--all-targets",
+        "--all-features",
+        "--no-deps",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "elapsed_s": 4.432,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-clippy-backend.log",
+      "log_sha256": "da478ddd5c69920af85d3d4e78b4b5d0972ae17f52025813742b244211798635"
+    },
+    {
+      "label": "clippy-ffi",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "beaconcrypt-ffi",
+        "--all-targets",
+        "--all-features",
+        "--no-deps",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "elapsed_s": 16.877,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-clippy-ffi.log",
+      "log_sha256": "ec8245b6a825c1bc25db793535ec71bf767f190ce5befd7051fcc4642648bc57"
+    },
+    {
+      "label": "workspace-tests",
+      "command": [
+        "/tmp/bc-arc-scratch/no-std-rustcrypto/bin/cargo-nextest",
+        "nextest",
+        "run",
+        "--workspace",
+        "--locked",
+        "--config-file=/tmp/bc-arc-scratch/no-std-rustcrypto/nextest.toml",
+        "--profile=mutants",
+        "--user-config-file=none"
+      ],
+      "environment": {
+        "CARGO_PROFILE_TEST_DEBUG": "0",
+        "CARGO_PROFILE_DEV_DEBUG": "0"
+      },
+      "exit_code": 0,
+      "elapsed_s": 204.291,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-workspace-tests.log",
+      "log_sha256": "dabed7312ff6f75aeacca40a527096fe00c89183eebde63e66c75b9693aa7f7d"
+    },
+    {
+      "label": "cbinds-tests",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "beaconcrypt",
+        "--features",
+        "cbinds",
+        "--lib",
+        "--locked"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "elapsed_s": 68.967,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-cbinds-tests.log",
+      "log_sha256": "5f182a748720b5b0c9230b8bd12c23d381f0145a3f6c25541544795073a60aa6"
+    },
+    {
+      "label": "c-build",
+      "command": [
+        "cc",
+        "-std=c11",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Ibeaconcrypt",
+        "beaconcrypt/tests/c_persistence.c",
+        "-Ltarget/release",
+        "-lbeaconcrypt",
+        "-Wl,-rpath,/home/user/worktrees/beaconcrypt-no-std/target/release",
+        "-o",
+        "/tmp/bc-arc-scratch/no-std-rustcrypto/final-c-persistence"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "elapsed_s": 0.136,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-c-build.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "c-test",
+      "command": [
+        "/tmp/bc-arc-scratch/no-std-rustcrypto/final-c-persistence"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "elapsed_s": 0.049,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-c-test.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "go-race",
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "-count=1",
+        "./..."
+      ],
+      "environment": {
+        "GOCACHE": "/tmp/bc-arc-scratch/no-std-rustcrypto/go-cache-final"
+      },
+      "exit_code": 0,
+      "elapsed_s": 49.902,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-go-race.log",
+      "log_sha256": "4dce79a1b2d52fa7625a8d6559ccb4e0e2a56929747d7d6f277ad85bbb736192"
+    },
+    {
+      "label": "python-develop",
+      "command": [
+        "uv",
+        "run",
+        "maturin",
+        "develop",
+        "--uv"
+      ],
+      "environment": {
+        "UV_PROJECT_ENVIRONMENT": "/tmp/beaconcrypt-no-std-venv"
+      },
+      "exit_code": 0,
+      "elapsed_s": 19.509,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-python-develop.log",
+      "log_sha256": "7789ae163190d9862ed28ae16f751bb3bb6645f3fa5244824ec83935d54c737d"
+    },
+    {
+      "label": "python-tests",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "tests"
+      ],
+      "environment": {
+        "UV_PROJECT_ENVIRONMENT": "/tmp/beaconcrypt-no-std-venv"
+      },
+      "exit_code": 0,
+      "elapsed_s": 9.501,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-python-tests.log",
+      "log_sha256": "629dec8f4098bfe2fadac6286eced3da15420b7331b860c7536f3b2945464f7b"
+    },
+    {
+      "label": "python-sdist",
+      "command": [
+        "uv",
+        "run",
+        "maturin",
+        "sdist",
+        "--out",
+        "/tmp/bc-arc-scratch/no-std-rustcrypto/sdist-final"
+      ],
+      "environment": {
+        "UV_PROJECT_ENVIRONMENT": "/tmp/beaconcrypt-no-std-venv"
+      },
+      "exit_code": 0,
+      "elapsed_s": 5.22,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-python-sdist.log",
+      "log_sha256": "9e3157e87986f94ce422bf521055cc6b2a7c302e128e9bd6a7360c99a3c3f324"
+    },
+    {
+      "label": "python-sdist-wheel",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/no-std-rustcrypto/validate-python-sdist.sh"
+      ],
+      "environment": {
+        "UV_PROJECT_ENVIRONMENT": "/tmp/beaconcrypt-no-std-venv"
+      },
+      "exit_code": 1,
+      "elapsed_s": 4.739,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/final-python-sdist-wheel.log",
+      "log_sha256": "2919b7638291644dca747095fad1e2ad99c67f6c02d1fe7e7c25c9abf194c69e"
+    }
+  ],
+  "source_archive_note": "The last initial source-archive check failed before wheel compilation because Cargo-generated archives omitted shared Rust sources and the library target. The separate final Python source-archive receipt records the corrected Git-generator validation.",
+  "source_archive_final_result": {
+    "passed": true,
+    "receipt": "no-std-rustcrypto-python-sdist.json",
+    "method": "Build actual wheel from unpacked Git-generated archive; native artifacts restored and all five measured hashes reconfirmed"
+  }
+}
