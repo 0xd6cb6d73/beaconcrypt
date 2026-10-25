@@ -2,11 +2,12 @@
   "baseline": "278204b921ae31a3e900cf21f690184173e531f5",
   "branch": "codex/core-lifecycle",
   "worktree": "/home/user/worktrees/beaconcrypt-core-lifecycle",
-  "updated_utc": "2026-10-25T05:27:01.381828+00:00",
+  "updated_utc": "2026-10-25T09:06:45.609114+00:00",
   "constraints": {
     "full_verify_in_shell": "not run, per owner instruction",
     "expensive_runs": "coordinated through /tmp/bc-coord",
-    "all_commits": "Co-authored-by: Codex <codex@openai.com>"
+    "all_commits": "Co-authored-by: Codex <codex@openai.com>",
+    "full_lean_build": "Only after items4and5 fully done, per owner continuation instruction"
   },
   "item1": {
     "commit": "ccaa4deb",
@@ -226,7 +227,7 @@
     "later_validation_cleanup": "One literal-element test loop unrolled;39+2 fidelity tests rerun; nine formatted Python files retain identical ASTs",
     "known_boundary": "Native interpreter/primitive/codec/compiler/persistence fidelity remains external; ordinaryFrame send and explicit decoded receive representation scopes; no fullML deployment or quantum security lift"
   },
-  "final_verification": {
+  "items1_through3_final_verification": {
     "full_verify_in_shell": "not run, per owner instruction",
     "lean_policy_root_panic_preflight": "passed",
     "canonical_whole_project": "passed",
@@ -237,5 +238,70 @@
       "reason": "Pre-existing top process PID2605055 in /home/user/beaconcrypt retains IN_NIX_SHELL; cleanup rule forbids collection while another repository process uses Nix",
       "our_verification_leases": "none active"
     }
+  },
+  "item4": {
+    "operation_count": 450,
+    "new_operations": 20,
+    "retired_operations": 0,
+    "behavioral_facts": 40,
+    "new_unconditional_panic_certificates": 20,
+    "focused_new_api_contracts": 20,
+    "full_lean_build": "deferred until all work is complete, per owner instruction",
+    "extraction": "complete global and isolated authentication extraction passed; generated external files and all six isolated authentication Lean outputs unchanged; retained definitions unchanged modulo two bound-variable alpha renames",
+    "full_rust_tests": 461,
+    "transcript_fidelity_tests": 41,
+    "joint_fidelity_tests": 2,
+    "python_checker_suites": 23,
+    "python_checker_tests": 433,
+    "clippy": "passed with existing warnings",
+    "role_checks_and_format": "passed",
+    "native_mutations": {
+      "status": "running against frozen item4-native-source",
+      "configured": 1739
+    },
+    "wasi_mutations": {
+      "status": "complete and audited",
+      "total": 159,
+      "caught": 147,
+      "compile_invalid": 12,
+      "missed": 0,
+      "timed_out": 0,
+      "all_invalid_logs": "actual Rust compilation errors",
+      "outcomes_sha256": "44c049ed4b4812ddea874d480546bab85481c7eb96ea1629c72b590d37a0ce8e"
+    },
+    "inventory_sensitivity_controls": 54,
+    "peer_source_controls": 104,
+    "proofs": {
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/PeerOwnership.lean": {
+        "theorems": 30,
+        "axiom_guards": 30,
+        "sha256": "d6fa861b328020f6084fb35050119487ddd430e1827ae9326216072e4058c13b"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/PeerCollections.lean": {
+        "theorems": 10,
+        "axiom_guards": 10,
+        "sha256": "7aecd56907b6015aa5a8a1f037f708f8e993260f676ad970a941e99d0211362b"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/PanicFreedom/PeerOwnership.lean": {
+        "theorems": 20,
+        "axiom_guards": 20,
+        "sha256": "a8c3346a4552be68fa8726d8513a850e8548643d91404d610e97dc1f37556c17"
+      }
+    },
+    "known_boundary": "Faithful native collection laws and synchronous exact kernel wrapping are explicit; compiler, native primitives, allocation, physical erasure, persistence and cross-owner instance uniqueness remain external. No full mandatory-ML or quantum security lift.",
+    "wasi_tests": 27,
+    "wasi_allocation_failure_probe": "passed",
+    "separate_full_inventory": "passed; subsequent prose-only baseline-count correction reviewed and complete hash/category/membership prefix replay passed",
+    "inventory_categories": {
+      "core-rust": 16,
+      "handwritten-lean": 2060,
+      "validation": 80
+    }
+  },
+  "final_verification": {
+    "status": "continuation in progress",
+    "full_verify_in_shell": "not run, per owner instruction",
+    "canonical_whole_project": "deferred until all requested implementation and proofs are complete",
+    "mutation_campaigns": "item4 native in progress; item4 WASI complete/audited; item5 staged"
   }
 }

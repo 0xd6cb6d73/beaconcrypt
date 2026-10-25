@@ -238,8 +238,8 @@ class NativeMovedTokenSourceGate(unittest.TestCase):
 
     def test_private_agreement_moves_with_token(self):
         self.mutate_source(
-            "agreement: beaconcrypt_core::agreement::ServerAgreement,",
-            "pub agreement: beaconcrypt_core::agreement::ServerAgreement,",
+            "registration: beaconcrypt_core::peer::ConsumedRegistration,",
+            "pub registration: beaconcrypt_core::peer::ConsumedRegistration,",
         )
 
     def test_token_server_key_binding_preserved(self):
@@ -249,16 +249,16 @@ class NativeMovedTokenSourceGate(unittest.TestCase):
             "beaconcrypt-core/src/registration.rs",
         )
 
-    def test_size_preflight_stays_before_token_move(self):
+    def test_size_preflight_stays_before_completion_resume(self):
         self.mutate_source(
-            "registration_response_len(plaintext.len(), next_key_id)?;\n\t\tlet RegistrationOutput { agreement } = reg_out;",
-            "let RegistrationOutput { agreement } = reg_out;\n\t\tregistration_response_len(plaintext.len(), next_key_id)?;",
+            "registration_response_len(plaintext.len(), next_key_id)?;",
+            "let _ = 0;",
         )
 
     def test_completion_uses_current_counter(self):
         self.mutate_source(
-            "control,\n\t\t\t&self.authentication_pin()?,",
-            "self.identity_key_kid,\n\t\t\t&self.authentication_pin()?,",
+            "control,\n\t\t\tself.authentication_pin()?,",
+            "self.identity_key_kid,\n\t\t\tself.authentication_pin()?,",
         )
 
     def test_serialization_failure_preserves_counter(self):

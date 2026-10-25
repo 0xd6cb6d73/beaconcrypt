@@ -154,8 +154,8 @@ class NativeResponseSourceGate(unittest.TestCase):
 
     def test_peer_map_key_preserved(self):
         self.mutate_source(
-            "let old = self.known_ids.insert(\n\t\t\tremote_kid,",
-            "let old = self.known_ids.insert(\n\t\t\tself.identity_key_kid,",
+            "self.known_ids.entry(remote_kid)",
+            "self.known_ids.entry(self.identity_key_kid)",
         )
 
     def test_peer_binding_assignment_preserved(self):

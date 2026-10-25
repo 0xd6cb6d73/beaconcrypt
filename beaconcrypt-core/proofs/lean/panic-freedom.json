@@ -209,6 +209,106 @@
     "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
     "theorem": "BeaconcryptCore.PanicFreedom.commitment_encode_u64_le_ok"
   },
+  "peer.CompletionLookup.request": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.CompletionLookup_request_total",
+    "form": "exists"
+  },
+  "peer.CompletionLookup.resume": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.CompletionLookup_resume_total",
+    "form": "exists"
+  },
+  "peer.Peer.from_trusted_parts": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.Peer_from_trusted_parts_total",
+    "form": "exists"
+  },
+  "peer.Peer.impl.binding": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.Peer_binding_total",
+    "form": "exists"
+  },
+  "peer.Peer.impl.ratchet": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.Peer_ratchet_total",
+    "form": "exists"
+  },
+  "peer.Peer.into_parts": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.Peer_into_parts_total",
+    "form": "exists"
+  },
+  "peer.Peer.key_id": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.Peer_key_id_total",
+    "form": "exists"
+  },
+  "peer.Peer.ratchet_mut": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.Peer_ratchet_mut_total",
+    "form": "exists"
+  },
+  "peer.PeerInsert.into_parts": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.PeerInsert_into_parts_total",
+    "form": "exists"
+  },
+  "peer.PeerInsert.request": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.PeerInsert_request_total",
+    "form": "exists"
+  },
+  "peer.PublicationFinish.finish": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.PublicationFinish_finish_total",
+    "form": "exists"
+  },
+  "peer.PublishedPeer.into_parts": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.PublishedPeer_into_parts_total",
+    "form": "exists"
+  },
+  "peer.RegistrationInsert.request": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.RegistrationInsert_request_total",
+    "form": "exists"
+  },
+  "peer.RegistrationInsert.resume": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.RegistrationInsert_resume_total",
+    "form": "exists"
+  },
+  "peer.RegistrationLookup.request": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.RegistrationLookup_request_total",
+    "form": "exists"
+  },
+  "peer.RegistrationLookup.resume": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.RegistrationLookup_resume_total",
+    "form": "exists"
+  },
+  "peer.begin_completion_lookup": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.begin_completion_lookup_total",
+    "form": "exists"
+  },
+  "peer.begin_peer_insert": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.begin_peer_insert_total",
+    "form": "exists"
+  },
+  "peer.begin_registration_insert": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.begin_registration_insert_total",
+    "form": "exists"
+  },
+  "peer.begin_registration_lookup": {
+    "module": "BeaconcryptCore.PanicFreedom.PeerOwnership",
+    "theorem": "BeaconcryptCore.PanicFreedom.PeerOwnership.begin_registration_lookup_total",
+    "form": "exists"
+  },
   "pqxdh.AuthenticatedBeaconRegistration.assigned_key_id": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Trivial",

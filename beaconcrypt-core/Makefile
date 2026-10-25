@@ -877,6 +877,9 @@ check-lean-root:
 		BeaconcryptCore.Refinement.TranscriptAuth \
 		BeaconcryptCore.Refinement.SessionBinding \
 		BeaconcryptCore.PanicFreedom.SessionBinding \
+		BeaconcryptCore.Refinement.PeerCollections \
+		BeaconcryptCore.Refinement.PeerOwnership \
+		BeaconcryptCore.PanicFreedom.PeerOwnership \
 		BeaconcryptCore.Refinement.KeyAgreement \
 		BeaconcryptCore.Refinement.RegistrationInputs \
 		BeaconcryptCore.Refinement.RegistrationBytePrimitives \

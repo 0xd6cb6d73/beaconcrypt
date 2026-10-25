@@ -9,6 +9,7 @@ fn source<'a>(snapshot: &'a Snapshot, name: &str) -> &'a str {
 	match name {
 		"registration" => &snapshot.core_registration,
 		"records" => &snapshot.core_record_effects,
+		"peer" => &snapshot.core_peer,
 		"ratchet" => &snapshot.adapter_ratchet,
 		"core-pqxdh" => &snapshot.core_pqxdh,
 		"agreement" => &snapshot.core_agreement,
@@ -86,7 +87,7 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 		"server",
 		"",
 		"get_shared_secret",
-		"verified_pqxdh::validate_registration_status(status).ok()?;",
+		"lookup.resume(consumed)",
 		"registration Server replay-status gate",
 	),
 	(
@@ -457,21 +458,21 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 		"server",
 		"",
 		"build_registration_response",
-		"letremote_kid=binding.assigned_key_id();",
+		"letremote_kid=pending.request();",
 		"registration assigned target comes from published binding",
 	),
 	(
 		"server",
 		"",
 		"build_registration_response",
-		"crypto_sign::PublicKey::from_bytes(binding.beacon_identity_public_key()).ok()?",
+		"crypto_sign::PublicKey::from_bytes(peer.binding().beacon_identity_public_key()).ok()?",
 		"registration established peer identity comes from binding",
 	),
 	(
 		"server",
 		"",
 		"build_registration_response",
-		"self.known_ids.insert(remote_kid,EstablishedRemote::new(public_key,RatchetManager::from_kernel(kernel),binding),)",
+		"entry.insert(EstablishedRemote::from_peer(public_key,peer));",
 		"registration established peer retains exact identity kernel and binding",
 	),
 	(
@@ -917,7 +918,7 @@ const BEACON_LIFECYCLE: &[(&str, &str, &str)] = &[
 
 const SERVER_LIFECYCLE: &[(&str, &str)] = &[
 	(
-		"pubstructRegistrationOutput{agreement:beaconcrypt_core::agreement::ServerAgreement,}",
+		"pubstructRegistrationOutput{registration:beaconcrypt_core::peer::ConsumedRegistration,}",
 		"initial ratchet RegistrationOutput storage",
 	),
 	(
@@ -995,13 +996,15 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 			"letregistration=decode_init(buffer)?;",
 			"letpacket=InitPacket::from_slices(",
 			"auth::authenticate_init(self.authentication_pin()?,packet)?;",
-			"letregistration_id=*authenticated.registration_id().as_bytes();",
-			"validate_registration_status(status)",
+			"letlookup=beaconcrypt_core::peer::begin_registration_lookup(control,authenticated);letregistration_id=*lookup.request().as_bytes();",
+			"letconsumed=self.consumed_registrations.contains(&registration_id);",
+			"leteffect=lookup.resume(consumed);",
+			"ifmatches!(effect,AgreementEffect::Rejected(_)){returnNone;}",
 			"self.consumed_registrations.try_reserve(1)",
-			"agreement::begin_server_agreement(control,status,authenticated)",
+			"crate::pqxdh::execute_agreement(effect,",
 			"AgreementEffect::ServerComplete(agreement)=>agreement",
-			"self.consumed_registrations.insert(registration_id)",
-			"Some(RegistrationOutput{agreement})",
+			"self.consumed_registrations.insert(*pending.request().as_bytes())",
+			"Some(RegistrationOutput{registration})",
 		],
 		"registration Server validate-reserve-derive-consume order",
 	)?;
@@ -1029,9 +1032,11 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 	require_ordered_once(
 		&publish,
 		&[
+			"letRegistrationOutput{registration}=reg_out;",
+			"beaconcrypt_core::peer::begin_completion_lookup(",
+			"letnext_key_id=lookup.request();",
 			"registration_response_len(plaintext.len(),next_key_id)?;",
-			"letRegistrationOutput{agreement}=reg_out;",
-			"registration::begin_server_completion(",
+			"lookup.resume(self.known_ids.contains_key(&next_key_id))",
 			"letresponse=crate::ratchet::ratchet_hkdf(pending.request());",
 			"execute_seal_request(pending.request())",
 			"pending.resume(detached_view)",
@@ -1041,8 +1046,9 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 			"auth::execute_hash(&pending.request())",
 			"self.mldsa_identity.sign_requested(&pending.request())",
 			"crate::wire::encode_response(KexResponse{",
-			"ready.publish(buffer).ok()?.into_parts()",
-			"self.known_ids.insert(",
+			"beaconcrypt_core::peer::begin_peer_insert(control,ready.publish(buffer).ok()?).ok()?;",
+			"self.known_ids.entry(remote_kid)",
+			"finish.finish(inserted).ok()?.into_parts()",
 			"self.control=next_control;",
 		],
 		"MLDSA token binding and signed publication precede commit",
@@ -1119,6 +1125,7 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 
 pub(super) fn lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 	runtime(snapshot)?;
+	super::peer_effects::validate(snapshot)?;
 	for &(function, wanted, label) in BEACON_LIFECYCLE {
 		check(snapshot, "beacon", "", function, wanted, label)?;
 	}
@@ -1164,13 +1171,18 @@ pub(super) fn lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 		"server",
 		"",
 		"get_shared_secret",
-		"letstatus=ifself.consumed_registrations.contains(&registration_id){verified_pqxdh::RegistrationStatus::Consumed}else{verified_pqxdh::RegistrationStatus::Fresh};",
+		"letconsumed=self.consumed_registrations.contains(&registration_id);",
 		"registration Server replay-status polarity",
 	)?;
 	let accept = body(snapshot, "server", "", "get_shared_secret")?;
-	let (_, after) = accept
-		.split_once("letinserted=self.consumed_registrations.insert(registration_id);")
+	let (_, after_insert) = accept
+		.split_once(
+			"letinserted=self.consumed_registrations.insert(*pending.request().as_bytes());",
+		)
 		.ok_or("registration missing consumption insertion")?;
+	let after = after_insert
+		.strip_prefix("letregistration=pending.resume(inserted)?;")
+		.ok_or("registration insertion reply must resume the same owned continuation")?;
 	if super::count(&accept, "self.consumed_registrations.insert(") != 1 {
 		return Err("registration Server consumed-ID insertion family count changed".into());
 	}
@@ -1193,6 +1205,7 @@ fn source_mut<'a>(snapshot: &'a mut Snapshot, name: &str) -> &'a mut String {
 	match name {
 		"registration" => &mut snapshot.core_registration,
 		"records" => &mut snapshot.core_record_effects,
+		"peer" => &mut snapshot.core_peer,
 		"ratchet" => &mut snapshot.adapter_ratchet,
 		"core-pqxdh" => &mut snapshot.core_pqxdh,
 		"agreement" => &mut snapshot.core_agreement,
@@ -1586,7 +1599,7 @@ fn extracted_registration_operand_and_continuation_mutations_are_rejected() {
 	}
 	eprintln!("extracted registration source mutations: {count}");
 	assert_eq!(
-		count, 511,
+		count, 507,
 		"reviewed registration coverage unexpectedly changed"
 	);
 }
@@ -1601,22 +1614,22 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 			"server",
 			"",
 			"get_shared_secret",
-			"letstatus=ifself.consumed_registrations.contains(&registration_id)",
-			"letstatus=ifself.known_ids.contains_key(&self.identity_key_kid)",
+			"letconsumed=self.consumed_registrations.contains(&registration_id)",
+			"letconsumed=self.known_ids.contains_key(&self.identity_key_kid)",
+		),
+		(
+			"peer",
+			"impl RegistrationLookup",
+			"resume",
+			"ifconsumed{returnAgreementEffect::Rejected(None);}",
+			"iffalse{returnAgreementEffect::Rejected(None);}",
 		),
 		(
 			"server",
 			"",
 			"get_shared_secret",
-			"RegistrationStatus::Consumed}else{verified_pqxdh::RegistrationStatus::Fresh",
-			"RegistrationStatus::Fresh}else{verified_pqxdh::RegistrationStatus::Consumed",
-		),
-		(
-			"server",
-			"",
-			"get_shared_secret",
-			"validate_registration_status(status).ok()?;",
-			"validate_registration_status(status).ok();",
+			"lookup.resume(consumed)",
+			"lookup.resume(false)",
 		),
 		(
 			"server",
@@ -1629,22 +1642,22 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 			"server",
 			"",
 			"get_shared_secret",
-			"self.consumed_registrations.insert(registration_id)",
+			"self.consumed_registrations.insert(*pending.request().as_bytes())",
 			"self.consumed_registrations.insert([0;64])",
 		),
 		(
 			"server",
 			"",
 			"get_shared_secret",
-			"debug_assert!(inserted);",
-			"debug_assert!(inserted); let _late = Some(())?;",
+			"letregistration=pending.resume(inserted)?;",
+			"letregistration=pending.resume(inserted)?; let _late = Some(())?;",
 		),
 		(
 			"server",
 			"",
 			"get_shared_secret",
-			"debug_assert!(inserted);",
-			"debug_assert!(inserted); if !inserted { return None; }",
+			"letregistration=pending.resume(inserted)?;",
+			"letregistration=pending.resume(inserted)?; if !inserted { return None; }",
 		),
 		(
 			"server",
@@ -1802,7 +1815,7 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 			"",
 			"build_registration_response",
 			"self.control=next_control;",
-			"letold=self.known_ids.insert(",
+			"letinserted=matchself.known_ids.entry(remote_kid){",
 		),
 	] {
 		let mut changed = baseline.clone();

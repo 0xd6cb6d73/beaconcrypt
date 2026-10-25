@@ -910,3 +910,109 @@ fn composed_record_failures_roll_back_exactly_and_cached_success_rejects_replay(
 	assert_eq!((trace.kdfs, trace.hashes, trace.aeads), (0, 0, 0));
 	assert_eq!(kernel_snapshot(&returned), before_replay);
 }
+
+#[test]
+fn peer_replay_lookup_binds_the_authenticated_id_and_rejects_consumed_requests() {
+	use beaconcrypt_core::peer;
+	let (_, bytes) = start(None).unwrap();
+	for consumed in [false, true] {
+		let accepted = authenticate(&bytes, None).unwrap();
+		let expected = accepted.registration_id();
+		let lookup = peer::begin_registration_lookup(ServerState::new(42), accepted);
+		assert_eq!(lookup.request().as_bytes(), expected.as_bytes());
+		let result = lookup.resume(consumed);
+		if consumed {
+			assert!(matches!(result, AgreementEffect::Rejected(None)));
+		} else {
+			assert!(matches!(result, AgreementEffect::GenerateEphemeral(_)));
+		}
+	}
+}
+
+#[test]
+fn peer_completion_requires_successful_replay_insertion_and_uses_the_live_counter() {
+	use beaconcrypt_core::peer;
+	let pending = peer::begin_registration_insert(server_agreement());
+	let mut expected = [29; 64];
+	expected[32..].fill(4);
+	assert_eq!(pending.request().as_bytes(), &expected);
+	assert!(pending.resume(false).is_none());
+	for occupied in [false, true] {
+		let token = peer::begin_registration_insert(server_agreement())
+			.resume(true)
+			.unwrap();
+		let lookup =
+			peer::begin_completion_lookup(ServerState::new(99), pin(), token, b"application")
+				.ok()
+				.unwrap();
+		assert_eq!(lookup.request(), 100);
+		match lookup.resume(occupied) {
+			Err(control) => {
+				assert!(occupied);
+				assert_eq!(control.last_key_id(), 99);
+			}
+			Ok(pending) => {
+				assert!(!occupied);
+				let state = pending.resume(None).err().unwrap();
+				assert_eq!(state.last_key_id(), 99);
+			}
+		}
+	}
+	let token = peer::begin_registration_insert(server_agreement())
+		.resume(true)
+		.unwrap();
+	let state = peer::begin_completion_lookup(ServerState::new(u64::MAX), pin(), token, b"x")
+		.err()
+		.unwrap();
+	assert_eq!(state.last_key_id(), u64::MAX);
+}
+
+#[test]
+fn peer_publication_retains_the_exact_peer_and_requires_actual_vacant_insertion() {
+	use beaconcrypt_core::peer;
+	let ciphertext = server_ciphertext();
+	for inserted in [false, true] {
+		let ready = server_hash(&ciphertext)
+			.resume(Some([59; 64]))
+			.unwrap()
+			.resume(Some(&[61; 3309]))
+			.unwrap();
+		let published = ready.publish(Some(b"encoded response")).unwrap();
+		let pending = peer::begin_peer_insert(ServerState::new(42), published)
+			.ok()
+			.unwrap();
+		assert_eq!(pending.request(), 43);
+		let (owned, finish) = pending.into_parts();
+		assert_eq!(owned.key_id(), 43);
+		assert_eq!(owned.binding().associated_data(), &expected_ad());
+		assert_eq!(owned.binding().beacon_identity_public_key(), &[29; 32]);
+		assert_eq!(owned.ratchet().send_sequence(), 1);
+		assert_eq!(owned.ratchet().receive_sequence(), 0);
+		assert_eq!(owned.ratchet().receive_cache_len(), 0);
+		match finish.finish(inserted) {
+			Err(control) => {
+				assert!(!inserted);
+				assert_eq!(control.last_key_id(), 42);
+			}
+			Ok(published) => {
+				assert!(inserted);
+				let (control, key_id, encoded) = published.into_parts();
+				assert_eq!(control.last_key_id(), 43);
+				assert_eq!(key_id, 43);
+				assert_eq!(encoded, b"encoded response");
+			}
+		}
+	}
+	for current in [41, 43, u64::MAX] {
+		let ready = server_hash(&ciphertext)
+			.resume(Some([59; 64]))
+			.unwrap()
+			.resume(Some(&[61; 3309]))
+			.unwrap();
+		let state =
+			peer::begin_peer_insert(ServerState::new(current), ready.publish(Some(())).unwrap())
+				.err()
+				.unwrap();
+		assert_eq!(state.last_key_id(), current);
+	}
+}

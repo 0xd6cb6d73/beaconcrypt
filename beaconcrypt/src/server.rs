@@ -37,7 +37,7 @@ pub struct RegResponse {
 }
 
 pub struct RegistrationOutput {
-	agreement: beaconcrypt_core::agreement::ServerAgreement,
+	registration: beaconcrypt_core::peer::ConsumedRegistration,
 }
 
 fn registration_response_len(application_len: usize, assigned_key_id: u64) -> Option<usize> {
@@ -395,7 +395,7 @@ impl Server {
 
 impl ProviderServer for Server {
 	fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput> {
-		use beaconcrypt_core::agreement::{self, AgreementEffect};
+		use beaconcrypt_core::agreement::AgreementEffect;
 		use beaconcrypt_core::registration::InitPacket;
 		let control = self.control;
 		let registration = decode_init(buffer)?;
@@ -408,16 +408,16 @@ impl ProviderServer for Server {
 			registration.signature,
 		)?;
 		let authenticated = auth::authenticate_init(self.authentication_pin()?, packet)?;
-		let registration_id = *authenticated.registration_id().as_bytes();
-		let status = if self.consumed_registrations.contains(&registration_id) {
-			verified_pqxdh::RegistrationStatus::Consumed
-		} else {
-			verified_pqxdh::RegistrationStatus::Fresh
-		};
-		verified_pqxdh::validate_registration_status(status).ok()?;
+		let lookup = beaconcrypt_core::peer::begin_registration_lookup(control, authenticated);
+		let registration_id = *lookup.request().as_bytes();
+		let consumed = self.consumed_registrations.contains(&registration_id);
+		let effect = lookup.resume(consumed);
+		if matches!(effect, AgreementEffect::Rejected(_)) {
+			return None;
+		}
 		self.consumed_registrations.try_reserve(1).ok()?;
 		let effect = crate::pqxdh::execute_agreement(
-			agreement::begin_server_agreement(control, status, authenticated),
+			effect,
 			crate::pqxdh::RegistrationKeys {
 				identity_secret: self.identity_sk(),
 				beacon_prekey: None,
@@ -429,10 +429,12 @@ impl ProviderServer for Server {
 			AgreementEffect::ServerComplete(agreement) => agreement,
 			_ => return None,
 		};
-		debug_assert_eq!(agreement.registration_id().as_bytes(), &registration_id);
-		let inserted = self.consumed_registrations.insert(registration_id);
-		debug_assert!(inserted);
-		Some(RegistrationOutput { agreement })
+		let pending = beaconcrypt_core::peer::begin_registration_insert(agreement);
+		let inserted = self
+			.consumed_registrations
+			.insert(*pending.request().as_bytes());
+		let registration = pending.resume(inserted)?;
+		Some(RegistrationOutput { registration })
 	}
 
 	fn build_registration_response(
@@ -440,25 +442,21 @@ impl ProviderServer for Server {
 		reg_out: RegistrationOutput,
 		data: Option<&[u8]>,
 	) -> Option<RegResponse> {
-		use beaconcrypt_core::registration;
 		let control = self.control;
 		let plaintext = data.unwrap_or(REGISTRATION_WITNESS);
-		let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;
-		registration_response_len(plaintext.len(), next_key_id)?;
-		let RegistrationOutput { agreement } = reg_out;
-		let availability = if self.known_ids.contains_key(&next_key_id) {
-			verified_pqxdh::KeyIdAvailability::Occupied
-		} else {
-			verified_pqxdh::KeyIdAvailability::Available
-		};
-		let pending = registration::begin_server_completion(
+		let RegistrationOutput { registration } = reg_out;
+		let lookup = beaconcrypt_core::peer::begin_completion_lookup(
 			control,
-			&self.authentication_pin()?,
-			availability,
-			agreement,
+			self.authentication_pin()?,
+			registration,
 			plaintext,
 		)
 		.ok()?;
+		let next_key_id = lookup.request();
+		registration_response_len(plaintext.len(), next_key_id)?;
+		let pending = lookup
+			.resume(self.known_ids.contains_key(&next_key_id))
+			.ok()?;
 		self.known_ids.try_reserve(1).ok()?;
 		let response = verified_pqxdh::InitialRatchetKdfResponse::from_bytes(
 			crate::ratchet::initial_ratchet_hkdf(pending.request()),
@@ -486,16 +484,20 @@ impl ProviderServer for Server {
 			app_cipher_text: message.application_ciphertext,
 			signature: message.signature,
 		});
-		let (next_control, binding, kernel, buffer) = ready.publish(buffer).ok()?.into_parts();
-		let remote_kid = binding.assigned_key_id();
+		let pending =
+			beaconcrypt_core::peer::begin_peer_insert(control, ready.publish(buffer).ok()?).ok()?;
+		let remote_kid = pending.request();
+		let (peer, finish) = pending.into_parts();
 		let public_key =
-			crypto_sign::PublicKey::from_bytes(binding.beacon_identity_public_key()).ok()?;
-		debug_assert_eq!(remote_kid, next_key_id);
-		let old = self.known_ids.insert(
-			remote_kid,
-			EstablishedRemote::new(public_key, RatchetManager::from_kernel(kernel), binding),
-		);
-		debug_assert!(old.is_none());
+			crypto_sign::PublicKey::from_bytes(peer.binding().beacon_identity_public_key()).ok()?;
+		let inserted = match self.known_ids.entry(remote_kid) {
+			std::collections::hash_map::Entry::Vacant(entry) => {
+				entry.insert(EstablishedRemote::from_peer(public_key, peer));
+				true
+			}
+			std::collections::hash_map::Entry::Occupied(_) => false,
+		};
+		let (next_control, remote_kid, buffer) = finish.finish(inserted).ok()?.into_parts();
 		self.control = next_control;
 		Some(RegResponse {
 			serialized: buffer,
@@ -538,6 +540,77 @@ impl ProviderServer for Server {
 mod size_tests {
 	use super::*;
 	use beaconcrypt_parse::MAX_MESSAGE_SIZE;
+
+	#[test]
+	#[cfg(feature = "beacon")]
+	fn replay_consumption_survives_dropped_or_failed_responses_without_publishing_a_peer() {
+		use crate::{Beacon, ProviderBeacon};
+		let mut server = Server::new(42, Some(&[7; 32]), Some(&[8; 32]));
+		let mut existing = Beacon::new(
+			42,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+		);
+		let init = existing.get_registration_bundle().unwrap();
+		let pending = server.get_shared_secret(&init).unwrap();
+		let response = server.build_registration_response(pending, None).unwrap();
+		existing.finish_registration(&response.serialized).unwrap();
+		let old_peer = serde_json::to_string(server.known_ids.get(&response.kid).unwrap()).unwrap();
+		let counter = server.server_kid();
+
+		let mut requests = Vec::new();
+		for _ in 0..3 {
+			let mut beacon = Beacon::new(
+				42,
+				server.identity_pk().as_bytes(),
+				&server.mldsa_public_key(),
+			);
+			requests.push(beacon.get_registration_bundle().unwrap());
+		}
+		let dropped = server.get_shared_secret(&requests[0]).unwrap();
+		drop(dropped);
+		let failed = server.get_shared_secret(&requests[1]).unwrap();
+		assert!(
+			server
+				.build_registration_response(failed, Some(b""))
+				.is_none()
+		);
+		assert_eq!(server.server_kid(), counter);
+		assert_eq!(server.known_ids.len(), 1);
+		assert_eq!(
+			serde_json::to_string(server.known_ids.get(&response.kid).unwrap()).unwrap(),
+			old_peer
+		);
+		for request in &requests[..2] {
+			assert!(server.get_shared_secret(request).is_none());
+		}
+
+		let pending = server.get_shared_secret(&requests[2]).unwrap();
+		let new_peer = server
+			.build_registration_response(pending, Some(b"new peer"))
+			.unwrap();
+		assert_eq!(new_peer.kid, counter + 1);
+		assert_eq!(server.server_kid(), counter + 1);
+		assert_eq!(server.known_ids.len(), 2);
+		assert!(server.get_shared_secret(&requests[2]).is_none());
+		assert_eq!(
+			serde_json::to_string(server.known_ids.get(&response.kid).unwrap()).unwrap(),
+			old_peer
+		);
+		let frame = server
+			.encrypt_message(b"existing peer still works", response.kid)
+			.unwrap();
+		assert_eq!(
+			existing.decrypt_message(&frame).unwrap().plaintext,
+			b"existing peer still works"
+		);
+		let restored = Server::deserialize_state(&server.serialize_state().unwrap()).unwrap();
+		assert_eq!(restored.server_kid(), counter + 1);
+		assert_eq!(
+			restored.consumed_registrations,
+			server.consumed_registrations
+		);
+	}
 
 	#[test]
 	#[cfg(feature = "beacon")]

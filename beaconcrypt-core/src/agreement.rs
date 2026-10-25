@@ -105,11 +105,11 @@ impl<'a> AgreementState<'a> {
 }
 
 /// Begin only from the core-owned authenticated request; field pairing is internal.
-pub fn begin_server_agreement(
+pub fn begin_server_agreement<'a>(
 	control: ServerState,
 	status: RegistrationStatus,
 	authenticated: AuthenticatedInit,
-) -> AgreementEffect<'static> {
+) -> AgreementEffect<'a> {
 	if pqxdh::validate_registration_status(status).is_err() {
 		return AgreementEffect::Rejected(None);
 	}

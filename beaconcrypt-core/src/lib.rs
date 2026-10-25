@@ -7,6 +7,7 @@ pub mod agreement;
 pub mod authentication;
 pub mod commitment;
 pub mod constants;
+pub mod peer;
 pub mod pqxdh;
 pub mod ratchet;
 pub mod record;
