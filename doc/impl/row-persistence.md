@@ -1,5 +1,7 @@
 # Database-independent row persistence
 
+This is the historical completion record for the uncached row implementation at `b1d297d13a42cdd1bb78befac655822e468a4b5a`, before the optional decoded-peer cache and PostgreSQL benchmark extension. Test counts, mutation totals, and SQLite results below describe that milestone. The [cached row persistence completion record](cached-row-persistence.md) documents the later implementation and its current validation.
+
 This implementation starts from `codex/mldsa65-transcript` at `278204b921ae31a3e900cf21f690184173e531f5` and lives on `codex/row-persistence`. The library exposes an application-owned transaction interface over opaque keys and values. It neither selects a database nor includes a database driver in its normal dependency graph.
 
 `RowServer` retains only immutable server identity material between calls. Ordinary sends and receives load one peer, run the existing protocol implementation, and replace that peer only when its state changes. Each peer contains both ratchet directions, the bounded skipped-key cache, and the authenticated peer identities. The independent row generation also advances when a cached receive consumes a key without moving the receive frontier. Handles opened by different workers coordinate through the application's authoritative database.
@@ -10,7 +12,7 @@ The Rust API has corresponding C, native Go and Python bindings. The SQLite adap
 
 Application transaction composition adds callback-scoped sessions for opaque application rows and zero or one native transition. Applications can check authorization and request identity, recover a stored response, or commit a newly encoded response with the peer update. Registration composition preserves separate acceptance and completion commits, with application-owned incomplete receipts and private pending native material. The library defines no request IDs, response formats, inbox/outbox schema, retention policy, or database driver. The [integration design](row-delivery-design.md) documents the implemented boundary and the atomic batch storage capability a future Mythic provider migration needs.
 
-## Validation
+## Validation of the uncached row milestone
 
 All 418 runtime library and integration tests passed, including 17 file-backed row tests and the composition unit tests. This covers row access counts, restart, independent peer records, cached receives, malformed rows, authentication rejection, replay, concurrent workers and registrations, transaction rollback, uncertain commit, callback misuse, and output suppression. Concurrent duplicate requests recover one exact durable receipt with one native receive, and an authenticated peer mismatch rolls back application and ratchet changes before a valid retry. Two additional C bridge tests verify sticky recursion and argument failures before native access. All 93 Python tests passed, including SQLite-backed composition and recovery tests. The complete Go race suite and the no-CGO unsupported-path test passed. Server-only and beacon-only feature checks, workspace Clippy with all targets and features, doctests, formatting, and release benchmark compilation also passed. The SQLite example was exercised against a persistent file during the initial draft.
 
