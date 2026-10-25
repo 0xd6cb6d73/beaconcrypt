@@ -384,7 +384,7 @@ fn validate_serial_report(path: &std::path::Path, backend: &str) {
 				"page_size=4096",
 				"cache_size=-20000",
 				"wal_autocheckpoint=1000",
-				"busy_timeout_ms=5000",
+				"busy_timeout_ms=600000",
 			] {
 				assert!(
 					declared.contains(setting),
