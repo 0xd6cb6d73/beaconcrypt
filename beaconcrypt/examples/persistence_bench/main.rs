@@ -70,7 +70,17 @@ struct Options {
 }
 
 fn parse_list(value: &str) -> Result<Vec<usize>> {
-	value.split(',').map(|part| Ok(part.parse()?)).collect()
+	let mut seen = std::collections::HashSet::new();
+	value
+		.split(',')
+		.map(|part| {
+			let value = part.parse()?;
+			if !seen.insert(value) {
+				return Err(format!("duplicate list axis value: {value}").into());
+			}
+			Ok(value)
+		})
+		.collect()
 }
 
 fn options() -> Result<Option<Options>> {
