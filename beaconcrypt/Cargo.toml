@@ -22,6 +22,11 @@ name = "sqlite"
 path = "examples/sqlite/main.rs"
 required-features = ["pqxdh", "beacon", "server"]
 
+[[example]]
+name = "persistence_bench"
+path = "examples/persistence_bench/main.rs"
+required-features = ["pqxdh", "beacon", "server"]
+
 [[test]]
 name = "row_persistence"
 path = "tests/row_persistence.rs"
