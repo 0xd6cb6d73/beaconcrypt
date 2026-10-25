@@ -11,8 +11,7 @@ use crate::pqxdh::{derive_root_key_input, shared_secrets, zeroize_shared_secrets
 #[cfg(test)]
 use crate::ratchet::finish_initial_ratchet_kdf;
 use crate::ratchet::{
-	RatchetManager, RatchetStatus, decrypt_message_with_ratchet,
-	decrypt_registration_message_with_ratchet, encrypt_message_with_ratchet,
+	RatchetManager, RatchetStatus, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
 };
 
 struct RegistrationAuthentication {
@@ -455,7 +454,7 @@ impl ProviderBeacon for Beacon {
 
 	fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {
 		use beaconcrypt_core::agreement::{self, AgreementEffect};
-		use beaconcrypt_core::registration::{self as registration, InitialOpened, ResponsePacket};
+		use beaconcrypt_core::registration::{self as registration, ResponsePacket};
 		let aborted = match &self.state {
 			BeaconState::InitSent { pending, .. } => pending.aborted_state(),
 			_ => return None,
@@ -509,45 +508,58 @@ impl ProviderBeacon for Beacon {
 		let response = verified_pqxdh::InitialRatchetKdfResponse::from_bytes(
 			crate::ratchet::initial_ratchet_hkdf(pending.request()),
 		);
-		let mut pending = match pending.resume(Some(response)) {
-			Ok(pending) => pending,
+		let mut effect = match pending.resume(Some(response)) {
+			Ok(effect) => effect,
 			Err(control) => {
 				self.state = BeaconState::Aborted { control };
 				return None;
 			}
 		};
-		let mut ratchet = RatchetManager::from_kernel(pending.take_kernel()?);
-		let request = pending.request();
-		let opened = decrypt_registration_message_with_ratchet(
-			request.ciphertext,
-			request.sender_key_id,
-			request.associated_data,
-			&mut ratchet,
-		);
-		let result = pending.resume(
-			ratchet.into_kernel(),
-			opened.as_ref().map(|opened| InitialOpened {
-				plaintext: &opened.plaintext,
-				sequence: opened.seq,
-				sender_key_id: opened.key_id,
-			}),
-		);
-		let completed = match result {
-			Ok(completed) => completed,
-			Err(control) => {
-				self.state = BeaconState::Aborted { control };
-				return None;
-			}
-		};
-		let (control, binding, kernel, application) = completed.into_parts();
-		let plaintext = application.to_vec();
-		self.identity_key_kid = binding.assigned_key_id();
-		self.state = BeaconState::Established {
-			control,
-			binding,
-			ratchet: RatchetManager::from_kernel(kernel),
-		};
-		Some(plaintext)
+		loop {
+			let next = match effect {
+				registration::BeaconInitialOpen::KdfRequested(pending) => {
+					let response = crate::ratchet::ratchet_hkdf(pending.request());
+					pending.resume(Some(response))
+				}
+				registration::BeaconInitialOpen::CommitmentRequested(mut pending) => {
+					let commitment =
+						crate::ratchet::execute_commitment_hash(pending.transcript_mut());
+					let matches = match commitment {
+						Some(commitment) => {
+							libsodium_rs::utils::memcmp(&commitment, pending.supplied_commitment())
+						}
+						None => false,
+					};
+					pending.resume(matches)
+				}
+				registration::BeaconInitialOpen::AeadRequested(pending) => {
+					let plaintext = crate::ratchet::execute_open_request(pending.request());
+					let completed = match pending.finish(plaintext.as_deref()) {
+						Ok(completed) => completed,
+						Err(control) => {
+							self.state = BeaconState::Aborted { control };
+							return None;
+						}
+					};
+					let (control, binding, kernel, application) = completed.into_parts();
+					let plaintext = application.to_vec();
+					self.identity_key_kid = binding.assigned_key_id();
+					self.state = BeaconState::Established {
+						control,
+						binding,
+						ratchet: RatchetManager::from_kernel(kernel),
+					};
+					return Some(plaintext);
+				}
+			};
+			effect = match next {
+				Ok(effect) => effect,
+				Err(control) => {
+					self.state = BeaconState::Aborted { control };
+					return None;
+				}
+			};
+		}
 	}
 }
 

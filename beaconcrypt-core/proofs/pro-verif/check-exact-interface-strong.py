@@ -251,9 +251,9 @@ TOKEN_SHA256 = {
 # Reviewed classical projection of the ML-DSA source; see doc/impl/mldsa-source-pins.md.
 # Full authentication/AD lifting is not inferred from these whole-file tripwires.
 SOURCE_SHA256 = {
-    "beaconcrypt/src/beacon.rs": "28fdde51b14eb4c7d44552dd5828cb036b4ad845a0434d9b5dfb84a628d43734",
-    "beaconcrypt/src/server.rs": "fe723eba1b1f8b84c37a1272a9326b93d6a5d987b2b6288df47bbf1e1e302bc3",
-    "beaconcrypt/src/ratchet.rs": "7aa3675eb4f340523da263b26294af9d10e060c2ded34226d0789aaa7c9c7ce4",
+    "beaconcrypt/src/beacon.rs": "e041cd9d18eab646e1cf4266156295cc118ddfd30dabe2e407c7a14bc3e9956b",
+    "beaconcrypt/src/server.rs": "378f61af4648ec65c4ee158f867dd6ccaff8abbb8eccd3b8098f70dd31c6bf5e",
+    "beaconcrypt/src/ratchet.rs": "91b83d6f519a9453d81911e71262a46ddaa529f8ffd1906ad50672792b6aa828",
     "beaconcrypt/src/shared.rs": "29367e958808b0c11d75b5ee1659dd518ea8f7d5379c94fcddb287cfc122183d",
     "beaconcrypt/src/pqxdh.rs": "4d786bf9f42a8f05204bc871f987f2b93440238672120af16c02f6837b11c52d",
     "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018",
@@ -261,11 +261,12 @@ SOURCE_SHA256 = {
     "beaconcrypt-core/src/ratchet.rs": "3ed4d65ed1a63605819f8e685707d47b718a91ea9ee23069da88501c8031fa51",
     "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
     "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
-    "beaconcrypt-core/src/record.rs": "2246e63184225fe95f7596454db9380a71c88702b2b57756513cfdcdd9d6623d",
+    "beaconcrypt-core/src/record.rs": "530f820ec1998cb60ce9f2d6666f33feabcfcc597fd06997d1272d3abba9edc0",
     "beaconcrypt-core/src/session.rs": "3779c778ce4f8ec534c2fa610c0a334302ada76fc5cd601ade575802ff9c07c4",
     "beaconcrypt/src/auth.rs": "e4119ce56650add757b83144f728aabc84904219e4f3fc3678fdce7028ebca29",
     "beaconcrypt-core/src/agreement.rs": "cd4f62dab7d18c9237ad7ce46480ae76faf8e9983b97a9f7af34473550acbabb",
-    "beaconcrypt-core/src/registration.rs": "a27884eb8e09752c84f997472652ad54362444d99bf4c104caef0367dbe49f1d"
+    "beaconcrypt-core/src/registration.rs": "fb6f679499585a9d9976abaea31f8dbd8f68f53f6c0f1deb7462ee393acf9f25",
+    "beaconcrypt-core/src/record_effects.rs": "dbdf79661a17c8d8c128ff349a7efe906d6713912e5510c9a0476b0c3efad2b5",
 }
 
 

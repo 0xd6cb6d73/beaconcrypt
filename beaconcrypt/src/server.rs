@@ -9,7 +9,6 @@ use crate::pqxdh::AD_SIZE;
 use crate::ratchet::KeyMaterial;
 use crate::ratchet::{
 	RatchetManager, RatchetStatus, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
-	encrypt_registration_message_with_ratchet,
 };
 use crate::shared::{
 	EstablishedRemote, REGISTRATION_WITNESS, deserialize_server_state, roles,
@@ -21,7 +20,7 @@ use beaconcrypt_core::session::ServerAuthenticationPin;
 use beaconcrypt_core::session::SessionBinding;
 use beaconcrypt_parse::{KexResponse, decode_init};
 use libsodium_rs::{crypto_sign, ensure_init};
-use zeroize::{Zeroize, Zeroizing};
+use zeroize::Zeroizing;
 
 pub struct Server {
 	identity_key: crypto_sign::KeyPair,
@@ -464,35 +463,16 @@ impl ProviderServer for Server {
 		let response = verified_pqxdh::InitialRatchetKdfResponse::from_bytes(
 			crate::ratchet::initial_ratchet_hkdf(pending.request()),
 		);
-		let mut pending = pending.resume(Some(response)).ok()?;
-		let mut ratchet = RatchetManager::from_kernel(pending.take_kernel()?);
-		let request = pending.request();
-		let length = request.plaintext[0]
-			.len()
-			.checked_add(request.plaintext[1].len())?;
-		let mut authenticated_plaintext = Vec::new();
-		authenticated_plaintext.try_reserve_exact(length).ok()?;
-		for part in request.plaintext {
-			authenticated_plaintext.extend_from_slice(part);
-		}
-		let encrypted = encrypt_registration_message_with_ratchet(
-			&authenticated_plaintext,
-			request.target_key_id,
-			request.sender_key_id,
-			request.associated_data,
-			&mut ratchet,
-		);
-		authenticated_plaintext.zeroize();
-		let sequence = encrypted.as_ref().map_or(0, |encrypted| encrypted.seq);
-		let pending = pending
-			.resume(
-				ratchet.into_kernel(),
-				sequence,
-				encrypted
-					.as_ref()
-					.map(|encrypted| encrypted.ciphertext.as_slice()),
-			)
-			.ok()?;
+		let pending = pending.resume(Some(response)).ok()?;
+		let response = crate::ratchet::ratchet_hkdf(pending.request());
+		let pending = pending.resume(Some(response)).ok()?;
+		let detached = crate::ratchet::execute_seal_request(pending.request());
+		let detached_view = detached.as_ref().map(|(body, tag)| (body.as_slice(), *tag));
+		let mut pending = pending.resume(detached_view).ok()?;
+		let commitment = crate::ratchet::execute_commitment_hash(pending.transcript_mut());
+		let pending = pending.resume(commitment).ok()?;
+		let ciphertext = crate::ratchet::execute_write_request(pending.request());
+		let pending = pending.resume(ciphertext.as_deref()).ok()?;
 		let hash = auth::execute_hash(&pending.request());
 		let pending = pending.resume(hash).ok()?;
 		let signature = self.mldsa_identity.sign_requested(&pending.request());

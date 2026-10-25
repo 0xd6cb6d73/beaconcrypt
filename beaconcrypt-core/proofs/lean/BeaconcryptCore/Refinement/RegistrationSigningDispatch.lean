@@ -121,20 +121,19 @@ theorem beacon_source_payload_exact (before : registration.BeaconFingerprint)
     ((request_preimage_exact (.beacon hashing) request requestRun).symm.trans bytes)⟩
 
 /-- A source-produced server command signs the actual sealed ciphertext, assigned ID and retained request digest. -/
-theorem server_source_payload_exact (before : registration.ServerInitialSeal)
-    (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
+theorem server_source_payload_exact (before : registration.ServerRecordWrite)
     (ciphertext : core.option.Option (Slice Std.U8)) :
-    ∃ result, before.resume kernel sequence ciphertext = ok result ∧
+    ∃ result, before.resume ciphertext = ok result ∧
       match result with
-      | .Err previous => previous = before.candidate.previous_state
-      | .Ok hashing => hashing.candidate = before.candidate ∧ hashing.binding = before.binding ∧
+      | .Err previous => previous = before.state.candidate.previous_state
+      | .Ok hashing => hashing.candidate = before.state.candidate ∧ hashing.binding = before.state.binding ∧
           ciphertext = .Some hashing.ciphertext ∧
           (Command.server hashing).payload = MldsaTranscriptAuth.responsePayload
-            (absBytes before.binding.init_hash)
+            (absBytes before.state.binding.init_hash)
             (TranscriptAuthRefinement.absResponse
-              (RegistrationPublication.serverResponseFields before.candidate hashing.ciphertext)) := by
+              (RegistrationPublication.serverResponseFields before.state.candidate hashing.ciphertext)) := by
   obtain ⟨result, run, meaning⟩ :=
-    RegistrationPublication.server_seal_preimage_refines before kernel sequence ciphertext
+    RegistrationPublication.server_seal_preimage_refines before ciphertext
   cases result with
   | Err previous => exact ⟨_, run, meaning⟩
   | Ok hashing =>

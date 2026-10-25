@@ -74,12 +74,6 @@ theorem PublishedBeaconInit_into_parts_total {Encoded : Type} (self : registrati
 theorem BeaconInitialKdf_request_total (self : registration.BeaconInitialKdf) :
     ∃ result, registration.BeaconInitialKdf.request self = ok result := ⟨_, rfl⟩
 
-theorem BeaconInitialOpen_request_total (self : registration.BeaconInitialOpen) :
-    ∃ result, registration.BeaconInitialOpen.request self = ok result := ⟨_, rfl⟩
-
-theorem BeaconInitialOpen_take_kernel_total (self : registration.BeaconInitialOpen) :
-    ∃ result, registration.BeaconInitialOpen.take_kernel self = ok result := ⟨_, rfl⟩
-
 theorem CompletedBeacon_into_parts_total (self : registration.CompletedBeacon) :
     ∃ result, registration.CompletedBeacon.into_parts self = ok result := ⟨_, rfl⟩
 
@@ -88,9 +82,6 @@ theorem ServerInitialKdf_request_total (self : registration.ServerInitialKdf) :
 
 theorem ServerInitialSeal_request_total (self : registration.ServerInitialSeal) :
     ∃ result, registration.ServerInitialSeal.request self = ok result := ⟨_, rfl⟩
-
-theorem ServerInitialSeal_take_kernel_total (self : registration.ServerInitialSeal) :
-    ∃ result, registration.ServerInitialSeal.take_kernel self = ok result := ⟨_, rfl⟩
 
 theorem ServerResponseHash_request_total (self : registration.ServerResponseHash) :
     ∃ result, registration.ServerResponseHash.request self = ok result := ⟨_, rfl⟩
@@ -240,16 +231,6 @@ end BeaconcryptCore.PanicFreedom.RegistrationTrivial
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitialKdf_request_total
-/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitialOpen_request_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitialOpen_request_total
-/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitialOpen_take_kernel_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitialOpen_take_kernel_total
 /-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.CompletedBeacon_into_parts_total' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
@@ -265,11 +246,6 @@ end BeaconcryptCore.PanicFreedom.RegistrationTrivial
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerInitialSeal_request_total
-/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerInitialSeal_take_kernel_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerInitialSeal_take_kernel_total
 /-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerResponseHash_request_total' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

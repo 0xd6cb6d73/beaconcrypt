@@ -229,6 +229,7 @@ def check_publication(directory=HERE):
 def check_source(directory=HERE):
     """Reviewed moved-capability/core publication mapping, with the existing symbolic scope."""
     root = directory.parents[2]
+    SOURCE.check_record_effect_source(root)
     body = SOURCE.rust_body(
         root,
         "beaconcrypt/src/server.rs",
@@ -260,7 +261,13 @@ def check_source(directory=HERE):
             "registration_response_len(plaintext.len(), next_key_id)?;",
             "let RegistrationOutput { agreement } = reg_out;",
             "registration::begin_server_completion(control, &self.authentication_pin()?, availability, agreement, plaintext,)",
-            "encrypt_registration_message_with_ratchet(",
+            "crate::ratchet::ratchet_hkdf(pending.request())",
+            "crate::ratchet::execute_seal_request(pending.request())",
+            "pending.resume(detached_view).ok()?",
+            "crate::ratchet::execute_commitment_hash(pending.transcript_mut())",
+            "pending.resume(commitment).ok()?",
+            "crate::ratchet::execute_write_request(pending.request())",
+            "pending.resume(ciphertext.as_deref()).ok()?",
             "crate::wire::encode_response(KexResponse {",
             "ready.publish(buffer).ok()?.into_parts()",
             "self.control = next_control;",

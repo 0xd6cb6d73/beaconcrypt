@@ -14,6 +14,8 @@ use beaconcrypt_core::{
 	split_ratchet_kdf_output,
 };
 
+#[path = "fidelity/record_effects.rs"]
+mod record_effects;
 #[path = "fidelity/registration_effects.rs"]
 mod registration_effects;
 
@@ -79,6 +81,7 @@ const CORE_AUTHENTICATION: &str = include_str!("../src/authentication.rs");
 const CORE_SESSION: &str = include_str!("../src/session.rs");
 const CORE_REGISTRATION: &str = include_str!("../src/registration.rs");
 const CORE_AGREEMENT: &str = include_str!("../src/agreement.rs");
+const CORE_RECORD_EFFECTS: &str = include_str!("../src/record_effects.rs");
 const CORE_RECORD: &str = include_str!("../src/record.rs");
 const CORE_COMMITMENT: &str = include_str!("../src/commitment.rs");
 const CORE_PQXDH: &str = include_str!("../src/pqxdh.rs");
@@ -416,38 +419,38 @@ const EXPECTED_FACTS: &[&str] = &[
 	"endpoint.symbolic.malicious_registration.fixture.initial_seal.count=1",
 	"endpoint.symbolic.malicious_registration.fixture.initial_seal.calls=server_material_1,associated_data,first_sequence(),SERVER_KEY_ID,registration_payload(binding,MALICIOUS_TASK_SECRET)",
 	"ratchet.driver.kind=synchronous_affine_interpreter",
-	"ratchet.driver.slot.take=Option::take:once_per_encrypt_or_decrypt_helper_after_prechecks",
+	"ratchet.driver.slot.take=Option::take:once_per_outer_helper_after_transport_prechecks",
 	"ratchet.driver.slot.put=assert_empty_then_store_returned_kernel",
 	"ratchet.driver.kdf.reply=ratchet_hkdf(SymmetricRatchetKdfRequest)->RatchetKdfResponse",
 	"ratchet.driver.send.precheck=empty_input_rejected_before_take",
-	"ratchet.driver.send.context=SealFrameContext(bytes,target_kid,sender_kid,associated_data,frame_encoding)",
+	"ratchet.driver.send.context=core_SealFrameContext::new(borrowed_bytes,target_kid,sender_kid,owned_AD,encoding)",
 	"ratchet.driver.send.take=ratchet.refined.take():once",
-	"ratchet.driver.send.begin=begin_send(kernel,same_context):once",
-	"ratchet.driver.send.exhausted=put(returned_kernel),return_none",
+	"ratchet.driver.send.begin=begin_record_send(kernel,same_owned_context):once",
+	"ratchet.driver.send.exhausted=RecordSendStart::Rejected(returned_kernel):outer_put_then_none",
 	"ratchet.driver.send.kdf.request=ratchet_hkdf(same_pending.request()):once",
 	"ratchet.driver.send.kdf.resume=same_pending.resume(same_response)",
-	"ratchet.driver.send.seal=seal_frame(seal.material(),seal.sequence(),seal.context())",
-	"ratchet.driver.send.finish=seal.finish(sealed)",
+	"ratchet.driver.send.seal=SealAead.request(exact_key_nonce_AD_Single_or_Prefixed_plaintext);resume(actual_detached_body_tag)",
+	"ratchet.driver.send.finish=SealWrite.finish(actual_ordered_writer_reply)",
 	"ratchet.driver.send.put=finish_returned_kernel_before_returned_sealed",
-	"ratchet.driver.send.failure=seal.finish(None):advanced_kernel_then_slot_put",
+	"ratchet.driver.send.failure=AEAD_or_hash_or_writer_failure:allocated_send_key_consumed_then_outer_put",
 	"ratchet.driver.send.cancel=not_invoked_in_encrypt_helper",
-	"ratchet.driver.receive.prechecks=empty,complete_CBOR_parse,sender_match,validated_payload_slices:before_take",
-	"ratchet.driver.receive.context=OpenFrameContext::from_frame(ciphertext,associated_data,parsed_sender):shared_body_tag_and_commitment_views",
+	"ratchet.driver.receive.prechecks=empty,complete_CBOR_parse,sender_match:before_take;core_payload_admission_rejects_with_entry_kernel",
+	"ratchet.driver.receive.context=core_OpenFrameContext::from_frame(ciphertext,owned_AD,parsed_sender):retained_body_tag_commitment_views",
 	"ratchet.driver.receive.take=ratchet.refined.take():once",
-	"ratchet.driver.receive.begin=begin_receive(kernel,parsed_sequence,same_context):once",
-	"ratchet.driver.receive.loop=effect_match_without_fixed_iteration_count",
+	"ratchet.driver.receive.begin=begin_record_receive(same_kernel,parsed_sequence,ciphertext,exact_AD,parsed_sender):once",
+	"ratchet.driver.receive.loop=RecordReceiveEffect_match_without_fixed_iteration_count",
 	"ratchet.driver.receive.rejected=put(returned_kernel),return_none",
 	"ratchet.driver.receive.kdf.request=ratchet_hkdf(same_pending.request()):per_arm",
 	"ratchet.driver.receive.kdf.resume=same_pending.resume(same_response)",
 	"ratchet.driver.receive.kdf.slot_put=none_in_ReceiveKdfRequested_arm",
-	"ratchet.driver.receive.no_material=executor_closure_None,open.finish(None),put(returned_kernel),return_none",
-	"ratchet.driver.receive.open=execute_open(same_owned_open):get_material,context,sequence;commitment_then_AEAD",
-	"ratchet.driver.receive.finish=execute_open_calls_same_open.finish(actual_primitive_result)",
+	"ratchet.driver.receive.no_material=core_begin_open_rejects_with_entry_kernel;outer_put_before_none",
+	"ratchet.driver.receive.open=RecordReceiveCommitment_then_RecordReceiveAead:exact_selected_requests_and_actual_replies",
+	"ratchet.driver.receive.finish=same_RecordReceiveAead.finish(actual_optional_plaintext)",
 	"ratchet.driver.receive.put=executor_returned_kernel_before_returning_optional_Decrypted",
 	"ratchet.driver.receive.success=actual_AEAD_plaintext,request_context_sender,request_sequence",
-	"ratchet.driver.receive.failure=open.finish(None):entry_kernel_then_slot_put",
+	"ratchet.driver.receive.failure=record_rejection_or_finish_None:entry_kernel_then_outer_put",
 	"ratchet.driver.receive.cancel=not_invoked_in_decrypt_helper",
-	"ratchet.driver.core.phase_api=SendStart,SendKdf,SendSeal,ReceiveEffect,ReceiveKdf,ReceiveOpen",
+	"ratchet.driver.core.phase_api=RecordSendStart,RecordSendKdf,SealAead,SealCommitment,SealWrite,RecordReceiveEffect,RecordReceiveKdf,RecordReceiveCommitment,RecordReceiveAead:shared_affine_ratchet_phases",
 	"ratchet.driver.core.receive.publication=staged_until_ReceiveOpen.finish(Some)",
 	"ratchet.driver.lean.structural=begin_send_nonexhausted_exact,begin_send_exhausted_restores_entry,SendKdf.request_exact,SendKdf.resume_exact,SendSeal.finish_returns_interpreter_result,begin_receive_rejected_plan_restores_entry,begin_receive_cached_exact,begin_receive_future_request_exact,ReceiveKdf.request_exact,ReceiveOpen.reject_exact,ReceiveOpen.context_exact,ReceiveOpen.future_sequence_exact,ReceiveOpen.future_material_exact,ReceiveOpen.finish_failure_restores_entry,ReceiveOpen.finish_future_success_publishes_same_plaintext,ReceiveOpen.finish_cached_success_publishes_same_plaintext,ReceiveFailureTrace.result_eq_entry",
 	"ratchet.driver.lean.refinement_anchors=conditional:ResponseRefines,begin_send_refines,SendKdf.resume_refines,SendSeal.finish_refines_ideal_send,ReceiveOpen.failure_preserves_refinement,ReceiveFailureTrace.preserves_refinement,OpenReplyRefines,begin_receive_cached_refines,CachedOpenRefines.finish_success_matches_ideal,CachedOpenRefines.finish_success_refines_of_publication",
@@ -641,13 +644,13 @@ const EXPECTED_FACTS: &[&str] = &[
 	"later_registration.source.beacon.staged=only_successful_sequence_1_receive_returns_the_advanced_ratchet_in_staged",
 	"later_registration.source.beacon.commit=Established_stores_the_same_staged_ratchet_after_server_binding_checks",
 	"later_registration.source.beacon.return=Some_returns_authenticated_plaintext_after_the_binding_prefix",
-	"later_registration.source.beacon.first_gate=raw_helper_fixes_sequence_1;finish_registration_checks_decrypted.seq_ne_1_defensively_before_binding",
+	"later_registration.source.beacon.first_gate=core_begin_record_receive_fixes_sequence_1_and_pinned_sender;owned_BeaconRecordAead.finish_checks_nonempty_assigned_ID_prefix_before_binding",
 	"later_registration.adapter.sequence=ordinary_frames_use_frame.seq;raw_registration_uses_constant_1",
-	"later_registration.adapter.begin=begin_receive(same_taken_kernel,key_seq,same_OpenFrameContext)",
-	"later_registration.adapter.loop=each_ReceiveKdfRequested_uses_ratchet_hkdf(same_pending.request)_then_same_pending.resume",
-	"later_registration.adapter.open=execute_open(same_owned_open):selected_material,sequence,and_context",
-	"later_registration.adapter.finish=executor_calls_same_open.finish(actual_primitive_result)_then_driver_puts_returned_kernel_before_result",
-	"later_registration.adapter.result=Decrypted(actual_AEAD_plaintext,open.context.sender_kid,open.sequence)",
+	"later_registration.adapter.begin=begin_record_receive(same_taken_kernel,key_seq,ciphertext,exact_AD,parsed_sender)",
+	"later_registration.adapter.loop=each_RecordReceiveKdf_uses_ratchet_hkdf(same_pending.request)_then_same_pending.resume",
+	"later_registration.adapter.open=core_RecordReceiveCommitment_then_RecordReceiveAead:retained_material_sequence_context",
+	"later_registration.adapter.finish=same_record_AEAD_continuation.finish(actual_optional_plaintext)_then_outer_puts_actual_kernel_before_result",
+	"later_registration.adapter.result=Decrypted(actual_AEAD_plaintext,source_owned_sender,source_owned_sequence)",
 	"later_registration.adapter.no_first_gate=generic_receive_has_no_first_sequence_special_case",
 	"later_registration.core.max_gap=RATCHET_MAX_GAP:50",
 	"later_registration.core.plan=future_derivations=target-receive_sequence;skipped=derivations-1",
@@ -771,6 +774,7 @@ struct Snapshot {
 	core_session: String,
 	core_registration: String,
 	core_agreement: String,
+	core_record_effects: String,
 	core_record: String,
 	core_commitment: String,
 	core_pqxdh: String,
@@ -832,6 +836,7 @@ impl Snapshot {
 			core_session: CORE_SESSION.to_owned(),
 			core_registration: CORE_REGISTRATION.to_owned(),
 			core_agreement: CORE_AGREEMENT.to_owned(),
+			core_record_effects: CORE_RECORD_EFFECTS.to_owned(),
 			core_record: CORE_RECORD.to_owned(),
 			core_commitment: CORE_COMMITMENT.to_owned(),
 			core_pqxdh: CORE_PQXDH.to_owned(),
@@ -1346,14 +1351,12 @@ fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
 		&send,
 		&[
 			"ifframe_encoding{letsequence=ratchet.status().send_sequence().checked_add(1)?;crate::wire::frame_len(bytes.len(),sequence,sender_kid)?;}",
-			"letkernel=ratchet.refined.take();",
+			"execute_record_send(ratchet.refined.take(),context)",
 		],
 		"CBOR size precheck before ratchet",
 	)?;
-	for (name, mode) in [
-		("encrypt_message_with_ratchet", "true"),
-		("encrypt_registration_message_with_ratchet", "false"),
-	] {
+	{
+		let (name, mode) = ("encrypt_message_with_ratchet", "true");
 		let body = rust_body(&snapshot.adapter_ratchet, name)?;
 		require_one_call(
 			&body,
@@ -1813,7 +1816,7 @@ fn validate_record_opening_source(snapshot: &Snapshot) -> Result<(), String> {
 	let adapter = compact(&uncommented_rust(&snapshot.adapter_ratchet)?);
 	require_once(
 		&adapter,
-		"usebeaconcrypt_core::record::{selfasverified_record,OpenFrameContext};",
+		"usebeaconcrypt_core::recordasverified_record;",
 		"CryptoFrame actual extracted wrapper import",
 	)?;
 	for wanted in [
@@ -1845,7 +1848,7 @@ fn validate_record_opening_source(snapshot: &Snapshot) -> Result<(), String> {
 			"CryptoFrame validated payload views",
 		),
 		(
-			"Some(Self{base_ciphertext,tag,commitment,associated_data,sender_kid,})",
+			"Some(Self{base_ciphertext,tag,commitment,associated_data:*associated_data,sender_kid,})",
 			"CryptoFrame validated payload views",
 		),
 	] {
@@ -1872,7 +1875,7 @@ fn validate_record_opening_source(snapshot: &Snapshot) -> Result<(), String> {
 		&[
 			"material.key().as_bytes()",
 			"material.nonce().as_bytes()",
-			"context.associated_data",
+			"&context.associated_data",
 			"context.tag",
 			"opening.sequence()",
 			"context.sender_kid",
@@ -1918,7 +1921,7 @@ fn validate_record_opening_source(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 	require_once(
 		&request,
-		"Some(AeadRequest{key:material.key().as_bytes(),nonce:material.nonce().as_bytes(),ciphertext:context.base_ciphertext,associated_data:context.associated_data,})",
+		"Some(AeadRequest{key:material.key().as_bytes(),nonce:material.nonce().as_bytes(),ciphertext:context.base_ciphertext,associated_data:&context.associated_data,})",
 		"CryptoFrame AEAD request fields",
 	)?;
 	let (_, aead_surface) = snapshot
@@ -1941,97 +1944,7 @@ fn validate_record_opening_source(snapshot: &Snapshot) -> Result<(), String> {
 		"self.opening.finish(Some(opened))",
 		"CryptoFrame one-use receive completion",
 	)?;
-	let open = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
-	require_once(
-		&open,
-		"letmutpending=matchverified_record::begin_open(open){verified_record::OpenStart::OpenRejected(kernel)=>return(kernel,None),verified_record::OpenStart::OpenCommitmentRequested(pending)=>pending,};",
-		"CryptoFrame selected receive material and sequence",
-	)?;
-	require_one_call(
-		&open,
-		"crypto_generichash::generichash",
-		&["pending.transcript().as_bytes()", "None", "COMMITMENT_SIZE"],
-		"CryptoFrame open commitment hash",
-	)?;
-	require_once(
-		&open,
-		"letcommitment=crypto_generichash::generichash(pending.transcript().as_bytes(),None,COMMITMENT_SIZE).ok();",
-		"CryptoFrame actual optional commitment",
-	)?;
-	require_once(
-		&open,
-		"pending.transcript_mut().as_mut_bytes().zeroize();",
-		"CryptoFrame unconditional opening transcript erase",
-	)?;
-	require_once(
-		&open,
-		"letcommitment_matches=matchcommitment{Some(commitment)=>memcmp(&commitment,pending.supplied_commitment()),None=>false,};",
-		"CryptoFrame libsodium memcmp commitment comparison",
-	)?;
-	require_once(
-		&open,
-		"letopening=matchpending.resume(commitment_matches){verified_record::OpenAfterCommitment::OpenCommitmentRejected(kernel)=>{return(kernel,None);}verified_record::OpenAfterCommitment::OpenAeadRequested(opening)=>opening,};",
-		"CryptoFrame commitment gate and same-opening resume",
-	)?;
-	for (wanted, label) in [
-		(
-			"letrequest=opening.request()?;",
-			"CryptoFrame exact AEAD request",
-		),
-		(
-			"letkey:AeadKey=(*request.key).into();",
-			"CryptoFrame open selected key",
-		),
-		(
-			"letnonce:AeadNonce=(*request.nonce).into();",
-			"CryptoFrame open selected nonce",
-		),
-	] {
-		require_once(&open, wanted, label)?;
-	}
-	require_one_call(
-		&open,
-		"crypto_aead::chacha20poly1305_ietf::decrypt",
-		&[
-			"request.ciphertext",
-			"Some(request.associated_data.as_slice())",
-			"&nonce",
-			"&key",
-			"",
-		],
-		"CryptoFrame C-and-tag AEAD open",
-	)?;
-	require_ordered_once(
-		&open,
-		&[
-			"verified_record::begin_open(open)",
-			"letcommitment=crypto_generichash::generichash(",
-			"pending.transcript_mut().as_mut_bytes().zeroize();",
-			"letcommitment_matches=matchcommitment",
-			"letopening=matchpending.resume(commitment_matches)",
-			"letplaintext=(||{",
-			"letrequest=opening.request()?;",
-			"crypto_aead::chacha20poly1305_ietf::decrypt(",
-			"let(kernel,opened)=opening.finish(plaintext);",
-		],
-		"CryptoFrame commitment-before-AEAD order",
-	)?;
-	require_once(
-		&open,
-		"letplaintext=(||{letrequest=opening.request()?;letkey:AeadKey=(*request.key).into();letnonce:AeadNonce=(*request.nonce).into();crypto_aead::chacha20poly1305_ietf::decrypt(request.ciphertext,Some(request.associated_data.as_slice()),&nonce,&key,).ok()})();",
-		"CryptoFrame recovered plaintext binding",
-	)?;
-	require_one_call(
-		&open,
-		"opening.finish",
-		&["plaintext"],
-		"CryptoFrame one-use receive completion",
-	)?;
-	require_once(
-		&open,
-		"(kernel,opened.map(|opened|Decrypted{plaintext:opened.plaintext,key_id:opened.key_id,seq:opened.seq,}),)",
-		"CryptoFrame returned parsed metadata",
-	)?;
+	record_effects::validate(snapshot)?;
 	for (body, bindings) in [
 		(
 			&begin,
@@ -2041,18 +1954,6 @@ fn validate_record_opening_source(snapshot: &Snapshot) -> Result<(), String> {
 		(
 			&finish,
 			&["letplaintext=", "letkey_id=", "letseq=", "letopened="][..],
-		),
-		(
-			&open,
-			&[
-				"letmutpending=",
-				"letcommitment=",
-				"letcommitment_matches=",
-				"letopening=",
-				"letplaintext=",
-				"letrequest=",
-				"let(kernel,opened)=",
-			][..],
 		),
 	] {
 		for binding in bindings {
@@ -2100,98 +2001,14 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		require_once(&ratchet, wanted, label)?;
 	}
 
-	let seal = rust_body(&snapshot.adapter_ratchet, "seal_frame")?;
-	for (wanted, label) in [
-		(
-			"letkey:AeadKey=(*material.key().as_bytes()).into();",
-			"CryptoFrame seal selected key",
-		),
-		(
-			"letnonce:AeadNonce=(*material.nonce().as_bytes()).into();",
-			"CryptoFrame seal selected nonce",
-		),
-	] {
-		require_once(&seal, wanted, label)?;
-	}
-	require_one_call(
-		&seal,
-		"crypto_aead::chacha20poly1305_ietf::encrypt_detached",
-		&[
-			"context.bytes",
-			"Some(context.associated_data.as_slice())",
-			"&nonce",
-			"&key",
-			"",
-		],
-		"CryptoFrame detached AEAD seal",
-	)?;
-	require_one_call(
-		&seal,
-		"build_commitment",
-		&[
-			"material",
-			"context.associated_data.as_slice()",
-			"tag.as_slice()",
-			"key_seq",
-			"context.sender_kid",
-			"",
-		],
-		"CryptoFrame seal commitment mapping",
-	)?;
-	require_ordered_once(
-		&seal,
-		&[
-			"plaintext.append(&muttag)",
-			"plaintext.append(&mutcommitment)",
-		],
-		"CryptoFrame seal payload order",
-	)?;
-	require_once(
-		&seal,
-		"letbuffer=ifcontext.frame_encoding{crate::wire::encode_frame(CryptoFrame{cipher_text:&plaintext,seq:key_seq,key_id:context.sender_kid,})?}else{plaintext};",
-		"CryptoFrame CBOR or raw payload serialization",
-	)?;
-
-	require_once(
-		&seal,
-		"Some(Encrypted{ciphertext:buffer,key_id:context.target_kid,seq:key_seq,})",
-		"CryptoFrame local target metadata",
-	)?;
-
+	record_effects::validate(snapshot)?;
 	let encrypt = rust_body(&snapshot.adapter_ratchet, "encrypt_with_ratchet")?;
 	require_once(
 		&encrypt,
 		"ifbytes.is_empty(){returnNone;}",
 		"CryptoFrame empty-plaintext rejection",
 	)?;
-	require_once(
-		&encrypt,
-		"letcontext=SealFrameContext{bytes,target_kid,sender_kid,associated_data,frame_encoding,};",
-		"CryptoFrame seal context mapping",
-	)?;
-	require_once(
-		&encrypt,
-		"letsealed=seal_frame(seal.material(),seal.sequence(),seal.context());",
-		"CryptoFrame selected send material and sequence",
-	)?;
-	require_once(
-		&encrypt,
-		"let(kernel,sealed)=seal.finish(sealed);",
-		"CryptoFrame one-use send completion",
-	)?;
-	require_ordered_once(
-		&encrypt,
-		&[
-			"ifbytes.is_empty()",
-			"verified_ratchet::begin_send(kernel,context)",
-			"seal_frame(seal.material(),seal.sequence(),seal.context())",
-			"seal.finish(sealed)",
-		],
-		"CryptoFrame empty-input and send ordering",
-	)?;
-
 	validate_record_opening_source(snapshot)?;
-	let open = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
 	let decoder = rust_body(&snapshot.adapter_ratchet, "decode_crypto_frame")?;
 	require_once(
 		&decoder,
@@ -2209,73 +2026,6 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 			"decrypt_payload_with_ratchet(frame.cipher_text,frame.seq,kid,associated_data,ratchet)",
 		],
 		"CryptoFrame parser and gate evaluation order",
-	)?;
-	let payload = rust_body(&snapshot.adapter_ratchet, "decrypt_payload_with_ratchet")?;
-	require_ordered_once(
-		&payload,
-		&[
-			"letcontext=OpenFrameContext::from_frame(ciphertext,associated_data,kid)?;",
-			"letkernel=ratchet.refined.take();",
-			"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);",
-			"verified_ratchet::ReceiveEffect::ReceiveOpenRequested",
-			"execute_open(open)",
-		],
-		"CryptoFrame parsed-sequence ratchet selection",
-	)?;
-	let registration = rust_body(
-		&snapshot.adapter_ratchet,
-		"decrypt_registration_message_with_ratchet",
-	)?;
-	require_once(
-		&registration,
-		"decrypt_payload_with_ratchet(ciphertext,1,sender_kid,associated_data,ratchet)",
-		"registration implicit sequence and pinned sender",
-	)?;
-
-	require_once(
-		&open,
-		"opening.finish(plaintext)",
-		"CryptoFrame one-use receive completion",
-	)?;
-
-	require_once(
-		&open,
-		"opened.map(|opened|Decrypted{plaintext:opened.plaintext,key_id:opened.key_id,seq:opened.seq,})",
-		"CryptoFrame returned parsed metadata",
-	)?;
-
-	let adapter_commitment = rust_body(&snapshot.adapter_ratchet, "build_commitment")?;
-	for (wanted, label) in [
-		(
-			"letkey=material.key().as_bytes();",
-			"CryptoFrame commitment selected key",
-		),
-		(
-			"letnonce=material.nonce().as_bytes();",
-			"CryptoFrame commitment selected nonce",
-		),
-		(
-			"letad=ad.try_into().ok()?;",
-			"CryptoFrame commitment fixed-width AD",
-		),
-		(
-			"lettag=tag.try_into().ok()?;",
-			"CryptoFrame commitment fixed-width retained tag",
-		),
-	] {
-		require_once(&adapter_commitment, wanted, label)?;
-	}
-	require_one_call(
-		&adapter_commitment,
-		"build_commitment_transcript",
-		&["key", "nonce", "ad", "tag", "seq", "kid"],
-		"CryptoFrame adapter-to-core commitment mapping",
-	)?;
-	require_one_call(
-		&adapter_commitment,
-		"crypto_generichash::generichash",
-		&["input.as_bytes()", "None", "COMMITMENT_SIZE"],
-		"CryptoFrame unkeyed commitment hash",
 	)?;
 
 	let core_source = compact(&uncommented_rust(&snapshot.core_commitment)?);
@@ -3634,29 +3384,8 @@ fn validate_adapters() -> Result<(), String> {
 		"pubconstCOMMITMENT_SIZE:usize=64;",
 		"64-byte production commitment output",
 	)?;
-	let seal = rust_body(ADAPTER_RATCHET, "seal_frame")?;
-	require(
-		&seal,
-		"crypto_aead::chacha20poly1305_ietf::encrypt_detached(context.bytes,Some(context.associated_data.as_slice()),&nonce,&key,)",
-		"production detached AEAD seal",
-	)?;
-	require(
-		&seal,
-		"build_commitment(material,context.associated_data.as_slice(),tag.as_slice(),key_seq,context.sender_kid,)",
-		"production seal commitment inputs",
-	)?;
 	validate_record_opening_source(&Snapshot::production())?;
-	let commitment = rust_body(ADAPTER_RATCHET, "build_commitment")?;
-	require(
-		&commitment,
-		"build_commitment_transcript(key,nonce,ad,tag,seq,kid)",
-		"production CTX builder call",
-	)?;
-	require(
-		&commitment,
-		"crypto_generichash::generichash(input.as_bytes(),None,COMMITMENT_SIZE)",
-		"unkeyed unlabeled BLAKE2b-512 call",
-	)?;
+	record_effects::validate(&Snapshot::production())?;
 	Ok(())
 }
 
@@ -3687,89 +3416,14 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 		"ratchet driver typed KDF reply",
 	)?;
 
+	record_effects::validate(snapshot)?;
+	validate_record_opening_source(snapshot)?;
 	let send = rust_body(&snapshot.adapter_ratchet, "encrypt_with_ratchet")?;
 	require_once(
 		&send,
 		"ifbytes.is_empty(){returnNone;}",
 		"ratchet send empty-input precheck",
 	)?;
-	require_once(
-		&send,
-		"letcontext=SealFrameContext{bytes,target_kid,sender_kid,associated_data,frame_encoding,};",
-		"ratchet send exact frame context",
-	)?;
-	require_one_call(
-		&send,
-		"ratchet.refined.take",
-		&[""],
-		"ratchet send affine kernel take",
-	)?;
-	require_one_call(
-		&send,
-		"verified_ratchet::begin_send",
-		&["kernel", "context"],
-		"ratchet send begin effect",
-	)?;
-	require_once(
-		&send,
-		"verified_ratchet::SendStart::SendExhausted{kernel,..}=>{ratchet.refined.put(kernel);returnNone;}verified_ratchet::SendStart::SendKdfRequested(pending)=>pending,",
-		"ratchet send exhausted and KDF branches",
-	)?;
-	require_one_call(
-		&send,
-		"ratchet_hkdf",
-		&["pending.request()"],
-		"ratchet send exact pending request interpretation",
-	)?;
-	require_one_call(
-		&send,
-		"pending.resume",
-		&["response"],
-		"ratchet send same-pending resume",
-	)?;
-	require_one_call(
-		&send,
-		"seal_frame",
-		&["seal.material()", "seal.sequence()", "seal.context()"],
-		"ratchet send seal capability handoff",
-	)?;
-	require_one_call(
-		&send,
-		"seal.finish",
-		&["sealed"],
-		"ratchet send capability finish",
-	)?;
-	let send_puts = all_arguments(&send, "ratchet.refined.put")?;
-	if send_puts != [vec!["kernel".to_owned()], vec!["kernel".to_owned()]] {
-		return Err(format!(
-			"ratchet send returned-kernel puts changed: {send_puts:?}"
-		));
-	}
-	require_once(
-		&send,
-		"ratchet.refined.put(kernel);sealed",
-		"ratchet send returned-kernel put before result",
-	)?;
-	require_ordered(
-		&send,
-		&[
-			"ifbytes.is_empty(){returnNone;}",
-			"letcontext=SealFrameContext",
-			"letkernel=ratchet.refined.take();",
-			"verified_ratchet::begin_send(kernel,context)",
-			"letresponse=ratchet_hkdf(pending.request());",
-			"letseal=pending.resume(response);",
-			"letsealed=seal_frame(seal.material(),seal.sequence(),seal.context());",
-			"let(kernel,sealed)=seal.finish(sealed);",
-			"ratchet.refined.put(kernel);",
-		],
-		"ratchet send synchronous effect order",
-	)?;
-	if !send.ends_with("sealed") {
-		return Err("ratchet send returned sealed result changed".to_owned());
-	}
-	forbid(&send, ".cancel(", "ratchet send production cancellation")?;
-
 	let concrete = compact(&uncommented_rust(&snapshot.core_ratchet_concrete)?);
 	for phase in [
 		"pubenumSendStart<Context>{",
@@ -3806,96 +3460,6 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 		],
 		"ratchet receive prechecks and effect start order",
 	)?;
-	let receive = rust_body(&snapshot.adapter_ratchet, "decrypt_payload_with_ratchet")?;
-	require_ordered(
-		&receive,
-		&[
-			"letcontext=OpenFrameContext::from_frame(ciphertext,associated_data,kid)?;",
-			"letkernel=ratchet.refined.take();",
-			"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);",
-			"loop{",
-		],
-		"ratchet receive prechecks and effect start order",
-	)?;
-
-	require_one_call(
-		&receive,
-		"ratchet.refined.take",
-		&[""],
-		"ratchet receive affine kernel take",
-	)?;
-	require_one_call(
-		&receive,
-		"verified_ratchet::begin_receive",
-		&["kernel", "key_seq", "context"],
-		"ratchet receive begin effect",
-	)?;
-	require_once(
-		&receive,
-		"verified_ratchet::ReceiveEffect::ReceiveRejected{kernel,..}=>{ratchet.refined.put(kernel);returnNone;}",
-		"ratchet receive rejected branch",
-	)?;
-	require_once(
-		&receive,
-		"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);loop{effect=matcheffect{",
-		"ratchet receive effect loop without fixed iteration count",
-	)?;
-	let receive_kdf_arm = section_between(
-		&receive,
-		"verified_ratchet::ReceiveEffect::ReceiveKdfRequested(pending)=>{",
-		"verified_ratchet::ReceiveEffect::ReceiveOpenRequested(open)=>{",
-		"ratchet receive KDF arm",
-	)?;
-	forbid(
-		receive_kdf_arm,
-		"ratchet.refined.put(",
-		"ratchet receive KDF-arm live publication",
-	)?;
-	forbid(
-		&receive,
-		".cancel(",
-		"ratchet receive production cancellation",
-	)?;
-	require_one_call(
-		&receive,
-		"ratchet_hkdf",
-		&["pending.request()"],
-		"ratchet receive exact pending request interpretation",
-	)?;
-	require_one_call(
-		&receive,
-		"pending.resume",
-		&["response"],
-		"ratchet receive same-pending resume",
-	)?;
-	require_once(
-		&receive,
-		"verified_ratchet::ReceiveEffect::ReceiveKdfRequested(pending)=>{letresponse=ratchet_hkdf(pending.request());pending.resume(response)}",
-		"ratchet receive private KDF loop arm",
-	)?;
-	validate_record_opening_source(snapshot)?;
-	require_one_call(
-		&receive,
-		"execute_open",
-		&["open"],
-		"ratchet receive open capability handoff",
-	)?;
-	let receive_puts = all_arguments(&receive, "ratchet.refined.put")?;
-	if receive_puts != [vec!["kernel".to_owned()], vec!["kernel".to_owned()]] {
-		return Err(format!(
-			"ratchet receive returned-kernel puts changed: {receive_puts:?}"
-		));
-	}
-	require_ordered(
-		&receive,
-		&[
-			"let(kernel,opened)=execute_open(open);",
-			"ratchet.refined.put(kernel);",
-			"returnopened;",
-		],
-		"ratchet receive open and terminal publication order",
-	)?;
-
 	let receive_open = section_between(
 		&snapshot.core_ratchet_concrete,
 		"impl<Context> ReceiveOpen<Context>",
@@ -5596,43 +5160,9 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 		"later-registration adapter parsed sequence",
 	)?;
 
-	let adapter = rust_body(&snapshot.adapter_ratchet, "decrypt_payload_with_ratchet")?;
-	for (wanted, label) in [
-		(
-			"letkernel=ratchet.refined.take();",
-			"later-registration adapter entry kernel",
-		),
-		(
-			"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);",
-			"later-registration adapter general receive start",
-		),
-		(
-			"verified_ratchet::ReceiveEffect::ReceiveKdfRequested(pending)=>{letresponse=ratchet_hkdf(pending.request());pending.resume(response)}",
-			"later-registration adapter exact KDF continuation",
-		),
-		(
-			"let(kernel,opened)=execute_open(open);",
-			"later-registration adapter exact open capability",
-		),
-	] {
-		require_once(&adapter, wanted, label)?;
-	}
+	record_effects::validate(snapshot)?;
 	validate_record_opening_source(snapshot)?;
-	require_ordered(
-		&adapter,
-		&[
-			"letcontext=OpenFrameContext::from_frame(ciphertext,associated_data,kid)?;",
-			"letkernel=ratchet.refined.take();",
-			"verified_ratchet::begin_receive(kernel,key_seq,context)",
-			"ratchet_hkdf(pending.request())",
-			"pending.resume(response)",
-			"execute_open(open)",
-			"ratchet.refined.put(kernel)",
-			"returnopened;",
-		],
-		"later-registration adapter parsed-sequence-to-result flow",
-	)?;
-
+	let adapter = rust_body(&snapshot.adapter_ratchet, "decrypt_payload_with_ratchet")?;
 	for forbidden in ["first_sequence", "key_seq==1", "key_seq!=1"] {
 		forbid(
 			&adapter,
@@ -7276,10 +6806,11 @@ fn replace_receive_surface(source: &mut String, from: &str, to: &str) {
 	for name in [
 		"decode_crypto_frame",
 		"encrypted_frame_sender",
-		"execute_open",
+		"execute_open_request",
+		"execute_commitment_hash",
+		"execute_record_receive",
 		"decrypt_message_with_ratchet",
 		"decrypt_payload_with_ratchet",
-		"decrypt_registration_message_with_ratchet",
 	] {
 		let marker = format!("fn {name}(");
 		let start = source
@@ -8160,7 +7691,7 @@ fn later_registration_sequence_three_poststate_is_exact_and_nonvacuous() {
 	);
 }
 
-const LATER_REGISTRATION_MUTATION_COUNT: usize = 395;
+const LATER_REGISTRATION_MUTATION_COUNT: usize = 387;
 
 #[test]
 fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
@@ -9431,24 +8962,6 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"later-registration adapter parsed sequence",
 		),
 		(
-			"later_registration_adapter_kernel_substituted",
-			"let kernel = ratchet.refined.take();",
-			"let kernel = replacement_kernel;",
-			"later-registration adapter entry kernel",
-		),
-		(
-			"later_registration_adapter_request_substituted",
-			"ratchet_hkdf(pending.request())",
-			"ratchet_hkdf(replacement_request)",
-			"later-registration adapter exact KDF continuation",
-		),
-		(
-			"later_registration_adapter_pending_substituted",
-			"pending.resume(response)",
-			"replacement_pending.resume(response)",
-			"later-registration adapter exact KDF continuation",
-		),
-		(
 			"later_registration_adapter_open_material_substituted",
 			"let material = match opening.material()",
 			"let material = match replacement_material",
@@ -9466,41 +8979,13 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"let context = replacement_context;",
 			"CryptoFrame selected receive material and sequence",
 		),
-		(
-			"later_registration_adapter_finish_substituted",
-			"opening.finish(plaintext)",
-			"opening.finish(replacement_opened)",
-			"CryptoFrame commitment-before-AEAD order",
-		),
-		(
-			"later_registration_adapter_result_sequence_substituted",
-			"seq: opened.seq,",
-			"seq: 1,",
-			"CryptoFrame returned parsed metadata",
-		),
 	] {
 		assert_later_registration_rejected(name, diagnostic, |snapshot| {
 			replace_record_surface(snapshot, from, to);
 		});
 		mutation_count += 1;
 	}
-	for (name, argument, replacement) in [
-		(
-			"later_registration_adapter_begin_kernel_substituted",
-			0usize,
-			"replacement_kernel",
-		),
-		(
-			"later_registration_adapter_begin_sequence_substituted",
-			1,
-			"key_seq.wrapping_add(1)",
-		),
-		(
-			"later_registration_adapter_begin_context_substituted",
-			2,
-			"replacement_context",
-		),
-	] {
+	for (name, argument, replacement) in [] {
 		assert_later_registration_rejected(
 			name,
 			"later-registration adapter general receive start",
@@ -9519,13 +9004,15 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 	}
 	assert_later_registration_rejected(
 		"later_registration_adapter_adds_first_sequence_gate",
-		"later-registration adapter first-sequence gate",
+		"record effects",
 		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_ratchet,
-				"pub(crate) fn decrypt_message_with_ratchet(",
-				"let context = OpenFrameContext::from_frame(ciphertext, associated_data, kid)?;",
-				"let context = OpenFrameContext::from_frame(ciphertext, associated_data, kid)?;\n\tif key_seq != 1 { return None; }",
+			registration_effects::replace_contract(
+				snapshot,
+				"ratchet",
+				"",
+				"decrypt_payload_with_ratchet",
+				"let effect = records::begin_record_receive(",
+				"if key_seq != 1 {return None;} let effect = records::begin_record_receive(",
 			);
 		},
 	);
@@ -11740,7 +11227,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 	assert_eq!(mutation_count, LATER_REGISTRATION_MUTATION_COUNT);
 }
 
-const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;
+const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 201;
 
 #[test]
 fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
@@ -12043,30 +11530,6 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 	}
 	for (name, from, to, diagnostic) in [
 		(
-			"cbor_seal_payload",
-			"cipher_text: &plaintext,",
-			"cipher_text: &tag,",
-			"CryptoFrame CBOR or raw payload serialization",
-		),
-		(
-			"cbor_seal_sequence",
-			"seq: key_seq,",
-			"seq: context.sender_kid,",
-			"CryptoFrame CBOR or raw payload serialization",
-		),
-		(
-			"cbor_seal_sender",
-			"key_id: context.sender_kid,",
-			"key_id: context.target_kid,",
-			"CryptoFrame CBOR or raw payload serialization",
-		),
-		(
-			"cbor_seal_raw_branch",
-			"} else {\n\t\tplaintext\n\t};",
-			"} else {\n\t\tvec![]\n\t};",
-			"CryptoFrame CBOR or raw payload serialization",
-		),
-		(
 			"cbor_send_size_gate",
 			"crate::wire::frame_len(bytes.len(), sequence, sender_kid)?;",
 			"crate::wire::frame_len(0, sequence, sender_kid)?;",
@@ -12076,25 +11539,13 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 			"cbor_receive_sender_gate",
 			"if kid != expected_sender_kid {",
 			"if kid != frame.key_id {",
-			"CryptoFrame parser and gate evaluation order",
+			"record effects",
 		),
 		(
 			"cbor_receive_sequence",
 			"frame.cipher_text, frame.seq, kid",
 			"frame.cipher_text, 1, kid",
-			"CryptoFrame parser and gate evaluation order",
-		),
-		(
-			"cbor_registration_implicit_sequence",
-			"decrypt_payload_with_ratchet(ciphertext, 1, sender_kid",
-			"decrypt_payload_with_ratchet(ciphertext, 3, sender_kid",
-			"registration implicit sequence and pinned sender",
-		),
-		(
-			"cbor_registration_pinned_sender",
-			"decrypt_payload_with_ratchet(ciphertext, 1, sender_kid",
-			"decrypt_payload_with_ratchet(ciphertext, 1, 0",
-			"registration implicit sequence and pinned sender",
+			"record effects",
 		),
 	] {
 		assert_rejected(name, diagnostic, |snapshot| {
@@ -12103,17 +11554,24 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		mutation_count += 1;
 	}
 	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
-		let values = ["&plaintext", "key_seq", "context.sender_kid"];
+		let values = [
+			"parts",
+			"self.seal.sequence()",
+			"self.seal.context().sender_kid",
+		];
 		let permuted = permutation.map(|field| values[field]);
 		assert_rejected(
 			&format!("cryptoframe_builder_mapping_permutation_{index}"),
-			"CryptoFrame CBOR or raw payload serialization",
+			"record effects",
 			|snapshot| {
-				replace_once(
-					&mut snapshot.adapter_ratchet,
-					"cipher_text: &plaintext,\n\t\t\tseq: key_seq,\n\t\t\tkey_id: context.sender_kid,",
+				registration_effects::replace_contract(
+					snapshot,
+					"records",
+					"impl SealWrite",
+					"request",
+					"Frame{parts,sequence:self.seal.sequence(),sender:self.seal.context().sender_kid,}",
 					&format!(
-						"cipher_text: {},\nseq: {},\nkey_id: {},",
+						"Frame{{parts:{},sequence:{},sender:{},}}",
 						permuted[0], permuted[1], permuted[2]
 					),
 				);
@@ -12123,18 +11581,6 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 	}
 
 	for (name, from, to, diagnostic) in [
-		(
-			"cryptoframe_open_uses_zero_key",
-			"let key: AeadKey = (*request.key).into();",
-			"let key: AeadKey = [0u8; AEAD_KEY_LEN].into();",
-			"CryptoFrame open selected key",
-		),
-		(
-			"cryptoframe_open_uses_zero_nonce",
-			"let nonce: AeadNonce = (*request.nonce).into();",
-			"let nonce: AeadNonce = [0u8; AEAD_NONCE_LEN].into();",
-			"CryptoFrame open selected nonce",
-		),
 		(
 			"cryptoframe_open_tag_slice_starts_late",
 			"base_ciphertext.len() - AEAD_TAG_SIZE..",
@@ -12154,42 +11600,6 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 			"CryptoFrame open commitment mapping",
 		),
 		(
-			"cryptoframe_open_commitment_slice_starts_late",
-			"memcmp(&commitment, pending.supplied_commitment())",
-			"memcmp(&commitment, &pending.supplied_commitment()[1..])",
-			"CryptoFrame libsodium memcmp commitment comparison",
-		),
-		(
-			"cryptoframe_open_commitment_slice_ends_early",
-			"memcmp(&commitment, pending.supplied_commitment())",
-			"memcmp(&commitment, &pending.supplied_commitment()[..COMMITMENT_SIZE - 1])",
-			"CryptoFrame libsodium memcmp commitment comparison",
-		),
-		(
-			"cryptoframe_open_decrypts_ciphertext_without_tag",
-			"request.ciphertext,",
-			"&request.ciphertext[..request.ciphertext.len() - AEAD_TAG_LEN],",
-			"CryptoFrame C-and-tag AEAD open",
-		),
-		(
-			"cryptoframe_open_decrypts_commitment_too",
-			"request.ciphertext,",
-			"pending.supplied_commitment(),",
-			"CryptoFrame C-and-tag AEAD open",
-		),
-		(
-			"cryptoframe_open_decrypt_prefix_boundary_late",
-			"request.ciphertext,",
-			"&request.ciphertext[..request.ciphertext.len() + 1],",
-			"CryptoFrame C-and-tag AEAD open",
-		),
-		(
-			"cryptoframe_open_omits_associated_data",
-			"Some(request.associated_data.as_slice()),",
-			"None,",
-			"CryptoFrame C-and-tag AEAD open",
-		),
-		(
 			"cryptoframe_open_commitment_swaps_sequence_sender",
 			"\t\topening.sequence(),\n\t\tcontext.sender_kid,",
 			"\t\tcontext.sender_kid,\n\t\topening.sequence(),",
@@ -12204,64 +11614,21 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 
 	assert_rejected(
 		"cryptoframe_open_decrypts_before_commitment_equality",
-		"CryptoFrame commitment-before-AEAD order",
+		"record effects",
 		|snapshot| {
-			let from = snapshot
-				.adapter_ratchet
-				.find("\tlet commitment_matches = match commitment {")
-				.unwrap();
-			let to = snapshot.adapter_ratchet[from..]
-				.find("\tlet plaintext = (|| {")
-				.unwrap() + from;
-			let gate = snapshot.adapter_ratchet[from..to].to_owned();
-			snapshot.adapter_ratchet.replace_range(from..to, "");
-			replace_receive_surface(
-				&mut snapshot.adapter_ratchet,
-				"\tlet (kernel, opened) = opening.finish(plaintext);",
-				&format!("{gate}\tlet (kernel, opened) = opening.finish(plaintext);"),
+			registration_effects::replace_contract(
+				snapshot,
+				"ratchet",
+				"",
+				"execute_record_receive",
+				"letactual=execute_commitment_hash(pending.transcript_mut());",
+				"letpremature=execute_open_request(replacement_aead_request);letactual=execute_commitment_hash(pending.transcript_mut());",
 			);
 		},
 	);
 	mutation_count += 1;
 
-	for (name, from, to, diagnostic) in [
-		(
-			"cryptoframe_commitment_extracts_zero_key",
-			"let key = material.key().as_bytes();",
-			"let key = &[0u8; AEAD_KEY_LEN];",
-			"CryptoFrame commitment selected key",
-		),
-		(
-			"cryptoframe_commitment_extracts_zero_nonce",
-			"let nonce = material.nonce().as_bytes();",
-			"let nonce = &[0u8; AEAD_NONCE_LEN];",
-			"CryptoFrame commitment selected nonce",
-		),
-		(
-			"cryptoframe_commitment_converts_tag_as_ad",
-			"let ad = ad.try_into().ok()?;",
-			"let ad = tag.try_into().ok()?;",
-			"CryptoFrame commitment fixed-width AD",
-		),
-		(
-			"cryptoframe_commitment_uses_ad_prefix_as_tag",
-			"let tag = tag.try_into().ok()?;",
-			"let tag = ad[..AEAD_TAG_LEN].try_into().ok()?;",
-			"CryptoFrame commitment fixed-width retained tag",
-		),
-		(
-			"cryptoframe_commitment_core_call_swaps_sequence_sender",
-			"build_commitment_transcript(key, nonce, ad, tag, seq, kid)",
-			"build_commitment_transcript(key, nonce, ad, tag, kid, seq)",
-			"CryptoFrame adapter-to-core commitment mapping",
-		),
-		(
-			"cryptoframe_commitment_hash_output_shortened",
-			"generichash(input.as_bytes(), None, COMMITMENT_SIZE)",
-			"generichash(input.as_bytes(), None, COMMITMENT_SIZE - 1)",
-			"CryptoFrame unkeyed commitment hash",
-		),
-	] {
+	for (name, from, to, diagnostic) in [] {
 		assert_rejected(name, diagnostic, |snapshot| {
 			replace_once_after(
 				&mut snapshot.adapter_ratchet,
@@ -12726,18 +12093,6 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 			"let tag = match tag.try_into() {",
 			"let tag = match supplied_commitment[..AEAD_TAG_SIZE].try_into() {",
 			"CryptoFrame validated payload views",
-		),
-		(
-			"cryptoframe_executor_shadows_plaintext",
-			"let (kernel, opened) = opening.finish(plaintext);",
-			"let plaintext = Some(vec![0]);\n\tlet (kernel, opened) = opening.finish(plaintext);",
-			"CryptoFrame executor binding shadowed",
-		),
-		(
-			"cryptoframe_executor_accepts_claimed_plaintext",
-			"\t\t.ok()\n\t})();",
-			"\t\t.ok().or_else(|| Some(vec![0]))\n\t})();",
-			"CryptoFrame recovered plaintext binding",
 		),
 	] {
 		assert_rejected(name, diagnostic, |snapshot| {
@@ -13653,7 +13008,7 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 	assert_eq!(mutation_count, ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT);
 }
 
-const RATCHET_EFFECT_DRIVER_MUTATION_COUNT: usize = 154;
+const RATCHET_EFFECT_DRIVER_MUTATION_COUNT: usize = 106;
 
 #[test]
 fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
@@ -13715,134 +13070,7 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		mutation_count += 1;
 	}
 
-	for (name, from, to, diagnostic) in [
-		(
-			"ratchet_driver_send_context_swaps_target_and_sender",
-			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data,\n\t\tframe_encoding,\n\t};",
-			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid: sender_kid,\n\t\tsender_kid: target_kid,\n\t\tassociated_data,\n\t\tframe_encoding,\n\t};",
-			"ratchet send exact frame context",
-		),
-		(
-			"ratchet_driver_send_context_replaces_plaintext",
-			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data,\n\t\tframe_encoding,\n\t};",
-			"let context = SealFrameContext {\n\t\tbytes: &[],\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data,\n\t\tframe_encoding,\n\t};",
-			"ratchet send exact frame context",
-		),
-		(
-			"ratchet_driver_send_context_replaces_associated_data",
-			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data,\n\t\tframe_encoding,\n\t};",
-			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data: &[0; AD_SIZE],\n\t};",
-			"ratchet send exact frame context",
-		),
-		(
-			"ratchet_driver_send_duplicates_kernel_take",
-			"let kernel = ratchet.refined.take();",
-			"let kernel = ratchet.refined.take();\n\tratchet.refined.put(kernel);\n\tlet kernel = ratchet.refined.take();",
-			"ratchet send affine kernel take",
-		),
-		(
-			"ratchet_driver_send_omits_begin",
-			"verified_ratchet::begin_send(kernel, context)",
-			"panic!(\"begin send omitted\")",
-			"ratchet send begin effect",
-		),
-		(
-			"ratchet_driver_send_begins_with_rebuilt_context",
-			"verified_ratchet::begin_send(kernel, context)",
-			"verified_ratchet::begin_send(kernel, SealFrameContext { bytes, target_kid: sender_kid, sender_kid: target_kid, associated_data })",
-			"ratchet send begin effect",
-		),
-		(
-			"ratchet_driver_send_exhaustion_drops_kernel",
-			"ratchet.refined.put(kernel);\n\t\t\treturn None;",
-			"drop(kernel);\n\t\t\treturn None;",
-			"ratchet send exhausted and KDF branches",
-		),
-		(
-			"ratchet_driver_send_exhaustion_puts_after_return",
-			"ratchet.refined.put(kernel);\n\t\t\treturn None;",
-			"return None;\n\t\t\tratchet.refined.put(kernel);",
-			"ratchet send exhausted and KDF branches",
-		),
-		(
-			"ratchet_driver_send_uses_fixed_request",
-			"ratchet_hkdf(pending.request())",
-			"ratchet_hkdf(&verified_ratchet::SymmetricRatchetKdfRequest::new([0; KDF_STATE_SIZE]))",
-			"ratchet send exact pending request interpretation",
-		),
-		(
-			"ratchet_driver_send_omits_request_interpretation",
-			"let response = ratchet_hkdf(pending.request());",
-			"let response = verified_ratchet::RatchetKdfResponse::from_bytes([0; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE]);",
-			"ratchet send exact pending request interpretation",
-		),
-		(
-			"ratchet_driver_send_resumes_with_wrong_response",
-			"pending.resume(response)",
-			"pending.resume(verified_ratchet::RatchetKdfResponse::from_bytes([0; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE]))",
-			"ratchet send same-pending resume",
-		),
-		(
-			"ratchet_driver_send_resumes_different_pending",
-			"pending.resume(response)",
-			"unsafe { std::hint::unreachable_unchecked() }.resume(response)",
-			"ratchet send same-pending resume",
-		),
-		(
-			"ratchet_driver_send_omits_pending_resume",
-			"let seal = pending.resume(response);",
-			"let seal = panic!(\"pending resume omitted\");",
-			"ratchet send same-pending resume",
-		),
-		(
-			"ratchet_driver_send_seals_with_wrong_material",
-			"seal_frame(seal.material(), seal.sequence(), seal.context())",
-			"seal_frame(panic!(), seal.sequence(), seal.context())",
-			"ratchet send seal capability handoff",
-		),
-		(
-			"ratchet_driver_send_seals_with_wrong_sequence",
-			"seal_frame(seal.material(), seal.sequence(), seal.context())",
-			"seal_frame(seal.material(), seal.sequence().wrapping_add(1), seal.context())",
-			"ratchet send seal capability handoff",
-		),
-		(
-			"ratchet_driver_send_seals_with_rebuilt_context",
-			"seal_frame(seal.material(), seal.sequence(), seal.context())",
-			"seal_frame(seal.material(), seal.sequence(), &SealFrameContext { bytes, target_kid: sender_kid, sender_kid: target_kid, associated_data })",
-			"ratchet send seal capability handoff",
-		),
-		(
-			"ratchet_driver_send_omits_seal",
-			"let sealed = seal_frame(seal.material(), seal.sequence(), seal.context());",
-			"let sealed: Option<Encrypted> = None;",
-			"ratchet send seal capability handoff",
-		),
-		(
-			"ratchet_driver_send_finishes_with_none",
-			"seal.finish(sealed)",
-			"seal.finish(None::<Encrypted>)",
-			"ratchet send capability finish",
-		),
-		(
-			"ratchet_driver_send_omits_finish",
-			"let (kernel, sealed) = seal.finish(sealed);",
-			"let (kernel, sealed) = panic!(\"seal finish omitted\");",
-			"ratchet send capability finish",
-		),
-		(
-			"ratchet_driver_send_drops_finished_kernel",
-			"ratchet.refined.put(kernel);\n\tsealed",
-			"drop(kernel);\n\tsealed",
-			"ratchet send returned-kernel puts",
-		),
-		(
-			"ratchet_driver_send_returns_before_put",
-			"ratchet.refined.put(kernel);\n\tsealed",
-			"return sealed;\n\tratchet.refined.put(kernel);",
-			"ratchet send returned-kernel put before result",
-		),
-	] {
+	for (name, from, to, diagnostic) in [] {
 		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
 			replace_once_after(
 				&mut snapshot.adapter_ratchet,
@@ -13856,7 +13084,7 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 
 	assert_ratchet_driver_rejected(
 		"ratchet_driver_send_moves_empty_gate_after_take",
-		"ratchet send empty-input precheck",
+		"record effects",
 		|snapshot| {
 			replace_once_after(
 				&mut snapshot.adapter_ratchet,
@@ -13867,8 +13095,8 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 			replace_once_after(
 				&mut snapshot.adapter_ratchet,
 				"fn encrypt_with_ratchet",
-				"let kernel = ratchet.refined.take();",
-				"let kernel = ratchet.refined.take();\n\tif bytes.is_empty() {\n\t\tratchet.refined.put(kernel);\n\t\treturn None;\n\t}",
+				"let (kernel, sealed) = execute_record_send(ratchet.refined.take(), context);",
+				"let kernel = ratchet.refined.take();\n\tif bytes.is_empty() {\n\t\tratchet.refined.put(kernel);\n\t\treturn None;\n\t}\n\tlet (kernel, sealed) = execute_record_send(kernel, context);",
 			);
 		},
 	);
@@ -13876,11 +13104,11 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 
 	assert_ratchet_driver_rejected(
 		"ratchet_driver_send_invokes_cancel",
-		"ratchet send production cancellation",
+		"record effects",
 		|snapshot| {
 			replace_once_after(
 				&mut snapshot.adapter_ratchet,
-				"fn encrypt_with_ratchet",
+				"fn execute_record_send",
 				"let response = ratchet_hkdf(pending.request());",
 				"pending.cancel();\n\tlet response = ratchet_hkdf(pending.request());",
 			);
@@ -13917,96 +13145,6 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 
 	for (name, from, to, diagnostic) in [
 		(
-			"ratchet_driver_receive_context_uses_expected_sender",
-			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
-			"OpenFrameContext::from_frame(ciphertext, associated_data, expected_sender_kid)",
-			"ratchet receive prechecks and effect start order",
-		),
-		(
-			"ratchet_driver_receive_context_replaces_ciphertext",
-			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
-			"OpenFrameContext::from_frame(&[], associated_data, kid)",
-			"ratchet receive prechecks and effect start order",
-		),
-		(
-			"ratchet_driver_receive_context_replaces_associated_data",
-			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
-			"OpenFrameContext::from_frame(ciphertext, &[0; AD_SIZE], kid)",
-			"ratchet receive prechecks and effect start order",
-		),
-		(
-			"ratchet_driver_receive_duplicates_kernel_take",
-			"let kernel = ratchet.refined.take();",
-			"let kernel = ratchet.refined.take();\n\tratchet.refined.put(kernel);\n\tlet kernel = ratchet.refined.take();",
-			"ratchet receive affine kernel take",
-		),
-		(
-			"ratchet_driver_receive_begins_with_wrong_sequence",
-			"verified_ratchet::begin_receive(kernel, key_seq, context)",
-			"verified_ratchet::begin_receive(kernel, key_seq.wrapping_add(1), context)",
-			"ratchet receive prechecks and effect start order",
-		),
-		(
-			"ratchet_driver_receive_begins_with_rebuilt_context",
-			"verified_ratchet::begin_receive(kernel, key_seq, context)",
-			"verified_ratchet::begin_receive(kernel, key_seq, OpenFrameContext { ciphertext, associated_data, sender_kid: expected_sender_kid })",
-			"ratchet receive prechecks and effect start order",
-		),
-		(
-			"ratchet_driver_receive_rejected_drops_kernel",
-			"ratchet.refined.put(kernel);\n\t\t\t\treturn None;",
-			"drop(kernel);\n\t\t\t\treturn None;",
-			"ratchet receive rejected branch",
-		),
-		(
-			"ratchet_driver_receive_rejected_puts_after_return",
-			"ratchet.refined.put(kernel);\n\t\t\t\treturn None;",
-			"return None;\n\t\t\t\tratchet.refined.put(kernel);",
-			"ratchet receive rejected branch",
-		),
-		(
-			"ratchet_driver_receive_fixes_loop_iteration_count",
-			"loop {\n\t\teffect = match effect {",
-			"let mut remaining_iterations = 1usize;\n\tloop {\n\t\tif remaining_iterations == 0 { return None; }\n\t\tremaining_iterations -= 1;\n\t\teffect = match effect {",
-			"ratchet receive effect loop without fixed iteration count",
-		),
-		(
-			"ratchet_driver_receive_uses_fixed_kdf_request",
-			"ratchet_hkdf(pending.request())",
-			"ratchet_hkdf(&verified_ratchet::SymmetricRatchetKdfRequest::new([0; KDF_STATE_SIZE]))",
-			"ratchet receive exact pending request interpretation",
-		),
-		(
-			"ratchet_driver_receive_omits_kdf_request",
-			"let response = ratchet_hkdf(pending.request());",
-			"let response = verified_ratchet::RatchetKdfResponse::from_bytes([0; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE]);",
-			"ratchet receive exact pending request interpretation",
-		),
-		(
-			"ratchet_driver_receive_resumes_with_wrong_response",
-			"pending.resume(response)",
-			"pending.resume(verified_ratchet::RatchetKdfResponse::from_bytes([0; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE]))",
-			"ratchet receive same-pending resume",
-		),
-		(
-			"ratchet_driver_receive_resumes_different_pending",
-			"pending.resume(response)",
-			"unsafe { std::hint::unreachable_unchecked() }.resume(response)",
-			"ratchet receive same-pending resume",
-		),
-		(
-			"ratchet_driver_receive_omits_pending_resume",
-			"pending.resume(response)",
-			"panic!(\"pending resume omitted\")",
-			"ratchet receive same-pending resume",
-		),
-		(
-			"ratchet_driver_receive_kdf_publishes_slot",
-			"let response = ratchet_hkdf(pending.request());",
-			"ratchet.refined.put(panic!(\"premature publication\"));\n\t\t\t\tlet response = ratchet_hkdf(pending.request());",
-			"ratchet receive KDF-arm live publication",
-		),
-		(
 			"ratchet_driver_receive_no_material_omits_material_gate",
 			"let material = match opening.material() {\n\t\tSome(material) => material,\n\t\tNone => return OpenStart::OpenRejected(opening.reject().0),\n\t};",
 			"let material = opening.material().unwrap();",
@@ -14017,24 +13155,6 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 			"None => return OpenStart::OpenRejected(opening.reject().0),",
 			"None => panic!(\"missing material\"),",
 			"CryptoFrame selected receive material and sequence",
-		),
-		(
-			"ratchet_driver_receive_no_material_drops_kernel",
-			"let (kernel, opened) = execute_open(open);\n\t\t\t\tratchet.refined.put(kernel);",
-			"let (kernel, opened) = execute_open(open);\n\t\t\t\tdrop(kernel);",
-			"ratchet receive returned-kernel puts",
-		),
-		(
-			"ratchet_driver_receive_no_material_puts_after_return",
-			"let (kernel, opened) = execute_open(open);\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\treturn opened;",
-			"let (kernel, opened) = execute_open(open);\n\t\t\t\treturn opened;\n\t\t\t\tratchet.refined.put(kernel);",
-			"ratchet receive open and terminal publication order",
-		),
-		(
-			"ratchet_driver_receive_opens_with_wrong_material",
-			"execute_open(open)",
-			"execute_open(panic!(\"wrong request\"))",
-			"ratchet receive open capability handoff",
 		),
 		(
 			"ratchet_driver_receive_opens_with_wrong_sequence",
@@ -14048,48 +13168,6 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 			"let context = replacement_context;",
 			"CryptoFrame selected receive material and sequence",
 		),
-		(
-			"ratchet_driver_receive_omits_open",
-			"let (kernel, opened) = execute_open(open);",
-			"let (kernel, opened) = (panic!(\"open omitted\"), None);",
-			"ratchet receive open capability handoff",
-		),
-		(
-			"ratchet_driver_receive_finishes_with_none",
-			"opening.finish(plaintext)",
-			"opening.finish(None::<Vec<u8>>)",
-			"CryptoFrame commitment-before-AEAD order",
-		),
-		(
-			"ratchet_driver_receive_omits_finish",
-			"opening.finish(plaintext)",
-			"panic!(\"open finish omitted\")",
-			"CryptoFrame commitment-before-AEAD order",
-		),
-		(
-			"ratchet_driver_receive_drops_finished_kernel",
-			"ratchet.refined.put(kernel);\n\t\t\t\treturn opened;",
-			"drop(kernel);\n\t\t\t\treturn opened;",
-			"ratchet receive returned-kernel puts",
-		),
-		(
-			"ratchet_driver_receive_questions_result_before_put",
-			"let (kernel, opened) = execute_open(open);\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\treturn opened;",
-			"let (kernel, opened) = execute_open(open);\n\t\t\t\tlet opened = opened?;\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\treturn Some(opened);",
-			"ratchet receive open and terminal publication order",
-		),
-		(
-			"ratchet_driver_receive_returns_expected_sender_metadata",
-			"key_id: opened.key_id,",
-			"key_id: expected_sender_kid,",
-			"CryptoFrame returned parsed metadata",
-		),
-		(
-			"ratchet_driver_receive_returns_wrong_sequence_metadata",
-			"seq: opened.seq,",
-			"seq: opened.seq.wrapping_add(1),",
-			"CryptoFrame returned parsed metadata",
-		),
 	] {
 		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
 			replace_record_surface(snapshot, from, to);
@@ -14099,27 +13177,18 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 
 	assert_ratchet_driver_rejected(
 		"ratchet_driver_receive_invokes_cancel",
-		"ratchet receive production cancellation",
+		"record effects",
 		|snapshot| {
 			replace_once_after(
 				&mut snapshot.adapter_ratchet,
-				"pub(crate) fn decrypt_message_with_ratchet",
+				"fn execute_record_receive",
 				"let response = ratchet_hkdf(pending.request());",
 				"pending.cancel();\n\t\t\t\tlet response = ratchet_hkdf(pending.request());",
 			);
 		},
 	);
 	mutation_count += 1;
-	for (name, gate) in [
-		(
-			"ratchet_driver_receive_moves_sender_gate_after_take",
-			"if kid != expected_sender_kid {\n\t\treturn None;\n\t}\n",
-		),
-		(
-			"ratchet_driver_receive_moves_length_gate_after_take",
-			"let context = OpenFrameContext::from_frame(ciphertext, associated_data, kid)?;\n",
-		),
-	] {
+	for (name, gate) in [] {
 		assert_ratchet_driver_rejected(
 			name,
 			"ratchet receive prechecks and effect start order",
@@ -14142,7 +13211,7 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 	}
 	assert_ratchet_driver_rejected(
 		"ratchet_driver_receive_moves_empty_gate_after_take",
-		"ratchet receive prechecks and effect start order",
+		"record effects",
 		|snapshot| {
 			replace_once_after(
 				&mut snapshot.adapter_ratchet,
@@ -14150,30 +13219,26 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 				"if data.is_empty() {\n\t\treturn None;\n\t}\n",
 				"",
 			);
-			replace_once_after(
-				&mut snapshot.adapter_ratchet,
-				"pub(crate) fn decrypt_message_with_ratchet",
-				"let kernel = ratchet.refined.take();",
-				"let kernel = ratchet.refined.take();\n\tif data.is_empty() {\n\t\tratchet.refined.put(kernel);\n\t\treturn None;\n\t}",
+			registration_effects::replace_contract(
+				snapshot,
+				"ratchet",
+				"",
+				"decrypt_payload_with_ratchet",
+				"let(kernel,opened)=execute_record_receive(effect);",
+				"ifciphertext.is_empty(){returnNone;}let(kernel,opened)=execute_record_receive(effect);",
 			);
 		},
 	);
 	mutation_count += 1;
 	assert_ratchet_driver_rejected(
 		"ratchet_driver_receive_takes_kernel_before_typed_parse",
-		"ratchet receive prechecks and effect start order",
+		"record effects",
 		|snapshot| {
 			replace_once_after(
 				&mut snapshot.adapter_ratchet,
 				"pub(crate) fn decrypt_message_with_ratchet",
-				"let kernel = ratchet.refined.take();",
-				"",
-			);
-			replace_once_after(
-				&mut snapshot.adapter_ratchet,
-				"pub(crate) fn decrypt_message_with_ratchet",
-				"if data.is_empty() {\n\t\treturn None;\n\t}",
-				"if data.is_empty() {\n\t\treturn None;\n\t}\n\tlet kernel = ratchet.refined.take();",
+				"let frame = decode_crypto_frame(data)?;",
+				"let prematurely_taken = ratchet.refined.take();\n\tlet frame = decode_crypto_frame(data)?;",
 			);
 		},
 	);
@@ -18585,7 +17650,7 @@ fn record_opening_source_mutations_are_rejected() {
 		(
 			"native_wrapper_import_substituted",
 			false,
-			"beaconcrypt_core::record::{self as verified_record",
+			"beaconcrypt_core::record as verified_record",
 			"unchecked_record::{self as verified_record",
 			"CryptoFrame actual extracted wrapper import",
 		),
@@ -18599,7 +17664,7 @@ fn record_opening_source_mutations_are_rejected() {
 		(
 			"core_begin_wrong_ad",
 			true,
-			"\t\tcontext.associated_data,",
+			"\t\t&context.associated_data,",
 			"\t\t&[0; ASSOCIATED_DATA_SIZE],",
 			"CryptoFrame open commitment mapping",
 		),
@@ -18708,69 +17773,6 @@ fn record_opening_source_mutations_are_rejected() {
 			"self.opening.finish(None)",
 			"CryptoFrame one-use receive completion",
 		),
-		(
-			"native_hash_failure_short_circuits",
-			false,
-			"\n\t\t\t.ok();\n\tpending.transcript_mut()",
-			"\n\t\t\t.ok()?;\n\tpending.transcript_mut()",
-			"CryptoFrame actual optional commitment",
-		),
-		(
-			"native_hash_uses_wrong_transcript",
-			false,
-			"generichash(pending.transcript().as_bytes(), None, COMMITMENT_SIZE)",
-			"generichash(&[0; 229], None, COMMITMENT_SIZE)",
-			"CryptoFrame open commitment hash",
-		),
-		(
-			"native_hash_omits_erase",
-			false,
-			"\tpending.transcript_mut().as_mut_bytes().zeroize();\n",
-			"",
-			"CryptoFrame unconditional opening transcript erase",
-		),
-		(
-			"native_hash_none_passes",
-			false,
-			"\t\tNone => false,",
-			"\t\tNone => true,",
-			"CryptoFrame libsodium memcmp commitment comparison",
-		),
-		(
-			"native_compare_result_ignored",
-			false,
-			"Some(commitment) => memcmp(&commitment, pending.supplied_commitment()),",
-			"Some(commitment) => true,",
-			"CryptoFrame libsodium memcmp commitment comparison",
-		),
-		(
-			"native_resume_forced_true",
-			false,
-			"pending.resume(commitment_matches)",
-			"pending.resume(true)",
-			"CryptoFrame commitment gate and same-opening resume",
-		),
-		(
-			"native_rejected_commitment_drops_kernel",
-			false,
-			"return (kernel, None);",
-			"return (replacement_kernel, None);",
-			"CryptoFrame commitment gate and same-opening resume",
-		),
-		(
-			"native_aead_request_substituted",
-			false,
-			"let request = opening.request()?;",
-			"let request = replacement_request;",
-			"CryptoFrame exact AEAD request",
-		),
-		(
-			"native_optional_plaintext_substituted",
-			false,
-			"opening.finish(plaintext)",
-			"opening.finish(Some(vec![0]))",
-			"CryptoFrame commitment-before-AEAD order",
-		),
 	] {
 		assert_rejected(name, diagnostic, |snapshot| {
 			if core {
@@ -18788,7 +17790,7 @@ fn record_opening_source_mutations_are_rejected() {
 		});
 		checked += 1;
 	}
-	assert_eq!(checked, 30);
+	assert_eq!(checked, 21);
 }
 
 #[test]
@@ -18888,12 +17890,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration-consumed.pvl",
 		"consumed.contains",
-		"beaconcrypt/src/server.rs:413-418",
+		"beaconcrypt/src/server.rs:412-417",
 	),
 	(
 		"fs-common.pvl",
 		"common.kid_counter_start",
-		"beaconcrypt/src/server.rs:191-191",
+		"beaconcrypt/src/server.rs:190-190",
 	),
 	(
 		"fs-common.pvl",
@@ -18913,22 +17915,22 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:398-402",
+		"beaconcrypt/src/server.rs:397-401",
 	),
 	(
 		"fs-registration.pvl",
 		"server.identity_tag",
-		"beaconcrypt-core/src/registration.rs:208-212",
+		"beaconcrypt-core/src/registration.rs:209-213",
 	),
 	(
 		"fs-registration.pvl",
 		"server.signatures",
-		"beaconcrypt-core/src/registration.rs:237-248",
+		"beaconcrypt-core/src/registration.rs:238-249",
 	),
 	(
 		"fs-registration.pvl",
 		"server.validate_init_kex",
-		"beaconcrypt-core/src/registration.rs:270-279",
+		"beaconcrypt-core/src/registration.rs:271-280",
 	),
 	(
 		"fs-registration.pvl",
@@ -18938,7 +17940,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:412-412",
+		"beaconcrypt/src/server.rs:411-411",
 	),
 	(
 		"fs-registration.pvl",
@@ -18953,7 +17955,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:413-418",
+		"beaconcrypt/src/server.rs:412-417",
 	),
 	(
 		"fs-registration.pvl",
@@ -18993,27 +17995,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:434-435",
+		"beaconcrypt/src/server.rs:433-434",
 	),
 	(
 		"fs-registration.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:436-436",
+		"beaconcrypt/src/server.rs:435-435",
 	),
 	(
 		"fs-registration.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:439-443",
+		"beaconcrypt/src/server.rs:438-442",
 	),
 	(
 		"fs-registration.pvl",
 		"server.next_key_id",
-		"beaconcrypt/src/server.rs:447-454",
+		"beaconcrypt/src/server.rs:446-453",
 	),
 	(
 		"fs-registration.pvl",
 		"server.prepare_commit",
-		"beaconcrypt-core/src/registration.rs:961-970",
+		"beaconcrypt-core/src/registration.rs:1022-1031",
 	),
 	(
 		"fs-registration.pvl",
@@ -19028,57 +18030,57 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.ratchet_start",
-		"beaconcrypt-core/src/registration.rs:970-971",
+		"beaconcrypt-core/src/registration.rs:1031-1032",
 	),
 	(
 		"fs-registration.pvl",
 		"server.associated_data",
-		"beaconcrypt-core/src/registration.rs:1026-1026",
+		"beaconcrypt-core/src/registration.rs:1066-1066",
 	),
 	(
 		"fs-registration.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:446-448",
+		"beaconcrypt/src/server.rs:445-447",
 	),
 	(
 		"fs-registration.pvl",
 		"server.binding",
-		"beaconcrypt-core/src/registration.rs:995-1003",
+		"beaconcrypt-core/src/record_effects.rs:61-70",
 	),
 	(
 		"fs-registration.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:478-486",
+		"beaconcrypt/src/server.rs:469-476",
 	),
 	(
 		"fs-registration.pvl",
 		"server.commit",
-		"beaconcrypt-core/src/registration.rs:1202-1211",
+		"beaconcrypt-core/src/registration.rs:1329-1338",
 	),
 	(
 		"fs-registration.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:520-523",
+		"beaconcrypt/src/server.rs:500-503",
 	),
 	(
 		"fs-registration.pvl",
 		"server.token_consumed",
-		"beaconcrypt/src/server.rs:129-134",
+		"beaconcrypt/src/server.rs:128-133",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:83-113",
+		"beaconcrypt/src/beacon.rs:82-112",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:326-330",
+		"beaconcrypt/src/beacon.rs:325-329",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:361-374",
+		"beaconcrypt/src/beacon.rs:360-373",
 	),
 	(
 		"fs-registration.pvl",
@@ -19088,22 +18090,22 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.sign",
-		"beaconcrypt-core/src/registration.rs:615-626",
+		"beaconcrypt-core/src/registration.rs:616-627",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.bundle_return",
-		"beaconcrypt/src/beacon.rs:453-453",
+		"beaconcrypt/src/beacon.rs:452-452",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:456-462",
+		"beaconcrypt/src/beacon.rs:455-461",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:474-484",
+		"beaconcrypt/src/beacon.rs:473-483",
 	),
 	(
 		"fs-registration.pvl",
@@ -19138,12 +18140,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.ratchet_start",
-		"beaconcrypt-core/src/registration.rs:809-812",
+		"beaconcrypt-core/src/registration.rs:810-813",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.associated_data",
-		"beaconcrypt-core/src/registration.rs:864-864",
+		"beaconcrypt-core/src/registration.rs:839-840",
 	),
 	(
 		"fs-registration.pvl",
@@ -19153,17 +18155,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:521-526",
+		"beaconcrypt/src/beacon.rs:520-542",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.sequence_one",
-		"beaconcrypt-core/src/registration.rs:892-896",
+		"beaconcrypt-core/src/registration.rs:835-841",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.binding",
-		"beaconcrypt-core/src/registration.rs:897-911",
+		"beaconcrypt-core/src/registration.rs:956-970",
 	),
 	(
 		"fs-registration.pvl",
@@ -19178,7 +18180,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:544-551",
+		"beaconcrypt/src/beacon.rs:546-553",
 	),
 	(
 		"fs-records-s2b-window.pvl",
@@ -19193,22 +18195,22 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-gate.pvl",
 		"gate.sequence_one",
-		"beaconcrypt-core/src/registration.rs:892-896",
+		"beaconcrypt-core/src/registration.rs:835-841",
 	),
 	(
 		"fs-records-s2b-gate.pvl",
 		"gate.abort",
-		"beaconcrypt/src/beacon.rs:535-542",
+		"beaconcrypt/src/beacon.rs:537-544",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.encrypt",
-		"beaconcrypt/src/server.rs:282-286",
+		"beaconcrypt/src/server.rs:281-285",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.seal",
-		"beaconcrypt/src/ratchet.rs:413-485",
+		"beaconcrypt/src/ratchet.rs:544-577",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
@@ -19228,17 +18230,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:526-536",
+		"beaconcrypt/src/server.rs:506-516",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.encrypt",
-		"beaconcrypt/src/server.rs:282-286",
+		"beaconcrypt/src/server.rs:281-285",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.seal",
-		"beaconcrypt/src/ratchet.rs:413-485",
+		"beaconcrypt/src/ratchet.rs:544-577",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
@@ -19258,17 +18260,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:526-536",
+		"beaconcrypt/src/server.rs:506-516",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
 		"beacon.decrypt",
-		"beaconcrypt/src/beacon.rs:194-209",
+		"beaconcrypt/src/beacon.rs:193-208",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
 		"ratchet.decode_sender",
-		"beaconcrypt/src/ratchet.rs:546-555",
+		"beaconcrypt/src/ratchet.rs:623-632",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
@@ -19298,7 +18300,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-receive.pvl",
 		"ratchet.open",
-		"beaconcrypt/src/ratchet.rs:490-523",
+		"beaconcrypt/src/ratchet.rs:577-606",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
@@ -19348,22 +18350,22 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:398-402",
+		"beaconcrypt/src/server.rs:397-401",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.identity_tag",
-		"beaconcrypt-core/src/registration.rs:208-212",
+		"beaconcrypt-core/src/registration.rs:209-213",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.signatures",
-		"beaconcrypt-core/src/registration.rs:237-248",
+		"beaconcrypt-core/src/registration.rs:238-249",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.validate_init_kex",
-		"beaconcrypt-core/src/registration.rs:270-279",
+		"beaconcrypt-core/src/registration.rs:271-280",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -19373,7 +18375,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:412-412",
+		"beaconcrypt/src/server.rs:411-411",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -19383,7 +18385,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:413-418",
+		"beaconcrypt/src/server.rs:412-417",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -19413,27 +18415,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:434-435",
+		"beaconcrypt/src/server.rs:433-434",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:436-436",
+		"beaconcrypt/src/server.rs:435-435",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:439-443",
+		"beaconcrypt/src/server.rs:438-442",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.next_key_id",
-		"beaconcrypt/src/server.rs:447-454",
+		"beaconcrypt/src/server.rs:446-453",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.prepare_commit",
-		"beaconcrypt-core/src/registration.rs:961-970",
+		"beaconcrypt-core/src/registration.rs:1022-1031",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -19443,12 +18445,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.ratchet_start",
-		"beaconcrypt-core/src/registration.rs:970-971",
+		"beaconcrypt-core/src/registration.rs:1031-1032",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.associated_data",
-		"beaconcrypt-core/src/registration.rs:1026-1026",
+		"beaconcrypt-core/src/registration.rs:1066-1066",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -19458,42 +18460,42 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:446-448",
+		"beaconcrypt/src/server.rs:445-447",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.binding",
-		"beaconcrypt-core/src/registration.rs:995-1003",
+		"beaconcrypt-core/src/record_effects.rs:61-70",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:478-486",
+		"beaconcrypt/src/server.rs:469-476",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.commit",
-		"beaconcrypt-core/src/registration.rs:1202-1211",
+		"beaconcrypt-core/src/registration.rs:1329-1338",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:520-523",
+		"beaconcrypt/src/server.rs:500-503",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:83-113",
+		"beaconcrypt/src/beacon.rs:82-112",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:326-330",
+		"beaconcrypt/src/beacon.rs:325-329",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:361-374",
+		"beaconcrypt/src/beacon.rs:360-373",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -19503,22 +18505,22 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.sign",
-		"beaconcrypt-core/src/registration.rs:615-626",
+		"beaconcrypt-core/src/registration.rs:616-627",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.bundle_return",
-		"beaconcrypt/src/beacon.rs:453-453",
+		"beaconcrypt/src/beacon.rs:452-452",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:456-462",
+		"beaconcrypt/src/beacon.rs:455-461",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:474-484",
+		"beaconcrypt/src/beacon.rs:473-483",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -19553,12 +18555,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.ratchet_start",
-		"beaconcrypt-core/src/registration.rs:809-812",
+		"beaconcrypt-core/src/registration.rs:810-813",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.associated_data",
-		"beaconcrypt-core/src/registration.rs:864-864",
+		"beaconcrypt-core/src/registration.rs:839-840",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -19568,22 +18570,22 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:521-526",
+		"beaconcrypt/src/beacon.rs:520-542",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"ratchet.decrypt",
-		"beaconcrypt/src/ratchet.rs:540-595",
+		"beaconcrypt/src/ratchet.rs:617-651",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.sequence_one",
-		"beaconcrypt-core/src/registration.rs:892-896",
+		"beaconcrypt-core/src/registration.rs:835-841",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.binding",
-		"beaconcrypt-core/src/registration.rs:897-911",
+		"beaconcrypt-core/src/registration.rs:956-970",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -19598,7 +18600,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:544-551",
+		"beaconcrypt/src/beacon.rs:546-553",
 	),
 	(
 		"fs-records-b2s-window.pvl",
@@ -19613,12 +18615,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-sends.pvl",
 		"sends.encrypt",
-		"beaconcrypt/src/beacon.rs:176-193",
+		"beaconcrypt/src/beacon.rs:175-192",
 	),
 	(
 		"fs-records-b2s-sends.pvl",
 		"sends.seal",
-		"beaconcrypt/src/ratchet.rs:413-485",
+		"beaconcrypt/src/ratchet.rs:544-577",
 	),
 	(
 		"fs-records-b2s-sends.pvl",
@@ -19638,12 +18640,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-sends-chosen.pvl",
 		"sends.encrypt",
-		"beaconcrypt/src/beacon.rs:176-193",
+		"beaconcrypt/src/beacon.rs:175-192",
 	),
 	(
 		"fs-records-b2s-sends-chosen.pvl",
 		"sends.seal",
-		"beaconcrypt/src/ratchet.rs:413-485",
+		"beaconcrypt/src/ratchet.rs:544-577",
 	),
 	(
 		"fs-records-b2s-sends-chosen.pvl",
@@ -19663,27 +18665,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.decrypt",
-		"beaconcrypt/src/server.rs:287-289",
+		"beaconcrypt/src/server.rs:286-288",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.route",
-		"beaconcrypt/src/server.rs:295-303",
+		"beaconcrypt/src/server.rs:294-302",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.frame_sender",
-		"beaconcrypt/src/ratchet.rs:356-358",
+		"beaconcrypt/src/ratchet.rs:355-357",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.peer_associated_data",
-		"beaconcrypt/src/server.rs:279-281",
+		"beaconcrypt/src/server.rs:278-280",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.decode_sender",
-		"beaconcrypt/src/ratchet.rs:546-555",
+		"beaconcrypt/src/ratchet.rs:623-632",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -19713,7 +18715,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.open",
-		"beaconcrypt/src/ratchet.rs:490-523",
+		"beaconcrypt/src/ratchet.rs:577-606",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -19738,7 +18740,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.accepted",
-		"beaconcrypt/src/server.rs:304-307",
+		"beaconcrypt/src/server.rs:303-306",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -19768,22 +18770,22 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:398-402",
+		"beaconcrypt/src/server.rs:397-401",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.identity_tag",
-		"beaconcrypt-core/src/registration.rs:208-212",
+		"beaconcrypt-core/src/registration.rs:209-213",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.signatures",
-		"beaconcrypt-core/src/registration.rs:237-248",
+		"beaconcrypt-core/src/registration.rs:238-249",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.validate_init_kex",
-		"beaconcrypt-core/src/registration.rs:270-279",
+		"beaconcrypt-core/src/registration.rs:271-280",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19793,7 +18795,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:412-412",
+		"beaconcrypt/src/server.rs:411-411",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19803,7 +18805,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:413-418",
+		"beaconcrypt/src/server.rs:412-417",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19828,32 +18830,32 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:434-435",
+		"beaconcrypt/src/server.rs:433-434",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:436-436",
+		"beaconcrypt/src/server.rs:435-435",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:439-443",
+		"beaconcrypt/src/server.rs:438-442",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.next_key_id",
-		"beaconcrypt/src/server.rs:447-454",
+		"beaconcrypt/src/server.rs:446-453",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.prepare_commit",
-		"beaconcrypt-core/src/registration.rs:961-970",
+		"beaconcrypt-core/src/registration.rs:1022-1031",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.ratchet_start",
-		"beaconcrypt-core/src/registration.rs:970-971",
+		"beaconcrypt-core/src/registration.rs:1031-1032",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19863,7 +18865,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.associated_data",
-		"beaconcrypt-core/src/registration.rs:1026-1026",
+		"beaconcrypt-core/src/registration.rs:1066-1066",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19873,27 +18875,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:446-448",
+		"beaconcrypt/src/server.rs:445-447",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.binding",
-		"beaconcrypt-core/src/registration.rs:995-1003",
+		"beaconcrypt-core/src/record_effects.rs:61-70",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:478-486",
+		"beaconcrypt/src/server.rs:469-476",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.commit",
-		"beaconcrypt-core/src/registration.rs:1202-1211",
+		"beaconcrypt-core/src/registration.rs:1329-1338",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:520-523",
+		"beaconcrypt/src/server.rs:500-503",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19903,17 +18905,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:83-113",
+		"beaconcrypt/src/beacon.rs:82-112",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:326-330",
+		"beaconcrypt/src/beacon.rs:325-329",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:361-374",
+		"beaconcrypt/src/beacon.rs:360-373",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19923,22 +18925,22 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.sign",
-		"beaconcrypt-core/src/registration.rs:615-626",
+		"beaconcrypt-core/src/registration.rs:616-627",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.bundle_return",
-		"beaconcrypt/src/beacon.rs:453-453",
+		"beaconcrypt/src/beacon.rs:452-452",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:456-462",
+		"beaconcrypt/src/beacon.rs:455-461",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:474-484",
+		"beaconcrypt/src/beacon.rs:473-483",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19973,7 +18975,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.ratchet_start",
-		"beaconcrypt-core/src/registration.rs:809-812",
+		"beaconcrypt-core/src/registration.rs:810-813",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19983,7 +18985,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.associated_data",
-		"beaconcrypt-core/src/registration.rs:864-864",
+		"beaconcrypt-core/src/registration.rs:839-840",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19993,17 +18995,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:521-526",
+		"beaconcrypt/src/beacon.rs:520-542",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.sequence_one",
-		"beaconcrypt-core/src/registration.rs:892-896",
+		"beaconcrypt-core/src/registration.rs:835-841",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.binding",
-		"beaconcrypt-core/src/registration.rs:897-911",
+		"beaconcrypt-core/src/registration.rs:956-970",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -20018,7 +19020,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:544-551",
+		"beaconcrypt/src/beacon.rs:546-553",
 	),
 ];
 
@@ -20581,6 +19583,7 @@ fn fs_rust_source(path: &str) -> Option<&'static str> {
 		"beaconcrypt/src/pqxdh.rs" => Some(ADAPTER_PQXDH),
 		"beaconcrypt-core/src/pqxdh.rs" => Some(CORE_PQXDH),
 		"beaconcrypt-core/src/record.rs" => Some(CORE_RECORD),
+		"beaconcrypt-core/src/record_effects.rs" => Some(CORE_RECORD_EFFECTS),
 		"beaconcrypt-core/src/ratchet/concrete.rs" => Some(CORE_RATCHET_CONCRETE),
 		"beaconcrypt-core/src/ratchet/control.rs" => Some(CORE_RATCHET_CONTROL),
 		"beaconcrypt-core/src/ratchet/refined.rs" => Some(CORE_RATCHET_REFINED),
@@ -22297,7 +21300,7 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 			Box::new(|files: &mut FsFiles| {
 				replace_once(
 					&mut files.registration,
-					"src=beaconcrypt/src/server.rs:434-435",
+					"src=beaconcrypt/src/server.rs:433-434",
 					"src=beaconcrypt/src/server.rs:414-416",
 				)
 			}) as Box<dyn Fn(&mut FsFiles)>,
@@ -22354,13 +21357,13 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 		);
 	}
 	assert_eq!(
-		check_fs_citation("beaconcrypt/src/server.rs:434-435", "let inserted"),
+		check_fs_citation("beaconcrypt/src/server.rs:433-434", "let inserted"),
 		Ok(())
 	);
 	assert!(check_fs_citation("beaconcrypt/src/server.rs:416-415", "let inserted").is_err());
 	assert!(check_fs_citation("beaconcrypt/src/server.rs:1-415", "let inserted").is_err());
 	assert!(check_fs_citation("beaconcrypt/src/other.rs:415-416", "let inserted").is_err());
-	assert!(check_fs_citation("beaconcrypt/src/server.rs:434-435", "let").is_err());
+	assert!(check_fs_citation("beaconcrypt/src/server.rs:433-434", "let").is_err());
 }
 
 #[test]

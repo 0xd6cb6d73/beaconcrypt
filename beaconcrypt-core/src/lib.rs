@@ -10,6 +10,7 @@ pub mod constants;
 pub mod pqxdh;
 pub mod ratchet;
 pub mod record;
+pub mod record_effects;
 pub mod registration;
 pub mod session;
 

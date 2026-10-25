@@ -46,16 +46,16 @@ declare -A expected_category_counts=(
 	[adapter-rust]=14
 	[adapter-schema]=1
 	[parser-rust]=6
-	[core-rust]=14
+	[core-rust]=15
 	[control]=17
 	[generated-lean]=13
 	[generated-proverif]=1
-	[handwritten-lean]=2045
+	[handwritten-lean]=2057
 	[handwritten-proverif]=298
 	[inventory]=2
 	[lean-control]=13
 	[lean-dependency-overlay]=4
-	[validation]=77
+	[validation]=79
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -180,10 +180,12 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	tests/session.rs \
 	tests/agreement.rs \
 	tests/registration.rs \
+	tests/record_effects.rs \
 	tests/mldsa_joint_fidelity.rs \
 	tests/general_registration_admission.rs \
 	tests/proverif_transcript_fidelity.rs \
 	tests/fidelity/registration_effects.rs \
+	tests/fidelity/record_effects.rs \
 	> "$tmp_dir/validation"
 compare_set validation "$tmp_dir/validation"
 
@@ -957,9 +959,15 @@ for scenario_process in \
 			"${scenario_process} top-level process"
 done
 
+record_fidelity_effects=tests/fidelity/record_effects.rs
+require_line_count 1 '^#\[path = "fidelity/record_effects\.rs"\]$' tests/proverif_transcript_fidelity.rs "record fidelity module import"
+require_line_count 1 '^mod record_effects;$' tests/proverif_transcript_fidelity.rs "record fidelity module binding"
+require_line_count 1 '^[[:space:]]*core_record_effects: String,$' tests/proverif_transcript_fidelity.rs "mutable core record source"
+require_line_count 1 '^[[:space:]]*core_record_effects: CORE_RECORD_EFFECTS\.to_owned\(\),$' tests/proverif_transcript_fidelity.rs "production core record snapshot"
+require_line_count 3 '^#\[test\]$' "$record_fidelity_effects" "record fidelity tests"
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 54 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_AUTH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_AUTHENTICATION|CORE_SESSION|CORE_REGISTRATION|CORE_AGREEMENT|CORE_RECORD|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|TRANSPORT_SCHEMA|TRANSPORT_PARSER|TRANSPORT_SIZING|ADAPTER_WIRE|CBOR_REGISTRATION_MODEL|MLDSA_AUTH_MODEL|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLDSA_REGISTRATION_MODEL|MLDSA_REGISTRATION_QUERIES|MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
+require_line_count 55 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_AUTH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_AUTHENTICATION|CORE_SESSION|CORE_REGISTRATION|CORE_AGREEMENT|CORE_RECORD|CORE_RECORD_EFFECTS|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|TRANSPORT_SCHEMA|TRANSPORT_PARSER|TRANSPORT_SIZING|ADAPTER_WIRE|CBOR_REGISTRATION_MODEL|MLDSA_AUTH_MODEL|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLDSA_REGISTRATION_MODEL|MLDSA_REGISTRATION_QUERIES|MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 3 '^const (CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA): &str = TRANSPORT_SCHEMA;$' \
 	"$fidelity_test" "shared CBOR schema aliases"
@@ -1102,12 +1110,13 @@ done
 require_line_count 1 '^fn validate_record_opening_source\(snapshot: &Snapshot\) -> Result<\(\), String> \{$' \
 	"$fidelity_test" "native record source validator"
 require_occurrence_count 1 \
-	'(?s)fn record_opening_source_mutations_are_rejected\(\) \{.*?assert_eq!\(checked, 30\);\s*\}' \
-	"native record thirty-control count assertion" "$fidelity_test"
+	'(?s)fn record_opening_source_mutations_are_rejected\(\) \{.*?assert_eq!\(checked, 21\);\s*\}' \
+	"native record twenty-one retained controls count assertion" "$fidelity_test"
 for record_control in core_reader_inverts_remainder core_reader_discards_message core_payload_wrong_overhead native_wrapper_import_substituted core_begin_wrong_nonce core_begin_wrong_ad core_begin_drops_original_opening core_transcript_reads_substitute core_transcript_erases_substitute core_supplied_commitment_substituted core_resume_inverts_comparison core_resume_skips_rejection core_resume_replaces_capability core_request_wrong_material core_request_wrong_context core_request_wrong_ciphertext core_request_wrong_key core_finish_none_becomes_plaintext core_finish_wrong_sender core_finish_wrong_sequence core_finish_discards_actual_some native_hash_failure_short_circuits native_hash_uses_wrong_transcript native_hash_omits_erase native_hash_none_passes native_compare_result_ignored native_resume_forced_true native_rejected_commitment_drops_kernel native_aead_request_substituted native_optional_plaintext_substituted; do
-	require_line_count 1 "^[[:space:]]*\"${record_control}\",$" "$fidelity_test" "native record control ${record_control}"
+	case "$record_control" in native_hash_*|native_compare_result_ignored|native_resume_forced_true|native_rejected_commitment_drops_kernel|native_aead_request_substituted|native_optional_plaintext_substituted) record_control_file="$record_fidelity_effects" ;; *) record_control_file="$fidelity_test" ;; esac
+	require_line_count 1 "^[[:space:]]*\"${record_control}\",$" "$record_control_file" "native record control ${record_control}"
 done
-require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;$' \
+require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 201;$' \
 	"$fidelity_test" "CryptoFrame exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, CRYPTOFRAME_WIRE_MUTATION_COUNT\);\s*\}' \
@@ -1134,7 +1143,7 @@ for cryptoframe_mutation_family in \
 	cryptoframe_ctx_pair_transposition_ \
 	cryptoframe_ctx_omits_and_duplicates_field_; do
 	require_occurrence_count 1 "$cryptoframe_mutation_family" \
-		"CryptoFrame ${cryptoframe_mutation_family} mutation family" "$fidelity_test"
+		"CryptoFrame ${cryptoframe_mutation_family} mutation family" "$fidelity_test" "$record_fidelity_effects"
 done
 for cbor_mutation in \
 	cbor_registration_raw_field_count \
@@ -1191,7 +1200,7 @@ for cbor_mutation in \
 	if [[ "$cbor_mutation" == cbor_response_size_precheck ]]; then
 		require_occurrence_count 2 "$cbor_mutation" "CBOR ${cbor_mutation} mutation and diagnostic" "$fidelity_test"
 	else
-		require_occurrence_count 1 "$cbor_mutation" "CBOR ${cbor_mutation} mutation" "$fidelity_test"
+		require_occurrence_count 1 "$cbor_mutation" "CBOR ${cbor_mutation} mutation" "$fidelity_test" "$record_fidelity_effects"
 	fi
 done
 require_line_count 1 '^const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 117;$' \
@@ -1243,7 +1252,7 @@ for endpoint_mutation_family in \
 	require_occurrence_count 1 "$endpoint_mutation_family" \
 		"endpoint frame-context ${endpoint_mutation_family} mutation family" "$fidelity_test"
 done
-require_line_count 1 '^const RATCHET_EFFECT_DRIVER_MUTATION_COUNT: usize = 154;$' \
+require_line_count 1 '^const RATCHET_EFFECT_DRIVER_MUTATION_COUNT: usize = 106;$' \
 	"$fidelity_test" "ratchet effect-driver exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, RATCHET_EFFECT_DRIVER_MUTATION_COUNT\);\s*\}' \
@@ -1273,7 +1282,7 @@ for ratchet_driver_mutation_family in \
 	ratchet_driver_proverif_renames_ideal_open \
 	ratchet_driver_proverif_exposes_\{concrete_step\}; do
 	require_occurrence_count 1 "$ratchet_driver_mutation_family" \
-		"ratchet effect-driver ${ratchet_driver_mutation_family} mutation family" "$fidelity_test"
+		"ratchet effect-driver ${ratchet_driver_mutation_family} mutation family" "$fidelity_test" "$record_fidelity_effects"
 done
 require_line_count 1 '^const FINITE_RECEIVE_STATE_FIXTURE_MUTATION_COUNT: usize = 1_230;$' \
 	"$fidelity_test" "finite receive-state fixture exact mutation count"
@@ -1344,9 +1353,9 @@ for initial_ratchet_mutation_family in \
 	initial_ratchet_pv_honest_beacon_initial_material_uses_wrong_chain \
 	initial_ratchet_pv_server_root_is_shadowed; do
 	require_occurrence_count 1 "$initial_ratchet_mutation_family" \
-		"initial-ratchet ${initial_ratchet_mutation_family} mutation family" "$fidelity_test"
+		"initial-ratchet ${initial_ratchet_mutation_family} mutation family" "$fidelity_test" "$record_fidelity_effects"
 done
-require_line_count 1 '^const LATER_REGISTRATION_MUTATION_COUNT: usize = 395;$' \
+require_line_count 1 '^const LATER_REGISTRATION_MUTATION_COUNT: usize = 387;$' \
 	"$fidelity_test" "later-sequence registration exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn later_registration_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, LATER_REGISTRATION_MUTATION_COUNT\);\s*\}' \
@@ -1377,7 +1386,7 @@ for later_registration_mutation_family in \
 	later_registration_checker_result_\{index\}_polarity_mutated \
 	later_registration_checker_query_count_mutated; do
 	require_occurrence_count 1 "$later_registration_mutation_family" \
-		"later-sequence registration ${later_registration_mutation_family} mutation family" "$fidelity_test"
+		"later-sequence registration ${later_registration_mutation_family} mutation family" "$fidelity_test" "$record_fidelity_effects"
 done
 require_line_count 1 '^\s*"later_registration_make_scenario_removed",$' \
 	"$fidelity_test" "later-sequence registration scenario-removal mutation"
@@ -1430,7 +1439,7 @@ for mutation_name in \
 	ctx_without_sequence \
 	ctx_without_sender_id; do
 	require_occurrence_count 1 "\"${mutation_name}\"" \
-		"transcript-fidelity ${mutation_name} mutation" "$fidelity_test"
+		"transcript-fidelity ${mutation_name} mutation" "$fidelity_test" "$record_fidelity_effects"
 done
 # The registration source controls moved with their production logic into extracted core phases.
 # Retain the independent model/record/kernel controls above and pin the actual new operands,
@@ -1456,14 +1465,17 @@ for registration_source in registration agreement; do
 	require_line_count 1 "^[[:space:]]*core_${registration_source}: CORE_${registration_source^^}\\.to_owned\\(\\),$" \
 		"$fidelity_test" "production core ${registration_source} source snapshot"
 done
-python3 - "$fidelity_test" "$fidelity_effects" <<'PY_REGISTRATION_FIDELITY'
+python3 - "$fidelity_test" "$fidelity_effects" "$record_fidelity_effects" <<'PY_REGISTRATION_FIDELITY'
 import ast
+import hashlib
+import json
 from pathlib import Path
 import re
 import sys
 
 main = Path(sys.argv[1]).read_text()
 source = Path(sys.argv[2]).read_text()
+records = Path(sys.argv[3]).read_text()
 
 def require(condition, label):
     if not condition:
@@ -1477,11 +1489,15 @@ def function(text, name):
 def once(text, value, label):
     require(text.count(value) == 1, label)
 
-expected_counts = {
-    "ADDITIONAL": 76, "AUTHENTICATION": 30, "NATIVE_AUTHENTICATION": 8,
-    "AGREEMENT": 8, "COMPLETION": 18, "BEACON_LIFECYCLE": 19,
-    "SERVER_LIFECYCLE": 5, "DH_REQUESTS": 8, "NATIVE_AGREEMENT": 7,
-}
+expected_counts = {'ADDITIONAL': 58,
+ 'AUTHENTICATION': 30,
+ 'NATIVE_AUTHENTICATION': 8,
+ 'AGREEMENT': 8,
+ 'COMPLETION': 9,
+ 'BEACON_LIFECYCLE': 19,
+ 'SERVER_LIFECYCLE': 5,
+ 'DH_REQUESTS': 8,
+ 'NATIVE_AGREEMENT': 7}
 tables = {}
 for name, count in expected_counts.items():
     found = re.search(r"^const " + name + r":.*?= &\[(.*?)^\];", source, re.M | re.S)
@@ -1652,42 +1668,6 @@ reviewed = {'AUTHENTICATION': [("impl<'a> InitPacket",
                  'begin_server_completion',
                  'start_server_candidate_ratchet_kdf(&candidate,agreement.root.as_bytes())',
                  'initial ratchet Server root and candidate handoff'),
-                ('impl BeaconInitialOpen',
-                 'request',
-                 'InitialOpenRequest{ciphertext:self.agreement.application_ciphertext,associated_data:self.agreement.binding.associated_data(),sequence:1,sender_key_id:self.agreement.candidate.server_key_id(),}',
-                 'Phase-2 beacon initial-frame mapping'),
-                ('impl BeaconInitialOpen',
-                 'resume',
-                 'kernel.send_sequence()!=0||kernel.receive_sequence()!=1||kernel.receive_cache_len()!=0',
-                 'registration Beacon exact initial record poststate'),
-                ('impl BeaconInitialOpen',
-                 'resume',
-                 'opened.sequence!=1||opened.plaintext.len()<=crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE',
-                 'later-registration Beacon binding-length gate'),
-                ('impl BeaconInitialOpen',
-                 'resume',
-                 '.split_at(crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE)',
-                 'later-registration Beacon returned remainder split'),
-                ('impl BeaconInitialOpen',
-                 'resume',
-                 'authenticate_registration_key_id_binding(self.agreement.candidate,opened.sender_key_id,prefix,)',
-                 'later-registration Beacon binding authentication'),
-                ('impl BeaconInitialOpen',
-                 'resume',
-                 'control:crate::pqxdh::beacon_commit(authenticated),binding,kernel,application,',
-                 'registration successful finish Established transition'),
-                ('impl ServerInitialSeal',
-                 'request',
-                 'InitialSealRequest{plaintext:[&self.prefix,self.application],associated_data:self.binding.associated_data(),sequence:1,sender_key_id:self.candidate.server_identity_key_id(),target_key_id:self.candidate.key_id(),}',
-                 'endpoint registration Server initial target/sender/context/ratchet mapping'),
-                ('impl ServerInitialSeal',
-                 'resume',
-                 'kernel.send_sequence()!=1||kernel.receive_sequence()!=0||kernel.receive_cache_len()!=0',
-                 'registration Server exact initial record poststate'),
-                ('impl ServerInitialSeal',
-                 'resume',
-                 'build_response_prefix(self.binding.init_hash(),self.candidate.server_identity_public_key(),self.candidate.ephemeral_public_key(),self.candidate.kem_ciphertext(),',
-                 'MLDSA complete response transcript'),
                 ("impl<'a> ServerResponseHash",
                  'request',
                  'HashRequest::Triple([&self.prefix,self.ciphertext,&self.assigned_id])',
@@ -1755,16 +1735,6 @@ selected_additional = [('core-pqxdh',
   'build_registration_response',
   'InitialRatchetKdfResponse::from_bytes(crate::ratchet::initial_ratchet_hkdf(pending.request()),)',
   'initial ratchet Server exact native 64-byte response'),
- ('beacon',
-  '',
-  'finish_registration',
-  'letmutpending=matchpending.resume(Some(response))',
-  'initial ratchet Beacon actual 64-byte continuation'),
- ('server',
-  '',
-  'build_registration_response',
-  'letmutpending=pending.resume(Some(response)).ok()?;',
-  'initial ratchet Server actual 64-byte continuation'),
  ('registration',
   'impl AuthenticatedInit',
   'into_parts',
@@ -1873,21 +1843,6 @@ selected_additional = [('core-pqxdh',
  ('beacon',
   '',
   'finish_registration',
-  'InitialOpened{plaintext:&opened.plaintext,sequence:opened.seq,sender_key_id:opened.key_id,}',
-  'registration actual native open response mapping'),
- ('beacon',
-  '',
-  'finish_registration',
-  'decrypt_registration_message_with_ratchet(request.ciphertext,request.sender_key_id,request.associated_data,&mutratchet,)',
-  'registration exact native initial open operands'),
- ('beacon',
-  '',
-  'finish_registration',
-  'ratchet.into_kernel(),opened.as_ref().map(|opened|InitialOpened{',
-  'registration native open same poststate continuation'),
- ('beacon',
-  '',
-  'finish_registration',
   'RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:Some(&prekey.secret_key),beacon_one_time:Some(&onetime_key.secret_key),beacon_kem:Some(&pq_key.secret_key),}',
   'registration Beacon secret handles belong to pending request'),
  ('server',
@@ -1900,21 +1855,6 @@ selected_additional = [('core-pqxdh',
   'get_shared_secret',
   'RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:None,beacon_one_time:None,beacon_kem:None,}',
   'registration Server local secret handles'),
- ('server',
-  '',
-  'build_registration_response',
-  'encrypt_registration_message_with_ratchet(&authenticated_plaintext,request.target_key_id,request.sender_key_id,request.associated_data,&mutratchet,)',
-  'registration exact native initial seal operands'),
- ('server',
-  '',
-  'build_registration_response',
-  'forpartinrequest.plaintext{authenticated_plaintext.extend_from_slice(part);}',
-  'registration exact ordered prefix and application plaintext'),
- ('server',
-  '',
-  'build_registration_response',
-  'ratchet.into_kernel(),sequence,encrypted.as_ref().map(|encrypted|encrypted.ciphertext.as_slice()),',
-  'registration actual native seal same poststate and output'),
  ('server',
   '',
   'build_registration_response',
@@ -1986,9 +1926,9 @@ for statement in [
     "contracts.extend_from_slice(ADDITIONAL);", "inAUTHENTICATION.iter().chain(COMPLETION)",
     "inAGREEMENT", "inNATIVE_AUTHENTICATION", "inBEACON_LIFECYCLE", "inDH_REQUESTS", "inNATIVE_AGREEMENT",
     "ifwanted.contains(from)", "wanted.replacen(from,to,1)",
-    'assert_eq!(count,609,"reviewedregistrationcoverageunexpectedlychanged");',
+    'assert_eq!(count,511,"reviewedregistrationcoverageunexpectedlychanged");',
 ]:
-    once(matrix, statement, f"609 exact operand/continuation controls: {statement}")
+    once(matrix, statement, f"511 exact operand/continuation controls: {statement}")
 once(function(source, "registration_failure_bypass_and_publication_order_controls_are_rejected"), "assert_eq!(count,28);", "28 failure/bypass/order controls")
 once(function(source, "registration_wire_fields_and_attached_signature_roles_cannot_be_substituted"), "assert_eq!(checked,54);", "54 field/signature-role substitution controls")
 capabilities = function(source, "registration_capabilities_keep_private_provenance_and_native_erasure")
@@ -1997,7 +1937,50 @@ for statement in ["pubstructAuthenticatedInit", "pubstructAuthenticatedResponse"
 require(capabilities.count(r"\npubstructRootKeyInput") == 2, "native erasure control mutates the actual RootKeyInput declaration")
 require(source.count("lifecycle(&baseline).unwrap();") == 4, "every new matrix checks its positive baseline")
 require(source.count("lifecycle(&changed).is_err()") == 6, "all six new negative-control dispatches reject their mutant")
-print("Registration fidelity inventory: 54 synchronized inputs, 32+4 tests, 695 moved-core/native negative controls")
+
+# Actual core-owned record continuations supersede the complete-record callback seam.
+# Pin every reviewed body/field/mutation tuple, plus execution of all validators and controls.
+record_pins = {'BODIES': {'count': 58,
+            'sha256': '6999c3e6a6d9ba8a601bcdcdbad540463af306a5e3ef5e30189c635fa28b5fb9'},
+ 'DECLARATIONS': {'count': 11,
+                  'sha256': 'd146e391f621db1b6c2ad9794486fd5da41470811b93474bcae8dbbedf0c81b2'},
+ 'MIGRATED': {'count': 87,
+              'sha256': '9cce464f100fe9d74765e87a76c6b8efa7820b0cbf688cda8d3f715757016c00'}}
+for name, pin in record_pins.items():
+    found = re.search(r"^const " + name + r":.*?= &\[(.*?)^\];", records, re.M | re.S)
+    require(found is not None, f"reviewed record {name} table")
+    rows = ast.literal_eval("[" + found[1] + "]")
+    require(len(rows) == pin["count"], f"reviewed record {name} count")
+    digest = hashlib.sha256(json.dumps(rows, separators=(",", ":")).encode()).hexdigest()
+    require(digest == pin["sha256"], f"reviewed record {name} operands/order/failure controls")
+for name in ["validate_cryptoframe_source", "validate_record_opening_source", "validate_ratchet_effect_driver", "validate_later_registration_fidelity"]:
+    once(function(main, name), "record_effects::validate(snapshot)?;", f"{name} delegates actual record continuations")
+once(function(source, "lifecycle"), "super::record_effects::validate(snapshot)?;", "registration lifecycle composes actual record continuations")
+for name in ["validate_ratchet_effect_driver", "validate_later_registration_fidelity"]:
+    once(function(main, name), "validate_record_opening_source(snapshot)?;", f"{name} retains exact core open guards")
+for statement in ["inBODIES{", "actual!=expected", "inDECLARATIONS{", 'core.contains("take_kernel")', 'core.contains("usealloc::")', 'core.contains("usestd::")']:
+    once(function(records, "validate"), statement, f"record validator remains active: {statement}")
+for name, constant in [
+    ("exact_record_controller_bodies_and_private_requests_are_required", "BODY_MUTATION_COUNT"),
+    ("record_request_privacy_and_part_types_cannot_be_weakened", "DECLARATION_MUTATION_COUNT"),
+    ("every_moved_record_operand_failure_and_bypass_control_is_rejected", "MIGRATED_CONTROL_COUNT"),
+]:
+    text = function(records, name)
+    once(text, f"assert_eq!(checked,{constant});", f"record control count {name}")
+    require("validate(&baseline).unwrap();" in text, f"record positive baseline {name}")
+body_matrix = function(records, "exact_record_controller_bodies_and_private_requests_are_required")
+for statement in ["inBODIES{", "super::registration_effects::replace_contract(", "validate(&changed).is_err()"]:
+    once(body_matrix, statement, f"actual record body mutation execution: {statement}")
+require(body_matrix.count("recordbodybypass") == 2 and body_matrix.count("recordearlyreturn") == 1, "both record body bypass controls execute")
+once(function(records, "change_declaration"), "source.replace_range(", "actual record declaration mutation executes")
+once(function(records, "record_request_privacy_and_part_types_cannot_be_weakened"), "change_declaration(&mutchanged,declaration,from,to);", "record declaration mutations execute")
+relocated = function(records, "every_moved_record_operand_failure_and_bypass_control_is_rejected")
+for statement in ["inMIGRATED{", "super::registration_effects::replace_contract(", "super::validate(&changed).unwrap_err()", "error.contains(diagnostic)"]:
+    once(relocated, statement, f"relocated record controls execute: {statement}")
+for name, count in [("BODY_MUTATION_COUNT", 116), ("DECLARATION_MUTATION_COUNT", 11), ("MIGRATED_CONTROL_COUNT", 87)]:
+    once(records, f"const {name}: usize = {count};", f"reviewed exact record count {name}")
+
+print("Registration/record fidelity inventory: 55 synchronized inputs, 32+4+3 tests, 597 registration plus 214 record negative controls; 87 old names retained")
 PY_REGISTRATION_FIDELITY
 
 require_line_count 1 \
@@ -2096,19 +2079,25 @@ require_line_count 1 '^            target: check-generated-proverif-phase2-assig
 	"dedicated weak Phase-2 assigned-ID CI target"
 
 
-# Initial-record policy is owned by the extracted controller and interpreted with exact request/reply fields.
+# The core owns initial sequence selection and opening metadata; native clauses only interpret its requests.
 require_occurrence_count 1 \
-	'impl BeaconInitialOpen<[^>]+>\s*\{\s*pub fn request\(&self\) -> InitialOpenRequest<[^>]+> \{\s*InitialOpenRequest \{\s*ciphertext: self\.agreement\.application_ciphertext,\s*associated_data: self\.agreement\.binding\.associated_data\(\),\s*sequence: 1,\s*sender_key_id: self\.agreement\.candidate\.server_key_id\(\),\s*\}\s*\}' \
-	'core initial opening fixes exact ciphertext, populated AD, sequence one and pinned sender' src/registration.rs
+	'let kernel = crate::pqxdh::resume_initial_ratchet_kdf\(self\.pending, response\);\s*let effect = records::begin_record_receive\(\s*kernel,\s*1,\s*self\.agreement\.application_ciphertext,\s*self\.agreement\.binding\.associated_data\(\),\s*self\.agreement\.candidate\.server_key_id\(\),\s*\);\s*normalize_beacon_open\(self\.agreement, effect\)' \
+	'core initial opening selects the actual initial kernel, sequence one, ciphertext, full AD and pinned sender' src/registration.rs
 require_occurrence_count 1 \
-	'let request = pending\.request\(\);\s*let opened = decrypt_registration_message_with_ratchet\(\s*request\.ciphertext,\s*request\.sender_key_id,\s*request\.associated_data,\s*&mut ratchet,\s*\);\s*let result = pending\.resume\(\s*ratchet\.into_kernel\(\),\s*opened\.as_ref\(\)\.map\(\|opened\| InitialOpened \{\s*plaintext: &opened\.plaintext,\s*sequence: opened\.seq,\s*sender_key_id: opened\.key_id,\s*\}\),\s*\);' \
-	'Beacon initial opening interprets the core request and returns exact plaintext metadata and kernel' "$adapter_dir/src/beacon.rs"
+	'registration::BeaconInitialOpen::AeadRequested\(pending\) => \{\s*let plaintext = crate::ratchet::execute_open_request\(pending\.request\(\)\);\s*let completed = match pending\.finish\(plaintext\.as_deref\(\)\) \{\s*Ok\(completed\) => completed,\s*Err\(control\) => \{\s*self\.state = BeaconState::Aborted \{ control \};\s*return None;\s*\}\s*\};\s*let \(control, binding, kernel, application\) = completed\.into_parts\(\);' \
+	'Beacon interprets the selected core AEAD request and finishes only its actual plaintext reply' "$adapter_dir/src/beacon.rs"
 require_occurrence_count 1 \
-	'let Some\(opened\) = opened else \{\s*return Err\(rejected\);\s*\};\s*if opened\.sequence != 1\s*\|\| opened\.plaintext\.len\(\) <= crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE\s*\{\s*return Err\(rejected\);\s*\}\s*let \(prefix, application\) = opened\s*\.plaintext\s*\.split_at\(crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE\);' \
-	'core initial sequence-one and nonempty gate precedes assigned-ID prefix admission' src/registration.rs
+	'let \(kernel, opened\) = self\.pending\.finish\(plaintext\);\s*let opened = match opened \{\s*Some\(opened\) => opened,\s*None => return Err\(rejected\),\s*\};\s*if opened\.plaintext\.len\(\) <= crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE \{\s*return Err\(rejected\);\s*\}\s*let \(prefix, application\) = opened\s*\.plaintext\s*\.split_at\(crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE\);' \
+	'core initial nonempty and prefix gates consume only source-owned opening metadata and kernel' src/registration.rs
 require_occurrence_count 1 \
-	'pub\(crate\) fn decrypt_registration_message_with_ratchet\([\s\S]*?\) -> Option<Decrypted> \{\s*decrypt_payload_with_ratchet\(ciphertext, 1, sender_kid, associated_data, ratchet\)\s*\}' \
-	"registration raw-payload opening fixes sequence one and pinned sender" "$adapter_dir/src/ratchet.rs"
+	'let effect = records::begin_record_receive\(\s*ratchet\.refined\.take\(\),\s*key_seq,\s*ciphertext,\s*associated_data,\s*kid,\s*\);\s*let \(kernel, opened\) = execute_record_receive\(effect\);\s*ratchet\.refined\.put\(kernel\);\s*opened' \
+	'generic receive preserves supplied sequence, ciphertext, AD, sender and exact returned kernel' "$adapter_dir/src/ratchet.rs"
+require_occurrence_count 1 \
+	'impl RecordReceiveAead<[^>]+> \{[\s\S]*?pub fn finish<Plaintext>\(\s*self,\s*plaintext: Option<Plaintext>,\s*\) -> \(ConcreteRatchetKernel, Option<OpenedRecord<Plaintext>>\) \{\s*self\.pending\.finish\(plaintext\)\s*\}' \
+	'record AEAD completion delegates the actual optional plaintext to its retained opening capability' src/record_effects.rs
+require_occurrence_count 1 \
+	'let key_id = self\.opening\.context\(\)\.sender_kid;\s*let seq = self\.opening\.sequence\(\);\s*let opened = OpenedRecord \{\s*plaintext,\s*key_id,\s*seq,\s*\};\s*self\.opening\.finish\(Some\(opened\)\)' \
+	'record metadata comes from the selected opening context and sequence before kernel publication' src/record.rs
 require_line_count 1 '^pub const MAX_MESSAGE_SIZE: usize = 33_554_432;$' \
 	"$parser_dir/src/sizing.rs" "complete CBOR message size limit"
 for record in \
@@ -2119,7 +2108,7 @@ for record in \
 		"CBOR fixed version, kind and field prefix ${record}"
 done
 require_line_count 1 \
-	'^\(\* @beaconcrypt-fidelity-v1 later_registration\.source\.beacon\.first_gate=raw_helper_fixes_sequence_1;finish_registration_checks_decrypted\.seq_ne_1_defensively_before_binding \*\)$' \
+	'^\(\* @beaconcrypt-fidelity-v1 later_registration\.source\.beacon\.first_gate=core_begin_record_receive_fixes_sequence_1_and_pinned_sender;owned_BeaconRecordAead\.finish_checks_nonempty_assigned_ID_prefix_before_binding \*\)$' \
 	"$transcript_interface" "sequence-one source fidelity fact"
 require_line_count 1 \
 	'^\(\* @beaconcrypt-fidelity-v1 later_registration\.adapter\.no_first_gate=generic_receive_has_no_first_sequence_special_case \*\)$' \

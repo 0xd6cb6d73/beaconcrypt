@@ -95,6 +95,192 @@ def source_order(root, relative, anchor, tokens, scope=""):
     return body
 
 
+def check_record_effect_source(root):
+    """Follow actual primitive replies through the owned protected-record phases."""
+    registration = (root / "beaconcrypt-core/src/registration.rs").read_text()
+    if any(
+        name in registration
+        for name in (
+            "take_kernel",
+            "InitialOpened",
+            "InitialSealRequest",
+            "InitialOpenRequest",
+        )
+    ):
+        raise ValueError(
+            "registration reintroduced a whole-record metadata/kernel callback"
+        )
+    checks = [
+        (
+            "beaconcrypt/src/ratchet.rs",
+            "fn symmetric_ratchet_hkdf",
+            "",
+            [
+                "crypto_kdf::hkdf::sha512::extract(None, request.input())",
+                "crypto_kdf::hkdf::sha512::expand(OUTPUT_SIZE, Some(request.info()), &prk)",
+                "output.copy_from_slice(&expanded)",
+            ],
+        ),
+        (
+            "beaconcrypt/src/ratchet.rs",
+            "pub(crate) fn execute_seal_request(",
+            "",
+            [
+                "let key: AeadKey = (*request.key).into();",
+                "let nonce: AeadNonce = (*request.nonce).into();",
+                "Some(Zeroizing::new(join_record_parts([prefix.as_slice(), *application,])?))",
+                "SealPlaintextRequest::Single(plaintext) => plaintext",
+                "SealPlaintextRequest::Prefixed { .. } => prefixed.as_ref()?.as_slice()",
+                "encrypt_detached(plaintext, Some(request.associated_data.as_slice()), &nonce, &key,)",
+                "Some((ciphertext, tag.as_slice().try_into().ok()?))",
+            ],
+        ),
+        (
+            "beaconcrypt/src/ratchet.rs",
+            "pub(crate) fn execute_commitment_hash(",
+            "",
+            [
+                "crypto_generichash::generichash(transcript.as_bytes(), None, COMMITMENT_SIZE).ok()",
+                "transcript.as_mut_bytes().zeroize()",
+                "commitment?.as_slice().try_into().ok()",
+            ],
+        ),
+        (
+            "beaconcrypt/src/ratchet.rs",
+            "pub(crate) fn execute_write_request(",
+            "",
+            [
+                "RecordWriteRequest::Raw { parts } => join_record_parts(parts)",
+                "RecordWriteRequest::Frame { parts, sequence, sender, }",
+                "let ciphertext = join_record_parts(parts)?;",
+                "encode_frame(CryptoFrame { cipher_text: &ciphertext, seq: sequence, key_id: sender, })",
+            ],
+        ),
+        (
+            "beaconcrypt/src/ratchet.rs",
+            "pub(crate) fn execute_open_request(",
+            "",
+            [
+                "let request = request?;",
+                "let key: AeadKey = (*request.key).into();",
+                "let nonce: AeadNonce = (*request.nonce).into();",
+                "decrypt(request.ciphertext, Some(request.associated_data.as_slice()), &nonce, &key,)",
+            ],
+        ),
+        (
+            "beaconcrypt-core/src/record_effects.rs",
+            "pub fn registration(",
+            "impl<'a> SealFrameContext<'a>",
+            [
+                "registration_key_id_binding(assigned_kid).as_bytes()",
+                "plaintext: application, prefix: Some(prefix), associated_data: *associated_data",
+                "target_kid: assigned_kid, sender_kid, encoding: RecordEncoding::Raw",
+            ],
+        ),
+        (
+            "beaconcrypt-core/src/record_effects.rs",
+            "pub fn request(&self)",
+            "impl<'a> SealAead<'a>",
+            [
+                "let material = self.seal.material();",
+                "let context = self.seal.context();",
+                "key: material.key().as_bytes(), nonce: material.nonce().as_bytes(), associated_data: &context.associated_data, plaintext: context.plaintext_request()",
+            ],
+        ),
+        (
+            "beaconcrypt-core/src/record_effects.rs",
+            "fn reject_send(",
+            "",
+            ["pending.finish(None)"],
+        ),
+        (
+            "beaconcrypt-core/src/record_effects.rs",
+            "pub fn resume<'ciphertext>(",
+            "impl<'a> SealAead<'a>",
+            [
+                "SealAfterAead::Rejected(reject_send(self.seal).0)",
+                "build_commitment_transcript(material.key().as_bytes(), material.nonce().as_bytes(), &context.associated_data, &tag, self.seal.sequence(), context.sender_kid,)",
+                "seal: self.seal, ciphertext, tag, transcript,",
+            ],
+        ),
+        (
+            "beaconcrypt-core/src/record_effects.rs",
+            "pub fn request(&self)",
+            "impl SealWrite<'_, '_>",
+            [
+                "let parts = [self.ciphertext, self.tag.as_slice(), self.commitment.as_slice(),];",
+                "RecordEncoding::Raw => RecordWriteRequest::Raw { parts }",
+                "sequence: self.seal.sequence(), sender: self.seal.context().sender_kid",
+            ],
+        ),
+        (
+            "beaconcrypt-core/src/record_effects.rs",
+            "pub fn finish<Output>(",
+            "impl SealWrite<'_, '_>",
+            [
+                "None => return self.seal.finish(None)",
+                "let key_id = self.seal.context().target_kid;",
+                "let seq = self.seal.sequence();",
+                "self.seal.finish(Some(output))",
+            ],
+        ),
+        (
+            "beaconcrypt-core/src/record_effects.rs",
+            "pub fn begin_record_receive<'a>(",
+            "",
+            [
+                "OpenFrameContext::from_frame(ciphertext, associated_data, sender)",
+                "RecordReceiveEffect::Rejected(kernel)",
+                "normalize_receive(begin_receive(kernel, sequence, context))",
+            ],
+        ),
+        (
+            "beaconcrypt-core/src/record_effects.rs",
+            "pub fn resume(self, commitment_matches:",
+            "impl<'a> RecordReceiveCommitment<'a>",
+            [
+                "self.pending.resume(commitment_matches)",
+                "OpenAfterCommitment::OpenCommitmentRejected(kernel)",
+                "RecordReceiveEffect::Rejected(kernel)",
+                "OpenAfterCommitment::OpenAeadRequested(pending)",
+                "RecordReceiveEffect::AeadRequested(RecordReceiveAead { pending })",
+            ],
+        ),
+        (
+            "beaconcrypt-core/src/record.rs",
+            "pub fn begin_open(",
+            "",
+            [
+                "build_commitment_transcript(material.key().as_bytes(), material.nonce().as_bytes(), &context.associated_data, context.tag, opening.sequence(), context.sender_kid,)",
+                "OpenCommitment { opening, transcript, }",
+            ],
+        ),
+        (
+            "beaconcrypt-core/src/record.rs",
+            "pub fn resume(self, commitment_matches:",
+            "impl<'a> OpenCommitment<'a>",
+            [
+                "if !commitment_matches",
+                "OpenAfterCommitment::OpenCommitmentRejected(self.opening.reject().0)",
+                "OpenAfterCommitment::OpenAeadRequested(OpenAead { opening: self.opening, })",
+            ],
+        ),
+        (
+            "beaconcrypt-core/src/record.rs",
+            "pub fn finish<Plaintext>(",
+            "impl OpenAead<'_>",
+            [
+                "None => return self.opening.finish(None)",
+                "let key_id = self.opening.context().sender_kid;",
+                "let seq = self.opening.sequence();",
+                "self.opening.finish(Some(opened))",
+            ],
+        ),
+    ]
+    for relative, anchor, scope, tokens in checks:
+        source_order(root, relative, anchor, tokens, scope)
+
+
 def check_source_order():
     """Reviewed interpreter/core drift checks for the retained classical projection."""
     root = HERE.parents[2]
@@ -264,6 +450,7 @@ def check_source_order():
         ],
         "impl<'a> RootKdfPending<'a>",
     )
+    check_record_effect_source(root)
 
 
 def run(proverif, model, queries, output, timeout):

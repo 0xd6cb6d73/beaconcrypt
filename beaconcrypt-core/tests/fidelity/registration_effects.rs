@@ -8,6 +8,8 @@ use super::{Snapshot, compact, require_once, require_ordered_once, rust_body, un
 fn source<'a>(snapshot: &'a Snapshot, name: &str) -> &'a str {
 	match name {
 		"registration" => &snapshot.core_registration,
+		"records" => &snapshot.core_record_effects,
+		"ratchet" => &snapshot.adapter_ratchet,
 		"core-pqxdh" => &snapshot.core_pqxdh,
 		"agreement" => &snapshot.core_agreement,
 		"auth" => &snapshot.adapter_auth,
@@ -114,20 +116,6 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 		"build_registration_response",
 		"InitialRatchetKdfResponse::from_bytes(crate::ratchet::initial_ratchet_hkdf(pending.request()),)",
 		"initial ratchet Server exact native 64-byte response",
-	),
-	(
-		"beacon",
-		"",
-		"finish_registration",
-		"letmutpending=matchpending.resume(Some(response))",
-		"initial ratchet Beacon actual 64-byte continuation",
-	),
-	(
-		"server",
-		"",
-		"build_registration_response",
-		"letmutpending=pending.resume(Some(response)).ok()?;",
-		"initial ratchet Server actual 64-byte continuation",
 	),
 	(
 		"registration",
@@ -243,80 +231,10 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 	),
 	(
 		"registration",
-		"impl<'a> ServerInitialKdf",
-		"resume",
-		"letprefix=*self.candidate.key_id_binding().as_bytes();",
-		"registration exact assigned-ID payload binding",
-	),
-	(
-		"registration",
-		"impl BeaconInitialOpen",
-		"take_kernel",
-		"self.kernel.take()",
-		"initial ratchet Beacon unique kernel transfer",
-	),
-	(
-		"registration",
-		"impl ServerInitialSeal",
-		"take_kernel",
-		"self.kernel.take()",
-		"initial ratchet Server unique kernel transfer",
-	),
-	(
-		"registration",
-		"impl BeaconInitialOpen",
-		"resume",
-		"ifself.kernel.is_some()||kernel.send_sequence()!=0||kernel.receive_sequence()!=1||kernel.receive_cache_len()!=0{returnErr(rejected);}",
-		"registration Beacon exact initial record poststate",
-	),
-	(
-		"registration",
-		"impl BeaconInitialOpen",
-		"resume",
-		"letSome(opened)=openedelse{returnErr(rejected);};",
-		"registration Beacon open failure is terminal",
-	),
-	(
-		"registration",
-		"impl BeaconInitialOpen",
-		"resume",
-		"letOk(prefix)=prefix.try_into()else{returnErr(rejected);};",
-		"registration exact assigned-ID binding prefix",
-	),
-	(
-		"registration",
-		"impl BeaconInitialOpen",
-		"resume",
-		".finish(authenticated.assigned_key_id())",
-		"registration accepted identity determines establishment binding",
-	),
-	(
-		"registration",
 		"impl<'a> CompletedBeacon",
 		"into_parts",
 		"(self.control,self.binding,self.kernel,self.application)",
 		"registration completed Beacon exact result parts",
-	),
-	(
-		"registration",
-		"impl ServerInitialSeal",
-		"resume",
-		"ifself.kernel.is_some()||sequence!=1||kernel.send_sequence()!=1||kernel.receive_sequence()!=0||kernel.receive_cache_len()!=0{returnErr(rejected);}",
-		"registration Server exact initial record poststate",
-	),
-	(
-		"registration",
-		"impl ServerInitialSeal",
-		"resume",
-		"ifciphertext.len()!=length{returnErr(rejected);}",
-		"registration sealed record exact raw ciphertext length",
-	),
-	(
-		"registration",
-		"impl ServerInitialSeal",
-		"resume",
-		"letassigned_id=encode_u64_le(self.candidate.key_id());",
-		"MLDSA assigned-ID response binding",
 	),
 	(
 		"registration",
@@ -511,27 +429,6 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 		"beacon",
 		"",
 		"finish_registration",
-		"InitialOpened{plaintext:&opened.plaintext,sequence:opened.seq,sender_key_id:opened.key_id,}",
-		"registration actual native open response mapping",
-	),
-	(
-		"beacon",
-		"",
-		"finish_registration",
-		"decrypt_registration_message_with_ratchet(request.ciphertext,request.sender_key_id,request.associated_data,&mutratchet,)",
-		"registration exact native initial open operands",
-	),
-	(
-		"beacon",
-		"",
-		"finish_registration",
-		"ratchet.into_kernel(),opened.as_ref().map(|opened|InitialOpened{",
-		"registration native open same poststate continuation",
-	),
-	(
-		"beacon",
-		"",
-		"finish_registration",
 		"RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:Some(&prekey.secret_key),beacon_one_time:Some(&onetime_key.secret_key),beacon_kem:Some(&pq_key.secret_key),}",
 		"registration Beacon secret handles belong to pending request",
 	),
@@ -548,27 +445,6 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 		"get_shared_secret",
 		"RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:None,beacon_one_time:None,beacon_kem:None,}",
 		"registration Server local secret handles",
-	),
-	(
-		"server",
-		"",
-		"build_registration_response",
-		"encrypt_registration_message_with_ratchet(&authenticated_plaintext,request.target_key_id,request.sender_key_id,request.associated_data,&mutratchet,)",
-		"registration exact native initial seal operands",
-	),
-	(
-		"server",
-		"",
-		"build_registration_response",
-		"forpartinrequest.plaintext{authenticated_plaintext.extend_from_slice(part);}",
-		"registration exact ordered prefix and application plaintext",
-	),
-	(
-		"server",
-		"",
-		"build_registration_response",
-		"ratchet.into_kernel(),sequence,encrypted.as_ref().map(|encrypted|encrypted.ciphertext.as_slice()),",
-		"registration actual native seal same poststate and output",
 	),
 	(
 		"server",
@@ -910,60 +786,6 @@ const COMPLETION: &[(&str, &str, &str, &str)] = &[
 		"initial ratchet Server root and candidate handoff",
 	),
 	(
-		"impl BeaconInitialOpen",
-		"request",
-		"InitialOpenRequest{ciphertext:self.agreement.application_ciphertext,associated_data:self.agreement.binding.associated_data(),sequence:1,sender_key_id:self.agreement.candidate.server_key_id(),}",
-		"Phase-2 beacon initial-frame mapping",
-	),
-	(
-		"impl BeaconInitialOpen",
-		"resume",
-		"kernel.send_sequence()!=0||kernel.receive_sequence()!=1||kernel.receive_cache_len()!=0",
-		"registration Beacon exact initial record poststate",
-	),
-	(
-		"impl BeaconInitialOpen",
-		"resume",
-		"opened.sequence!=1||opened.plaintext.len()<=crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE",
-		"later-registration Beacon binding-length gate",
-	),
-	(
-		"impl BeaconInitialOpen",
-		"resume",
-		".split_at(crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE)",
-		"later-registration Beacon returned remainder split",
-	),
-	(
-		"impl BeaconInitialOpen",
-		"resume",
-		"authenticate_registration_key_id_binding(self.agreement.candidate,opened.sender_key_id,prefix,)",
-		"later-registration Beacon binding authentication",
-	),
-	(
-		"impl BeaconInitialOpen",
-		"resume",
-		"control:crate::pqxdh::beacon_commit(authenticated),binding,kernel,application,",
-		"registration successful finish Established transition",
-	),
-	(
-		"impl ServerInitialSeal",
-		"request",
-		"InitialSealRequest{plaintext:[&self.prefix,self.application],associated_data:self.binding.associated_data(),sequence:1,sender_key_id:self.candidate.server_identity_key_id(),target_key_id:self.candidate.key_id(),}",
-		"endpoint registration Server initial target/sender/context/ratchet mapping",
-	),
-	(
-		"impl ServerInitialSeal",
-		"resume",
-		"kernel.send_sequence()!=1||kernel.receive_sequence()!=0||kernel.receive_cache_len()!=0",
-		"registration Server exact initial record poststate",
-	),
-	(
-		"impl ServerInitialSeal",
-		"resume",
-		"build_response_prefix(self.binding.init_hash(),self.candidate.server_identity_public_key(),self.candidate.ephemeral_public_key(),self.candidate.kem_ciphertext(),",
-		"MLDSA complete response transcript",
-	),
-	(
 		"impl<'a> ServerResponseHash",
 		"request",
 		"HashRequest::Triple([&self.prefix,self.ciphertext,&self.assigned_id])",
@@ -1192,9 +1014,11 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 			"auth::authenticate_response(pending,packet)",
 			"agreement::begin_beacon_agreement(authenticated)",
 			"registration::begin_beacon_completion(agreement)",
-			"pending.take_kernel()",
-			"decrypt_registration_message_with_ratchet(",
-			"pending.resume(ratchet.into_kernel(),",
+			"letmuteffect=matchpending.resume(Some(response))",
+			"registration::BeaconInitialOpen::KdfRequested(pending)",
+			"registration::BeaconInitialOpen::CommitmentRequested(mutpending)",
+			"registration::BeaconInitialOpen::AeadRequested(pending)",
+			"pending.finish(plaintext.as_deref())",
 			"completed.into_parts()",
 			"self.identity_key_kid=binding.assigned_key_id();",
 			"self.state=BeaconState::Established{control,binding,ratchet:RatchetManager::from_kernel(kernel),};",
@@ -1208,8 +1032,12 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 			"registration_response_len(plaintext.len(),next_key_id)?;",
 			"letRegistrationOutput{agreement}=reg_out;",
 			"registration::begin_server_completion(",
-			"pending.take_kernel()",
-			"encrypt_registration_message_with_ratchet(",
+			"letresponse=crate::ratchet::ratchet_hkdf(pending.request());",
+			"execute_seal_request(pending.request())",
+			"pending.resume(detached_view)",
+			"execute_commitment_hash(pending.transcript_mut())",
+			"execute_write_request(pending.request())",
+			"pending.resume(ciphertext.as_deref())",
 			"auth::execute_hash(&pending.request())",
 			"self.mldsa_identity.sign_requested(&pending.request())",
 			"crate::wire::encode_response(KexResponse{",
@@ -1219,13 +1047,24 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 		],
 		"MLDSA token binding and signed publication precede commit",
 	)?;
-	let opened = body(snapshot, "registration", "impl BeaconInitialOpen", "resume")?;
+	let initial = body(
+		snapshot,
+		"registration",
+		"impl<'a> BeaconInitialKdf",
+		"resume",
+	)?;
+	require_once(
+		&initial,
+		"records::begin_record_receive(kernel,1,self.agreement.application_ciphertext,self.agreement.binding.associated_data(),self.agreement.candidate.server_key_id(),)",
+		"registration core implicit sequence and pinned sender",
+	)?;
+	let opened = body(snapshot, "registration", "impl BeaconRecordAead", "finish")?;
 	require_ordered_once(
 		&opened,
 		&[
-			"ifself.kernel.is_some()",
-			"letSome(opened)=openedelse",
-			"ifopened.sequence!=1",
+			"let(kernel,opened)=self.pending.finish(plaintext);",
+			"letopened=matchopened",
+			"ifopened.plaintext.len()<=crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE",
 			".split_at(crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE)",
 			"authenticate_registration_key_id_binding(",
 			".finish(authenticated.assigned_key_id())",
@@ -1233,15 +1072,15 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 		],
 		"registration initial open authentication before commit",
 	)?;
-	let seal = body(snapshot, "registration", "impl ServerInitialSeal", "resume")?;
+	let seal = body(snapshot, "registration", "impl ServerRecordWrite", "resume")?;
 	require_ordered_once(
 		&seal,
 		&[
-			"ifself.kernel.is_some()",
-			"letciphertext=matchciphertext",
+			"let(kernel,sealed)=self.pending.finish(ciphertext);",
+			"letciphertext=matchsealed",
 			"ifciphertext.len()!=length",
 			"build_response_prefix(",
-			"letassigned_id=encode_u64_le(self.candidate.key_id());",
+			"letassigned_id=encode_u64_le(self.state.candidate.key_id());",
 			"Ok(ServerResponseHash{",
 		],
 		"registration exact seal output before response authentication",
@@ -1346,12 +1185,15 @@ pub(super) fn lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 	{
 		return Err("registration replay-set mutation during later response construction".into());
 	}
+	super::record_effects::validate(snapshot)?;
 	Ok(())
 }
 
 fn source_mut<'a>(snapshot: &'a mut Snapshot, name: &str) -> &'a mut String {
 	match name {
 		"registration" => &mut snapshot.core_registration,
+		"records" => &mut snapshot.core_record_effects,
+		"ratchet" => &mut snapshot.adapter_ratchet,
 		"core-pqxdh" => &mut snapshot.core_pqxdh,
 		"agreement" => &mut snapshot.core_agreement,
 		"auth" => &mut snapshot.adapter_auth,
@@ -1363,7 +1205,7 @@ fn source_mut<'a>(snapshot: &'a mut Snapshot, name: &str) -> &'a mut String {
 }
 
 /// Find reviewed operands without depending on rustfmt's choice of line breaks.
-fn replace_contract(
+pub(super) fn replace_contract(
 	snapshot: &mut Snapshot,
 	name: &str,
 	scope: &str,
@@ -1744,7 +1586,7 @@ fn extracted_registration_operand_and_continuation_mutations_are_rejected() {
 	}
 	eprintln!("extracted registration source mutations: {count}");
 	assert_eq!(
-		count, 609,
+		count, 511,
 		"reviewed registration coverage unexpectedly changed"
 	);
 }
@@ -1883,56 +1725,56 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 		),
 		(
 			"registration",
-			"impl BeaconInitialOpen",
+			"impl<'a> BeaconInitialKdf",
 			"resume",
-			"opened.sequence!=1",
-			"false",
+			"records::begin_record_receive(kernel,1,",
+			"records::begin_record_receive(kernel,2,",
 		),
 		(
 			"registration",
-			"impl BeaconInitialOpen",
+			"impl<'a> BeaconInitialKdf",
 			"resume",
-			"opened.sequence!=1",
-			"opened.sequence==1",
+			"records::begin_record_receive(kernel,1,",
+			"records::begin_record_receive(kernel,0,",
 		),
 		(
 			"registration",
-			"impl BeaconInitialOpen",
+			"impl<'a> BeaconInitialKdf",
 			"resume",
-			"opened.sequence!=1",
-			"opened.sender_key_id!=1",
+			"records::begin_record_receive(kernel,1,",
+			"records::begin_record_receive(kernel,self.agreement.candidate.server_key_id(),",
 		),
 		(
 			"registration",
-			"impl BeaconInitialOpen",
+			"impl<'a> BeaconInitialKdf",
 			"resume",
-			"opened.sequence!=1",
-			"opened.sequence>1",
+			"records::begin_record_receive(kernel,1,",
+			"records::begin_record_receive(kernel,u64::MAX,",
 		),
 		(
 			"registration",
-			"impl BeaconInitialOpen",
-			"resume",
+			"impl BeaconRecordAead",
+			"finish",
 			"opened.plaintext.len()<=crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE",
 			"false",
 		),
 		(
-			"registration",
-			"impl ServerInitialSeal",
+			"records",
+			"impl<'a> SealAead",
 			"resume",
-			"sequence!=1",
-			"sequence==1",
+			"self.seal.sequence(),",
+			"0,",
+		),
+		(
+			"records",
+			"impl<'a> SealAead",
+			"resume",
+			"self.seal.sequence(),",
+			"2,",
 		),
 		(
 			"registration",
-			"impl ServerInitialSeal",
-			"resume",
-			"sequence!=1",
-			"sequence>1",
-		),
-		(
-			"registration",
-			"impl ServerInitialSeal",
+			"impl ServerRecordWrite",
 			"resume",
 			"ifciphertext.len()!=length",
 			"if false",
@@ -1950,9 +1792,9 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 	for (target, scope, function, moved, before) in [
 		(
 			"registration",
-			"impl BeaconInitialOpen",
-			"resume",
-			"ifopened.sequence!=1||opened.plaintext.len()<=crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE{returnErr(rejected);}",
+			"impl BeaconRecordAead",
+			"finish",
+			"ifopened.plaintext.len()<=crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE{returnErr(rejected);}",
 			"letbinding=self.agreement.binding.finish(authenticated.assigned_key_id());",
 		),
 		(

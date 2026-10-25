@@ -283,7 +283,7 @@ inductive agreement.AgreementEffect where
 | BeaconComplete : agreement.BeaconAgreement → agreement.AgreementEffect
 
 /-- [beaconcrypt_core::registration::AuthenticatedInit]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 350:0-353:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 351:0-354:1
     Visibility: public -/
 structure registration.AuthenticatedInit where
   registration : pqxdh.VerifiedInitKex
@@ -303,14 +303,14 @@ inductive pqxdh.RegistrationError where
 | KeyIdCollision : pqxdh.RegistrationError
 
 /-- [beaconcrypt_core::registration::BeaconPending]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 407:0-410:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 408:0-411:1
     Visibility: public -/
 structure registration.BeaconPending where
   control : pqxdh.BeaconInitSent
   binding : session.RegistrationBinding
 
 /-- [beaconcrypt_core::registration::ResponsePacket]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 366:0-370:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 367:0-371:1
     Visibility: public -/
 structure registration.ResponsePacket where
   «public» : agreement.ResponsePublic
@@ -318,7 +318,7 @@ structure registration.ResponsePacket where
   signature : Array Std.U8 3309#usize
 
 /-- [beaconcrypt_core::registration::AuthenticatedResponse]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 510:0-513:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 511:0-514:1
     Visibility: public -/
 structure registration.AuthenticatedResponse where
   pending : registration.BeaconPending
@@ -996,8 +996,169 @@ structure record.OpenedRecord (Plaintext : Type) where
   key_id : Std.U64
   seq : Std.U64
 
+/-- [beaconcrypt_core::record_effects::RecordEncoding]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 21:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive record_effects.RecordEncoding where
+| Raw : record_effects.RecordEncoding
+| Frame : record_effects.RecordEncoding
+
+/-- [beaconcrypt_core::record_effects::SealFrameContext]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 27:0-34:1
+    Visibility: public -/
+structure record_effects.SealFrameContext where
+  plaintext : Slice Std.U8
+  «prefix» : core.option.Option (Array Std.U8 8#usize)
+  associated_data : Array Std.U8 281#usize
+  target_kid : Std.U64
+  sender_kid : Std.U64
+  encoding : record_effects.RecordEncoding
+
+/-- [beaconcrypt_core::record_effects::SealPlaintextRequest]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 126:0-132:1
+    Visibility: public -/
+@[discriminant isize]
+inductive record_effects.SealPlaintextRequest where
+| Single : Slice Std.U8 → record_effects.SealPlaintextRequest
+| Prefixed :
+  Array Std.U8 8#usize →
+  Slice Std.U8 →
+  record_effects.SealPlaintextRequest
+
+/-- [beaconcrypt_core::record_effects::RecordSendKdf]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 89:0-91:1
+    Visibility: public -/
+structure record_effects.RecordSendKdf where
+  pending : ratchet.concrete.SendKdf record_effects.SealFrameContext
+
+/-- [beaconcrypt_core::record_effects::RecordSendStart]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 84:0-87:1
+    Visibility: public -/
+@[discriminant isize]
+inductive record_effects.RecordSendStart where
+| Rejected :
+  ratchet.concrete.ConcreteRatchetKernel →
+  record_effects.RecordSendStart
+| KdfRequested :
+  record_effects.RecordSendKdf →
+  record_effects.RecordSendStart
+
+/-- [beaconcrypt_core::record_effects::SealAead]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 147:0-149:1
+    Visibility: public -/
+structure record_effects.SealAead where
+  «seal» : ratchet.concrete.SendSeal record_effects.SealFrameContext
+
+/-- [beaconcrypt_core::record_effects::AeadSealRequest]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 134:0-139:1
+    Visibility: public -/
+structure record_effects.AeadSealRequest where
+  key : Array Std.U8 32#usize
+  nonce : Array Std.U8 12#usize
+  associated_data : Array Std.U8 281#usize
+  plaintext : record_effects.SealPlaintextRequest
+
+/-- [beaconcrypt_core::record_effects::SealCommitment]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 195:0-200:1
+    Visibility: public -/
+structure record_effects.SealCommitment where
+  «seal» : ratchet.concrete.SendSeal record_effects.SealFrameContext
+  ciphertext : Slice Std.U8
+  tag : Array Std.U8 16#usize
+  transcript : commitment.CommitmentTranscript
+
+/-- [beaconcrypt_core::record_effects::SealAfterAead]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 151:0-154:1
+    Visibility: public -/
+@[discriminant isize]
+inductive record_effects.SealAfterAead where
+| Rejected :
+  ratchet.concrete.ConcreteRatchetKernel →
+  record_effects.SealAfterAead
+| CommitmentRequested :
+  record_effects.SealCommitment →
+  record_effects.SealAfterAead
+
+/-- [beaconcrypt_core::record_effects::SealWrite]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 244:0-249:1
+    Visibility: public -/
+structure record_effects.SealWrite where
+  «seal» : ratchet.concrete.SendSeal record_effects.SealFrameContext
+  ciphertext : Slice Std.U8
+  tag : Array Std.U8 16#usize
+  commitment : Array Std.U8 64#usize
+
+/-- [beaconcrypt_core::record_effects::SealAfterCommitment]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 202:0-205:1
+    Visibility: public -/
+@[discriminant isize]
+inductive record_effects.SealAfterCommitment where
+| Rejected :
+  ratchet.concrete.ConcreteRatchetKernel →
+  record_effects.SealAfterCommitment
+| WriteRequested :
+  record_effects.SealWrite →
+  record_effects.SealAfterCommitment
+
+/-- [beaconcrypt_core::record_effects::RecordWriteRequest]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 232:0-241:1
+    Visibility: public -/
+@[discriminant isize]
+inductive record_effects.RecordWriteRequest where
+| Raw : Array (Slice Std.U8) 3#usize → record_effects.RecordWriteRequest
+| Frame :
+  Array (Slice Std.U8) 3#usize →
+  Std.U64 →
+  Std.U64 →
+  record_effects.RecordWriteRequest
+
+/-- [beaconcrypt_core::record_effects::SealedRecord]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 251:0-255:1
+    Visibility: public -/
+structure record_effects.SealedRecord (Output : Type) where
+  ciphertext : Output
+  key_id : Std.U64
+  seq : Std.U64
+
+/-- [beaconcrypt_core::record_effects::RecordReceiveAead]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 310:0-312:1
+    Visibility: public -/
+structure record_effects.RecordReceiveAead where
+  pending : record.OpenAead
+
+/-- [beaconcrypt_core::record_effects::RecordReceiveCommitment]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 306:0-308:1
+    Visibility: public -/
+structure record_effects.RecordReceiveCommitment where
+  pending : record.OpenCommitment
+
+/-- [beaconcrypt_core::record_effects::RecordReceiveKdf]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 302:0-304:1
+    Visibility: public -/
+structure record_effects.RecordReceiveKdf where
+  pending : ratchet.concrete.ReceiveKdf record.OpenFrameContext
+
+/-- [beaconcrypt_core::record_effects::RecordReceiveEffect]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 295:0-300:1
+    Visibility: public -/
+@[discriminant isize]
+inductive record_effects.RecordReceiveEffect where
+| Rejected :
+  ratchet.concrete.ConcreteRatchetKernel →
+  record_effects.RecordReceiveEffect
+| KdfRequested :
+  record_effects.RecordReceiveKdf →
+  record_effects.RecordReceiveEffect
+| CommitmentRequested :
+  record_effects.RecordReceiveCommitment →
+  record_effects.RecordReceiveEffect
+| AeadRequested :
+  record_effects.RecordReceiveAead →
+  record_effects.RecordReceiveEffect
+
 /-- [beaconcrypt_core::registration::HashRequest]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 22:0-25:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 23:0-26:1
     Visibility: public -/
 @[discriminant isize]
 inductive registration.HashRequest where
@@ -1005,7 +1166,7 @@ inductive registration.HashRequest where
 | Triple : Array (Slice Std.U8) 3#usize → registration.HashRequest
 
 /-- [beaconcrypt_core::registration::MldsaVerificationRequest]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 27:0-32:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 28:0-33:1
     Visibility: public -/
 structure registration.MldsaVerificationRequest where
   public_key : Array Std.U8 1952#usize
@@ -1014,14 +1175,14 @@ structure registration.MldsaVerificationRequest where
   signature : Array Std.U8 3309#usize
 
 /-- [beaconcrypt_core::registration::Ed25519VerificationRequest]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 34:0-37:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 35:0-38:1
     Visibility: public -/
 structure registration.Ed25519VerificationRequest where
   public_key : Array Std.U8 32#usize
   signed : Slice Std.U8
 
 /-- [beaconcrypt_core::registration::InitPacket]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 40:0-47:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 41:0-48:1
     Visibility: public -/
 structure registration.InitPacket where
   identity_key : Array Std.U8 33#usize
@@ -1032,21 +1193,21 @@ structure registration.InitPacket where
   signature : Array Std.U8 3309#usize
 
 /-- [beaconcrypt_core::registration::PinFingerprint]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 97:0-100:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 98:0-101:1
     Visibility: public -/
 structure registration.PinFingerprint where
   binding : pqxdh.ServerBinding
   public_key : Array Std.U8 1952#usize
 
 /-- [beaconcrypt_core::registration::InitAuthenticationState]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 132:0-136:1 -/
+    Source: 'beaconcrypt-core/src/registration.rs', lines 133:0-137:1 -/
 structure registration.InitAuthenticationState where
   packet : registration.InitPacket
   server_pin : session.ServerAuthenticationPin
   init_hash : Array Std.U8 64#usize
 
 /-- [beaconcrypt_core::registration::InitBeaconFingerprint]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 322:0-326:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 323:0-327:1
     Visibility: public -/
 structure registration.InitBeaconFingerprint where
   state : registration.InitAuthenticationState
@@ -1054,14 +1215,14 @@ structure registration.InitBeaconFingerprint where
   registration : pqxdh.VerifiedInitKex
 
 /-- [beaconcrypt_core::registration::InitServerFingerprint]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 296:0-299:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 297:0-300:1
     Visibility: public -/
 structure registration.InitServerFingerprint where
   state : registration.InitAuthenticationState
   registration : pqxdh.VerifiedInitKex
 
 /-- [beaconcrypt_core::registration::SignedKeyStage]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 222:0-226:1 -/
+    Source: 'beaconcrypt-core/src/registration.rs', lines 223:0-227:1 -/
 @[discriminant isize]
 inductive registration.SignedKeyStage where
 | PreKey : registration.SignedKeyStage
@@ -1069,7 +1230,7 @@ inductive registration.SignedKeyStage where
 | PqKey : registration.SignedKeyStage
 
 /-- [beaconcrypt_core::registration::InitEd25519Verification]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 228:0-234:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 229:0-235:1
     Visibility: public -/
 structure registration.InitEd25519Verification where
   state : registration.InitAuthenticationState
@@ -1079,14 +1240,14 @@ structure registration.InitEd25519Verification where
   pq_key : Array Std.U8 1185#usize
 
 /-- [beaconcrypt_core::registration::InitMldsaVerification]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 192:0-195:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 193:0-196:1
     Visibility: public -/
 structure registration.InitMldsaVerification where
   state : registration.InitAuthenticationState
   input : Array Std.U8 163#usize
 
 /-- [beaconcrypt_core::registration::InitHash]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 148:0-152:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 149:0-153:1
     Visibility: public -/
 structure registration.InitHash where
   packet : registration.InitPacket
@@ -1094,7 +1255,7 @@ structure registration.InitHash where
   input : Array Std.U8 5495#usize
 
 /-- [beaconcrypt_core::registration::InitAuthentication]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 138:0-146:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 139:0-147:1
     Visibility: public -/
 @[discriminant isize]
 inductive registration.InitAuthentication where
@@ -1115,12 +1276,12 @@ inductive registration.InitAuthentication where
 | Rejected : registration.InitAuthentication
 
 /-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitMldsaVerification<'a>}::resume::closure]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 211:46-211:95 -/
+    Source: 'beaconcrypt-core/src/registration.rs', lines 212:46-212:95 -/
 @[reducible]
 def registration.InitMldsaVerification.resume.closure := Array Std.U8 33#usize
 
 /-- [beaconcrypt_core::registration::ResponseHash]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 424:0-429:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 425:0-430:1
     Visibility: public -/
 structure registration.ResponseHash where
   pending : registration.BeaconPending
@@ -1129,7 +1290,7 @@ structure registration.ResponseHash where
   assigned_id : Array Std.U8 8#usize
 
 /-- [beaconcrypt_core::registration::ResponseMldsaVerification]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 480:0-484:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 481:0-485:1
     Visibility: public -/
 structure registration.ResponseMldsaVerification where
   pending : registration.BeaconPending
@@ -1137,7 +1298,7 @@ structure registration.ResponseMldsaVerification where
   input : Array Std.U8 163#usize
 
 /-- [beaconcrypt_core::registration::Ed25519SigningRequest]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 533:0-537:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 534:0-538:1
     Visibility: public -/
 structure registration.Ed25519SigningRequest where
   public_key : Array Std.U8 32#usize
@@ -1145,7 +1306,7 @@ structure registration.Ed25519SigningRequest where
   message : Slice Std.U8
 
 /-- [beaconcrypt_core::registration::MldsaSigningRequest]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 539:0-544:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 540:0-545:1
     Visibility: public -/
 structure registration.MldsaSigningRequest where
   public_key : Array Std.U8 1952#usize
@@ -1154,7 +1315,7 @@ structure registration.MldsaSigningRequest where
   context : Array Std.U8 32#usize
 
 /-- [beaconcrypt_core::registration::BeaconInitState]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 546:0-555:1 -/
+    Source: 'beaconcrypt-core/src/registration.rs', lines 547:0-556:1 -/
 structure registration.BeaconInitState where
   original_control : pqxdh.BeaconFresh
   started : pqxdh.BeaconStart
@@ -1166,7 +1327,7 @@ structure registration.BeaconInitState where
   pq_key : Array Std.U8 1249#usize
 
 /-- [beaconcrypt_core::registration::BeaconInitReady]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 758:0-762:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 759:0-763:1
     Visibility: public -/
 structure registration.BeaconInitReady where
   state : registration.BeaconInitState
@@ -1174,7 +1335,7 @@ structure registration.BeaconInitReady where
   signature : Array Std.U8 3309#usize
 
 /-- [beaconcrypt_core::registration::BeaconMldsaSigning]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 715:0-720:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 716:0-721:1
     Visibility: public -/
 structure registration.BeaconMldsaSigning where
   state : registration.BeaconInitState
@@ -1183,7 +1344,7 @@ structure registration.BeaconMldsaSigning where
   input : Array Std.U8 163#usize
 
 /-- [beaconcrypt_core::registration::BeaconInitHash]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 691:0-695:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 692:0-696:1
     Visibility: public -/
 structure registration.BeaconInitHash where
   state : registration.BeaconInitState
@@ -1191,20 +1352,20 @@ structure registration.BeaconInitHash where
   input : Array Std.U8 5495#usize
 
 /-- [beaconcrypt_core::registration::BeaconFingerprint]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 663:0-665:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 664:0-666:1
     Visibility: public -/
 structure registration.BeaconFingerprint where
   state : registration.BeaconInitState
 
 /-- [beaconcrypt_core::registration::BeaconEd25519Signing]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 609:0-612:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 610:0-613:1
     Visibility: public -/
 structure registration.BeaconEd25519Signing where
   state : registration.BeaconInitState
   stage : registration.SignedKeyStage
 
 /-- [beaconcrypt_core::registration::BeaconInitEffect]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 569:0-576:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 570:0-577:1
     Visibility: public -/
 @[discriminant isize]
 inductive registration.BeaconInitEffect where
@@ -1222,49 +1383,61 @@ inductive registration.BeaconInitEffect where
 | Ready : registration.BeaconInitReady → registration.BeaconInitEffect
 
 /-- [beaconcrypt_core::registration::SignedInitView]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 753:0-756:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 754:0-757:1
     Visibility: public -/
 structure registration.SignedInitView where
   fields : authentication.InitFields
   signature : Array Std.U8 3309#usize
 
 /-- [beaconcrypt_core::registration::PublishedBeaconInit]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 790:0-793:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 791:0-794:1
     Visibility: public -/
 structure registration.PublishedBeaconInit (Encoded : Type) where
   pending : registration.BeaconPending
   encoded : Encoded
 
 /-- [beaconcrypt_core::registration::BeaconInitialKdf]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 801:0-804:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 802:0-805:1
     Visibility: public -/
 structure registration.BeaconInitialKdf where
   agreement : agreement.BeaconAgreement
   pending : pqxdh.concrete.InitialRatchetKdfPending
 
-/-- [beaconcrypt_core::registration::BeaconInitialOpen]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 855:0-858:1
+/-- [beaconcrypt_core::registration::BeaconRecordAead]
+    Source: 'beaconcrypt-core/src/registration.rs', lines 864:0-867:1
     Visibility: public -/
-structure registration.BeaconInitialOpen where
+structure registration.BeaconRecordAead where
   agreement : agreement.BeaconAgreement
-  kernel : core.option.Option ratchet.concrete.ConcreteRatchetKernel
+  pending : record_effects.RecordReceiveAead
 
-/-- [beaconcrypt_core::registration::InitialOpenRequest]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 842:0-847:1
+/-- [beaconcrypt_core::registration::BeaconRecordCommitment]
+    Source: 'beaconcrypt-core/src/registration.rs', lines 859:0-862:1
     Visibility: public -/
-structure registration.InitialOpenRequest where
-  ciphertext : Slice Std.U8
-  associated_data : Array Std.U8 281#usize
-  sequence : Std.U64
-  sender_key_id : Std.U64
+structure registration.BeaconRecordCommitment where
+  agreement : agreement.BeaconAgreement
+  pending : record_effects.RecordReceiveCommitment
 
-/-- [beaconcrypt_core::registration::InitialOpened]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 849:0-853:1
+/-- [beaconcrypt_core::registration::BeaconRecordKdf]
+    Source: 'beaconcrypt-core/src/registration.rs', lines 854:0-857:1
     Visibility: public -/
-structure registration.InitialOpened where
-  plaintext : Slice Std.U8
-  sequence : Std.U64
-  sender_key_id : Std.U64
+structure registration.BeaconRecordKdf where
+  agreement : agreement.BeaconAgreement
+  pending : record_effects.RecordReceiveKdf
+
+/-- [beaconcrypt_core::registration::BeaconInitialOpen]
+    Source: 'beaconcrypt-core/src/registration.rs', lines 848:0-852:1
+    Visibility: public -/
+@[discriminant isize]
+inductive registration.BeaconInitialOpen where
+| KdfRequested :
+  registration.BeaconRecordKdf →
+  registration.BeaconInitialOpen
+| CommitmentRequested :
+  registration.BeaconRecordCommitment →
+  registration.BeaconInitialOpen
+| AeadRequested :
+  registration.BeaconRecordAead →
+  registration.BeaconInitialOpen
 
 /-- [beaconcrypt_core::session::SessionBinding]
     Source: 'beaconcrypt-core/src/session.rs', lines 121:0-128:1
@@ -1278,7 +1451,7 @@ structure session.SessionBinding where
   associated_data : Array Std.U8 281#usize
 
 /-- [beaconcrypt_core::registration::CompletedBeacon]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 923:0-928:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 984:0-989:1
     Visibility: public -/
 structure registration.CompletedBeacon where
   control : pqxdh.BeaconEstablished
@@ -1287,7 +1460,7 @@ structure registration.CompletedBeacon where
   application : Slice Std.U8
 
 /-- [beaconcrypt_core::registration::ServerInitialKdf]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 943:0-948:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1004:0-1009:1
     Visibility: public -/
 structure registration.ServerInitialKdf where
   candidate : pqxdh.ServerRegistrationCandidate
@@ -1295,28 +1468,43 @@ structure registration.ServerInitialKdf where
   application : Slice Std.U8
   pending : pqxdh.concrete.InitialRatchetKdfPending
 
-/-- [beaconcrypt_core::registration::ServerInitialSeal]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 1014:0-1020:1
-    Visibility: public -/
-structure registration.ServerInitialSeal where
+/-- [beaconcrypt_core::registration::ServerRecordState]
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1041:0-1045:1 -/
+structure registration.ServerRecordState where
   candidate : pqxdh.ServerRegistrationCandidate
   binding : session.RegistrationBinding
   application : Slice Std.U8
-  «prefix» : Array Std.U8 8#usize
-  kernel : core.option.Option ratchet.concrete.ConcreteRatchetKernel
 
-/-- [beaconcrypt_core::registration::InitialSealRequest]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 1006:0-1012:1
+/-- [beaconcrypt_core::registration::ServerInitialSeal]
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1083:0-1086:1
     Visibility: public -/
-structure registration.InitialSealRequest where
-  plaintext : Array (Slice Std.U8) 2#usize
-  associated_data : Array Std.U8 281#usize
-  sequence : Std.U64
-  sender_key_id : Std.U64
-  target_key_id : Std.U64
+structure registration.ServerInitialSeal where
+  state : registration.ServerRecordState
+  pending : record_effects.RecordSendKdf
+
+/-- [beaconcrypt_core::registration::ServerRecordAead]
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1108:0-1111:1
+    Visibility: public -/
+structure registration.ServerRecordAead where
+  state : registration.ServerRecordState
+  pending : record_effects.SealAead
+
+/-- [beaconcrypt_core::registration::ServerRecordCommitment]
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1134:0-1137:1
+    Visibility: public -/
+structure registration.ServerRecordCommitment where
+  state : registration.ServerRecordState
+  pending : record_effects.SealCommitment
+
+/-- [beaconcrypt_core::registration::ServerRecordWrite]
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1164:0-1167:1
+    Visibility: public -/
+structure registration.ServerRecordWrite where
+  state : registration.ServerRecordState
+  pending : record_effects.SealWrite
 
 /-- [beaconcrypt_core::registration::ServerResponseHash]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 1090:0-1097:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1217:0-1224:1
     Visibility: public -/
 structure registration.ServerResponseHash where
   candidate : pqxdh.ServerRegistrationCandidate
@@ -1327,7 +1515,7 @@ structure registration.ServerResponseHash where
   assigned_id : Array Std.U8 8#usize
 
 /-- [beaconcrypt_core::registration::ServerResponseSigning]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 1125:0-1131:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1252:0-1258:1
     Visibility: public -/
 structure registration.ServerResponseSigning where
   candidate : pqxdh.ServerRegistrationCandidate
@@ -1337,7 +1525,7 @@ structure registration.ServerResponseSigning where
   input : Array Std.U8 163#usize
 
 /-- [beaconcrypt_core::registration::ServerResponseReady]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 1173:0-1179:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1300:0-1306:1
     Visibility: public -/
 structure registration.ServerResponseReady where
   candidate : pqxdh.ServerRegistrationCandidate
@@ -1347,7 +1535,7 @@ structure registration.ServerResponseReady where
   signature : Array Std.U8 3309#usize
 
 /-- [beaconcrypt_core::registration::SignedResponseView]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 1164:0-1171:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1291:0-1298:1
     Visibility: public -/
 structure registration.SignedResponseView where
   identity_key : Array Std.U8 32#usize
@@ -1358,7 +1546,7 @@ structure registration.SignedResponseView where
   signature : Array Std.U8 3309#usize
 
 /-- [beaconcrypt_core::registration::PublishedServerResponse]
-    Source: 'beaconcrypt-core/src/registration.rs', lines 1213:0-1218:1
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1340:0-1345:1
     Visibility: public -/
 structure registration.PublishedServerResponse (Encoded : Type) where
   control : pqxdh.ServerState

@@ -137,7 +137,7 @@ class NativeResponseSourceGate(unittest.TestCase):
 
     def test_response_uses_accepted_request_hash(self):
         self.mutate_source(
-            "build_response_prefix(\n\t\t\tself.binding.init_hash(),",
+            "build_response_prefix(\n\t\t\tself.state.binding.init_hash(),",
             "build_response_prefix(\n\t\t\t&[0; 64],",
             "beaconcrypt-core/src/registration.rs",
         )
@@ -174,8 +174,9 @@ class NativeResponseSourceGate(unittest.TestCase):
 
     def test_exact_record_request_interpreted(self):
         self.mutate_source(
-            "request.target_key_id,\n\t\t\trequest.sender_key_id,",
-            "request.sender_key_id,\n\t\t\trequest.target_key_id,",
+            "self.candidate.key_id(),\n\t\t\tself.candidate.server_identity_key_id(),",
+            "self.candidate.server_identity_key_id(),\n\t\t\tself.candidate.key_id(),",
+            "beaconcrypt-core/src/registration.rs",
         )
 
     def test_core_hash_parts_are_ordered(self):
@@ -183,6 +184,38 @@ class NativeResponseSourceGate(unittest.TestCase):
             "HashRequest::Triple([&self.prefix, self.ciphertext, &self.assigned_id])",
             "HashRequest::Triple([&self.assigned_id, self.ciphertext, &self.prefix])",
             "beaconcrypt-core/src/registration.rs",
+        )
+
+    def test_record_aead_reply_is_not_substituted(self):
+        self.mutate_source(
+            "pending.resume(detached_view).ok()?",
+            "pending.resume(Some((&[], [0; 16]))).ok()?",
+        )
+
+    def test_record_hash_reply_is_not_substituted(self):
+        self.mutate_source(
+            "pending.resume(commitment).ok()?",
+            "pending.resume(Some([0; 64])).ok()?",
+        )
+
+    def test_record_writer_reply_is_not_substituted(self):
+        self.mutate_source(
+            "pending.resume(ciphertext.as_deref()).ok()?",
+            "pending.resume(Some(&[])).ok()?",
+        )
+
+    def test_written_record_length_is_checked_before_signing(self):
+        self.mutate_source(
+            "if ciphertext.len() != length {",
+            "if false && ciphertext.len() != length {",
+            "beaconcrypt-core/src/registration.rs",
+        )
+
+    def test_assigned_identifier_prefix_is_core_owned(self):
+        self.mutate_source(
+            "registration_key_id_binding(assigned_kid).as_bytes()",
+            "registration_key_id_binding(sender_kid).as_bytes()",
+            "beaconcrypt-core/src/record_effects.rs",
         )
 
 

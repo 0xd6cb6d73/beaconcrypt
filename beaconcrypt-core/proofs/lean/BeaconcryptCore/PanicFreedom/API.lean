@@ -8,6 +8,8 @@ import BeaconcryptCore.PanicFreedom.Pqxdh
 import BeaconcryptCore.PanicFreedom.RatchetLoops
 import BeaconcryptCore.PanicFreedom.RatchetReceive
 import BeaconcryptCore.PanicFreedom.Record
+import BeaconcryptCore.PanicFreedom.RecordEffects
+import BeaconcryptCore.PanicFreedom.RecordEffectsSend
 import BeaconcryptCore.PanicFreedom.Registration
 import BeaconcryptCore.PanicFreedom.RegistrationPublication
 import BeaconcryptCore.PanicFreedom.RegistrationResponse
@@ -1666,369 +1668,578 @@ theorem operation_310 {Message : Type} (remaining : Slice Std.U8) (message : Mes
     ∃ result, record.finish_frame_read (Message := Message) remaining message = ok result := by
   apply BeaconcryptCore.PanicFreedom.Record.complete_total
 
+-- Extracted operation: record_effects.RecordEncoding.Insts.CoreCloneClone.clone
+theorem operation_311 (self : record_effects.RecordEncoding) :
+    ∃ result, record_effects.RecordEncoding.Insts.CoreCloneClone.clone self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordEncoding_Insts_CoreCloneClone_clone_total
+
+-- Extracted operation: record_effects.RecordReceiveAead.finish
+theorem operation_312 {Plaintext : Type} (self : record_effects.RecordReceiveAead)
+  (plaintext : core.option.Option Plaintext) :
+    ∃ result, record_effects.RecordReceiveAead.finish (Plaintext := Plaintext) self plaintext = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveAead_finish_total
+
+-- Extracted operation: record_effects.RecordReceiveAead.request
+theorem operation_313 (self : record_effects.RecordReceiveAead) :
+    ∃ result, record_effects.RecordReceiveAead.request self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveAead_request_total
+
+-- Extracted operation: record_effects.RecordReceiveCommitment.resume
+theorem operation_314 (self : record_effects.RecordReceiveCommitment) (commitment_matches : Bool) :
+    ∃ result, record_effects.RecordReceiveCommitment.resume self commitment_matches = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveCommitment_resume_total
+
+-- Extracted operation: record_effects.RecordReceiveCommitment.supplied_commitment
+theorem operation_315 (self : record_effects.RecordReceiveCommitment) :
+    ∃ result, record_effects.RecordReceiveCommitment.supplied_commitment self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveCommitment_supplied_commitment_total
+
+-- Extracted operation: record_effects.RecordReceiveCommitment.transcript
+theorem operation_316 (self : record_effects.RecordReceiveCommitment) :
+    ∃ result, record_effects.RecordReceiveCommitment.transcript self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveCommitment_transcript_total
+
+-- Extracted operation: record_effects.RecordReceiveCommitment.transcript_mut
+theorem operation_317 (self : record_effects.RecordReceiveCommitment) :
+    ∃ result, record_effects.RecordReceiveCommitment.transcript_mut self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveCommitment_transcript_mut_total
+
+-- Extracted operation: record_effects.RecordReceiveKdf.cancel
+theorem operation_318 (self : record_effects.RecordReceiveKdf) :
+    ∃ result, record_effects.RecordReceiveKdf.cancel self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveKdf_cancel_total
+
+-- Extracted operation: record_effects.RecordReceiveKdf.request
+theorem operation_319 (self : record_effects.RecordReceiveKdf) :
+    ∃ result, record_effects.RecordReceiveKdf.request self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveKdf_request_total
+
+-- Extracted operation: record_effects.RecordReceiveKdf.resume
+theorem operation_320 (self : record_effects.RecordReceiveKdf)
+  (response : ratchet.RatchetKdfResponse) :
+    ∃ result, record_effects.RecordReceiveKdf.resume self response = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveKdf_resume_total
+
+-- Extracted operation: record_effects.RecordSendKdf.cancel
+theorem operation_321 (self : record_effects.RecordSendKdf) :
+    ∃ result, record_effects.RecordSendKdf.cancel self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordSendKdf_cancel_total
+
+-- Extracted operation: record_effects.RecordSendKdf.request
+theorem operation_322 (self : record_effects.RecordSendKdf) :
+    ∃ result, record_effects.RecordSendKdf.request self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordSendKdf_request_total
+
+-- Extracted operation: record_effects.RecordSendKdf.resume
+theorem operation_323 (self : record_effects.RecordSendKdf) (response : ratchet.RatchetKdfResponse) :
+    ∃ result, record_effects.RecordSendKdf.resume self response = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.RecordSendKdf_resume_total
+
+-- Extracted operation: record_effects.SealAead.request
+theorem operation_324 (self : record_effects.SealAead) :
+    ∃ result, record_effects.SealAead.request self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.SealAead_request_total
+
+-- Extracted operation: record_effects.SealAead.resume
+theorem operation_325 (self : record_effects.SealAead)
+  (detached : core.option.Option ((Slice Std.U8) × (Array Std.U8 16#usize))) :
+    ∃ result, record_effects.SealAead.resume self detached = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.SealAead_resume_total
+
+-- Extracted operation: record_effects.SealCommitment.impl.transcript
+theorem operation_326 (self : record_effects.SealCommitment) :
+    ∃ result, record_effects.SealCommitment.impl.transcript self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.SealCommitment_impl_transcript_total
+
+-- Extracted operation: record_effects.SealCommitment.resume
+theorem operation_327 (self : record_effects.SealCommitment)
+  (commitment1 : core.option.Option (Array Std.U8 64#usize)) :
+    ∃ result, record_effects.SealCommitment.resume self commitment1 = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.SealCommitment_resume_total
+
+-- Extracted operation: record_effects.SealCommitment.transcript_mut
+theorem operation_328 (self : record_effects.SealCommitment) :
+    ∃ result, record_effects.SealCommitment.transcript_mut self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.SealCommitment_transcript_mut_total
+
+-- Extracted operation: record_effects.SealFrameContext.new
+theorem operation_329 (plaintext : Slice Std.U8) (target_kid : Std.U64) (sender_kid : Std.U64)
+  (associated_data : Array Std.U8 281#usize)
+  (encoding : record_effects.RecordEncoding) :
+    ∃ result, record_effects.SealFrameContext.new plaintext target_kid sender_kid associated_data encoding = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.SealFrameContext_new_total
+
+-- Extracted operation: record_effects.SealFrameContext.plaintext_request
+theorem operation_330 (self : record_effects.SealFrameContext) :
+    ∃ result, record_effects.SealFrameContext.plaintext_request self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.SealFrameContext_plaintext_request_total
+
+-- Extracted operation: record_effects.SealFrameContext.registration
+theorem operation_331 (application : Slice Std.U8) (assigned_kid : Std.U64) (sender_kid : Std.U64)
+  (associated_data : Array Std.U8 281#usize) :
+    ∃ result, record_effects.SealFrameContext.registration application assigned_kid sender_kid associated_data = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.SealFrameContext_registration_total
+
+-- Extracted operation: record_effects.SealWrite.finish
+theorem operation_332 {Output : Type} (self : record_effects.SealWrite)
+  (written : core.option.Option Output) :
+    ∃ result, record_effects.SealWrite.finish (Output := Output) self written = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.SealWrite_finish_total
+
+-- Extracted operation: record_effects.SealWrite.request
+theorem operation_333 (self : record_effects.SealWrite) :
+    ∃ result, record_effects.SealWrite.request self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffectsSend.SealWrite_request_total
+
+-- Extracted operation: record_effects.begin_record_receive
+theorem operation_334 (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
+  (ciphertext : Slice Std.U8) (associated_data : Array Std.U8 281#usize)
+  (sender : Std.U64) :
+    ∃ result, record_effects.begin_record_receive kernel sequence ciphertext associated_data sender = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.begin_record_receive_total
+
+-- Extracted operation: record_effects.begin_record_send
+theorem operation_335 (kernel : ratchet.concrete.ConcreteRatchetKernel)
+  (context : record_effects.SealFrameContext) :
+    ∃ result, record_effects.begin_record_send kernel context = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffectsSend.begin_record_send_total
+
+-- Extracted operation: record_effects.normalize_receive
+theorem operation_336 (effect : ratchet.concrete.ReceiveEffect record.OpenFrameContext) :
+    ∃ result, record_effects.normalize_receive effect = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.normalize_receive_total
+
+-- Extracted operation: record_effects.reject_send
+theorem operation_337 (pending : ratchet.concrete.SendSeal record_effects.SealFrameContext) :
+    ∃ result, record_effects.reject_send pending = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RecordEffects.reject_send_total
+
 -- Extracted operation: registration.AuthenticatedInit.into_parts
-theorem operation_311 (self : registration.AuthenticatedInit) :
+theorem operation_338 (self : registration.AuthenticatedInit) :
     ∃ result, registration.AuthenticatedInit.into_parts self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.AuthenticatedInit_into_parts_total
 
 -- Extracted operation: registration.AuthenticatedInit.registration_id
-theorem operation_312 (self : registration.AuthenticatedInit) :
+theorem operation_339 (self : registration.AuthenticatedInit) :
     ∃ result, registration.AuthenticatedInit.registration_id self = ok result := by
   apply BeaconcryptCore.PanicFreedom.Registration.AuthenticatedInit_registration_id_total
 
 -- Extracted operation: registration.AuthenticatedResponse.into_parts
-theorem operation_313 (self : registration.AuthenticatedResponse) :
+theorem operation_340 (self : registration.AuthenticatedResponse) :
     ∃ result, registration.AuthenticatedResponse.into_parts self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.AuthenticatedResponse_into_parts_total
 
 -- Extracted operation: registration.BeaconEd25519Signing.request
-theorem operation_314 (self : registration.BeaconEd25519Signing) :
+theorem operation_341 (self : registration.BeaconEd25519Signing) :
     ∃ result, registration.BeaconEd25519Signing.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationSigning.ed_request_total
 
 -- Extracted operation: registration.BeaconEd25519Signing.resume
-theorem operation_315 (self : registration.BeaconEd25519Signing)
+theorem operation_342 (self : registration.BeaconEd25519Signing)
   (signed : core.option.Option (Slice Std.U8)) :
     ∃ result, registration.BeaconEd25519Signing.resume self signed = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationSigning.ed_resume_total
 
 -- Extracted operation: registration.BeaconFingerprint.request
-theorem operation_316 (self : registration.BeaconFingerprint) :
+theorem operation_343 (self : registration.BeaconFingerprint) :
     ∃ result, registration.BeaconFingerprint.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconFingerprint_request_total
 
 -- Extracted operation: registration.BeaconFingerprint.resume
-theorem operation_317 (self : registration.BeaconFingerprint)
+theorem operation_344 (self : registration.BeaconFingerprint)
   (fingerprint : core.option.Option (Array Std.U8 64#usize)) :
     ∃ result, registration.BeaconFingerprint.resume self fingerprint = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationSigningContinuations.BeaconFingerprint_resume_total
 
 -- Extracted operation: registration.BeaconInitHash.request
-theorem operation_318 (self : registration.BeaconInitHash) :
+theorem operation_345 (self : registration.BeaconInitHash) :
     ∃ result, registration.BeaconInitHash.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitHash_request_total
 
 -- Extracted operation: registration.BeaconInitHash.resume
-theorem operation_319 (self : registration.BeaconInitHash)
+theorem operation_346 (self : registration.BeaconInitHash)
   (hash : core.option.Option (Array Std.U8 64#usize)) :
     ∃ result, registration.BeaconInitHash.resume self hash = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationSigningContinuations.BeaconInitHash_resume_total
 
 -- Extracted operation: registration.BeaconInitReady.message
-theorem operation_320 (self : registration.BeaconInitReady) :
+theorem operation_347 (self : registration.BeaconInitReady) :
     ∃ result, registration.BeaconInitReady.message self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitReady_message_total
 
 -- Extracted operation: registration.BeaconInitReady.publish
-theorem operation_321 {Encoded : Type} (self : registration.BeaconInitReady)
+theorem operation_348 {Encoded : Type} (self : registration.BeaconInitReady)
   (encoded : core.option.Option Encoded) :
     ∃ result, registration.BeaconInitReady.publish (Encoded := Encoded) self encoded = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitReady_publish_total
 
 -- Extracted operation: registration.BeaconInitState.fields
-theorem operation_322 (self : registration.BeaconInitState) :
+theorem operation_349 (self : registration.BeaconInitState) :
     ∃ result, registration.BeaconInitState.fields self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitState_fields_total
 
 -- Extracted operation: registration.BeaconInitialKdf.request
-theorem operation_323 (self : registration.BeaconInitialKdf) :
+theorem operation_350 (self : registration.BeaconInitialKdf) :
     ∃ result, registration.BeaconInitialKdf.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitialKdf_request_total
 
 -- Extracted operation: registration.BeaconInitialKdf.resume
-theorem operation_324 (self : registration.BeaconInitialKdf)
+theorem operation_351 (self : registration.BeaconInitialKdf)
   (response : core.option.Option pqxdh.concrete.InitialRatchetKdfResponse) :
     ∃ result, registration.BeaconInitialKdf.resume self response = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconInitialKdf_resume_total
 
--- Extracted operation: registration.BeaconInitialOpen.request
-theorem operation_325 (self : registration.BeaconInitialOpen) :
-    ∃ result, registration.BeaconInitialOpen.request self = ok result := by
-  apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitialOpen_request_total
-
--- Extracted operation: registration.BeaconInitialOpen.resume
-theorem operation_326 (self : registration.BeaconInitialOpen)
-  (kernel : ratchet.concrete.ConcreteRatchetKernel)
-  (opened : core.option.Option registration.InitialOpened) :
-    ∃ result, registration.BeaconInitialOpen.resume self kernel opened = ok result := by
-  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconInitialOpen_resume_total
-
--- Extracted operation: registration.BeaconInitialOpen.take_kernel
-theorem operation_327 (self : registration.BeaconInitialOpen) :
-    ∃ result, registration.BeaconInitialOpen.take_kernel self = ok result := by
-  apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitialOpen_take_kernel_total
-
 -- Extracted operation: registration.BeaconMldsaSigning.request
-theorem operation_328 (self : registration.BeaconMldsaSigning) :
+theorem operation_352 (self : registration.BeaconMldsaSigning) :
     ∃ result, registration.BeaconMldsaSigning.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconMldsaSigning_request_total
 
 -- Extracted operation: registration.BeaconMldsaSigning.resume
-theorem operation_329 (self : registration.BeaconMldsaSigning)
+theorem operation_353 (self : registration.BeaconMldsaSigning)
   (signature : core.option.Option (Slice Std.U8)) :
     ∃ result, registration.BeaconMldsaSigning.resume self signature = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationSigningContinuations.BeaconMldsaSigning_resume_total
 
 -- Extracted operation: registration.BeaconPending.abort
-theorem operation_330 (self : registration.BeaconPending) :
+theorem operation_354 (self : registration.BeaconPending) :
     ∃ result, registration.BeaconPending.abort self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconPending_abort_total
 
 -- Extracted operation: registration.BeaconPending.aborted_state
-theorem operation_331 (self : registration.BeaconPending) :
+theorem operation_355 (self : registration.BeaconPending) :
     ∃ result, registration.BeaconPending.aborted_state self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconPending_aborted_state_total
 
 -- Extracted operation: registration.BeaconPending.server_key_id
-theorem operation_332 (self : registration.BeaconPending) :
+theorem operation_356 (self : registration.BeaconPending) :
     ∃ result, registration.BeaconPending.server_key_id self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconPending_server_key_id_total
 
+-- Extracted operation: registration.BeaconRecordAead.finish
+theorem operation_357 (self : registration.BeaconRecordAead)
+  (plaintext : core.option.Option (Slice Std.U8)) :
+    ∃ result, registration.BeaconRecordAead.finish self plaintext = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordAead_finish_total
+
+-- Extracted operation: registration.BeaconRecordAead.request
+theorem operation_358 (self : registration.BeaconRecordAead) :
+    ∃ result, registration.BeaconRecordAead.request self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordAead_request_total
+
+-- Extracted operation: registration.BeaconRecordCommitment.resume
+theorem operation_359 (self : registration.BeaconRecordCommitment) (commitment_matches : Bool) :
+    ∃ result, registration.BeaconRecordCommitment.resume self commitment_matches = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordCommitment_resume_total
+
+-- Extracted operation: registration.BeaconRecordCommitment.supplied_commitment
+theorem operation_360 (self : registration.BeaconRecordCommitment) :
+    ∃ result, registration.BeaconRecordCommitment.supplied_commitment self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordCommitment_supplied_commitment_total
+
+-- Extracted operation: registration.BeaconRecordCommitment.transcript
+theorem operation_361 (self : registration.BeaconRecordCommitment) :
+    ∃ result, registration.BeaconRecordCommitment.transcript self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordCommitment_transcript_total
+
+-- Extracted operation: registration.BeaconRecordCommitment.transcript_mut
+theorem operation_362 (self : registration.BeaconRecordCommitment) :
+    ∃ result, registration.BeaconRecordCommitment.transcript_mut self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordCommitment_transcript_mut_total
+
+-- Extracted operation: registration.BeaconRecordKdf.request
+theorem operation_363 (self : registration.BeaconRecordKdf) :
+    ∃ result, registration.BeaconRecordKdf.request self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordKdf_request_total
+
+-- Extracted operation: registration.BeaconRecordKdf.resume
+theorem operation_364 (self : registration.BeaconRecordKdf)
+  (response : core.option.Option ratchet.RatchetKdfResponse) :
+    ∃ result, registration.BeaconRecordKdf.resume self response = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordKdf_resume_total
+
 -- Extracted operation: registration.CompletedBeacon.into_parts
-theorem operation_333 (self : registration.CompletedBeacon) :
+theorem operation_365 (self : registration.CompletedBeacon) :
     ∃ result, registration.CompletedBeacon.into_parts self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.CompletedBeacon_into_parts_total
 
 -- Extracted operation: registration.InitBeaconFingerprint.request
-theorem operation_334 (self : registration.InitBeaconFingerprint) :
+theorem operation_366 (self : registration.InitBeaconFingerprint) :
     ∃ result, registration.InitBeaconFingerprint.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitBeaconFingerprint_request_total
 
 -- Extracted operation: registration.InitBeaconFingerprint.resume
-theorem operation_335 (self : registration.InitBeaconFingerprint)
+theorem operation_367 (self : registration.InitBeaconFingerprint)
   (fingerprint : core.option.Option (Array Std.U8 64#usize)) :
     ∃ result, registration.InitBeaconFingerprint.resume self fingerprint = ok result := by
   apply BeaconcryptCore.PanicFreedom.Registration.InitBeaconFingerprint_resume_total
 
 -- Extracted operation: registration.InitEd25519Verification.request
-theorem operation_336 (self : registration.InitEd25519Verification) :
+theorem operation_368 (self : registration.InitEd25519Verification) :
     ∃ result, registration.InitEd25519Verification.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.Registration.InitEd25519Verification_request_total
 
 -- Extracted operation: registration.InitEd25519Verification.resume
-theorem operation_337 (self : registration.InitEd25519Verification)
+theorem operation_369 (self : registration.InitEd25519Verification)
   (opened : core.option.Option (Slice Std.U8)) :
     ∃ result, registration.InitEd25519Verification.resume self opened = ok result := by
   apply BeaconcryptCore.PanicFreedom.Registration.InitEd25519Verification_resume_total
 
 -- Extracted operation: registration.InitHash.request
-theorem operation_338 (self : registration.InitHash) :
+theorem operation_370 (self : registration.InitHash) :
     ∃ result, registration.InitHash.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitHash_request_total
 
 -- Extracted operation: registration.InitHash.resume
-theorem operation_339 (self : registration.InitHash)
+theorem operation_371 (self : registration.InitHash)
   (hash : core.option.Option (Array Std.U8 64#usize)) :
     ∃ result, registration.InitHash.resume self hash = ok result := by
   apply BeaconcryptCore.PanicFreedom.Registration.InitHash_resume_total
 
 -- Extracted operation: registration.InitMldsaVerification.request
-theorem operation_340 (self : registration.InitMldsaVerification) :
+theorem operation_372 (self : registration.InitMldsaVerification) :
     ∃ result, registration.InitMldsaVerification.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitMldsaVerification_request_total
 
 -- Extracted operation: registration.InitMldsaVerification.resume
-theorem operation_341 (self : registration.InitMldsaVerification) (verified : Bool) :
+theorem operation_373 (self : registration.InitMldsaVerification) (verified : Bool) :
     ∃ result, registration.InitMldsaVerification.resume self verified = ok result := by
   apply BeaconcryptCore.PanicFreedom.Registration.InitMldsaVerification_resume_total
 
 -- Extracted operation: registration.InitPacket.fields
-theorem operation_342 (self : registration.InitPacket) :
+theorem operation_374 (self : registration.InitPacket) :
     ∃ result, registration.InitPacket.fields self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitPacket_fields_total
 
 -- Extracted operation: registration.InitPacket.from_slices
-theorem operation_343 (identity_key : Slice Std.U8) (pre_key : Slice Std.U8)
+theorem operation_375 (identity_key : Slice Std.U8) (pre_key : Slice Std.U8)
   (one_time_key : Slice Std.U8) (pq_key : Slice Std.U8)
   (mldsa_public_key : Slice Std.U8) (signature : Slice Std.U8) :
     ∃ result, registration.InitPacket.from_slices identity_key pre_key one_time_key pq_key mldsa_public_key signature = ok result := by
   apply BeaconcryptCore.PanicFreedom.Registration.InitPacket_from_slices_total
 
 -- Extracted operation: registration.InitServerFingerprint.request
-theorem operation_344 (self : registration.InitServerFingerprint) :
+theorem operation_376 (self : registration.InitServerFingerprint) :
     ∃ result, registration.InitServerFingerprint.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitServerFingerprint_request_total
 
 -- Extracted operation: registration.InitServerFingerprint.resume
-theorem operation_345 (self : registration.InitServerFingerprint)
+theorem operation_377 (self : registration.InitServerFingerprint)
   (fingerprint : core.option.Option (Array Std.U8 64#usize)) :
     ∃ result, registration.InitServerFingerprint.resume self fingerprint = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitServerFingerprint_resume_total
 
 -- Extracted operation: registration.PinFingerprint.request
-theorem operation_346 (self : registration.PinFingerprint) :
+theorem operation_378 (self : registration.PinFingerprint) :
     ∃ result, registration.PinFingerprint.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.PinFingerprint_request_total
 
 -- Extracted operation: registration.PinFingerprint.resume
-theorem operation_347 (self : registration.PinFingerprint)
+theorem operation_379 (self : registration.PinFingerprint)
   (fingerprint : core.option.Option (Array Std.U8 64#usize)) :
     ∃ result, registration.PinFingerprint.resume self fingerprint = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.PinFingerprint_resume_total
 
 -- Extracted operation: registration.PublishedBeaconInit.into_parts
-theorem operation_348 {Encoded : Type} (self : registration.PublishedBeaconInit Encoded) :
+theorem operation_380 {Encoded : Type} (self : registration.PublishedBeaconInit Encoded) :
     ∃ result, registration.PublishedBeaconInit.into_parts (Encoded := Encoded) self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.PublishedBeaconInit_into_parts_total
 
 -- Extracted operation: registration.PublishedServerResponse.into_parts
-theorem operation_349 {Encoded : Type} (self : registration.PublishedServerResponse Encoded) :
+theorem operation_381 {Encoded : Type} (self : registration.PublishedServerResponse Encoded) :
     ∃ result, registration.PublishedServerResponse.into_parts (Encoded := Encoded) self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.PublishedServerResponse_into_parts_total
 
 -- Extracted operation: registration.ResponseHash.request
-theorem operation_350 (self : registration.ResponseHash) :
+theorem operation_382 (self : registration.ResponseHash) :
     ∃ result, registration.ResponseHash.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.ResponseHash_request_total
 
 -- Extracted operation: registration.ResponseHash.resume
-theorem operation_351 (self : registration.ResponseHash)
+theorem operation_383 (self : registration.ResponseHash)
   (digest : core.option.Option (Array Std.U8 64#usize)) :
     ∃ result, registration.ResponseHash.resume self digest = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationResponse.ResponseHash_resume_total
 
 -- Extracted operation: registration.ResponseMldsaVerification.request
-theorem operation_352 (self : registration.ResponseMldsaVerification) :
+theorem operation_384 (self : registration.ResponseMldsaVerification) :
     ∃ result, registration.ResponseMldsaVerification.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.ResponseMldsaVerification_request_total
 
 -- Extracted operation: registration.ResponseMldsaVerification.resume
-theorem operation_353 (self : registration.ResponseMldsaVerification) (verified : Bool) :
+theorem operation_385 (self : registration.ResponseMldsaVerification) (verified : Bool) :
     ∃ result, registration.ResponseMldsaVerification.resume self verified = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.ResponseMldsaVerification_resume_total
 
 -- Extracted operation: registration.ResponsePacket.from_slices
-theorem operation_354 (identity_key : Slice Std.U8) (ephemeral_key : Slice Std.U8)
+theorem operation_386 (identity_key : Slice Std.U8) (ephemeral_key : Slice Std.U8)
   (kem_cipher_text : Slice Std.U8) (key_id : Std.U64)
   (application : Slice Std.U8) (signature : Slice Std.U8) :
     ∃ result, registration.ResponsePacket.from_slices identity_key ephemeral_key kem_cipher_text key_id application signature = ok result := by
   apply BeaconcryptCore.PanicFreedom.Registration.ResponsePacket_from_slices_total
 
 -- Extracted operation: registration.ServerInitialKdf.request
-theorem operation_355 (self : registration.ServerInitialKdf) :
+theorem operation_387 (self : registration.ServerInitialKdf) :
     ∃ result, registration.ServerInitialKdf.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerInitialKdf_request_total
 
 -- Extracted operation: registration.ServerInitialKdf.resume
-theorem operation_356 (self : registration.ServerInitialKdf)
+theorem operation_388 (self : registration.ServerInitialKdf)
   (response : core.option.Option pqxdh.concrete.InitialRatchetKdfResponse) :
     ∃ result, registration.ServerInitialKdf.resume self response = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerInitialKdf_resume_total
 
 -- Extracted operation: registration.ServerInitialSeal.request
-theorem operation_357 (self : registration.ServerInitialSeal) :
+theorem operation_389 (self : registration.ServerInitialSeal) :
     ∃ result, registration.ServerInitialSeal.request self = ok result := by
-  apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerInitialSeal_request_total
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerInitialSeal_request_total
 
 -- Extracted operation: registration.ServerInitialSeal.resume
-theorem operation_358 (self : registration.ServerInitialSeal)
-  (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
-  (ciphertext : core.option.Option (Slice Std.U8)) :
-    ∃ result, registration.ServerInitialSeal.resume self kernel sequence ciphertext = ok result := by
+theorem operation_390 (self : registration.ServerInitialSeal)
+  (response : core.option.Option ratchet.RatchetKdfResponse) :
+    ∃ result, registration.ServerInitialSeal.resume self response = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerInitialSeal_resume_total
 
--- Extracted operation: registration.ServerInitialSeal.take_kernel
-theorem operation_359 (self : registration.ServerInitialSeal) :
-    ∃ result, registration.ServerInitialSeal.take_kernel self = ok result := by
-  apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerInitialSeal_take_kernel_total
+-- Extracted operation: registration.ServerRecordAead.request
+theorem operation_391 (self : registration.ServerRecordAead) :
+    ∃ result, registration.ServerRecordAead.request self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordAead_request_total
+
+-- Extracted operation: registration.ServerRecordAead.resume
+theorem operation_392 (self : registration.ServerRecordAead)
+  (detached : core.option.Option ((Slice Std.U8) × (Array Std.U8 16#usize))) :
+    ∃ result, registration.ServerRecordAead.resume self detached = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordAead_resume_total
+
+-- Extracted operation: registration.ServerRecordCommitment.resume
+theorem operation_393 (self : registration.ServerRecordCommitment)
+  (commitment1 : core.option.Option (Array Std.U8 64#usize)) :
+    ∃ result, registration.ServerRecordCommitment.resume self commitment1 = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordCommitment_resume_total
+
+-- Extracted operation: registration.ServerRecordCommitment.transcript
+theorem operation_394 (self : registration.ServerRecordCommitment) :
+    ∃ result, registration.ServerRecordCommitment.transcript self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordCommitment_transcript_total
+
+-- Extracted operation: registration.ServerRecordCommitment.transcript_mut
+theorem operation_395 (self : registration.ServerRecordCommitment) :
+    ∃ result, registration.ServerRecordCommitment.transcript_mut self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordCommitment_transcript_mut_total
+
+-- Extracted operation: registration.ServerRecordWrite.request
+theorem operation_396 (self : registration.ServerRecordWrite) :
+    ∃ result, registration.ServerRecordWrite.request self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordWrite_request_total
+
+-- Extracted operation: registration.ServerRecordWrite.resume
+theorem operation_397 (self : registration.ServerRecordWrite)
+  (ciphertext : core.option.Option (Slice Std.U8)) :
+    ∃ result, registration.ServerRecordWrite.resume self ciphertext = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordWrite_resume_total
 
 -- Extracted operation: registration.ServerResponseHash.request
-theorem operation_360 (self : registration.ServerResponseHash) :
+theorem operation_398 (self : registration.ServerResponseHash) :
     ∃ result, registration.ServerResponseHash.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerResponseHash_request_total
 
 -- Extracted operation: registration.ServerResponseHash.resume
-theorem operation_361 (self : registration.ServerResponseHash)
+theorem operation_399 (self : registration.ServerResponseHash)
   (digest : core.option.Option (Array Std.U8 64#usize)) :
     ∃ result, registration.ServerResponseHash.resume self digest = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerResponseHash_resume_total
 
 -- Extracted operation: registration.ServerResponseReady.message
-theorem operation_362 (self : registration.ServerResponseReady) :
+theorem operation_400 (self : registration.ServerResponseReady) :
     ∃ result, registration.ServerResponseReady.message self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerResponseReady_message_total
 
 -- Extracted operation: registration.ServerResponseReady.publish
-theorem operation_363 {Encoded : Type} (self : registration.ServerResponseReady)
+theorem operation_401 {Encoded : Type} (self : registration.ServerResponseReady)
   (encoded : core.option.Option Encoded) :
     ∃ result, registration.ServerResponseReady.publish (Encoded := Encoded) self encoded = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerResponseReady_publish_total
 
 -- Extracted operation: registration.ServerResponseSigning.request
-theorem operation_364 (self : registration.ServerResponseSigning) :
+theorem operation_402 (self : registration.ServerResponseSigning) :
     ∃ result, registration.ServerResponseSigning.request self = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerResponseSigning_request_total
 
 -- Extracted operation: registration.ServerResponseSigning.resume
-theorem operation_365 (self : registration.ServerResponseSigning)
+theorem operation_403 (self : registration.ServerResponseSigning)
   (signature : core.option.Option (Slice Std.U8)) :
     ∃ result, registration.ServerResponseSigning.resume self signature = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerResponseSigning_resume_total
 
 -- Extracted operation: registration.begin_beacon_completion
-theorem operation_366 (agreement1 : agreement.BeaconAgreement) :
+theorem operation_404 (agreement1 : agreement.BeaconAgreement) :
     ∃ result, registration.begin_beacon_completion agreement1 = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationPublication.begin_beacon_completion_total
 
 -- Extracted operation: registration.begin_beacon_init
-theorem operation_367 (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs)
+theorem operation_405 (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs)
   (coins : pqxdh.BeaconCoins) (server_pin : session.ServerAuthenticationPin)
   (beacon_mldsa : Array Std.U8 1952#usize) :
     ∃ result, registration.begin_beacon_init control inputs coins server_pin beacon_mldsa = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationSigningContinuations.begin_beacon_init_total
 
 -- Extracted operation: registration.begin_init_authentication
-theorem operation_368 (server_pin : session.ServerAuthenticationPin)
+theorem operation_406 (server_pin : session.ServerAuthenticationPin)
   (packet : registration.InitPacket) :
     ∃ result, registration.begin_init_authentication server_pin packet = ok result := by
   apply BeaconcryptCore.PanicFreedom.Registration.begin_init_authentication_total
 
 -- Extracted operation: registration.begin_response_authentication
-theorem operation_369 (pending : registration.BeaconPending)
+theorem operation_407 (pending : registration.BeaconPending)
   (packet : core.option.Option registration.ResponsePacket) :
     ∃ result, registration.begin_response_authentication pending packet = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationResponse.begin_response_authentication_total
 
 -- Extracted operation: registration.begin_server_completion
-theorem operation_370 (control : pqxdh.ServerState) (current_pin : session.ServerAuthenticationPin)
+theorem operation_408 (control : pqxdh.ServerState) (current_pin : session.ServerAuthenticationPin)
   (availability : pqxdh.KeyIdAvailability)
   (agreement1 : agreement.ServerAgreement) (application : Slice Std.U8) :
     ∃ result, registration.begin_server_completion control current_pin availability agreement1 application = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationPublication.begin_server_completion_total
 
 -- Extracted operation: registration.begin_server_pin
-theorem operation_371 (binding : pqxdh.ServerBinding) (public_key : Array Std.U8 1952#usize) :
+theorem operation_409 (binding : pqxdh.ServerBinding) (public_key : Array Std.U8 1952#usize) :
     ∃ result, registration.begin_server_pin binding public_key = ok result := by
   apply BeaconcryptCore.PanicFreedom.RegistrationTrivial.begin_server_pin_total
 
+-- Extracted operation: registration.normalize_beacon_open
+theorem operation_410 (agreement1 : agreement.BeaconAgreement)
+  (effect : record_effects.RecordReceiveEffect) :
+    ∃ result, registration.normalize_beacon_open agreement1 effect = ok result := by
+  apply BeaconcryptCore.PanicFreedom.RegistrationPublication.normalize_beacon_open_total
+
 -- Extracted operation: session.RegistrationBinding.finish
-theorem operation_372 (self : session.RegistrationBinding) (assigned_key_id : Std.U64) :
+theorem operation_411 (self : session.RegistrationBinding) (assigned_key_id : Std.U64) :
     ∃ result, session.RegistrationBinding.finish self assigned_key_id = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_finish_total
 
 -- Extracted operation: session.RegistrationBinding.impl.associated_data
-theorem operation_373 (self : session.RegistrationBinding) :
+theorem operation_412 (self : session.RegistrationBinding) :
     ∃ result, session.RegistrationBinding.impl.associated_data self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_associated_data_total
 
 -- Extracted operation: session.RegistrationBinding.impl.init_hash
-theorem operation_374 (self : session.RegistrationBinding) :
+theorem operation_413 (self : session.RegistrationBinding) :
     ∃ result, session.RegistrationBinding.impl.init_hash self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_init_hash_total
 
 -- Extracted operation: session.RegistrationBinding.impl.server_pin
-theorem operation_375 (self : session.RegistrationBinding) :
+theorem operation_414 (self : session.RegistrationBinding) :
     ∃ result, session.RegistrationBinding.impl.server_pin self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_server_pin_total
 
 -- Extracted operation: session.RegistrationBinding.matches_server
-theorem operation_376 (self : session.RegistrationBinding)
+theorem operation_415 (self : session.RegistrationBinding)
   (current : session.ServerAuthenticationPin) :
     ∃ result, session.RegistrationBinding.matches_server self current = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_matches_server_total
 
 -- Extracted operation: session.RegistrationBinding.new
-theorem operation_377 (server_pin : session.ServerAuthenticationPin)
+theorem operation_416 (server_pin : session.ServerAuthenticationPin)
   (init_hash : Array Std.U8 64#usize)
   (beacon_identity_public_key : Array Std.U8 32#usize)
   (beacon_fingerprint : Array Std.U8 64#usize) :
@@ -2036,38 +2247,38 @@ theorem operation_377 (server_pin : session.ServerAuthenticationPin)
   apply BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_new_total
 
 -- Extracted operation: session.ServerAuthenticationPin.Insts.CoreCloneClone.clone
-theorem operation_378 (self : session.ServerAuthenticationPin) :
+theorem operation_417 (self : session.ServerAuthenticationPin) :
     ∃ result, session.ServerAuthenticationPin.Insts.CoreCloneClone.clone self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_clone_total
 
 -- Extracted operation: session.ServerAuthenticationPin.impl.binding
-theorem operation_379 (self : session.ServerAuthenticationPin) :
+theorem operation_418 (self : session.ServerAuthenticationPin) :
     ∃ result, session.ServerAuthenticationPin.impl.binding self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_binding_total
 
 -- Extracted operation: session.ServerAuthenticationPin.impl.fingerprint
-theorem operation_380 (self : session.ServerAuthenticationPin) :
+theorem operation_419 (self : session.ServerAuthenticationPin) :
     ∃ result, session.ServerAuthenticationPin.impl.fingerprint self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_fingerprint_total
 
 -- Extracted operation: session.ServerAuthenticationPin.impl.public_key
-theorem operation_381 (self : session.ServerAuthenticationPin) :
+theorem operation_420 (self : session.ServerAuthenticationPin) :
     ∃ result, session.ServerAuthenticationPin.impl.public_key self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_public_key_total
 
 -- Extracted operation: session.ServerAuthenticationPin.new
-theorem operation_382 (binding : pqxdh.ServerBinding) (public_key : Array Std.U8 1952#usize)
+theorem operation_421 (binding : pqxdh.ServerBinding) (public_key : Array Std.U8 1952#usize)
   (fingerprint : Array Std.U8 64#usize) :
     ∃ result, session.ServerAuthenticationPin.new binding public_key fingerprint = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_new_total
 
 -- Extracted operation: session.SessionBinding.Insts.CoreCloneClone.clone
-theorem operation_383 (self : session.SessionBinding) :
+theorem operation_422 (self : session.SessionBinding) :
     ∃ result, session.SessionBinding.Insts.CoreCloneClone.clone self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_clone_total
 
 -- Extracted operation: session.SessionBinding.from_trusted_metadata
-theorem operation_384 (server_binding : pqxdh.ServerBinding) (assigned_key_id : Std.U64)
+theorem operation_423 (server_binding : pqxdh.ServerBinding) (assigned_key_id : Std.U64)
   (beacon_identity_public_key : Array Std.U8 32#usize)
   (server_fingerprint : Array Std.U8 64#usize)
   (beacon_fingerprint : Array Std.U8 64#usize) :
@@ -2075,32 +2286,32 @@ theorem operation_384 (server_binding : pqxdh.ServerBinding) (assigned_key_id : 
   apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_from_trusted_metadata_total
 
 -- Extracted operation: session.SessionBinding.impl.assigned_key_id
-theorem operation_385 (self : session.SessionBinding) :
+theorem operation_424 (self : session.SessionBinding) :
     ∃ result, session.SessionBinding.impl.assigned_key_id self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_assigned_key_id_total
 
 -- Extracted operation: session.SessionBinding.impl.associated_data
-theorem operation_386 (self : session.SessionBinding) :
+theorem operation_425 (self : session.SessionBinding) :
     ∃ result, session.SessionBinding.impl.associated_data self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_associated_data_total
 
 -- Extracted operation: session.SessionBinding.impl.beacon_fingerprint
-theorem operation_387 (self : session.SessionBinding) :
+theorem operation_426 (self : session.SessionBinding) :
     ∃ result, session.SessionBinding.impl.beacon_fingerprint self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_beacon_fingerprint_total
 
 -- Extracted operation: session.SessionBinding.impl.beacon_identity_public_key
-theorem operation_388 (self : session.SessionBinding) :
+theorem operation_427 (self : session.SessionBinding) :
     ∃ result, session.SessionBinding.impl.beacon_identity_public_key self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_beacon_identity_public_key_total
 
 -- Extracted operation: session.SessionBinding.impl.server_binding
-theorem operation_389 (self : session.SessionBinding) :
+theorem operation_428 (self : session.SessionBinding) :
     ∃ result, session.SessionBinding.impl.server_binding self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_server_binding_total
 
 -- Extracted operation: session.SessionBinding.impl.server_fingerprint
-theorem operation_390 (self : session.SessionBinding) :
+theorem operation_429 (self : session.SessionBinding) :
     ∃ result, session.SessionBinding.impl.server_fingerprint self = ok result := by
   apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_server_fingerprint_total
 
