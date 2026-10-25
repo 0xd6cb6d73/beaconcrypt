@@ -8,6 +8,7 @@ import BeaconcryptCore.PanicFreedom.RatchetLoops
 import BeaconcryptCore.PanicFreedom.RatchetReceive
 import BeaconcryptCore.PanicFreedom.Record
 import BeaconcryptCore.PanicFreedom.Restore
+import BeaconcryptCore.PanicFreedom.SessionBinding
 import BeaconcryptCore.PanicFreedom.Static
 import BeaconcryptCore.PanicFreedom.Structural
 import BeaconcryptCore.PanicFreedom.Trivial
@@ -1544,5 +1545,108 @@ theorem operation_288 (opening : ratchet.concrete.ReceiveOpen record.OpenFrameCo
 theorem operation_289 {Message : Type} (remaining : Slice Std.U8) (message : Message) :
     ∃ result, record.finish_frame_read (Message := Message) remaining message = ok result := by
   apply BeaconcryptCore.PanicFreedom.Record.complete_total
+
+-- Extracted operation: session.RegistrationBinding.finish
+theorem operation_290 (self : session.RegistrationBinding) (assigned_key_id : Std.U64) :
+    ∃ result, session.RegistrationBinding.finish self assigned_key_id = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_finish_total
+
+-- Extracted operation: session.RegistrationBinding.impl.associated_data
+theorem operation_291 (self : session.RegistrationBinding) :
+    ∃ result, session.RegistrationBinding.impl.associated_data self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_associated_data_total
+
+-- Extracted operation: session.RegistrationBinding.impl.init_hash
+theorem operation_292 (self : session.RegistrationBinding) :
+    ∃ result, session.RegistrationBinding.impl.init_hash self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_init_hash_total
+
+-- Extracted operation: session.RegistrationBinding.impl.server_pin
+theorem operation_293 (self : session.RegistrationBinding) :
+    ∃ result, session.RegistrationBinding.impl.server_pin self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_server_pin_total
+
+-- Extracted operation: session.RegistrationBinding.matches_server
+theorem operation_294 (self : session.RegistrationBinding)
+  (current : session.ServerAuthenticationPin) :
+    ∃ result, session.RegistrationBinding.matches_server self current = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_matches_server_total
+
+-- Extracted operation: session.RegistrationBinding.new
+theorem operation_295 (server_pin : session.ServerAuthenticationPin)
+  (init_hash : Array Std.U8 64#usize)
+  (beacon_identity_public_key : Array Std.U8 32#usize)
+  (beacon_fingerprint : Array Std.U8 64#usize) :
+    ∃ result, session.RegistrationBinding.new server_pin init_hash beacon_identity_public_key beacon_fingerprint = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_new_total
+
+-- Extracted operation: session.ServerAuthenticationPin.Insts.CoreCloneClone.clone
+theorem operation_296 (self : session.ServerAuthenticationPin) :
+    ∃ result, session.ServerAuthenticationPin.Insts.CoreCloneClone.clone self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_clone_total
+
+-- Extracted operation: session.ServerAuthenticationPin.impl.binding
+theorem operation_297 (self : session.ServerAuthenticationPin) :
+    ∃ result, session.ServerAuthenticationPin.impl.binding self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_binding_total
+
+-- Extracted operation: session.ServerAuthenticationPin.impl.fingerprint
+theorem operation_298 (self : session.ServerAuthenticationPin) :
+    ∃ result, session.ServerAuthenticationPin.impl.fingerprint self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_fingerprint_total
+
+-- Extracted operation: session.ServerAuthenticationPin.impl.public_key
+theorem operation_299 (self : session.ServerAuthenticationPin) :
+    ∃ result, session.ServerAuthenticationPin.impl.public_key self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_public_key_total
+
+-- Extracted operation: session.ServerAuthenticationPin.new
+theorem operation_300 (binding : pqxdh.ServerBinding) (public_key : Array Std.U8 1952#usize)
+  (fingerprint : Array Std.U8 64#usize) :
+    ∃ result, session.ServerAuthenticationPin.new binding public_key fingerprint = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_new_total
+
+-- Extracted operation: session.SessionBinding.Insts.CoreCloneClone.clone
+theorem operation_301 (self : session.SessionBinding) :
+    ∃ result, session.SessionBinding.Insts.CoreCloneClone.clone self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_clone_total
+
+-- Extracted operation: session.SessionBinding.from_trusted_metadata
+theorem operation_302 (server_binding : pqxdh.ServerBinding) (assigned_key_id : Std.U64)
+  (beacon_identity_public_key : Array Std.U8 32#usize)
+  (server_fingerprint : Array Std.U8 64#usize)
+  (beacon_fingerprint : Array Std.U8 64#usize) :
+    ∃ result, session.SessionBinding.from_trusted_metadata server_binding assigned_key_id beacon_identity_public_key server_fingerprint beacon_fingerprint = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_from_trusted_metadata_total
+
+-- Extracted operation: session.SessionBinding.impl.assigned_key_id
+theorem operation_303 (self : session.SessionBinding) :
+    ∃ result, session.SessionBinding.impl.assigned_key_id self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_assigned_key_id_total
+
+-- Extracted operation: session.SessionBinding.impl.associated_data
+theorem operation_304 (self : session.SessionBinding) :
+    ∃ result, session.SessionBinding.impl.associated_data self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_associated_data_total
+
+-- Extracted operation: session.SessionBinding.impl.beacon_fingerprint
+theorem operation_305 (self : session.SessionBinding) :
+    ∃ result, session.SessionBinding.impl.beacon_fingerprint self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_beacon_fingerprint_total
+
+-- Extracted operation: session.SessionBinding.impl.beacon_identity_public_key
+theorem operation_306 (self : session.SessionBinding) :
+    ∃ result, session.SessionBinding.impl.beacon_identity_public_key self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_beacon_identity_public_key_total
+
+-- Extracted operation: session.SessionBinding.impl.server_binding
+theorem operation_307 (self : session.SessionBinding) :
+    ∃ result, session.SessionBinding.impl.server_binding self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_server_binding_total
+
+-- Extracted operation: session.SessionBinding.impl.server_fingerprint
+theorem operation_308 (self : session.SessionBinding) :
+    ∃ result, session.SessionBinding.impl.server_fingerprint self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_server_fingerprint_total
 
 end BeaconcryptCore.PanicFreedom.API

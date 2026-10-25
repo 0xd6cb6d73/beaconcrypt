@@ -4,10 +4,7 @@ use std::collections::{HashMap, HashSet};
 use std::marker::PhantomData;
 
 use crate::auth::{self, AuthRole, MLDSA_PUBLIC_KEY_LEN, MldsaIdentity};
-use crate::pqxdh::mldsa_associated_data;
-use crate::pqxdh::{
-	AD_SIZE, build_associated_data, derive_root_key_input, shared_secrets, zeroize_shared_secrets,
-};
+use crate::pqxdh::{AD_SIZE, derive_root_key_input, shared_secrets, zeroize_shared_secrets};
 #[cfg(test)]
 use crate::ratchet::KeyMaterial;
 use crate::ratchet::{
@@ -19,15 +16,12 @@ use crate::shared::{
 	roles, serialize_server_state,
 };
 use beaconcrypt_core::pqxdh::{self as verified_pqxdh, start_server_candidate_ratchet_kdf};
+#[cfg(test)]
+use beaconcrypt_core::session::SessionBinding;
+use beaconcrypt_core::session::{RegistrationBinding, ServerAuthenticationPin};
 use beaconcrypt_parse::{KexResponse, decode_init};
 use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init};
 use zeroize::{Zeroize, Zeroizing};
-
-struct RegistrationAuthentication {
-	init_hash: [u8; 64],
-	server_hash: [u8; 64],
-	beacon_hash: [u8; 64],
-}
 
 pub struct Server {
 	identity_key: crypto_sign::KeyPair,
@@ -46,7 +40,7 @@ pub struct RegResponse {
 pub struct RegistrationOutput {
 	pub(crate) derived_secret: KexDerivedSecret,
 	pub(crate) control: beaconcrypt_core::pqxdh::PendingServerRegistration,
-	authentication: RegistrationAuthentication,
+	authentication: RegistrationBinding,
 }
 
 fn registration_response_len(application_len: usize, assigned_key_id: u64) -> Option<usize> {
@@ -206,6 +200,18 @@ impl Server {
 		self.mldsa_identity.public_key()
 	}
 
+	fn authentication_pin(&self) -> Option<ServerAuthenticationPin> {
+		let public_key = self.mldsa_public_key();
+		Some(ServerAuthenticationPin::new(
+			verified_pqxdh::ServerBinding {
+				identity_public_key: *self.identity_pk().as_bytes(),
+				identity_key_id: self.identity_key_kid,
+			},
+			public_key,
+			auth::public_key_hash(&public_key)?,
+		))
+	}
+
 	/// Hash of the key authenticated by InitKex; authorization remains the caller's responsibility.
 	pub fn mldsa_public_key_hash_by_kid(&self, kid: u64) -> Option<&[u8; 64]> {
 		Some(self.known_ids.get(&kid)?.mldsa_public_key_hash())
@@ -229,10 +235,18 @@ impl Server {
 	}
 	#[cfg(test)]
 	pub(crate) fn add_known_kid(&mut self, k: u64, pk: crypto_sign::PublicKey) {
+		let pin = self.authentication_pin().unwrap();
+		let binding = SessionBinding::from_trusted_metadata(
+			pin.binding(),
+			k,
+			*pk.as_bytes(),
+			*pin.fingerprint(),
+			[0; 64],
+		);
 		self.known_ids.entry(k).or_insert(EstablishedRemote::new(
 			pk,
 			RatchetManager::default(),
-			[0; 64],
+			binding,
 		));
 	}
 	#[cfg(test)]
@@ -267,12 +281,7 @@ impl Server {
 			.map(EstablishedRemote::ratchet_mut)
 	}
 	pub(crate) fn associated_data(&self, k: u64) -> Option<[u8; AD_SIZE]> {
-		let base = build_associated_data(self.identity_pk().clone(), self.pk_by_kid(k)?.clone());
-		Some(mldsa_associated_data(
-			&base,
-			&auth::public_key_hash(&self.mldsa_public_key())?,
-			self.mldsa_public_key_hash_by_kid(k)?,
-		))
+		Some(*self.known_ids.get(&k)?.binding().associated_data())
 	}
 	pub fn encrypt_message(&mut self, b: &[u8], k: u64) -> Option<crate::Encrypted> {
 		let ad = self.associated_data(k)?;
@@ -409,11 +418,6 @@ impl ProviderServer for Server {
 		) {
 			return None;
 		}
-		let authentication = RegistrationAuthentication {
-			init_hash,
-			server_hash: auth::public_key_hash(&server_key)?,
-			beacon_hash: auth::public_key_hash(public_key)?,
-		};
 		let encoded_identity: [u8; verified_pqxdh::ENCODED_SIGN_PUBLIC_KEY_SIZE] =
 			registration.identity_key.try_into().ok()?;
 		if encoded_identity[0] != verified_pqxdh::SIGN_TYPE_ED25519 {
@@ -430,6 +434,19 @@ impl ProviderServer for Server {
 			pq_verified.as_slice().try_into().ok()?,
 		);
 		let verified_registration = verified_pqxdh::validate_init_kex(init_kex).ok()?;
+		let authentication = RegistrationBinding::new(
+			ServerAuthenticationPin::new(
+				verified_pqxdh::ServerBinding {
+					identity_public_key: *self.identity_pk().as_bytes(),
+					identity_key_id: self.identity_key_kid,
+				},
+				server_key,
+				auth::public_key_hash(&server_key)?,
+			),
+			init_hash,
+			*verified_registration.beacon_identity_public_key(),
+			auth::public_key_hash(public_key)?,
+		);
 		let registration_id = *verified_pqxdh::registration_id(&verified_registration).as_bytes();
 		let registration_status = if self.consumed_registrations.contains(&registration_id) {
 			verified_pqxdh::RegistrationStatus::Consumed
@@ -515,7 +532,7 @@ impl ProviderServer for Server {
 			control: pending,
 			authentication,
 		} = reg_out;
-		if auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash {
+		if !authentication.matches_server(&self.authentication_pin()?) {
 			return None;
 		}
 		let key_id_availability = if self.known_ids.contains_key(&next_key_id) {
@@ -541,11 +558,7 @@ impl ProviderServer for Server {
 		self.known_ids.try_reserve(1).ok()?;
 		let pending = start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array());
 		let mut ratchet = RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));
-		let associated_data = mldsa_associated_data(
-			candidate.associated_data(),
-			&authentication.server_hash,
-			&authentication.beacon_hash,
-		);
+		let associated_data = authentication.associated_data();
 		if plaintext.is_empty() {
 			return None;
 		}
@@ -561,7 +574,7 @@ impl ProviderServer for Server {
 			&authenticated_plaintext,
 			remote_kid,
 			candidate.server_identity_key_id(),
-			&associated_data,
+			associated_data,
 			&mut ratchet,
 		);
 		authenticated_plaintext.zeroize();
@@ -574,7 +587,7 @@ impl ProviderServer for Server {
 			app_cipher_text: &encrypted.ciphertext,
 			signature: &[],
 		};
-		let hash = auth::response_transcript_hash(&authentication.init_hash, &response)?;
+		let hash = auth::response_transcript_hash(authentication.init_hash(), &response)?;
 		let signature = self.mldsa_identity.sign(AuthRole::Server, &hash)?;
 		let buffer = crate::wire::encode_response(KexResponse {
 			signature: &signature,
@@ -589,7 +602,7 @@ impl ProviderServer for Server {
 		debug_assert_eq!(&established_peer.identity_public_key, public_key.as_bytes());
 		let old = self.known_ids.insert(
 			remote_kid,
-			EstablishedRemote::new(public_key, ratchet, authentication.beacon_hash),
+			EstablishedRemote::new(public_key, ratchet, authentication.finish(remote_kid)),
 		);
 		debug_assert!(old.is_none());
 		self.control = next_control;
@@ -634,6 +647,94 @@ impl ProviderServer for Server {
 mod size_tests {
 	use super::*;
 	use beaconcrypt_parse::MAX_MESSAGE_SIZE;
+
+	#[test]
+	#[cfg(feature = "beacon")]
+	fn established_peer_retains_its_record_binding_across_restore() {
+		let mut server = Server::new(42, Some(&[7; 32]), Some(&[8; 32]));
+		let mut beacon = crate::Beacon::new(
+			42,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+		);
+		let init = crate::ProviderBeacon::get_registration_bundle(&mut beacon).unwrap();
+		let accepted = server.get_shared_secret(&init).unwrap();
+		let response = server.build_registration_response(accepted, None).unwrap();
+		crate::ProviderBeacon::finish_registration(&mut beacon, &response.serialized).unwrap();
+		let expected = beacon.associated_data().unwrap();
+		let peer = server.known_ids.get(&response.kid).unwrap();
+		assert_eq!(peer.binding().associated_data(), &expected);
+		assert_eq!(peer.binding().assigned_key_id(), response.kid);
+		assert_eq!(peer.binding().server_binding().identity_key_id, 42);
+		assert_eq!(
+			peer.binding().beacon_identity_public_key(),
+			beacon.identity_pk().as_bytes()
+		);
+		let snapshot = server.serialize_state().unwrap();
+		let mut restored = Server::deserialize_state(&snapshot).unwrap();
+		assert_eq!(restored.serialize_state().unwrap(), snapshot);
+		let binding = restored.known_ids.get(&response.kid).unwrap().binding();
+		assert_eq!(binding.associated_data(), &expected);
+		assert_eq!(binding.assigned_key_id(), response.kid);
+		assert_eq!(binding.server_binding(), peer.binding().server_binding());
+		assert_eq!(
+			binding.beacon_identity_public_key(),
+			peer.binding().beacon_identity_public_key()
+		);
+		assert_eq!(
+			binding.server_fingerprint(),
+			peer.binding().server_fingerprint()
+		);
+		assert_eq!(
+			binding.beacon_fingerprint(),
+			peer.binding().beacon_fingerprint()
+		);
+		let encrypted = restored
+			.encrypt_message(b"restored binding", response.kid)
+			.unwrap();
+		assert_eq!(
+			beacon.decrypt_message(&encrypted).unwrap().plaintext,
+			b"restored binding"
+		);
+		let encrypted = beacon.encrypt_message(b"same restored peer").unwrap();
+		assert_eq!(
+			restored.decrypt_message(&encrypted).unwrap().plaintext,
+			b"same restored peer"
+		);
+	}
+
+	#[test]
+	#[cfg(feature = "beacon")]
+	fn established_record_ad_is_stored_instead_of_rehashed_from_current_identity() {
+		let mut server = Server::new(42, Some(&[7; 32]), Some(&[8; 32]));
+		let mut beacon = crate::Beacon::new(
+			42,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+		);
+		let init = crate::ProviderBeacon::get_registration_bundle(&mut beacon).unwrap();
+		let accepted = server.get_shared_secret(&init).unwrap();
+		let response = server.build_registration_response(accepted, None).unwrap();
+		crate::ProviderBeacon::finish_registration(&mut beacon, &response.serialized).unwrap();
+		let expected = server.associated_data(response.kid).unwrap();
+		// There is no production identity-replacement API. This private change
+		// distinguishes a stored session binding from recomputation on each record.
+		server.mldsa_identity = MldsaIdentity::from_seed([9; 32]);
+		assert_ne!(
+			auth::public_key_hash(&server.mldsa_public_key())
+				.unwrap()
+				.as_slice(),
+			&expected[153..217]
+		);
+		assert_eq!(server.associated_data(response.kid), Some(expected));
+		let encrypted = server
+			.encrypt_message(b"stored binding", response.kid)
+			.unwrap();
+		assert_eq!(
+			beacon.decrypt_message(&encrypted).unwrap().plaintext,
+			b"stored binding"
+		);
+	}
 
 	#[test]
 	fn registration_limit_includes_binding_ciphertext_signature_and_cbor() {

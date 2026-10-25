@@ -244,8 +244,8 @@ class NativeMovedTokenSourceGate(unittest.TestCase):
 
     def test_token_server_key_binding_preserved(self):
         self.mutate_source(
-            "if auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
-            "if false && auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
+            "if !authentication.matches_server(&self.authentication_pin()?)",
+            "if false && !authentication.matches_server(&self.authentication_pin()?)",
         )
 
     def test_size_preflight_stays_before_token_move(self):

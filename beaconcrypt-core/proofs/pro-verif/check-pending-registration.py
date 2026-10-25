@@ -247,7 +247,7 @@ def check_source(directory=HERE):
         "let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;",
         "registration_response_len(plaintext.len(), next_key_id)?;",
         "let RegistrationOutput {",
-        "if auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
+        "if !authentication.matches_server(&self.authentication_pin()?)",
         "if plaintext.is_empty()",
         "encrypt_registration_message_with_ratchet(",
         "crate::wire::encode_response(KexResponse {",

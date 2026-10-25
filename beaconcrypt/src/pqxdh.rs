@@ -10,6 +10,7 @@ use zeroize::Zeroize;
 pub const PQXDH_INFO: &[u8; 46] = verified_pqxdh::PQXDH_INFO;
 pub const AD_SIZE: usize = verified_pqxdh::ASSOCIATED_DATA_SIZE;
 
+#[cfg(test)]
 pub(crate) fn mldsa_associated_data(
 	base: &[u8; AD_SIZE],
 	server_hash: &[u8; 64],
@@ -69,7 +70,7 @@ pub(crate) fn derive_root_key_input(
 	derived
 }
 
-#[cfg(feature = "server")]
+#[cfg(all(test, feature = "server"))]
 pub fn build_associated_data(
 	server_id: crypto_sign::PublicKey,
 	beacon_id: crypto_sign::PublicKey,
@@ -356,7 +357,7 @@ mod tests {
 	}
 
 	#[test]
-	fn established_beacon_replaces_singular_associated_data() {
+	fn established_beacon_and_server_retain_the_same_session_associated_data() {
 		let mut server = Server::new(0, None, None);
 		let mut beacon = Beacon::new(
 			0,
@@ -364,9 +365,23 @@ mod tests {
 			&server.mldsa_public_key(),
 		);
 		register(&mut server, &mut beacon);
-		let replacement = [0xa5; AD_SIZE];
-		beacon.set_associated_data(replacement);
-		assert_eq!(beacon.associated_data(), Some(replacement));
+		let associated_data = beacon.associated_data().unwrap();
+		assert_eq!(
+			server.associated_data(beacon.identity_key_kid()),
+			Some(associated_data)
+		);
+		assert_eq!(
+			&associated_data[153..217],
+			crate::auth::public_key_hash(&server.mldsa_public_key())
+				.unwrap()
+				.as_slice()
+		);
+		assert_eq!(
+			&associated_data[217..281],
+			crate::auth::public_key_hash(&beacon.mldsa_public_key())
+				.unwrap()
+				.as_slice()
+		);
 	}
 
 	#[test]

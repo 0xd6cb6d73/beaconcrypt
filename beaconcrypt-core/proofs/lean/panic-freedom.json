@@ -1448,5 +1448,100 @@
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Record",
     "theorem": "BeaconcryptCore.PanicFreedom.Record.complete_total"
+  },
+  "session.RegistrationBinding.finish": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_finish_total"
+  },
+  "session.RegistrationBinding.impl.associated_data": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_associated_data_total"
+  },
+  "session.RegistrationBinding.impl.init_hash": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_init_hash_total"
+  },
+  "session.RegistrationBinding.impl.server_pin": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_server_pin_total"
+  },
+  "session.RegistrationBinding.matches_server": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_matches_server_total"
+  },
+  "session.RegistrationBinding.new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_new_total"
+  },
+  "session.ServerAuthenticationPin.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_clone_total"
+  },
+  "session.ServerAuthenticationPin.impl.binding": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_binding_total"
+  },
+  "session.ServerAuthenticationPin.impl.fingerprint": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_fingerprint_total"
+  },
+  "session.ServerAuthenticationPin.impl.public_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_public_key_total"
+  },
+  "session.ServerAuthenticationPin.new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_new_total"
+  },
+  "session.SessionBinding.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_clone_total"
+  },
+  "session.SessionBinding.from_trusted_metadata": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_from_trusted_metadata_total"
+  },
+  "session.SessionBinding.impl.assigned_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_assigned_key_id_total"
+  },
+  "session.SessionBinding.impl.associated_data": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_associated_data_total"
+  },
+  "session.SessionBinding.impl.beacon_fingerprint": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_beacon_fingerprint_total"
+  },
+  "session.SessionBinding.impl.beacon_identity_public_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_beacon_identity_public_key_total"
+  },
+  "session.SessionBinding.impl.server_binding": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_server_binding_total"
+  },
+  "session.SessionBinding.impl.server_fingerprint": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_server_fingerprint_total"
   }
 }

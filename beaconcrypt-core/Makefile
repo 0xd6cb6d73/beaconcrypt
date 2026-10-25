@@ -875,6 +875,8 @@ check-lean-root:
 		BeaconcryptCore.Refinement.PqxdhSession \
 		BeaconcryptCore.Refinement.PqxdhCommitment \
 		BeaconcryptCore.Refinement.TranscriptAuth \
+		BeaconcryptCore.Refinement.SessionBinding \
+		BeaconcryptCore.PanicFreedom.SessionBinding \
 		BeaconcryptCore.Verification.PqxdhCommitmentRefinement \
 		BeaconcryptCore.Refinement.RatchetControlRestore \
 		BeaconcryptCore.Refinement.RatchetEffectRefinement \
