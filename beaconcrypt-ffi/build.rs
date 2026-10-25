@@ -23,11 +23,24 @@ fn main() {
 		.generate()
 		.expect("Unable to generate bindings");
 	let header_path = crate_dir.join("../beaconcrypt/bindings.h");
-	bindings.write_to_file(&header_path);
-	let header = std::fs::read_to_string(&header_path).expect("read generated bindings");
+	let mut rendered = Vec::new();
+	bindings.write(&mut rendered);
+	let header = if rendered.is_empty() {
+		// cbindgen's recursive-invocation guard produces no output and preserves the existing file.
+		std::fs::read_to_string(&header_path).expect("read generated bindings")
+	} else {
+		String::from_utf8(rendered).expect("read generated bindings")
+	};
 	let header = deduplicate_opaque_typedef(&header, "beaconcrypt_Beacon");
 	let header = deduplicate_opaque_typedef(&header, "beaconcrypt_Server");
-	std::fs::write(header_path, header).expect("write generated bindings");
+	let existing = match std::fs::read(&header_path) {
+		Ok(bytes) => Some(bytes),
+		Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+		Err(error) => panic!("read generated bindings: {error}"),
+	};
+	if existing.as_deref() != Some(header.as_bytes()) {
+		std::fs::write(header_path, header).expect("write generated bindings");
+	}
 }
 
 #[cfg(feature = "cbinds")]

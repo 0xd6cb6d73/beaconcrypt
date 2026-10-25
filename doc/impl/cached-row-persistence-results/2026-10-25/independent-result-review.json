@@ -1,0 +1,1336 @@
+{
+  "reviewed_utc": "2026-10-25T13:52:38.948678+00:00",
+  "collection_directory": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025-v2",
+  "manifest_sha256": "17e3829e72822567829041ff3b063002627c9a9de79b253219b0efcf73778c09",
+  "collection_plan_sha256": "9bc49b4c0ac309368998e71f58c13c4e9520bf0c72c96991f5404403abe2c997",
+  "analysis_receipt_sha256": "e38809b26769d2e989ed422e069950fd3632586bf845d1f9688651c0bdddea6b",
+  "exported_all_groups_sha256": "3d6747252e9c5739e70d93f0c258b6f3cc840eb69fe84ce248f554c21b8446bb",
+  "binary_sha256": "985d56867fad436512aaff69878aa3e1c91793cc9dc00288b587c19144713b66",
+  "source_commit": "9f9c51d7911dae8c7b6ea4020cac38c8ad0c78bb",
+  "implementation_commit": "6a89a4c7624453c471c3f148a7a8b4e24a7ee6dd",
+  "verified_committed_source_hashes": 50,
+  "build_provenance_note": "Built from uncommitted implementation bytes, subsequently committed at implementation_commit; all 50 recorded source/manifests match the clean collection revision. Two separately identified ignored Python bytecode files are auxiliary artifacts, not committed source. Collection revision adds documentation only. Build script does not embed git revision.",
+  "checks": "Independent raw matrix, paired ratios, all 648 hot counter records, all 54 fixture warm/cold records, exported-group equality, per-arm balanced order, touched peers, latency ranks, throughput, source hashes, and measurement-window guards verified. No benchmark reruns or original-collection modifications.",
+  "totals": {
+    "operations": 324864,
+    "plaintext_bytes": 47584641024,
+    "arm_batch_records": 648
+  },
+  "groups": 72,
+  "axes": [
+    {
+      "backend": "sqlite",
+      "peers": 1,
+      "report_sha256": "4c27bed30063ab0963a268bf8f09b3f317cc7a24c7175c2a21e1151564e32e2e",
+      "summary_sha256": "ba15c56227089092e5af12d691318635b4ef52a4a6af2b1dce1ce65034229db0",
+      "quiet_journal_sha256": "f00d0c803f16f37d07e7eb5ce79856d45f9e5a3d338a8273ba1ea8a02906a5f9",
+      "raw_batches": 108,
+      "groups": 12,
+      "interval_start": "2026-10-25T12:38:45.404296+00:00",
+      "interval_finish": "2026-10-25T12:44:49.650291+00:00",
+      "invocation_seconds": 364.2459957168903,
+      "measurement_samples": 73,
+      "max_sample_gap_seconds": 5.130981987109408,
+      "all_guard_checks_true": true,
+      "steal_ticks_delta": 89,
+      "swap_in_pages_delta": 1,
+      "swap_out_pages_delta": 0,
+      "max_observed_steal_cores": 0.0919470119005312,
+      "max_controller_cores": 0.046892204007988283,
+      "max_outside_aggregate_cores": 0.0627792354649071,
+      "max_swap_pages_per_second": 0.19574045143539126
+    },
+    {
+      "backend": "postgres",
+      "peers": 1,
+      "report_sha256": "760110c89a89a1b5cd2fa9a90ba4c7c300bb3f78d4fd238b0062627daf5cff30",
+      "summary_sha256": "b915d9b328a887c85373f6d39959741a35c4c4a8046a35b7733b52e9ed505b34",
+      "quiet_journal_sha256": "a76147e06febd573d66d98bfbce11e753b8858ba77bd73cdc93b312ffa310231",
+      "raw_batches": 108,
+      "groups": 12,
+      "interval_start": "2026-10-25T12:48:55.741085+00:00",
+      "interval_finish": "2026-10-25T12:51:14.486921+00:00",
+      "invocation_seconds": 138.74583412404172,
+      "measurement_samples": 29,
+      "max_sample_gap_seconds": 5.182043242035434,
+      "all_guard_checks_true": true,
+      "steal_ticks_delta": 12,
+      "swap_in_pages_delta": 1,
+      "swap_out_pages_delta": 0,
+      "max_observed_steal_cores": 0.003912287634000041,
+      "max_controller_cores": 0.06846503359500071,
+      "max_outside_aggregate_cores": 0.037105814849492214,
+      "max_swap_pages_per_second": 0.19561438170000206
+    },
+    {
+      "backend": "postgres",
+      "peers": 100,
+      "report_sha256": "3ee18c18692581e5d5c1ca80c9646bbc22698f4be58764a8f816c7bf0e497fdc",
+      "summary_sha256": "59cda4fc6b174ec415597e4278bf888e9b8a51b3d5ebded5bfa6bb8548a8b968",
+      "quiet_journal_sha256": "bc7fb5806238454f51cae26d4d089e3de4a99237f99f98bd7d2ef7ac0a524e57",
+      "raw_batches": 108,
+      "groups": 12,
+      "interval_start": "2026-10-25T12:55:20.711741+00:00",
+      "interval_finish": "2026-10-25T12:58:29.639361+00:00",
+      "invocation_seconds": 188.92762501793914,
+      "measurement_samples": 38,
+      "max_sample_gap_seconds": 5.1411052260082215,
+      "all_guard_checks_true": true,
+      "steal_ticks_delta": 30,
+      "swap_in_pages_delta": 7,
+      "swap_out_pages_delta": 0,
+      "max_observed_steal_cores": 0.011715397529018281,
+      "max_controller_cores": 0.7897134607284357,
+      "max_outside_aggregate_cores": 0.14266172320788434,
+      "max_swap_pages_per_second": 0.8519956097454706
+    },
+    {
+      "backend": "sqlite",
+      "peers": 100,
+      "report_sha256": "9dd2b4afc2c5ff995d189223135129242998a6ff29441742d2cf99159043f01b",
+      "summary_sha256": "d050a35b89cf0af08eb69cced0c7d7b2d0f816bbe20326df5c665023cbeba57b",
+      "quiet_journal_sha256": "5d9d928b9737c89b23baa2e649cffca786e1e83d2075007ca620d8764dd028db",
+      "raw_batches": 108,
+      "groups": 12,
+      "interval_start": "2026-10-25T13:02:35.704304+00:00",
+      "interval_finish": "2026-10-25T13:09:15.193319+00:00",
+      "invocation_seconds": 399.4890111128334,
+      "measurement_samples": 80,
+      "max_sample_gap_seconds": 5.127009443938732,
+      "all_guard_checks_true": true,
+      "steal_ticks_delta": 62,
+      "swap_in_pages_delta": 2,
+      "swap_out_pages_delta": 0,
+      "max_observed_steal_cores": 0.06070392700424348,
+      "max_controller_cores": 0.021515202179627047,
+      "max_outside_aggregate_cores": 0.056710591770233326,
+      "max_swap_pages_per_second": 0.19561810311582742
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "report_sha256": "00ab8347b3dec404260bdd68349536563828cbf5975411a014d6329024ffd499",
+      "summary_sha256": "45f5ba75a2c0a514721769bebc420086d9cc04b84f9c12aa6fdeaf0a77364781",
+      "quiet_journal_sha256": "a0173413b33d3345aac7605702856d165c5090dd120295a4fe973ba796378b44",
+      "raw_batches": 108,
+      "groups": 12,
+      "interval_start": "2026-10-25T13:13:21.038641+00:00",
+      "interval_finish": "2026-10-25T13:27:40.876852+00:00",
+      "invocation_seconds": 859.8382091328967,
+      "measurement_samples": 170,
+      "max_sample_gap_seconds": 5.131432154914364,
+      "all_guard_checks_true": true,
+      "steal_ticks_delta": 58,
+      "swap_in_pages_delta": 124,
+      "swap_out_pages_delta": 0,
+      "max_observed_steal_cores": 0.009780814868961927,
+      "max_controller_cores": 0.021510787815581946,
+      "max_outside_aggregate_cores": 0.12903920367986493,
+      "max_swap_pages_per_second": 23.457720389693158
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "report_sha256": "f9cd2181289a6718d113c29128e119beef9dc1766d65d08fe6a0137e0e58ba11",
+      "summary_sha256": "141ad9ebed08e50aeeedb8c5c8dfd4bbdc34ee791d7dcac718322f18cb64e16d",
+      "quiet_journal_sha256": "4d624d93db000a3a752418b6da7a3da13d91e6a5456d3357aac8541d0c71ca46",
+      "raw_batches": 108,
+      "groups": 12,
+      "interval_start": "2026-10-25T13:31:46.940685+00:00",
+      "interval_finish": "2026-10-25T13:45:24.090694+00:00",
+      "invocation_seconds": 817.1500135480892,
+      "measurement_samples": 161,
+      "max_sample_gap_seconds": 5.184354612836614,
+      "all_guard_checks_true": true,
+      "steal_ticks_delta": 84,
+      "swap_in_pages_delta": 23,
+      "swap_out_pages_delta": 0,
+      "max_observed_steal_cores": 0.011729254358164697,
+      "max_controller_cores": 0.029256685924706545,
+      "max_outside_aggregate_cores": 0.11342737272228384,
+      "max_swap_pages_per_second": 1.9542291451657832
+    }
+  ],
+  "comparison_ranges": [
+    {
+      "backend": "sqlite",
+      "peers": 1,
+      "comparisons": {
+        "snapshot_over_row": {
+          "minimum_case_median": 0.9414847861685738,
+          "maximum_case_median": 1.0401150975088602,
+          "ranges_all_above_one": 2,
+          "ranges_all_below_one": 1,
+          "ranges_crossing_one": 9
+        },
+        "snapshot_over_cached_row": {
+          "minimum_case_median": 0.9390887161513947,
+          "maximum_case_median": 1.0379171130766007,
+          "ranges_all_above_one": 1,
+          "ranges_all_below_one": 1,
+          "ranges_crossing_one": 10
+        },
+        "row_over_cached_row": {
+          "minimum_case_median": 0.8973162737564185,
+          "maximum_case_median": 1.0665836338050667,
+          "ranges_all_above_one": 1,
+          "ranges_all_below_one": 2,
+          "ranges_crossing_one": 9
+        }
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 100,
+      "comparisons": {
+        "snapshot_over_row": {
+          "minimum_case_median": 1.0540094887038154,
+          "maximum_case_median": 1.1497493084443318,
+          "ranges_all_above_one": 9,
+          "ranges_all_below_one": 0,
+          "ranges_crossing_one": 3
+        },
+        "snapshot_over_cached_row": {
+          "minimum_case_median": 1.0266320273813954,
+          "maximum_case_median": 1.1389784013218978,
+          "ranges_all_above_one": 9,
+          "ranges_all_below_one": 0,
+          "ranges_crossing_one": 3
+        },
+        "row_over_cached_row": {
+          "minimum_case_median": 0.9380632290898995,
+          "maximum_case_median": 1.0433004064462061,
+          "ranges_all_above_one": 2,
+          "ranges_all_below_one": 0,
+          "ranges_crossing_one": 10
+        }
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "comparisons": {
+        "snapshot_over_row": {
+          "minimum_case_median": 1.8504482606129473,
+          "maximum_case_median": 2.324855570210681,
+          "ranges_all_above_one": 12,
+          "ranges_all_below_one": 0,
+          "ranges_crossing_one": 0
+        },
+        "snapshot_over_cached_row": {
+          "minimum_case_median": 1.9754648133620938,
+          "maximum_case_median": 2.4614918947938267,
+          "ranges_all_above_one": 12,
+          "ranges_all_below_one": 0,
+          "ranges_crossing_one": 0
+        },
+        "row_over_cached_row": {
+          "minimum_case_median": 0.9493522912411262,
+          "maximum_case_median": 1.1926088923350457,
+          "ranges_all_above_one": 2,
+          "ranges_all_below_one": 1,
+          "ranges_crossing_one": 9
+        }
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 1,
+      "comparisons": {
+        "snapshot_over_row": {
+          "minimum_case_median": 0.8376529153215104,
+          "maximum_case_median": 1.0395594417503828,
+          "ranges_all_above_one": 0,
+          "ranges_all_below_one": 8,
+          "ranges_crossing_one": 4
+        },
+        "snapshot_over_cached_row": {
+          "minimum_case_median": 0.6683344323888436,
+          "maximum_case_median": 1.0628313153231328,
+          "ranges_all_above_one": 0,
+          "ranges_all_below_one": 3,
+          "ranges_crossing_one": 9
+        },
+        "row_over_cached_row": {
+          "minimum_case_median": 0.9498021590144955,
+          "maximum_case_median": 1.165045584442183,
+          "ranges_all_above_one": 4,
+          "ranges_all_below_one": 1,
+          "ranges_crossing_one": 7
+        }
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 100,
+      "comparisons": {
+        "snapshot_over_row": {
+          "minimum_case_median": 1.5054281807523346,
+          "maximum_case_median": 2.1127617100330447,
+          "ranges_all_above_one": 12,
+          "ranges_all_below_one": 0,
+          "ranges_crossing_one": 0
+        },
+        "snapshot_over_cached_row": {
+          "minimum_case_median": 1.8417160278551987,
+          "maximum_case_median": 2.1874411910123284,
+          "ranges_all_above_one": 12,
+          "ranges_all_below_one": 0,
+          "ranges_crossing_one": 0
+        },
+        "row_over_cached_row": {
+          "minimum_case_median": 0.9772986481214325,
+          "maximum_case_median": 1.1978518475632034,
+          "ranges_all_above_one": 4,
+          "ranges_all_below_one": 0,
+          "ranges_crossing_one": 8
+        }
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "comparisons": {
+        "snapshot_over_row": {
+          "minimum_case_median": 7.2434822835173,
+          "maximum_case_median": 12.436829584423748,
+          "ranges_all_above_one": 12,
+          "ranges_all_below_one": 0,
+          "ranges_crossing_one": 0
+        },
+        "snapshot_over_cached_row": {
+          "minimum_case_median": 7.089267214343427,
+          "maximum_case_median": 11.989856433919119,
+          "ranges_all_above_one": 12,
+          "ranges_all_below_one": 0,
+          "ranges_crossing_one": 0
+        },
+        "row_over_cached_row": {
+          "minimum_case_median": 0.9204305447222424,
+          "maximum_case_median": 1.1694336307778581,
+          "ranges_all_above_one": 3,
+          "ranges_all_below_one": 0,
+          "ranges_crossing_one": 9
+        }
+      }
+    }
+  ],
+  "selected_display_groups": [
+    {
+      "backend": "sqlite",
+      "peers": 1,
+      "scenario": "small_stream",
+      "direction": "send",
+      "touched_peers": 1,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 0.9414847861685738,
+          "min": 0.9005048951920482,
+          "max": 1.0046789156263731
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 0.9757801231069329,
+          "min": 0.9748675144345018,
+          "max": 1.0004865802545229
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.062668876813252,
+          "min": 0.9712357927792054,
+          "max": 1.0825788062224742
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 5991.780182,
+        "row": 6364.181631,
+        "cached_row": 6144.71846
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1,
+      "scenario": "small_stream",
+      "direction": "receive",
+      "touched_peers": 1,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 1.0401150975088602,
+          "min": 0.9776762525178703,
+          "max": 1.2416364345226487
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 1.0353571527626546,
+          "min": 1.028856955123049,
+          "max": 1.2664250655056566
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.0199644842030897,
+          "min": 0.9891760609832748,
+          "max": 1.0589979557100166
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 6315.580374,
+        "row": 6368.050671,
+        "cached_row": 6138.443583
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1,
+      "scenario": "burst_512",
+      "direction": "send",
+      "touched_peers": 1,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 1.0363622977676148,
+          "min": 1.0340041111073552,
+          "max": 1.0476662187766501
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 1.0322764581345067,
+          "min": 0.9459352367372617,
+          "max": 1.0767732375453984
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 0.9853104353597333,
+          "min": 0.912745705603978,
+          "max": 1.0413626270714147
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 3663.959198,
+        "row": 3501.4298,
+        "cached_row": 3616.289815
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1,
+      "scenario": "burst_512",
+      "direction": "receive",
+      "touched_peers": 1,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 0.9819920213549765,
+          "min": 0.8399344905495161,
+          "max": 1.0730023966213507
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 0.9810529060354565,
+          "min": 0.9435717970535354,
+          "max": 1.119053593948304
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.0429180749940152,
+          "min": 0.9608752174499057,
+          "max": 1.1680112164385767
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 3424.128412,
+        "row": 3495.219634,
+        "cached_row": 3458.419528
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 1,
+      "scenario": "small_stream",
+      "direction": "send",
+      "touched_peers": 1,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 0.9286144891543495,
+          "min": 0.8638718543629218,
+          "max": 0.9486266222642257
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 0.9635615989008088,
+          "min": 0.8236426130627165,
+          "max": 1.1143080664289486
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.0376336037770466,
+          "min": 0.8682474155077035,
+          "max": 1.2898997239014294
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 1848.827257,
+        "row": 1990.952412,
+        "cached_row": 1918.743191
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 1,
+      "scenario": "small_stream",
+      "direction": "receive",
+      "touched_peers": 1,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 0.9241575254300195,
+          "min": 0.8620171893084926,
+          "max": 0.9342026561175063
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 0.9437796799946607,
+          "min": 0.7585717416098161,
+          "max": 0.9785413085261591
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.0474614925555035,
+          "min": 0.8208251523535939,
+          "max": 1.0948501859362663
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 1859.944907,
+        "row": 2150.892691,
+        "cached_row": 2451.903762
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 1,
+      "scenario": "burst_512",
+      "direction": "send",
+      "touched_peers": 1,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 1.0395594417503828,
+          "min": 0.9280700335108847,
+          "max": 1.194791958149628
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 1.0628313153231328,
+          "min": 0.8824194641425113,
+          "max": 1.223972073034577
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 0.9508112882433263,
+          "min": 0.8895534557908622,
+          "max": 1.1773949847193779
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 1593.826702,
+        "row": 1362.702609,
+        "cached_row": 1433.199864
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 1,
+      "scenario": "burst_512",
+      "direction": "receive",
+      "touched_peers": 1,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 0.8376529153215104,
+          "min": 0.7566455579487825,
+          "max": 0.9002723790939873
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 1.048858360058709,
+          "min": 0.8692715216579795,
+          "max": 1.0648605677343004
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.165045584442183,
+          "min": 1.0377466678120892,
+          "max": 1.4073439757197133
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 1235.272792,
+        "row": 1632.564652,
+        "cached_row": 1169.459084
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 100,
+      "scenario": "small_stream",
+      "direction": "send",
+      "touched_peers": 100,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 2.08783451475001,
+          "min": 2.0229195170991554,
+          "max": 2.1521039898492784
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 2.1295877339194327,
+          "min": 1.5536969921782873,
+          "max": 2.1501921874772707
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 0.9991116589249288,
+          "min": 0.7441667340978515,
+          "max": 1.0527298372073832
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 4044.558553,
+        "row": 1950.351694,
+        "cached_row": 1881.021881
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 100,
+      "scenario": "small_stream",
+      "direction": "receive",
+      "touched_peers": 100,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 2.062128268416948,
+          "min": 1.8411418127382577,
+          "max": 2.3225169061392923
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 2.1384432285601966,
+          "min": 1.977064434530489,
+          "max": 2.247417874915524
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.037007862853184,
+          "min": 0.9676648075089342,
+          "max": 1.0738251778607313
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 3972.947605,
+        "row": 1926.624869,
+        "cached_row": 1977.720127
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 100,
+      "scenario": "burst_512",
+      "direction": "send",
+      "touched_peers": 100,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 1.698826194779894,
+          "min": 1.6687311743023827,
+          "max": 1.7379705923296078
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 1.844653863693133,
+          "min": 1.6959569278209867,
+          "max": 1.9741414163990099
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.0613838184802225,
+          "min": 0.9983110297170341,
+          "max": 1.1830194382413362
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 2384.200927,
+        "row": 1403.440172,
+        "cached_row": 1306.834068
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 100,
+      "scenario": "burst_512",
+      "direction": "receive",
+      "touched_peers": 100,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 1.8123989773928135,
+          "min": 1.6301220873768585,
+          "max": 1.8739525630780103
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 1.959283103704403,
+          "min": 1.9083416871583807,
+          "max": 2.022782218234209
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.1160799820931466,
+          "min": 1.0183511177166007,
+          "max": 1.2019241496550852
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 2331.778609,
+        "row": 1414.184077,
+        "cached_row": 1221.887372
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 100,
+      "scenario": "small_stream",
+      "direction": "send",
+      "touched_peers": 100,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 1.116670601820765,
+          "min": 1.048080650838593,
+          "max": 1.3817666161701856
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 1.067221343591626,
+          "min": 1.0607177095166047,
+          "max": 1.1913514378984258
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 0.9557172382361365,
+          "min": 0.8621943995147822,
+          "max": 1.0120573342021921
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 7020.236258,
+        "row": 6285.218831,
+        "cached_row": 6618.38319
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 100,
+      "scenario": "small_stream",
+      "direction": "receive",
+      "touched_peers": 100,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 1.0572016393592392,
+          "min": 1.0545083367032704,
+          "max": 1.1014948491258383
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 1.0611068557344714,
+          "min": 0.9573312417055748,
+          "max": 1.1644591316754316
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.006257436571654,
+          "min": 0.869120034891971,
+          "max": 1.1014541486912564
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 6711.899584,
+        "row": 6283.485366,
+        "cached_row": 6268.018501
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 100,
+      "scenario": "burst_512",
+      "direction": "send",
+      "touched_peers": 100,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 1.1497493084443318,
+          "min": 1.0840357755511187,
+          "max": 1.1604030209320428
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 1.1387966811123014,
+          "min": 1.0662552873803672,
+          "max": 1.1630324248728625
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 0.9904738996130819,
+          "min": 0.9835978769596309,
+          "max": 1.0022659402753948
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 3962.513548,
+        "row": 3419.408399,
+        "cached_row": 3450.659397
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 100,
+      "scenario": "burst_512",
+      "direction": "receive",
+      "touched_peers": 100,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 1.0857894325642563,
+          "min": 1.02063041147274,
+          "max": 1.1136762342568947
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 1.0605888127157956,
+          "min": 0.8482562657756365,
+          "max": 1.129921570310058
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 0.9767905091975839,
+          "min": 0.8311101219800293,
+          "max": 1.0145871264497293
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 3732.477089,
+        "row": 3452.030889,
+        "cached_row": 3409.24261
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "scenario": "small_stream",
+      "direction": "send",
+      "touched_peers": 1000,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 2.1648466767387844,
+          "min": 1.8298246405266239,
+          "max": 2.2376828650546683
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 2.153521040934428,
+          "min": 1.6886323618462558,
+          "max": 2.3029353474303127
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 0.9623888507908898,
+          "min": 0.9228383553520555,
+          "max": 1.0637868132534682
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 14201.496282,
+        "row": 6673.387664,
+        "cached_row": 6594.547261
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "scenario": "small_stream",
+      "direction": "receive",
+      "touched_peers": 1000,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 2.324855570210681,
+          "min": 2.262666606855714,
+          "max": 2.3833001003658616
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 2.4614918947938267,
+          "min": 2.119940845076308,
+          "max": 2.565047117966614
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.0587719625829333,
+          "min": 0.9369214353776393,
+          "max": 1.07625855324424
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 14815.995936,
+        "row": 6372.867255,
+        "cached_row": 6204.125857
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "scenario": "burst_512",
+      "direction": "send",
+      "touched_peers": 512,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 2.06463805125555,
+          "min": 1.813328006894989,
+          "max": 2.1308226902715655
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 2.234808166880009,
+          "min": 1.8688934721518475,
+          "max": 2.2638218781324753
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.0488006238544376,
+          "min": 1.030642809820163,
+          "max": 1.0964739687693916
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 7915.105089,
+        "row": 3833.652627,
+        "cached_row": 3497.859546
+      }
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "scenario": "burst_512",
+      "direction": "receive",
+      "touched_peers": 512,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 2.041959224104449,
+          "min": 1.8083369039748767,
+          "max": 2.1648542189238307
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 1.9754648133620938,
+          "min": 1.8537392347820838,
+          "max": 2.090621340858315
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.0238310913261297,
+          "min": 0.8562882519191499,
+          "max": 1.0924207812271352
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 7341.570341,
+        "row": 3542.779381,
+        "cached_row": 3960.411585
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "scenario": "small_stream",
+      "direction": "send",
+      "touched_peers": 1000,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 12.436829584423748,
+          "min": 7.5578877058578,
+          "max": 12.50400427452053
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 11.720875717795224,
+          "min": 7.70786579026572,
+          "max": 12.999520656477396
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.0198439154225167,
+          "min": 0.942432766987078,
+          "max": 1.0396286158480113
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 22922.319112,
+        "row": 1906.279767,
+        "cached_row": 1897.627214
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "scenario": "small_stream",
+      "direction": "receive",
+      "touched_peers": 1000,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 11.961226176990966,
+          "min": 7.235018624617415,
+          "max": 12.162745779616529
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 9.497531442842329,
+          "min": 7.2303293816664915,
+          "max": 12.503781125028842
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 0.9993518685722567,
+          "min": 0.7940265740574418,
+          "max": 1.0280393384513433
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 23052.443203,
+        "row": 1942.174105,
+        "cached_row": 2445.981241
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "scenario": "burst_512",
+      "direction": "send",
+      "touched_peers": 512,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 8.370081535693217,
+          "min": 7.387327655641123,
+          "max": 8.723116968170284
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 7.8088571371072595,
+          "min": 7.70973153990908,
+          "max": 9.152923364506094
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.0436428298969198,
+          "min": 0.9329487537017791,
+          "max": 1.0492721120104347
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 11714.377224,
+        "row": 1470.727914,
+        "cached_row": 1516.58259
+      }
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "scenario": "burst_512",
+      "direction": "receive",
+      "touched_peers": 512,
+      "ratios": {
+        "snapshot_over_row": {
+          "count": 3,
+          "median": 9.151158569712758,
+          "min": 5.807435531476689,
+          "max": 9.811759648830874
+        },
+        "snapshot_over_cached_row": {
+          "count": 3,
+          "median": 8.569078469227493,
+          "min": 6.24227403094845,
+          "max": 9.460978857630403
+        },
+        "row_over_cached_row": {
+          "count": 3,
+          "median": 1.033855853939964,
+          "min": 0.8733477761298961,
+          "max": 1.0748761647227778
+        }
+      },
+      "median_batch_ms": {
+        "snapshot": 12049.197074,
+        "row": 1316.685421,
+        "cached_row": 1380.26362
+      }
+    }
+  ],
+  "logical_bytes": [
+    {
+      "backend": "sqlite",
+      "peers": 1,
+      "arm": "snapshot",
+      "logical_value_bytes_written_per_operation": 1360.364417109929,
+      "logical_validation_bytes_per_operation": 0.0
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1,
+      "arm": "row",
+      "logical_value_bytes_written_per_operation": 818.2517176418439,
+      "logical_validation_bytes_per_operation": 818.2502770390071
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1,
+      "arm": "cached_row",
+      "logical_value_bytes_written_per_operation": 823.8021941489362,
+      "logical_validation_bytes_per_operation": 823.8018617021277
+    },
+    {
+      "backend": "sqlite",
+      "peers": 100,
+      "arm": "snapshot",
+      "logical_value_bytes_written_per_operation": 93992.66722074468,
+      "logical_validation_bytes_per_operation": 0.0
+    },
+    {
+      "backend": "sqlite",
+      "peers": 100,
+      "arm": "row",
+      "logical_value_bytes_written_per_operation": 819.3871343085107,
+      "logical_validation_bytes_per_operation": 819.3567154255319
+    },
+    {
+      "backend": "sqlite",
+      "peers": 100,
+      "arm": "cached_row",
+      "logical_value_bytes_written_per_operation": 819.9898603723404,
+      "logical_validation_bytes_per_operation": 819.9609375
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "arm": "snapshot",
+      "logical_value_bytes_written_per_operation": 935755.3721742021,
+      "logical_validation_bytes_per_operation": 0.0
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "arm": "row",
+      "logical_value_bytes_written_per_operation": 818.2455119680851,
+      "logical_validation_bytes_per_operation": 818.1843417553191
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "arm": "cached_row",
+      "logical_value_bytes_written_per_operation": 818.5061502659574,
+      "logical_validation_bytes_per_operation": 818.4994459219859
+    },
+    {
+      "backend": "postgres",
+      "peers": 1,
+      "arm": "snapshot",
+      "logical_value_bytes_written_per_operation": 1358.3259640957447,
+      "logical_validation_bytes_per_operation": 72.0
+    },
+    {
+      "backend": "postgres",
+      "peers": 1,
+      "arm": "row",
+      "logical_value_bytes_written_per_operation": 817.2504986702128,
+      "logical_validation_bytes_per_operation": 817.2488918439716
+    },
+    {
+      "backend": "postgres",
+      "peers": 1,
+      "arm": "cached_row",
+      "logical_value_bytes_written_per_operation": 824.9660904255319,
+      "logical_validation_bytes_per_operation": 824.9652593085107
+    },
+    {
+      "backend": "postgres",
+      "peers": 100,
+      "arm": "snapshot",
+      "logical_value_bytes_written_per_operation": 94038.93068484042,
+      "logical_validation_bytes_per_operation": 72.0
+    },
+    {
+      "backend": "postgres",
+      "peers": 100,
+      "arm": "row",
+      "logical_value_bytes_written_per_operation": 820.3778812056737,
+      "logical_validation_bytes_per_operation": 820.3436945921986
+    },
+    {
+      "backend": "postgres",
+      "peers": 100,
+      "arm": "cached_row",
+      "logical_value_bytes_written_per_operation": 819.4931294326241,
+      "logical_validation_bytes_per_operation": 819.4736258865248
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "arm": "snapshot",
+      "logical_value_bytes_written_per_operation": 935482.316101507,
+      "logical_validation_bytes_per_operation": 72.0
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "arm": "row",
+      "logical_value_bytes_written_per_operation": 818.309452570922,
+      "logical_validation_bytes_per_operation": 818.3394281914893
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "arm": "cached_row",
+      "logical_value_bytes_written_per_operation": 818.339649822695,
+      "logical_validation_bytes_per_operation": 818.2890625
+    }
+  ],
+  "largest_operation_latencies": [
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "scenario": "mixed_stream",
+      "direction": "receive",
+      "trial": 1,
+      "arm": "snapshot",
+      "max_ms": 120.647625,
+      "p99_ms": 39.224407,
+      "batch_ms": 24231.150768
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "scenario": "small_stream",
+      "direction": "receive",
+      "trial": 3,
+      "arm": "snapshot",
+      "max_ms": 78.292713,
+      "p99_ms": 33.789512,
+      "batch_ms": 23052.443203
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "scenario": "burst_256",
+      "direction": "receive",
+      "trial": 3,
+      "arm": "snapshot",
+      "max_ms": 61.4886,
+      "p99_ms": 39.330945,
+      "batch_ms": 5338.062563
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "scenario": "small_stream",
+      "direction": "send",
+      "trial": 2,
+      "arm": "snapshot",
+      "max_ms": 59.416555,
+      "p99_ms": 28.085738,
+      "batch_ms": 22922.319112
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "scenario": "burst_512",
+      "direction": "receive",
+      "trial": 3,
+      "arm": "snapshot",
+      "max_ms": 52.172413,
+      "p99_ms": 37.421291,
+      "batch_ms": 10469.739985
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "scenario": "small_stream",
+      "direction": "receive",
+      "trial": 2,
+      "arm": "snapshot",
+      "max_ms": 51.680367,
+      "p99_ms": 26.100002,
+      "batch_ms": 14815.995936
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000,
+      "scenario": "burst_512",
+      "direction": "receive",
+      "trial": 3,
+      "arm": "snapshot",
+      "max_ms": 51.357056,
+      "p99_ms": 39.727333,
+      "batch_ms": 11827.587268
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "scenario": "burst_256",
+      "direction": "send",
+      "trial": 3,
+      "arm": "snapshot",
+      "max_ms": 50.566284,
+      "p99_ms": 45.016616,
+      "batch_ms": 5642.727836
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "scenario": "burst_64",
+      "direction": "receive",
+      "trial": 3,
+      "arm": "snapshot",
+      "max_ms": 45.366918,
+      "p99_ms": 45.366918,
+      "batch_ms": 1391.951862
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000,
+      "scenario": "mixed_stream",
+      "direction": "receive",
+      "trial": 3,
+      "arm": "snapshot",
+      "max_ms": 44.774225,
+      "p99_ms": 30.365741,
+      "batch_ms": 15905.034306
+    }
+  ],
+  "limitations": [
+    "Quiet-VM policy includes exact controller instrumentation and does not exclude physical-host Kubernetes activity. Low observed steal does not measure all host scheduling/storage contention.",
+    "RPC counters count prepared query/ack calls, not physical packets or network bytes; logical storage bytes are not physical I/O.",
+    "Timing boundaries include durable native commits but exclude provider transport/application result journaling; fully warm cache, one worker, no contention or eviction tests in measured matrix.",
+    "Three paired trials; 52 of 72 cached-versus-row ratio ranges cross one. Do not pool operation percentiles, claim significance, select fastest trials, or infer reliable cache speedup from call reduction alone.",
+    "The largest operation latency was120.647625ms in PostgreSQL1000-peer snapshot mixed receive trial1; retain all tails. SQLite1000-peer mixed receive row trial3 takes11.370024s versus6.637268s/6.033944s in trials1/2, producing one R/C ratio1.804655 with other trials0.919066/0.969880; no causal attribution or exclusion."
+  ],
+  "discrepancies": []
+}

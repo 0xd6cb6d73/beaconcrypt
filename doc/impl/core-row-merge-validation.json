@@ -1,0 +1,110 @@
+{
+  "target": "eda5a18424d816d9e1f5ba86eafbdae5da788411",
+  "incoming": "2b38ad523f6e4b67f4a38f431636101f4a14be6a",
+  "source_sha256": {
+    "beaconcrypt/src/server.rs": "c47d482bfd41e9d93623acf94319a36cadb8e2ab413df07ea7678e64209e67dc",
+    "beaconcrypt/src/deser.rs": "35b49d73e89dafe0d9f5699f513adc4293f1ff2b24146584a6ac5cb272eb6af2",
+    "beaconcrypt/src/shared.rs": "2a1531e83277646ee47da116db0f2cf28af046342b846d3bcfb2a02b36ab855e",
+    "beaconcrypt/src/row_persistence.rs": "c5b4a861437c9b9c8d9e0ce54e0ac4e84247cc082431d8e10d4629111d506cfa",
+    "beaconcrypt/src/row_binding_server.rs": "24102f97eae27dc410835aced288cddab527db9c234110a85f7627e10a0226e3",
+    "beaconcrypt/tests/row_rng.rs": "c67437eb8a7df7fa726256b62232b70f1aac91c2d38f001da899f97e4d1c299c",
+    "scripts/check-no-std.sh": "8011fcb8fcbc430e21365c1372582eb7b719cb2bf45d68482ca20e134caa4240"
+  },
+  "scope": "Merge preparation; full mutation and benchmark receipts on parent branches remain historical",
+  "unchanged_subtrees": {
+    "beaconcrypt-core": "16ef0be42e3fff3facf21da48b48da7a7756910c",
+    "beaconcrypt-crypto": "c42da0ff2a642b531313f6416ce7b1d9f0d00ac7",
+    "beaconcrypt-parse": "71429faa29c35153a53089a2df453ee7fb6972cb"
+  },
+  "environment": {
+    "rust": "1.96.0",
+    "wasi_rust": "1.97.1",
+    "resource_coordinator": "/tmp/bc-coord",
+    "target": "/tmp/bc-arc-scratch/core-row-merge/target",
+    "host_linker_workaround": "-C linker-features=-lld; RUSTC_WRAPPER applies this only to host compilation during cross builds"
+  },
+  "checks": [
+    {
+      "label": "runtime",
+      "command": "cargo nextest run --workspace --all-features --locked --config-file=doc/impl/no-std-core-lifecycle-nextest.toml --profile=mutants --user-config-file=none",
+      "exit_code": 0,
+      "result": "533 passed, 22 inherited proof-source exclusions",
+      "log": "/tmp/bc-arc-scratch/core-row-merge/runtime-final.log",
+      "sha256": "2daa60c8f6e667ca3d1ec41dcbb77818baf07c7b5c04c02b80ba9cf6c8c14ae7"
+    },
+    {
+      "label": "clippy",
+      "command": "cargo clippy --workspace --all-targets --all-features --locked",
+      "exit_code": 0,
+      "result": "Passed; existing core and WASI Clippy warnings retained",
+      "log": "/tmp/bc-arc-scratch/core-row-merge/clippy-final.log",
+      "sha256": "d4c778bb796ffc3ef67d6980fd2231ab4060e38acaf33c71e76a2e21a74db18d"
+    },
+    {
+      "label": "thumb-atomic",
+      "command": "bash scripts/check-no-std.sh",
+      "exit_code": 0,
+      "result": "Four feature configurations passed on thumbv7em-none-eabihf",
+      "log": "/tmp/bc-arc-scratch/core-row-merge/portable.log",
+      "sha256": "e5005981b53ad76627f4d4db1216b27af3e4c80a43d0ddf60011374eccb55781"
+    },
+    {
+      "label": "thumb-no-atomics",
+      "command": "BEACONCRYPT_NO_STD_TARGET=thumbv6m-none-eabi bash scripts/check-no-std.sh",
+      "exit_code": 0,
+      "result": "Four feature configurations passed",
+      "log": "/tmp/bc-arc-scratch/core-row-merge/portable-noatomics.log",
+      "sha256": "ff548201ec04e3689b11c2cba7e7bc0d1a0150b7da96b9feb156c0ed5f03230c"
+    },
+    {
+      "label": "hosted-no-std",
+      "command": "cargo check -p beaconcrypt --no-default-features --features pqxdh,server --lib --locked; cargo check -p beaconcrypt --no-default-features --features pqxdh,beacon --lib --locked",
+      "exit_code": 0,
+      "result": "Both passed without warnings",
+      "log": "/tmp/bc-arc-scratch/core-row-merge/hosted-nostd.log",
+      "sha256": "f995614a031755ec997c890cf31cf7212c10714b012791d5315705f480edc49a"
+    },
+    {
+      "label": "wasi",
+      "command": "bash scripts/test-wasm.sh",
+      "exit_code": 0,
+      "result": "27 tests and isolated allocation-failure probe passed",
+      "log": "/tmp/bc-arc-scratch/core-row-merge/wasi.log",
+      "sha256": "5ba747589ac12a7bff59c2efe262055d46b54475e0c8f60a5d1f8b5e62f1e8b2"
+    },
+    {
+      "label": "wasm-go",
+      "command": "bash scripts/build-wasm.sh; CGO_ENABLED=0 go test ./...; CGO_ENABLED=1 go test -tags beaconcrypt_wazero ./...",
+      "exit_code": 0,
+      "result": "Both Go/Wasm modes passed",
+      "log": "/tmp/bc-arc-scratch/core-row-merge/wasm-go.log",
+      "sha256": "67e13a6bf04f2593ecdb2e4818404778228b92158d94408307ceb13d842d37b3"
+    },
+    {
+      "label": "rng-properties",
+      "command": "PROPTEST_CASES=64 cargo test -p beaconcrypt --test row_rng --locked",
+      "exit_code": 0,
+      "result": "2 tests passed, including 64 generated cases and retained regression seed",
+      "log": "/tmp/bc-arc-scratch/core-row-merge/rng-property-fixed.log",
+      "sha256": "f8eaecfd04d28e991c0c3c6069b3a0493b9b59d672b570f02bb2b866fb1aec94"
+    }
+  ],
+  "bindings_receipt": "core-row-merge-bindings.json",
+  "proofs": "No proof edits, regeneration or verification; preserve existing 22 deferrals exactly",
+  "benchmarks": "Not rerun; prior archives and original revision claims unchanged",
+  "mutations": {
+    "status": "passed",
+    "scope": "74 mutations selected by the adapter adaptation diff; this is not a full workspace mutation rerun",
+    "command": "cargo mutants -p beaconcrypt --in-diff adaptation.diff --test-tool nextest --jobs 1 --timeout 120 --build-timeout 240 --output adaptation-isolated -- --config-file=doc/impl/no-std-core-lifecycle-nextest.toml --profile=mutants --user-config-file=none",
+    "execution": "One worker, with no competing Cargo build after the baseline; prior interrupted exploratory runs are not acceptance evidence",
+    "total": 74,
+    "caught": 36,
+    "unviable": 38,
+    "missed": 0,
+    "timeout": 0,
+    "unviable_review": "All 38 failures contain Rust source type/constructor errors (E0061, E0277 or E0599); none are environment failures",
+    "outcomes": "/tmp/bc-arc-scratch/core-row-merge/adaptation-isolated/mutants.out/outcomes.json",
+    "sha256": "4f80e6094563578f3ae7399a01d88def444958546d2e18396fb44d4e9d584583",
+    "diff_sha256": "b0284d2a736ed380c86c521801c857728b307dd8ab3b373cfd3961feaf104f33"
+  }
+}

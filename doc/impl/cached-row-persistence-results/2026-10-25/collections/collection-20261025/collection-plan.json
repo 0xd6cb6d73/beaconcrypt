@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "status": "prepared; execution requires root authorization",
+  "created_utc": "2026-10-25T11:14:46.487116+00:00",
+  "workspace": "/home/user/worktrees/beaconcrypt-row-persistence",
+  "collection_directory": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025",
+  "binary": "/home/user/worktrees/beaconcrypt-row-persistence/target/release/examples/persistence_bench",
+  "build_receipt": {
+    "started": "2026-10-25T10:20:51.730151+00:00",
+    "finished": "2026-10-25T10:22:42.637589+00:00",
+    "source_commit": "6a89a4c7624453c471c3f148a7a8b4e24a7ee6dd",
+    "source_dirty_at_build": " M .cargo/mutants.toml\n M Cargo.lock\n M beaconcrypt.pyi\n M beaconcrypt/Cargo.toml\n M beaconcrypt/bindings.h\n M beaconcrypt/examples/persistence_bench/database.rs\n M beaconcrypt/examples/persistence_bench/main.rs\n M beaconcrypt/examples/persistence_bench/summarize.py\n M beaconcrypt/examples/persistence_bench/test_summarize.py\n M beaconcrypt/src/lib.rs\n M beaconcrypt/src/row_cbinds.rs\n M beaconcrypt/src/row_persistence.rs\n M beaconcrypt/src/row_pybinds.rs\n M beaconcrypt_row_go.c\n M beaconcrypt_row_go.h\n M doc/impl/row-persistence-benchmark.md\n M doc/persistence.md\n M row_persistence_cgo.go\n M row_persistence_types.go\n M row_persistence_wazero.go\n M row_persistence_wazero_test.go\n?? beaconcrypt/examples/persistence_bench/adapter_tests.rs\n?? beaconcrypt/examples/persistence_bench/buffered.rs\n?? beaconcrypt/examples/persistence_bench/native_postgres_tests.rs\n?? beaconcrypt/examples/persistence_bench/postgres.rs\n?? beaconcrypt/examples/sqlite/optimistic.rs\n?? beaconcrypt/src/row_binding_server.rs\n?? beaconcrypt/tests/cached_row_persistence.rs\n?? doc/impl/cached-row-persistence.md\n?? row_cached_cgo_test.go\n?? tests/test_row_cached.py\n",
+    "binary_sha256": "985d56867fad436512aaff69878aa3e1c91793cc9dc00288b587c19144713b66",
+    "source_sha256": {
+      "beaconcrypt/src/error.rs": "45e9cd7bd2de08de9eea4bdb5bce9f279fc46c9fa091371557968385ee922a87",
+      "beaconcrypt/src/deser.rs": "fa64f80818cb27ba479a3fa5b0f719ce286eacac5437e0abe39df39cddfbe6a0",
+      "beaconcrypt/src/wire.rs": "b9538d2b232796009909f02ec2b35e2181ccbb20f27989ae6b59b15c3066870c",
+      "beaconcrypt/src/pybinds.rs": "6dc9a248f6eba84f6bbc6cfdf16d741b45a61ea1428caacf3a4d1302a8b19dce",
+      "beaconcrypt/src/beacon.rs": "880a240ccfda92565734d31ae3a7e630e988d3e1ff77666579ed31dafd15fd68",
+      "beaconcrypt/src/row_persistence.rs": "90b6c022ab3763d69b440a9728b8c457fd809b05d0f91a7e32e7443d50251ace",
+      "beaconcrypt/src/persistence.rs": "4e3cd48185eaf3eb104179be3b7adc2db22a465efc6651cd28d27283339a3a6d",
+      "beaconcrypt/src/auth.rs": "18f0604c5f5812f8ab477fbffa2d4b1e0b955378e4f799d7eb843dfd8da9fb3a",
+      "beaconcrypt/src/ratchet.rs": "bfe86fc2b5589a706c0513505e6cf9249741654538eabe7d2708c8213baf256b",
+      "beaconcrypt/src/server.rs": "ffd3a2d4402fb1919791266bc49035a98efeec7323d033f593f6ab1c9211d6b6",
+      "beaconcrypt/src/pqxdh.rs": "892c9b689b6ccfcec08d5d76707667d181c22e021f6b7106495844f5c8ca2fd1",
+      "beaconcrypt/src/row_cbinds.rs": "438d30fa1c47d017b822519187e6e9ad4facec64b55a7179d88a5a5ea8ea47c6",
+      "beaconcrypt/src/lib.rs": "33f42a2d5adbf566b6dfd6198c7ba737ce240708fbb8d9c35f9a592e0014a72f",
+      "beaconcrypt/src/cbinds.rs": "0a0872c7586414e5cdbbbda18c7856639fc5627388b719b0cb4c0456d7c00aff",
+      "beaconcrypt/src/row_binding_server.rs": "5ddeec7dc556184fe11f7faa8759c7ba21a7a205a7c7c766b97c895af4545ff7",
+      "beaconcrypt/src/ser.rs": "4477cb381c2257af28b45b212a8c50c9a6bd635dd15f50985db1b61b2900feda",
+      "beaconcrypt/src/row_pybinds.rs": "22dcc8999043f7f33bf3e0d4b44c8abff33536964c10a64f4812f562351bb091",
+      "beaconcrypt/src/shared.rs": "9100666b1a7f037bb792778cb1433ea9b5b03c715ed3e1c482f7362ff2c3d56e",
+      "beaconcrypt-core/src/constants.rs": "748979a5b3b340b692bc10a687a27250ef5e6e2a67d43876a32585177226ef0a",
+      "beaconcrypt-core/src/commitment.rs": "44bd939e02cbfd02671142fae08b83e9e971b8955c6a84c04cc309c17c087a48",
+      "beaconcrypt-core/src/authentication.rs": "794db37d54728df926e9c5f150ded8734eb7521d5781fa3fc4e2f4b2c1f5d1ef",
+      "beaconcrypt-core/src/ratchet.rs": "3ed4d65ed1a63605819f8e685707d47b718a91ea9ee23069da88501c8031fa51",
+      "beaconcrypt-core/src/pqxdh.rs": "2f2e1b3c8e02ad605d5078a8ca16ccf569c50a77bda6df787d84722a16806763",
+      "beaconcrypt-core/src/lib.rs": "ab0db6ff490ccbaf95540cf1b89f2ccc813d3c61a4c52d002ee170851b064ffd",
+      "beaconcrypt-core/src/record.rs": "2246e63184225fe95f7596454db9380a71c88702b2b57756513cfdcdd9d6623d",
+      "beaconcrypt-core/src/pqxdh/concrete.rs": "b3a22f8a7c4adb087e217d58e2d302a057fd5ae224cd8fe2c44777472e469c50",
+      "beaconcrypt-core/src/ratchet/control.rs": "6c17cc0dbe7445be04dc3ab123a60ecbf3d757da6337a7132d5dafd3e06f5639",
+      "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
+      "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
+      "beaconcrypt-parse/src/preflight_tests.rs": "c0e3299054d9003e28dc060d5c3d83e8b5a98219d0f4605ec4482d3ae658479f",
+      "beaconcrypt-parse/src/sizing.rs": "22ea4eca8af17246f985a4658a1b8e47367295289db88b29303cb3cddb4cc770",
+      "beaconcrypt-parse/src/lib.rs": "8d67fe4808bdfe00bf59e2d56a0488f9fea29cce0356f0d045263ec81e2c47f3",
+      "beaconcrypt-parse/src/generated/cbordetveraux.rs": "36420e78b9feed0a4c4a1b6a57b28aeba16ae38be9c61f5ff8165fa088ac3589",
+      "beaconcrypt-parse/src/generated/cbordetver.rs": "e60e27d58b3fe7eeaca202e9751b596c88884b4a76d5bf57a345a21861066d6c",
+      "beaconcrypt-parse/src/generated/transport.rs": "218245bef2baa287d6d2a77f6013fe7d78c887b4416a88756618240ad83e3fa8",
+      "beaconcrypt/examples/persistence_bench/database.rs": "b7bb77ee800f8e01800af94e0143b42b14cfc2778c7a39e8b825850ba93c5497",
+      "beaconcrypt/examples/persistence_bench/summarize.py": "8df3345bb2997e0898df7ed3c50eeeed4634a1f2746531852d716146230eb555",
+      "beaconcrypt/examples/persistence_bench/postgres.rs": "6f22421f97530b2472540f7377e5815d58c15db9d0801fd41d2893f11983d7f4",
+      "beaconcrypt/examples/persistence_bench/main.rs": "ad2bc2397df96ece411a94ef4045c087537a9ad41e596aaf84bddc11c8f0b481",
+      "beaconcrypt/examples/persistence_bench/test_summarize.py": "282ab5a3fc85d50ee3398999a27ae2c77d3f449a2f144742701baa05f4095eae",
+      "beaconcrypt/examples/persistence_bench/adapter_tests.rs": "38f4eacd7bf5ae2acebc2ec592cb44ad5e7c42f3733e68edce334189be77690b",
+      "beaconcrypt/examples/persistence_bench/native_postgres_tests.rs": "87bea07af6a79160586efb8068263d6c35ba010fecddc23a32369d7f50d183d6",
+      "beaconcrypt/examples/persistence_bench/buffered.rs": "c1496501b9c7bbe6b3945e965d664a43ea561d45db5045a50e64a6ccb746fc3e",
+      "beaconcrypt/examples/persistence_bench/__pycache__/test_summarize.cpython-314.pyc": "4f5c19376941dc6cec8539e5a7db587bc3a2c774c1289827b9e9fc483bdf1e7a",
+      "beaconcrypt/examples/persistence_bench/__pycache__/summarize.cpython-314.pyc": "46dff4c3bddcb5581399ac10d76639fdf785439ea80a70c2d04a7b95a03fdc14",
+      "Cargo.toml": "c68d4cabebbaa64d93df20057becce3eeafd87b64ca16ff4c343c1adc730b80e",
+      "Cargo.lock": "c287ee8497290a8536e7431b9e6824c63cbf36da896aa83f4d6af3c39e6f848d",
+      "beaconcrypt/Cargo.toml": "ffa3540fa36cf74027bf31c780b0197147b724de50626961569b4de9ddf4bb6e",
+      "beaconcrypt/build.rs": "aca35eb7a5fba80d3ccdb4da75981dc9b8532ca5074b36695ddb7184ee938034",
+      "beaconcrypt-core/Cargo.toml": "2a02a8689522b93a4969ed31a861c8d18a686c3fd7417e5b6bfeb201734a1beb",
+      "beaconcrypt-parse/Cargo.toml": "9ed4ed614fbd1de0b8bb0c650a50e6e7f15276f59cdab6cd6c8ce6f2d67ff8ed",
+      "beaconcrypt-wasm/Cargo.toml": "8c0ce05e37d07423947ec188b944529eb8f3f6f5cf7d75ae80088769f7b237f3"
+    },
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "--release",
+      "-p",
+      "beaconcrypt",
+      "--example",
+      "persistence_bench"
+    ],
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0\nLLVM version: 22.1.2\n",
+    "environment": {
+      "PATH": "/tmp/bc-arc-scratch/row-persistence-20261025:/home/user/.rustup/toolchains/1.96.0-x86_64-unknown-linux-gnu/bin:/home/user/.cargo/bin:/nix/store/9wyldz5qids294k9h5qcg1f72i52jidi-gnumake-4.4.1/bin:/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/codex-path:/home/user/.codex/tmp/arg0-linux/codex-arg0IQCqhV:/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/codex-path:/nix/store/pvh5hvndqbhr9l89ikd7gkqbgjvkf1vq-ripgrep-15.1.0/bin:/nix/store/kxcgm56aqlvgffr88i2d76zhiklxj3r7-bubblewrap-0.11.2/bin:/run/wrappers/bin:/home/user/.nix-profile/bin:/nix/profile/bin:/home/user/.local/state/nix/profile/bin:/etc/profiles/per-user/user/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin",
+      "RUSTFLAGS": "-C linker-features=-lld",
+      "CARGO_BUILD_JOBS": "1"
+    },
+    "log_sha256": "366e76e4e7383c13b4b65e3104bb1f6470b9f82a69ee384eca92931d9bd3876a",
+    "build_source_commit": "b1d297d13a42cdd1bb78befac655822e468a4b5a",
+    "source_match_note": "Built from uncommitted implementation bytes; every recorded source hash matches the subsequently committed clean collection revision. Build script does not embed git revision.",
+    "source_verified_utc": "2026-10-25T11:14:46.380745+00:00"
+  },
+  "build_receipt_path": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/build-final.json",
+  "build_receipt_sha256": "55a01f8efa416fa8a12c5787c5d8e000922e9abded8cad2fae75bad14c8d400b",
+  "validation_receipt_path": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/validation-final.json",
+  "validation_receipt_sha256": "f81ace4767793e08f73436d4c1f2d4e98c6813e7b6ae625947252dc04a05afdd",
+  "postgres_cluster": {
+    "binary_directory": "/nix/store/2bq8r5zag09ngvxr3jnfxhww1x904psn-postgresql-16.15/bin",
+    "version": "postgres (PostgreSQL) 16.15",
+    "data_directory": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/pgdata",
+    "dsn": "host=127.0.0.1 port=55439 user=bcbench dbname=postgres sslmode=disable",
+    "purpose": "Dedicated ephemeral local test and benchmark cluster; never a production database"
+  },
+  "postgres_port": 55439,
+  "postgres_start_arguments": [
+    "-D",
+    "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/pgdata",
+    "-c",
+    "unix_socket_directories="
+  ],
+  "postgres_binary_sha256": "1f23f97afd46bafb15200938ca8e6dda69afc34de54885ebcb2f1d45256724e9",
+  "postgres_config_sha256": {
+    "postgresql.conf": "0d9c924df4ee3ce323ba5f901e2f184b8d8bf526d3e2a9478d34b521ed577a64",
+    "postgresql.auto.conf": "0874e665ecf5c0a6135a73158ea1b71a959dafb809574810da5c9cc28c0c63ed",
+    "pg_hba.conf": "056ad9accf7e1961052e549db6b4b03fc8480f12d358da0b4b221880e8e6fcec"
+  },
+  "axes": [
+    {
+      "backend": "sqlite",
+      "peers": 1
+    },
+    {
+      "backend": "postgres",
+      "peers": 1
+    },
+    {
+      "backend": "postgres",
+      "peers": 100
+    },
+    {
+      "backend": "sqlite",
+      "peers": 100
+    },
+    {
+      "backend": "sqlite",
+      "peers": 1000
+    },
+    {
+      "backend": "postgres",
+      "peers": 1000
+    }
+  ],
+  "workload_arguments": [
+    "--trials",
+    "3",
+    "--extra-registrations",
+    "0",
+    "--small-bytes",
+    "1024",
+    "--small-messages",
+    "1024",
+    "--large-bytes",
+    "65536",
+    "--large-messages",
+    "128",
+    "--mixed-messages",
+    "1024",
+    "--large-every",
+    "16",
+    "--burst-chunk-bytes",
+    "512000",
+    "--burst-chunks",
+    "64,256,512",
+    "--warmup-messages",
+    "16"
+  ],
+  "limits": {
+    "passive_quiet_seconds": 180,
+    "reserved_quiet_seconds": 60,
+    "sample_seconds": 5,
+    "maximum_sample_gap_seconds": 10,
+    "passive_wait_seconds": 43200,
+    "axis_seconds": 2700,
+    "maximum_attempts_per_axis": 3,
+    "minimum_disk_free_bytes": 53687091200
+  },
+  "cpu_limits": {
+    "minimum_interval_seconds": 1.0,
+    "outside_process_cores": 0.25,
+    "outside_aggregate_cores": 0.5,
+    "system_steal_cores": 0.25,
+    "swap_pages_per_second": 256
+  },
+  "cpu_definition": "Per-process /proc/PID/stat utime+stime deltas divided by SC_CLK_TCK and monotonic CPU-window elapsed seconds; 1 core is one CPU-second per wall second. PID+start_ticks identify processes. Only exact benchmark/owned-PostgreSQL identities are exempt; a previous verified exemption survives only for the same identity becoming a zombie. New processes born since the CPU anchor's uptime tick count from zero. Newly observed older processes without baselines fail the guard; processes exiting wholly unobserved remain a sampling limitation. Rate gates apply to intervals >=1 second, ordinarily five seconds. An older stored anchor covers short start/finish samples, so CPU windows can overlap and must not be summed. Startup/provenance is before the reserved CPU-quiet interval; settling resets the CPU anchor. System steal uses aggregate /proc/stat steal jiffies; swap uses pswpin+pswpout page deltas, with page size recorded.",
+  "retry_policy": "Fixed axis order; retain the first complete validated uncontaminated report. Retry the entire same axis from fresh fixtures only after observed interference, a monitor gap, or reservation contention. At most three attempts per axis. Exit on hard failure or runtime limit; never select by timing. Preserve every failed/interrupted attempt and its receipts.",
+  "comparison": "Three arms paired within each report; rotations balance positions over three trials. Cross-backend and cross-peer windows are separate observations, not a randomized cross-window experiment.",
+  "monitor_limits": "Five-second snapshots enforce named-heavy-process vetoes, generic outside-process CPU thresholds, steal/swap thresholds, and monotonic memory/Lean ticket sequences. This is not proof of zero sub-sample or below-threshold activity, hidden processes, or host/hypervisor noise. System CPU, steal, swap and disk counters are system-wide.",
+  "machinery_sha256": {
+    "test_hybrid_guard.py": "3f438cceddda2c16843ea81b78bc15f324b74410e0ba120bd7d075906f44558e",
+    "run-quiet-hybrid.py": "761a22c77d08bf20b06a4e7f89ffd6d6d373d8fac0d9e3573b52cf6247ab499d",
+    "prepare-quiet-hybrid.py": "e3e13b2b37a62f0156bd935a5413dae5a8e7498e0051e3749fe1b1de04af98eb",
+    "hybrid_guard.py": "fae4a860826b551998ec64f7e76f7ebdc99d8c70adddaf150551f460206c53e9",
+    "summarize.py": "8df3345bb2997e0898df7ed3c50eeeed4634a1f2746531852d716146230eb555",
+    "wait-quiet-hybrid.py": "fed4645755de25c989aa80d033d82ee1fcc9cd3a4d953ef359cdd9f581532b90"
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "utc": "2026-10-25T12:29:01.681015+00:00",
+  "binary_sha256": "985d56867fad436512aaff69878aa3e1c91793cc9dc00288b587c19144713b66",
+  "source_commit": "9f9c51d7911dae8c7b6ea4020cac38c8ad0c78bb",
+  "guard_sha256": "ddfa13438771ba9a605c30891368c33ddc60cf3226e0c60e7200f80038713dc9",
+  "scope": "coord-00002813-hybrid-persistence-benchmark-please-no-lean.scope",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "sqlite_mount": {
+    "filesystems": [
+      {
+        "target": "/",
+        "source": "/dev/sda2",
+        "fstype": "ext4",
+        "options": "rw,relatime"
+      }
+    ]
+  },
+  "block_devices": {
+    "blockdevices": [
+      {
+        "name": "sda",
+        "model": "QEMU HARDDISK",
+        "rota": false,
+        "type": "disk",
+        "mountpoints": [],
+        "children": [
+          {
+            "name": "sda1",
+            "model": null,
+            "rota": false,
+            "type": "part",
+            "mountpoints": [
+              "/boot"
+            ]
+          },
+          {
+            "name": "sda2",
+            "model": null,
+            "rota": false,
+            "type": "part",
+            "mountpoints": [
+              "/nix/store",
+              "/"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "sr0",
+        "model": "QEMU DVD-ROM",
+        "rota": true,
+        "type": "rom",
+        "mountpoints": []
+      },
+      {
+        "name": "zram0",
+        "model": null,
+        "rota": false,
+        "type": "disk",
+        "mountpoints": [
+          "[SWAP]"
+        ]
+      }
+    ]
+  },
+  "thermal_readings": {}
+}

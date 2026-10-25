@@ -1,0 +1,9 @@
+coord: lease 00002699 granted: codex 19800 MiB class custom (row-persistence-benchmark)
+coord: lease 00002699 runs in memory scope coord-00002699-row-persistence-benchmark.scope (user@1000.service; MemoryMax 20480 MiB, MemorySwapMax 4096 MiB, OOMPolicy stop); LEAN_NUM_THREADS=6 (LEASE_LEAN_NUM_THREADS; set LEAN_NUM_THREADS to choose another value)
+Benchmark lease reserved; waiting for 60 continuous seconds without competing work
+RUN: /home/user/worktrees/beaconcrypt-row-persistence/target/release/examples/persistence_bench --run --output /tmp/bc-arc-scratch/row-persistence-20261025/persistence-reduced.json --database-directory /home/user/worktrees/beaconcrypt-row-persistence --peers 1,10 --trials 2 --small-messages 32 --large-messages 8 --mixed-messages 32 --burst-chunks 4 --warmup-messages 4
+Completed quiet benchmark: reduced
+RUN: /home/user/worktrees/beaconcrypt-row-persistence/target/release/examples/persistence_bench --run --output /tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-1.json --database-directory /home/user/worktrees/beaconcrypt-row-persistence --peers 1
+Completed quiet benchmark: peers-1
+RUN: /home/user/worktrees/beaconcrypt-row-persistence/target/release/examples/persistence_bench --run --output /tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-100.json --database-directory /home/user/worktrees/beaconcrypt-row-persistence --peers 100
+Benchmark failed or was contaminated; do not publish this window

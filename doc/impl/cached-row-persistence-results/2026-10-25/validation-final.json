@@ -1,0 +1,73 @@
+{
+  "recorded": "2026-10-25T11:13:32.407694+00:00",
+  "implementation_branch": "codex/row-persistence",
+  "status": "correctness validation complete; no measurements",
+  "runtime_tests": {
+    "native": 435,
+    "cached_file_backed_integration": 8,
+    "existing_row_integration": 17,
+    "additional_c_bridge": 2,
+    "python": 97,
+    "wasi_guest": 28,
+    "go": "Complete native race suite passed; no-CGO unsupported-path test passed",
+    "database_examples": 18
+  },
+  "properties": {
+    "cases_per_property": 128,
+    "new_generated_properties": 2,
+    "coverage": [
+      "cached/uncached arbitrary operation histories",
+      "rollback and unknown-commit receipt recovery"
+    ]
+  },
+  "native_mutations": {
+    "catalog": 1672,
+    "caught": 1206,
+    "verified_unviable": 466,
+    "missed": 0,
+    "timeouts": 0,
+    "duplicates": 0,
+    "uncovered": 0,
+    "fresh_run": true,
+    "catalog_matches_final_source": true,
+    "receipt": "native-final-reviewed-receipt/summary.json"
+  },
+  "wasi_mutations": {
+    "total_mutants": 159,
+    "caught": 147,
+    "unviable": 12,
+    "missed": 0,
+    "timeout": 0
+  },
+  "additional_checks": [
+    "All-feature/all-target workspace Clippy passed; remaining warnings pre-existing",
+    "cargo fmt --all --check",
+    "Black check with target py314 for modified Python/stub files",
+    "gofmt check on modified Go files",
+    "Server-only and beacon-only builds",
+    "Workspace doctests",
+    "Release benchmark build",
+    "Seven synthetic summarizer tests and archived schema1 compatibility",
+    "Thirteen synthetic collection-guard tests"
+  ],
+  "independent_review": "independent-review.json",
+  "proofs": "Explicitly waived by owner. Two proof-only source-fidelity test binaries remain excluded; five pre-existing fidelity failures recorded in earlier implementation were not rerun or changed.",
+  "excluded_proof_binaries": [
+    "proverif_transcript_fidelity",
+    "mldsa_joint_fidelity"
+  ],
+  "logs_sha256": {
+    "focused.log": "03c47f5e354784de85c19e286516506aa237ad25d3d3300b18214db78f25518d",
+    "bindings.log": "171372ccc00b7136f738e183643944d880080a4c430976e8bef0d310650fcef0",
+    "validation.log": "2257b2ab82d9b654416679f8b6b60d96d0d565795fa3fa8a8a6cca9c95d8c993",
+    "pg-revalidation.log": "200c30e545dceb75a6ea03bd161014644cb80e3dae03cf1315c55b3c0a38b9ea",
+    "final-lint.log": "d7bf04db34c2c90bae56eb2bf7411d7d66f2c34d030f4f796975c672ca0b4ac8",
+    "release-build.log": "366e76e4e7383c13b4b65e3104bb1f6470b9f82a69ee384eca92931d9bd3876a",
+    "independent-review.json": "a961c5f35b9c9d0d4c15355ac2d92acde390720f1fb1cc0b39cedc61a869b2c0",
+    "wasm-audit/summary.json": "7a3f63b2b33b7ab83d9282da961601848ca09d48d41dc4ed3830970f6c59b69a",
+    "native-final-reviewed-receipt/summary.json": "52567e53c6c09304cd4edabb0761f0945530b0d1e1be70977620c8b395b907ee",
+    "native-final-reviewed-receipt/manual-review.json": "65e5df8753f1005d420f7d9fd04fda6c05098eea71db6f5e8adee268ad14e7d9"
+  },
+  "native_source_catalog_matches_initial": true,
+  "source_commit": "6a89a4c7624453c471c3f148a7a8b4e24a7ee6dd"
+}

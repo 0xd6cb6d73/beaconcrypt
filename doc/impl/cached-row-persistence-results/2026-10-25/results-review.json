@@ -1,0 +1,37 @@
+{
+  "created_utc": "2026-10-25T13:53:34.280215+00:00",
+  "reviewer": "cached_review",
+  "status": "accepted; no remaining concrete findings",
+  "reviewed_documents_sha256": {
+    "doc/impl/cached-row-persistence-results.md": "0bf2b7e8719fcdede01c6170ab0d99a6753db527e9141926b3b629ce4b8f3216",
+    "doc/impl/cached-row-persistence.md": "fd091b2bcd1902ca8ad75a666b1222bbb29a440f907a656ccea38bde96662c1c",
+    "doc/impl/row-persistence-benchmark.md": "c45caea2428b4f28762a2a981246742cea75505d2277529846f6d431cfcf3366"
+  },
+  "evidence_sha256": {
+    "analysis-v2/analysis-receipt.json": "e38809b26769d2e989ed422e069950fd3632586bf845d1f9688651c0bdddea6b",
+    "analysis-v2/all-groups.json": "3d6747252e9c5739e70d93f0c258b6f3cc840eb69fe84ce248f554c21b8446bb",
+    "analysis-v2/concise-tables.md": "f1e27ca07d4a5312d9a9a41e8baa94b7d1c91b9167b89ede8ee3602481d32be8",
+    "validation-final-v2.json": "dcc941f945df729add1301bb43bc24f508b67baee291a8cbbbf2ce6f180b28af",
+    "build-final-v2.json": "1ab1878697d0af72ecb8a254194456bd3ea105c25cf018c6c112c4645b36cca4",
+    "native-final-reviewed-receipt/summary.json": "52567e53c6c09304cd4edabb0761f0945530b0d1e1be70977620c8b395b907ee",
+    "wasm-audit/summary.json": "7a3f63b2b33b7ab83d9282da961601848ca09d48d41dc4ed3830970f6c59b69a",
+    "collection-20261025-v2/collection-plan.json": "9bc49b4c0ac309368998e71f58c13c4e9520bf0c72c96991f5404403abe2c997"
+  },
+  "checks": [
+    "Independently recomputed all eight published 1000-peer timing table rows, distinguishing medians of matched-trial ratios from ratios of batch medians.",
+    "Recomputed each workload/backend uncached-row/cached-row group-median range and the 52 spanning / 16 caching-favored / 4 uncached-favored group counts.",
+    "Verified snapshot/row 1000-peer ranges, operation/plaintext totals, logical write averages, and the three cached PostgreSQL send p99 values.",
+    "Checked retained noise maxima, collection start/finish timestamps, discarded swap-window cause, per-axis scope, and explicit non-isolation/non-significance limitations.",
+    "Matched runtime/property/mutation counts and acknowledged initial PostgreSQL validation failure to validation and audit receipts.",
+    "Matched source commits, build provenance, database versions/settings, VM CPU/memory/disk/affinity claims, and development-only adapter scope to source and recorded evidence.",
+    "Reviewed changed guide links and performance summaries for consistency with the results report."
+  ],
+  "resolved_notes": [
+    "The draft GiB conversion was corrected to approximately 44.32 GiB (exact conversion 44.316650390625 GiB)."
+  ],
+  "findings": [],
+  "limits": [
+    "Read-only review of source and completed evidence, with independent arithmetic; no benchmarks, builds, or tests rerun.",
+    "Final artifact copying and archive-link completeness are being verified separately by the packaging agent."
+  ]
+}

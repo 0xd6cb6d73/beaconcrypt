@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "policy_id": "quiet-vm-exact-controller-v1",
+  "declared_utc": "2026-10-25T12:21:34.697997+00:00",
+  "instrumentation_identity": {
+    "pid": 1426259,
+    "start_ticks": 120432725,
+    "executable": "/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/bin/.codex-wrapped",
+    "cgroup": "0::/user.slice/user-1000.slice/session-111.scope"
+  },
+  "instrumentation_rule": "Only this exact PID, start_ticks, executable and cgroup identity; no process-name, descendant or other Codex exemption. CPU recorded separately on the same CPU-window anchors.",
+  "host_steal_policy": "record only; physical host runs active Kubernetes workloads and host exclusivity is not claimed",
+  "other_vm_gates": "Unchanged: unknown VM CPU >=0.25 core per PID or >=0.5 core aggregate, swap >=256 pages/s, recognized-heavy-process vetoes, active/queued leases, Lean tickets, sockets, disk and monitor gaps.",
+  "supersedes_campaign": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025",
+  "prior_campaign_disposition": "Preserved, superseded for comparison; no retained timings carried forward. Rerun all six axes under this policy with the same benchmark binary.",
+  "timing_values_inspected": false,
+  "revision_record_sha256": "199e79e4fd1cef28df6aaa9c4db1ab08d14a55b5a84a5c38988cea52ccfaf59c",
+  "benchmark_binary_sha256": "985d56867fad436512aaff69878aa3e1c91793cc9dc00288b587c19144713b66"
+}

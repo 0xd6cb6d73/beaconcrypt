@@ -50,6 +50,39 @@ pub fn make_server<R: beaconcrypt::crypto::TryCryptoRng + ?Sized>(
     beaconcrypt::Server::try_new_with_rng(7, None, None, rng)
 }
 
+#[cfg(feature = "server")]
+pub fn make_rows<S: beaconcrypt::RowStore, R: beaconcrypt::crypto::TryCryptoRng + ?Sized>(
+    store: S, lineage: beaconcrypt::SnapshotLineage, request: &[u8], rng: &mut R,
+) -> Result<beaconcrypt::RowServer<S>, beaconcrypt::RowError> {
+    let mut server = beaconcrypt::RowServer::create_with_rng(7, None, None, store, lineage, rng)?;
+    server.register_beacon_with_rng(request, None, rng)?;
+    Ok(server)
+}
+
+#[cfg(feature = "server")]
+pub fn make_cached_rows<S: beaconcrypt::RowStore, R: beaconcrypt::crypto::TryCryptoRng + ?Sized>(
+    store: S, lineage: beaconcrypt::SnapshotLineage, request: &[u8], rng: &mut R,
+) -> Result<beaconcrypt::CachedRowServer<S>, beaconcrypt::RowError> {
+    let mut server = beaconcrypt::CachedRowServer::create_with_rng(7, None, None, store, lineage, 4, rng)?;
+    server.register_beacon_with_rng(request, None, rng)?;
+    Ok(server)
+}
+
+#[cfg(feature = "server")]
+pub fn accept_row_registration<R: beaconcrypt::crypto::TryCryptoRng + ?Sized>(
+    session: &mut beaconcrypt::RowSession<'_>, request: &[u8], rng: &mut R,
+) -> Result<bool, beaconcrypt::RowError> {
+    session.accept_registration_with_rng(request, rng)
+}
+
+#[cfg(feature = "server")]
+pub fn open_rows<S: beaconcrypt::RowStore>(
+    store: S, lineage: beaconcrypt::SnapshotLineage,
+) -> Result<beaconcrypt::CachedRowServer<S>, beaconcrypt::RowError> {
+    let server = beaconcrypt::RowServer::open(store, lineage)?;
+    Ok(beaconcrypt::CachedRowServer::from_server(server, 4))
+}
+
 #[cfg(all(feature = "beacon", feature = "server"))]
 pub fn establish<R: beaconcrypt::crypto::TryCryptoRng + ?Sized>(
     rng: &mut R,

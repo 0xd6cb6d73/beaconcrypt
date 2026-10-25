@@ -1,0 +1,10 @@
+{
+  "excluded": [
+    "generated database fixture directories",
+    "Python bytecode caches",
+    "database data directories",
+    "compiled executables and build targets",
+    "audit source checkouts (Git revisions and source manifests are preserved)"
+  ],
+  "note": "All materialized collection attempts, including failures and discarded attempts, are archived. SQLite1000 is excluded from primary analysis at the user request. Supplementary harness mutation work was stopped, not passed."
+}
