@@ -131,9 +131,9 @@ SOURCE_SHA256 = {
     "beaconcrypt-core/src/ratchet/control.rs": "6c17cc0dbe7445be04dc3ab123a60ecbf3d757da6337a7132d5dafd3e06f5639",
     "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
     "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
-    "beaconcrypt/src/ratchet.rs": "7aa3675eb4f340523da263b26294af9d10e060c2ded34226d0789aaa7c9c7ce4",
-    "beaconcrypt/src/beacon.rs": "28fdde51b14eb4c7d44552dd5828cb036b4ad845a0434d9b5dfb84a628d43734",
-    "beaconcrypt/src/server.rs": "fe723eba1b1f8b84c37a1272a9326b93d6a5d987b2b6288df47bbf1e1e302bc3",
+    "beaconcrypt/src/ratchet.rs": "91b83d6f519a9453d81911e71262a46ddaa529f8ffd1906ad50672792b6aa828",
+    "beaconcrypt/src/beacon.rs": "e041cd9d18eab646e1cf4266156295cc118ddfd30dabe2e407c7a14bc3e9956b",
+    "beaconcrypt/src/server.rs": "378f61af4648ec65c4ee158f867dd6ccaff8abbb8eccd3b8098f70dd31c6bf5e",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetControl.lean": "467e40094bfde41c7ebeed24761788c263d5ba12e21d3dfd86e981917b60565c",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetRefinement.lean": "813d26cedc7a82a9c19f795fdc8599809aac8d0626608000a626a2986be2c915",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetFuturePublication.lean": "b87aff9e49e929786c8e7a158e6e470d84a4f07f9fbbe9b5e65837a4065162f8",
@@ -143,8 +143,9 @@ SOURCE_SHA256 = {
     "beaconcrypt/src/auth.rs": "e4119ce56650add757b83144f728aabc84904219e4f3fc3678fdce7028ebca29",
     "beaconcrypt/src/pqxdh.rs": "4d786bf9f42a8f05204bc871f987f2b93440238672120af16c02f6837b11c52d",
     "beaconcrypt-core/src/agreement.rs": "cd4f62dab7d18c9237ad7ce46480ae76faf8e9983b97a9f7af34473550acbabb",
-    "beaconcrypt-core/src/registration.rs": "a27884eb8e09752c84f997472652ad54362444d99bf4c104caef0367dbe49f1d",
-    "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018"
+    "beaconcrypt-core/src/registration.rs": "fb6f679499585a9d9976abaea31f8dbd8f68f53f6c0f1deb7462ee393acf9f25",
+    "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018",
+    "beaconcrypt-core/src/record_effects.rs": "dbdf79661a17c8d8c128ff349a7efe906d6713912e5510c9a0476b0c3efad2b5",
 }
 
 

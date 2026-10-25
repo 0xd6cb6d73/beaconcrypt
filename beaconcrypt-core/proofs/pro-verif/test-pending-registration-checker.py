@@ -268,6 +268,18 @@ class NativeMovedTokenSourceGate(unittest.TestCase):
             "beaconcrypt-core/src/registration.rs",
         )
 
+    def test_record_writer_failure_cannot_publish(self):
+        self.mutate_source(
+            "pending.resume(ciphertext.as_deref()).ok()?",
+            "pending.resume(Some(&[])).ok()?",
+        )
+
+    def test_record_commitment_reply_cannot_be_ignored(self):
+        self.mutate_source(
+            "pending.resume(commitment).ok()?",
+            "pending.resume(Some([0; 64])).ok()?",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

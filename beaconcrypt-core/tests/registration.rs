@@ -9,8 +9,10 @@ use beaconcrypt_core::pqxdh::{
 	BeaconCoins, BeaconFresh, BeaconStartInputs, InitialRatchetKdfResponse, KeyIdAvailability,
 	RegistrationStatus, ServerBinding, ServerState,
 };
+use beaconcrypt_core::ratchet::{ConcreteRatchetKernel, RatchetKdfResponse};
+use beaconcrypt_core::record_effects as records;
 use beaconcrypt_core::registration::{self as registration, *};
-use beaconcrypt_core::session::ServerAuthenticationPin;
+use beaconcrypt_core::session::{RegistrationBinding, ServerAuthenticationPin, SessionBinding};
 
 fn hash_parts(request: HashRequest<'_>) -> Vec<&[u8]> {
 	match request {
@@ -209,29 +211,132 @@ fn server_seal() -> ServerInitialSeal<'static> {
 		.unwrap()
 }
 
-fn advance_send(
-	kernel: beaconcrypt_core::ratchet::ConcreteRatchetKernel,
-) -> beaconcrypt_core::ratchet::ConcreteRatchetKernel {
-	use beaconcrypt_core::ratchet::*;
-	let SendStart::SendKdfRequested(pending) = begin_send(kernel, ()) else {
-		panic!("send should start")
+// This test interpreter authenticates every primitive input deterministically; it is not a crypto implementation.
+fn digest(bytes: &[u8]) -> [u8; 64] {
+	let mut output = std::array::from_fn(|index| index as u8);
+	for (index, byte) in bytes.iter().enumerate() {
+		let slot = index % output.len();
+		output[slot] = output[slot].wrapping_add(*byte).rotate_left(1) ^ index as u8;
+	}
+	output
+}
+
+fn expected_ad() -> [u8; 281] {
+	*RegistrationBinding::new(pin(), [37; 64], [29; 32], [31; 64]).associated_data()
+}
+
+fn step_response() -> RatchetKdfResponse {
+	RatchetKdfResponse::from_bytes([7; 76])
+}
+
+fn tag(key: &[u8; 32], nonce: &[u8; 12], ad: &[u8; 281], plaintext: &[u8]) -> [u8; 16] {
+	let hash = digest(&[key.as_slice(), nonce.as_slice(), ad.as_slice(), plaintext].concat());
+	std::array::from_fn(|index| {
+		hash[index] ^ hash[index + 16] ^ hash[index + 32] ^ hash[index + 48]
+	})
+}
+
+fn seal_primitive(request: records::AeadSealRequest<'_>) -> (Vec<u8>, [u8; 16]) {
+	assert_eq!(request.key, &[7; 32]);
+	assert_eq!(request.nonce, &[7; 12]);
+	assert_eq!(request.associated_data, &expected_ad());
+	let plaintext = match request.plaintext {
+		records::SealPlaintextRequest::Single(application) => application.to_vec(),
+		records::SealPlaintextRequest::Prefixed {
+			prefix,
+			application,
+		} => [prefix.as_slice(), application].concat(),
 	};
-	let seal = pending.resume(RatchetKdfResponse::from_bytes([7; 76]));
-	seal.finish(Some(())).0
+	let tag = tag(
+		request.key,
+		request.nonce,
+		request.associated_data,
+		&plaintext,
+	);
+	(plaintext, tag)
+}
+
+fn open_primitive(request: Option<beaconcrypt_core::record::AeadRequest<'_>>) -> Option<Vec<u8>> {
+	let request = request?;
+	assert_eq!(request.key, &[7; 32]);
+	assert_eq!(request.nonce, &[7; 12]);
+	assert_eq!(request.associated_data, &expected_ad());
+	let length = request.ciphertext.len().checked_sub(16)?;
+	let (plaintext, supplied) = request.ciphertext.split_at(length);
+	(supplied
+		== tag(
+			request.key,
+			request.nonce,
+			request.associated_data,
+			plaintext,
+		))
+	.then(|| plaintext.to_vec())
+}
+
+fn commitment_hash(
+	transcript: &mut beaconcrypt_core::commitment::CommitmentTranscript,
+) -> [u8; 64] {
+	let hash = digest(transcript.as_bytes());
+	transcript.as_mut_bytes().fill(0);
+	assert!(transcript.as_bytes().iter().all(|byte| *byte == 0));
+	hash
+}
+
+fn assert_initial_commitment(transcript: &beaconcrypt_core::commitment::CommitmentTranscript) {
+	let bytes = transcript.as_bytes();
+	assert_eq!(&bytes[..32], &[7; 32]);
+	assert_eq!(&bytes[32..44], &[7; 12]);
+	assert_eq!(&bytes[44..325], &expected_ad());
+	assert_eq!(
+		&bytes[bytes.len() - 16..bytes.len() - 8],
+		&1u64.to_le_bytes()
+	);
+	assert_eq!(&bytes[bytes.len() - 8..], &42u64.to_le_bytes());
+}
+
+fn raw_write(request: records::RecordWriteRequest<'_>) -> Vec<u8> {
+	let records::RecordWriteRequest::Raw { parts } = request else {
+		panic!("registration must request implicit raw encoding")
+	};
+	assert_eq!(parts[1].len(), 16);
+	assert_eq!(parts[2].len(), 64);
+	parts.concat()
+}
+
+fn with_server_writer<'application, Output>(
+	pending: ServerInitialSeal<'application>,
+	assigned: u64,
+	action: impl for<'ciphertext> FnOnce(ServerRecordWrite<'application, 'ciphertext>) -> Output,
+) -> Output {
+	assert_eq!(pending.request().input(), &[1; 32]);
+	let aead = pending.resume(Some(step_response())).unwrap();
+	let request = aead.request();
+	let records::SealPlaintextRequest::Prefixed {
+		prefix,
+		application,
+	} = request.plaintext
+	else {
+		panic!("registration prefix must be source-owned")
+	};
+	assert_eq!(prefix, &assigned.to_le_bytes());
+	assert_eq!(application, b"application");
+	let (body, tag) = seal_primitive(aead.request());
+	let mut commitment = aead.resume(Some((&body, tag))).unwrap();
+	assert_initial_commitment(commitment.transcript());
+	let hash = commitment_hash(commitment.transcript_mut());
+	let writer = commitment.resume(Some(hash)).unwrap();
+	action(writer)
+}
+
+fn server_ciphertext() -> Vec<u8> {
+	with_server_writer(server_seal(), 43, |writer| raw_write(writer.request()))
 }
 
 fn server_hash(ciphertext: &[u8]) -> ServerResponseHash<'_> {
-	let mut pending = server_seal();
-	let request = pending.request();
-	assert_eq!(
-		request.plaintext,
-		[&43u64.to_le_bytes()[..], &b"application"[..]]
-	);
-	assert_eq!(request.sequence, 1);
-	assert_eq!(request.sender_key_id, 42);
-	assert_eq!(request.target_key_id, 43);
-	let kernel = advance_send(pending.take_kernel().unwrap());
-	pending.resume(kernel, 1, Some(ciphertext)).unwrap()
+	with_server_writer(server_seal(), 43, |writer| {
+		assert_eq!(raw_write(writer.request()), ciphertext);
+		writer.resume(Some(ciphertext)).unwrap()
+	})
 }
 
 #[test]
@@ -285,13 +390,36 @@ fn server_completion_failures_preserve_the_actual_current_counter() {
 		panic!("KDF failure must reject")
 	};
 	rejected(state);
-	let mut pending = server_seal();
-	let kernel = advance_send(pending.take_kernel().unwrap());
-	let Err(state) = pending.resume(kernel, 1, None) else {
-		panic!("seal failure must reject")
+	let Err(state) = server_seal().resume(None) else {
+		panic!("record KDF failure must reject")
 	};
 	rejected(state);
-	let ciphertext = [53; 99];
+	let aead = server_seal().resume(Some(step_response())).unwrap();
+	let Err(state) = aead.resume(None) else {
+		panic!("AEAD failure must reject")
+	};
+	rejected(state);
+	let aead = server_seal().resume(Some(step_response())).unwrap();
+	let (body, tag) = seal_primitive(aead.request());
+	let commitment = aead.resume(Some((&body, tag))).unwrap();
+	let Err(state) = commitment.resume(None) else {
+		panic!("commitment hash failure must reject")
+	};
+	rejected(state);
+	let Err(state) = with_server_writer(server_seal(), 43, |writer| writer.resume(None)) else {
+		panic!("raw write failure must reject")
+	};
+	rejected(state);
+	for width in [98, 100] {
+		let malformed = vec![0; width];
+		let result =
+			with_server_writer(server_seal(), 43, |writer| writer.resume(Some(&malformed)));
+		let Err(state) = result else {
+			panic!("malformed raw write width must reject")
+		};
+		rejected(state);
+	}
+	let ciphertext = server_ciphertext();
 	let Err(state) = server_hash(&ciphertext).resume(None) else {
 		panic!("hash failure must reject")
 	};
@@ -322,24 +450,24 @@ fn delayed_response_uses_the_current_counter_and_publishes_only_after_serializat
 		b"application",
 	)
 	.unwrap();
-	let mut pending = pending
+	let pending = pending
 		.resume(Some(InitialRatchetKdfResponse::from_bytes([1; 64])))
 		.unwrap();
-	assert_eq!(pending.request().target_key_id, 100);
-	let kernel = advance_send(pending.take_kernel().unwrap());
-	let ciphertext = [53; 99];
-	let pending = pending.resume(kernel, 1, Some(&ciphertext)).unwrap();
-	assert_eq!(hash_parts(pending.request())[2], &100u64.to_le_bytes());
-	let pending = pending.resume(Some([59; 64])).unwrap();
-	assert_eq!(pending.request().public_key, &[17; 1952]);
-	assert_eq!(
-		pending.request().input,
-		&build_signature_input(AuthRole::Server, &[59; 64])
-	);
-	let ready = pending.resume(Some(&[61; 3309])).unwrap();
-	assert_eq!(ready.message().key_id, 100);
-	assert_eq!(ready.message().application_ciphertext, &ciphertext);
-	let (control, binding, kernel, ()) = ready.publish(Some(())).unwrap().into_parts();
+	let (control, binding, kernel, ()) = with_server_writer(pending, 100, |writer| {
+		let ciphertext = raw_write(writer.request());
+		let pending = writer.resume(Some(&ciphertext)).unwrap();
+		assert_eq!(hash_parts(pending.request())[2], &100u64.to_le_bytes());
+		let pending = pending.resume(Some([59; 64])).unwrap();
+		assert_eq!(pending.request().public_key, &[17; 1952]);
+		assert_eq!(
+			pending.request().input,
+			&build_signature_input(AuthRole::Server, &[59; 64])
+		);
+		let ready = pending.resume(Some(&[61; 3309])).unwrap();
+		assert_eq!(ready.message().key_id, 100);
+		assert_eq!(ready.message().application_ciphertext, &ciphertext);
+		ready.publish(Some(())).unwrap().into_parts()
+	});
 	assert_eq!(control.last_key_id(), 100);
 	assert_eq!(binding.assigned_key_id(), 100);
 	assert_eq!(binding.server_binding(), server_binding());
@@ -382,26 +510,87 @@ fn beacon_agreement(ciphertext: &[u8]) -> agreement::BeaconAgreement<'_> {
 	agreement
 }
 
-fn beacon_open(ciphertext: &[u8]) -> BeaconInitialOpen<'_> {
-	registration::begin_beacon_completion(beacon_agreement(ciphertext))
-		.resume(Some(InitialRatchetKdfResponse::from_bytes([1; 64])))
-		.unwrap()
+#[derive(Clone, Copy)]
+enum ReceiveFailure {
+	Kdf,
+	Hash,
+	Aead,
 }
 
-fn advance_receive(
-	kernel: beaconcrypt_core::ratchet::ConcreteRatchetKernel,
-) -> beaconcrypt_core::ratchet::ConcreteRatchetKernel {
-	use beaconcrypt_core::ratchet::*;
-	let mut effect = begin_receive(kernel, 1, ());
+#[derive(Default)]
+struct ReceiveTrace {
+	kdfs: usize,
+	hashes: usize,
+	aeads: usize,
+}
+
+struct Completed {
+	control: beaconcrypt_core::pqxdh::BeaconEstablished,
+	binding: SessionBinding,
+	kernel: ConcreteRatchetKernel,
+	application: Vec<u8>,
+}
+
+fn complete_beacon(
+	ciphertext: &[u8],
+	failure: Option<ReceiveFailure>,
+	trace: &mut ReceiveTrace,
+) -> Result<Completed, beaconcrypt_core::pqxdh::BeaconAborted> {
+	let mut effect = registration::begin_beacon_completion(beacon_agreement(ciphertext))
+		.resume(Some(InitialRatchetKdfResponse::from_bytes([1; 64])))?;
 	loop {
 		effect = match effect {
-			ReceiveEffect::ReceiveRejected { .. } => panic!("receive should start"),
-			ReceiveEffect::ReceiveKdfRequested(pending) => {
-				pending.resume(RatchetKdfResponse::from_bytes([7; 76]))
+			BeaconInitialOpen::KdfRequested(pending) => {
+				trace.kdfs += 1;
+				assert_eq!(pending.request().input(), &[1; 32]);
+				pending
+					.resume((!matches!(failure, Some(ReceiveFailure::Kdf))).then(step_response))?
 			}
-			ReceiveEffect::ReceiveOpenRequested(open) => return open.finish(Some(())).0,
+			BeaconInitialOpen::CommitmentRequested(mut pending) => {
+				trace.hashes += 1;
+				assert_initial_commitment(pending.transcript());
+				let actual = commitment_hash(pending.transcript_mut());
+				let matches = !matches!(failure, Some(ReceiveFailure::Hash))
+					&& &actual == pending.supplied_commitment();
+				pending.resume(matches)?
+			}
+			BeaconInitialOpen::AeadRequested(pending) => {
+				trace.aeads += 1;
+				let plaintext = if matches!(failure, Some(ReceiveFailure::Aead)) {
+					None
+				} else {
+					open_primitive(pending.request())
+				};
+				let (control, binding, kernel, application) =
+					pending.finish(plaintext.as_deref())?.into_parts();
+				return Ok(Completed {
+					control,
+					binding,
+					kernel,
+					application: application.to_vec(),
+				});
+			}
 		};
 	}
+}
+
+// These are authenticated ciphertext substitutions, never independent completion metadata or kernels.
+fn authenticated_payload(plaintext: &[u8], sequence: u64, sender: u64) -> Vec<u8> {
+	let tag = tag(&[7; 32], &[7; 12], &expected_ad(), plaintext);
+	let transcript = beaconcrypt_core::commitment::build_commitment_transcript(
+		&[7; 32],
+		&[7; 12],
+		&expected_ad(),
+		&tag,
+		sequence,
+		sender,
+	);
+	[
+		plaintext,
+		tag.as_slice(),
+		digest(transcript.as_bytes()).as_slice(),
+	]
+	.concat()
 }
 
 #[test]
@@ -439,62 +628,73 @@ fn every_response_authentication_failure_returns_the_retained_terminal_binding()
 
 #[test]
 fn initial_open_admission_checks_the_complete_plaintext_and_publishes_its_actual_kernel() {
-	let ciphertext = [53; 99];
+	let ciphertext = server_ciphertext();
 	let mut valid = 43u64.to_le_bytes().to_vec();
 	valid.extend_from_slice(b"application");
-	let mut cases: Vec<(Option<Vec<u8>>, u64, u64)> = vec![(None, 1, 42)];
 	for width in 0..=8 {
-		cases.push((Some(valid[..width].to_vec()), 1, 42));
-	}
-	for sequence in [0, 2, u64::MAX] {
-		cases.push((Some(valid.clone()), sequence, 42));
-	}
-	for sender in [0, 41, 43, u64::MAX] {
-		cases.push((Some(valid.clone()), 1, sender));
+		let payload = authenticated_payload(&valid[..width], 1, 42);
+		let Err(aborted) = complete_beacon(&payload, None, &mut ReceiveTrace::default()) else {
+			panic!("empty or short authenticated initial plaintext must abort")
+		};
+		assert_eq!(aborted.server_key_id(), 42);
 	}
 	for bit in 0..64 {
 		let mut changed = (43u64 ^ (1u64 << bit)).to_le_bytes().to_vec();
 		changed.extend_from_slice(b"application");
-		cases.push((Some(changed), 1, 42));
-	}
-	for (plaintext, sequence, sender_key_id) in cases {
-		let mut pending = beacon_open(&ciphertext);
-		assert_eq!(pending.request().ciphertext, &ciphertext);
-		assert_eq!(pending.request().sequence, 1);
-		assert_eq!(pending.request().sender_key_id, 42);
-		let kernel = advance_receive(pending.take_kernel().unwrap());
-		let opened = plaintext.as_deref().map(|plaintext| InitialOpened {
-			plaintext,
-			sequence,
-			sender_key_id,
-		});
-		let Err(aborted) = pending.resume(kernel, opened) else {
-			panic!("malformed initial opening must abort")
+		let payload = authenticated_payload(&changed, 1, 42);
+		let Err(aborted) = complete_beacon(&payload, None, &mut ReceiveTrace::default()) else {
+			panic!("every incorrect assigned-ID bit must abort")
 		};
 		assert_eq!(aborted.server_key_id(), 42);
 	}
-	let mut pending = beacon_open(&ciphertext);
-	let expected_ad = *pending.request().associated_data;
-	let kernel = advance_receive(pending.take_kernel().unwrap());
-	let completed = pending
-		.resume(
-			kernel,
-			Some(InitialOpened {
-				plaintext: &valid,
-				sequence: 1,
-				sender_key_id: 42,
-			}),
-		)
-		.unwrap();
-	let (control, binding, kernel, application) = completed.into_parts();
-	assert_eq!(control.server_key_id(), 42);
-	assert_eq!(control.assigned_key_id(), 43);
-	assert_eq!(binding.associated_data(), &expected_ad);
-	assert_eq!(binding.assigned_key_id(), 43);
-	assert_eq!(application, b"application");
-	assert_eq!(kernel.receive_sequence(), 1);
-	assert_eq!(kernel.send_sequence(), 0);
-	assert_eq!(kernel.receive_cache_len(), 0);
+	for (sequence, sender) in [
+		(0, 42),
+		(2, 42),
+		(u64::MAX, 42),
+		(1, 0),
+		(1, 41),
+		(1, 43),
+		(1, u64::MAX),
+	] {
+		let payload = authenticated_payload(&valid, sequence, sender);
+		let mut trace = ReceiveTrace::default();
+		let Err(aborted) = complete_beacon(&payload, None, &mut trace) else {
+			panic!("a ciphertext bound to other metadata must abort")
+		};
+		assert_eq!(aborted.server_key_id(), 42);
+		assert_eq!((trace.kdfs, trace.hashes, trace.aeads), (1, 1, 0));
+	}
+	for failure in [
+		ReceiveFailure::Kdf,
+		ReceiveFailure::Hash,
+		ReceiveFailure::Aead,
+	] {
+		let Err(aborted) =
+			complete_beacon(&ciphertext, Some(failure), &mut ReceiveTrace::default())
+		else {
+			panic!("every primitive failure must abort")
+		};
+		assert_eq!(aborted.server_key_id(), 42);
+	}
+	for offset in [0, ciphertext.len() - 80, ciphertext.len() - 1] {
+		let mut substituted = ciphertext.clone();
+		substituted[offset] ^= 1;
+		let Err(aborted) = complete_beacon(&substituted, None, &mut ReceiveTrace::default()) else {
+			panic!("body, tag and commitment substitution must abort")
+		};
+		assert_eq!(aborted.server_key_id(), 42);
+	}
+	let mut trace = ReceiveTrace::default();
+	let completed = complete_beacon(&ciphertext, None, &mut trace).unwrap();
+	assert_eq!((trace.kdfs, trace.hashes, trace.aeads), (1, 1, 1));
+	assert_eq!(completed.control.server_key_id(), 42);
+	assert_eq!(completed.control.assigned_key_id(), 43);
+	assert_eq!(completed.binding.associated_data(), &expected_ad());
+	assert_eq!(completed.binding.assigned_key_id(), 43);
+	assert_eq!(completed.application, b"application");
+	assert_eq!(completed.kernel.receive_sequence(), 1);
+	assert_eq!(completed.kernel.send_sequence(), 0);
+	assert_eq!(completed.kernel.receive_cache_len(), 0);
 }
 
 #[test]
@@ -540,4 +740,173 @@ fn fixed_width_packet_admission_rejects_short_and_long_fields_before_verificatio
 			);
 		}
 	}
+}
+
+fn initial_record_kernel() -> ConcreteRatchetKernel {
+	let pending = beaconcrypt_core::pqxdh::start_beacon_ratchet_kdf(&[42; 32]);
+	assert_eq!(pending.request().input(), &[42; 32]);
+	beaconcrypt_core::pqxdh::resume_initial_ratchet_kdf(
+		pending,
+		InitialRatchetKdfResponse::from_bytes([1; 64]),
+	)
+}
+
+type KernelSnapshot = (u64, u64, [u8; 32], [u8; 32], Vec<(u64, [u8; 32], [u8; 12])>);
+
+fn kernel_snapshot(kernel: &ConcreteRatchetKernel) -> KernelSnapshot {
+	let entries = (0..kernel.receive_cache_len())
+		.map(|slot| {
+			let (sequence, material) = kernel.receive_entry_at(slot).unwrap();
+			(
+				sequence,
+				*material.key().as_bytes(),
+				*material.nonce().as_bytes(),
+			)
+		})
+		.collect();
+	(
+		kernel.send_sequence(),
+		kernel.receive_sequence(),
+		*kernel.send_chain().as_bytes(),
+		*kernel.receive_chain().as_bytes(),
+		entries,
+	)
+}
+
+fn send_record(
+	kernel: ConcreteRatchetKernel,
+	application: &[u8],
+) -> (ConcreteRatchetKernel, Vec<u8>) {
+	let context = records::SealFrameContext::new(
+		application,
+		43,
+		42,
+		&expected_ad(),
+		records::RecordEncoding::Raw,
+	);
+	let records::RecordSendStart::KdfRequested(pending) =
+		records::begin_record_send(kernel, context)
+	else {
+		panic!("nonempty record should request its KDF")
+	};
+	let aead = pending.resume(step_response());
+	let (body, tag) = seal_primitive(aead.request());
+	let records::SealAfterAead::CommitmentRequested(mut pending) = aead.resume(Some((&body, tag)))
+	else {
+		panic!("actual detached result should request commitment")
+	};
+	let hash = commitment_hash(pending.transcript_mut());
+	let records::SealAfterCommitment::WriteRequested(writer) = pending.resume(Some(hash)) else {
+		panic!("actual hash should request writing")
+	};
+	let bytes = raw_write(writer.request());
+	let (kernel, sealed) = writer.finish(Some(bytes));
+	let sealed = sealed.unwrap();
+	assert_eq!((sealed.key_id, sealed.seq), (43, kernel.send_sequence()));
+	(kernel, sealed.ciphertext)
+}
+
+fn receive_record(
+	kernel: ConcreteRatchetKernel,
+	sequence: u64,
+	ciphertext: &[u8],
+	failure: Option<ReceiveFailure>,
+	trace: &mut ReceiveTrace,
+) -> (
+	ConcreteRatchetKernel,
+	Option<beaconcrypt_core::record::OpenedRecord<Vec<u8>>>,
+) {
+	let mut effect =
+		records::begin_record_receive(kernel, sequence, ciphertext, &expected_ad(), 42);
+	loop {
+		effect = match effect {
+			records::RecordReceiveEffect::Rejected(kernel) => return (kernel, None),
+			records::RecordReceiveEffect::KdfRequested(pending) => {
+				trace.kdfs += 1;
+				if matches!(failure, Some(ReceiveFailure::Kdf)) {
+					return (pending.cancel(), None);
+				}
+				pending.resume(step_response())
+			}
+			records::RecordReceiveEffect::CommitmentRequested(mut pending) => {
+				trace.hashes += 1;
+				let hash = commitment_hash(pending.transcript_mut());
+				let matches = !matches!(failure, Some(ReceiveFailure::Hash))
+					&& &hash == pending.supplied_commitment();
+				pending.resume(matches)
+			}
+			records::RecordReceiveEffect::AeadRequested(pending) => {
+				trace.aeads += 1;
+				let plaintext = if matches!(failure, Some(ReceiveFailure::Aead)) {
+					None
+				} else {
+					open_primitive(pending.request())
+				};
+				return pending.finish(plaintext);
+			}
+		};
+	}
+}
+
+#[test]
+fn composed_record_failures_roll_back_exactly_and_cached_success_rejects_replay() {
+	let (sender, first) = send_record(initial_record_kernel(), b"first");
+	let (sender, _) = send_record(sender, b"second");
+	let (_, third) = send_record(sender, b"third");
+	let mut receiver = initial_record_kernel();
+	let before = kernel_snapshot(&receiver);
+	for failure in [
+		ReceiveFailure::Kdf,
+		ReceiveFailure::Hash,
+		ReceiveFailure::Aead,
+	] {
+		let (returned, opened) = receive_record(
+			receiver,
+			3,
+			&third,
+			Some(failure),
+			&mut ReceiveTrace::default(),
+		);
+		assert!(opened.is_none());
+		assert_eq!(kernel_snapshot(&returned), before);
+		receiver = returned;
+	}
+	let mut changed = third.clone();
+	changed[0] ^= 1;
+	let (returned, opened) =
+		receive_record(receiver, 3, &changed, None, &mut ReceiveTrace::default());
+	assert!(opened.is_none());
+	assert_eq!(kernel_snapshot(&returned), before);
+	let (returned, opened) =
+		receive_record(returned, 3, &third, None, &mut ReceiveTrace::default());
+	let opened = opened.unwrap();
+	assert_eq!(
+		(opened.key_id, opened.seq, opened.plaintext.as_slice()),
+		(42, 3, &b"third"[..])
+	);
+	assert_eq!(
+		(returned.receive_sequence(), returned.receive_cache_len()),
+		(3, 2)
+	);
+	receiver = returned;
+	let before_cached = kernel_snapshot(&receiver);
+	for failure in [ReceiveFailure::Hash, ReceiveFailure::Aead] {
+		let mut trace = ReceiveTrace::default();
+		let (returned, opened) = receive_record(receiver, 1, &first, Some(failure), &mut trace);
+		assert!(opened.is_none());
+		assert_eq!(trace.kdfs, 0);
+		assert_eq!(kernel_snapshot(&returned), before_cached);
+		receiver = returned;
+	}
+	let mut trace = ReceiveTrace::default();
+	let (returned, opened) = receive_record(receiver, 1, &first, None, &mut trace);
+	assert_eq!((trace.kdfs, trace.hashes, trace.aeads), (0, 1, 1));
+	assert_eq!(opened.unwrap().plaintext, b"first");
+	assert_eq!(returned.receive_cache_len(), 1);
+	let before_replay = kernel_snapshot(&returned);
+	let mut trace = ReceiveTrace::default();
+	let (returned, opened) = receive_record(returned, 1, &first, None, &mut trace);
+	assert!(opened.is_none());
+	assert_eq!((trace.kdfs, trace.hashes, trace.aeads), (0, 0, 0));
+	assert_eq!(kernel_snapshot(&returned), before_replay);
 }

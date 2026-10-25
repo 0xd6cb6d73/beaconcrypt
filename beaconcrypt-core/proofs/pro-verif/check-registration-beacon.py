@@ -100,15 +100,20 @@ def check_source_order():
             "AgreementEffect::Rejected(Some(control)) => { self.state = BeaconState::Aborted { control }; return None; }",
             "registration::begin_beacon_completion(agreement)",
             "crate::ratchet::initial_ratchet_hkdf(pending.request())",
-            "pending.resume(Some(response))",
-            "pending.take_kernel()?",
-            "let request = pending.request();",
-            "decrypt_registration_message_with_ratchet(request.ciphertext, request.sender_key_id, request.associated_data, &mut ratchet,)",
-            "pending.resume(ratchet.into_kernel(), opened.as_ref().map(|opened| InitialOpened { plaintext: &opened.plaintext, sequence: opened.seq, sender_key_id: opened.key_id, }),)",
+            "let mut effect = match pending.resume(Some(response))",
+            "registration::BeaconInitialOpen::KdfRequested(pending) => { let response = crate::ratchet::ratchet_hkdf(pending.request()); pending.resume(Some(response)) }",
+            "registration::BeaconInitialOpen::CommitmentRequested(mut pending)",
+            "crate::ratchet::execute_commitment_hash(pending.transcript_mut())",
+            "libsodium_rs::utils::memcmp(&commitment, pending.supplied_commitment())",
+            "None => false",
+            "pending.resume(matches)",
+            "registration::BeaconInitialOpen::AeadRequested(pending)",
+            "let plaintext = crate::ratchet::execute_open_request(pending.request());",
+            "let completed = match pending.finish(plaintext.as_deref())",
             "completed.into_parts()",
             "self.identity_key_kid = binding.assigned_key_id();",
             "self.state = BeaconState::Established",
-            "Some(plaintext)",
+            "return Some(plaintext);",
         ],
         "impl ProviderBeacon for Beacon {",
     )
@@ -116,7 +121,7 @@ def check_source_order():
         body.count(
             "Err(control)=>{self.state=BeaconState::Aborted{control};returnNone;}"
         )
-        != 3
+        != 4
     ):
         raise ValueError("active core terminal failure installation changed")
     BASE.source_order(
@@ -179,38 +184,65 @@ def check_source_order():
     BASE.source_order(
         root,
         "beaconcrypt-core/src/registration.rs",
-        "pub fn request(&self)",
+        "pub fn resume(",
         [
-            "ciphertext: self.agreement.application_ciphertext",
-            "associated_data: self.agreement.binding.associated_data()",
-            "sequence: 1",
-            "sender_key_id: self.agreement.candidate.server_key_id()",
+            "None => { return Err(crate::pqxdh::beacon_abort_candidate(self.agreement.candidate,)); }",
+            "let kernel = crate::pqxdh::resume_initial_ratchet_kdf(self.pending, response);",
+            "records::begin_record_receive(kernel, 1, self.agreement.application_ciphertext, self.agreement.binding.associated_data(), self.agreement.candidate.server_key_id(),)",
+            "normalize_beacon_open(self.agreement, effect)",
         ],
-        "impl BeaconInitialOpen<'_>",
+        "impl<'a> BeaconInitialKdf<'a>",
     )
     BASE.source_order(
         root,
-        "beaconcrypt/src/ratchet.rs",
-        "pub(crate) fn decrypt_registration_message_with_ratchet(",
+        "beaconcrypt-core/src/registration.rs",
+        "fn normalize_beacon_open<'a>(",
         [
-            "decrypt_payload_with_ratchet(ciphertext, 1, sender_kid, associated_data, ratchet)",
+            "records::RecordReceiveEffect::Rejected(_)",
+            "Err(crate::pqxdh::beacon_abort_candidate(agreement.candidate))",
+            "records::RecordReceiveEffect::KdfRequested(pending)",
+            "BeaconInitialOpen::KdfRequested(BeaconRecordKdf { agreement, pending, })",
+            "records::RecordReceiveEffect::CommitmentRequested(pending)",
+            "BeaconInitialOpen::CommitmentRequested(BeaconRecordCommitment { agreement, pending })",
+            "records::RecordReceiveEffect::AeadRequested(pending)",
+            "BeaconInitialOpen::AeadRequested(BeaconRecordAead { agreement, pending, })",
         ],
     )
     BASE.source_order(
         root,
         "beaconcrypt-core/src/registration.rs",
-        "pub fn resume<'a>(",
+        "pub fn resume(",
         [
-            "let server_key_id = self.agreement.candidate.server_key_id();",
-            "self.kernel.is_some() || kernel.send_sequence() != 0 || kernel.receive_sequence() != 1 || kernel.receive_cache_len() != 0",
-            "opened.sequence != 1 || opened.plaintext.len() <= crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE",
+            "None => { return Err(crate::pqxdh::beacon_abort_candidate(self.agreement.candidate,)); }",
+            "normalize_beacon_open(self.agreement, self.pending.resume(response))",
+        ],
+        "impl<'a> BeaconRecordKdf<'a>",
+    )
+    BASE.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn resume(",
+        [
+            "normalize_beacon_open(self.agreement, self.pending.resume(commitment_matches))"
+        ],
+        "impl<'a> BeaconRecordCommitment<'a>",
+    )
+    BASE.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn finish<'plaintext>(",
+        [
+            "let rejected = crate::pqxdh::BeaconAborted::new(self.agreement.candidate.server_key_id());",
+            "let (kernel, opened) = self.pending.finish(plaintext);",
+            "Some(opened) => opened, None => return Err(rejected)",
+            "opened.plaintext.len() <= crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE",
             "split_at(crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE)",
-            "crate::pqxdh::authenticate_registration_key_id_binding(self.agreement.candidate, opened.sender_key_id, prefix,)",
+            "crate::pqxdh::authenticate_registration_key_id_binding(self.agreement.candidate, opened.key_id, prefix,)",
             "self.agreement.binding.finish(authenticated.assigned_key_id())",
             "crate::pqxdh::beacon_commit(authenticated)",
             "kernel, application,",
         ],
-        "impl BeaconInitialOpen<'_>",
+        "impl BeaconRecordAead<'_>",
     )
     model = (HERE / "registration-beacon-admission.pvl").read_text()
     owner = model[model.index("let RegistrationBeaconOwner(") :]

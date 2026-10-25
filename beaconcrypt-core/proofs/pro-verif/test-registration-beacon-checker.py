@@ -158,7 +158,9 @@ class InterpretedBeaconSourceGate(unittest.TestCase):
 
     def test_initial_open_metadata_is_the_actual_record_result(self):
         self.mutate_source(
-            "beaconcrypt/src/beacon.rs", "sequence: opened.seq,", "sequence: 0,"
+            "beaconcrypt-core/src/record.rs",
+            "let seq = self.opening.sequence();",
+            "let seq = 0;",
         )
 
     def test_private_one_time_handle_is_not_replaced_with_the_prekey(self):
@@ -178,8 +180,8 @@ class InterpretedBeaconSourceGate(unittest.TestCase):
     def test_first_sequence_gate_is_preserved(self):
         self.mutate_source(
             "beaconcrypt-core/src/registration.rs",
-            "opened.sequence != 1",
-            "opened.sequence != 2",
+            "kernel,\n\t\t\t1,\n\t\t\tself.agreement.application_ciphertext,",
+            "kernel,\n\t\t\t2,\n\t\t\tself.agreement.application_ciphertext,",
         )
 
     def test_post_dh_pin_rejection_is_not_moved_before_dh(self):
@@ -196,6 +198,48 @@ class InterpretedBeaconSourceGate(unittest.TestCase):
             "beaconcrypt/src/beacon.rs",
             "BeaconState::InitSent { pending, .. } => pending.aborted_state(),",
             "BeaconState::InitSent { pending, .. } => verified_pqxdh::BeaconAborted::new(0),",
+        )
+
+    def test_initial_open_sender_is_the_pinned_server(self):
+        self.mutate_source(
+            "beaconcrypt-core/src/registration.rs",
+            "self.agreement.binding.associated_data(),\n\t\t\tself.agreement.candidate.server_key_id(),",
+            "self.agreement.binding.associated_data(),\n\t\t\t0,",
+        )
+
+    def test_opened_sender_comes_from_the_record_capability(self):
+        self.mutate_source(
+            "beaconcrypt-core/src/registration.rs",
+            "self.agreement.candidate,\n\t\t\topened.key_id,",
+            "self.agreement.candidate,\n\t\t\t0,",
+        )
+
+    def test_commitment_hash_failure_cannot_admit_aead(self):
+        self.mutate_source(
+            "beaconcrypt/src/beacon.rs",
+            "None => false,",
+            "None => true,",
+        )
+
+    def test_commitment_comparison_uses_the_supplied_record_bytes(self):
+        self.mutate_source(
+            "beaconcrypt/src/beacon.rs",
+            "memcmp(&commitment, pending.supplied_commitment())",
+            "memcmp(&commitment, &commitment)",
+        )
+
+    def test_actual_aead_plaintext_is_the_only_completion_reply(self):
+        self.mutate_source(
+            "beaconcrypt/src/beacon.rs",
+            "pending.finish(plaintext.as_deref())",
+            "pending.finish(Some(&[0; 9]))",
+        )
+
+    def test_rejected_record_effect_aborts_the_retained_candidate(self):
+        self.mutate_source(
+            "beaconcrypt-core/src/registration.rs",
+            "beacon_abort_candidate(agreement.candidate)",
+            "BeaconAborted::new(0)",
         )
 
 

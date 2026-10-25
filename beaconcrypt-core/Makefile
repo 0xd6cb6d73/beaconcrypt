@@ -886,6 +886,16 @@ check-lean-root:
 		BeaconcryptCore.Refinement.RegistrationSigning \
 		BeaconcryptCore.Refinement.RegistrationSigningContinuations \
 		BeaconcryptCore.Refinement.RegistrationPublication \
+		BeaconcryptCore.Refinement.RecordEffectsComposition \
+		BeaconcryptCore.Refinement.RecordEffects \
+		BeaconcryptCore.Refinement.RecordEffectsReceiveInvariant \
+		BeaconcryptCore.Computational.RecordEffectsSendBridge \
+		BeaconcryptCore.Computational.RecordEffectsReceiveRank \
+		BeaconcryptCore.Computational.RecordEffectsReceiveProgram \
+		BeaconcryptCore.Computational.RecordEffectsReceiveBridge \
+		BeaconcryptCore.Refinement.RecordEffectsRequests \
+		BeaconcryptCore.Refinement.RegistrationRecords \
+		BeaconcryptCore.Refinement.RegistrationReachability \
 		BeaconcryptCore.Refinement.RegistrationAuthenticationFlow \
 		BeaconcryptCore.Refinement.RegistrationSigningTrace \
 		BeaconcryptCore.Refinement.RegistrationSigningHistory \

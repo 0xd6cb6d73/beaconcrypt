@@ -1554,6 +1554,141 @@
     "module": "BeaconcryptCore.PanicFreedom.Record",
     "theorem": "BeaconcryptCore.PanicFreedom.Record.complete_total"
   },
+  "record_effects.RecordEncoding.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordEncoding_Insts_CoreCloneClone_clone_total"
+  },
+  "record_effects.RecordReceiveAead.finish": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveAead_finish_total"
+  },
+  "record_effects.RecordReceiveAead.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveAead_request_total"
+  },
+  "record_effects.RecordReceiveCommitment.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveCommitment_resume_total"
+  },
+  "record_effects.RecordReceiveCommitment.supplied_commitment": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveCommitment_supplied_commitment_total"
+  },
+  "record_effects.RecordReceiveCommitment.transcript": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveCommitment_transcript_total"
+  },
+  "record_effects.RecordReceiveCommitment.transcript_mut": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveCommitment_transcript_mut_total"
+  },
+  "record_effects.RecordReceiveKdf.cancel": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveKdf_cancel_total"
+  },
+  "record_effects.RecordReceiveKdf.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveKdf_request_total"
+  },
+  "record_effects.RecordReceiveKdf.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordReceiveKdf_resume_total"
+  },
+  "record_effects.RecordSendKdf.cancel": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordSendKdf_cancel_total"
+  },
+  "record_effects.RecordSendKdf.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordSendKdf_request_total"
+  },
+  "record_effects.RecordSendKdf.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.RecordSendKdf_resume_total"
+  },
+  "record_effects.SealAead.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.SealAead_request_total"
+  },
+  "record_effects.SealAead.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.SealAead_resume_total"
+  },
+  "record_effects.SealCommitment.impl.transcript": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.SealCommitment_impl_transcript_total"
+  },
+  "record_effects.SealCommitment.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.SealCommitment_resume_total"
+  },
+  "record_effects.SealCommitment.transcript_mut": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.SealCommitment_transcript_mut_total"
+  },
+  "record_effects.SealFrameContext.new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.SealFrameContext_new_total"
+  },
+  "record_effects.SealFrameContext.plaintext_request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.SealFrameContext_plaintext_request_total"
+  },
+  "record_effects.SealFrameContext.registration": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.SealFrameContext_registration_total"
+  },
+  "record_effects.SealWrite.finish": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.SealWrite_finish_total"
+  },
+  "record_effects.SealWrite.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffectsSend",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffectsSend.SealWrite_request_total"
+  },
+  "record_effects.begin_record_receive": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.begin_record_receive_total"
+  },
+  "record_effects.begin_record_send": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffectsSend",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffectsSend.begin_record_send_total"
+  },
+  "record_effects.normalize_receive": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.normalize_receive_total"
+  },
+  "record_effects.reject_send": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RecordEffects",
+    "theorem": "BeaconcryptCore.PanicFreedom.RecordEffects.reject_send_total"
+  },
   "registration.AuthenticatedInit.into_parts": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
@@ -1624,21 +1759,6 @@
     "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
     "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconInitialKdf_resume_total"
   },
-  "registration.BeaconInitialOpen.request": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitialOpen_request_total"
-  },
-  "registration.BeaconInitialOpen.resume": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconInitialOpen_resume_total"
-  },
-  "registration.BeaconInitialOpen.take_kernel": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitialOpen_take_kernel_total"
-  },
   "registration.BeaconMldsaSigning.request": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
@@ -1663,6 +1783,46 @@
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
     "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconPending_server_key_id_total"
+  },
+  "registration.BeaconRecordAead.finish": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordAead_finish_total"
+  },
+  "registration.BeaconRecordAead.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordAead_request_total"
+  },
+  "registration.BeaconRecordCommitment.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordCommitment_resume_total"
+  },
+  "registration.BeaconRecordCommitment.supplied_commitment": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordCommitment_supplied_commitment_total"
+  },
+  "registration.BeaconRecordCommitment.transcript": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordCommitment_transcript_total"
+  },
+  "registration.BeaconRecordCommitment.transcript_mut": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordCommitment_transcript_mut_total"
+  },
+  "registration.BeaconRecordKdf.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordKdf_request_total"
+  },
+  "registration.BeaconRecordKdf.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconRecordKdf_resume_total"
   },
   "registration.CompletedBeacon.into_parts": {
     "form": "exists",
@@ -1786,18 +1946,48 @@
   },
   "registration.ServerInitialSeal.request": {
     "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerInitialSeal_request_total"
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerInitialSeal_request_total"
   },
   "registration.ServerInitialSeal.resume": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
     "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerInitialSeal_resume_total"
   },
-  "registration.ServerInitialSeal.take_kernel": {
+  "registration.ServerRecordAead.request": {
     "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerInitialSeal_take_kernel_total"
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordAead_request_total"
+  },
+  "registration.ServerRecordAead.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordAead_resume_total"
+  },
+  "registration.ServerRecordCommitment.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordCommitment_resume_total"
+  },
+  "registration.ServerRecordCommitment.transcript": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordCommitment_transcript_total"
+  },
+  "registration.ServerRecordCommitment.transcript_mut": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordCommitment_transcript_mut_total"
+  },
+  "registration.ServerRecordWrite.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordWrite_request_total"
+  },
+  "registration.ServerRecordWrite.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.ServerRecordWrite_resume_total"
   },
   "registration.ServerResponseHash.request": {
     "form": "exists",
@@ -1858,6 +2048,11 @@
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
     "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.begin_server_pin_total"
+  },
+  "registration.normalize_beacon_open": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.normalize_beacon_open_total"
   },
   "session.RegistrationBinding.finish": {
     "form": "exists",

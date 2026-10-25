@@ -16,6 +16,7 @@ use crate::pqxdh::{
 	ENCODED_MLKEM768_PUBLIC_KEY_SIZE, ENCODED_X25519_PUBLIC_KEY_SIZE, InitKex, SIGN_TYPE_ED25519,
 	ServerBinding, VerifiedInitKex, validate_init_kex,
 };
+use crate::record_effects as records;
 use crate::session::{RegistrationBinding, ServerAuthenticationPin};
 
 /// The exact single input or ordered transcript parts selected by the current phase.
@@ -831,81 +832,141 @@ impl<'a> BeaconInitialKdf<'a> {
 			}
 		};
 		let kernel = crate::pqxdh::resume_initial_ratchet_kdf(self.pending, response);
-		Ok(BeaconInitialOpen {
-			agreement: self.agreement,
-			kernel: Some(kernel),
-		})
+		let effect = records::begin_record_receive(
+			kernel,
+			1,
+			self.agreement.application_ciphertext,
+			self.agreement.binding.associated_data(),
+			self.agreement.candidate.server_key_id(),
+		);
+		normalize_beacon_open(self.agreement, effect)
 	}
 }
 
-/// Temporary complete-record interpreter seam, replaced by composed record effects in item 3.
-pub struct InitialOpenRequest<'a> {
-	pub ciphertext: &'a [u8],
-	pub associated_data: &'a [u8; crate::pqxdh::ASSOCIATED_DATA_SIZE],
-	pub sequence: u64,
-	pub sender_key_id: u64,
+#[must_use]
+#[allow(clippy::large_enum_variant)]
+pub enum BeaconInitialOpen<'a> {
+	KdfRequested(BeaconRecordKdf<'a>),
+	CommitmentRequested(BeaconRecordCommitment<'a>),
+	AeadRequested(BeaconRecordAead<'a>),
 }
 
-pub struct InitialOpened<'a> {
-	pub plaintext: &'a [u8],
-	pub sequence: u64,
-	pub sender_key_id: u64,
-}
-
-pub struct BeaconInitialOpen<'a> {
+pub struct BeaconRecordKdf<'a> {
 	agreement: crate::agreement::BeaconAgreement<'a>,
-	kernel: Option<crate::ratchet::ConcreteRatchetKernel>,
+	pending: records::RecordReceiveKdf<'a>,
 }
 
-impl BeaconInitialOpen<'_> {
-	pub fn request(&self) -> InitialOpenRequest<'_> {
-		InitialOpenRequest {
-			ciphertext: self.agreement.application_ciphertext,
-			associated_data: self.agreement.binding.associated_data(),
-			sequence: 1,
-			sender_key_id: self.agreement.candidate.server_key_id(),
+pub struct BeaconRecordCommitment<'a> {
+	agreement: crate::agreement::BeaconAgreement<'a>,
+	pending: records::RecordReceiveCommitment<'a>,
+}
+
+pub struct BeaconRecordAead<'a> {
+	agreement: crate::agreement::BeaconAgreement<'a>,
+	pending: records::RecordReceiveAead<'a>,
+}
+
+fn normalize_beacon_open<'a>(
+	agreement: crate::agreement::BeaconAgreement<'a>,
+	effect: records::RecordReceiveEffect<'a>,
+) -> Result<BeaconInitialOpen<'a>, crate::pqxdh::BeaconAborted> {
+	match effect {
+		records::RecordReceiveEffect::Rejected(_) => {
+			Err(crate::pqxdh::beacon_abort_candidate(agreement.candidate))
+		}
+		records::RecordReceiveEffect::KdfRequested(pending) => {
+			Ok(BeaconInitialOpen::KdfRequested(BeaconRecordKdf {
+				agreement,
+				pending,
+			}))
+		}
+		records::RecordReceiveEffect::CommitmentRequested(pending) => Ok(
+			BeaconInitialOpen::CommitmentRequested(BeaconRecordCommitment { agreement, pending }),
+		),
+		records::RecordReceiveEffect::AeadRequested(pending) => {
+			Ok(BeaconInitialOpen::AeadRequested(BeaconRecordAead {
+				agreement,
+				pending,
+			}))
 		}
 	}
+}
 
-	pub fn take_kernel(&mut self) -> Option<crate::ratchet::ConcreteRatchetKernel> {
-		self.kernel.take()
+impl<'a> BeaconRecordKdf<'a> {
+	pub const fn request(&self) -> &crate::ratchet::SymmetricRatchetKdfRequest {
+		self.pending.request()
 	}
 
-	/// The interpreter must return the same kernel after the exact requested open.
-	pub fn resume<'a>(
+	pub fn resume(
 		self,
-		kernel: crate::ratchet::ConcreteRatchetKernel,
-		opened: Option<InitialOpened<'a>>,
-	) -> Result<CompletedBeacon<'a>, crate::pqxdh::BeaconAborted> {
-		let server_key_id = self.agreement.candidate.server_key_id();
-		let rejected = crate::pqxdh::BeaconAborted::new(server_key_id);
-		if self.kernel.is_some()
-			|| kernel.send_sequence() != 0
-			|| kernel.receive_sequence() != 1
-			|| kernel.receive_cache_len() != 0
-		{
-			return Err(rejected);
-		}
-		let Some(opened) = opened else {
-			return Err(rejected);
+		response: Option<crate::ratchet::RatchetKdfResponse>,
+	) -> Result<BeaconInitialOpen<'a>, crate::pqxdh::BeaconAborted> {
+		let response = match response {
+			Some(response) => response,
+			None => {
+				return Err(crate::pqxdh::beacon_abort_candidate(
+					self.agreement.candidate,
+				));
+			}
 		};
-		if opened.sequence != 1
-			|| opened.plaintext.len() <= crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE
-		{
+		normalize_beacon_open(self.agreement, self.pending.resume(response))
+	}
+}
+
+impl<'a> BeaconRecordCommitment<'a> {
+	pub const fn transcript(&self) -> &crate::commitment::CommitmentTranscript {
+		self.pending.transcript()
+	}
+
+	pub fn transcript_mut(&mut self) -> &mut crate::commitment::CommitmentTranscript {
+		&mut self.pending.pending.transcript
+	}
+
+	pub const fn supplied_commitment(&self) -> &[u8; crate::record::COMMITMENT_SIZE] {
+		self.pending.supplied_commitment()
+	}
+
+	pub fn resume(
+		self,
+		commitment_matches: bool,
+	) -> Result<BeaconInitialOpen<'a>, crate::pqxdh::BeaconAborted> {
+		normalize_beacon_open(self.agreement, self.pending.resume(commitment_matches))
+	}
+}
+
+impl BeaconRecordAead<'_> {
+	pub fn request(&self) -> Option<crate::record::AeadRequest<'_>> {
+		self.pending.request()
+	}
+
+	/// Actual AEAD plaintext is paired with source-owned record metadata and kernel.
+	pub fn finish<'plaintext>(
+		self,
+		plaintext: Option<&'plaintext [u8]>,
+	) -> Result<CompletedBeacon<'plaintext>, crate::pqxdh::BeaconAborted> {
+		let rejected = crate::pqxdh::BeaconAborted::new(self.agreement.candidate.server_key_id());
+		let (kernel, opened) = self.pending.finish(plaintext);
+		let opened = match opened {
+			Some(opened) => opened,
+			None => return Err(rejected),
+		};
+		if opened.plaintext.len() <= crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE {
 			return Err(rejected);
 		}
 		let (prefix, application) = opened
 			.plaintext
 			.split_at(crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE);
-		let Ok(prefix) = prefix.try_into() else {
-			return Err(rejected);
+		let prefix = match prefix.try_into() {
+			Ok(prefix) => prefix,
+			Err(_) => return Err(rejected),
 		};
-		let Ok(authenticated) = crate::pqxdh::authenticate_registration_key_id_binding(
+		let authenticated = match crate::pqxdh::authenticate_registration_key_id_binding(
 			self.agreement.candidate,
-			opened.sender_key_id,
+			opened.key_id,
 			prefix,
-		) else {
-			return Err(rejected);
+		) {
+			Ok(authenticated) => authenticated,
+			Err(_) => return Err(rejected),
 		};
 		let binding = self
 			.agreement
@@ -977,6 +1038,12 @@ pub fn begin_server_completion<'a>(
 	})
 }
 
+struct ServerRecordState<'a> {
+	candidate: crate::pqxdh::ServerRegistrationCandidate,
+	binding: RegistrationBinding,
+	application: &'a [u8],
+}
+
 impl<'a> ServerInitialKdf<'a> {
 	pub const fn request(&self) -> &crate::ratchet::SymmetricRatchetKdfRequest {
 		self.pending.request()
@@ -992,69 +1059,129 @@ impl<'a> ServerInitialKdf<'a> {
 			None => return Err(rejected),
 		};
 		let kernel = crate::pqxdh::resume_initial_ratchet_kdf(self.pending, response);
-		let prefix = *self.candidate.key_id_binding().as_bytes();
+		let context = records::SealFrameContext::registration(
+			self.application,
+			self.candidate.key_id(),
+			self.candidate.server_identity_key_id(),
+			self.binding.associated_data(),
+		);
+		let pending = match records::begin_record_send(kernel, context) {
+			records::RecordSendStart::Rejected(_) => return Err(rejected),
+			records::RecordSendStart::KdfRequested(pending) => pending,
+		};
 		Ok(ServerInitialSeal {
-			candidate: self.candidate,
-			binding: self.binding,
-			application: self.application,
-			prefix,
-			kernel: Some(kernel),
+			state: ServerRecordState {
+				candidate: self.candidate,
+				binding: self.binding,
+				application: self.application,
+			},
+			pending,
 		})
 	}
 }
 
-pub struct InitialSealRequest<'a> {
-	pub plaintext: [&'a [u8]; 2],
-	pub associated_data: &'a [u8; crate::pqxdh::ASSOCIATED_DATA_SIZE],
-	pub sequence: u64,
-	pub sender_key_id: u64,
-	pub target_key_id: u64,
-}
-
 pub struct ServerInitialSeal<'a> {
-	candidate: crate::pqxdh::ServerRegistrationCandidate,
-	binding: RegistrationBinding,
-	application: &'a [u8],
-	prefix: [u8; 8],
-	kernel: Option<crate::ratchet::ConcreteRatchetKernel>,
+	state: ServerRecordState<'a>,
+	pending: records::RecordSendKdf<'a>,
 }
 
-impl ServerInitialSeal<'_> {
-	pub fn request(&self) -> InitialSealRequest<'_> {
-		InitialSealRequest {
-			plaintext: [&self.prefix, self.application],
-			associated_data: self.binding.associated_data(),
-			sequence: 1,
-			sender_key_id: self.candidate.server_identity_key_id(),
-			target_key_id: self.candidate.key_id(),
-		}
+impl<'a> ServerInitialSeal<'a> {
+	pub const fn request(&self) -> &crate::ratchet::SymmetricRatchetKdfRequest {
+		self.pending.request()
 	}
 
-	pub fn take_kernel(&mut self) -> Option<crate::ratchet::ConcreteRatchetKernel> {
-		self.kernel.take()
-	}
-
-	/// The interpreter must return the same kernel and ciphertext from the exact requested seal.
-	pub fn resume<'a>(
+	pub fn resume(
 		self,
-		kernel: crate::ratchet::ConcreteRatchetKernel,
-		sequence: u64,
-		ciphertext: Option<&'a [u8]>,
-	) -> Result<ServerResponseHash<'a>, crate::pqxdh::ServerState> {
-		let rejected = crate::pqxdh::server_abort_candidate(&self.candidate);
-		if self.kernel.is_some()
-			|| sequence != 1
-			|| kernel.send_sequence() != 1
-			|| kernel.receive_sequence() != 0
-			|| kernel.receive_cache_len() != 0
-		{
-			return Err(rejected);
+		response: Option<crate::ratchet::RatchetKdfResponse>,
+	) -> Result<ServerRecordAead<'a>, crate::pqxdh::ServerState> {
+		let response = match response {
+			Some(response) => response,
+			None => return Err(crate::pqxdh::server_abort_candidate(&self.state.candidate)),
+		};
+		Ok(ServerRecordAead {
+			state: self.state,
+			pending: self.pending.resume(response),
+		})
+	}
+}
+
+pub struct ServerRecordAead<'a> {
+	state: ServerRecordState<'a>,
+	pending: records::SealAead<'a>,
+}
+
+impl<'a> ServerRecordAead<'a> {
+	pub fn request(&self) -> records::AeadSealRequest<'_> {
+		self.pending.request()
+	}
+
+	pub fn resume<'ciphertext>(
+		self,
+		detached: Option<(&'ciphertext [u8], [u8; 16])>,
+	) -> Result<ServerRecordCommitment<'a, 'ciphertext>, crate::pqxdh::ServerState> {
+		match self.pending.resume(detached) {
+			records::SealAfterAead::Rejected(_) => {
+				Err(crate::pqxdh::server_abort_candidate(&self.state.candidate))
+			}
+			records::SealAfterAead::CommitmentRequested(pending) => Ok(ServerRecordCommitment {
+				state: self.state,
+				pending,
+			}),
 		}
-		let ciphertext = match ciphertext {
-			Some(ciphertext) => ciphertext,
+	}
+}
+
+pub struct ServerRecordCommitment<'a, 'ciphertext> {
+	state: ServerRecordState<'a>,
+	pending: records::SealCommitment<'a, 'ciphertext>,
+}
+
+impl<'a, 'ciphertext> ServerRecordCommitment<'a, 'ciphertext> {
+	pub const fn transcript(&self) -> &crate::commitment::CommitmentTranscript {
+		self.pending.transcript()
+	}
+
+	pub fn transcript_mut(&mut self) -> &mut crate::commitment::CommitmentTranscript {
+		&mut self.pending.transcript
+	}
+
+	pub fn resume(
+		self,
+		commitment: Option<[u8; 64]>,
+	) -> Result<ServerRecordWrite<'a, 'ciphertext>, crate::pqxdh::ServerState> {
+		match self.pending.resume(commitment) {
+			records::SealAfterCommitment::Rejected(_) => {
+				Err(crate::pqxdh::server_abort_candidate(&self.state.candidate))
+			}
+			records::SealAfterCommitment::WriteRequested(pending) => Ok(ServerRecordWrite {
+				state: self.state,
+				pending,
+			}),
+		}
+	}
+}
+
+pub struct ServerRecordWrite<'a, 'ciphertext> {
+	state: ServerRecordState<'a>,
+	pending: records::SealWrite<'a, 'ciphertext>,
+}
+
+impl ServerRecordWrite<'_, '_> {
+	pub fn request(&self) -> records::RecordWriteRequest<'_> {
+		self.pending.request()
+	}
+
+	pub fn resume<'output>(
+		self,
+		ciphertext: Option<&'output [u8]>,
+	) -> Result<ServerResponseHash<'output>, crate::pqxdh::ServerState> {
+		let rejected = crate::pqxdh::server_abort_candidate(&self.state.candidate);
+		let (kernel, sealed) = self.pending.finish(ciphertext);
+		let ciphertext = match sealed {
+			Some(sealed) => sealed.ciphertext,
 			None => return Err(rejected),
 		};
-		let bound_length = match 8usize.checked_add(self.application.len()) {
+		let bound_length = match 8usize.checked_add(self.state.application.len()) {
 			Some(length) => length,
 			None => return Err(rejected),
 		};
@@ -1066,19 +1193,19 @@ impl ServerInitialSeal<'_> {
 			return Err(rejected);
 		}
 		let prefix = build_response_prefix(
-			self.binding.init_hash(),
-			self.candidate.server_identity_public_key(),
-			self.candidate.ephemeral_public_key(),
-			self.candidate.kem_ciphertext(),
+			self.state.binding.init_hash(),
+			self.state.candidate.server_identity_public_key(),
+			self.state.candidate.ephemeral_public_key(),
+			self.state.candidate.kem_ciphertext(),
 			match u64::try_from(ciphertext.len()) {
 				Ok(length) => length,
 				Err(_) => return Err(rejected),
 			},
 		);
-		let assigned_id = encode_u64_le(self.candidate.key_id());
+		let assigned_id = encode_u64_le(self.state.candidate.key_id());
 		Ok(ServerResponseHash {
-			candidate: self.candidate,
-			binding: self.binding,
+			candidate: self.state.candidate,
+			binding: self.state.binding,
 			kernel,
 			ciphertext,
 			prefix,

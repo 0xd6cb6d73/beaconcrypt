@@ -142,6 +142,55 @@ class InterpretedAdmissionSourceGate(unittest.TestCase):
             "request.input,\n\t\t&[0; 32],",
         )
 
+    def test_record_sealing_uses_the_exact_associated_data(self):
+        self.mutate_source(
+            "beaconcrypt/src/ratchet.rs",
+            "encrypt_detached(\n\t\tplaintext,\n\t\tSome(request.associated_data.as_slice()),",
+            "encrypt_detached(\n\t\tplaintext,\n\t\tNone,",
+        )
+
+    def test_record_opening_uses_the_exact_associated_data(self):
+        self.mutate_source(
+            "beaconcrypt/src/ratchet.rs",
+            "decrypt(\n\t\trequest.ciphertext,\n\t\tSome(request.associated_data.as_slice()),",
+            "decrypt(\n\t\trequest.ciphertext,\n\t\tNone,",
+        )
+
+    def test_commitment_is_hashed_before_its_secret_transcript_is_erased(self):
+        self.mutate_source(
+            "beaconcrypt/src/ratchet.rs",
+            "crypto_generichash::generichash(transcript.as_bytes(), None, COMMITMENT_SIZE).ok();\n\ttranscript.as_mut_bytes().zeroize();",
+            "{ transcript.as_mut_bytes().zeroize(); crypto_generichash::generichash(transcript.as_bytes(), None, COMMITMENT_SIZE).ok() };",
+        )
+
+    def test_record_write_parts_cannot_swap_tag_and_commitment(self):
+        self.mutate_source(
+            "beaconcrypt-core/src/record_effects.rs",
+            "self.tag.as_slice(),\n\t\t\tself.commitment.as_slice(),",
+            "self.commitment.as_slice(),\n\t\t\tself.tag.as_slice(),",
+        )
+
+    def test_commitment_gate_remains_before_aead(self):
+        self.mutate_source(
+            "beaconcrypt-core/src/record.rs",
+            "if !commitment_matches {",
+            "if false && !commitment_matches {",
+        )
+
+    def test_record_rejection_finishes_with_the_actual_none_reply(self):
+        self.mutate_source(
+            "beaconcrypt-core/src/record_effects.rs",
+            "pending.finish(None)",
+            "pending.finish(Some(()))",
+        )
+
+    def test_whole_record_callback_cannot_return(self):
+        self.mutate_source(
+            "beaconcrypt-core/src/registration.rs",
+            "pub struct CompletedBeacon<'a> {",
+            "pub struct InitialOpened;\npub struct CompletedBeacon<'a> {",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

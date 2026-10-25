@@ -27,14 +27,14 @@ pub struct OpenFrameContext<'a> {
 	base_ciphertext: &'a [u8],
 	tag: &'a [u8; AEAD_TAG_SIZE],
 	commitment: &'a [u8; COMMITMENT_SIZE],
-	associated_data: &'a [u8; ASSOCIATED_DATA_SIZE],
+	associated_data: [u8; ASSOCIATED_DATA_SIZE],
 	sender_kid: u64,
 }
 
 impl<'a> OpenFrameContext<'a> {
 	pub fn from_frame(
 		ciphertext: &'a [u8],
-		associated_data: &'a [u8; ASSOCIATED_DATA_SIZE],
+		associated_data: &[u8; ASSOCIATED_DATA_SIZE],
 		sender_kid: u64,
 	) -> Option<Self> {
 		if ciphertext.len() <= MESSAGE_OVERHEAD {
@@ -55,7 +55,7 @@ impl<'a> OpenFrameContext<'a> {
 			base_ciphertext,
 			tag,
 			commitment,
-			associated_data,
+			associated_data: *associated_data,
 			sender_kid,
 		})
 	}
@@ -73,7 +73,7 @@ pub enum OpenStart<'a> {
 /// The pending hash retains the original one-use ratchet capability.
 pub struct OpenCommitment<'a> {
 	opening: ReceiveOpen<OpenFrameContext<'a>>,
-	transcript: CommitmentTranscript,
+	pub(crate) transcript: CommitmentTranscript,
 }
 
 /// Select the source material, sequence and payload before any primitive effect.
@@ -86,7 +86,7 @@ pub fn begin_open(opening: ReceiveOpen<OpenFrameContext<'_>>) -> OpenStart<'_> {
 	let transcript = build_commitment_transcript(
 		material.key().as_bytes(),
 		material.nonce().as_bytes(),
-		context.associated_data,
+		&context.associated_data,
 		context.tag,
 		opening.sequence(),
 		context.sender_kid,
@@ -160,7 +160,7 @@ impl OpenAead<'_> {
 			key: material.key().as_bytes(),
 			nonce: material.nonce().as_bytes(),
 			ciphertext: context.base_ciphertext,
-			associated_data: context.associated_data,
+			associated_data: &context.associated_data,
 		})
 	}
 
