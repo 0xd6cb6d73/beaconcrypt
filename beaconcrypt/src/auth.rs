@@ -3,10 +3,12 @@
 //! ML-DSA-65 identities and domain-separated registration transcript authentication.
 
 use beaconcrypt_core::authentication as transcript;
+#[cfg(test)]
 use beaconcrypt_parse::{InitKex, KexResponse};
 
 use libsodium_rs::{crypto_generichash, ensure_init, random};
 use ml_dsa::{EncodedVerifyingKey, Keypair, MlDsa65, Signature, SigningKey, VerifyingKey};
+#[cfg(test)]
 pub(crate) use transcript::AuthRole;
 use zeroize::Zeroizing;
 
@@ -55,6 +57,7 @@ impl MldsaIdentity {
 		self.key.verifying_key().encode().into()
 	}
 
+	#[cfg(test)]
 	pub(crate) fn sign(&self, role: AuthRole, transcript: &TranscriptHash) -> Option<Vec<u8>> {
 		self.key
 			.expanded_key()
@@ -67,6 +70,7 @@ impl MldsaIdentity {
 	}
 }
 
+#[cfg(test)]
 pub(crate) fn verify(
 	public_key: &[u8],
 	role: AuthRole,
@@ -96,6 +100,7 @@ fn finish_hash(mut state: crypto_generichash::State) -> Option<TranscriptHash> {
 }
 
 /// Fingerprint an exact ML-DSA-65 public key with unkeyed BLAKE2b-512.
+#[cfg(test)]
 pub(crate) fn public_key_hash(public_key: &[u8]) -> Option<TranscriptHash> {
 	if public_key.len() != MLDSA_PUBLIC_KEY_LEN {
 		return None;
@@ -106,6 +111,7 @@ pub(crate) fn public_key_hash(public_key: &[u8]) -> Option<TranscriptHash> {
 }
 
 /// Hash the decoded request and both authentication pins; variable fields have LE64 lengths.
+#[cfg(test)]
 pub(crate) fn init_transcript_hash(
 	init: &InitKex<'_>,
 	server_kid: u64,
@@ -127,6 +133,7 @@ pub(crate) fn init_transcript_hash(
 }
 
 /// Hash the core's ordered response parts, excluding the authentication signature.
+#[cfg(test)]
 pub(crate) fn response_transcript_hash(
 	init_hash: &TranscriptHash,
 	response: &KexResponse<'_>,
@@ -146,9 +153,184 @@ pub(crate) fn response_transcript_hash(
 	finish_hash(state)
 }
 
+// Interpret the core's exact primitive requests; legacy digest helpers are test-only.
+
+pub(crate) fn execute_hash(
+	request: &beaconcrypt_core::registration::HashRequest<'_>,
+) -> Option<TranscriptHash> {
+	let mut state = hash_state()?;
+	match request {
+		beaconcrypt_core::registration::HashRequest::Single(input) => state.update(input),
+		beaconcrypt_core::registration::HashRequest::Triple(parts) => {
+			for part in parts {
+				state.update(part);
+			}
+		}
+	}
+	finish_hash(state)
+}
+
+pub(crate) fn fingerprint_pin(
+	binding: beaconcrypt_core::pqxdh::ServerBinding,
+	public_key: [u8; MLDSA_PUBLIC_KEY_LEN],
+) -> Option<beaconcrypt_core::session::ServerAuthenticationPin> {
+	let pending = beaconcrypt_core::registration::begin_server_pin(binding, public_key);
+	let fingerprint = execute_hash(&pending.request());
+	pending.resume(fingerprint)
+}
+
+pub(crate) fn verify_requested(
+	request: &beaconcrypt_core::registration::MldsaVerificationRequest<'_>,
+) -> bool {
+	let Ok(encoded_key) = <&EncodedVerifyingKey<MlDsa65>>::try_from(request.public_key.as_slice())
+	else {
+		return false;
+	};
+	let Ok(signature) = Signature::<MlDsa65>::try_from(request.signature.as_slice()) else {
+		return false;
+	};
+	VerifyingKey::decode(encoded_key).verify_with_context(
+		request.input,
+		&request.context,
+		&signature,
+	)
+}
+
+impl MldsaIdentity {
+	pub(crate) fn sign_requested(
+		&self,
+		request: &beaconcrypt_core::registration::MldsaSigningRequest<'_>,
+	) -> Option<Vec<u8>> {
+		if self.public_key() != *request.public_key {
+			return None;
+		}
+		self.key
+			.expanded_key()
+			.sign_deterministic(request.input, &request.context)
+			.ok()
+			.map(|signature| signature.encode().to_vec())
+	}
+}
+
+pub(crate) fn authenticate_init(
+	pin: beaconcrypt_core::session::ServerAuthenticationPin,
+	packet: beaconcrypt_core::registration::InitPacket<'_>,
+) -> Option<beaconcrypt_core::registration::AuthenticatedInit> {
+	use beaconcrypt_core::registration::InitAuthentication;
+	let mut effect = beaconcrypt_core::registration::begin_init_authentication(pin, packet);
+	loop {
+		effect = match effect {
+			InitAuthentication::Rejected => return None,
+			InitAuthentication::Accepted(authenticated) => return Some(authenticated),
+			InitAuthentication::HashRequested(pending) => {
+				let hash = execute_hash(&pending.request());
+				pending.resume(hash)
+			}
+			InitAuthentication::MldsaVerificationRequested(pending) => {
+				let verified = verify_requested(&pending.request());
+				pending.resume(verified)
+			}
+			InitAuthentication::Ed25519VerificationRequested(pending) => {
+				let request = pending.request();
+				let opened = (|| {
+					let public_key =
+						libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key)
+							.ok()?;
+					libsodium_rs::crypto_sign::verify(request.signed, &public_key)
+				})();
+				pending.resume(opened.as_deref())
+			}
+			InitAuthentication::ServerFingerprintRequested(pending) => {
+				let fingerprint = execute_hash(&pending.request());
+				pending.resume(fingerprint)
+			}
+			InitAuthentication::BeaconFingerprintRequested(pending) => {
+				let fingerprint = execute_hash(&pending.request());
+				pending.resume(fingerprint)
+			}
+		};
+	}
+}
+
+pub(crate) fn authenticate_response<'a>(
+	pending: beaconcrypt_core::registration::BeaconPending,
+	packet: Option<beaconcrypt_core::registration::ResponsePacket<'a>>,
+) -> Result<
+	beaconcrypt_core::registration::AuthenticatedResponse<'a>,
+	beaconcrypt_core::pqxdh::BeaconAborted,
+> {
+	let pending = beaconcrypt_core::registration::begin_response_authentication(pending, packet)?;
+	let digest = execute_hash(&pending.request());
+	let pending = pending.resume(digest)?;
+	let verified = verify_requested(&pending.request());
+	pending.resume(verified)
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
+
+	#[test]
+	fn requested_hashing_preserves_single_inputs_and_all_three_ordered_parts() {
+		use beaconcrypt_core::registration::HashRequest;
+		let expected = crypto_generichash::generichash(b"firstsecondthird", None, 64).unwrap();
+		let single = execute_hash(&HashRequest::Single(b"firstsecondthird")).unwrap();
+		let triple = execute_hash(&HashRequest::Triple([b"first", b"second", b"third"])).unwrap();
+		assert_eq!(single.as_slice(), expected);
+		assert_eq!(triple, single);
+		assert_ne!(
+			execute_hash(&HashRequest::Triple([b"second", b"first", b"third"])).unwrap(),
+			single
+		);
+		assert_ne!(
+			execute_hash(&HashRequest::Triple([b"first", b"second", b""])).unwrap(),
+			single
+		);
+	}
+
+	#[test]
+	fn requested_signing_uses_the_selected_identity_and_exact_context() {
+		use beaconcrypt_core::registration::{MldsaSigningRequest, MldsaVerificationRequest};
+		let identity = MldsaIdentity::from_seed([7; 32]);
+		let public_key = identity.public_key();
+		let input = transcript::build_signature_input(AuthRole::Server, &[11; 64]);
+		let request = MldsaSigningRequest {
+			public_key: &public_key,
+			role: AuthRole::Server,
+			input: &input,
+			context: transcript::SIGNING_CONTEXT,
+		};
+		let signature = identity.sign_requested(&request).unwrap();
+		let mut verification = MldsaVerificationRequest {
+			public_key: &public_key,
+			input: &input,
+			context: transcript::SIGNING_CONTEXT,
+			signature: signature.as_slice().try_into().unwrap(),
+		};
+		assert!(verify_requested(&verification));
+		verification.context[0] ^= 1;
+		assert!(!verify_requested(&verification));
+		let changed = MldsaSigningRequest {
+			context: verification.context,
+			..request
+		};
+		let changed_signature = identity.sign_requested(&changed).unwrap();
+		verification.signature = changed_signature.as_slice().try_into().unwrap();
+		assert!(verify_requested(&verification));
+		verification.context = transcript::SIGNING_CONTEXT;
+		assert!(!verify_requested(&verification));
+		for other_key in [[0; MLDSA_PUBLIC_KEY_LEN], [u8::MAX; MLDSA_PUBLIC_KEY_LEN]] {
+			assert_ne!(public_key, other_key);
+			assert!(
+				identity
+					.sign_requested(&MldsaSigningRequest {
+						public_key: &other_key,
+						..request
+					})
+					.is_none()
+			);
+		}
+	}
 
 	#[test]
 	fn identity_seed_roundtrip_retains_signing_key() {

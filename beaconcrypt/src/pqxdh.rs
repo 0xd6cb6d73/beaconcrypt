@@ -2,11 +2,14 @@
 
 #[cfg(feature = "server")]
 use crate::shared::SignaturePk;
+#[cfg(test)]
 use crate::shared::{DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret};
 use beaconcrypt_core::pqxdh as verified_pqxdh;
 use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
+#[cfg(test)]
 use zeroize::Zeroize;
 
+#[cfg(test)]
 pub const PQXDH_INFO: &[u8; 46] = verified_pqxdh::PQXDH_INFO;
 pub const AD_SIZE: usize = verified_pqxdh::ASSOCIATED_DATA_SIZE;
 
@@ -31,6 +34,7 @@ const _: () =
 #[cfg(feature = "server")]
 impl SignaturePk for crypto_sign::PublicKey {}
 
+#[cfg(test)]
 pub(crate) fn shared_secrets(
 	dh1: DhSecret,
 	dh2: DhSecret,
@@ -47,6 +51,7 @@ pub(crate) fn shared_secrets(
 	})
 }
 
+#[cfg(test)]
 pub(crate) fn zeroize_shared_secrets(secrets: &mut verified_pqxdh::PqxdhSharedSecrets) {
 	secrets.dh1.zeroize();
 	secrets.dh2.zeroize();
@@ -55,6 +60,7 @@ pub(crate) fn zeroize_shared_secrets(secrets: &mut verified_pqxdh::PqxdhSharedSe
 	secrets.kem_shared_secret.zeroize();
 }
 
+#[cfg(test)]
 pub(crate) fn derive_root_key_input(
 	input: &mut verified_pqxdh::RootKeyInput,
 ) -> Option<KexDerivedSecret> {
@@ -76,6 +82,99 @@ pub fn build_associated_data(
 	beacon_id: crypto_sign::PublicKey,
 ) -> [u8; AD_SIZE] {
 	verified_pqxdh::build_associated_data(*server_id.as_bytes(), *beacon_id.as_bytes())
+}
+
+// Native key handles belong only to this synchronous registration interpreter.
+
+pub(crate) struct RegistrationKeys<'a> {
+	pub identity_secret: &'a libsodium_rs::crypto_sign::SecretKey,
+	pub beacon_prekey: Option<&'a libsodium_rs::crypto_kx::SecretKey>,
+	pub beacon_one_time: Option<&'a libsodium_rs::crypto_kx::SecretKey>,
+	pub beacon_kem: Option<&'a libsodium_rs::crypto_kem::mlkem768::SecretKey>,
+}
+
+pub(crate) fn execute_agreement<'a>(
+	mut effect: beaconcrypt_core::agreement::AgreementEffect<'a>,
+	keys: RegistrationKeys<'_>,
+) -> beaconcrypt_core::agreement::AgreementEffect<'a> {
+	use beaconcrypt_core::agreement::{AgreementEffect, DhSecretRole};
+	use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign};
+	use zeroize::Zeroizing;
+	let mut local_identity: Option<Zeroizing<[u8; 32]>> = None;
+	let mut server_ephemeral: Option<crypto_kx::KeyPair> = None;
+	loop {
+		effect = match effect {
+			AgreementEffect::Rejected(_)
+			| AgreementEffect::ServerComplete(_)
+			| AgreementEffect::BeaconComplete(_) => return effect,
+			AgreementEffect::ConvertPublic(pending) => {
+				let converted = crypto_sign::PublicKey::from_bytes(pending.public_key())
+					.ok()
+					.and_then(|key| crypto_sign::ed25519_pk_to_curve25519(&key).ok());
+				pending.resume(converted)
+			}
+			AgreementEffect::ConvertSecret(pending) => {
+				local_identity = crypto_sign::ed25519_sk_to_curve25519(keys.identity_secret)
+					.ok()
+					.map(Zeroizing::new);
+				pending.resume(local_identity.is_some())
+			}
+			AgreementEffect::GenerateEphemeral(pending) => {
+				server_ephemeral = crypto_kx::KeyPair::generate().ok();
+				let public = server_ephemeral
+					.as_ref()
+					.and_then(|key| key.public_key.as_bytes().try_into().ok());
+				pending.resume(public)
+			}
+			AgreementEffect::Encapsulate(pending) => {
+				let result = (|| {
+					let key =
+						crypto_kem::mlkem768::PublicKey::from_bytes(pending.public_key()?).ok()?;
+					let (ciphertext, shared) = crypto_kem::mlkem768::encapsulate(&key).ok()?;
+					Some((*ciphertext.as_bytes(), *shared.as_bytes()))
+				})();
+				pending.resume(result)
+			}
+			AgreementEffect::Decapsulate(pending) => {
+				let shared = (|| {
+					let ciphertext =
+						crypto_kem::mlkem768::Ciphertext::from_bytes(pending.ciphertext()?).ok()?;
+					let shared =
+						crypto_kem::mlkem768::decapsulate(&ciphertext, keys.beacon_kem?).ok()?;
+					Some(*shared.as_bytes())
+				})();
+				pending.resume(shared)
+			}
+			AgreementEffect::Dh(pending) => {
+				let request = pending.request();
+				let secret: Option<&[u8]> = match request.secret_role {
+					DhSecretRole::LocalIdentity => {
+						local_identity.as_ref().map(|key| key.as_slice())
+					}
+					DhSecretRole::ServerEphemeral => server_ephemeral
+						.as_ref()
+						.map(|key| key.secret_key.as_bytes()),
+					DhSecretRole::BeaconPrekey => keys.beacon_prekey.map(|key| key.as_bytes()),
+					DhSecretRole::BeaconOneTime => keys.beacon_one_time.map(|key| key.as_bytes()),
+				};
+				let shared = secret.and_then(|secret| {
+					crypto_scalarmult::scalarmult(secret, request.public_key).ok()
+				});
+				pending.resume(shared)
+			}
+			AgreementEffect::RootKdf(pending) => {
+				let root = (|| {
+					let request = pending.request();
+					let prk = crypto_kdf::hkdf::sha512::extract(None, request.input).ok()?;
+					let expanded = Zeroizing::new(
+						crypto_kdf::hkdf::sha512::expand(32, Some(request.info), &prk).ok()?,
+					);
+					expanded.as_slice().try_into().ok()
+				})();
+				pending.resume(root)
+			}
+		};
+	}
 }
 
 #[cfg(all(test, feature = "beacon", feature = "server"))]

@@ -14,6 +14,9 @@ use beaconcrypt_core::{
 	split_ratchet_kdf_output,
 };
 
+#[path = "fidelity/registration_effects.rs"]
+mod registration_effects;
+
 const INTERFACE: &str = include_str!("../proofs/pro-verif/production-transcript-interface.pvl");
 const CRYPTO_MODEL: &str = include_str!("../proofs/pro-verif/crypto.pvl");
 const MLDSA_AUTH_MODEL: &str = include_str!("../proofs/pro-verif/mldsa-auth.pvl");
@@ -74,6 +77,8 @@ const ADAPTER_SERVER: &str = include_str!("../../beaconcrypt/src/server.rs");
 const ADAPTER_BEACON: &str = include_str!("../../beaconcrypt/src/beacon.rs");
 const CORE_AUTHENTICATION: &str = include_str!("../src/authentication.rs");
 const CORE_SESSION: &str = include_str!("../src/session.rs");
+const CORE_REGISTRATION: &str = include_str!("../src/registration.rs");
+const CORE_AGREEMENT: &str = include_str!("../src/agreement.rs");
 const CORE_RECORD: &str = include_str!("../src/record.rs");
 const CORE_COMMITMENT: &str = include_str!("../src/commitment.rs");
 const CORE_PQXDH: &str = include_str!("../src/pqxdh.rs");
@@ -764,6 +769,8 @@ struct Snapshot {
 	adapter_shared: String,
 	core_authentication: String,
 	core_session: String,
+	core_registration: String,
+	core_agreement: String,
 	core_record: String,
 	core_commitment: String,
 	core_pqxdh: String,
@@ -823,6 +830,8 @@ impl Snapshot {
 			adapter_shared: ADAPTER_SHARED.to_owned(),
 			core_authentication: CORE_AUTHENTICATION.to_owned(),
 			core_session: CORE_SESSION.to_owned(),
+			core_registration: CORE_REGISTRATION.to_owned(),
+			core_agreement: CORE_AGREEMENT.to_owned(),
 			core_record: CORE_RECORD.to_owned(),
 			core_commitment: CORE_COMMITMENT.to_owned(),
 			core_pqxdh: CORE_PQXDH.to_owned(),
@@ -1377,7 +1386,7 @@ fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
 		&response,
 		&[
 			"registration_response_len(plaintext.len(),next_key_id)?;",
-			"start_server_candidate_ratchet_kdf(",
+			"registration::begin_server_completion(",
 		],
 		"CBOR response size precheck before ratchet",
 	)?;
@@ -1422,104 +1431,7 @@ fn validate_phase1_source(snapshot: &Snapshot) -> Result<(), String> {
 		"Phase-1 core InitKex field order",
 	)?;
 
-	let beacon = rust_body(&snapshot.adapter_beacon, "get_registration_bundle")?;
-	for wanted in [
-		"identity_key:started.message.identity_key(),",
-		"pre_key:&prekey_sig,",
-		"one_time_key:&onetime_sig,",
-		"pq_key:&pq_sig,",
-	] {
-		require_once(&beacon, wanted, "Phase-1 Beacon field mapping")?;
-	}
-	require_once(
-		&beacon,
-		"letinit=InitKex{identity_key:started.message.identity_key(),pre_key:&prekey_sig,one_time_key:&onetime_sig,pq_key:&pq_sig,mldsa_public_key:&public_key,signature:&[],};",
-		"Phase-1 Beacon CBOR encoding",
-	)?;
-
-	let sign_calls = all_arguments(&beacon, "crypto_sign::sign")?;
-	let expected_sign_calls = [
-		["started.message.prekey()", "self.identity_sk()"],
-		["started.message.one_time_key()", "self.identity_sk()"],
-		["started.message.pq_key()", "self.identity_sk()"],
-	]
-	.map(|arguments| arguments.map(str::to_owned).to_vec());
-	if sign_calls != expected_sign_calls {
-		return Err(format!(
-			"Phase-1 Beacon attached-signature inputs changed: {sign_calls:?}"
-		));
-	}
-	require_ordered_once(
-		&beacon,
-		&[
-			"crypto_sign::sign(started.message.prekey(),self.identity_sk())",
-			"crypto_sign::sign(started.message.one_time_key(),self.identity_sk())",
-			"crypto_sign::sign(started.message.pq_key(),self.identity_sk())",
-			"crate::wire::encode_init(InitKex{",
-		],
-		"Phase-1 Beacon serialization order",
-	)?;
-
-	let server = rust_body(&snapshot.adapter_server, "get_shared_secret")?;
-	for (wanted, label) in [
-		(
-			"letencoded_identity:[u8;verified_pqxdh::ENCODED_SIGN_PUBLIC_KEY_SIZE]=registration.identity_key.try_into().ok()?;",
-			"Phase-1 Server identity consumer",
-		),
-		(
-			"ifencoded_identity[0]!=verified_pqxdh::SIGN_TYPE_ED25519{returnNone;}",
-			"Phase-1 Server Ed25519 identity tag gate",
-		),
-		(
-			"letremote_id=crypto_sign::PublicKey::from_bytes(&encoded_identity[1..]).ok()?;",
-			"Phase-1 Server identity decoder",
-		),
-		(
-			"letpq_verified=crypto_sign::verify(registration.pq_key,&remote_id)?;",
-			"Phase-1 Server ML-KEM signature consumer",
-		),
-		(
-			"letprekey_verified=crypto_sign::verify(registration.pre_key,&remote_id)?;",
-			"Phase-1 Server prekey signature consumer",
-		),
-		(
-			"letonetime_verified=crypto_sign::verify(registration.one_time_key,&remote_id)?;",
-			"Phase-1 Server one-time signature consumer",
-		),
-		(
-			"letverified_registration=verified_pqxdh::validate_init_kex(init_kex).ok()?;",
-			"Phase-1 Server typed tag validation",
-		),
-	] {
-		require_once(&server, wanted, label)?;
-	}
-	require_one_call(
-		&server,
-		"verified_pqxdh::InitKex::from_encoded",
-		&[
-			"encoded_identity",
-			"prekey_verified.as_slice().try_into().ok()?",
-			"onetime_verified.as_slice().try_into().ok()?",
-			"pq_verified.as_slice().try_into().ok()?",
-			"",
-		],
-		"Phase-1 Server from_encoded mapping",
-	)?;
-	require_ordered_once(
-		&server,
-		&[
-			"registration.identity_key",
-			"encoded_identity[0]!=verified_pqxdh::SIGN_TYPE_ED25519",
-			"crypto_sign::PublicKey::from_bytes(&encoded_identity[1..])",
-			"registration.pq_key",
-			"registration.pre_key",
-			"registration.one_time_key",
-			"verified_pqxdh::InitKex::from_encoded(",
-			"verified_pqxdh::validate_init_kex(init_kex)",
-		],
-		"Phase-1 Server source evaluation order",
-	)?;
-
+	registration_effects::authentication(snapshot)?;
 	let core_validation = rust_body(&snapshot.core_pqxdh, "validate_init_kex")?;
 	for (wanted, label) in [
 		(
@@ -1780,181 +1692,14 @@ fn validate_mldsa_source(snapshot: &Snapshot) -> Result<(), String> {
 			"MLDSA duplicate adapter transcript construction",
 		)?;
 	}
-	let sign = rust_body(&snapshot.adapter_auth, "sign")?;
-	require_once(
-		&sign,
-		".sign_deterministic(&transcript::build_signature_input(role,transcript),&transcript::SIGNING_CONTEXT,)",
-		"MLDSA signing context and input",
-	)?;
-	let verify = rust_body(&snapshot.adapter_auth, "verify")?;
-	for wanted in [
-		"letOk(encoded_key)=<&EncodedVerifyingKey<MlDsa65>>::try_from(public_key)else{returnfalse;};",
-		"letOk(signature)=Signature::<MlDsa65>::try_from(signature)else{returnfalse;};",
-		"VerifyingKey::decode(encoded_key).verify_with_context(&transcript::build_signature_input(role,transcript),&transcript::SIGNING_CONTEXT,&signature,)",
-	] {
-		require_once(
-			&verify,
-			wanted,
-			"MLDSA canonical parsing and verification context",
-		)?;
-	}
 	let hash = rust_body(&snapshot.adapter_auth, "hash_state")?;
 	require_once(
 		&hash,
 		"crypto_generichash::State::new(None,TRANSCRIPT_HASH_LEN).ok()",
 		"MLDSA unkeyed BLAKE2b512 transcript hash",
 	)?;
-	let fingerprint = rust_body(&snapshot.adapter_auth, "public_key_hash")?;
-	require_ordered_once(
-		&fingerprint,
-		&[
-			"ifpublic_key.len()!=MLDSA_PUBLIC_KEY_LEN{returnNone;}",
-			"letmutstate=hash_state()?;",
-			"state.update(public_key);",
-			"finish_hash(state)",
-		],
-		"MLDSA public-key fingerprint",
-	)?;
-	let init = rust_body(&snapshot.adapter_auth, "init_transcript_hash")?;
-	require_ordered_once(
-		&init,
-		&[
-			"letfields=transcript::InitFields{identity_key:init.identity_key.try_into().ok()?,pre_key:init.pre_key.try_into().ok()?,one_time_key:init.one_time_key.try_into().ok()?,pq_key:init.pq_key.try_into().ok()?,mldsa_public_key:init.mldsa_public_key.try_into().ok()?,};",
-			"letbytes=transcript::build_init_transcript(fields,server_kid,pinned_server_ed,server_auth_key);",
-			"letmutstate=hash_state()?;",
-			"state.update(&bytes);",
-			"finish_hash(state)",
-		],
-		"MLDSA request transcript field order and pins",
-	)?;
-	forbid(&init, "init.signature", "MLDSA request signature exclusion")?;
-	if count(&init, "state.update(") != 1 {
-		return Err("MLDSA adapter must hash the exact core Init bytes once".to_owned());
-	}
-	let response = rust_body(&snapshot.adapter_auth, "response_transcript_hash")?;
-	require_ordered_once(
-		&response,
-		&[
-			"letfields=transcript::ResponseFields{identity_key:response.identity_key.try_into().ok()?,ephemeral_key:response.ephemeral_key.try_into().ok()?,kem_cipher_text:response.kem_cipher_text.try_into().ok()?,app_cipher_text:response.app_cipher_text,key_id:response.key_id,};",
-			"lettranscript=transcript::build_response_transcript(init_hash,fields)?;",
-			"letmutstate=hash_state()?;",
-			"forpartintranscript.parts(){state.update(part);}",
-			"finish_hash(state)",
-		],
-		"MLDSA complete response transcript",
-	)?;
-	forbid(
-		&response,
-		"response.signature",
-		"MLDSA response signature exclusion",
-	)?;
-	if count(&response, "state.update(") != 1 {
-		return Err("MLDSA adapter must hash exactly the ordered core response parts".to_owned());
-	}
-	let helper = rust_body(&snapshot.adapter_pqxdh, "mldsa_associated_data")?;
-	require_once(
-		&helper,
-		"beaconcrypt_core::authentication::bind_associated_data(base,server_hash,beacon_hash)",
-		"MLDSA associated-data core delegation",
-	)?;
-	let server_source = compact(&uncommented_rust(&snapshot.adapter_server)?);
-	require_once(
-		&server_source,
-		"pubstructRegistrationOutput{pub(crate)derived_secret:KexDerivedSecret,pub(crate)control:beaconcrypt_core::pqxdh::PendingServerRegistration,authentication:RegistrationBinding,}",
-		"MLDSA private accepted-token context",
-	)?;
-	forbid(
-		&server_source,
-		"pubauthentication:RegistrationBinding",
-		"MLDSA private accepted-token context",
-	)?;
-	let server_pin = rust_body(&snapshot.adapter_server, "authentication_pin")?;
-	require_once(
-		&server_pin,
-		"letpublic_key=self.mldsa_public_key();Some(ServerAuthenticationPin::new(verified_pqxdh::ServerBinding{identity_public_key:*self.identity_pk().as_bytes(),identity_key_id:self.identity_key_kid,},public_key,auth::public_key_hash(&public_key)?,))",
-		"MLDSA current server pin uses the exact active identities",
-	)?;
-	let beacon_new = rust_body(&snapshot.adapter_beacon, "try_new")?;
-	require_ordered_once(
-		&beacon_new,
-		&[
-			"letserver_binding=verified_pqxdh::ServerBinding{identity_public_key:*id.as_bytes(),identity_key_id:server_kid,};",
-			"server_pin:ServerAuthenticationPin::new(server_binding,server_public_key,auth::public_key_hash(&server_public_key).ok_or(crate::KeyGenError)?,)",
-			"state:BeaconState::Fresh{control:verified_pqxdh::BeaconFresh::new(server_binding),",
-		],
-		"MLDSA beacon construction retains its complete selected server pin",
-	)?;
-	let accept = rust_body(&snapshot.adapter_server, "get_shared_secret")?;
-	require_ordered_once(
-		&accept,
-		&[
-			"letregistration=decode_init(buffer)?;",
-			"letpublic_key=registration.mldsa_public_key;",
-			"letserver_key=self.mldsa_public_key();",
-			"letinit_hash=auth::init_transcript_hash(&registration,self.identity_key_kid,self.identity_pk().as_bytes(),&server_key,)?;",
-			"if!auth::verify(public_key,AuthRole::Beacon,&init_hash,registration.signature,){returnNone;}",
-			"registration.identity_key.try_into()",
-			"crypto_sign::verify(registration.pq_key,&remote_id)",
-			"letverified_registration=verified_pqxdh::validate_init_kex(init_kex).ok()?;",
-			"letauthentication=RegistrationBinding::new(ServerAuthenticationPin::new(verified_pqxdh::ServerBinding{identity_public_key:*self.identity_pk().as_bytes(),identity_key_id:self.identity_key_kid,},server_key,auth::public_key_hash(&server_key)?,),init_hash,*verified_registration.beacon_identity_public_key(),auth::public_key_hash(public_key)?,);",
-			"validate_registration_status(registration_status)",
-			"mlkem768::encapsulate(&pq_pub)",
-			"letdh1:DhSecret=crypto_scalarmult::scalarmult(",
-			"Some(RegistrationOutput{derived_secret,control:pending,authentication,})",
-		],
-		"MLDSA request verification precedes classical and stateful work",
-	)?;
-	let build = rust_body(&snapshot.adapter_server, "build_registration_response")?;
-	require_ordered_once(
-		&build,
-		&[
-			"letRegistrationOutput{derived_secret,control:pending,authentication,}=reg_out;",
-			"if!authentication.matches_server(&self.authentication_pin()?){returnNone;}",
-			"verified_pqxdh::server_prepare_commit(",
-			"start_server_candidate_ratchet_kdf(",
-			"auth::response_transcript_hash(authentication.init_hash(),&response)",
-			"self.mldsa_identity.sign(AuthRole::Server,&hash)",
-			"crate::wire::encode_response(KexResponse{signature:&signature,..response})?;",
-			"verified_pqxdh::server_commit(candidate)",
-		],
-		"MLDSA token binding and signed publication precede commit",
-	)?;
-	let bundle = rust_body(&snapshot.adapter_beacon, "get_registration_bundle")?;
-	require_ordered_once(
-		&bundle,
-		&[
-			"mldsa_public_key:&public_key,signature:&[],",
-			"auth::init_transcript_hash(&init,self.server_kid(),self.server_id.as_bytes(),self.authentication.server_pin.public_key(),)",
-			".sign(AuthRole::Beacon,&init_hash)",
-			"crate::wire::encode_init(InitKex{signature:&signature,..init})?;",
-			"letauthentication=RegistrationBinding::new(self.authentication.server_pin,init_hash,*self.identity_pk().as_bytes(),auth::public_key_hash(&public_key)?,);",
-			"std::mem::replace(&mutself.state,fallback)",
-			"Some(buffer)",
-		],
-		"MLDSA request signing and retained hash before publication",
-	)?;
-	if count(
-		&bundle,
-		"self.state=BeaconState::InitSent{control:started.state,authentication,prekey,onetime_key,pq_key,};",
-	) != 2
-	{
-		return Err("MLDSA request signing and retained hash before publication: both pending branches must own the binding".to_owned());
-	}
-	let finish = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
-	require_ordered_once(
-		&finish,
-		&[
-			"letresponse=decode_response(bytes)?;",
-			"auth::response_transcript_hash(authentication.init_hash(),&response)?;",
-			"if!auth::verify(authentication.server_pin().public_key(),AuthRole::Server,&hash,response.signature,){returnNone;}",
-			"mlkem768::Ciphertext::from_bytes(response.kem_cipher_text)",
-			"mlkem768::decapsulate(",
-			"letdh1:DhSecret=crypto_scalarmult::scalarmult(",
-			"decrypt_registration_message_with_ratchet(",
-			"self.state=BeaconState::Established",
-		],
-		"MLDSA pinned response verification before KEM, DH and installation",
-	)?;
+	registration_effects::runtime(snapshot)?;
+
 	Ok(())
 }
 
@@ -2057,63 +1802,8 @@ fn validate_phase2_source(snapshot: &Snapshot) -> Result<(), String> {
 		"kex-response=[2,1,identity-key:bstr.size32,ephemeral-key:bstr.size32,kem-cipher-text:bstr.size1088,app-cipher-text:bstr,key-id:uint,signature:bstr.size3309]",
 		"Phase-2 response schema",
 	)?;
-	let server = rust_body(&snapshot.adapter_server, "build_registration_response")?;
-	require_once(
-		&server,
-		"letremote_kid=candidate.key_id();",
-		"Phase-2 assigned key-ID source",
-	)?;
-	for (wanted, label) in [
-		(
-			"identity_key:candidate.server_identity_public_key(),",
-			"Phase-2 server identity mapping",
-		),
-		(
-			"ephemeral_key:candidate.ephemeral_public_key(),",
-			"Phase-2 server ephemeral mapping",
-		),
-		(
-			"kem_cipher_text:candidate.kem_ciphertext(),",
-			"Phase-2 server KEM-ciphertext mapping",
-		),
-		(
-			"app_cipher_text:&encrypted.ciphertext,",
-			"Phase-2 server initial-frame mapping",
-		),
-		("key_id:remote_kid,", "Phase-2 server assigned-ID mapping"),
-	] {
-		require_once(&server, wanted, label)?;
-	}
+	registration_effects::runtime(snapshot)?;
 
-	let beacon = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
-	for (wanted, label) in [
-		(
-			"letresponse=decode_response(bytes)?;",
-			"Phase-2 complete CBOR response",
-		),
-		(
-			"crypto_sign::PublicKey::from_bytes(response.identity_key).ok()?",
-			"Phase-2 beacon identity mapping",
-		),
-		(
-			"crypto_kx::PublicKey::from_bytes(response.ephemeral_key).ok()?",
-			"Phase-2 beacon ephemeral mapping",
-		),
-		(
-			"crypto_kem::mlkem768::Ciphertext::from_bytes(response.kem_cipher_text).ok()?",
-			"Phase-2 beacon KEM-ciphertext mapping",
-		),
-		(
-			"decrypt_registration_message_with_ratchet(response.app_cipher_text,candidate.server_key_id(),associated_data,&mutratchet,)?",
-			"Phase-2 beacon initial-frame mapping",
-		),
-		(
-			"assigned_key_id:response.key_id,",
-			"Phase-2 beacon assigned-ID mapping",
-		),
-	] {
-		require_once(&beacon, wanted, label)?;
-	}
 	Ok(())
 }
 
@@ -2900,135 +2590,7 @@ fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), Str
 		"endpoint Beacon receive expected-sender/stored context mapping",
 	)?;
 
-	let server_initial = rust_body(&snapshot.adapter_server, "build_registration_response")?;
-	require_once(
-		&server_initial,
-		"letremote_kid=candidate.key_id();",
-		"endpoint registration assigned remote key ID",
-	)?;
-	require_one_call(
-		&server_initial,
-		"start_server_candidate_ratchet_kdf",
-		&["&candidate", "derived_secret.as_array()"],
-		"endpoint registration Server candidate ratchet",
-	)?;
-	require_once(
-		&server_initial,
-		"letmutratchet=RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));",
-		"endpoint registration Server initial ratchet materialization",
-	)?;
-	require_once(
-		&server_initial,
-		"letassociated_data=authentication.associated_data();",
-		"endpoint registration Server candidate associated data",
-	)?;
-	require_once(
-		&server_initial,
-		"letpublic_key=crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key()).ok()?;",
-		"endpoint registration Server candidate peer identity",
-	)?;
-	require_one_call(
-		&server_initial,
-		"encrypt_registration_message_with_ratchet",
-		&[
-			"&authenticated_plaintext",
-			"remote_kid",
-			"candidate.server_identity_key_id()",
-			"associated_data",
-			"&mutratchet",
-			"",
-		],
-		"endpoint registration Server initial target/sender/context/ratchet mapping",
-	)?;
-	require_once(
-		&server_initial,
-		"Some(RegResponse{serialized:buffer,kid:remote_kid,})",
-		"endpoint registration Server returned target metadata",
-	)?;
-	require_once(
-		&server_initial,
-		"letold=self.known_ids.insert(remote_kid,EstablishedRemote::new(public_key,ratchet,authentication.finish(remote_kid)),);",
-		"endpoint registration Server committed peer identity and candidate ratchet",
-	)?;
-	require_ordered_once(
-		&server_initial,
-		&[
-			"crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key())",
-			"start_server_candidate_ratchet_kdf(&candidate,derived_secret.as_array())",
-			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
-			"letassociated_data=authentication.associated_data();",
-			"encrypt_registration_message_with_ratchet(",
-			"letencrypted=encrypted?;",
-			"crate::wire::encode_response(KexResponse{",
-			"let(next_control,established_peer)=verified_pqxdh::server_commit(candidate);",
-			"self.known_ids.insert(remote_kid,EstablishedRemote::new(public_key,ratchet,authentication.finish(remote_kid)),)",
-			"self.control=next_control;",
-			"Some(RegResponse{serialized:buffer,kid:remote_kid,})",
-		],
-		"endpoint registration Server initial source order",
-	)?;
-
-	let beacon_initial = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
-	require_one_call(
-		&beacon_initial,
-		"start_beacon_candidate_ratchet_kdf",
-		&["&candidate", "derived_secret.as_array()"],
-		"endpoint registration Beacon candidate ratchet",
-	)?;
-	require_once(
-		&beacon_initial,
-		"letmutratchet=RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));",
-		"endpoint registration Beacon initial ratchet materialization",
-	)?;
-	require_once(
-		&beacon_initial,
-		"letassociated_data=authentication.associated_data();",
-		"endpoint registration Beacon candidate associated data",
-	)?;
-	require_one_call(
-		&beacon_initial,
-		"decrypt_registration_message_with_ratchet",
-		&[
-			"response.app_cipher_text",
-			"candidate.server_key_id()",
-			"associated_data",
-			"&mutratchet",
-			"",
-		],
-		"endpoint registration Beacon initial expected-sender/context/ratchet mapping",
-	)?;
-	require_once(
-		&beacon_initial,
-		"Some((authenticated,ratchet,plaintext))})();",
-		"endpoint registration Beacon candidate context handoff",
-	)?;
-	require_once(
-		&beacon_initial,
-		"self.identity_key_kid=authenticated.assigned_key_id();",
-		"endpoint registration Beacon assigned local sender",
-	)?;
-	require_once(
-		&beacon_initial,
-		"self.state=BeaconState::Established{control:verified_pqxdh::beacon_commit(authenticated),binding:authentication.finish(self.identity_key_kid),ratchet,};",
-		"endpoint registration Beacon stores candidate context",
-	)?;
-	require_ordered_once(
-		&beacon_initial,
-		&[
-			"start_beacon_candidate_ratchet_kdf(&candidate,derived_secret.as_array())",
-			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
-			"letassociated_data=authentication.associated_data();",
-			"decrypt_registration_message_with_ratchet(",
-			"verified_pqxdh::authenticate_registration_key_id_binding(",
-			"Some((authenticated,ratchet,plaintext))})();",
-			"letserver_binding=authenticated.server_binding();",
-			"ifself.server_kid()!=server_kid",
-			"ifself.server_id.as_bytes()!=&server_binding.identity_public_key",
-			"self.identity_key_kid=authenticated.assigned_key_id();",
-			"self.state=BeaconState::Established",
-		],
-		"endpoint registration Beacon initial source order",
-	)?;
+	registration_effects::runtime(snapshot)?;
 
 	let environment = compact(&uncommented_pv(&snapshot.environment)?);
 	let honest_beacon = section_between(
@@ -5242,243 +4804,7 @@ fn validate_registration_lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 		)?;
 	}
 
-	let bundle = rust_body(&snapshot.adapter_beacon, "get_registration_bundle")?;
-	for (wanted, label) in [
-		(
-			"letmutgenerated_onetime=ifmatches!(&self.state,BeaconState::Fresh{..}){Some(crypto_kx::KeyPair::generate().ok()?)}else{None};",
-			"registration Fresh one-time generation",
-		),
-		(
-			"BeaconState::Fresh{control,prekey,pq_key,}=>(*control,prekey.public_key.as_bytes().try_into().ok()?,*pq_key.public_key.as_bytes(),generated_onetime.as_ref()?.public_key.as_bytes().try_into().ok()?,)",
-			"registration Fresh material selection",
-		),
-		(
-			"BeaconState::FreshWithCoins{control,prekey,onetime_key,pq_key,}=>(*control,prekey.public_key.as_bytes().try_into().ok()?,*pq_key.public_key.as_bytes(),onetime_key.public_key.as_bytes().try_into().ok()?,)",
-			"registration FreshWithCoins material selection",
-		),
-		("_=>returnNone,", "registration ineligible-state rejection"),
-		(
-			"letstarted=verified_pqxdh::beacon_start(control,verified_pqxdh::BeaconStartInputs{identity_public_key:*self.identity_pk().as_bytes(),prekey_public_key:prekey_public,pq_public_key:pq_public,},verified_pqxdh::BeaconCoins{one_time_public_key:onetime_public,},);",
-			"registration Beacon-start input mapping",
-		),
-		(
-			"letbuffer=crate::wire::encode_init(InitKex{",
-			"registration typed InitKex builder",
-		),
-		(
-			"identity_key:started.message.identity_key(),",
-			"registration serialized identity field",
-		),
-		(
-			"pre_key:&prekey_sig,",
-			"registration serialized prekey field",
-		),
-		(
-			"one_time_key:&onetime_sig,",
-			"registration serialized one-time field",
-		),
-		("pq_key:&pq_sig,", "registration serialized PQ field"),
-		(
-			"signature:&signature,..init})?;",
-			"registration completed InitKex serialization",
-		),
-		(
-			"BeaconState::Fresh{prekey,pq_key,..}=>{letSome(onetime_key)=generated_onetime.take()else{self.state=BeaconState::Fresh{control,prekey,pq_key,};returnNone;};self.state=BeaconState::InitSent{control:started.state,authentication,prekey,onetime_key,pq_key,};}",
-			"registration Fresh success transition and restoration",
-		),
-		(
-			"BeaconState::FreshWithCoins{prekey,onetime_key,pq_key,..}=>{self.state=BeaconState::InitSent{control:started.state,authentication,prekey,onetime_key,pq_key,};}",
-			"registration FreshWithCoins success transition",
-		),
-		("Some(buffer)", "registration serialized bundle return"),
-	] {
-		require_once(&bundle, wanted, label)?;
-	}
-	require_ordered(
-		&bundle,
-		&[
-			"signature:&signature,..init})?;",
-			"letprevious=std::mem::replace(&mutself.state,fallback);",
-			"self.state=BeaconState::InitSent{",
-			"Some(buffer)",
-		],
-		"registration serialization-to-InitSent order",
-	)?;
-	let replace = bundle
-		.find("letprevious=std::mem::replace(&mutself.state,fallback);")
-		.ok_or_else(|| "missing registration Beacon state replacement".to_owned())?;
-	if bundle[..replace].contains("self.state=BeaconState::") {
-		return Err("registration Beacon state changed before successful serialization".to_owned());
-	}
-	if bundle[replace..].contains('?') {
-		return Err("registration fallible work moved after state replacement".to_owned());
-	}
-	for (constructor, expected) in [
-		("self.state=BeaconState::Fresh{", 1),
-		("self.state=BeaconState::FreshWithCoins{", 1),
-		("self.state=BeaconState::InitSent{", 2),
-		("self.state=BeaconState::Established{", 1),
-	] {
-		if count(&beacon_source, constructor) != expected {
-			return Err(format!(
-				"registration Beacon eligible-state publication graph changed: {constructor}"
-			));
-		}
-	}
-	let new_one_time = rust_body(&snapshot.adapter_beacon, "new_onetime_keypair")?;
-	require_once(
-		&new_one_time,
-		"letcontrol=match&self.state{BeaconState::Fresh{control,..}=>*control,_=>returnNone,};",
-		"registration post-Init one-time regeneration rejection",
-	)?;
-	let abort = rust_body(&snapshot.adapter_beacon, "abort_registration")?;
-	require_once(
-		&abort,
-		"self.state=BeaconState::Aborted{control:verified_pqxdh::beacon_abort_init(control),};",
-		"registration InitSent abort transition",
-	)?;
-	let delete_one_time = rust_body(&snapshot.adapter_beacon, "delete_onetime_keypair")?;
-	require_once(
-		&delete_one_time,
-		"BeaconState::InitSent{control,..}=>BeaconState::Aborted{control:verified_pqxdh::beacon_abort_init(control),}",
-		"registration InitSent one-time deletion transition",
-	)?;
-	let delete_pq = rust_body(&snapshot.adapter_beacon, "delete_pq_keypair")?;
-	require_once(
-		&delete_pq,
-		"BeaconState::InitSent{control,..}=>{Some(verified_pqxdh::beacon_abort_init(*control))}",
-		"registration InitSent PQ deletion transition",
-	)?;
-	require_once(
-		&delete_pq,
-		"self.state=BeaconState::Aborted{control};",
-		"registration PQ deletion terminal state",
-	)?;
-	let finish = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
-	for (wanted, label) in [
-		(
-			"letcontrol=match&self.state{BeaconState::InitSent{control,..}=>*control,_=>returnNone,};",
-			"registration finish InitSent gate",
-		),
-		(
-			"letSome((authenticated,ratchet,plaintext))=stagedelse{self.abort_registration(control);returnNone;};",
-			"registration failed finish abort",
-		),
-		(
-			"ifself.server_kid()!=server_kid{self.abort_registration(control);returnNone;}",
-			"registration server-key-ID mismatch abort",
-		),
-		(
-			"ifself.server_id.as_bytes()!=&server_binding.identity_public_key{self.abort_registration(control);returnNone;}",
-			"registration server-identity mismatch abort",
-		),
-		(
-			"self.state=BeaconState::Established{control:verified_pqxdh::beacon_commit(authenticated),binding:authentication.finish(self.identity_key_kid),ratchet,};",
-			"registration successful finish Established transition",
-		),
-	] {
-		require_once(&finish, wanted, label)?;
-	}
-	forbid(
-		&finish,
-		"self.state=BeaconState::Fresh",
-		"registration finish reset to eligible state",
-	)?;
-
-	let server_source = compact(&uncommented_rust(&snapshot.adapter_server)?);
-	for (wanted, label) in [
-		(
-			"known_ids:HashMap<u64,EstablishedRemote<crypto_sign::PublicKey>>",
-			"registration numeric peer map",
-		),
-		(
-			"consumed_registrations:HashSet<[u8;verified_pqxdh::REGISTRATION_ID_SIZE]>",
-			"registration consumed-ID set",
-		),
-	] {
-		require_once(&server_source, wanted, label)?;
-	}
-	let server = rust_body(&snapshot.adapter_server, "get_shared_secret")?;
-	for (wanted, label) in [
-		(
-			"letregistration_id=*verified_pqxdh::registration_id(&verified_registration).as_bytes();",
-			"registration Server ID source",
-		),
-		(
-			"letregistration_status=ifself.consumed_registrations.contains(&registration_id){verified_pqxdh::RegistrationStatus::Consumed}else{verified_pqxdh::RegistrationStatus::Fresh};",
-			"registration Server replay-status polarity",
-		),
-		(
-			"verified_pqxdh::validate_registration_status(registration_status).ok()?;",
-			"registration Server replay-status gate",
-		),
-		(
-			"self.consumed_registrations.try_reserve(1).ok()?;",
-			"registration Server consumed-set reservation",
-		),
-		(
-			"letinserted=self.consumed_registrations.insert(registration_id);",
-			"registration Server exact-ID consumption",
-		),
-		(
-			"letmutsecrets=shared_secrets(dh1,dh2,dh3,dh4,&kem_shared)?;",
-			"registration Server complete post-validation PQXDH inputs",
-		),
-		(
-			"Some(RegistrationOutput{derived_secret,control:pending,authentication,})",
-			"registration Server pending output",
-		),
-	] {
-		require_once(&server, wanted, label)?;
-	}
-	require_ordered_once(
-		&server,
-		&[
-			"letregistration_id=*verified_pqxdh::registration_id(&verified_registration).as_bytes();",
-			"letregistration_status=ifself.consumed_registrations.contains(&registration_id)",
-			"verified_pqxdh::validate_registration_status(registration_status).ok()?;",
-			"self.consumed_registrations.try_reserve(1).ok()?;",
-			"letephemeral=crypto_kx::KeyPair::generate().ok()?;",
-			"let(kem_ciphertext,kem_shared)=crypto_kem::mlkem768::encapsulate(&pq_pub).ok()?;",
-			"letdh1:DhSecret=crypto_scalarmult::scalarmult(",
-			"letdh2:DhSecret=crypto_scalarmult::scalarmult(",
-			"letdh3:DhSecret=crypto_scalarmult::scalarmult(",
-			"letdh4:DhSecret=crypto_scalarmult::scalarmult(",
-			"letmutsecrets=shared_secrets(dh1,dh2,dh3,dh4,&kem_shared)?;",
-			"letaccepted=verified_pqxdh::server_accept(",
-			"letderived_secret=derive_root_key_input(pending.root_key_input_mut())?;",
-			"letinserted=self.consumed_registrations.insert(registration_id);",
-			"Some(RegistrationOutput{",
-		],
-		"registration Server validate-reserve-derive-consume order",
-	)?;
-	let accept_calls = all_arguments(&server, "verified_pqxdh::server_accept")?;
-	if accept_calls.len() != 1
-		|| accept_calls[0].get(1).map(String::as_str) != Some("verified_registration")
-		|| accept_calls[0].get(2).map(String::as_str) != Some("registration_status")
-	{
-		return Err(format!(
-			"registration Server accepted registration/status mapping changed: {accept_calls:?}"
-		));
-	}
-	let insert = server
-		.find("letinserted=self.consumed_registrations.insert(registration_id);")
-		.ok_or_else(|| "missing registration Server consumption insertion".to_owned())?;
-	if count(&server, "self.consumed_registrations.insert(") != 1 {
-		return Err("registration Server consumed-ID insertion family count changed".to_owned());
-	}
-	if server[insert..].contains('?') {
-		return Err("registration fallible work moved after consumption insertion".to_owned());
-	}
-	if server[insert..].contains("returnNone") {
-		return Err("registration explicit failure moved after consumption insertion".to_owned());
-	}
-	let response = rust_body(&snapshot.adapter_server, "build_registration_response")?;
-	forbid(
-		&response,
-		"consumed_registrations",
-		"registration replay-set mutation during later response construction",
-	)?;
+	registration_effects::lifecycle(snapshot)?;
 
 	let environment = compact(&uncommented_pv(&snapshot.environment)?);
 	let guard = section_between(
@@ -5689,118 +5015,7 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 		));
 	}
 
-	let server_source = compact(&uncommented_rust(&snapshot.adapter_server)?);
-	require_once(
-		&server_source,
-		"pubstructRegistrationOutput{pub(crate)derived_secret:KexDerivedSecret,pub(crate)control:beaconcrypt_core::pqxdh::PendingServerRegistration,authentication:RegistrationBinding,}",
-		"initial ratchet RegistrationOutput storage",
-	)?;
-	for (wanted, label) in [
-		(
-			"fnget_shared_secret(&mutself,buffer:&[u8])->Option<RegistrationOutput>{",
-			"initial ratchet Server RegistrationOutput return signature",
-		),
-		(
-			"fnbuild_registration_response(&mutself,reg_out:RegistrationOutput,data:Option<&[u8]>,)->Option<RegResponse>{",
-			"initial ratchet Server RegistrationOutput by-value consumer signature",
-		),
-	] {
-		require_once(&server_source, wanted, label)?;
-	}
-	let get_shared_secret = rust_body(&snapshot.adapter_server, "get_shared_secret")?;
-	require_ordered_once(
-		&get_shared_secret,
-		&[
-			"letderived_secret=derive_root_key_input(pending.root_key_input_mut())?;",
-			"Some(RegistrationOutput{derived_secret,control:pending,authentication,})",
-		],
-		"initial ratchet Server derived-root output",
-	)?;
-	if count(&get_shared_secret, "letderived_secret=") != 1 {
-		return Err("initial ratchet Server derived-root binding count changed".to_owned());
-	}
-	let server_response = rust_body(&snapshot.adapter_server, "build_registration_response")?;
-	require_once(
-		&server_response,
-		"letRegistrationOutput{derived_secret,control:pending,authentication,}=reg_out;",
-		"initial ratchet Server RegistrationOutput destructure",
-	)?;
-	require_one_call(
-		&server_response,
-		"start_server_candidate_ratchet_kdf",
-		&["&candidate", "derived_secret.as_array()"],
-		"initial ratchet Server root and candidate handoff",
-	)?;
-	require_one_call(
-		&server_response,
-		"finish_initial_ratchet_kdf",
-		&["pending"],
-		"initial ratchet Server pending completion",
-	)?;
-	require_one_call(
-		&server_response,
-		"RatchetManager::from_kernel",
-		&["finish_initial_ratchet_kdf(pending)"],
-		"initial ratchet Server kernel wrapper",
-	)?;
-	require_ordered_once(
-		&server_response,
-		&[
-			"letRegistrationOutput{derived_secret,control:pending,authentication,}=reg_out;",
-			"letpending=start_server_candidate_ratchet_kdf(&candidate,derived_secret.as_array());",
-			"letmutratchet=RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));",
-			"letencrypted=encrypt_registration_message_with_ratchet(",
-		],
-		"initial ratchet Server cross-method root-to-seal flow",
-	)?;
-	if count(&server_response, "letderived_secret=") != 0 {
-		return Err("initial ratchet Server derived root was shadowed after handoff".to_owned());
-	}
-	if count(&server_response, "letpending=") != 1 {
-		return Err("initial ratchet Server KDF pending binding count changed".to_owned());
-	}
-
-	let beacon_finish = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
-	require_one_call(
-		&beacon_finish,
-		"derive_root_key_input",
-		&["candidate.root_key_input_mut()"],
-		"initial ratchet Beacon candidate-root derivation",
-	)?;
-	require_one_call(
-		&beacon_finish,
-		"start_beacon_candidate_ratchet_kdf",
-		&["&candidate", "derived_secret.as_array()"],
-		"initial ratchet Beacon root and candidate handoff",
-	)?;
-	require_one_call(
-		&beacon_finish,
-		"finish_initial_ratchet_kdf",
-		&["pending"],
-		"initial ratchet Beacon pending completion",
-	)?;
-	require_one_call(
-		&beacon_finish,
-		"RatchetManager::from_kernel",
-		&["finish_initial_ratchet_kdf(pending)"],
-		"initial ratchet Beacon kernel wrapper",
-	)?;
-	require_ordered_once(
-		&beacon_finish,
-		&[
-			"letderived_secret=derive_root_key_input(candidate.root_key_input_mut())?;",
-			"letpending=start_beacon_candidate_ratchet_kdf(&candidate,derived_secret.as_array());",
-			"letmutratchet=RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));",
-			"letdecrypted=decrypt_registration_message_with_ratchet(",
-		],
-		"initial ratchet Beacon root-to-open flow",
-	)?;
-	if count(&beacon_finish, "letderived_secret=") != 1 {
-		return Err("initial ratchet Beacon derived-root binding count changed".to_owned());
-	}
-	if count(&beacon_finish, "letpending=") != 1 {
-		return Err("initial ratchet Beacon KDF pending binding count changed".to_owned());
-	}
+	registration_effects::runtime(snapshot)?;
 
 	let core_pqxdh = compact(&uncommented_rust(&snapshot.core_pqxdh)?);
 	for (wanted, label) in [
@@ -6059,6 +5274,8 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 		require_once(&body, expected, label)?;
 	}
 
+	// This retained helper is test-only compatibility coverage; production handoffs are checked
+	// above against registration effects and the exact native initial_ratchet_hkdf interpreter.
 	let finish = rust_body(&snapshot.adapter_ratchet, "finish_initial_ratchet_kdf")?;
 	require_one_call(
 		&finish,
@@ -6370,117 +5587,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 		));
 	}
 
-	let beacon = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
-	for (wanted, label) in [
-		(
-			"letcontrol=match&self.state{BeaconState::InitSent{control,..}=>*control,_=>returnNone,};",
-			"later-registration Beacon pending-state entry",
-		),
-		(
-			"letresponse=decode_response(bytes)?;",
-			"later-registration Beacon response reader",
-		),
-		(
-			"response_server_identity:*response_server.as_bytes(),assigned_key_id:response.key_id,shared_secrets:shared_secrets(dh1,dh2,dh3,dh4,&kem_shared)?,",
-			"later-registration Beacon finish inputs",
-		),
-		(
-			"letassociated_data=authentication.associated_data();",
-			"later-registration Beacon candidate associated data",
-		),
-		(
-			"letauthenticated_server_key_id=decrypted.key_id;",
-			"later-registration Beacon authenticated sender",
-		),
-		(
-			"letmutauthenticated_plaintext=decrypted.plaintext;",
-			"later-registration Beacon authenticated plaintext",
-		),
-		(
-			"ifauthenticated_plaintext.len()<=verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE{returnNone;}",
-			"later-registration Beacon binding-length gate",
-		),
-		(
-			"letplaintext=authenticated_plaintext.split_off(verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE);",
-			"later-registration Beacon returned remainder split",
-		),
-		(
-			"letbinding=authenticated_plaintext.as_slice().try_into().ok()?;",
-			"later-registration Beacon assigned-ID binding prefix",
-		),
-		(
-			"Some((authenticated,ratchet,plaintext))})();",
-			"later-registration Beacon staged tuple",
-		),
-		(
-			"letSome((authenticated,ratchet,plaintext))=stagedelse{self.abort_registration(control);returnNone;};",
-			"later-registration Beacon staged commit boundary",
-		),
-		(
-			"self.state=BeaconState::Established{control:verified_pqxdh::beacon_commit(authenticated),binding:authentication.finish(self.identity_key_kid),ratchet,};",
-			"later-registration Beacon ratchet commit",
-		),
-	] {
-		require_once(&beacon, wanted, label)?;
-	}
-	for (function, expected, label) in [
-		(
-			"decrypt_registration_message_with_ratchet",
-			&[
-				"response.app_cipher_text",
-				"candidate.server_key_id()",
-				"associated_data",
-				"&mutratchet",
-				"",
-			][..],
-			"later-registration Beacon general receive handoff",
-		),
-		(
-			"verified_pqxdh::authenticate_registration_key_id_binding",
-			&["candidate", "authenticated_server_key_id", "binding", ""][..],
-			"later-registration Beacon binding authentication",
-		),
-	] {
-		require_one_call(&beacon, function, expected, label)?;
-	}
-	require_ordered_once(
-		&beacon,
-		&[
-			"letresponse=decode_response(bytes)?;",
-			"response.kem_cipher_text",
-			"response.ephemeral_key",
-			"response.identity_key",
-			"assigned_key_id:response.key_id",
-			"letassociated_data=authentication.associated_data();",
-			"decrypt_registration_message_with_ratchet(response.app_cipher_text,candidate.server_key_id(),associated_data,&mutratchet,)?",
-			"letauthenticated_server_key_id=decrypted.key_id;",
-			"letmutauthenticated_plaintext=decrypted.plaintext;",
-			"authenticated_plaintext.split_off(verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE)",
-			"letbinding=authenticated_plaintext.as_slice().try_into().ok()?;",
-			"verified_pqxdh::authenticate_registration_key_id_binding(candidate,authenticated_server_key_id,binding,)",
-			"Some((authenticated,ratchet,plaintext))})();",
-			"letSome((authenticated,ratchet,plaintext))=stagedelse",
-			"self.state=BeaconState::Established",
-			"Some(plaintext)",
-		],
-		"later-registration Beacon response-to-commit flow",
-	)?;
-	require_once(
-		&beacon,
-		"ifdecrypted.seq!=1{returnNone;}",
-		"later-registration Beacon first-sequence gate",
-	)?;
-	require_ordered_once(
-		&beacon,
-		&[
-			"decrypt_registration_message_with_ratchet(response.app_cipher_text,candidate.server_key_id(),associated_data,&mutratchet,)?",
-			"ifdecrypted.seq!=1{returnNone;}",
-			"letauthenticated_server_key_id=decrypted.key_id;",
-			"letmutauthenticated_plaintext=decrypted.plaintext;",
-			"verified_pqxdh::authenticate_registration_key_id_binding(",
-		],
-		"later-registration Beacon first-sequence gate order",
-	)?;
+	registration_effects::runtime(snapshot)?;
 
 	let ordinary = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
 	require_once(
@@ -9053,7 +8160,7 @@ fn later_registration_sequence_three_poststate_is_exact_and_nonvacuous() {
 	);
 }
 
-const LATER_REGISTRATION_MUTATION_COUNT: usize = 422;
+const LATER_REGISTRATION_MUTATION_COUNT: usize = 395;
 
 #[test]
 fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
@@ -10315,209 +9422,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		mutation_count += 1;
 	}
 
-	for (name, from, to, diagnostic) in [
-		(
-			"later_registration_beacon_pending_state_swapped",
-			"BeaconState::InitSent { control, .. } => *control,",
-			"BeaconState::Established { control, .. } => *control,",
-			"later-registration Beacon pending-state entry",
-		),
-		(
-			"later_registration_beacon_response_reader_bypassed",
-			"let response = decode_response(bytes)?;",
-			"let response = replacement_response;",
-			"later-registration Beacon response reader",
-		),
-		(
-			"later_registration_beacon_finish_identity_substituted",
-			"response_server_identity: *response_server.as_bytes(),",
-			"response_server_identity: *self.server_id.as_bytes(),",
-			"later-registration Beacon finish inputs",
-		),
-		(
-			"later_registration_beacon_assigned_id_substituted",
-			"assigned_key_id: response.key_id,",
-			"assigned_key_id: candidate.server_key_id(),",
-			"later-registration Beacon finish inputs",
-		),
-		(
-			"later_registration_beacon_shared_secrets_substituted",
-			"shared_secrets: shared_secrets(dh1, dh2, dh3, dh4, &kem_shared)?,",
-			"shared_secrets: replacement_shared_secrets,",
-			"later-registration Beacon finish inputs",
-		),
-		(
-			"later_registration_beacon_associated_data_substituted",
-			"let associated_data = authentication.associated_data();",
-			"let associated_data = replacement_associated_data;",
-			"later-registration Beacon candidate associated data",
-		),
-		(
-			"later_registration_beacon_sender_substituted",
-			"let authenticated_server_key_id = decrypted.key_id;",
-			"let authenticated_server_key_id = candidate.server_key_id();",
-			"later-registration Beacon authenticated sender",
-		),
-		(
-			"later_registration_beacon_plaintext_substituted",
-			"let mut authenticated_plaintext = decrypted.plaintext;",
-			"let mut authenticated_plaintext = replacement_plaintext;",
-			"later-registration Beacon authenticated plaintext",
-		),
-		(
-			"later_registration_beacon_binding_length_gate_removed",
-			"if authenticated_plaintext.len() <= verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE {",
-			"if false {",
-			"later-registration Beacon binding-length gate",
-		),
-		(
-			"later_registration_beacon_plaintext_split_shifted",
-			"authenticated_plaintext.split_off(verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE)",
-			"authenticated_plaintext.split_off(0)",
-			"later-registration Beacon returned remainder split",
-		),
-		(
-			"later_registration_beacon_binding_substituted",
-			"let binding = authenticated_plaintext.as_slice().try_into().ok()?;",
-			"let binding = replacement_binding;",
-			"later-registration Beacon assigned-ID binding prefix",
-		),
-		(
-			"later_registration_beacon_staged_ratchet_substituted",
-			"Some((authenticated, ratchet, plaintext))",
-			"Some((authenticated, replacement_ratchet, plaintext))",
-			"later-registration Beacon staged tuple",
-		),
-		(
-			"later_registration_beacon_committed_ratchet_substituted",
-			"binding: authentication.finish(self.identity_key_kid),\n\t\t\tratchet,\n\t\t};",
-			"binding: authentication.finish(self.identity_key_kid),\n\t\t\tratchet: replacement_ratchet,\n\t\t};",
-			"later-registration Beacon ratchet commit",
-		),
-	] {
-		assert_later_registration_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_beacon,
-				"impl ProviderBeacon for Beacon {",
-				from,
-				to,
-			);
-		});
-		mutation_count += 1;
-	}
-	for (name, argument, replacement) in [
-		(
-			"later_registration_beacon_frame_substituted",
-			0usize,
-			"replacement_frame",
-		),
-		(
-			"later_registration_beacon_expected_sender_substituted",
-			1,
-			"replacement_sender",
-		),
-		(
-			"later_registration_beacon_open_ad_substituted",
-			2,
-			"&replacement_associated_data",
-		),
-		(
-			"later_registration_beacon_open_ratchet_substituted",
-			3,
-			"&mut replacement_ratchet",
-		),
-	] {
-		assert_later_registration_rejected(
-			name,
-			"later-registration Beacon general receive handoff",
-			|snapshot| {
-				replace_nth_call_argument_after(
-					&mut snapshot.adapter_beacon,
-					"impl ProviderBeacon for Beacon {",
-					"decrypt_registration_message_with_ratchet",
-					0,
-					argument,
-					replacement,
-				);
-			},
-		);
-		mutation_count += 1;
-	}
-	for (name, argument, replacement) in [
-		(
-			"later_registration_beacon_binding_candidate_substituted",
-			0usize,
-			"replacement_candidate",
-		),
-		(
-			"later_registration_beacon_binding_sender_substituted",
-			1,
-			"candidate.server_key_id()",
-		),
-		(
-			"later_registration_beacon_binding_prefix_substituted",
-			2,
-			"replacement_binding",
-		),
-	] {
-		assert_later_registration_rejected(
-			name,
-			"later-registration Beacon binding authentication",
-			|snapshot| {
-				replace_nth_call_argument_after(
-					&mut snapshot.adapter_beacon,
-					"impl ProviderBeacon for Beacon {",
-					"verified_pqxdh::authenticate_registration_key_id_binding",
-					0,
-					argument,
-					replacement,
-				);
-			},
-		);
-		mutation_count += 1;
-	}
-	for (name, replacement) in [
-		("removed", ""),
-		("inverted", "if decrypted.seq == 1 { return None; }"),
-		("wrong_sequence", "if decrypted.seq != 3 { return None; }"),
-		("wrong_field", "if decrypted.key_id != 1 { return None; }"),
-		("weakened", "if decrypted.seq > 1 { return None; }"),
-		("bypassed", "if false { return None; }"),
-	] {
-		assert_later_registration_rejected(
-			&format!("later_registration_beacon_first_sequence_gate_{name}"),
-			"later-registration Beacon first-sequence gate",
-			|snapshot| {
-				replace_once_after(
-					&mut snapshot.adapter_beacon,
-					"impl ProviderBeacon for Beacon {",
-					"if decrypted.seq != 1 {\n\t\t\t\treturn None;\n\t\t\t}",
-					replacement,
-				);
-			},
-		);
-		mutation_count += 1;
-	}
-	assert_later_registration_rejected(
-		"later_registration_beacon_first_sequence_gate_after_binding",
-		"later-registration Beacon first-sequence gate order",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_beacon,
-				"impl ProviderBeacon for Beacon {",
-				"if decrypted.seq != 1 {\n\t\t\t\treturn None;\n\t\t\t}",
-				"",
-			);
-			replace_once_after(
-				&mut snapshot.adapter_beacon,
-				"impl ProviderBeacon for Beacon {",
-				"Some((authenticated, ratchet, plaintext))",
-				"if decrypted.seq != 1 { return None; }\n\t\t\tSome((authenticated, ratchet, plaintext))",
-			);
-		},
-	);
-	mutation_count += 1;
-
+	// Moved registration controls are exercised against core phases and native drivers below.
 	for (name, from, to, diagnostic) in [
 		(
 			"later_registration_adapter_sequence_substituted",
@@ -12933,7 +11838,12 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 			"registration_response_len(0, next_key_id)?;",
 		),
 	] {
-		assert_rejected(name, "CBOR", |snapshot| {
+		let diagnostic = if name == "cbor_response_size_precheck" {
+			"MLDSA token binding and signed publication precede commit"
+		} else {
+			"CBOR"
+		};
+		assert_rejected(name, diagnostic, |snapshot| {
 			replace_once(&mut snapshot.adapter_server, from, to)
 		});
 		mutation_count += 1;
@@ -13839,7 +12749,7 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 	assert_eq!(mutation_count, CRYPTOFRAME_WIRE_MUTATION_COUNT);
 }
 
-const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 157;
+const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 117;
 
 #[test]
 fn phase1_registration_mutation_matrix_is_complete_and_rejected() {
@@ -13918,159 +12828,7 @@ fn phase1_registration_mutation_matrix_is_complete_and_rejected() {
 		});
 		mutation_count += 1;
 	}
-	let beacon_fields = [
-		("identity_key", "started.message.identity_key()"),
-		("pre_key", "&prekey_sig"),
-		("one_time_key", "&onetime_sig"),
-		("pq_key", "&pq_sig"),
-	];
-	for (field_index, (field, canonical)) in beacon_fields.iter().enumerate() {
-		for (value_index, (_, value)) in beacon_fields.iter().enumerate() {
-			if field_index == value_index {
-				continue;
-			}
-			assert_rejected(
-				&format!("phase1_beacon_field_{field_index}_uses_{value_index}"),
-				"Phase-1 Beacon field mapping",
-				|snapshot| {
-					replace_once(
-						&mut snapshot.adapter_beacon,
-						&format!("{field}: {canonical},"),
-						&format!("{field}: {value},"),
-					)
-				},
-			);
-			mutation_count += 1;
-		}
-	}
-
-	let signed_inputs = [
-		"started.message.prekey()",
-		"started.message.one_time_key()",
-		"started.message.pq_key()",
-	];
-	for (signature_index, canonical) in signed_inputs.iter().enumerate() {
-		for (input_index, replacement) in signed_inputs.iter().enumerate() {
-			if signature_index == input_index {
-				continue;
-			}
-			let name = format!("phase1_beacon_signature_{signature_index}_uses_{input_index}");
-			let from = format!("crypto_sign::sign({canonical}, self.identity_sk())");
-			let to = format!("crypto_sign::sign({replacement}, self.identity_sk())");
-			assert_rejected(
-				&name,
-				"Phase-1 Beacon attached-signature inputs",
-				|snapshot| {
-					replace_once(&mut snapshot.adapter_beacon, &from, &to);
-				},
-			);
-			mutation_count += 1;
-		}
-	}
-
-	let server_consumers = [
-		(
-			"registration.identity_key",
-			"Phase-1 Server identity consumer",
-		),
-		(
-			"registration.pre_key",
-			"Phase-1 Server prekey signature consumer",
-		),
-		(
-			"registration.one_time_key",
-			"Phase-1 Server one-time signature consumer",
-		),
-		(
-			"registration.pq_key",
-			"Phase-1 Server ML-KEM signature consumer",
-		),
-	];
-	for (consumer_index, (canonical, diagnostic)) in server_consumers.iter().enumerate() {
-		for (field_index, (replacement, _)) in server_consumers.iter().enumerate() {
-			if consumer_index == field_index {
-				continue;
-			}
-			let name = format!("phase1_server_consumer_{consumer_index}_uses_{field_index}");
-			assert_rejected(&name, diagnostic, |snapshot| {
-				replace_once(&mut snapshot.adapter_server, canonical, replacement);
-			});
-			mutation_count += 1;
-		}
-	}
-	for (name, getter, diagnostic) in [
-		(
-			"phase1_server_pq_verifies_under_local_identity",
-			"registration.pq_key",
-			"Phase-1 Server ML-KEM signature consumer",
-		),
-		(
-			"phase1_server_prekey_verifies_under_local_identity",
-			"registration.pre_key",
-			"Phase-1 Server prekey signature consumer",
-		),
-		(
-			"phase1_server_one_time_verifies_under_local_identity",
-			"registration.one_time_key",
-			"Phase-1 Server one-time signature consumer",
-		),
-	] {
-		let from = format!("crypto_sign::verify({getter}, &remote_id)");
-		let to = format!("crypto_sign::verify({getter}, self.identity_pk())");
-		assert_rejected(name, diagnostic, |snapshot| {
-			replace_once(&mut snapshot.adapter_server, &from, &to);
-		});
-		mutation_count += 1;
-	}
-	let encoded_identity = "encoded_identity";
-	let prekey_verified = "prekey_verified.as_slice().try_into().ok()?";
-	let onetime_verified = "onetime_verified.as_slice().try_into().ok()?";
-	let pq_verified = "pq_verified.as_slice().try_into().ok()?";
-	for (name, arguments) in [
-		(
-			"phase1_from_encoded_duplicates_one_time",
-			[
-				encoded_identity,
-				onetime_verified,
-				onetime_verified,
-				pq_verified,
-			],
-		),
-		(
-			"phase1_from_encoded_duplicates_prekey",
-			[
-				encoded_identity,
-				prekey_verified,
-				prekey_verified,
-				pq_verified,
-			],
-		),
-		(
-			"phase1_from_encoded_swaps_x25519_roles",
-			[
-				encoded_identity,
-				onetime_verified,
-				prekey_verified,
-				pq_verified,
-			],
-		),
-	] {
-		let arguments = arguments.map(str::to_owned);
-		assert_rejected(
-			name,
-			"Phase-1 Server from_encoded mapping",
-			move |snapshot| {
-				replace_call(
-					&mut snapshot.adapter_server,
-					"verified_pqxdh::InitKex::from_encoded",
-					0,
-					&arguments,
-				);
-			},
-		);
-		mutation_count += 1;
-	}
-
+	// Moved registration controls are exercised against core phases and native drivers below.
 	let declaration_arguments = [
 		"encoded_identity",
 		"signed_prekey",
@@ -14253,30 +13011,6 @@ fn phase1_registration_mutation_matrix_is_complete_and_rejected() {
 		mutation_count += 1;
 	}
 	assert_rejected(
-		"phase1_server_accepts_mlkem_identity_tag",
-		"Phase-1 Server Ed25519 identity tag gate",
-		|snapshot| {
-			replace_once(
-				&mut snapshot.adapter_server,
-				"encoded_identity[0] != verified_pqxdh::SIGN_TYPE_ED25519",
-				"encoded_identity[0] != verified_pqxdh::KEM_TYPE_MLKEM768",
-			);
-		},
-	);
-	mutation_count += 1;
-	assert_rejected(
-		"phase1_server_decodes_identity_with_tag",
-		"Phase-1 Server identity decoder",
-		|snapshot| {
-			replace_once(
-				&mut snapshot.adapter_server,
-				"crypto_sign::PublicKey::from_bytes(&encoded_identity[1..])",
-				"crypto_sign::PublicKey::from_bytes(&encoded_identity[..32])",
-			);
-		},
-	);
-	mutation_count += 1;
-	assert_rejected(
 		"phase1_symbolic_signature_verifies_under_x25519_key",
 		"Phase-1 symbolic attached-signature verification",
 		|snapshot| {
@@ -14289,18 +13023,6 @@ fn phase1_registration_mutation_matrix_is_complete_and_rejected() {
 	);
 	mutation_count += 1;
 	assert_rejected(
-		"phase1_server_reorders_pq_and_prekey_verification",
-		"Phase-1 Server source evaluation order",
-		|snapshot| {
-			replace_once(
-				&mut snapshot.adapter_server,
-				"\t\tlet pq_verified = crypto_sign::verify(registration.pq_key, &remote_id)?;\n\t\tlet prekey_verified = crypto_sign::verify(registration.pre_key, &remote_id)?;",
-				"\t\tlet prekey_verified = crypto_sign::verify(registration.pre_key, &remote_id)?;\n\t\tlet pq_verified = crypto_sign::verify(registration.pq_key, &remote_id)?;",
-			);
-		},
-	);
-	mutation_count += 1;
-	assert_rejected(
 		"phase1_symbolic_reorders_prekey_and_one_time_gates",
 		"Phase-1 symbolic pure-gate evaluation order",
 		|snapshot| {
@@ -14308,18 +13030,6 @@ fn phase1_registration_mutation_matrix_is_complete_and_rejected() {
 				&mut snapshot.environment,
 				"  let tag_x25519_prekey(beacon_prekey: bitstring) =\n    verify_signature(signed_prekey, beacon_identity)\n  in\n  let tag_x25519_one_time(beacon_one_time: bitstring) =\n    verify_signature(signed_one_time, beacon_identity)\n  in",
 				"  let tag_x25519_one_time(beacon_one_time: bitstring) =\n    verify_signature(signed_one_time, beacon_identity)\n  in\n  let tag_x25519_prekey(beacon_prekey: bitstring) =\n    verify_signature(signed_prekey, beacon_identity)\n  in",
-			);
-		},
-	);
-	mutation_count += 1;
-	assert_rejected(
-		"phase1_beacon_duplicates_one_time_signature",
-		"Phase-1 Beacon attached-signature inputs",
-		|snapshot| {
-			replace_once(
-				&mut snapshot.adapter_beacon,
-				"let prekey_sig = crypto_sign::sign(started.message.prekey(), self.identity_sk()).ok()?;",
-				"let prekey_sig = crypto_sign::sign(started.message.one_time_key(), self.identity_sk()).ok()?;",
 			);
 		},
 	);
@@ -14352,7 +13062,7 @@ fn phase1_registration_mutation_matrix_is_complete_and_rejected() {
 	assert_eq!(mutation_count, PHASE1_REGISTRATION_MUTATION_COUNT);
 }
 
-const ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT: usize = 242;
+const ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT: usize = 214;
 
 #[test]
 fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
@@ -14587,160 +13297,7 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 		mutation_count += 1;
 	}
 
-	for (name, from, to, diagnostic) in [
-		(
-			"endpoint_registration_server_peer_identity_uses_local_identity",
-			"crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key()).ok()?",
-			"crypto_sign::PublicKey::from_bytes(candidate.server_identity_public_key()).ok()?",
-			"endpoint registration Server candidate peer identity",
-		),
-		(
-			"endpoint_registration_server_ratchet_uses_zero_root",
-			"start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
-			"start_server_candidate_ratchet_kdf(&candidate, &[0; 32])",
-			"endpoint registration Server candidate ratchet",
-		),
-		(
-			"endpoint_registration_server_rebuilds_candidate_ad",
-			"let associated_data = authentication.associated_data();",
-			"let associated_data = self.associated_data(remote_kid)?;",
-			"endpoint registration Server candidate associated data",
-		),
-		(
-			"endpoint_registration_server_target_uses_local_id",
-			"&authenticated_plaintext,\n\t\t\tremote_kid,\n\t\t\tcandidate.server_identity_key_id(),",
-			"&authenticated_plaintext,\n\t\t\tcandidate.server_identity_key_id(),\n\t\t\tcandidate.server_identity_key_id(),",
-			"endpoint registration Server initial target/sender/context/ratchet mapping",
-		),
-		(
-			"endpoint_registration_server_sender_uses_assigned_id",
-			"&authenticated_plaintext,\n\t\t\tremote_kid,\n\t\t\tcandidate.server_identity_key_id(),",
-			"&authenticated_plaintext,\n\t\t\tremote_kid,\n\t\t\tremote_kid,",
-			"endpoint registration Server initial target/sender/context/ratchet mapping",
-		),
-		(
-			"endpoint_registration_server_initial_uses_zero_ad",
-			"associated_data,\n\t\t\t&mut ratchet,",
-			"&[0; AD_SIZE],\n\t\t\t&mut ratchet,",
-			"endpoint registration Server initial target/sender/context/ratchet mapping",
-		),
-		(
-			"endpoint_registration_server_initial_uses_committed_ratchet",
-			"associated_data,\n\t\t\t&mut ratchet,",
-			"associated_data,\n\t\t\tself.ratchet_manager_mut(remote_kid)?,",
-			"endpoint registration Server initial target/sender/context/ratchet mapping",
-		),
-		(
-			"endpoint_registration_server_return_metadata_uses_local_id",
-			"kid: remote_kid,",
-			"kid: self.identity_key_kid,",
-			"endpoint registration Server returned target metadata",
-		),
-		(
-			"endpoint_registration_server_map_uses_local_id",
-			".insert(\n\t\t\tremote_kid,\n\t\t\tEstablishedRemote::new(public_key, ratchet, authentication.finish(remote_kid)),\n\t\t)",
-			".insert(\n\t\t\tself.identity_key_kid,\n\t\t\tEstablishedRemote::new(public_key, ratchet, authentication.finish(remote_kid)),\n\t\t)",
-			"endpoint registration Server committed peer identity and candidate ratchet",
-		),
-	] {
-		assert_rejected(name, diagnostic, move |snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"fn build_registration_response",
-				from,
-				to,
-			);
-		});
-		mutation_count += 1;
-	}
-
-	assert_rejected(
-		"endpoint_registration_server_outer_key_id_uses_local_id",
-		"Phase-2 server assigned-ID mapping",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"fn build_registration_response",
-				"key_id: remote_kid,",
-				"key_id: candidate.server_identity_key_id(),",
-			);
-		},
-	);
-	mutation_count += 1;
-
-	for (name, from, to, diagnostic) in [
-		(
-			"endpoint_registration_beacon_ratchet_uses_zero_root",
-			"start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
-			"start_beacon_candidate_ratchet_kdf(&candidate, &[0; 32])",
-			"endpoint registration Beacon candidate ratchet",
-		),
-		(
-			"endpoint_registration_beacon_replaces_candidate_ad",
-			"let associated_data = authentication.associated_data();",
-			"let associated_data = [0; AD_SIZE];",
-			"endpoint registration Beacon candidate associated data",
-		),
-		(
-			"endpoint_registration_beacon_expected_sender_uses_outer_id",
-			"candidate.server_key_id(),\n\t\t\t\tassociated_data,",
-			"response.key_id,\n\t\t\t\tassociated_data,",
-			"Phase-2 beacon initial-frame mapping",
-		),
-		(
-			"endpoint_registration_beacon_open_uses_zero_ad",
-			"associated_data,\n\t\t\t\t&mut ratchet,",
-			"&[0; AD_SIZE],\n\t\t\t\t&mut ratchet,",
-			"Phase-2 beacon initial-frame mapping",
-		),
-		(
-			"endpoint_registration_beacon_open_discards_candidate_ratchet",
-			"associated_data,\n\t\t\t\t&mut ratchet,",
-			"associated_data,\n\t\t\t\tpanic!(),",
-			"Phase-2 beacon initial-frame mapping",
-		),
-		(
-			"endpoint_registration_beacon_handoff_replaces_binding",
-			"binding: authentication.finish(self.identity_key_kid),",
-			"binding: replacement_binding,",
-			"endpoint registration Beacon stores candidate context",
-		),
-		(
-			"endpoint_registration_beacon_handoff_discards_ratchet",
-			"Some((authenticated, ratchet, plaintext))",
-			"Some((authenticated, panic!(), plaintext))",
-			"endpoint registration Beacon candidate context handoff",
-		),
-		(
-			"endpoint_registration_beacon_local_sender_uses_server_id",
-			"self.identity_key_kid = authenticated.assigned_key_id();",
-			"self.identity_key_kid = server_kid;",
-			"endpoint registration Beacon assigned local sender",
-		),
-		(
-			"endpoint_registration_beacon_state_replaces_ad",
-			"binding: authentication.finish(self.identity_key_kid),\n\t\t\tratchet,",
-			"binding: replacement_binding,\n\t\t\tratchet,",
-			"endpoint registration Beacon stores candidate context",
-		),
-		(
-			"endpoint_registration_beacon_state_discards_ratchet",
-			"binding: authentication.finish(self.identity_key_kid),\n\t\t\tratchet,",
-			"binding: authentication.finish(self.identity_key_kid),\n\t\t\tratchet: panic!(),",
-			"endpoint registration Beacon stores candidate context",
-		),
-	] {
-		assert_rejected(name, diagnostic, move |snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_beacon,
-				"fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {",
-				from,
-				to,
-			);
-		});
-		mutation_count += 1;
-	}
-
+	// Moved registration controls are exercised against core phases and native drivers below.
 	assert_rejected(
 		"endpoint_server_receive_fail_open",
 		"endpoint Server acceptance only after successful open",
@@ -14776,109 +13333,7 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 		});
 		mutation_count += 1;
 	}
-	assert_rejected(
-		"endpoint_registration_server_remote_id_uses_local_id",
-		"Phase-2 assigned key-ID source",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"fn build_registration_response",
-				"let remote_kid = candidate.key_id();",
-				"let remote_kid = candidate.server_identity_key_id();",
-			);
-		},
-	);
-	mutation_count += 1;
-	for (name, from, to, diagnostic) in [
-		(
-			"endpoint_registration_server_materialization_discards_pending",
-			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
-			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(panic!()))",
-			"endpoint registration Server initial ratchet materialization",
-		),
-		(
-			"endpoint_registration_server_map_discards_peer_identity",
-			"EstablishedRemote::new(public_key, ratchet, authentication.finish(remote_kid))",
-			"EstablishedRemote::new(panic!(), ratchet, authentication.finish(remote_kid))",
-			"endpoint registration Server committed peer identity and candidate ratchet",
-		),
-		(
-			"endpoint_registration_server_map_discards_post_send_ratchet",
-			"EstablishedRemote::new(public_key, ratchet, authentication.finish(remote_kid))",
-			"EstablishedRemote::new(public_key, panic!(), authentication.finish(remote_kid))",
-			"endpoint registration Server committed peer identity and candidate ratchet",
-		),
-	] {
-		assert_rejected(name, diagnostic, move |snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"fn build_registration_response",
-				from,
-				to,
-			);
-		});
-		mutation_count += 1;
-	}
-
-	for (name, from, to, diagnostic) in [
-		(
-			"endpoint_registration_beacon_materialization_discards_pending",
-			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
-			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(panic!()))",
-			"endpoint registration Beacon initial ratchet materialization",
-		),
-		(
-			"endpoint_registration_beacon_state_discards_authenticated_control",
-			"control: verified_pqxdh::beacon_commit(authenticated),",
-			"control: panic!(),",
-			"endpoint registration Beacon stores candidate context",
-		),
-	] {
-		assert_rejected(name, diagnostic, move |snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_beacon,
-				"fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {",
-				from,
-				to,
-			);
-		});
-		mutation_count += 1;
-	}
-
-	assert_rejected(
-		"endpoint_registration_beacon_assigns_local_id_before_server_binding_checks",
-		"endpoint registration Beacon initial source order",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_beacon,
-				"fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {",
-				"let server_binding = authenticated.server_binding();",
-				"self.identity_key_kid = authenticated.assigned_key_id();\n\t\tlet server_binding = authenticated.server_binding();",
-			);
-			replace_once_after(
-				&mut snapshot.adapter_beacon,
-				"if self.server_id.as_bytes() != &server_binding.identity_public_key",
-				"self.identity_key_kid = authenticated.assigned_key_id();",
-				"let _assigned_id_checked_above = authenticated.assigned_key_id();",
-			);
-		},
-	);
-	mutation_count += 1;
-
-	assert_rejected(
-		"endpoint_registration_server_publishes_control_before_peer_insert",
-		"endpoint registration Server initial source order",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"fn build_registration_response",
-				"let old = self.known_ids.insert(\n\t\t\tremote_kid,\n\t\t\tEstablishedRemote::new(public_key, ratchet, authentication.finish(remote_kid)),\n\t\t);\n\t\tdebug_assert!(old.is_none());\n\t\tself.control = next_control;",
-				"self.control = next_control;\n\t\tlet old = self.known_ids.insert(\n\t\t\tremote_kid,\n\t\t\tEstablishedRemote::new(public_key, ratchet, authentication.finish(remote_kid)),\n\t\t);\n\t\tdebug_assert!(old.is_none());",
-			);
-		},
-	);
-	mutation_count += 1;
-
+	// Moved registration controls are exercised against core phases and native drivers below.
 	for (family, scope, function, calls, replacement, diagnostic) in [
 		(
 			"honest_beacon_server_open",
@@ -18066,7 +16521,7 @@ fn finite_receive_state_fixture_mutation_matrix_is_complete_and_rejected() {
 	assert_eq!(mutation_count, FINITE_RECEIVE_STATE_FIXTURE_MUTATION_COUNT);
 }
 
-const REGISTRATION_LIFECYCLE_MUTATION_COUNT: usize = 177;
+const REGISTRATION_LIFECYCLE_MUTATION_COUNT: usize = 116;
 
 #[test]
 fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
@@ -18214,603 +16669,7 @@ fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
 		mutation_count += 1;
 	}
 
-	for (name, from, to, diagnostic) in [
-		(
-			"registration_fresh_coin_condition_changes",
-			"matches!(&self.state, BeaconState::Fresh { .. })",
-			"matches!(&self.state, BeaconState::FreshWithCoins { .. })",
-			"registration Fresh one-time generation",
-		),
-		(
-			"registration_fresh_coin_generation_removed",
-			"Some(crypto_kx::KeyPair::generate().ok()?)",
-			"None",
-			"registration Fresh one-time generation",
-		),
-		(
-			"registration_fresh_arm_accepts_init_sent",
-			"BeaconState::Fresh {\n\t\t\t\tcontrol,\n\t\t\t\tprekey,\n\t\t\t\tpq_key,\n\t\t\t}",
-			"BeaconState::InitSent {\n\t\t\t\tcontrol,\n\t\t\t\tprekey,\n\t\t\t\tpq_key,\n\t\t\t}",
-			"registration Fresh material selection",
-		),
-		(
-			"registration_fresh_with_coins_arm_accepts_established",
-			"BeaconState::FreshWithCoins {\n\t\t\t\tcontrol,\n\t\t\t\tprekey,\n\t\t\t\tonetime_key,\n\t\t\t\tpq_key,\n\t\t\t}",
-			"BeaconState::Established {\n\t\t\t\tcontrol,\n\t\t\t\tprekey,\n\t\t\t\tonetime_key,\n\t\t\t\tpq_key,\n\t\t\t}",
-			"registration FreshWithCoins material selection",
-		),
-		(
-			"registration_ineligible_state_falls_through",
-			"_ => return None,",
-			"_ => unreachable!(),",
-			"registration ineligible-state rejection",
-		),
-		(
-			"registration_fresh_prekey_uses_pq",
-			"prekey.public_key.as_bytes().try_into().ok()?,",
-			"pq_key.public_key.as_bytes().try_into().ok()?,",
-			"registration Fresh material selection",
-		),
-		(
-			"registration_fresh_pq_uses_prekey",
-			"*pq_key.public_key.as_bytes(),",
-			"*prekey.public_key.as_bytes(),",
-			"registration Fresh material selection",
-		),
-		(
-			"registration_fresh_one_time_uses_prekey",
-			"generated_onetime\n\t\t\t\t\t.as_ref()?",
-			"Some(prekey)\n\t\t\t\t\t.as_ref()?",
-			"registration Fresh material selection",
-		),
-		(
-			"registration_stored_one_time_uses_prekey",
-			"onetime_key.public_key.as_bytes().try_into().ok()?,",
-			"prekey.public_key.as_bytes().try_into().ok()?,",
-			"registration FreshWithCoins material selection",
-		),
-	] {
-		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_beacon,
-				"impl ProviderBeacon for Beacon",
-				from,
-				to,
-			);
-		});
-		mutation_count += 1;
-	}
-
-	for (name, from, to) in [
-		(
-			"registration_start_identity_uses_server",
-			"identity_public_key: *self.identity_pk().as_bytes(),",
-			"identity_public_key: *self.server_id().as_bytes(),",
-		),
-		(
-			"registration_start_prekey_uses_one_time",
-			"prekey_public_key: prekey_public,",
-			"prekey_public_key: onetime_public,",
-		),
-		(
-			"registration_start_pq_uses_prekey",
-			"pq_public_key: pq_public,",
-			"pq_public_key: prekey_public,",
-		),
-		(
-			"registration_start_one_time_uses_prekey",
-			"one_time_public_key: onetime_public,",
-			"one_time_public_key: prekey_public,",
-		),
-	] {
-		assert_registration_lifecycle_rejected(
-			name,
-			"registration Beacon-start input mapping",
-			|snapshot| {
-				replace_once_after(
-					&mut snapshot.adapter_beacon,
-					"impl ProviderBeacon for Beacon",
-					from,
-					to,
-				);
-			},
-		);
-		mutation_count += 1;
-	}
-
-	for (name, from, to, diagnostic) in [
-		(
-			"registration_builder_type_changes",
-			"crate::wire::encode_init(InitKex",
-			"crate::wire::encode_response(KexResponse",
-			"registration typed InitKex builder",
-		),
-		(
-			"registration_identity_setter_uses_prekey",
-			"identity_key: started.message.identity_key(),",
-			"identity_key: started.message.prekey(),",
-			"registration serialized identity field",
-		),
-		(
-			"registration_prekey_setter_uses_one_time",
-			"pre_key: &prekey_sig,",
-			"pre_key: &onetime_sig,",
-			"registration serialized prekey field",
-		),
-		(
-			"registration_one_time_setter_uses_prekey",
-			"one_time_key: &onetime_sig,",
-			"one_time_key: &prekey_sig,",
-			"registration serialized one-time field",
-		),
-		(
-			"registration_pq_setter_uses_prekey",
-			"pq_key: &pq_sig,",
-			"pq_key: &prekey_sig,",
-			"registration serialized PQ field",
-		),
-		(
-			"registration_serialization_call_removed",
-			"signature: &signature,\n\t\t\t..init\n\t\t})?;",
-			"signature: &signature,\n\t\t\t..init\n\t\t}).unwrap();",
-			"registration completed InitKex serialization",
-		),
-		(
-			"registration_success_returns_none",
-			"Some(buffer)\n\t}",
-			"None\n\t}",
-			"registration serialized bundle return",
-		),
-	] {
-		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_beacon,
-				"impl ProviderBeacon for Beacon",
-				from,
-				to,
-			);
-		});
-		mutation_count += 1;
-	}
-	assert_registration_lifecycle_rejected(
-		"registration_state_transition_precedes_serialization",
-		"registration serialization-to-InitSent order",
-		|snapshot| {
-			let start = snapshot
-				.adapter_beacon
-				.find("\t\tlet buffer = crate::wire::encode_init(InitKex {")
-				.unwrap();
-			let end = start
-				+ snapshot.adapter_beacon[start..].find("\n\t\t})?;").unwrap()
-				+ "\n\t\t})?;".len();
-			let encoding = snapshot.adapter_beacon[start..end].to_owned();
-			snapshot.adapter_beacon.replace_range(start..end, "");
-			replace_once_after(
-				&mut snapshot.adapter_beacon,
-				"impl ProviderBeacon for Beacon",
-				"let previous = std::mem::replace(&mut self.state, fallback);",
-				&format!(
-					"let previous = std::mem::replace(&mut self.state, fallback);\n{encoding}"
-				),
-			);
-		},
-	);
-	mutation_count += 1;
-	assert_registration_lifecycle_rejected(
-		"registration_pretransition_failure_changes_state",
-		"registration Beacon state changed before successful serialization",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_beacon,
-				"impl ProviderBeacon for Beacon",
-				"let buffer = crate::wire::encode_init(InitKex {",
-				"self.state = BeaconState::Aborted { control: verified_pqxdh::beacon_abort_fresh(control) };\n\t\tlet buffer = crate::wire::encode_init(InitKex {",
-			);
-		},
-	);
-	mutation_count += 1;
-	for (name, marker, from, to, diagnostic) in [
-		(
-			"registration_fresh_success_reopens_fresh",
-			"crate::wire::encode_init",
-			"self.state = BeaconState::InitSent {",
-			"self.state = BeaconState::Fresh {",
-			"registration Fresh success transition and restoration",
-		),
-		(
-			"registration_fresh_success_uses_old_control",
-			"crate::wire::encode_init",
-			"control: started.state,",
-			"control,",
-			"registration Fresh success transition and restoration",
-		),
-		(
-			"registration_fresh_success_drops_generated_one_time",
-			"crate::wire::encode_init",
-			"onetime_key,\n\t\t\t\t\tpq_key,",
-			"onetime_key: crypto_kx::KeyPair::generate().unwrap(),\n\t\t\t\t\tpq_key,",
-			"registration Fresh success transition and restoration",
-		),
-		(
-			"registration_fresh_take_failure_aborts",
-			"let Some(onetime_key) = generated_onetime.take() else {",
-			"self.state = BeaconState::Fresh {",
-			"self.state = BeaconState::Aborted {",
-			"registration Fresh success transition and restoration",
-		),
-		(
-			"registration_stored_success_reopens_fresh_with_coins",
-			"BeaconState::FreshWithCoins {\n\t\t\t\tprekey,",
-			"self.state = BeaconState::InitSent {",
-			"self.state = BeaconState::FreshWithCoins {",
-			"registration FreshWithCoins success transition",
-		),
-		(
-			"registration_stored_success_uses_old_control",
-			"BeaconState::FreshWithCoins {\n\t\t\t\tprekey,",
-			"control: started.state,",
-			"control,",
-			"registration FreshWithCoins success transition",
-		),
-		(
-			"registration_stored_success_swaps_one_time_and_prekey",
-			"BeaconState::FreshWithCoins {\n\t\t\t\tprekey,",
-			"prekey,\n\t\t\t\t\tonetime_key,",
-			"prekey: onetime_key,\n\t\t\t\t\tonetime_key: prekey,",
-			"registration FreshWithCoins success transition",
-		),
-	] {
-		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(&mut snapshot.adapter_beacon, marker, from, to);
-		});
-		mutation_count += 1;
-	}
-
-	for (name, marker, from, to, diagnostic) in [
-		(
-			"registration_new_one_time_accepts_init_sent",
-			"pub fn new_onetime_keypair",
-			"BeaconState::Fresh { control, .. } => *control,",
-			"BeaconState::InitSent { control, .. } => *control,",
-			"registration post-Init one-time regeneration rejection",
-		),
-		(
-			"registration_abort_reopens_fresh",
-			"fn abort_registration",
-			"self.state = BeaconState::Aborted {",
-			"self.state = BeaconState::Fresh {",
-			"registration Beacon eligible-state publication graph",
-		),
-		(
-			"registration_delete_one_time_reopens_init",
-			"pub fn delete_onetime_keypair",
-			"BeaconState::InitSent { control, .. } => BeaconState::Aborted {",
-			"BeaconState::InitSent { control, .. } => BeaconState::Fresh {",
-			"registration InitSent one-time deletion transition",
-		),
-		(
-			"registration_delete_pq_uses_fresh_abort",
-			"pub fn delete_pq_keypair",
-			"Some(verified_pqxdh::beacon_abort_init(*control))",
-			"Some(verified_pqxdh::beacon_abort_fresh(*control))",
-			"registration InitSent PQ deletion transition",
-		),
-		(
-			"registration_finish_accepts_fresh",
-			"impl ProviderBeacon for Beacon",
-			"BeaconState::InitSent { control, .. } => *control,",
-			"BeaconState::Fresh { control, .. } => *control,",
-			"registration finish InitSent gate",
-		),
-		(
-			"registration_finish_failure_keeps_init",
-			"impl ProviderBeacon for Beacon",
-			"self.abort_registration(control);\n\t\t\treturn None;",
-			"return None;",
-			"registration failed finish abort",
-		),
-		(
-			"registration_finish_success_reopens_fresh",
-			"impl ProviderBeacon for Beacon",
-			"self.state = BeaconState::Established {",
-			"self.state = BeaconState::Fresh {",
-			"registration Beacon eligible-state publication graph",
-		),
-	] {
-		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(&mut snapshot.adapter_beacon, marker, from, to);
-		});
-		mutation_count += 1;
-	}
-	for (name, from, diagnostic) in [
-		(
-			"registration_finish_server_key_id_mismatch_keeps_init",
-			"if self.server_kid() != server_kid {\n\t\t\tself.abort_registration(control);\n\t\t\treturn None;\n\t\t}",
-			"registration server-key-ID mismatch abort",
-		),
-		(
-			"registration_finish_server_identity_mismatch_keeps_init",
-			"if self.server_id.as_bytes() != &server_binding.identity_public_key {\n\t\t\tself.abort_registration(control);\n\t\t\treturn None;\n\t\t}",
-			"registration server-identity mismatch abort",
-		),
-	] {
-		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
-			let to = from.replace("\n\t\t\tself.abort_registration(control);", "");
-			replace_once_after(
-				&mut snapshot.adapter_beacon,
-				"impl ProviderBeacon for Beacon",
-				from,
-				&to,
-			);
-		});
-		mutation_count += 1;
-	}
-
-	for (name, from, to, diagnostic) in [
-		(
-			"registration_server_peer_map_replaced_by_replay_set",
-			"known_ids: HashMap<u64, EstablishedRemote<crypto_sign::PublicKey>>",
-			"known_ids: HashSet<[u8; verified_pqxdh::REGISTRATION_ID_SIZE]>",
-			"registration numeric peer map",
-		),
-		(
-			"registration_server_replay_set_uses_numeric_ids",
-			"consumed_registrations: HashSet<[u8; verified_pqxdh::REGISTRATION_ID_SIZE]>",
-			"consumed_registrations: HashSet<u64>",
-			"registration consumed-ID set",
-		),
-		(
-			"registration_server_id_uses_peer_key_id",
-			"*verified_pqxdh::registration_id(&verified_registration).as_bytes()",
-			"self.identity_key_kid.to_le_bytes()",
-			"registration Server ID source",
-		),
-		(
-			"registration_server_status_uses_peer_map",
-			"self.consumed_registrations.contains(&registration_id)",
-			"self.known_ids.contains_key(&self.identity_key_kid)",
-			"registration Server replay-status polarity",
-		),
-		(
-			"registration_server_status_polarity_reverses_consumed",
-			"verified_pqxdh::RegistrationStatus::Consumed\n\t\t} else {\n\t\t\tverified_pqxdh::RegistrationStatus::Fresh",
-			"verified_pqxdh::RegistrationStatus::Fresh\n\t\t} else {\n\t\t\tverified_pqxdh::RegistrationStatus::Consumed",
-			"registration Server replay-status polarity",
-		),
-		(
-			"registration_server_status_gate_removed",
-			"verified_pqxdh::validate_registration_status(registration_status).ok()?;",
-			"let _ = registration_status;",
-			"registration Server replay-status gate",
-		),
-		(
-			"registration_server_reservation_removed",
-			"self.consumed_registrations.try_reserve(1).ok()?;",
-			"let _ = self.consumed_registrations.capacity();",
-			"registration Server consumed-set reservation",
-		),
-		(
-			"registration_server_shared_secrets_reuses_dh3",
-			"shared_secrets(dh1, dh2, dh3, dh4, &kem_shared)?",
-			"shared_secrets(dh1, dh2, dh3, dh3, &kem_shared)?",
-			"registration Server complete post-validation PQXDH inputs",
-		),
-		(
-			"registration_server_insert_uses_derived_secret",
-			"self.consumed_registrations.insert(registration_id)",
-			"self.consumed_registrations.insert(*derived_secret.as_array())",
-			"registration Server exact-ID consumption",
-		),
-		(
-			"registration_server_output_removed",
-			"Some(RegistrationOutput {",
-			"Ok(RegistrationOutput {",
-			"registration Server pending output",
-		),
-	] {
-		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(&mut snapshot.adapter_server, "pub struct Server", from, to);
-		});
-		mutation_count += 1;
-	}
-
-	for (name, argument_index, replacement) in [
-		(
-			"registration_server_accept_uses_unvalidated_init",
-			1,
-			"init_kex",
-		),
-		(
-			"registration_server_accept_forces_fresh",
-			2,
-			"verified_pqxdh::RegistrationStatus::Fresh",
-		),
-	] {
-		assert_registration_lifecycle_rejected(
-			name,
-			"registration Server accepted registration/status mapping changed",
-			|snapshot| {
-				replace_nth_call_argument_after(
-					&mut snapshot.adapter_server,
-					"fn get_shared_secret",
-					"verified_pqxdh::server_accept",
-					0,
-					argument_index,
-					replacement,
-				);
-			},
-		);
-		mutation_count += 1;
-	}
-
-	assert_registration_lifecycle_rejected(
-		"registration_server_status_gate_moves_after_ephemeral_generation",
-		"registration Server validate-reserve-derive-consume order",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"fn get_shared_secret",
-				"verified_pqxdh::validate_registration_status(registration_status).ok()?;",
-				"let _status_gate_moved = registration_status;",
-			);
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"let ephemeral = crypto_kx::KeyPair::generate().ok()?;",
-				"let pq_pub =",
-				"verified_pqxdh::validate_registration_status(registration_status).ok()?;\n\t\tlet pq_pub =",
-			);
-		},
-	);
-	mutation_count += 1;
-	assert_registration_lifecycle_rejected(
-		"registration_server_reservation_moves_after_ephemeral_generation",
-		"registration Server validate-reserve-derive-consume order",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"fn get_shared_secret",
-				"self.consumed_registrations.try_reserve(1).ok()?;",
-				"let _reservation_moved = self.consumed_registrations.capacity();",
-			);
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"let ephemeral = crypto_kx::KeyPair::generate().ok()?;",
-				"let pq_pub =",
-				"self.consumed_registrations.try_reserve(1).ok()?;\n\t\tlet pq_pub =",
-			);
-		},
-	);
-	mutation_count += 1;
-	for (name, binding, expression) in [
-		(
-			"registration_server_dh2_moves_before_status_gate",
-			"dh2",
-			"crypto_scalarmult::scalarmult(&id_kex_sk, beacon_prekey.as_bytes()).ok()?.into()",
-		),
-		(
-			"registration_server_dh3_moves_before_status_gate",
-			"dh3",
-			"crypto_scalarmult::scalarmult(&id_kex_sk, beacon_prekey.as_bytes()).ok()?.into()",
-		),
-		(
-			"registration_server_dh4_moves_before_status_gate",
-			"dh4",
-			"crypto_scalarmult::scalarmult(&id_kex_sk, beacon_onetime.as_bytes()).ok()?.into()",
-		),
-	] {
-		assert_registration_lifecycle_rejected(
-			name,
-			"registration Server validate-reserve-derive-consume order",
-			|snapshot| {
-				let original = if binding == "dh2" {
-					format!("let {binding}: DhSecret =")
-				} else {
-					format!("let {binding}: DhSecret = crypto_scalarmult::scalarmult(")
-				};
-				let renamed = original.replacen(binding, &format!("{binding}_after_gate"), 1);
-				replace_once_after(
-					&mut snapshot.adapter_server,
-					"fn get_shared_secret",
-					&original,
-					&renamed,
-				);
-				replace_once_after(
-					&mut snapshot.adapter_server,
-					"fn get_shared_secret",
-					"verified_pqxdh::validate_registration_status(registration_status).ok()?;",
-					&format!(
-						"let {binding}: DhSecret = {expression};\n\t\tverified_pqxdh::validate_registration_status(registration_status).ok()?;"
-					),
-				);
-			},
-		);
-		mutation_count += 1;
-	}
-	assert_registration_lifecycle_rejected(
-		"registration_server_root_derivation_uses_registration_id",
-		"registration Server validate-reserve-derive-consume order",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"fn get_shared_secret",
-				"derive_root_key_input(pending.root_key_input_mut())?",
-				"derive_root_key_input(&mut registration_id)?",
-			);
-		},
-	);
-	mutation_count += 1;
-	assert_registration_lifecycle_rejected(
-		"registration_server_consumes_before_root_derivation",
-		"registration Server validate-reserve-derive-consume order",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"fn get_shared_secret",
-				"let inserted = self.consumed_registrations.insert(registration_id);\n\t\tdebug_assert!(inserted);",
-				"let _insert_moved = inserted;",
-			);
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"let derived_secret = derive_root_key_input(pending.root_key_input_mut())?;",
-				"let derived_secret = derive_root_key_input(pending.root_key_input_mut())?;",
-				"let inserted = self.consumed_registrations.insert(registration_id);\n\t\tdebug_assert!(inserted);\n\t\tlet derived_secret = derive_root_key_input(pending.root_key_input_mut())?;",
-			);
-		},
-	);
-	mutation_count += 1;
-	assert_registration_lifecycle_rejected(
-		"registration_server_consumes_different_id_before_crypto",
-		"registration Server consumed-ID insertion family count changed",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"fn get_shared_secret",
-				"verified_pqxdh::validate_registration_status(registration_status).ok()?;",
-				"self.consumed_registrations.insert([0; verified_pqxdh::REGISTRATION_ID_SIZE]);\n\t\tverified_pqxdh::validate_registration_status(registration_status).ok()?;",
-			);
-		},
-	);
-	mutation_count += 1;
-	assert_registration_lifecycle_rejected(
-		"registration_server_explicit_failure_after_consumption",
-		"registration explicit failure moved after consumption insertion",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"let inserted = self.consumed_registrations.insert(registration_id);",
-				"debug_assert!(inserted);",
-				"debug_assert!(inserted);\n\t\tif !inserted { return None; }",
-			);
-		},
-	);
-	mutation_count += 1;
-	assert_registration_lifecycle_rejected(
-		"registration_server_fallible_work_after_consumption",
-		"registration fallible work moved after consumption insertion",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"let inserted = self.consumed_registrations.insert(registration_id);",
-				"debug_assert!(inserted);",
-				"debug_assert!(inserted);\n\t\tlet _late = Some(())?;",
-			);
-		},
-	);
-	mutation_count += 1;
-	assert_registration_lifecycle_rejected(
-		"registration_response_failure_removes_consumed_id",
-		"registration replay-set mutation during later response construction",
-		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_server,
-				"Some(RegistrationOutput {",
-				"let control = self.control;",
-				"self.consumed_registrations.clear();\n\t\tlet control = self.control;",
-			);
-		},
-	);
-	mutation_count += 1;
-
+	// Moved registration controls are exercised against core phases and native drivers below.
 	for (name, from, to, diagnostic) in [
 		(
 			"registration_guard_first_identity_not_publicly_bound",
@@ -19165,7 +17024,7 @@ fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
 
 	assert_eq!(mutation_count, REGISTRATION_LIFECYCLE_MUTATION_COUNT);
 }
-const INITIAL_RATCHET_MUTATION_COUNT: usize = 223;
+const INITIAL_RATCHET_MUTATION_COUNT: usize = 192;
 
 #[test]
 fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
@@ -19239,234 +17098,7 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		});
 		mutation_count += 1;
 	}
-	for (name, marker, from, to, diagnostic) in [
-		(
-			"initial_ratchet_server_output_return_type_drifts",
-			"impl ProviderServer for Server",
-			"fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput>",
-			"fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<ReplacementOutput>",
-			"RegistrationOutput return signature",
-		),
-		(
-			"initial_ratchet_server_output_consumer_borrows_value",
-			"impl ProviderServer for Server",
-			"reg_out: RegistrationOutput",
-			"reg_out: &RegistrationOutput",
-			"RegistrationOutput by-value consumer signature",
-		),
-	] {
-		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(&mut snapshot.adapter_server, marker, from, to);
-		});
-		mutation_count += 1;
-	}
-
-	for (name, from, to, diagnostic) in [
-		(
-			"initial_ratchet_server_output_drops_root",
-			"\tpub(crate) derived_secret: KexDerivedSecret,\n",
-			"",
-			"RegistrationOutput storage",
-		),
-		(
-			"initial_ratchet_server_output_root_type_substituted",
-			"pub(crate) derived_secret: KexDerivedSecret",
-			"pub(crate) derived_secret: [u8; 32]",
-			"RegistrationOutput storage",
-		),
-		(
-			"initial_ratchet_server_root_uses_control_input",
-			"derive_root_key_input(pending.root_key_input_mut())?",
-			"derive_root_key_input(control.root_key_input_mut())?",
-			"Server derived-root output",
-		),
-		(
-			"initial_ratchet_server_output_substitutes_root",
-			"Some(RegistrationOutput {\n\t\t\tderived_secret,",
-			"Some(RegistrationOutput {\n\t\t\tderived_secret: replacement_secret,",
-			"Server derived-root output",
-		),
-		(
-			"initial_ratchet_server_output_substitutes_pending",
-			"control: pending,\n\t\t\tauthentication,\n\t\t})",
-			"control: replacement_pending,\n\t\t\tauthentication,\n\t\t})",
-			"Server derived-root output",
-		),
-		(
-			"initial_ratchet_server_response_drops_root_destructure",
-			"\t\t\tderived_secret,\n\t\t\tcontrol: pending,\n\t\t\tauthentication,\n\t\t} = reg_out;",
-			"\t\t\tcontrol: pending,\n\t\t\tauthentication,\n\t\t} = reg_out;",
-			"RegistrationOutput destructure",
-		),
-		(
-			"initial_ratchet_server_response_substitutes_root_destructure",
-			"let RegistrationOutput {\n\t\t\tderived_secret,",
-			"let RegistrationOutput {\n\t\t\tderived_secret: replacement_secret,",
-			"RegistrationOutput destructure",
-		),
-		(
-			"initial_ratchet_server_start_swaps_role",
-			"start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
-			"start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
-			"Server root and candidate handoff",
-		),
-		(
-			"initial_ratchet_server_start_substitutes_candidate",
-			"start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
-			"start_server_candidate_ratchet_kdf(&replacement_candidate, derived_secret.as_array())",
-			"Server root and candidate handoff",
-		),
-		(
-			"initial_ratchet_server_start_substitutes_root",
-			"start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
-			"start_server_candidate_ratchet_kdf(&candidate, replacement_secret.as_array())",
-			"Server root and candidate handoff",
-		),
-		(
-			"initial_ratchet_server_start_is_duplicated",
-			"let pending = start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array());",
-			"let pending = start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array());\n\t\tlet duplicate = start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array());",
-			"Server root and candidate handoff",
-		),
-		(
-			"initial_ratchet_server_finish_uses_different_pending",
-			"finish_initial_ratchet_kdf(pending)",
-			"finish_initial_ratchet_kdf(replacement_pending)",
-			"Server pending completion",
-		),
-		(
-			"initial_ratchet_server_finish_is_duplicated",
-			"finish_initial_ratchet_kdf(pending)",
-			"finish_initial_ratchet_kdf(pending); finish_initial_ratchet_kdf(pending)",
-			"Server pending completion",
-		),
-		(
-			"initial_ratchet_server_finish_is_bypassed",
-			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
-			"RatchetManager::from_kernel(replacement_kernel)",
-			"Server pending completion",
-		),
-		(
-			"initial_ratchet_server_kernel_wrapper_is_bypassed",
-			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
-			"finish_initial_ratchet_kdf(pending)",
-			"Server kernel wrapper",
-		),
-	] {
-		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
-			replace_once(&mut snapshot.adapter_server, from, to);
-		});
-		mutation_count += 1;
-	}
-	for (name, marker, insertion, diagnostic) in [
-		(
-			"initial_ratchet_server_get_root_is_shadowed",
-			"let derived_secret = derive_root_key_input(pending.root_key_input_mut())?;",
-			"\n\t\tlet derived_secret = replacement_secret;",
-			"Server derived-root binding count",
-		),
-		(
-			"initial_ratchet_server_handoff_root_is_shadowed",
-			"} = reg_out;",
-			"\n\t\tlet derived_secret = replacement_secret;",
-			"Server derived root was shadowed",
-		),
-		(
-			"initial_ratchet_server_kdf_pending_is_shadowed",
-			"let pending = start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array());",
-			"\n\t\tlet pending = replacement_pending;",
-			"Server KDF pending binding count",
-		),
-	] {
-		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
-			let replacement = format!("{marker}{insertion}");
-			replace_once(&mut snapshot.adapter_server, marker, &replacement);
-		});
-		mutation_count += 1;
-	}
-
-	for (name, from, to, diagnostic) in [
-		(
-			"initial_ratchet_beacon_root_uses_prepared_input",
-			"derive_root_key_input(candidate.root_key_input_mut())?",
-			"derive_root_key_input(prepared.root_key_input_mut())?",
-			"Beacon candidate-root derivation",
-		),
-		(
-			"initial_ratchet_beacon_start_swaps_role",
-			"start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
-			"start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
-			"Beacon root and candidate handoff",
-		),
-		(
-			"initial_ratchet_beacon_start_substitutes_candidate",
-			"start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
-			"start_beacon_candidate_ratchet_kdf(&replacement_candidate, derived_secret.as_array())",
-			"Beacon root and candidate handoff",
-		),
-		(
-			"initial_ratchet_beacon_start_substitutes_root",
-			"start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
-			"start_beacon_candidate_ratchet_kdf(&candidate, replacement_secret.as_array())",
-			"Beacon root and candidate handoff",
-		),
-		(
-			"initial_ratchet_beacon_start_is_duplicated",
-			"let pending = start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array());",
-			"let pending = start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array());\n\t\t\tlet duplicate = start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array());",
-			"Beacon root and candidate handoff",
-		),
-		(
-			"initial_ratchet_beacon_finish_uses_different_pending",
-			"finish_initial_ratchet_kdf(pending)",
-			"finish_initial_ratchet_kdf(replacement_pending)",
-			"Beacon pending completion",
-		),
-		(
-			"initial_ratchet_beacon_finish_is_duplicated",
-			"finish_initial_ratchet_kdf(pending)",
-			"finish_initial_ratchet_kdf(pending); finish_initial_ratchet_kdf(pending)",
-			"Beacon pending completion",
-		),
-		(
-			"initial_ratchet_beacon_finish_is_bypassed",
-			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
-			"RatchetManager::from_kernel(replacement_kernel)",
-			"Beacon pending completion",
-		),
-		(
-			"initial_ratchet_beacon_kernel_wrapper_is_bypassed",
-			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
-			"finish_initial_ratchet_kdf(pending)",
-			"Beacon kernel wrapper",
-		),
-	] {
-		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
-			replace_once(&mut snapshot.adapter_beacon, from, to);
-		});
-		mutation_count += 1;
-	}
-	for (name, marker, insertion, diagnostic) in [
-		(
-			"initial_ratchet_beacon_root_is_shadowed",
-			"let derived_secret = derive_root_key_input(candidate.root_key_input_mut())?;",
-			"\n\t\t\tlet derived_secret = replacement_secret;",
-			"Beacon derived-root binding count",
-		),
-		(
-			"initial_ratchet_beacon_kdf_pending_is_shadowed",
-			"let pending = start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array());",
-			"\n\t\t\tlet pending = replacement_pending;",
-			"Beacon KDF pending binding count",
-		),
-	] {
-		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
-			let replacement = format!("{marker}{insertion}");
-			replace_once(&mut snapshot.adapter_beacon, marker, &replacement);
-		});
-		mutation_count += 1;
-	}
-
+	// Moved registration controls are exercised against core phases and native drivers below.
 	for (name, from, to, diagnostic) in [
 		(
 			"initial_ratchet_chain_width_drifts",
@@ -20592,78 +18224,7 @@ fn requested_transcript_mutations_are_rejected() {
 			);
 		},
 	);
-	for (name, from, to, label) in [
-		(
-			"swapped_phase2_server_identity_mapping",
-			"identity_key: candidate.server_identity_public_key(),",
-			"identity_key: candidate.ephemeral_public_key(),",
-			"Phase-2 server identity mapping",
-		),
-		(
-			"swapped_phase2_server_ephemeral_mapping",
-			"ephemeral_key: candidate.ephemeral_public_key(),",
-			"ephemeral_key: candidate.server_identity_public_key(),",
-			"Phase-2 server ephemeral mapping",
-		),
-		(
-			"swapped_phase2_server_kem_mapping",
-			"kem_cipher_text: candidate.kem_ciphertext(),",
-			"kem_cipher_text: &encrypted.ciphertext,",
-			"Phase-2 server KEM-ciphertext mapping",
-		),
-		(
-			"swapped_phase2_server_frame_mapping",
-			"app_cipher_text: &encrypted.ciphertext,",
-			"app_cipher_text: candidate.kem_ciphertext(),",
-			"Phase-2 server initial-frame mapping",
-		),
-		(
-			"swapped_phase2_server_key_id_mapping",
-			"key_id: remote_kid,",
-			"key_id: candidate.server_identity_key_id(),",
-			"Phase-2 server assigned-ID mapping",
-		),
-	] {
-		assert_rejected(name, label, |snapshot| {
-			replace_once(&mut snapshot.adapter_server, from, to);
-		});
-	}
-	for (name, from, to, label) in [
-		(
-			"swapped_phase2_beacon_identity_mapping",
-			"response.identity_key",
-			"response.ephemeral_key",
-			"Phase-2 beacon identity mapping",
-		),
-		(
-			"swapped_phase2_beacon_ephemeral_mapping",
-			"response.ephemeral_key",
-			"response.identity_key",
-			"Phase-2 beacon ephemeral mapping",
-		),
-		(
-			"swapped_phase2_beacon_kem_mapping",
-			"response.kem_cipher_text",
-			"response.app_cipher_text",
-			"Phase-2 beacon KEM-ciphertext mapping",
-		),
-		(
-			"swapped_phase2_beacon_frame_mapping",
-			"response.app_cipher_text",
-			"response.kem_cipher_text",
-			"Phase-2 beacon initial-frame mapping",
-		),
-		(
-			"swapped_phase2_beacon_key_id_mapping",
-			"response.key_id",
-			"candidate.server_key_id()",
-			"Phase-2 beacon assigned-ID mapping",
-		),
-	] {
-		assert_rejected(name, label, |snapshot| {
-			replace_once(&mut snapshot.adapter_beacon, from, to);
-		});
-	}
+	// Phase-2 serializer and exact request-field substitutions now live in registration_effects.
 	assert_rejected(
 		"agreement_without_selected_pqpk",
 		"beacon establishment emitter",
@@ -21327,47 +18888,47 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration-consumed.pvl",
 		"consumed.contains",
-		"beaconcrypt/src/server.rs:451-456",
+		"beaconcrypt/src/server.rs:413-418",
 	),
 	(
 		"fs-common.pvl",
 		"common.kid_counter_start",
-		"beaconcrypt/src/server.rs:193-193",
+		"beaconcrypt/src/server.rs:191-191",
 	),
 	(
 		"fs-common.pvl",
 		"common.kid_next",
-		"beaconcrypt-core/src/pqxdh.rs:838-844",
+		"beaconcrypt-core/src/pqxdh.rs:845-851",
 	),
 	(
 		"fs-registration-binding.pvl",
 		"binding.root_input",
-		"beaconcrypt-core/src/pqxdh.rs:391-405",
+		"beaconcrypt-core/src/pqxdh.rs:398-412",
 	),
 	(
 		"fs-registration-binding.pvl",
 		"binding.associated_data",
-		"beaconcrypt-core/src/pqxdh.rs:931-952",
+		"beaconcrypt-core/src/pqxdh.rs:938-959",
 	),
 	(
 		"fs-registration.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:402-404",
+		"beaconcrypt/src/server.rs:398-402",
 	),
 	(
 		"fs-registration.pvl",
 		"server.identity_tag",
-		"beaconcrypt/src/server.rs:421-426",
+		"beaconcrypt-core/src/registration.rs:208-212",
 	),
 	(
 		"fs-registration.pvl",
 		"server.signatures",
-		"beaconcrypt/src/server.rs:427-429",
+		"beaconcrypt-core/src/registration.rs:237-248",
 	),
 	(
 		"fs-registration.pvl",
 		"server.validate_init_kex",
-		"beaconcrypt/src/server.rs:430-436",
+		"beaconcrypt-core/src/registration.rs:270-279",
 	),
 	(
 		"fs-registration.pvl",
@@ -21377,7 +18938,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:450-450",
+		"beaconcrypt/src/server.rs:412-412",
 	),
 	(
 		"fs-registration.pvl",
@@ -21392,7 +18953,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:451-456",
+		"beaconcrypt/src/server.rs:413-418",
 	),
 	(
 		"fs-registration.pvl",
@@ -21402,122 +18963,122 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.fresh_ephemeral",
-		"beaconcrypt/src/server.rs:464-464",
+		"beaconcrypt/src/pqxdh.rs:123-128",
 	),
 	(
 		"fs-registration.pvl",
 		"server.encapsulate",
-		"beaconcrypt/src/server.rs:469-469",
+		"beaconcrypt/src/pqxdh.rs:133-136",
 	),
 	(
 		"fs-registration.pvl",
 		"server.identity_conversion",
-		"beaconcrypt/src/server.rs:470-471",
+		"beaconcrypt/src/pqxdh.rs:110-121",
 	),
 	(
 		"fs-registration.pvl",
 		"server.dh",
-		"beaconcrypt/src/server.rs:472-490",
+		"beaconcrypt-core/src/agreement.rs:280-299",
 	),
 	(
 		"fs-registration.pvl",
 		"server.accept_root_input",
-		"beaconcrypt/src/server.rs:491-507",
+		"beaconcrypt-core/src/agreement.rs:364-395",
 	),
 	(
 		"fs-registration.pvl",
 		"server.root",
-		"beaconcrypt/src/server.rs:510-510",
+		"beaconcrypt-core/src/agreement.rs:429-438",
 	),
 	(
 		"fs-registration.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:511-512",
+		"beaconcrypt/src/server.rs:434-435",
 	),
 	(
 		"fs-registration.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:514-518",
+		"beaconcrypt/src/server.rs:436-436",
 	),
 	(
 		"fs-registration.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:521-525",
+		"beaconcrypt/src/server.rs:439-443",
 	),
 	(
 		"fs-registration.pvl",
 		"server.next_key_id",
-		"beaconcrypt/src/server.rs:528-542",
+		"beaconcrypt/src/server.rs:447-454",
 	),
 	(
 		"fs-registration.pvl",
 		"server.prepare_commit",
-		"beaconcrypt/src/server.rs:543-552",
+		"beaconcrypt-core/src/registration.rs:961-970",
 	),
 	(
 		"fs-registration.pvl",
 		"core.prepare_commit",
-		"beaconcrypt-core/src/pqxdh.rs:847-858",
+		"beaconcrypt-core/src/pqxdh.rs:854-865",
 	),
 	(
 		"fs-registration.pvl",
 		"core.prepare_commit_ad",
-		"beaconcrypt-core/src/pqxdh.rs:877-880",
+		"beaconcrypt-core/src/pqxdh.rs:884-887",
 	),
 	(
 		"fs-registration.pvl",
 		"server.ratchet_start",
-		"beaconcrypt/src/server.rs:559-560",
+		"beaconcrypt-core/src/registration.rs:970-971",
 	),
 	(
 		"fs-registration.pvl",
 		"server.associated_data",
-		"beaconcrypt/src/server.rs:561-561",
+		"beaconcrypt-core/src/registration.rs:1026-1026",
 	),
 	(
 		"fs-registration.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:527-529",
+		"beaconcrypt/src/server.rs:446-448",
 	),
 	(
 		"fs-registration.pvl",
 		"server.binding",
-		"beaconcrypt/src/server.rs:565-572",
+		"beaconcrypt-core/src/registration.rs:995-1003",
 	),
 	(
 		"fs-registration.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:573-581",
+		"beaconcrypt/src/server.rs:478-486",
 	),
 	(
 		"fs-registration.pvl",
 		"server.commit",
-		"beaconcrypt/src/server.rs:596-608",
+		"beaconcrypt-core/src/registration.rs:1202-1211",
 	),
 	(
 		"fs-registration.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:609-612",
+		"beaconcrypt/src/server.rs:520-523",
 	),
 	(
 		"fs-registration.pvl",
 		"server.token_consumed",
-		"beaconcrypt/src/server.rs:131-136",
+		"beaconcrypt/src/server.rs:129-134",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:77-110",
+		"beaconcrypt/src/beacon.rs:83-113",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:333-337",
+		"beaconcrypt/src/beacon.rs:326-330",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:367-377",
+		"beaconcrypt/src/beacon.rs:361-374",
 	),
 	(
 		"fs-registration.pvl",
@@ -21527,7 +19088,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.sign",
-		"beaconcrypt/src/beacon.rs:378-385",
+		"beaconcrypt-core/src/registration.rs:615-626",
 	),
 	(
 		"fs-registration.pvl",
@@ -21537,87 +19098,87 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:457-461",
+		"beaconcrypt/src/beacon.rs:456-462",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:479-492",
+		"beaconcrypt/src/beacon.rs:474-484",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.identity_conversion",
-		"beaconcrypt/src/beacon.rs:493-494",
+		"beaconcrypt/src/pqxdh.rs:110-121",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.decapsulate",
-		"beaconcrypt/src/beacon.rs:495-495",
+		"beaconcrypt/src/pqxdh.rs:138-147",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.dh",
-		"beaconcrypt/src/beacon.rs:496-510",
+		"beaconcrypt-core/src/agreement.rs:280-317",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.prepare",
-		"beaconcrypt/src/beacon.rs:511-518",
+		"beaconcrypt-core/src/agreement.rs:400-407",
 	),
 	(
 		"fs-registration.pvl",
 		"core.pin_check",
-		"beaconcrypt-core/src/pqxdh.rs:545-547",
+		"beaconcrypt-core/src/pqxdh.rs:552-554",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.root",
-		"beaconcrypt/src/beacon.rs:519-519",
+		"beaconcrypt-core/src/agreement.rs:429-438",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.ratchet_start",
-		"beaconcrypt/src/beacon.rs:520-521",
+		"beaconcrypt-core/src/registration.rs:809-812",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.associated_data",
-		"beaconcrypt/src/beacon.rs:522-522",
+		"beaconcrypt-core/src/registration.rs:864-864",
 	),
 	(
 		"fs-registration.pvl",
 		"core.finish_ad",
-		"beaconcrypt-core/src/pqxdh.rs:552-555",
+		"beaconcrypt-core/src/pqxdh.rs:559-562",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:523-528",
+		"beaconcrypt/src/beacon.rs:521-526",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.sequence_one",
-		"beaconcrypt/src/beacon.rs:529-531",
+		"beaconcrypt-core/src/registration.rs:892-896",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.binding",
-		"beaconcrypt/src/beacon.rs:537-545",
+		"beaconcrypt-core/src/registration.rs:897-911",
 	),
 	(
 		"fs-registration.pvl",
 		"core.binding",
-		"beaconcrypt-core/src/pqxdh.rs:616-628",
+		"beaconcrypt-core/src/pqxdh.rs:623-635",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.pin_checks",
-		"beaconcrypt/src/beacon.rs:554-563",
+		"beaconcrypt-core/src/pqxdh.rs:552-556",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:564-579",
+		"beaconcrypt/src/beacon.rs:544-551",
 	),
 	(
 		"fs-records-s2b-window.pvl",
@@ -21632,22 +19193,22 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-gate.pvl",
 		"gate.sequence_one",
-		"beaconcrypt/src/beacon.rs:529-531",
+		"beaconcrypt-core/src/registration.rs:892-896",
 	),
 	(
 		"fs-records-s2b-gate.pvl",
 		"gate.abort",
-		"beaconcrypt/src/beacon.rs:549-552",
+		"beaconcrypt/src/beacon.rs:535-542",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.encrypt",
-		"beaconcrypt/src/server.rs:286-290",
+		"beaconcrypt/src/server.rs:282-286",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.seal",
-		"beaconcrypt/src/ratchet.rs:408-480",
+		"beaconcrypt/src/ratchet.rs:413-485",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
@@ -21667,17 +19228,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:615-625",
+		"beaconcrypt/src/server.rs:526-536",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.encrypt",
-		"beaconcrypt/src/server.rs:286-290",
+		"beaconcrypt/src/server.rs:282-286",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.seal",
-		"beaconcrypt/src/ratchet.rs:408-480",
+		"beaconcrypt/src/ratchet.rs:413-485",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
@@ -21697,17 +19258,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:615-625",
+		"beaconcrypt/src/server.rs:526-536",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
 		"beacon.decrypt",
-		"beaconcrypt/src/beacon.rs:191-206",
+		"beaconcrypt/src/beacon.rs:194-209",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
 		"ratchet.decode_sender",
-		"beaconcrypt/src/ratchet.rs:541-550",
+		"beaconcrypt/src/ratchet.rs:546-555",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
@@ -21737,7 +19298,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-receive.pvl",
 		"ratchet.open",
-		"beaconcrypt/src/ratchet.rs:485-518",
+		"beaconcrypt/src/ratchet.rs:490-523",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
@@ -21777,32 +19338,32 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.fresh_ephemeral",
-		"beaconcrypt/src/server.rs:464-464",
+		"beaconcrypt/src/pqxdh.rs:123-128",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.encapsulate",
-		"beaconcrypt/src/server.rs:469-469",
+		"beaconcrypt/src/pqxdh.rs:133-136",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:402-404",
+		"beaconcrypt/src/server.rs:398-402",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.identity_tag",
-		"beaconcrypt/src/server.rs:421-426",
+		"beaconcrypt-core/src/registration.rs:208-212",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.signatures",
-		"beaconcrypt/src/server.rs:427-429",
+		"beaconcrypt-core/src/registration.rs:237-248",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.validate_init_kex",
-		"beaconcrypt/src/server.rs:430-436",
+		"beaconcrypt-core/src/registration.rs:270-279",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21812,7 +19373,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:450-450",
+		"beaconcrypt/src/server.rs:412-412",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21822,117 +19383,117 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:451-456",
+		"beaconcrypt/src/server.rs:413-418",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.identity_conversion",
-		"beaconcrypt/src/server.rs:470-471",
+		"beaconcrypt/src/pqxdh.rs:110-121",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.dh",
-		"beaconcrypt/src/server.rs:472-490",
+		"beaconcrypt-core/src/agreement.rs:280-299",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.accept_root_input",
-		"beaconcrypt/src/server.rs:491-507",
+		"beaconcrypt-core/src/agreement.rs:364-395",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.root_input",
-		"beaconcrypt-core/src/pqxdh.rs:391-405",
+		"beaconcrypt-core/src/pqxdh.rs:398-412",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.root",
-		"beaconcrypt/src/server.rs:510-510",
+		"beaconcrypt-core/src/agreement.rs:429-438",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:511-512",
+		"beaconcrypt/src/server.rs:434-435",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:514-518",
+		"beaconcrypt/src/server.rs:436-436",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:521-525",
+		"beaconcrypt/src/server.rs:439-443",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.next_key_id",
-		"beaconcrypt/src/server.rs:528-542",
+		"beaconcrypt/src/server.rs:447-454",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.prepare_commit",
-		"beaconcrypt/src/server.rs:543-552",
+		"beaconcrypt-core/src/registration.rs:961-970",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.prepare_commit_ad",
-		"beaconcrypt-core/src/pqxdh.rs:877-880",
+		"beaconcrypt-core/src/pqxdh.rs:884-887",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.ratchet_start",
-		"beaconcrypt/src/server.rs:559-560",
+		"beaconcrypt-core/src/registration.rs:970-971",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.associated_data",
-		"beaconcrypt/src/server.rs:561-561",
+		"beaconcrypt-core/src/registration.rs:1026-1026",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.associated_data",
-		"beaconcrypt-core/src/pqxdh.rs:931-952",
+		"beaconcrypt-core/src/pqxdh.rs:938-959",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:527-529",
+		"beaconcrypt/src/server.rs:446-448",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.binding",
-		"beaconcrypt/src/server.rs:565-572",
+		"beaconcrypt-core/src/registration.rs:995-1003",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:573-581",
+		"beaconcrypt/src/server.rs:478-486",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.commit",
-		"beaconcrypt/src/server.rs:596-608",
+		"beaconcrypt-core/src/registration.rs:1202-1211",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:609-612",
+		"beaconcrypt/src/server.rs:520-523",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:77-110",
+		"beaconcrypt/src/beacon.rs:83-113",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:333-337",
+		"beaconcrypt/src/beacon.rs:326-330",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:367-377",
+		"beaconcrypt/src/beacon.rs:361-374",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21942,7 +19503,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.sign",
-		"beaconcrypt/src/beacon.rs:378-385",
+		"beaconcrypt-core/src/registration.rs:615-626",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -21952,92 +19513,92 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:457-461",
+		"beaconcrypt/src/beacon.rs:456-462",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:479-492",
+		"beaconcrypt/src/beacon.rs:474-484",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.identity_conversion",
-		"beaconcrypt/src/beacon.rs:493-494",
+		"beaconcrypt/src/pqxdh.rs:110-121",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.decapsulate",
-		"beaconcrypt/src/beacon.rs:495-495",
+		"beaconcrypt/src/pqxdh.rs:138-147",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.dh",
-		"beaconcrypt/src/beacon.rs:496-510",
+		"beaconcrypt-core/src/agreement.rs:280-317",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.prepare",
-		"beaconcrypt/src/beacon.rs:511-518",
+		"beaconcrypt-core/src/agreement.rs:400-407",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.pin_check",
-		"beaconcrypt-core/src/pqxdh.rs:545-547",
+		"beaconcrypt-core/src/pqxdh.rs:552-554",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.root",
-		"beaconcrypt/src/beacon.rs:519-519",
+		"beaconcrypt-core/src/agreement.rs:429-438",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.ratchet_start",
-		"beaconcrypt/src/beacon.rs:520-521",
+		"beaconcrypt-core/src/registration.rs:809-812",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.associated_data",
-		"beaconcrypt/src/beacon.rs:522-522",
+		"beaconcrypt-core/src/registration.rs:864-864",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.finish_ad",
-		"beaconcrypt-core/src/pqxdh.rs:552-555",
+		"beaconcrypt-core/src/pqxdh.rs:559-562",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:523-528",
+		"beaconcrypt/src/beacon.rs:521-526",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"ratchet.decrypt",
-		"beaconcrypt/src/ratchet.rs:535-590",
+		"beaconcrypt/src/ratchet.rs:540-595",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.sequence_one",
-		"beaconcrypt/src/beacon.rs:529-531",
+		"beaconcrypt-core/src/registration.rs:892-896",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.binding",
-		"beaconcrypt/src/beacon.rs:537-545",
+		"beaconcrypt-core/src/registration.rs:897-911",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.binding",
-		"beaconcrypt-core/src/pqxdh.rs:616-628",
+		"beaconcrypt-core/src/pqxdh.rs:623-635",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.pin_checks",
-		"beaconcrypt/src/beacon.rs:554-563",
+		"beaconcrypt-core/src/pqxdh.rs:552-556",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:564-579",
+		"beaconcrypt/src/beacon.rs:544-551",
 	),
 	(
 		"fs-records-b2s-window.pvl",
@@ -22052,12 +19613,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-sends.pvl",
 		"sends.encrypt",
-		"beaconcrypt/src/beacon.rs:173-190",
+		"beaconcrypt/src/beacon.rs:176-193",
 	),
 	(
 		"fs-records-b2s-sends.pvl",
 		"sends.seal",
-		"beaconcrypt/src/ratchet.rs:408-480",
+		"beaconcrypt/src/ratchet.rs:413-485",
 	),
 	(
 		"fs-records-b2s-sends.pvl",
@@ -22077,12 +19638,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-sends-chosen.pvl",
 		"sends.encrypt",
-		"beaconcrypt/src/beacon.rs:173-190",
+		"beaconcrypt/src/beacon.rs:176-193",
 	),
 	(
 		"fs-records-b2s-sends-chosen.pvl",
 		"sends.seal",
-		"beaconcrypt/src/ratchet.rs:408-480",
+		"beaconcrypt/src/ratchet.rs:413-485",
 	),
 	(
 		"fs-records-b2s-sends-chosen.pvl",
@@ -22102,27 +19663,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.decrypt",
-		"beaconcrypt/src/server.rs:291-293",
+		"beaconcrypt/src/server.rs:287-289",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.route",
-		"beaconcrypt/src/server.rs:299-307",
+		"beaconcrypt/src/server.rs:295-303",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.frame_sender",
-		"beaconcrypt/src/ratchet.rs:351-353",
+		"beaconcrypt/src/ratchet.rs:356-358",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.peer_associated_data",
-		"beaconcrypt/src/server.rs:283-285",
+		"beaconcrypt/src/server.rs:279-281",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.decode_sender",
-		"beaconcrypt/src/ratchet.rs:541-550",
+		"beaconcrypt/src/ratchet.rs:546-555",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -22152,7 +19713,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.open",
-		"beaconcrypt/src/ratchet.rs:485-518",
+		"beaconcrypt/src/ratchet.rs:490-523",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -22177,7 +19738,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.accepted",
-		"beaconcrypt/src/server.rs:308-311",
+		"beaconcrypt/src/server.rs:304-307",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -22197,32 +19758,32 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.fresh_ephemeral",
-		"beaconcrypt/src/server.rs:464-464",
+		"beaconcrypt/src/pqxdh.rs:123-128",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.encapsulate",
-		"beaconcrypt/src/server.rs:469-469",
+		"beaconcrypt/src/pqxdh.rs:133-136",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:402-404",
+		"beaconcrypt/src/server.rs:398-402",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.identity_tag",
-		"beaconcrypt/src/server.rs:421-426",
+		"beaconcrypt-core/src/registration.rs:208-212",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.signatures",
-		"beaconcrypt/src/server.rs:427-429",
+		"beaconcrypt-core/src/registration.rs:237-248",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.validate_init_kex",
-		"beaconcrypt/src/server.rs:430-436",
+		"beaconcrypt-core/src/registration.rs:270-279",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -22232,7 +19793,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:450-450",
+		"beaconcrypt/src/server.rs:412-412",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -22242,97 +19803,97 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:451-456",
+		"beaconcrypt/src/server.rs:413-418",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.identity_conversion",
-		"beaconcrypt/src/server.rs:470-471",
+		"beaconcrypt/src/pqxdh.rs:110-121",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.dh",
-		"beaconcrypt/src/server.rs:472-490",
+		"beaconcrypt-core/src/agreement.rs:280-299",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.accept_root_input",
-		"beaconcrypt/src/server.rs:491-507",
+		"beaconcrypt-core/src/agreement.rs:364-395",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.root",
-		"beaconcrypt/src/server.rs:510-510",
+		"beaconcrypt-core/src/agreement.rs:429-438",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:511-512",
+		"beaconcrypt/src/server.rs:434-435",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:514-518",
+		"beaconcrypt/src/server.rs:436-436",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:521-525",
+		"beaconcrypt/src/server.rs:439-443",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.next_key_id",
-		"beaconcrypt/src/server.rs:528-542",
+		"beaconcrypt/src/server.rs:447-454",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.prepare_commit",
-		"beaconcrypt/src/server.rs:543-552",
+		"beaconcrypt-core/src/registration.rs:961-970",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.ratchet_start",
-		"beaconcrypt/src/server.rs:559-560",
+		"beaconcrypt-core/src/registration.rs:970-971",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.server_ratchets",
-		"beaconcrypt-core/src/pqxdh.rs:432-435",
+		"beaconcrypt-core/src/pqxdh.rs:439-442",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.associated_data",
-		"beaconcrypt/src/server.rs:561-561",
+		"beaconcrypt-core/src/registration.rs:1026-1026",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.prepare_commit_ad",
-		"beaconcrypt-core/src/pqxdh.rs:877-880",
+		"beaconcrypt-core/src/pqxdh.rs:884-887",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:527-529",
+		"beaconcrypt/src/server.rs:446-448",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.binding",
-		"beaconcrypt/src/server.rs:565-572",
+		"beaconcrypt-core/src/registration.rs:995-1003",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:573-581",
+		"beaconcrypt/src/server.rs:478-486",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.commit",
-		"beaconcrypt/src/server.rs:596-608",
+		"beaconcrypt-core/src/registration.rs:1202-1211",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:609-612",
+		"beaconcrypt/src/server.rs:520-523",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -22342,17 +19903,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:77-110",
+		"beaconcrypt/src/beacon.rs:83-113",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:333-337",
+		"beaconcrypt/src/beacon.rs:326-330",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:367-377",
+		"beaconcrypt/src/beacon.rs:361-374",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -22362,7 +19923,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.sign",
-		"beaconcrypt/src/beacon.rs:378-385",
+		"beaconcrypt-core/src/registration.rs:615-626",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -22372,92 +19933,92 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:457-461",
+		"beaconcrypt/src/beacon.rs:456-462",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:479-492",
+		"beaconcrypt/src/beacon.rs:474-484",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.identity_conversion",
-		"beaconcrypt/src/beacon.rs:493-494",
+		"beaconcrypt/src/pqxdh.rs:110-121",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.decapsulate",
-		"beaconcrypt/src/beacon.rs:495-495",
+		"beaconcrypt/src/pqxdh.rs:138-147",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.dh",
-		"beaconcrypt/src/beacon.rs:496-510",
+		"beaconcrypt-core/src/agreement.rs:280-317",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.prepare",
-		"beaconcrypt/src/beacon.rs:511-518",
+		"beaconcrypt-core/src/agreement.rs:400-407",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.pin_check",
-		"beaconcrypt-core/src/pqxdh.rs:545-547",
+		"beaconcrypt-core/src/pqxdh.rs:552-554",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.root",
-		"beaconcrypt/src/beacon.rs:519-519",
+		"beaconcrypt-core/src/agreement.rs:429-438",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.ratchet_start",
-		"beaconcrypt/src/beacon.rs:520-521",
+		"beaconcrypt-core/src/registration.rs:809-812",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.beacon_ratchets",
-		"beaconcrypt-core/src/pqxdh.rs:428-431",
+		"beaconcrypt-core/src/pqxdh.rs:435-438",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.associated_data",
-		"beaconcrypt/src/beacon.rs:522-522",
+		"beaconcrypt-core/src/registration.rs:864-864",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.finish_ad",
-		"beaconcrypt-core/src/pqxdh.rs:552-555",
+		"beaconcrypt-core/src/pqxdh.rs:559-562",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:523-528",
+		"beaconcrypt/src/beacon.rs:521-526",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.sequence_one",
-		"beaconcrypt/src/beacon.rs:529-531",
+		"beaconcrypt-core/src/registration.rs:892-896",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.binding",
-		"beaconcrypt/src/beacon.rs:537-545",
+		"beaconcrypt-core/src/registration.rs:897-911",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.binding",
-		"beaconcrypt-core/src/pqxdh.rs:616-628",
+		"beaconcrypt-core/src/pqxdh.rs:623-635",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.pin_checks",
-		"beaconcrypt/src/beacon.rs:554-563",
+		"beaconcrypt-core/src/pqxdh.rs:552-556",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:564-579",
+		"beaconcrypt/src/beacon.rs:544-551",
 	),
 ];
 
@@ -23015,6 +20576,9 @@ fn fs_rust_source(path: &str) -> Option<&'static str> {
 		"beaconcrypt/src/server.rs" => Some(ADAPTER_SERVER),
 		"beaconcrypt/src/beacon.rs" => Some(ADAPTER_BEACON),
 		"beaconcrypt/src/ratchet.rs" => Some(ADAPTER_RATCHET),
+		"beaconcrypt-core/src/registration.rs" => Some(CORE_REGISTRATION),
+		"beaconcrypt-core/src/agreement.rs" => Some(CORE_AGREEMENT),
+		"beaconcrypt/src/pqxdh.rs" => Some(ADAPTER_PQXDH),
 		"beaconcrypt-core/src/pqxdh.rs" => Some(CORE_PQXDH),
 		"beaconcrypt-core/src/record.rs" => Some(CORE_RECORD),
 		"beaconcrypt-core/src/ratchet/concrete.rs" => Some(CORE_RATCHET_CONCRETE),
@@ -24733,7 +22297,7 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 			Box::new(|files: &mut FsFiles| {
 				replace_once(
 					&mut files.registration,
-					"src=beaconcrypt/src/server.rs:511-512",
+					"src=beaconcrypt/src/server.rs:434-435",
 					"src=beaconcrypt/src/server.rs:414-416",
 				)
 			}) as Box<dyn Fn(&mut FsFiles)>,
@@ -24790,13 +22354,13 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 		);
 	}
 	assert_eq!(
-		check_fs_citation("beaconcrypt/src/server.rs:511-512", "let inserted"),
+		check_fs_citation("beaconcrypt/src/server.rs:434-435", "let inserted"),
 		Ok(())
 	);
 	assert!(check_fs_citation("beaconcrypt/src/server.rs:416-415", "let inserted").is_err());
 	assert!(check_fs_citation("beaconcrypt/src/server.rs:1-415", "let inserted").is_err());
 	assert!(check_fs_citation("beaconcrypt/src/other.rs:415-416", "let inserted").is_err());
-	assert!(check_fs_citation("beaconcrypt/src/server.rs:511-512", "let").is_err());
+	assert!(check_fs_citation("beaconcrypt/src/server.rs:434-435", "let").is_err());
 }
 
 #[test]
@@ -24837,8 +22401,8 @@ fn free_schedule_vocabulary_and_registration_model_are_pinned() {
 			Box::new(|files: &mut FsFiles| {
 				replace_once(
 					&mut files.registration,
-					"    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/server.rs:464-464 anchor=let ephemeral = crypto_kx::KeyPair::generate().ok()?; *)\n      new ephemeral_secret: bitstring;\n",
-					"    new ephemeral_secret: bitstring;\n    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/server.rs:464-464 anchor=let ephemeral = crypto_kx::KeyPair::generate().ok()?; *)\n",
+					"    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/pqxdh.rs:123-128 anchor=server_ephemeral = crypto_kx::KeyPair::generate().ok(); *)\n      new ephemeral_secret: bitstring;\n",
+					"    new ephemeral_secret: bitstring;\n    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/pqxdh.rs:123-128 anchor=server_ephemeral = crypto_kx::KeyPair::generate().ok(); *)\n",
 				)
 			}),
 			"fs-registration Rust-ordered process changed",
@@ -26262,7 +23826,7 @@ fn serial_proverif_ci_preserves_every_gate_and_separate_group() {
 	}
 }
 
-const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 90;
+const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 60;
 
 #[test]
 fn session_binding_source_mutations_are_rejected() {
@@ -26456,38 +24020,6 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"TLS-style signed input",
 		),
 		(
-			"mldsa_sign_context_substitution",
-			"adapter_auth",
-			"fn sign(",
-			"&transcript::SIGNING_CONTEXT,",
-			"&[],",
-			"signing context and input",
-		),
-		(
-			"mldsa_verify_context_substitution",
-			"adapter_auth",
-			"fn verify(",
-			"&transcript::SIGNING_CONTEXT,",
-			"&[],",
-			"canonical parsing and verification context",
-		),
-		(
-			"mldsa_verify_public_key_substitution",
-			"adapter_auth",
-			"fn verify(",
-			"try_from(public_key)",
-			"try_from(&[0; MLDSA_PUBLIC_KEY_LEN][..])",
-			"canonical parsing and verification context",
-		),
-		(
-			"mldsa_verify_signature_substitution",
-			"adapter_auth",
-			"fn verify(",
-			"Signature::<MlDsa65>::try_from(signature)",
-			"Signature::<MlDsa65>::try_from(&[0; MLDSA_SIGNATURE_LEN][..])",
-			"canonical parsing and verification context",
-		),
-		(
 			"mldsa_keyed_transcript_hash",
 			"adapter_auth",
 			"fn hash_state",
@@ -26518,22 +24050,6 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"fields.identity_key[i - 3993]",
 			"0",
 			"request transcript field order and pins",
-		),
-		(
-			"mldsa_public_key_hash_length",
-			"adapter_auth",
-			"fn public_key_hash",
-			"public_key.len() != MLDSA_PUBLIC_KEY_LEN",
-			"public_key.len() == MLDSA_PUBLIC_KEY_LEN",
-			"public-key fingerprint",
-		),
-		(
-			"mldsa_public_key_hash_bytes",
-			"adapter_auth",
-			"fn public_key_hash",
-			"state.update(public_key);",
-			"state.update(&[]);",
-			"public-key fingerprint",
 		),
 		(
 			"mldsa_request_server_id_big_endian",
@@ -26576,14 +24092,6 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"request transcript field order and pins",
 		),
 		(
-			"mldsa_request_hashes_signature",
-			"adapter_auth",
-			"fn init_transcript_hash",
-			"\n\tfinish_hash(state)",
-			"\n\tstate.update(init.signature);\n\tfinish_hash(state)",
-			"request signature exclusion",
-		),
-		(
 			"mldsa_response_request_hash_omitted",
 			"core_authentication",
 			"fn build_response_prefix",
@@ -26608,14 +24116,6 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"response binds streamed ciphertext length and assigned identifier",
 		),
 		(
-			"mldsa_response_hashes_signature",
-			"adapter_auth",
-			"fn response_transcript_hash",
-			"\n\tfinish_hash(state)",
-			"\n\tstate.update(response.signature);\n\tfinish_hash(state)",
-			"response signature exclusion",
-		),
-		(
 			"mldsa_ad_server_hash_slot",
 			"core_authentication",
 			"fn bind_associated_data",
@@ -26638,126 +24138,6 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"init_hash: [u8; TRANSCRIPT_HASH_LEN],",
 			"pub init_hash: [u8; TRANSCRIPT_HASH_LEN],",
 			"private accepted-token context",
-		),
-		(
-			"mldsa_init_self_presented_key_substituted",
-			"adapter_server",
-			"fn get_shared_secret",
-			"let public_key = registration.mldsa_public_key;",
-			"let public_key = &self.mldsa_public_key();",
-			"request verification precedes classical and stateful work",
-		),
-		(
-			"mldsa_init_verification_role",
-			"adapter_server",
-			"fn get_shared_secret",
-			"AuthRole::Beacon,",
-			"AuthRole::Server,",
-			"request verification precedes classical and stateful work",
-		),
-		(
-			"mldsa_init_verification_bypass",
-			"adapter_server",
-			"fn get_shared_secret",
-			"if !auth::verify(",
-			"if false && !auth::verify(",
-			"request verification precedes classical and stateful work",
-		),
-		(
-			"mldsa_token_request_hash_substitution",
-			"adapter_server",
-			"fn get_shared_secret",
-			"init_hash,\n\t\t\t*verified_registration.beacon_identity_public_key(),",
-			"[0; 64],\n\t\t\t*verified_registration.beacon_identity_public_key(),",
-			"request verification precedes classical and stateful work",
-		),
-		(
-			"mldsa_token_server_key_binding_bypass",
-			"adapter_server",
-			"fn build_registration_response",
-			"if !authentication.matches_server(&self.authentication_pin()?)",
-			"if false && !authentication.matches_server(&self.authentication_pin()?)",
-			"token binding and signed publication precede commit",
-		),
-		(
-			"mldsa_response_signs_wrong_request_hash",
-			"adapter_server",
-			"fn build_registration_response",
-			"response_transcript_hash(authentication.init_hash(), &response)",
-			"response_transcript_hash(&[0; 64], &response)",
-			"token binding and signed publication precede commit",
-		),
-		(
-			"mldsa_response_signing_role",
-			"adapter_server",
-			"fn build_registration_response",
-			"self.mldsa_identity.sign(AuthRole::Server, &hash)",
-			"self.mldsa_identity.sign(AuthRole::Beacon, &hash)",
-			"token binding and signed publication precede commit",
-		),
-		(
-			"mldsa_response_published_signature_substitution",
-			"adapter_server",
-			"fn build_registration_response",
-			"signature: &signature,",
-			"signature: &[0; auth::MLDSA_SIGNATURE_LEN],",
-			"token binding and signed publication precede commit",
-		),
-		(
-			"mldsa_request_published_ml_key_substitution",
-			"adapter_beacon",
-			"fn get_registration_bundle",
-			"mldsa_public_key: &public_key,",
-			"mldsa_public_key: &[0; auth::MLDSA_PUBLIC_KEY_LEN],",
-			"request signing and retained hash before publication",
-		),
-		(
-			"mldsa_request_signing_role",
-			"adapter_beacon",
-			"fn get_registration_bundle",
-			".sign(AuthRole::Beacon, &init_hash)",
-			".sign(AuthRole::Server, &init_hash)",
-			"request signing and retained hash before publication",
-		),
-		(
-			"mldsa_request_retained_hash_substitution",
-			"adapter_beacon",
-			"fn get_registration_bundle",
-			"let authentication = RegistrationBinding::new(\n\t\t\tself.authentication.server_pin,\n\t\t\tinit_hash,",
-			"let authentication = RegistrationBinding::new(\n\t\t\tself.authentication.server_pin,\n\t\t\t[0; 64],",
-			"request signing and retained hash before publication",
-		),
-		(
-			"mldsa_response_verification_pin_substitution",
-			"adapter_beacon",
-			"fn finish_registration",
-			"authentication.server_pin().public_key(),",
-			"&self.mldsa_public_key(),",
-			"pinned response verification before KEM, DH and installation",
-		),
-		(
-			"mldsa_response_verification_request_substitution",
-			"adapter_beacon",
-			"fn finish_registration",
-			"authentication.init_hash(), &response",
-			"&[0; 64], &response",
-			"pinned response verification before KEM, DH and installation",
-		),
-		(
-			"mldsa_response_verification_role",
-			"adapter_beacon",
-			"fn finish_registration",
-			"AuthRole::Server,",
-			"AuthRole::Beacon,",
-			"pinned response verification before KEM, DH and installation",
-		),
-		(
-			"mldsa_response_verification_bypass",
-			"adapter_beacon",
-			"fn finish_registration",
-			"if !auth::verify(",
-			"if false && !auth::verify(",
-			"pinned response verification before KEM, DH and installation",
 		),
 		(
 			"mldsa_model_context_match",
@@ -27032,68 +24412,12 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"private response streaming capability",
 		),
 		(
-			"mldsa_adapter_request_identity_mapping",
-			"adapter_auth",
-			"fn init_transcript_hash",
-			"identity_key: init.identity_key.try_into().ok()?,",
-			"identity_key: &[0; 33],",
-			"request transcript field order and pins",
-		),
-		(
 			"mldsa_adapter_request_signature_role_shared",
 			"core_authentication",
 			"fn build_signature_input",
 			"AuthRole::Beacon => BEACON_LABEL,",
 			"AuthRole::Beacon => SERVER_LABEL,",
 			"TLS-style signed input",
-		),
-		(
-			"mldsa_adapter_request_server_pin_substitution",
-			"adapter_auth",
-			"fn init_transcript_hash",
-			"fields, server_kid, pinned_server_ed, server_auth_key",
-			"fields, server_kid, &[0; 32], server_auth_key",
-			"request transcript field order and pins",
-		),
-		(
-			"mldsa_adapter_request_extra_hash_bytes",
-			"adapter_auth",
-			"fn init_transcript_hash",
-			"state.update(&bytes);",
-			"state.update(&bytes); state.update(&[0]);",
-			"exact core Init bytes once",
-		),
-		(
-			"mldsa_adapter_response_ephemeral_mapping",
-			"adapter_auth",
-			"fn response_transcript_hash",
-			"ephemeral_key: response.ephemeral_key.try_into().ok()?,",
-			"ephemeral_key: response.identity_key.try_into().ok()?,",
-			"complete response transcript",
-		),
-		(
-			"mldsa_adapter_response_core_request_hash_substitution",
-			"adapter_auth",
-			"fn response_transcript_hash",
-			"build_response_transcript(init_hash, fields)",
-			"build_response_transcript(&[0; 64], fields)",
-			"complete response transcript",
-		),
-		(
-			"mldsa_adapter_response_extra_hash_bytes",
-			"adapter_auth",
-			"fn response_transcript_hash",
-			"for part in transcript.parts() {\n\t\tstate.update(part);\n\t}",
-			"for part in transcript.parts() {\n\t\tstate.update(part);\n\t}\n\tstate.update(&[0]);",
-			"exactly the ordered core response parts",
-		),
-		(
-			"mldsa_adapter_ad_hashes_reversed",
-			"adapter_pqxdh",
-			"fn mldsa_associated_data",
-			"bind_associated_data(base, server_hash, beacon_hash)",
-			"bind_associated_data(base, beacon_hash, server_hash)",
-			"associated-data core delegation",
 		),
 	] {
 		let mut changed = baseline.clone();

@@ -877,6 +877,19 @@ check-lean-root:
 		BeaconcryptCore.Refinement.TranscriptAuth \
 		BeaconcryptCore.Refinement.SessionBinding \
 		BeaconcryptCore.PanicFreedom.SessionBinding \
+		BeaconcryptCore.Refinement.KeyAgreement \
+		BeaconcryptCore.Refinement.RegistrationInputs \
+		BeaconcryptCore.Refinement.RegistrationBytePrimitives \
+		BeaconcryptCore.Refinement.RegistrationAuthentication \
+		BeaconcryptCore.Refinement.RegistrationInbound \
+		BeaconcryptCore.Refinement.RegistrationResponse \
+		BeaconcryptCore.Refinement.RegistrationSigning \
+		BeaconcryptCore.Refinement.RegistrationSigningContinuations \
+		BeaconcryptCore.Refinement.RegistrationPublication \
+		BeaconcryptCore.Refinement.RegistrationAuthenticationFlow \
+		BeaconcryptCore.Refinement.RegistrationSigningTrace \
+		BeaconcryptCore.Refinement.RegistrationSigningHistory \
+		BeaconcryptCore.Refinement.RegistrationSigningDispatch \
 		BeaconcryptCore.Verification.PqxdhCommitmentRefinement \
 		BeaconcryptCore.Refinement.RatchetControlRestore \
 		BeaconcryptCore.Refinement.RatchetEffectRefinement \

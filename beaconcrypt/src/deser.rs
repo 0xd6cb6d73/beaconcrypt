@@ -418,7 +418,8 @@ pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServer
 		identity_public_key: *keypair.public_key.as_bytes(),
 		identity_key_id: identity_key_kid,
 	};
-	let server_fingerprint = crate::auth::public_key_hash(&mldsa_identity.public_key())?;
+	let server_fingerprint =
+		*crate::auth::fingerprint_pin(server_binding, mldsa_identity.public_key())?.fingerprint();
 	let known_ids = known_ids
 		.into_iter()
 		.map(|(key_id, remote)| {

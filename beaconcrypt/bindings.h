@@ -179,8 +179,6 @@ typedef struct beaconcrypt_EncryptState {
   uint64_t seq;
 } beaconcrypt_EncryptState;
 
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
