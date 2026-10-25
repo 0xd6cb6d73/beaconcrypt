@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: 0BSD
 
+use alloc::vec::Vec;
+
 #[cfg(feature = "server")]
 use crate::error::DecodingError;
 #[cfg(any(feature = "server", test))]
 use crate::error::EncodingError;
-use libsodium_rs::utils::memcmp;
-use std::any::TypeId;
-use std::marker::{PhantomData, PhantomPinned};
 #[cfg(any(feature = "server", test))]
-use std::vec;
+use alloc::vec;
+use beaconcrypt_crypto::utils::memcmp;
+use core::any::TypeId;
+use core::marker::{PhantomData, PhantomPinned};
 use zeroize::Zeroizing;
 
 use crate::ratchet::KDF_STATE_SIZE;
@@ -27,7 +29,7 @@ use beaconcrypt_core::pqxdh::ASSOCIATED_DATA_SIZE as AD_SIZE;
 #[cfg(test)]
 use beaconcrypt_core::ratchet as verified_ratchet;
 #[cfg(test)]
-use libsodium_rs::crypto_aead;
+use beaconcrypt_crypto::crypto_aead;
 
 #[cfg(feature = "server")]
 #[path = "deser.rs"]
@@ -490,7 +492,7 @@ pub struct Encrypted {
 	pub seq: u64,
 }
 
-impl std::ops::Deref for Encrypted {
+impl core::ops::Deref for Encrypted {
 	type Target = [u8];
 
 	fn deref(&self) -> &Self::Target {
@@ -498,7 +500,7 @@ impl std::ops::Deref for Encrypted {
 	}
 }
 
-impl std::ops::DerefMut for Encrypted {
+impl core::ops::DerefMut for Encrypted {
 	fn deref_mut(&mut self) -> &mut Self::Target {
 		&mut self.ciphertext
 	}

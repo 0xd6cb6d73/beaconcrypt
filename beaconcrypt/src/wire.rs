@@ -2,6 +2,8 @@
 
 //! Allocate output only from trusted slice lengths, and publish successful encodings.
 
+use alloc::vec::Vec;
+
 use beaconcrypt_parse::CryptoFrame;
 #[cfg(any(feature = "beacon", test))]
 use beaconcrypt_parse::InitKex;

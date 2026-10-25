@@ -68,8 +68,8 @@ fn deserialize_state_update(serialized: &str) -> StateUpdate {
 }
 
 fn main() {
-	libsodium_rs::ensure_init().expect("failed to initialize libsodium");
-	let server_seed = libsodium_rs::random::bytes(ED25519_SEED_SIZE);
+	beaconcrypt_crypto::ensure_init().expect("failed to initialize cryptography");
+	let server_seed = beaconcrypt_crypto::random::bytes(ED25519_SEED_SIZE);
 	let state_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/rust/server-state.bin");
 	let store = FileSnapshotStore {
 		path: state_path.clone(),

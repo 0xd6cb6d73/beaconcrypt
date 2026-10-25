@@ -1,0 +1,106 @@
+{
+  "scope": "Git source distribution and actual wheel build from the unpacked archive after native packaging split; archive snapshot precedes final CI-only validation-step edit.",
+  "prepared_utc": "2026-10-25T02:05:47.472748+00:00",
+  "source_revision": "278204b921ae31a3e900cf21f690184173e531f5",
+  "source_dirty": true,
+  "fix": {
+    "config": "tool.maturin.sdist-generator = git",
+    "reason": "Cargo sdist target normalization removed the parent-relative shared-source [lib] target; Git preserves tracked manifests and shared Rust sources without source duplication or API changes.",
+    "excluded_sdist_only": [
+      "rooterberg",
+      "wycheproof",
+      "beaconcrypt-core/proofs/**/*",
+      "doc/**/*"
+    ],
+    "primary_sources": [
+      "https://www.maturin.rs/config.html",
+      "https://github.com/PyO3/maturin/blob/v1.14.1/src/source_distribution/mod.rs"
+    ]
+  },
+  "resource_leases": {
+    "sdist_wheel": "00002686",
+    "native_artifact_restore": "00002688"
+  },
+  "toolchain": {
+    "rust": "1.96.0",
+    "RUSTFLAGS": "-C linker-features=-lld",
+    "sdist_maturin_locked_version": "1.14.1",
+    "wheel_generator": "maturin (1.15.0)",
+    "CARGO_BUILD_JOBS": 2
+  },
+  "validation_script": {
+    "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/validate-python-sdist-git.sh",
+    "bytes": 2738,
+    "sha256": "bf7ad5cf5757321b75e796d68e53b9734970b10be70437ce9dac7a0b29f32506"
+  },
+  "command_log": {
+    "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/python-sdist-git-validation-lease.log",
+    "bytes": 2412,
+    "sha256": "15ec9c02f38111cb6cf0071d245239b965d85dd2b10cfdc0046cc1c2165c79a7"
+  },
+  "source_archive": {
+    "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/python-sdist-git-validation/dist/beaconcrypt-0.6.1.tar.gz",
+    "bytes": 541447,
+    "sha256": "2bdf199d5582c8e8c672747989e45ac619f4a10e772abfceac5079b1136cb3fd",
+    "entries": 167,
+    "shared_adapter_rust_files": 15,
+    "ffi_lib_path_preserved": "../beaconcrypt/src/lib.rs",
+    "shared_lib_rs_exact_checkout_bytes": true,
+    "proofs_and_vector_submodules_excluded": true
+  },
+  "wheel_from_unpacked_archive": {
+    "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/python-sdist-git-validation/wheels/beaconcrypt-0.6.1-cp311-abi3-manylinux_2_34_x86_64.whl",
+    "bytes": 574832,
+    "sha256": "bbfb0c8c1deca11b98f462ff240f472810bf6cf324c9b0b9dcc7a59730dc4074",
+    "build_passed": true,
+    "tag": "cp311-abi3-manylinux_2_34_x86_64"
+  },
+  "preserved_initial_failure": {
+    "archive": {
+      "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/python-sdist-validation/dist/beaconcrypt-0.6.1.tar.gz",
+      "bytes": 150381,
+      "sha256": "4ebda16a4245d6cb2d7f4eb910530d29faa2986aad8a26672a4d648eb5c6a6c8"
+    },
+    "cause": "The original Cargo-generator archive contained no shared adapter Rust files and its rewritten FFI manifest omitted [lib]. The initial full native pipeline correctly stopped at the source-archive check; the failure was not erased or relabeled."
+  },
+  "native_artifact_restore": {
+    "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/retained-native-artifacts.json",
+    "bytes": 2067,
+    "sha256": "c5855eee31a61ad4c00ea1c02781a0369f622414fce1a1389927c8241936237b",
+    "all_five_match_recorded_measurements": true,
+    "source_mtime_only_touched": true,
+    "measured_values_unchanged": true,
+    "artifacts": [
+      {
+        "artifact": "target/release/libbeaconcrypt.a",
+        "bytes": 8738698,
+        "sha256": "2b40f04fadffeb772e2b16e0bd2c1c905710de324476194fa6c71e73d2450539",
+        "retained_copy": "/tmp/bc-arc-scratch/no-std-rustcrypto/measured-native-release/target/release/libbeaconcrypt.a"
+      },
+      {
+        "artifact": "target/release/libbeaconcrypt.so",
+        "bytes": 1089968,
+        "sha256": "52f12627697d4023878e6b5553fa424ba848ed82f7c1e9f850facc3f2d292b49",
+        "retained_copy": "/tmp/bc-arc-scratch/no-std-rustcrypto/measured-native-release/target/release/libbeaconcrypt.so"
+      },
+      {
+        "artifact": "target/release/libbeaconcrypt.rlib",
+        "bytes": 2083458,
+        "sha256": "aea4b80d74ec528d56309a601914a8608bb114e7dfe99ea544b88e14f613a165",
+        "retained_copy": "/tmp/bc-arc-scratch/no-std-rustcrypto/measured-native-release/target/release/libbeaconcrypt.rlib"
+      },
+      {
+        "artifact": "target-release-cli/release/libbeaconcrypt.a",
+        "bytes": 2021706,
+        "sha256": "e80363884e9feda127120bef7989d5703f6a4a61054e6318a8191b626af87747",
+        "retained_copy": "/tmp/bc-arc-scratch/no-std-rustcrypto/measured-native-release/target-release-cli/release/libbeaconcrypt.a"
+      },
+      {
+        "artifact": "target-release-beacon/release/libbeaconcrypt.a",
+        "bytes": 908898,
+        "sha256": "c7058461d4dffe24affdde2c3dc3f05be54ba4687ec84b12fc6104cea1284a45",
+        "retained_copy": "/tmp/bc-arc-scratch/no-std-rustcrypto/measured-native-release/target-release-beacon/release/libbeaconcrypt.a"
+      }
+    ]
+  }
+}

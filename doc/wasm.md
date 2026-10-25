@@ -19,8 +19,7 @@ the missing artifact.
 
 ## Build the guest from source
 
-Install the versions in [wasm-toolchain.json](../scripts/wasm-toolchain.json):
-Rust 1.97.1, its `wasm32-wasip1` target, and Zig 0.17.0 on `PATH`. Then run:
+Install the versions in [wasm-toolchain.json](../scripts/wasm-toolchain.json): Rust 1.97.1 and its `wasm32-wasip1` target. Then run:
 
 ```sh
 rustup toolchain install 1.97.1 --profile minimal --target wasm32-wasip1
@@ -29,25 +28,15 @@ CGO_ENABLED=0 go test ./...
 CGO_ENABLED=1 go test -tags=beaconcrypt_wazero ./...
 ```
 
-The script checks the installed Rust/Cargo/Zig versions, builds the
-`beaconcrypt-wasm` workspace member with `--locked --release`, and writes
-`internal/wasm/beaconcrypt.wasm` and `internal/wasm/beaconcrypt.build.json`.
-Both files are ignored by Git. `CARGO_TARGET_DIR` is honored; a relative value
-is interpreted from the repository root. Zig's global cache defaults to
-`.build/zig-cache` and honors `ZIG_GLOBAL_CACHE_DIR`. The generated module requires no
-Wasmtime, Wasmi, JavaScript or Emscripten dependency.
+The script checks the installed Rust version, builds the `beaconcrypt-wasm` workspace member with `--locked --release`, and writes `internal/wasm/beaconcrypt.wasm` and `internal/wasm/beaconcrypt.build.json`. Both files are ignored by Git. `CARGO_TARGET_DIR` is honored; a relative value is interpreted from the repository root. The guest's RustCrypto/Dalek backend requires no Zig installation or native C-crypto build. The generated module requires no Wasmtime, Wasmi, JavaScript or Emscripten dependency.
 
-The guest uses the existing Rust protocol, codecs, libsodium and persistence
-implementation. Go supplies secure randomness before guest initialization and
-implements snapshot-store callbacks. Compilation is shared; each server or
-beacon retains its own guest memory and serialized operations. Server state
-still requires the storage guarantees described in [persistence.md](persistence.md).
+The guest uses the existing Rust protocol, codecs and persistence implementation with the portable RustCrypto/Dalek primitives. It remains a hosted WASI build with `std`. Go supplies secure randomness through WASI and implements snapshot-store callbacks. Compilation is shared; each server or beacon retains its own guest memory and serialized operations. Server state still requires the storage guarantees described in [persistence.md](persistence.md).
 
 Registration uses a single CBOR version-two array in both backends. The eight-element `InitKex` array carries the agent's 1,952-byte ML-DSA public key and 3,309-byte signature after its four PQXDH byte fields. The eight-element `KexResponse` array carries its 3,309-byte signature after the assigned key ID. Established traffic uses the version-one `CryptoFrame` array. Go and the guest pass complete registration messages as opaque bytes; ABI version two continues to provision both server public-key pins and independent identity seeds through its existing constructor requests.
 
 ## Run guest unit and mutation tests
 
-With the pinned Rust target and Zig installed, run `bash scripts/test-wasm.sh` to execute the Rust guest tests in wazero under the production 256 MiB memory limit. The runner uses the existing pinned Go dependency and test-only snapshot callbacks. It exercises actual 32-bit allocation descriptors, complete packed replies, snapshot load/CAS forwarding, and owned-context destruction. One size-bound probe runs in a separate guest and must produce the expected allocation-failure trap, so the test never allocates a multi-gigabyte host buffer.
+With the pinned Rust toolchain and target installed, run `bash scripts/test-wasm.sh` to execute the Rust guest tests in wazero under the production 256 MiB memory limit. The runner uses the existing pinned Go dependency and test-only snapshot callbacks. It exercises actual 32-bit allocation descriptors, complete packed replies, snapshot load/CAS forwarding, and owned-context destruction. One size-bound probe runs in a separate guest and must produce the expected allocation-failure trap, so the test never allocates a multi-gigabyte host buffer.
 
 Run the complete mutation catalog in two target partitions: `cargo mutants --workspace --exclude 'beaconcrypt-wasm/**'` runs native workspace mutations, and `bash scripts/test-wasm.sh --mutants` runs every guest mutation on wasm32-wasip1. Both partitions retain the repository's mutation configuration. Guest mutation workers use private build directories so a WASI runner cannot read another worker's rebuilt artifact. Guest tests use `test_workspace=false` because native integration tests require host OS facilities; the native partition still runs the workspace tests. The catalog union covers all source files, and only exact-name equivalent mutants justified in `.cargo/mutants.toml` are excluded. Native pointer-width behavior does not substitute for guest allocation and host-callback coverage.
 
@@ -71,11 +60,7 @@ revision or Rust/build inputs since generation. Its outputs are:
   SHA-256 hashes for the Wasm and bundled files.
 - `SHA256SUMS`, covering the archive and standalone release assets.
 
-Archive ordering, permissions and timestamps are deterministic for identical
-inputs. The pinned recipe and provenance support rebuilding the module; this
-does not claim byte-identical Rust/Zig output across arbitrary build hosts.
-The current import allowlist excludes filesystem, clock and network access.
-The Go loader validates the ABI and function signatures when using the module.
+Archive ordering, permissions and timestamps are deterministic for identical inputs. The pinned recipe and provenance support rebuilding the module; this does not claim byte-identical Rust output across arbitrary build hosts. The current import allowlist excludes filesystem, clock and network access. The Go loader validates the ABI and function signatures when using the module.
 
 ## Build an existing application from the release bundle
 
@@ -120,4 +105,4 @@ checkout. Packaging tests run without downloading tools:
 python3 -m unittest discover -s scripts -p 'test_package_wasm.py' -v
 ```
 
-The complete encoded-message limit remains 32 MiB, including CBOR headers, ML-DSA public keys, and signatures. It is not a plaintext, snapshot or JSON-state limit. Each guest instance has a 256 MiB memory cap. The one-peer test fixture measured about 193 MiB sender and 97 MiB receiver guest memory at that boundary; these are separate instances and exclude host memory. Those measurements do not bound memory use for other peer counts or snapshot sizes. Resource exhaustion invalidates the affected handle. The Wasm backend's memory and throughput costs should be measured with the application's peer counts and message sizes. Functional interoperability does not establish constant-time behavior of generated native code.
+The complete encoded-message limit remains 32 MiB, including CBOR headers, ML-DSA public keys, and signatures. It is not a plaintext, snapshot or JSON-state limit. Each guest instance has a 256 MiB memory cap. Before the RustCrypto migration, the one-peer test fixture measured about 193 MiB sender and 97 MiB receiver guest memory at that boundary; these are separate instances and exclude host memory. Those measurements do not bound memory use for other peer counts or snapshot sizes. Resource exhaustion invalidates the affected handle. The Wasm backend's memory and throughput costs should be measured with the application's peer counts and message sizes. Functional interoperability does not establish constant-time behavior of generated native code.
