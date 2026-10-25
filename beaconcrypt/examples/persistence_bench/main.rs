@@ -6,6 +6,7 @@
 mod adapter_tests;
 mod buffered;
 mod concurrency;
+mod concurrency_contracts;
 mod concurrency_schedule;
 mod database;
 #[cfg(test)]

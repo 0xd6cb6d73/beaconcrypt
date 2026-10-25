@@ -56,6 +56,11 @@ impl Drop for DatabaseCall<'_> {
 		if let Some(start) = self.start {
 			let end = Instant::now();
 			if let Some((epoch, spans)) = self.counts.trace.borrow_mut().as_mut() {
+				#[cfg(test)]
+				assert!(
+					spans.len() < spans.capacity(),
+					"database tracing must be preallocated before measured callbacks"
+				);
 				spans.push(DatabaseSpan {
 					kind: self.kind,
 					start_ns: super::nanos(start.duration_since(*epoch)),
@@ -384,4 +389,32 @@ pub fn footprint(path: &Path, row_store: bool) -> rusqlite::Result<serde_json::V
 		"rows": rows, "stored_value_bytes": value_bytes,
 		"main_file_bytes": file_bytes(path), "wal_file_bytes": file_bytes(Path::new(&wal_path)),
 	}))
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn sqlite_connection_uses_the_declared_durability_cache_and_wait_settings() {
+		let directory = tempfile::tempdir().unwrap();
+		let connection = open(&directory.path().join("settings.sqlite")).unwrap();
+		let journal: String = connection
+			.pragma_query_value(None, "journal_mode", |row| row.get(0))
+			.unwrap();
+		assert_eq!(journal, "wal");
+		for (pragma, expected) in [
+			("synchronous", 2_i64),
+			("page_size", 4096),
+			// A negative value declares KiB; positive 20000 would mean 20000 pages.
+			("cache_size", -20_000),
+			("wal_autocheckpoint", 1000),
+			("busy_timeout", 5000),
+		] {
+			let actual: i64 = connection
+				.pragma_query_value(None, pragma, |row| row.get(0))
+				.unwrap();
+			assert_eq!(actual, expected, "actual setting for {pragma}");
+		}
+	}
 }

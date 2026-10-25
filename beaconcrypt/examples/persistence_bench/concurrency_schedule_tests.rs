@@ -231,6 +231,59 @@ fn invalid_configuration_and_peer_queries_fail_explicitly() {
 	assert_eq!(schedule(&configuration, sparse).unwrap().len(), 1);
 }
 
+#[test]
+fn every_zero_schedule_limit_is_rejected_by_preflight_for_every_workload() {
+	for workload in [
+		Workload::Small,
+		Workload::Large,
+		Workload::Mixed { large_every: 2 },
+		Workload::Heterogeneous {
+			periods_ns: vec![3, 1],
+			large_every: 2,
+		},
+		Workload::Burst { messages: 3 },
+	] {
+		assert_eq!(validate(&config(), &workload), Ok(()));
+		for change in [
+			(|c: &mut ScheduleConfig| c.peers = 0) as fn(&mut ScheduleConfig),
+			|c| c.interval_ns = 0,
+			|c| c.horizon_ns = 0,
+			|c| c.small_bytes = 0,
+			|c| c.large_bytes = 0,
+			|c| c.burst_bytes = 0,
+			|c| c.max_operations = 0,
+			|c| c.max_plaintext_bytes = 0,
+		] {
+			let mut invalid = config();
+			change(&mut invalid);
+			assert_eq!(
+				validate(&invalid, &workload),
+				Err("schedule parameters and limits must be positive".into())
+			);
+		}
+	}
+}
+
+#[test]
+fn active_peer_budget_accepts_equality_and_rejects_only_excess() {
+	let mut configuration = config();
+	configuration.max_operations = 3;
+	let workload = Workload::Burst { messages: 3 };
+	assert_eq!(validate(&configuration, &workload), Ok(()));
+	let jobs = schedule(&configuration, workload.clone()).unwrap();
+	assert_eq!(
+		jobs.iter().map(|job| job.peer).collect::<Vec<_>>(),
+		[0, 1, 2]
+	);
+	configuration.peers = 4;
+	assert_eq!(
+		validate(&configuration, &workload),
+		Err("active peer count exceeds the bounded operation budget".into())
+	);
+	configuration.peers = 2;
+	assert_eq!(validate(&configuration, &workload), Ok(()));
+}
+
 fn sample_job(at: u64) -> Scheduled {
 	Scheduled {
 		id: 0,
@@ -337,6 +390,25 @@ proptest! {
 		configuration.max_plaintext_bytes -= 1;
 		let rejected = schedule(&configuration, Workload::Mixed { large_every: cadence });
 		prop_assert!(rejected.is_err());
+	}
+
+	#[test]
+	fn generated_fixed_payload_limits_equal_the_actual_offered_plaintext(peers in 1usize..9, period in 1u64..21, horizon in 1u64..101, size in 2usize..4096) {
+		for workload in [Workload::Small, Workload::Large] {
+			let mut configuration = config();
+			configuration.peers = peers;
+			configuration.interval_ns = period;
+			configuration.horizon_ns = horizon;
+			configuration.small_bytes = size;
+			configuration.large_bytes = size + 1;
+			configuration.max_plaintext_bytes = u64::MAX;
+			let jobs = schedule(&configuration, workload.clone()).unwrap();
+			let offered_bytes: u64 = jobs.iter().map(|job| job.plaintext_bytes as u64).sum();
+			configuration.max_plaintext_bytes = offered_bytes;
+			prop_assert_eq!(schedule(&configuration, workload.clone()).unwrap(), jobs);
+			configuration.max_plaintext_bytes -= 1;
+			prop_assert_eq!(schedule(&configuration, workload).unwrap_err(), "offered plaintext byte limit exceeded before allocation");
+		}
 	}
 
 	#[test]

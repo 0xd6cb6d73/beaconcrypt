@@ -2,7 +2,12 @@
 
 //! Benchmark-only PostgreSQL adapter. Every writer must use the same advisory-lock protocol.
 
-use std::{cell::RefCell, rc::Rc, str::FromStr};
+use std::{
+	cell::RefCell,
+	net::{IpAddr, Ipv4Addr, Ipv6Addr},
+	rc::Rc,
+	str::FromStr,
+};
 
 use beaconcrypt::{
 	RowError, RowStore, RowTransaction, ServerSnapshot, SnapshotHead, SnapshotLineage,
@@ -20,20 +25,28 @@ pub struct PgFixture {
 	cleanup: bool,
 }
 
+/// Validate both host names and address overrides before any connection is attempted.
+fn validate_loopback_config(config: &Config) -> Result<()> {
+	if config.get_hosts().is_empty()
+		|| !config
+			.get_hosts()
+			.iter()
+			.all(|host| matches!(host, Host::Tcp(name) if name == "127.0.0.1" || name == "::1"))
+		|| !config.get_hostaddrs().iter().all(|address| {
+			*address == IpAddr::V4(Ipv4Addr::LOCALHOST)
+				|| *address == IpAddr::V6(Ipv6Addr::LOCALHOST)
+		}) {
+		return Err(
+			"PostgreSQL benchmark requires an explicit loopback TCP host (127.0.0.1 or ::1)".into(),
+		);
+	}
+	Ok(())
+}
+
 impl PgFixture {
 	pub fn create(dsn: &str, lineage: SnapshotLineage) -> Result<Rc<Self>> {
 		let config = Config::from_str(dsn)?;
-		if config.get_hosts().is_empty()
-			|| !config
-				.get_hosts()
-				.iter()
-				.all(|host| matches!(host, Host::Tcp(name) if name == "127.0.0.1" || name == "::1"))
-		{
-			return Err(
-				"PostgreSQL benchmark requires an explicit loopback TCP host (127.0.0.1 or ::1)"
-					.into(),
-			);
-		}
+		validate_loopback_config(&config)?;
 		let schema = format!(
 			"bcbench_{}",
 			lineage.as_bytes()[..16]
@@ -170,7 +183,7 @@ fn settings(client: &mut Client) -> Result<Value> {
 		"full_page_writes":row.get::<_,String>(5),"isolation":isolation,
 		"shared_buffers":row.get::<_,String>(7),"checkpoint_timeout":row.get::<_,String>(8),
 		"max_wal_size":row.get::<_,String>(9),"wal_sync_method":row.get::<_,String>(10),
-		"autovacuum":row.get::<_,String>(11),"transport":"loopback TCP, prepared statements, one connection per arm"
+		"autovacuum":row.get::<_,String>(11),"transport":"loopback TCP, prepared statements, one connection per resident owner"
 	}))
 }
 
@@ -381,6 +394,186 @@ fn storage(error: postgres::Error) -> RowError {
 }
 
 #[test]
+fn loopback_configuration_accepts_explicit_canonical_hosts_without_connecting() {
+	for (host, addresses) in [
+		("127.0.0.1", ""),
+		("::1", ""),
+		("127.0.0.1,::1", ""),
+		("127.0.0.1", "127.0.0.1"),
+		("127.0.0.1", "::1"),
+		("::1", "::1"),
+		("127.0.0.1,::1", "127.0.0.1,::1"),
+	] {
+		let override_option = if addresses.is_empty() {
+			String::new()
+		} else {
+			format!(" hostaddr={addresses}")
+		};
+		let config = Config::from_str(&format!(
+			"host={host}{override_option} port=55439 user=bcbench dbname=postgres"
+		))
+		.unwrap();
+		validate_loopback_config(&config).unwrap();
+		let hosts: Vec<_> = config
+			.get_hosts()
+			.iter()
+			.map(|host| match host {
+				Host::Tcp(name) => name.as_str(),
+				_ => panic!("accepted a non-TCP host"),
+			})
+			.collect();
+		assert_eq!(hosts, host.split(',').collect::<Vec<_>>());
+		let parsed_addresses: Vec<_> = config
+			.get_hostaddrs()
+			.iter()
+			.map(ToString::to_string)
+			.collect();
+		let expected_addresses: Vec<_> = addresses
+			.split(',')
+			.filter(|address| !address.is_empty())
+			.collect();
+		assert_eq!(parsed_addresses, expected_addresses);
+		assert_eq!(config.get_ports(), &[55439]);
+		assert_eq!(config.get_user(), Some("bcbench"));
+		assert_eq!(config.get_dbname(), Some("postgres"));
+	}
+}
+
+#[test]
+fn loopback_configuration_rejects_missing_socket_hostname_and_external_overrides() {
+	// These tests call only the parser/policy helper. Even an accepting mutant cannot dial a host.
+	for dsn in [
+		"",
+		"user=bcbench dbname=postgres",
+		"host=''",
+		"host=/tmp",
+		"host=localhost",
+		"host=203.0.113.1",
+		"host=127.0.0.2",
+		"host=::ffff:127.0.0.1",
+		"host=127.0.0.1,localhost",
+		"host=localhost,::1",
+		"host=127.0.0.1,203.0.113.1",
+		"host=127.0.0.1,/tmp",
+		"hostaddr=127.0.0.1",
+		"host=127.0.0.1 hostaddr=203.0.113.1",
+		"host=::1 hostaddr=2001:db8::1",
+		"host=127.0.0.1 hostaddr=127.0.0.2",
+		"host=127.0.0.1 hostaddr=::ffff:127.0.0.1",
+		"host=127.0.0.1,::1 hostaddr=127.0.0.1,203.0.113.1",
+		"host=127.0.0.1,::1 hostaddr=2001:db8::1,::1",
+	] {
+		let config = Config::from_str(dsn).unwrap();
+		let error =
+			validate_loopback_config(&config).expect_err("noncanonical connection target accepted");
+		assert_eq!(
+			error.to_string(),
+			"PostgreSQL benchmark requires an explicit loopback TCP host (127.0.0.1 or ::1)",
+			"unexpected rejection for {dsn:?}"
+		);
+	}
+}
+
+#[test]
+#[ignore = "requires dedicated durable PostgreSQL over loopback TCP"]
+fn postgres_fixture_lifetime_preserves_shared_owners_and_rejects_duplicate_ownership() {
+	struct OwnedSchema {
+		client: Client,
+		schema: String,
+	}
+	impl OwnedSchema {
+		fn exists(&mut self) -> bool {
+			self.client
+				.query_one(
+					"SELECT EXISTS(SELECT FROM pg_namespace WHERE nspname=$1)",
+					&[&self.schema],
+				)
+				.unwrap()
+				.get(0)
+		}
+		fn assert_marker(&mut self) {
+			let value: Vec<u8> = self
+				.client
+				.query_one(
+					&format!("SELECT value FROM {}.peer_rows WHERE key=$1", self.schema),
+					&[&b"marker".as_slice()],
+				)
+				.unwrap()
+				.get(0);
+			assert_eq!(value, b"owned data survives");
+		}
+	}
+	impl Drop for OwnedSchema {
+		fn drop(&mut self) {
+			// Cleanup only this test's successfully created random namespace, also after a failing
+			// assertion under mutation. It runs after the fixture-lifetime assertions, not before.
+			if let Err(error) = self
+				.client
+				.batch_execute(&format!("DROP SCHEMA IF EXISTS {} CASCADE", self.schema))
+			{
+				eprintln!("could not clean owned fixture-lifetime schema: {error}");
+			}
+		}
+	}
+
+	libsodium_rs::ensure_init().unwrap();
+	let mut lineage = [0; 32];
+	libsodium_rs::random::fill_bytes(&mut lineage);
+	let dsn = std::env::var("BEACONCRYPT_BENCH_POSTGRES").expect("set live PostgreSQL DSN");
+	let fixture = PgFixture::create(&dsn, SnapshotLineage::from_bytes(lineage)).unwrap();
+	let mut observer = OwnedSchema {
+		client: fixture.connect().unwrap(),
+		schema: fixture.schema.clone(),
+	};
+	assert!(observer.exists());
+	observer
+		.client
+		.batch_execute(&format!(
+			"INSERT INTO {}.peer_rows VALUES(decode('6d61726b6572','hex'),convert_to('owned data survives','UTF8'))",
+			observer.schema
+		))
+		.unwrap();
+	let shared_owner = Rc::clone(&fixture);
+	drop(fixture.worker_copy());
+	assert!(
+		observer.exists(),
+		"a worker copy must not own schema cleanup"
+	);
+	observer.assert_marker();
+	let duplicate = PgFixture::create(&dsn, SnapshotLineage::from_bytes(lineage))
+		.err()
+		.expect("creating an already owned namespace must fail");
+	assert_eq!(
+		duplicate
+			.downcast_ref::<postgres::Error>()
+			.unwrap()
+			.as_db_error()
+			.unwrap()
+			.code(),
+		&postgres::error::SqlState::DUPLICATE_SCHEMA
+	);
+	assert!(
+		observer.exists(),
+		"a failed duplicate creation must not remove the first owner's schema"
+	);
+	observer.assert_marker();
+	drop(fixture);
+	assert!(
+		observer.exists(),
+		"an Rc owner still keeps the fixture alive"
+	);
+	observer.assert_marker();
+	let nonowning_worker = shared_owner.worker_copy();
+	drop(shared_owner);
+	assert!(
+		!observer.exists(),
+		"the final owning reference must remove its namespace"
+	);
+	drop(nonowning_worker);
+	assert!(!observer.exists());
+}
+
+#[test]
 #[ignore = "requires dedicated durable PostgreSQL over loopback TCP"]
 fn postgres_validation_observes_commit_after_advisory_lock_wait() {
 	use std::{
@@ -459,4 +652,80 @@ fn postgres_validation_observes_commit_after_advisory_lock_wait() {
 			Ok(())
 		})
 		.unwrap();
+}
+
+#[test]
+#[ignore = "requires dedicated PostgreSQL with authority to create and drop an owned test role"]
+fn postgres_checkpoint_propagates_permission_error_for_an_owned_unprivileged_role() {
+	struct OwnedRole {
+		client: Client,
+		name: Option<String>,
+	}
+	impl Drop for OwnedRole {
+		fn drop(&mut self) {
+			if let Some(name) = &self.name
+				&& let Err(error) = self.client.batch_execute(&format!("DROP ROLE {name}"))
+			{
+				eprintln!("could not remove owned checkpoint-test role {name}: {error}");
+			}
+		}
+	}
+
+	libsodium_rs::ensure_init().unwrap();
+	let mut lineage = [0; 32];
+	libsodium_rs::random::fill_bytes(&mut lineage);
+	let fixture = PgFixture::create(
+		&std::env::var("BEACONCRYPT_BENCH_POSTGRES").expect("set live PostgreSQL DSN"),
+		SnapshotLineage::from_bytes(lineage),
+	)
+	.unwrap();
+	// The random fixture schema supplies a unique, identifier-safe role name under 63 bytes.
+	let role = format!("{}_checkpoint_role", fixture.schema);
+	let mut administrator = fixture.connect().unwrap();
+	administrator
+		.batch_execute(&format!(
+			"CREATE ROLE {role} LOGIN NOSUPERUSER NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION"
+		))
+		.unwrap();
+	let mut cleanup = OwnedRole {
+		client: administrator,
+		name: Some(role.clone()),
+	};
+	let mut restricted = fixture.worker_copy();
+	restricted.config.user(&role);
+	{
+		let mut ordinary = restricted.connect().unwrap();
+		assert_eq!(
+			ordinary
+				.query_one("SELECT 1::integer", &[])
+				.unwrap()
+				.get::<_, i32>(0),
+			1
+		);
+	} // Ordinary connection is closed before testing the privileged statement.
+	let error = restricted
+		.checkpoint()
+		.expect_err("CHECKPOINT must not succeed for this new unprivileged role");
+	let error = error
+		.downcast_ref::<postgres::Error>()
+		.expect("preserve the typed PostgreSQL error");
+	assert_eq!(
+		error.as_db_error().unwrap().code(),
+		&postgres::error::SqlState::INSUFFICIENT_PRIVILEGE
+	);
+	drop(restricted); // No restricted client or handle remains during role cleanup.
+	cleanup
+		.client
+		.batch_execute(&format!("DROP ROLE {role}"))
+		.unwrap();
+	cleanup.name = None;
+	let exists: bool = cleanup
+		.client
+		.query_one(
+			"SELECT EXISTS(SELECT FROM pg_roles WHERE rolname=$1)",
+			&[&role],
+		)
+		.unwrap()
+		.get(0);
+	assert!(!exists);
 }
