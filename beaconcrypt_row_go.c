@@ -53,3 +53,17 @@ beaconcrypt_Buffer beaconcrypt_go_row_transaction(beaconcrypt_RowServerHandle *s
 beaconcrypt_Buffer beaconcrypt_go_row_registration_transaction(beaconcrypt_RowServerHandle *server, uintptr_t token, uint32_t *phase) {
 	return beaconcrypt_row_server_registration_transaction(server, (void *)token, row_acceptance, row_completion, phase);
 }
+
+static int32_t row_expect(void *context, const uint8_t *key, uintptr_t key_len, const uint8_t *expected, uintptr_t expected_len, bool present) {
+    return beaconcryptGoRowExpect((uintptr_t)context, (uint8_t *)key, key_len, (uint8_t *)expected, expected_len, present);
+}
+static beaconcrypt_CachedRowStoreCallbacks cached_callbacks(uintptr_t token, bool expect) {
+    beaconcrypt_CachedRowStoreCallbacks result = {callbacks(token), expect ? row_expect : NULL};
+    return result;
+}
+beaconcrypt_RowServerHandle *beaconcrypt_go_cached_row_create(uint64_t kid, const uint8_t *seed, uintptr_t seed_len, const uint8_t *mldsa, uintptr_t mldsa_len, uintptr_t token, const uint8_t *lineage, uintptr_t capacity, bool expect, uint32_t *status) {
+    return beaconcrypt_cached_row_server_create(kid, seed, seed_len, mldsa, mldsa_len, cached_callbacks(token, expect), lineage, 32, capacity, status);
+}
+beaconcrypt_RowServerHandle *beaconcrypt_go_cached_row_open(uintptr_t token, const uint8_t *lineage, uintptr_t capacity, bool expect, uint32_t *status) {
+    return beaconcrypt_cached_row_server_open(cached_callbacks(token, expect), lineage, 32, capacity, status);
+}

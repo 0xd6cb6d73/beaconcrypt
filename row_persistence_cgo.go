@@ -31,7 +31,7 @@ type rowContext struct {
 	err   error
 }
 
-func rowCreate(kid uint64, seed, mldsa []byte, store RowStore, lineage [32]byte, open bool) (*RowServer, error) {
+func rowCreate(kid uint64, seed, mldsa []byte, store RowStore, lineage [32]byte, open bool, cacheCapacity *uint) (*RowServer, error) {
 	if store == nil {
 		return nil, &PersistenceError{Code: StatusInvalidArgument}
 	}
@@ -48,7 +48,14 @@ func rowCreate(kid uint64, seed, mldsa []byte, store RowStore, lineage [32]byte,
 	defer freeLineage()
 	var status C.uint32_t
 	var handle *C.beaconcrypt_RowServerHandle
-	if open {
+	if cacheCapacity != nil {
+		_, hasExpect := store.(CachedRowStore)
+		if open {
+			handle = C.beaconcrypt_go_cached_row_open(C.uintptr_t(token), lineagePtr, C.uintptr_t(*cacheCapacity), C.bool(hasExpect), &status)
+		} else {
+			handle = C.beaconcrypt_go_cached_row_create(C.uint64_t(kid), seedPtr, C.uintptr_t(len(seed)), mldsaPtr, C.uintptr_t(len(mldsa)), C.uintptr_t(token), lineagePtr, C.uintptr_t(*cacheCapacity), C.bool(hasExpect), &status)
+		}
+	} else if open {
 		handle = C.beaconcrypt_go_row_open(C.uintptr_t(token), lineagePtr, &status)
 	} else {
 		handle = C.beaconcrypt_go_row_create(C.uint64_t(kid), seedPtr, C.uintptr_t(len(seed)), mldsaPtr, C.uintptr_t(len(mldsa)), C.uintptr_t(token), lineagePtr, &status)
@@ -63,12 +70,12 @@ func rowCreate(kid uint64, seed, mldsa []byte, store RowStore, lineage [32]byte,
 
 // NewRowServer creates a namespace and commits its identity and allocator.
 func NewRowServer(kid uint64, seed, mldsaSeed []byte, store RowStore, lineage [32]byte) (*RowServer, error) {
-	return rowCreate(kid, seed, mldsaSeed, store, lineage, false)
+	return rowCreate(kid, seed, mldsaSeed, store, lineage, false, nil)
 }
 
 // OpenRowServer opens an existing namespace without loading any peer state.
 func OpenRowServer(store RowStore, lineage [32]byte) (*RowServer, error) {
-	return rowCreate(0, nil, nil, store, lineage, true)
+	return rowCreate(0, nil, nil, store, lineage, true, nil)
 }
 
 func (n *rowNative) close() {
@@ -276,4 +283,81 @@ func beaconcryptGoRowStore(token C.uintptr_t, key *C.uint8_t, keyLen C.uintptr_t
 		}
 		return c.store.Store(keyBytes, valueBytes)
 	})
+}
+
+// CachedRowServer retains a bounded decoded-peer cache while validating each
+// cached predecessor against the authoritative database in every transaction.
+// All RowServer operations and composition methods are available unchanged.
+type CachedRowServer struct{ RowServer }
+
+// NewCachedRowServer creates a namespace with optional bounded caching. Capacity
+// zero disables caching. An optional CachedRowStore expectation callback can
+// stage exact-value CAS conditions without fetching warm peer rows.
+func NewCachedRowServer(kid uint64, seed, mldsaSeed []byte, store RowStore, lineage [32]byte, cacheCapacity uint) (*CachedRowServer, error) {
+	server, err := rowCreate(kid, seed, mldsaSeed, store, lineage, false, &cacheCapacity)
+	if err != nil {
+		return nil, err
+	}
+	return &CachedRowServer{RowServer: *server}, nil
+}
+func OpenCachedRowServer(store RowStore, lineage [32]byte, cacheCapacity uint) (*CachedRowServer, error) {
+	server, err := rowCreate(0, nil, nil, store, lineage, true, &cacheCapacity)
+	if err != nil {
+		return nil, err
+	}
+	return &CachedRowServer{RowServer: *server}, nil
+}
+func (s *CachedRowServer) CacheCapacity() (uint, error) {
+	if s == nil {
+		return 0, ErrClosed
+	}
+	return rowCall(&s.RowServer, false, func(handle *C.beaconcrypt_RowServerHandle) (uint, error) {
+		return uint(C.beaconcrypt_row_server_cache_capacity(handle)), nil
+	})
+}
+func (s *CachedRowServer) CachedPeerCount() (uint, error) {
+	if s == nil {
+		return 0, ErrClosed
+	}
+	return rowCall(&s.RowServer, false, func(handle *C.beaconcrypt_RowServerHandle) (uint, error) {
+		return uint(C.beaconcrypt_row_server_cached_peer_count(handle)), nil
+	})
+}
+func (s *CachedRowServer) ClearCache() error {
+	if s == nil {
+		return ErrClosed
+	}
+	_, err := rowCall(&s.RowServer, false, func(handle *C.beaconcrypt_RowServerHandle) (struct{}, error) {
+		C.beaconcrypt_row_server_clear_cache(handle)
+		return struct{}{}, nil
+	})
+	return err
+}
+
+//export beaconcryptGoRowExpect
+func beaconcryptGoRowExpect(token C.uintptr_t, key *C.uint8_t, keyLen C.uintptr_t, expected *C.uint8_t, expectedLen C.uintptr_t, present C.bool) C.int32_t {
+	conflict := false
+	ok := callbackRow(token, func(context *rowContext) error {
+		keyBytes, err := callbackBytes(key, keyLen)
+		if err != nil {
+			return err
+		}
+		var value []byte
+		if bool(present) {
+			value, err = callbackBytes(expected, expectedLen)
+			if err != nil {
+				return err
+			}
+		}
+		err = context.store.(CachedRowStore).Expect(keyBytes, value)
+		conflict = errors.Is(err, ErrRowConflict)
+		return err
+	})
+	if conflict {
+		return 0
+	}
+	if !bool(ok) {
+		return -1
+	}
+	return 1
 }

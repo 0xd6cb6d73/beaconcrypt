@@ -17,6 +17,8 @@ exclude_globs = [
 	"beaconcrypt-parse/src/generated/**",
 	"beaconcrypt/src/cbinds.rs",
 	"beaconcrypt/src/pybinds.rs",
+	# Shared dispatch is compiled only by those same language-binding features.
+	"beaconcrypt/src/row_binding_server.rs",
 	"beaconcrypt/src/row_cbinds.rs",
 	"beaconcrypt/src/row_pybinds.rs",
 ]

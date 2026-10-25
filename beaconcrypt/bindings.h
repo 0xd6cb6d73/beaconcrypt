@@ -214,6 +214,14 @@ typedef struct beaconcrypt_RowStoreCallbacks {
 } beaconcrypt_RowStoreCallbacks;
 
 /**
+ * Optional cached-peer expectation support. `expect` returns 1 after protecting the exact expected bytes (or absence when present is false) through the final atomic commit, 0 for a conflict, and -1 for a storage failure. It may stage a CAS condition instead of loading the row. A null callback falls back to load and compare. Context ownership and transaction callbacks are inherited unchanged from store.
+ */
+typedef struct beaconcrypt_CachedRowStoreCallbacks {
+  struct beaconcrypt_RowStoreCallbacks store;
+  int32_t (*expect)(void*, const uint8_t*, uintptr_t, const uint8_t*, uintptr_t, bool);
+} beaconcrypt_CachedRowStoreCallbacks;
+
+/**
  * A committed row message and authenticated peer/sequence metadata. Free `data` with `beaconcrypt_free_buffer`; it contains ciphertext for encrypt and plaintext for decrypt. Failure returns an empty buffer and zero metadata; inspect the server's last status.
  */
 typedef struct beaconcrypt_RowMessageBuffer {
@@ -528,6 +536,41 @@ struct beaconcrypt_RowServerHandle *beaconcrypt_row_server_open(struct beaconcry
                                                                 const uint8_t *lineage,
                                                                 uintptr_t lineage_len,
                                                                 uint32_t *status_out);
+
+/**
+ * Create a row server with a bounded decoded-peer cache. Capacity zero disables caching. Existing row operations, composition callbacks and free functions accept the returned handle. The database remains authoritative and every cached predecessor is validated in the transaction. Store context is consumed even on invalid arguments.
+ */
+struct beaconcrypt_RowServerHandle *beaconcrypt_cached_row_server_create(uint64_t kid,
+                                                                         const uint8_t *seed,
+                                                                         uintptr_t seed_len,
+                                                                         const uint8_t *mldsa,
+                                                                         uintptr_t mldsa_len,
+                                                                         struct beaconcrypt_CachedRowStoreCallbacks callbacks,
+                                                                         const uint8_t *lineage,
+                                                                         uintptr_t lineage_len,
+                                                                         uintptr_t cache_capacity,
+                                                                         uint32_t *status_out);
+
+/**
+ * Open an existing row namespace with a bounded decoded-peer cache, initially empty. Store context is consumed even on failure.
+ */
+struct beaconcrypt_RowServerHandle *beaconcrypt_cached_row_server_open(struct beaconcrypt_CachedRowStoreCallbacks callbacks,
+                                                                       const uint8_t *lineage,
+                                                                       uintptr_t lineage_len,
+                                                                       uintptr_t cache_capacity,
+                                                                       uint32_t *status_out);
+
+/**
+ * Return zero for an uncached handle.
+ */
+uintptr_t beaconcrypt_row_server_cache_capacity(const struct beaconcrypt_RowServerHandle *handle);
+
+uintptr_t beaconcrypt_row_server_cached_peer_count(const struct beaconcrypt_RowServerHandle *handle);
+
+/**
+ * Discard local decoded peers without changing the database. Serialize with all other handle calls.
+ */
+void beaconcrypt_row_server_clear_cache(struct beaconcrypt_RowServerHandle *handle);
 
 void beaconcrypt_row_server_free(struct beaconcrypt_RowServerHandle *handle);
 

@@ -85,8 +85,8 @@ pub use ratchet::{
 };
 #[cfg(feature = "server")]
 pub use row_persistence::{
-	RowError, RowMessage, RowRegistrationDecision, RowRegistrationError, RowRegistrationPhase,
-	RowServer, RowSession, RowStore, RowTransaction, RowTransition,
+	CachedRowServer, RowError, RowMessage, RowRegistrationDecision, RowRegistrationError,
+	RowRegistrationPhase, RowServer, RowSession, RowStore, RowTransaction, RowTransition,
 };
 #[cfg(all(feature = "pqxdh", feature = "server"))]
 pub use server::Server;
@@ -102,6 +102,8 @@ mod cbinds;
 #[cfg(feature = "pybinds")]
 mod pybinds;
 
+#[cfg(any(feature = "cbinds", feature = "gobinds", feature = "pybinds"))]
+mod row_binding_server;
 #[cfg(any(feature = "cbinds", feature = "gobinds"))]
 mod row_cbinds;
 #[cfg(feature = "pybinds")]
@@ -122,7 +124,7 @@ mod beaconcrypt {
 
 	#[pymodule_export]
 	use crate::row_pybinds::{
-		RowMessagePy, RowPersistenceError, RowRegistrationDecisionPy, RowRegistrationError,
-		RowServerPy, RowSessionPy, RowTransitionPy,
+		CachedRowServerPy, RowMessagePy, RowPersistenceError, RowRegistrationDecisionPy,
+		RowRegistrationError, RowServerPy, RowSessionPy, RowTransitionPy,
 	};
 }

@@ -2,7 +2,7 @@
 
 //! Database-independent persistence of individual peers.
 
-use std::{error::Error, fmt};
+use std::{collections::BTreeMap, error::Error, fmt};
 
 use libsodium_rs::{crypto_generichash, crypto_sign, ensure_init};
 use zeroize::Zeroizing;
@@ -58,6 +58,22 @@ impl Error for RowError {}
 pub trait RowTransaction {
 	fn load(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>, RowError>;
 	fn store(&mut self, key: &[u8], value: &[u8]) -> Result<(), RowError>;
+
+	/// Require this exact value, or absence, in the transaction's read set.
+	///
+	/// `Some(&[])` is a present empty value, distinct from `None`. The default loads and compares
+	/// under the ordinary transaction isolation contract. An optimistic backend may instead stage
+	/// the expectation without reading; it must validate all expectations atomically with the outer
+	/// commit, including transactions that make no writes, and return `Conflict` on a mismatch.
+	/// Deferred success is tentative: callers must not publish output before the outer commit.
+	fn expect(&mut self, key: &[u8], expected: Option<&[u8]>) -> Result<(), RowError> {
+		let actual = self.load(key)?.map(Zeroizing::new);
+		if actual.as_deref().map(Vec::as_slice) == expected {
+			Ok(())
+		} else {
+			Err(RowError::Conflict)
+		}
+	}
 }
 
 /// Trusted, serializable, durable transactions over opaque rows.
@@ -282,7 +298,8 @@ enum SessionPhase {
 ///
 /// Application rows are isolated from beaconcrypt's private keys. A session permits zero or one
 /// native operation, including rejected attempts. Any method error aborts the transaction even if
-/// the callback catches it. Native ratchets never leave the session and are not retained afterward.
+/// the callback catches it. Native ratchets never leave the library. A [`CachedRowServer`] may retain
+/// the committed peer after this session and its outer transaction succeed.
 ///
 /// The callback is part of the trusted persistence boundary: it may encode and store pending
 /// results, but must not publish them or perform irreversible external effects before commit.
@@ -297,6 +314,28 @@ pub struct RowSession<'a> {
 	native_used: bool,
 	failure: Option<RowError>,
 	pending_registration: Option<crate::RegistrationOutput>,
+	cache: Option<&'a mut PeerCache>,
+	pending_peer: Option<(u64, CachedPeer)>,
+}
+
+struct CachedPeer {
+	peer: EstablishedRemote<crypto_sign::PublicKey>,
+	bytes: Zeroizing<Vec<u8>>,
+	generation: u64,
+}
+
+struct PeerCache {
+	capacity: usize,
+	peers: BTreeMap<u64, CachedPeer>,
+}
+
+impl PeerCache {
+	fn insert(&mut self, kid: u64, peer: CachedPeer) {
+		if self.peers.len() == self.capacity {
+			self.peers.pop_first();
+		}
+		self.peers.insert(kid, peer);
+	}
 }
 
 /// A database-independent server that loads and commits only the affected peer.
@@ -311,6 +350,176 @@ pub struct RowServer<S: RowStore> {
 	identity_digest: [u8; 32],
 	lineage: SnapshotLineage,
 	store: S,
+}
+
+/// A row server with a bounded cache of decoded peers and their exact committed row bytes.
+///
+/// A cache hit calls [`RowTransaction::expect`] instead of loading and decoding the peer. An
+/// optimistic adapter can validate that expectation in its commit request; the default expectation
+/// implementation still performs a storage read. Application reads remain the adapter's concern.
+/// Every successful transaction, including a rejected native operation, must validate its reads.
+///
+/// Peers are moved into tentative operation state and retained only after confirmed durable commit.
+/// Any transaction error clears the entire cache, including uncertain commit outcomes. Callbacks
+/// are never retried. Registration uses the uncached two-phase path and does not populate the cache.
+/// Cached secrets remain resident until eviction, clearing, or drop. When full, insertion evicts the
+/// smallest cached peer ID; cache lookup and insertion do not scan all resident peers.
+pub struct CachedRowServer<S: RowStore> {
+	server: RowServer<S>,
+	cache: PeerCache,
+}
+
+impl<S: RowStore> CachedRowServer<S> {
+	pub fn create(
+		server_kid: u64,
+		id_seed: Option<&[u8]>,
+		mldsa_seed: Option<&[u8]>,
+		store: S,
+		lineage: SnapshotLineage,
+		cache_capacity: usize,
+	) -> Result<Self, RowError> {
+		RowServer::create(server_kid, id_seed, mldsa_seed, store, lineage)
+			.map(|server| Self::from_server(server, cache_capacity))
+	}
+
+	pub fn open(
+		store: S,
+		lineage: SnapshotLineage,
+		cache_capacity: usize,
+	) -> Result<Self, RowError> {
+		RowServer::open(store, lineage).map(|server| Self::from_server(server, cache_capacity))
+	}
+
+	/// Wrap an existing row server. Capacity zero disables caching; no entries are allocated eagerly.
+	pub fn from_server(server: RowServer<S>, cache_capacity: usize) -> Self {
+		Self {
+			server,
+			cache: PeerCache {
+				capacity: cache_capacity,
+				peers: BTreeMap::new(),
+			},
+		}
+	}
+
+	/// Discard cached secrets and return the uncached server.
+	pub fn into_server(self) -> RowServer<S> {
+		self.server
+	}
+
+	pub const fn cache_capacity(&self) -> usize {
+		self.cache.capacity
+	}
+
+	pub fn cached_peer_count(&self) -> usize {
+		self.cache.peers.len()
+	}
+
+	pub fn clear_cache(&mut self) {
+		self.cache.peers.clear();
+	}
+
+	pub const fn lineage(&self) -> SnapshotLineage {
+		self.server.lineage()
+	}
+	pub fn identity_key_kid(&self) -> u64 {
+		self.server.identity_key_kid()
+	}
+	pub fn identity_pk(&self) -> &crypto_sign::PublicKey {
+		self.server.identity_pk()
+	}
+	pub fn mldsa_public_key(&self) -> [u8; crate::MLDSA_PUBLIC_KEY_LEN] {
+		self.server.mldsa_public_key()
+	}
+
+	/// Compose one message transition and application rows with the same contract as [`RowServer::transaction`].
+	pub fn transaction<T>(
+		&mut self,
+		operation: impl FnOnce(&mut RowSession<'_>) -> Result<T, RowError>,
+	) -> Result<T, RowError> {
+		if self.cache.capacity == 0 {
+			return self.server.transaction(operation);
+		}
+		let server = &mut self.server;
+		let result = transact(&mut server.store, |transaction| {
+			let mut session = RowSession::new(
+				&server.identity,
+				&server.identity_digest,
+				server.lineage,
+				transaction,
+				SessionPhase::Message,
+				None,
+			);
+			session.cache = Some(&mut self.cache);
+			let output = operation(&mut session);
+			let output = session.finish(output)?;
+			Ok((output, session.pending_peer.take()))
+		});
+		match result {
+			Ok((output, pending)) => {
+				if let Some((kid, peer)) = pending {
+					self.cache.insert(kid, peer);
+				}
+				Ok(output)
+			}
+			Err(error) => {
+				self.clear_cache();
+				Err(error)
+			}
+		}
+	}
+
+	/// Use the uncached registration path, preserving its two separate durable phases.
+	pub fn registration_transaction<A, T>(
+		&mut self,
+		accept: impl FnOnce(&mut RowSession<'_>) -> Result<RowRegistrationDecision<A, T>, RowError>,
+		complete: impl FnOnce(&mut RowSession<'_>, A) -> Result<T, RowError>,
+	) -> Result<T, RowRegistrationError> {
+		let result = self.server.registration_transaction(accept, complete);
+		if result.is_err() {
+			self.clear_cache();
+		}
+		result
+	}
+
+	pub fn register_beacon(
+		&mut self,
+		bytes: &[u8],
+		data: Option<&[u8]>,
+	) -> Result<Option<RegResponse>, RowError> {
+		let result = self.server.register_beacon(bytes, data);
+		if result.is_err() {
+			self.clear_cache();
+		}
+		result
+	}
+
+	pub fn encrypt_message(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> Result<Option<Encrypted>, RowError> {
+		if !send_input_fits(bytes, self.identity_key_kid()) {
+			return Ok(None);
+		}
+		let output = self.transaction(|session| session.encrypt_message(bytes, kid))?;
+		Ok(output.message.map(|mut message| Encrypted {
+			ciphertext: std::mem::take(&mut *message.data),
+			key_id: message.key_id,
+			seq: message.sequence,
+		}))
+	}
+
+	pub fn decrypt_message(&mut self, bytes: &[u8]) -> Result<Option<Decrypted>, RowError> {
+		if crate::ratchet::encrypted_frame_sender(bytes).is_none() {
+			return Ok(None);
+		}
+		let output = self.transaction(|session| session.decrypt_message(bytes))?;
+		Ok(output.message.map(|mut message| Decrypted {
+			plaintext: std::mem::take(&mut *message.data),
+			key_id: message.key_id,
+			seq: message.sequence,
+		}))
+	}
 }
 
 impl<S: RowStore> RowServer<S> {
@@ -584,6 +793,8 @@ impl<'a> RowSession<'a> {
 			native_used: false,
 			failure: None,
 			pending_registration,
+			cache: None,
+			pending_peer: None,
 		}
 	}
 
@@ -648,32 +859,25 @@ impl<'a> RowSession<'a> {
 			if !send_input_fits(bytes, session.identity.identity_key_kid()) {
 				return Ok(RowTransition::unchanged());
 			}
-			with_peer(
-				session.identity,
-				session.identity_digest,
-				session.lineage,
-				session.transaction,
-				kid,
-				|server| {
-					let before = server
-						.ratchet_status(kid)
-						.ok_or(RowError::InvalidRow)?
-						.send_sequence();
-					let encrypted = server.encrypt_message(bytes, kid);
-					let after = server
-						.ratchet_status(kid)
-						.ok_or(RowError::InvalidRow)?
-						.send_sequence();
-					Ok(RowTransition {
-						message: encrypted.map(|message| RowMessage {
-							data: Zeroizing::new(message.ciphertext),
-							key_id: message.key_id,
-							sequence: message.seq,
-						}),
-						changed: before != after,
-					})
-				},
-			)
+			session.with_peer(kid, |server| {
+				let before = server
+					.ratchet_status(kid)
+					.ok_or(RowError::InvalidRow)?
+					.send_sequence();
+				let encrypted = server.encrypt_message(bytes, kid);
+				let after = server
+					.ratchet_status(kid)
+					.ok_or(RowError::InvalidRow)?
+					.send_sequence();
+				Ok(RowTransition {
+					message: encrypted.map(|message| RowMessage {
+						data: Zeroizing::new(message.ciphertext),
+						key_id: message.key_id,
+						sequence: message.seq,
+					}),
+					changed: before != after,
+				})
+			})
 		})
 	}
 
@@ -683,24 +887,17 @@ impl<'a> RowSession<'a> {
 			let Some(kid) = crate::ratchet::encrypted_frame_sender(bytes) else {
 				return Ok(RowTransition::unchanged());
 			};
-			with_peer(
-				session.identity,
-				session.identity_digest,
-				session.lineage,
-				session.transaction,
-				kid,
-				|server| {
-					let message = server.decrypt_message(bytes).map(|message| RowMessage {
-						data: Zeroizing::new(message.plaintext),
-						key_id: message.key_id,
-						sequence: message.seq,
-					});
-					Ok(RowTransition {
-						changed: message.is_some(),
-						message,
-					})
-				},
-			)
+			session.with_peer(kid, |server| {
+				let message = server.decrypt_message(bytes).map(|message| RowMessage {
+					data: Zeroizing::new(message.plaintext),
+					key_id: message.key_id,
+					sequence: message.seq,
+				});
+				Ok(RowTransition {
+					changed: message.is_some(),
+					message,
+				})
+			})
 		})
 	}
 
@@ -747,6 +944,56 @@ impl<'a> RowSession<'a> {
 				data,
 			)
 		})
+	}
+
+	fn with_peer(
+		&mut self,
+		kid: u64,
+		operation: impl FnOnce(&mut Server) -> Result<RowTransition, RowError>,
+	) -> Result<RowTransition, RowError> {
+		let key = storage_key(self.lineage, PEER, &kid.to_le_bytes());
+		let cached = self
+			.cache
+			.as_mut()
+			.and_then(|cache| cache.peers.remove(&kid));
+		let (mut bytes, mut generation, peer) = match cached {
+			Some(cached) => {
+				self.transaction.expect(&key, Some(&cached.bytes))?;
+				(cached.bytes, cached.generation, cached.peer)
+			}
+			None => {
+				let Some(bytes) = self.transaction.load(&key)? else {
+					return Ok(RowTransition::unchanged());
+				};
+				let bytes = Zeroizing::new(bytes);
+				let row = bound_row(&key, &bytes, self.identity_digest)?;
+				let generation = row.generation;
+				let peer = decode_peer(row.payload)?;
+				(bytes, generation, peer)
+			}
+		};
+		let mut server = self.identity.row_session(self.identity.identity_key_kid());
+		server.put_row_peer(kid, peer);
+		let output = operation(&mut server)?;
+		let peer = server.take_row_peer(kid).ok_or(RowError::InvalidRow)?;
+		if output.changed {
+			generation = generation
+				.checked_add(1)
+				.ok_or(RowError::GenerationExhausted)?;
+			bytes = encode_row(&key, generation, self.identity_digest, &encode_peer(&peer)?);
+			self.transaction.store(&key, &bytes)?;
+		}
+		if self.cache.is_some() {
+			self.pending_peer = Some((
+				kid,
+				CachedPeer {
+					peer,
+					bytes,
+					generation,
+				},
+			));
+		}
+		Ok(output)
 	}
 }
 
@@ -831,38 +1078,6 @@ fn complete_registration(
 	})
 }
 
-fn with_peer(
-	identity: &Server,
-	identity_digest: &[u8; 32],
-	lineage: SnapshotLineage,
-	transaction: &mut dyn RowTransaction,
-	kid: u64,
-	operation: impl FnOnce(&mut Server) -> Result<RowTransition, RowError>,
-) -> Result<RowTransition, RowError> {
-	let key = storage_key(lineage, PEER, &kid.to_le_bytes());
-	let Some(bytes) = transaction.load(&key)? else {
-		return Ok(RowTransition::unchanged());
-	};
-	let bytes = Zeroizing::new(bytes);
-	let row = bound_row(&key, &bytes, identity_digest)?;
-	let peer = decode_peer(row.payload)?;
-	let mut server = identity.row_session(identity.identity_key_kid());
-	server.put_row_peer(kid, peer);
-	let output = operation(&mut server)?;
-	if output.changed {
-		let peer = server.take_row_peer(kid).ok_or(RowError::InvalidRow)?;
-		let generation = row
-			.generation
-			.checked_add(1)
-			.ok_or(RowError::GenerationExhausted)?;
-		transaction.store(
-			&key,
-			&encode_row(&key, generation, identity_digest, &encode_peer(&peer)?),
-		)?;
-	}
-	Ok(output)
-}
-
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -942,13 +1157,17 @@ mod tests {
 	}
 
 	fn install_peer(server: &mut RowServer<TestStore>, generation: u64) -> Vec<u8> {
+		install_peer_id(server, PEER_KID, generation)
+	}
+
+	fn install_peer_id(server: &mut RowServer<TestStore>, kid: u64, generation: u64) -> Vec<u8> {
 		let mut session = server.identity.row_session(SERVER_KID);
 		let public_key = crypto_sign::KeyPair::from_seed(&[0x64; 32])
 			.unwrap()
 			.public_key;
-		session.add_known_kid(PEER_KID, public_key);
-		let peer = session.take_row_peer(PEER_KID).unwrap();
-		let key = storage_key(LINEAGE, PEER, &PEER_KID.to_le_bytes());
+		session.add_known_kid(kid, public_key);
+		let peer = session.take_row_peer(kid).unwrap();
+		let key = storage_key(LINEAGE, PEER, &kid.to_le_bytes());
 		server.store.rows.insert(
 			key.clone(),
 			encode_row(
@@ -960,6 +1179,683 @@ mod tests {
 			.to_vec(),
 		);
 		key
+	}
+
+	#[derive(Default)]
+	struct DeferredStore {
+		rows: BTreeMap<Vec<u8>, Vec<u8>>,
+		loads: usize,
+		expects: usize,
+		fail_load: bool,
+		fail_store: bool,
+		fail_commit: bool,
+		lose_acknowledgement: bool,
+	}
+
+	struct DeferredTransaction<'a> {
+		inner: TestTransaction<'a>,
+		loads: &'a mut usize,
+		expects: &'a mut usize,
+		expected: &'a mut BTreeMap<Vec<u8>, Option<Zeroizing<Vec<u8>>>>,
+	}
+
+	impl RowTransaction for DeferredTransaction<'_> {
+		fn load(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>, RowError> {
+			*self.loads += 1;
+			self.inner.load(key)
+		}
+
+		fn store(&mut self, key: &[u8], value: &[u8]) -> Result<(), RowError> {
+			self.inner.store(key, value)
+		}
+
+		fn expect(&mut self, key: &[u8], expected: Option<&[u8]>) -> Result<(), RowError> {
+			*self.expects += 1;
+			self.expected.insert(
+				key.to_vec(),
+				expected.map(|bytes| Zeroizing::new(bytes.to_vec())),
+			);
+			Ok(())
+		}
+	}
+
+	impl RowStore for DeferredStore {
+		fn transaction(
+			&mut self,
+			operation: &mut dyn FnMut(&mut dyn RowTransaction) -> Result<(), RowError>,
+		) -> Result<(), RowError> {
+			let mut rows = self.rows.clone();
+			let mut expected = BTreeMap::new();
+			operation(&mut DeferredTransaction {
+				inner: TestTransaction {
+					rows: &mut rows,
+					fail_load: self.fail_load,
+					fail_store: self.fail_store,
+				},
+				loads: &mut self.loads,
+				expects: &mut self.expects,
+				expected: &mut expected,
+			})?;
+			for (key, value) in expected {
+				if self.rows.get(&key).map(Vec::as_slice) != value.as_deref().map(Vec::as_slice) {
+					return Err(RowError::Conflict);
+				}
+			}
+			if self.fail_commit {
+				return Err(RowError::Storage("commit failed".into()));
+			}
+			self.rows = rows;
+			if self.lose_acknowledgement {
+				return Err(RowError::Storage("commit acknowledgement lost".into()));
+			}
+			Ok(())
+		}
+	}
+
+	fn deferred_server(capacity: usize) -> CachedRowServer<DeferredStore> {
+		let mut server = server();
+		install_peer(&mut server, 0);
+		install_peer_id(&mut server, PEER_KID + 1, 0);
+		CachedRowServer::open(
+			DeferredStore {
+				rows: server.store.rows,
+				..DeferredStore::default()
+			},
+			LINEAGE,
+			capacity,
+		)
+		.unwrap()
+	}
+
+	#[test]
+	fn cache_hits_stage_expectations_without_loading_and_zero_capacity_disables_the_cache() {
+		for capacity in [0, 1, usize::MAX] {
+			let mut cached = deferred_server(capacity);
+			assert_eq!(cached.cache_capacity(), capacity);
+			assert_eq!(cached.cached_peer_count(), 0);
+			assert_eq!(cached.lineage(), LINEAGE);
+			assert_eq!(cached.identity_key_kid(), SERVER_KID);
+			let public_key = cached.identity_pk().clone();
+			let mldsa_key = cached.mldsa_public_key();
+			let loads = cached.server.store.loads;
+			assert_eq!(
+				cached
+					.encrypt_message(b"first", PEER_KID)
+					.unwrap()
+					.unwrap()
+					.seq,
+				1
+			);
+			assert_eq!(cached.server.store.loads, loads + 1);
+			assert_eq!(cached.cached_peer_count(), usize::from(capacity != 0));
+			let second = cached
+				.encrypt_message(b"second", PEER_KID)
+				.unwrap()
+				.unwrap();
+			assert_eq!(second.seq, 2);
+			assert_eq!(cached.server.store.expects, usize::from(capacity != 0));
+			assert_eq!(
+				cached.server.store.loads,
+				loads + 1 + usize::from(capacity == 0)
+			);
+			cached.clear_cache();
+			assert_eq!(cached.cached_peer_count(), 0);
+			assert_eq!(
+				cached
+					.encrypt_message(b"third", PEER_KID)
+					.unwrap()
+					.unwrap()
+					.seq,
+				3
+			);
+			let uncached = cached.into_server();
+			assert_eq!(uncached.identity_pk(), &public_key);
+			assert_eq!(uncached.mldsa_public_key(), mldsa_key);
+			let mut reopened = CachedRowServer::open(uncached.store, LINEAGE, capacity).unwrap();
+			assert_eq!(reopened.cached_peer_count(), 0);
+			assert_eq!(
+				reopened
+					.encrypt_message(b"reopened", PEER_KID)
+					.unwrap()
+					.unwrap()
+					.seq,
+				4
+			);
+		}
+	}
+
+	#[test]
+	fn cache_eviction_and_uncached_fallback_preserve_each_peer_sequence() {
+		let mut server = server();
+		install_peer(&mut server, 0);
+		install_peer_id(&mut server, PEER_KID + 1, 0);
+		let mut cached = CachedRowServer::from_server(server, 1);
+		for (kid, sequence) in [(PEER_KID, 1), (PEER_KID + 1, 1), (PEER_KID, 2)] {
+			assert_eq!(
+				cached
+					.encrypt_message(b"message", kid)
+					.unwrap()
+					.unwrap()
+					.seq,
+				sequence
+			);
+			assert_eq!(cached.cached_peer_count(), 1);
+		}
+		cached.server.store.fail_load = true;
+		assert!(matches!(
+			cached.encrypt_message(b"default expect reads", PEER_KID),
+			Err(RowError::Storage(_))
+		));
+		assert_eq!(cached.cached_peer_count(), 0);
+		cached.server.store.fail_load = false;
+		assert_eq!(
+			cached
+				.encrypt_message(b"reload", PEER_KID)
+				.unwrap()
+				.unwrap()
+				.seq,
+			3
+		);
+	}
+
+	#[test]
+	fn deferred_stale_expectation_suppresses_output_and_does_not_retry_the_callback() {
+		let mut cached = deferred_server(2);
+		assert_eq!(
+			cached
+				.encrypt_message(b"warm", PEER_KID)
+				.unwrap()
+				.unwrap()
+				.seq,
+			1
+		);
+		let mut other = RowServer::open(
+			TestStore {
+				rows: cached.server.store.rows.clone(),
+				..TestStore::default()
+			},
+			LINEAGE,
+		)
+		.unwrap();
+		assert_eq!(
+			other
+				.encrypt_message(b"other worker", PEER_KID)
+				.unwrap()
+				.unwrap()
+				.seq,
+			2
+		);
+		cached.server.store.rows = other.store.rows;
+		let before = cached.server.store.rows.clone();
+		let mut calls = 0;
+		let result = cached.transaction(|session| {
+			calls += 1;
+			let message = session
+				.encrypt_message(b"stale candidate", PEER_KID)?
+				.message
+				.unwrap();
+			session.store_application(b"receipt", message.data())?;
+			Ok(message)
+		});
+		assert_eq!(result.err(), Some(RowError::Conflict));
+		assert_eq!(calls, 1);
+		assert_eq!(cached.cached_peer_count(), 0);
+		assert_eq!(cached.server.store.rows, before);
+		assert_eq!(
+			cached
+				.encrypt_message(b"fresh", PEER_KID)
+				.unwrap()
+				.unwrap()
+				.seq,
+			3
+		);
+	}
+
+	#[test]
+	fn cached_callback_storage_and_commit_failures_discard_tentative_peers() {
+		for failure in ["callback", "sticky", "store", "commit", "unknown"] {
+			let mut cached = deferred_server(2);
+			assert_eq!(
+				cached
+					.encrypt_message(b"warm", PEER_KID)
+					.unwrap()
+					.unwrap()
+					.seq,
+				1
+			);
+			cached
+				.encrypt_message(b"other warm peer", PEER_KID + 1)
+				.unwrap()
+				.unwrap();
+			assert_eq!(cached.cached_peer_count(), 2);
+			let before = cached.server.store.rows.clone();
+			cached.server.store.fail_store = failure == "store";
+			cached.server.store.fail_commit = failure == "commit";
+			cached.server.store.lose_acknowledgement = failure == "unknown";
+			let mut calls = 0;
+			let result = cached.transaction(|session| {
+				calls += 1;
+				let message = session
+					.encrypt_message(b"tentative", PEER_KID)?
+					.message
+					.unwrap();
+				session.store_application(b"receipt", message.data())?;
+				if failure == "callback" {
+					return Err(RowError::Storage("application rejected output".into()));
+				}
+				if failure == "sticky" {
+					assert_eq!(
+						session
+							.encrypt_message(b"second native call", PEER_KID)
+							.err(),
+						Some(RowError::InvalidSession)
+					);
+				}
+				Ok(message)
+			});
+			assert!(result.is_err(), "{failure}");
+			assert_eq!(calls, 1);
+			assert_eq!(cached.cached_peer_count(), 0, "{failure}");
+			if failure != "unknown" {
+				assert_eq!(cached.server.store.rows, before, "{failure}");
+			}
+			cached.server.store.fail_store = false;
+			cached.server.store.fail_commit = false;
+			cached.server.store.lose_acknowledgement = false;
+			let receipt = cached
+				.transaction(|session| session.load_application(b"receipt"))
+				.unwrap();
+			assert_eq!(receipt.is_some(), failure == "unknown");
+			let loads = cached.server.store.loads;
+			let next = cached.encrypt_message(b"fresh", PEER_KID).unwrap().unwrap();
+			assert_eq!(
+				next.seq,
+				if failure == "unknown" { 3 } else { 2 },
+				"{failure}"
+			);
+			assert_eq!(cached.server.store.loads, loads + 1);
+		}
+	}
+
+	#[test]
+	fn cached_preflight_rejection_and_application_only_callbacks_preserve_valid_entries() {
+		let mut cached = deferred_server(1);
+		cached.encrypt_message(b"warm", PEER_KID).unwrap().unwrap();
+		let before = cached.server.store.rows.clone();
+		let loads = cached.server.store.loads;
+		let expects = cached.server.store.expects;
+		cached.server.store.fail_load = true;
+		assert!(cached.encrypt_message(b"", PEER_KID).unwrap().is_none());
+		assert!(
+			cached
+				.encrypt_message(&vec![0; crate::MAX_MESSAGE_SIZE], PEER_KID)
+				.unwrap()
+				.is_none()
+		);
+		assert!(cached.decrypt_message(b"malformed").unwrap().is_none());
+		assert!(
+			cached
+				.register_beacon(b"malformed", None)
+				.unwrap()
+				.is_none()
+		);
+		assert_eq!(
+			cached
+				.transaction(|_| Ok(b"cached application policy"))
+				.unwrap(),
+			b"cached application policy"
+		);
+		assert_eq!(cached.server.store.loads, loads);
+		assert_eq!(cached.server.store.expects, expects);
+		assert_eq!(cached.server.store.rows, before);
+		assert_eq!(cached.cached_peer_count(), 1);
+		assert_eq!(
+			cached
+				.encrypt_message(b"warm no-load path", PEER_KID)
+				.unwrap()
+				.unwrap()
+				.seq,
+			2
+		);
+	}
+
+	#[test]
+	fn cached_generation_exhaustion_and_invalid_reloads_never_reuse_tentative_keys() {
+		let mut server = server();
+		let key = install_peer(&mut server, u64::MAX - 1);
+		let mut cached = CachedRowServer::from_server(server, 1);
+		assert_eq!(
+			cached
+				.encrypt_message(b"last generation", PEER_KID)
+				.unwrap()
+				.unwrap()
+				.seq,
+			1
+		);
+		let committed = cached.server.store.rows.clone();
+		assert_eq!(
+			cached.encrypt_message(b"exhausted", PEER_KID).err(),
+			Some(RowError::GenerationExhausted)
+		);
+		assert_eq!(cached.cached_peer_count(), 0);
+		assert_eq!(cached.server.store.rows, committed);
+		assert_eq!(
+			decode_row(&key, &committed[&key]).unwrap().generation,
+			u64::MAX
+		);
+		assert_eq!(
+			cached.encrypt_message(b"still exhausted", PEER_KID).err(),
+			Some(RowError::GenerationExhausted)
+		);
+		assert_eq!(cached.server.store.rows, committed);
+
+		let mut cached = deferred_server(1);
+		cached.encrypt_message(b"warm", PEER_KID).unwrap().unwrap();
+		let committed = cached.server.store.rows[&key].clone();
+		cached
+			.server
+			.store
+			.rows
+			.insert(key.clone(), b"corrupted".to_vec());
+		assert_eq!(
+			cached.encrypt_message(b"stale", PEER_KID).err(),
+			Some(RowError::Conflict)
+		);
+		assert_eq!(cached.cached_peer_count(), 0);
+		assert_eq!(
+			cached.encrypt_message(b"invalid reload", PEER_KID).err(),
+			Some(RowError::InvalidRow)
+		);
+		assert_eq!(cached.cached_peer_count(), 0);
+		cached.server.store.rows.insert(key, committed);
+		assert_eq!(
+			cached
+				.encrypt_message(b"valid reload", PEER_KID)
+				.unwrap()
+				.unwrap()
+				.seq,
+			2
+		);
+	}
+
+	#[test]
+	fn cached_transaction_gate_discards_pending_output_when_callbacks_are_misused() {
+		#[derive(Clone, Copy)]
+		enum Behaviour {
+			Normal,
+			Skip,
+			Repeat,
+			Swallow,
+		}
+		struct MisbehavingStore {
+			inner: TestStore,
+			behaviour: Behaviour,
+		}
+		impl RowStore for MisbehavingStore {
+			fn transaction(
+				&mut self,
+				operation: &mut dyn FnMut(&mut dyn RowTransaction) -> Result<(), RowError>,
+			) -> Result<(), RowError> {
+				if matches!(self.behaviour, Behaviour::Normal) {
+					return self.inner.transaction(operation);
+				}
+				let mut rows = self.inner.rows.clone();
+				let mut transaction = TestTransaction {
+					rows: &mut rows,
+					fail_load: false,
+					fail_store: false,
+				};
+				match self.behaviour {
+					Behaviour::Skip => (),
+					Behaviour::Repeat => {
+						let _ = operation(&mut transaction);
+						let _ = operation(&mut transaction);
+					}
+					Behaviour::Swallow => {
+						let _ = operation(&mut transaction);
+					}
+					Behaviour::Normal => unreachable!(),
+				}
+				Ok(())
+			}
+		}
+		struct PendingOutput {
+			_message: RowMessage,
+			dropped: Arc<AtomicUsize>,
+		}
+		impl Drop for PendingOutput {
+			fn drop(&mut self) {
+				self.dropped.fetch_add(1, Ordering::SeqCst);
+			}
+		}
+		for behaviour in [Behaviour::Skip, Behaviour::Repeat, Behaviour::Swallow] {
+			let mut server = server();
+			install_peer(&mut server, 0);
+			let mut cached = CachedRowServer::open(
+				MisbehavingStore {
+					inner: server.store,
+					behaviour: Behaviour::Normal,
+				},
+				LINEAGE,
+				1,
+			)
+			.unwrap();
+			cached.encrypt_message(b"warm", PEER_KID).unwrap().unwrap();
+			let committed = cached.server.store.inner.rows.clone();
+			cached.server.store.behaviour = behaviour;
+			let dropped = Arc::new(AtomicUsize::new(0));
+			let mut calls = 0;
+			let result = cached.transaction(|session| {
+				calls += 1;
+				let message = session
+					.encrypt_message(b"pending", PEER_KID)?
+					.message
+					.unwrap();
+				let pending = PendingOutput {
+					_message: message,
+					dropped: Arc::clone(&dropped),
+				};
+				if matches!(behaviour, Behaviour::Swallow) {
+					return Err(RowError::InvalidSession);
+				}
+				Ok(pending)
+			});
+			assert!(result.is_err());
+			assert_eq!(calls, usize::from(!matches!(behaviour, Behaviour::Skip)));
+			assert_eq!(dropped.load(Ordering::SeqCst), calls);
+			assert_eq!(cached.cached_peer_count(), 0);
+			assert_eq!(cached.server.store.inner.rows, committed);
+			cached.server.store.behaviour = Behaviour::Normal;
+			assert_eq!(
+				cached
+					.encrypt_message(b"fresh", PEER_KID)
+					.unwrap()
+					.unwrap()
+					.seq,
+				2
+			);
+		}
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn cached_rejected_receives_validate_deferred_expectations_without_writing() {
+		use crate::ProviderBeacon;
+		let mut cached = CachedRowServer::create(
+			SERVER_KID,
+			Some(&[0x62; 32]),
+			Some(&[0x63; 32]),
+			DeferredStore::default(),
+			LINEAGE,
+			1,
+		)
+		.unwrap();
+		let mut beacon = crate::Beacon::new(
+			SERVER_KID,
+			cached.identity_pk().as_bytes(),
+			&cached.mldsa_public_key(),
+		);
+		let request = beacon.get_registration_bundle().unwrap();
+		let response = cached.register_beacon(&request, None).unwrap().unwrap();
+		beacon.finish_registration(&response.serialized).unwrap();
+		assert_eq!(cached.cached_peer_count(), 0);
+		let first = beacon.encrypt_message(b"first").unwrap();
+		let second = beacon.encrypt_message(b"second").unwrap();
+		assert_eq!(
+			cached
+				.decrypt_message(&first.ciphertext)
+				.unwrap()
+				.unwrap()
+				.plaintext,
+			b"first"
+		);
+		let before = cached.server.store.rows.clone();
+		let loads = cached.server.store.loads;
+		let expects = cached.server.store.expects;
+		assert!(cached.decrypt_message(&first.ciphertext).unwrap().is_none());
+		assert_eq!(cached.server.store.rows, before);
+		assert_eq!(cached.server.store.loads, loads);
+		assert_eq!(cached.server.store.expects, expects + 1);
+		assert_eq!(cached.cached_peer_count(), 1);
+
+		let mut other = RowServer::open(
+			TestStore {
+				rows: before,
+				..TestStore::default()
+			},
+			LINEAGE,
+		)
+		.unwrap();
+		assert_eq!(
+			other
+				.decrypt_message(&second.ciphertext)
+				.unwrap()
+				.unwrap()
+				.plaintext,
+			b"second"
+		);
+		cached.server.store.rows = other.store.rows;
+		let current = cached.server.store.rows.clone();
+		// The local ratchet rejects this replay without changing anything, but its stale read must
+		// still fail the outer transaction. A backend cannot infer freshness from zero writes.
+		assert_eq!(
+			cached.decrypt_message(&first.ciphertext).err(),
+			Some(RowError::Conflict)
+		);
+		assert_eq!(cached.cached_peer_count(), 0);
+		assert_eq!(cached.server.store.rows, current);
+		assert!(
+			cached
+				.decrypt_message(&second.ciphertext)
+				.unwrap()
+				.is_none()
+		);
+		assert_eq!(cached.cached_peer_count(), 1);
+		let third = beacon.encrypt_message(b"third").unwrap();
+		assert_eq!(
+			cached
+				.decrypt_message(&third.ciphertext)
+				.unwrap()
+				.unwrap()
+				.plaintext,
+			b"third"
+		);
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn cached_registration_uses_uncached_phases_and_clears_resident_peers_on_phase_errors() {
+		use crate::ProviderBeacon;
+		let mut cached = CachedRowServer::from_server(server(), 2);
+		let request = registration(&cached.server);
+		assert_eq!(
+			cached.register_beacon(&request, None).unwrap().unwrap().kid,
+			PEER_KID
+		);
+		assert_eq!(cached.cached_peer_count(), 0);
+		cached.encrypt_message(b"warm", PEER_KID).unwrap().unwrap();
+		let before = cached.server.store.rows.clone();
+		let request = registration(&cached.server);
+		let acceptance_error = cached
+			.registration_transaction(
+				|session| {
+					assert!(session.accept_registration(&request)?);
+					Err::<RowRegistrationDecision<(), ()>, _>(RowError::Storage(
+						"acceptance callback".into(),
+					))
+				},
+				|_, ()| panic!("failed acceptance must not invoke completion"),
+			)
+			.unwrap_err();
+		assert_eq!(acceptance_error.phase, RowRegistrationPhase::Acceptance);
+		assert_eq!(cached.cached_peer_count(), 0);
+		assert_eq!(cached.server.store.rows, before);
+		assert!(cached.register_beacon(&request, None).unwrap().is_some());
+		cached
+			.encrypt_message(b"warm again", PEER_KID)
+			.unwrap()
+			.unwrap();
+		let before = cached.server.store.rows.clone();
+		let request = registration(&cached.server);
+		let completion_error = cached
+			.registration_transaction(
+				|session| {
+					assert!(session.accept_registration(&request)?);
+					Ok(RowRegistrationDecision::Continue(()))
+				},
+				|session, ()| {
+					assert!(session.complete_registration(None)?.message.is_some());
+					Err::<(), _>(RowError::Storage("completion callback".into()))
+				},
+			)
+			.unwrap_err();
+		assert_eq!(completion_error.phase, RowRegistrationPhase::Completion);
+		assert_eq!(cached.cached_peer_count(), 0);
+		assert_eq!(cached.server.store.rows.len(), before.len() + 1);
+		for (key, value) in before {
+			assert_eq!(cached.server.store.rows[&key], value);
+		}
+		assert!(cached.register_beacon(&request, None).unwrap().is_none());
+
+		cached
+			.encrypt_message(b"keep resident", PEER_KID)
+			.unwrap()
+			.unwrap();
+		let mut beacon = crate::Beacon::new(
+			SERVER_KID,
+			cached.identity_pk().as_bytes(),
+			&cached.mldsa_public_key(),
+		);
+		let request = beacon.get_registration_bundle().unwrap();
+		let message = cached
+			.registration_transaction(
+				|session| {
+					assert!(session.accept_registration(&request)?);
+					session.store_application(b"registration", b"accepted")?;
+					Ok(RowRegistrationDecision::Continue(()))
+				},
+				|session, ()| {
+					let message = session
+						.complete_registration(Some(b"registered"))?
+						.message
+						.unwrap();
+					session.store_application(b"registration", message.data())?;
+					Ok(message)
+				},
+			)
+			.unwrap();
+		assert_eq!(
+			beacon.finish_registration(message.data()).unwrap(),
+			b"registered"
+		);
+		assert_eq!(cached.cached_peer_count(), 1);
+		cached.server.store.fail_commit = true;
+		let request = registration(&cached.server);
+		assert!(matches!(
+			cached.register_beacon(&request, None),
+			Err(RowError::Storage(_))
+		));
+		assert_eq!(cached.cached_peer_count(), 0);
 	}
 
 	#[test]

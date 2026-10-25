@@ -82,3 +82,17 @@ func (e *RowRegistrationError) Error() string {
 	return "beaconcrypt: registration " + phase + ": " + e.Cause.Error()
 }
 func (e *RowRegistrationError) Unwrap() error { return e.Cause }
+
+// ErrRowConflict signals that a cached predecessor expectation does not match
+// the authoritative row. The transaction must not commit.
+var ErrRowConflict = errors.New("beaconcrypt: row expectation conflicted")
+
+// CachedRowStore optionally avoids fetching warm peer rows. Expect protects the
+// exact expected bytes or absence (nil) through Commit, either by checking under
+// a lock or staging an atomic CAS condition. A non-nil empty slice is a present
+// empty value. Return ErrRowConflict for mismatch, or another error for a storage
+// failure. If unsupported, cached servers use Load and compare automatically.
+type CachedRowStore interface {
+	RowStore
+	Expect(key, expected []byte) error
+}

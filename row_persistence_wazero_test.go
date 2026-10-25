@@ -15,6 +15,12 @@ func TestRowPersistenceExplicitlyUnsupportedOnWasm(t *testing.T) {
 	if server, err := OpenRowServer(nil, [32]byte{}); server != nil || !errors.Is(err, ErrPersistenceUnsupported) {
 		t.Fatalf("open: %v, %v", server, err)
 	}
+	if server, err := NewCachedRowServer(0, nil, nil, nil, [32]byte{}, 1); server != nil || !errors.Is(err, ErrPersistenceUnsupported) {
+		t.Fatalf("cached create: %v, %v", server, err)
+	}
+	if server, err := OpenCachedRowServer(nil, [32]byte{}, 1); server != nil || !errors.Is(err, ErrPersistenceUnsupported) {
+		t.Fatalf("cached open: %v, %v", server, err)
+	}
 	var server *RowServer
 	server.Close()
 	if _, err := server.DecryptBeaconMessage(nil); !errors.Is(err, ErrClosed) {

@@ -210,7 +210,6 @@ class RowSession:
         self, initial_message: bytes | None = None
     ) -> RowTransition: ...
 
-@final
 class BeaconCryptRowServer:
     """A database-backed server with independent peer records; no full-state checkpoint is loaded or written for messages."""
 
@@ -225,6 +224,9 @@ class BeaconCryptRowServer:
     @staticmethod
     def open(store: _RowStore, lineage_bytes: bytes) -> BeaconCryptRowServer: ...
     def close(self) -> None: ...
+    def cache_capacity(self) -> int: ...
+    def cached_peer_count(self) -> int: ...
+    def clear_cache(self) -> None: ...
     def lineage(self) -> bytes: ...
     def id_pk(self) -> bytes: ...
     def mldsa_public_key(self) -> bytes: ...
@@ -247,3 +249,26 @@ class BeaconCryptRowServer:
         accept: Callable[[RowSession], RowRegistrationDecision],
         complete: Callable[[RowSession, bytes], bytes],
     ) -> bytes: ...
+
+class _CachedRowStore(_RowStore, Protocol):
+    """Optional exact-value expectation support. Protect expected bytes or absence through commit; return False for conflict, None or True for staged/satisfied, and raise for storage failure."""
+
+    def expect(self, key: bytes, expected: bytes | None) -> bool | None: ...
+
+@final
+class BeaconCryptCachedRowServer(BeaconCryptRowServer):
+    """Bounded decoded-peer caching with authoritative database validation. Missing store.expect falls back to load and compare. Capacity zero disables caching."""
+
+    @staticmethod
+    def create(
+        kid: int,
+        id_seed: bytes | None,
+        mldsa_seed: bytes | None,
+        store: _RowStore,
+        lineage_bytes: bytes,
+        cache_capacity: int,
+    ) -> BeaconCryptCachedRowServer: ...
+    @staticmethod
+    def open(
+        store: _RowStore, lineage_bytes: bytes, cache_capacity: int
+    ) -> BeaconCryptCachedRowServer: ...

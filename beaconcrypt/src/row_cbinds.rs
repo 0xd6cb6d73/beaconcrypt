@@ -9,13 +9,14 @@ use crate::cbinds::{
 	STATUS_MISSING_SNAPSHOT, STATUS_OK, STATUS_REJECTED, STATUS_STALE_GENERATION, empty_buffer,
 	into_buffer,
 };
+use crate::row_binding_server::BindingRowServer;
 use crate::{
-	RowError, RowRegistrationDecision, RowRegistrationPhase, RowServer, RowSession, RowStore,
-	RowTransaction, RowTransition, SnapshotLineage,
+	CachedRowServer, RowError, RowRegistrationDecision, RowRegistrationPhase, RowServer,
+	RowSession, RowStore, RowTransaction, RowTransition, SnapshotLineage,
 };
 
 /// A database-backed row server. Serialize calls on one handle and never reenter it from callbacks.
-pub struct RowServerHandle(RowServer<Box<dyn RowStore>>, Cell<u32>);
+pub struct RowServerHandle(BindingRowServer<Box<dyn RowStore>>, Cell<u32>);
 
 /// A committed row message and authenticated peer/sequence metadata. Free `data` with `beaconcrypt_free_buffer`; it contains ciphertext for encrypt and plaintext for decrypt. Failure returns an empty buffer and zero metadata; inspect the server's last status.
 #[repr(C)]
@@ -60,7 +61,18 @@ pub struct RowStoreCallbacks {
 	pub destroy: Option<unsafe extern "C" fn(*mut c_void)>,
 }
 
-struct CallbackStore(RowStoreCallbacks);
+/// Optional cached-peer expectation support. `expect` returns 1 after protecting the exact expected bytes (or absence when present is false) through the final atomic commit, 0 for a conflict, and -1 for a storage failure. It may stage a CAS condition instead of loading the row. A null callback falls back to load and compare. Context ownership and transaction callbacks are inherited unchanged from store.
+#[repr(C)]
+pub struct CachedRowStoreCallbacks {
+	pub store: RowStoreCallbacks,
+	pub expect:
+		Option<unsafe extern "C" fn(*mut c_void, *const u8, usize, *const u8, usize, bool) -> i32>,
+}
+
+struct CallbackStore(
+	RowStoreCallbacks,
+	Option<unsafe extern "C" fn(*mut c_void, *const u8, usize, *const u8, usize, bool) -> i32>,
+);
 
 impl Drop for CallbackStore {
 	fn drop(&mut self) {
@@ -110,6 +122,33 @@ impl RowTransaction for CallbackStore {
 			(0, false, None) => Ok(None),
 			(1, false, Some(mut bytes)) => Ok(Some(std::mem::take(&mut *bytes))),
 			_ => Err(storage_error()),
+		}
+	}
+
+	fn expect(&mut self, key: &[u8], expected: Option<&[u8]>) -> Result<(), RowError> {
+		if let Some(callback) = self.1 {
+			let bytes = expected.unwrap_or_default();
+			match unsafe {
+				callback(
+					self.0.context,
+					key.as_ptr(),
+					key.len(),
+					bytes.as_ptr(),
+					bytes.len(),
+					expected.is_some(),
+				)
+			} {
+				1 => Ok(()),
+				0 => Err(RowError::Conflict),
+				_ => Err(storage_error()),
+			}
+		} else {
+			let actual = self.load(key)?.map(Zeroizing::new);
+			if actual.as_deref().map(Vec::as_slice) == expected {
+				Ok(())
+			} else {
+				Err(RowError::Conflict)
+			}
 		}
 	}
 
@@ -186,7 +225,7 @@ unsafe fn bytes<'a>(ptr: *const u8, len: usize) -> Option<&'a [u8]> {
 }
 
 fn construct(
-	result: Result<RowServer<Box<dyn RowStore>>, RowError>,
+	result: Result<BindingRowServer<Box<dyn RowStore>>, RowError>,
 	out: *mut u32,
 ) -> *mut RowServerHandle {
 	match result {
@@ -218,7 +257,7 @@ pub extern "C" fn beaconcrypt_row_server_create(
 	lineage_len: usize,
 	status_out: *mut u32,
 ) -> *mut RowServerHandle {
-	let store = CallbackStore(callbacks);
+	let store = CallbackStore(callbacks, None);
 	if !status_out.is_null() {
 		unsafe { *status_out = STATUS_INVALID_ARGUMENT };
 	}
@@ -243,7 +282,8 @@ pub extern "C" fn beaconcrypt_row_server_create(
 			(!mldsa.is_empty()).then_some(mldsa),
 			store,
 			SnapshotLineage::from_bytes(lineage),
-		),
+		)
+		.map(BindingRowServer::Rows),
 		status_out,
 	)
 }
@@ -256,7 +296,7 @@ pub extern "C" fn beaconcrypt_row_server_open(
 	lineage_len: usize,
 	status_out: *mut u32,
 ) -> *mut RowServerHandle {
-	let store = CallbackStore(callbacks);
+	let store = CallbackStore(callbacks, None);
 	if !status_out.is_null() {
 		unsafe { *status_out = STATUS_INVALID_ARGUMENT };
 	}
@@ -269,9 +309,104 @@ pub extern "C" fn beaconcrypt_row_server_open(
 	}
 	let store: Box<dyn RowStore> = Box::new(store);
 	construct(
-		RowServer::open(store, SnapshotLineage::from_bytes(lineage)),
+		RowServer::open(store, SnapshotLineage::from_bytes(lineage)).map(BindingRowServer::Rows),
 		status_out,
 	)
+}
+
+/// Create a row server with a bounded decoded-peer cache. Capacity zero disables caching. Existing row operations, composition callbacks and free functions accept the returned handle. The database remains authoritative and every cached predecessor is validated in the transaction. Store context is consumed even on invalid arguments.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_cached_row_server_create(
+	kid: u64,
+	seed: *const u8,
+	seed_len: usize,
+	mldsa: *const u8,
+	mldsa_len: usize,
+	callbacks: CachedRowStoreCallbacks,
+	lineage: *const u8,
+	lineage_len: usize,
+	cache_capacity: usize,
+	status_out: *mut u32,
+) -> *mut RowServerHandle {
+	let store = CallbackStore(callbacks.store, callbacks.expect);
+	if !status_out.is_null() {
+		unsafe { *status_out = STATUS_INVALID_ARGUMENT };
+	}
+	let Some(seed) = (unsafe { bytes(seed, seed_len) }) else {
+		return std::ptr::null_mut();
+	};
+	let Some(mldsa) = (unsafe { bytes(mldsa, mldsa_len) }) else {
+		return std::ptr::null_mut();
+	};
+	let Some(lineage) =
+		(unsafe { bytes(lineage, lineage_len) }).and_then(|bytes| bytes.try_into().ok())
+	else {
+		return std::ptr::null_mut();
+	};
+	if !valid(&store) || !matches!(seed.len(), 0 | 32) || !matches!(mldsa.len(), 0 | 32) {
+		return std::ptr::null_mut();
+	}
+	let store: Box<dyn RowStore> = Box::new(store);
+	construct(
+		CachedRowServer::create(
+			kid,
+			(!seed.is_empty()).then_some(seed),
+			(!mldsa.is_empty()).then_some(mldsa),
+			store,
+			SnapshotLineage::from_bytes(lineage),
+			cache_capacity,
+		)
+		.map(BindingRowServer::Cached),
+		status_out,
+	)
+}
+
+/// Open an existing row namespace with a bounded decoded-peer cache, initially empty. Store context is consumed even on failure.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_cached_row_server_open(
+	callbacks: CachedRowStoreCallbacks,
+	lineage: *const u8,
+	lineage_len: usize,
+	cache_capacity: usize,
+	status_out: *mut u32,
+) -> *mut RowServerHandle {
+	let store = CallbackStore(callbacks.store, callbacks.expect);
+	if !status_out.is_null() {
+		unsafe { *status_out = STATUS_INVALID_ARGUMENT };
+	}
+	let Some(lineage) =
+		(unsafe { bytes(lineage, lineage_len) }).and_then(|bytes| bytes.try_into().ok())
+	else {
+		return std::ptr::null_mut();
+	};
+	if !valid(&store) {
+		return std::ptr::null_mut();
+	}
+	let store: Box<dyn RowStore> = Box::new(store);
+	construct(
+		CachedRowServer::open(store, SnapshotLineage::from_bytes(lineage), cache_capacity)
+			.map(BindingRowServer::Cached),
+		status_out,
+	)
+}
+
+/// Return zero for an uncached handle.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_row_server_cache_capacity(handle: *const RowServerHandle) -> usize {
+	unsafe { handle.as_ref() }.map_or(0, |server| server.0.cache_capacity())
+}
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_row_server_cached_peer_count(
+	handle: *const RowServerHandle,
+) -> usize {
+	unsafe { handle.as_ref() }.map_or(0, |server| server.0.cached_peer_count())
+}
+/// Discard local decoded peers without changing the database. Serialize with all other handle calls.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_row_server_clear_cache(handle: *mut RowServerHandle) {
+	if let Some(server) = unsafe { handle.as_mut() } {
+		server.0.clear_cache();
+	}
 }
 
 #[unsafe(no_mangle)]

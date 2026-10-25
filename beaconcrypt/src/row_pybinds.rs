@@ -13,9 +13,10 @@ use pyo3::{
 };
 
 use crate::pybinds::RegResponsePy;
+use crate::row_binding_server::BindingRowServer;
 use crate::{
-	Decrypted, Encrypted, RowError, RowRegistrationDecision, RowRegistrationPhase, RowServer,
-	RowSession, RowStore, RowTransaction, RowTransition, SnapshotLineage,
+	CachedRowServer, Decrypted, Encrypted, RowError, RowRegistrationDecision, RowRegistrationPhase,
+	RowServer, RowSession, RowStore, RowTransaction, RowTransition, SnapshotLineage,
 };
 use zeroize::Zeroizing;
 
@@ -24,7 +25,7 @@ pyo3::create_exception!(beaconcrypt, RowRegistrationError, RowPersistenceError);
 
 type Object = Arc<Mutex<Option<Py<PyAny>>>>;
 type Errors = Arc<Mutex<Option<PyErr>>>;
-type NativeServer = RowServer<Box<dyn RowStore + Send + Sync>>;
+type NativeServer = BindingRowServer<Box<dyn RowStore + Send + Sync>>;
 
 /// Message bytes and authenticated peer/sequence metadata, without ratchet state. Session callbacks receive pending messages and must not publish them before the outer call succeeds.
 #[pyclass(name = "RowMessage", frozen)]
@@ -110,6 +111,32 @@ impl RowTransaction for PythonStore {
 		})
 	}
 
+	fn expect(&mut self, key: &[u8], expected: Option<&[u8]>) -> Result<(), RowError> {
+		let matched = self.call(|py, object| {
+			if object.hasattr("expect")? {
+				let value = expected.map(|bytes| PyBytes::new(py, bytes));
+				let output = object.call_method1("expect", (PyBytes::new(py, key), value))?;
+				if output.is_none() {
+					Ok(true)
+				} else {
+					output.extract::<bool>()
+				}
+			} else {
+				let actual = object.call_method1("load", (PyBytes::new(py, key),))?;
+				if actual.is_none() {
+					Ok(expected.is_none())
+				} else {
+					Ok(Some(actual.cast::<PyBytes>()?.as_bytes()) == expected)
+				}
+			}
+		})?;
+		if matched {
+			Ok(())
+		} else {
+			Err(RowError::Conflict)
+		}
+	}
+
 	fn store(&mut self, key: &[u8], value: &[u8]) -> Result<(), RowError> {
 		self.call(|py, object| {
 			object
@@ -171,7 +198,7 @@ fn lineage(bytes: &[u8]) -> PyResult<SnapshotLineage> {
 }
 
 /// A database-backed server that loads and commits only the selected peer. Store callbacks must implement a serializable durable transaction and raise exceptions on failure. Callbacks cannot reenter their server.
-#[pyclass(name = "BeaconCryptRowServer")]
+#[pyclass(name = "BeaconCryptRowServer", subclass)]
 pub struct RowServerPy {
 	server: Option<NativeServer>,
 	object: Object,
@@ -219,14 +246,27 @@ impl RowServerPy {
 	) -> PyResult<Self> {
 		let lineage = lineage(lineage_bytes)?;
 		Self::construct(py, store, |store| {
-			RowServer::create(kid, id_seed, mldsa_seed, store, lineage)
+			RowServer::create(kid, id_seed, mldsa_seed, store, lineage).map(BindingRowServer::Rows)
 		})
 	}
 
 	#[staticmethod]
 	fn open(py: Python<'_>, store: Py<PyAny>, lineage_bytes: &[u8]) -> PyResult<Self> {
 		let lineage = lineage(lineage_bytes)?;
-		Self::construct(py, store, |store| RowServer::open(store, lineage))
+		Self::construct(py, store, |store| {
+			RowServer::open(store, lineage).map(BindingRowServer::Rows)
+		})
+	}
+
+	fn cache_capacity(&mut self) -> PyResult<usize> {
+		Ok(self.native()?.cache_capacity())
+	}
+	fn cached_peer_count(&mut self) -> PyResult<usize> {
+		Ok(self.native()?.cached_peer_count())
+	}
+	fn clear_cache(&mut self) -> PyResult<()> {
+		self.native()?.clear_cache();
+		Ok(())
 	}
 
 	fn close(&mut self) {
@@ -534,4 +574,43 @@ fn application_callback<T>(
 		}
 		RowError::Storage("application callback failed".into())
 	})
+}
+
+/// An optional bounded decoded-peer cache backed by the authoritative database. An optional store.expect(key, expected) callback can stage exact-value conditions instead of loading warm peers. A capacity of zero disables caching.
+#[pyclass(name = "BeaconCryptCachedRowServer", extends = RowServerPy)]
+pub struct CachedRowServerPy;
+
+#[pymethods]
+impl CachedRowServerPy {
+	#[staticmethod]
+	#[pyo3(signature = (kid, id_seed, mldsa_seed, store, lineage_bytes, cache_capacity))]
+	fn create(
+		py: Python<'_>,
+		kid: u64,
+		id_seed: Option<&[u8]>,
+		mldsa_seed: Option<&[u8]>,
+		store: Py<PyAny>,
+		lineage_bytes: &[u8],
+		cache_capacity: usize,
+	) -> PyResult<Py<Self>> {
+		let lineage = lineage(lineage_bytes)?;
+		let base = RowServerPy::construct(py, store, |store| {
+			CachedRowServer::create(kid, id_seed, mldsa_seed, store, lineage, cache_capacity)
+				.map(BindingRowServer::Cached)
+		})?;
+		Py::new(py, (Self, base))
+	}
+	#[staticmethod]
+	fn open(
+		py: Python<'_>,
+		store: Py<PyAny>,
+		lineage_bytes: &[u8],
+		cache_capacity: usize,
+	) -> PyResult<Py<Self>> {
+		let lineage = lineage(lineage_bytes)?;
+		let base = RowServerPy::construct(py, store, |store| {
+			CachedRowServer::open(store, lineage, cache_capacity).map(BindingRowServer::Cached)
+		})?;
+		Py::new(py, (Self, base))
+	}
 }
