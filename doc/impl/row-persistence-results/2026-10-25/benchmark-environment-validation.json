@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "scope": "Environment provenance of the three retained full peer-count axes; reduced functional runs are excluded.",
+  "manifest_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-retained.json",
+  "manifest_sha256": "430e6627dddf0d8c67e35f8e314f69b960ab581851d1e8abac721c51030cb358",
+  "definitions": {
+    "interval": "Manifest start_unix through finish_unix, inclusive. Duration is monitor wall-clock elapsed time for the entire process, including setup and verification; it is not measured server-batch time.",
+    "observations": "Receipt records whose time_unix falls within the inclusive manifest interval, retaining their original order. Event counts include start, sample, and finish. Maximum gap uses adjacent records including start/finish, not only sample events.",
+    "quiet": "The receipt watcher quiet boolean must be true in every observation. This is sampled guest-host evidence, not proof of absence of all unobserved or hypervisor activity.",
+    "sole_benchmark_lease": "Exactly one active lease line in every observation, with a constant ticket and a label beginning row-persistence-benchmark. Waiting lease requests are not active leases. Lean slot occupancy is checked separately.",
+    "lean_ticket_changes": "No new_lean_ticket_since_sample flag is true, and the recorded lean_ticket_sequence is present and constant throughout the interval.",
+    "heavy_processes": "The receipt watcher heavy_processes list is present and empty in every observation. This inherits the watcher process filter; it does not assert that no other processes existed.",
+    "swap_pages": "End minus start /proc/vmstat pswpin and pswpout counters, system-wide pages. These cannot be attributed specifically to the benchmark. No byte conversion is made because the receipts do not record page size.",
+    "cpu_jiffies": "End minus start aggregate cpu line from /proc/stat, in recorded USER_HZ accounting ticks and aggregated over logical CPUs. These are system-wide, not benchmark CPU time. guest overlaps user; guest_nice overlaps nice, so summing all ten fields double-counts guest time.",
+    "steal": "The steal entry is the recorded aggregate /proc/stat steal counter delta, not a per-core or benchmark-specific elapsed duration.",
+    "pass": "Conjunction of the explicitly listed checks. No numerical CPU, swap, or sampling-gap threshold is imposed; those observations remain visible rather than being described as zero activity."
+  },
+  "axes": [
+    {
+      "case": "peers-1",
+      "peers": 1,
+      "report_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-1.json",
+      "report_sha256": "b3ead15ab9d157594ff66f15d9dd7a794461862afad181dd28f2aef49e679cf2",
+      "source_commit": "f0b53c634c48cb77db636b1cd01060cae075375b",
+      "source_status": "",
+      "receipt_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-3/benchmark-quiet-window.jsonl",
+      "receipt_sha256": "7418b51c0acc1efbc32b4ba0ed0ffeb026663f12bef487bdb96117b3e82bccff",
+      "start_unix": 1792896857.0092838,
+      "finish_unix": 1792897107.3115222,
+      "start_utc": "2026-10-25T02:54:17.009284+00:00",
+      "finish_utc": "2026-10-25T02:58:27.311522+00:00",
+      "duration_seconds": 250.30223846435547,
+      "observation_count": 51,
+      "event_counts": {
+        "start": 1,
+        "sample": 49,
+        "finish": 1
+      },
+      "max_observation_gap_seconds": 5.121057748794556,
+      "benchmark_lease": {
+        "ticket": "00002699",
+        "agent": "codex",
+        "label": "row-persistence-benchmark",
+        "scope": "coord-00002699-row-persistence-benchmark.scope"
+      },
+      "lean_ticket_sequence": "16430",
+      "checks": {
+        "retained_report_sha256_matches": true,
+        "report_complete": true,
+        "all_observations_quiet": true,
+        "sole_benchmark_lease_every_observation": true,
+        "all_lean_slots_idle": true,
+        "no_new_lean_tickets": true,
+        "no_heavy_processes_detected": true,
+        "timestamps_strictly_increasing": true,
+        "exact_start_finish_records": true,
+        "successful_uncontaminated_finish": true
+      },
+      "all_checks_passed": true,
+      "system_wide_swap_page_deltas": {
+        "in": 12,
+        "out": 0
+      },
+      "system_wide_cpu_jiffy_deltas": {
+        "user": 3593,
+        "nice": 0,
+        "system": 2384,
+        "idle": 371646,
+        "iowait": 21787,
+        "irq": 587,
+        "softirq": 101,
+        "steal": 29,
+        "guest": 0,
+        "guest_nice": 0
+      }
+    },
+    {
+      "case": "peers-100",
+      "peers": 100,
+      "report_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-100.json",
+      "report_sha256": "e6c3c38c58d1facd698553c783956f1bb0b01e56a637f09bd50633986ad5ff4f",
+      "source_commit": "f0b53c634c48cb77db636b1cd01060cae075375b",
+      "source_status": "",
+      "receipt_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-5/benchmark-quiet-window.jsonl",
+      "receipt_sha256": "453e39d95620e3ba8819ab3acdebc0e0777d37e42402c827c96ed0d0a4d5f57c",
+      "start_unix": 1792906213.903185,
+      "finish_unix": 1792906494.752579,
+      "start_utc": "2026-10-25T05:30:13.903185+00:00",
+      "finish_utc": "2026-10-25T05:34:54.752579+00:00",
+      "duration_seconds": 280.84939408302307,
+      "observation_count": 57,
+      "event_counts": {
+        "start": 1,
+        "sample": 55,
+        "finish": 1
+      },
+      "max_observation_gap_seconds": 5.116882562637329,
+      "benchmark_lease": {
+        "ticket": "00002741",
+        "agent": "codex",
+        "label": "row-persistence-benchmark-please-no-lean",
+        "scope": "coord-00002741-row-persistence-benchmark-please-no-lean.scope"
+      },
+      "lean_ticket_sequence": "17378",
+      "checks": {
+        "retained_report_sha256_matches": true,
+        "report_complete": true,
+        "all_observations_quiet": true,
+        "sole_benchmark_lease_every_observation": true,
+        "all_lean_slots_idle": true,
+        "no_new_lean_tickets": true,
+        "no_heavy_processes_detected": true,
+        "timestamps_strictly_increasing": true,
+        "exact_start_finish_records": true,
+        "successful_uncontaminated_finish": true
+      },
+      "all_checks_passed": true,
+      "system_wide_swap_page_deltas": {
+        "in": 2130,
+        "out": 0
+      },
+      "system_wide_cpu_jiffy_deltas": {
+        "user": 3385,
+        "nice": 0,
+        "system": 1375,
+        "idle": 419877,
+        "iowait": 23889,
+        "irq": 456,
+        "softirq": 68,
+        "steal": 20,
+        "guest": 0,
+        "guest_nice": 0
+      }
+    },
+    {
+      "case": "peers-1000",
+      "peers": 1000,
+      "report_path": "/tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-1000.json",
+      "report_sha256": "28736f08cf30e39d3d84d5e20a2196d398f6332f60f68594bc92b0e31ba5ba90",
+      "source_commit": "f0b53c634c48cb77db636b1cd01060cae075375b",
+      "source_status": "",
+      "receipt_path": "/tmp/bc-arc-scratch/row-persistence-20261025/benchmark-axis-window-5/benchmark-quiet-window.jsonl",
+      "receipt_sha256": "453e39d95620e3ba8819ab3acdebc0e0777d37e42402c827c96ed0d0a4d5f57c",
+      "start_unix": 1792906494.8525643,
+      "finish_unix": 1792907010.5121298,
+      "start_utc": "2026-10-25T05:34:54.852564+00:00",
+      "finish_utc": "2026-10-25T05:43:30.512130+00:00",
+      "duration_seconds": 515.659565448761,
+      "observation_count": 103,
+      "event_counts": {
+        "start": 1,
+        "sample": 101,
+        "finish": 1
+      },
+      "max_observation_gap_seconds": 5.122862815856934,
+      "benchmark_lease": {
+        "ticket": "00002741",
+        "agent": "codex",
+        "label": "row-persistence-benchmark-please-no-lean",
+        "scope": "coord-00002741-row-persistence-benchmark-please-no-lean.scope"
+      },
+      "lean_ticket_sequence": "17378",
+      "checks": {
+        "retained_report_sha256_matches": true,
+        "report_complete": true,
+        "all_observations_quiet": true,
+        "sole_benchmark_lease_every_observation": true,
+        "all_lean_slots_idle": true,
+        "no_new_lean_tickets": true,
+        "no_heavy_processes_detected": true,
+        "timestamps_strictly_increasing": true,
+        "exact_start_finish_records": true,
+        "successful_uncontaminated_finish": true
+      },
+      "all_checks_passed": true,
+      "system_wide_swap_page_deltas": {
+        "in": 67,
+        "out": 0
+      },
+      "system_wide_cpu_jiffy_deltas": {
+        "user": 14961,
+        "nice": 0,
+        "system": 2826,
+        "idle": 770271,
+        "iowait": 35488,
+        "irq": 890,
+        "softirq": 129,
+        "steal": 63,
+        "guest": 0,
+        "guest_nice": 0
+      }
+    }
+  ]
+}

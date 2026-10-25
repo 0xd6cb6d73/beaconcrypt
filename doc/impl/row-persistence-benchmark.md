@@ -2,7 +2,7 @@
 
 The `persistence_bench` Rust example compares a resident `PersistentServer` backed by a full SQLite snapshot with a resident `RowServer` backed by SQLite rows. Both arms run the same Beaconcrypt revision and cryptography, preserve ratchet state durably before releasing output, and use the same database settings. The experiment measures the cost of the native persistence boundary. It does not measure the Mythic provider, its transport, or its application result journal.
 
-No performance result follows from this design alone. Keep the generated JSON and the exact build and run commands with any reported measurements. Do not start this benchmark, including a reduced smoke measurement, on the shared development machine until the orchestrator confirms that all other `/tmp/bc-coord` leases have ended and a quiet measurement window is available. Compilation and correctness testing must finish before that window.
+The [2026-10-25 results](row-persistence-results.md) archive the completed shared-host collection, raw reports, and measurement limits. No performance result follows from this design alone. Keep the generated JSON and the exact build and run commands with any reported measurements. Do not start this benchmark, including a reduced smoke measurement, on the shared development machine until the orchestrator confirms that all other `/tmp/bc-coord` leases have ended and a quiet measurement window is available. Compilation and correctness testing must finish before that window.
 
 ## Reference integration and choice of baseline
 

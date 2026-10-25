@@ -1,0 +1,7 @@
+coord: lease 00002741 granted: codex 19800 MiB class custom (row-persistence-benchmark-please-no-lean)
+coord: lease 00002741 runs in memory scope coord-00002741-row-persistence-benchmark-please-no-lean.scope (user@1000.service; MemoryMax 20480 MiB, MemorySwapMax 4096 MiB, OOMPolicy stop); LEAN_NUM_THREADS=6 (LEASE_LEAN_NUM_THREADS; set LEAN_NUM_THREADS to choose another value)
+Benchmark lease reserved; waiting for 60 continuous seconds without competing work
+RUN: /home/user/worktrees/beaconcrypt-row-persistence/target/release/examples/persistence_bench --run --output /tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-100.json --database-directory /home/user/worktrees/beaconcrypt-row-persistence --peers 100
+Completed quiet benchmark: peers-100
+RUN: /home/user/worktrees/beaconcrypt-row-persistence/target/release/examples/persistence_bench --run --output /tmp/bc-arc-scratch/row-persistence-20261025/persistence-peers-1000.json --database-directory /home/user/worktrees/beaconcrypt-row-persistence --peers 1000
+Completed quiet benchmark: peers-1000
