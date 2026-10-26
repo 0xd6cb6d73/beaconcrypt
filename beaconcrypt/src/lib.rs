@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 
+#[cfg(feature = "pqxdh")]
+mod auth;
 #[cfg(feature = "beacon")]
 mod beacon;
 mod error;
@@ -62,6 +64,8 @@ pub unsafe extern "system" fn SystemFunction036(
 	u8::from(status >= 0)
 }
 
+#[cfg(feature = "pqxdh")]
+pub use auth::{MLDSA_PUBLIC_KEY_LEN, MLDSA_SIGNATURE_LEN, MldsaIdentity};
 #[cfg(all(feature = "pqxdh", feature = "beacon"))]
 pub use beacon::Beacon;
 #[cfg(feature = "beacon")]

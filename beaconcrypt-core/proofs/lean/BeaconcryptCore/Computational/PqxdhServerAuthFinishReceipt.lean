@@ -29,7 +29,7 @@ theorem opening_input (send receiving next : Chain) (material : Material)
 /-- The complete sequence-one driver reaches one selected raw request and returns that request's actual optional plaintext before the source finish. -/
 theorem execute_selected (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (read : RawCtxReceive.FrameDecoder) (expected : Std.U64) (send : Chain)
-    (context : RawCtxWholeOwner.OpenContext) (width : context.associatedData.length = 153) :
+    (context : RawCtxWholeOwner.OpenContext) (width : context.associatedData.length = 281) :
     simulateQ (receive source rest read expected)
       (RawCtxChainReceive.execute (PqxdhServerAuthBeaconFirstOpening.initial send .hidden) 1#u64 context) =
       (do

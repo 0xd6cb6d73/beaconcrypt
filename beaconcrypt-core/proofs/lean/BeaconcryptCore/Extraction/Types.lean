@@ -22,16 +22,77 @@ set_option maxRecDepth 2048
 
 namespace beaconcrypt_core
 
+/-- [beaconcrypt_core::authentication::AuthRole]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 28:0-31:1
+    Visibility: public -/
+@[discriminant isize]
+inductive authentication.AuthRole where
+| Beacon : authentication.AuthRole
+| Server : authentication.AuthRole
+
+/-- [beaconcrypt_core::authentication::InitFields]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 34:0-40:1
+    Visibility: public -/
+structure authentication.InitFields where
+  identity_key : Array Std.U8 33#usize
+  pre_key : Array Std.U8 98#usize
+  one_time_key : Array Std.U8 98#usize
+  pq_key : Array Std.U8 1249#usize
+  mldsa_public_key : Array Std.U8 1952#usize
+
+/-- [beaconcrypt_core::authentication::build_init_transcript::closure]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 66:25-94:5 -/
+def authentication.build_init_transcript.closure :=
+  Array Std.U8 8#usize × Array Std.U8 32#usize × Array Std.U8 33#usize ×
+  Array Std.U8 98#usize × Array Std.U8 98#usize × Array Std.U8 1249#usize ×
+  Array Std.U8 1952#usize × Array Std.U8 1952#usize × Array Std.U8 8#usize ×
+  Array Std.U8 8#usize × Array Std.U8 8#usize
+
+/-- [beaconcrypt_core::authentication::ResponseFields]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 98:0-104:1
+    Visibility: public -/
+structure authentication.ResponseFields where
+  identity_key : Array Std.U8 32#usize
+  ephemeral_key : Array Std.U8 32#usize
+  kem_cipher_text : Array Std.U8 1088#usize
+  app_cipher_text : Slice Std.U8
+  key_id : Std.U64
+
+/-- [beaconcrypt_core::authentication::build_response_prefix::closure]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 117:25-137:5 -/
+def authentication.build_response_prefix.closure :=
+  Array Std.U8 64#usize × Array Std.U8 8#usize × Array Std.U8 32#usize ×
+  Array Std.U8 32#usize × Array Std.U8 8#usize × Array Std.U8 1088#usize ×
+  Array Std.U8 8#usize
+
+/-- [beaconcrypt_core::authentication::ResponseTranscript]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 141:0-145:1
+    Visibility: public -/
+structure authentication.ResponseTranscript where
+  «prefix» : Array Std.U8 1293#usize
+  application : Slice Std.U8
+  assigned_id : Array Std.U8 8#usize
+
+/-- [beaconcrypt_core::authentication::build_signature_input::closure]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 184:25-194:5 -/
+def authentication.build_signature_input.closure :=
+  Array Std.U8 34#usize × Array Std.U8 64#usize
+
+/-- [beaconcrypt_core::authentication::bind_associated_data::closure]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 203:25-211:5 -/
+def authentication.bind_associated_data.closure :=
+  Array Std.U8 281#usize × Array Std.U8 64#usize × Array Std.U8 64#usize
+
 /-- [beaconcrypt_core::commitment::CommitmentTranscript]
     Source: 'beaconcrypt-core/src/commitment.rs', lines 26:0-28:1
     Visibility: public -/
 structure commitment.CommitmentTranscript where
-  bytes : Array Std.U8 229#usize
+  bytes : Array Std.U8 357#usize
 
 /-- [beaconcrypt_core::commitment::build_commitment_transcript::closure]
     Source: 'beaconcrypt-core/src/commitment.rs', lines 66:37-80:5 -/
 def commitment.build_commitment_transcript.closure :=
-  Array Std.U8 32#usize × Array Std.U8 12#usize × Array Std.U8 153#usize ×
+  Array Std.U8 32#usize × Array Std.U8 12#usize × Array Std.U8 281#usize ×
   Array Std.U8 16#usize × Array Std.U8 8#usize × Array Std.U8 8#usize
 
 /-- [beaconcrypt_core::ratchet::SymmetricRatchetKdfRequest]
@@ -163,7 +224,7 @@ structure pqxdh.BeaconRegistrationCandidate where
   server_binding : pqxdh.ServerBinding
   assigned_key_id : Std.U64
   root_key_input : pqxdh.RootKeyInput
-  associated_data : Array Std.U8 153#usize
+  associated_data : Array Std.U8 281#usize
 
 /-- [beaconcrypt_core::pqxdh::ServerState]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 696:0-698:1
@@ -183,7 +244,7 @@ structure pqxdh.ServerRegistrationCandidate where
   server_identity_key_id : Std.U64
   ephemeral_public_key : Array Std.U8 32#usize
   kem_ciphertext : Array Std.U8 1088#usize
-  associated_data : Array Std.U8 153#usize
+  associated_data : Array Std.U8 281#usize
 
 /-- [beaconcrypt_core::pqxdh::RegistrationError]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 79:0-87:1
@@ -270,31 +331,31 @@ structure pqxdh.BeaconStart where
   message : pqxdh.InitKex
 
 /-- [beaconcrypt_core::pqxdh::tag_mlkem768_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 973:29-973:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 978:29-978:83 -/
 @[reducible]
 def pqxdh.tag_mlkem768_key.closure := Array Std.U8 1184#usize
 
 /-- [beaconcrypt_core::pqxdh::tag_x25519_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 959:76-967:5 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 964:76-972:5 -/
 def pqxdh.tag_x25519_key.closure := Std.U8 × Array Std.U8 32#usize
 
 /-- [beaconcrypt_core::pqxdh::tag_sign_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 951:29-951:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 956:29-956:83 -/
 @[reducible]
 def pqxdh.tag_sign_key.closure := Array Std.U8 32#usize
 
 /-- [beaconcrypt_core::pqxdh::untag_mlkem768_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1004:67-1004:85 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1009:67-1009:85 -/
 @[reducible]
 def pqxdh.untag_mlkem768_key.closure := Array Std.U8 1185#usize
 
 /-- [beaconcrypt_core::pqxdh::untag_x25519_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 994:65-994:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 999:65-999:83 -/
 @[reducible]
 def pqxdh.untag_x25519_key.closure := Array Std.U8 34#usize
 
 /-- [beaconcrypt_core::pqxdh::untag_sign_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 983:63-983:81 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 988:63-988:81 -/
 @[reducible]
 def pqxdh.untag_sign_key.closure := Array Std.U8 33#usize
 
@@ -328,7 +389,7 @@ structure pqxdh.BeaconFinishInputs where
   shared_secrets : pqxdh.PqxdhSharedSecrets
 
 /-- [beaconcrypt_core::pqxdh::build_associated_data::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 935:66-945:5 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 938:66-950:5 -/
 def pqxdh.build_associated_data.closure :=
   Array Std.U8 33#usize × Array Std.U8 33#usize
 
@@ -383,7 +444,7 @@ inductive pqxdh.KeyIdAvailability where
 structure pqxdh.EstablishedPeer where
   key_id : Std.U64
   identity_public_key : Array Std.U8 32#usize
-  associated_data : Array Std.U8 153#usize
+  associated_data : Array Std.U8 281#usize
 
 /-- [beaconcrypt_core::ratchet::split_ratchet_kdf_output::closure#2]
     Source: 'beaconcrypt-core/src/ratchet.rs', lines 233:29-233:98 -/
@@ -662,7 +723,7 @@ structure record.OpenFrameContext where
   base_ciphertext : Slice Std.U8
   tag : Array Std.U8 16#usize
   commitment : Array Std.U8 64#usize
-  associated_data : Array Std.U8 153#usize
+  associated_data : Array Std.U8 281#usize
   sender_kid : Std.U64
 
 /-- [beaconcrypt_core::record::OpenCommitment]
@@ -703,7 +764,7 @@ structure record.AeadRequest where
   key : Array Std.U8 32#usize
   nonce : Array Std.U8 12#usize
   ciphertext : Slice Std.U8
-  associated_data : Array Std.U8 153#usize
+  associated_data : Array Std.U8 281#usize
 
 /-- [beaconcrypt_core::record::OpenedRecord]
     Source: 'beaconcrypt-core/src/record.rs', lines 146:0-150:1

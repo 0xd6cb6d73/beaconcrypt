@@ -2,7 +2,7 @@
 
 This document describes the way beaconcrypt exposes state persistence to the server. This breaks forward secrecy, but is required to be useful in a server context. Additionally, the [threat model](threat_model.md) specifies that we already assume that server compromise is game over.
 
-Snapshots contain the server identity seed and all ratchet state in plaintext. They are not encrypted or authenticated by beaconcrypt, so applications must treat them as secret data and obtain integrity, provenance, and rollback protection from the server's trusted storage.
+Snapshots contain the server identity seeds and all ratchet state in plaintext. They are not encrypted or authenticated by beaconcrypt, so applications must treat them as secret data and obtain integrity, provenance, and rollback protection from the server's trusted storage.
 
 # Usage
 
@@ -14,7 +14,7 @@ Python storage objects implement `load() -> bytes | None` and `compare_and_swap(
 from beaconcrypt import BeaconCryptServer
 
 # store implements the trusted storage contract described above.
-server = BeaconCryptServer.create_with_store(server_kid, seed, store)
+server = BeaconCryptServer.create_with_store(server_kid, ed25519_seed, mldsa_seed, store)
 response = server.register_beacon(registration, initial_message)
 # The store has committed the registration before response is returned.
 
@@ -51,7 +51,7 @@ with open("server-state.bin", "wb") as state_file:
 
 Go uses `Server.ExportState` and `NewServerFromState`. C uses `beaconcrypt_server_export_state` and `beaconcrypt_server_new_from_state`. Complete runnable save-and-restore examples are available for [Python](../examples/python/main.py), [Go](../examples/go/main.go), and [C](../examples/c/main.c).
 
-The exported value is a binary version-2 snapshot envelope, not a bare JSON document. It contains a format identifier, a lineage identifier, a monotonic generation, the previous snapshot's digest, a payload length, and the canonical JSON server-state payload. The digest identifies exact snapshot bytes and links generations; because it is unkeyed, it does not authenticate snapshots obtained outside trusted storage.
+The exported value is a binary version-3 snapshot envelope, not a bare JSON document. It contains a format identifier, a lineage identifier, a monotonic generation, the previous snapshot's digest, a payload length, and the canonical JSON server-state payload. The digest identifies exact snapshot bytes and links generations; because it is unkeyed, it does not authenticate snapshots obtained outside trusted storage.
 
 Store implementations can call `replacement.validate_successor(expected)` to validate the envelope, exact next generation, same lineage and complete parent digest before accepting a replacement. The in-memory binding store uses this check. It must run in the same transaction as comparison with the authoritative current head; it supplies neither payload authentication nor external freshness, durability or linearizability. The application must separately provide storage integrity, freshness, durability, and linearizability; buffer wiping does not protect copies retained by the application or storage system. [The deployment boundary](deployment-boundary.md) describes the separate requirements and the limits of buffer erasure and fallible construction.
 
@@ -60,11 +60,13 @@ The decoded JSON payload has the following shape:
 ```json
 {
     "identity_key": [1,14,[65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65]],
+    "mldsa_identity_seed": [66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66],
     "identity_key_kid": 0,
     "server_kid": 2,
     "known_ids": {
       "1": {
         "pk": [1,179,176,97,56,138,132,165,3,79,7,190,144,179,105,2,187,3,165,119,87,142,123,131,59,254,117,167,156,41,125,254,56],
+        "mldsa_public_key_hash": [67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67],
         "ratchet": {
             "send_key": [6,8,[1,79,112,132,98,47,6,118,212,221,235,120,149,156,87,172,106,157,248,36,135,198,191,207,243,65,83,183,57,110,161,213]],
             "recv_key": [6,9,[171,11,55,200,145,194,88,3,54,90,129,116,208,31,217,146,194,6,40,38,184,222,233,43,198,132,151,204,51,182,233,11]],
@@ -75,6 +77,7 @@ The decoded JSON payload has the following shape:
       },
       "2": {
         "pk": [1,198,247,65,172,172,76,66,155,64,140,90,73,162,40,247,225,134,162,239,15,149,105,64,89,167,171,159,125,28,56,207,166],
+        "mldsa_public_key_hash": [67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67],
         "ratchet": {
             "send_key": [6,8,[62,234,153,109,200,24,60,67,197,43,127,175,32,40,158,53,61,233,196,100,226,72,64,51,164,91,186,161,85,15,211,144]],
             "recv_key": [6,9,[102,95,139,78,169,159,72,133,153,83,238,26,138,13,31,122,136,212,63,38,104,40,239,153,128,61,177,149,28,80,14,79]],
@@ -91,7 +94,9 @@ The decoded JSON payload has the following shape:
 }
 ```
 
-`identity_key` contains the server's 32-byte Ed25519 seed as a strongly typed array. `identity_key_kid` is the server identity's key ID, `server_kid` is the last allocated remote-ID counter, and `known_ids` contains the known beacons' public keys and ratchet states. In this example the server knows two beacons, with key IDs 1 and 2.
+`identity_key` contains the server's 32-byte Ed25519 seed as a strongly typed array. `mldsa_identity_seed` contains its independent 32-byte ML-DSA-65 seed, and each peer requires its 64-byte `mldsa_public_key_hash` to reconstruct the authenticated AD. Version-one and version-two snapshots, missing fields, and incorrect seed or hash lengths are rejected. `identity_key_kid` is the server identity's key ID, `server_kid` is the last allocated remote-ID counter, and `known_ids` contains the known beacons' public keys and ratchet states. In this example the server knows two beacons, with key IDs 1 and 2.
+
+Registration transport messages use CBOR version two, with the agent ML-DSA public key and both parties' signatures carried as array fields. The persisted peer hash is BLAKE2b-512 of the decoded 1,952-byte agent ML-DSA public key. Registration CBOR headers and signature bytes are excluded from that hash. Snapshot version three stores the same identity seeds, peer hashes, and ratchets independently of registration encoding.
 
 Each serialized ratchet has exactly five fields: `send_key`, `recv_key`, `send_ctr`, `recv_past`, and `recv_ctr`. Send-message keys and their logical capabilities exist only during one encryption call and are never persisted. Objects from the former six-field format, including objects with an empty `send_past`, are rejected.
 
@@ -99,7 +104,7 @@ Each serialized ratchet has exactly five fields: `send_key`, `recv_key`, `send_c
 
 The canonical codec serializes peer IDs and cached receive sequences in numeric order and rejects duplicate or noncanonical map keys before inserting them into a `HashMap`. Restoration also checks field names, typed-array roles, counter bounds, cache capacity, and cached sequence alignment. These structural checks do not establish that arbitrary supplied chain bytes came from the canonical HKDF history, which is why restoration must receive the current snapshot from trusted storage.
 
-Version-2 snapshots permit up to 50 receive-cache entries. Restoration accepts structurally valid state with all 50 entries occupied, including a target retained by an older failed-receive implementation. An invalid retry against an imported cached target is neutral; an authentic retry consumes it. A full restored cache can still process the next no-skip future target because the target is consumed separately and never occupies a cache slot; a farther target that would require retaining another skipped key is rejected until an authentic cached frame frees capacity. A fresh maximum-gap success can now retain all 50 skipped keys without changing the snapshot format or cache capacity.
+Version-3 snapshots permit up to 50 receive-cache entries. Restoration accepts structurally valid state with all 50 entries occupied, including a target retained by an older failed-receive implementation. An invalid retry against an imported cached target is neutral; an authentic retry consumes it. A full restored cache can still process the next no-skip future target because the target is consumed separately and never occupies a cache slot; a farther target that would require retaining another skipped key is rejected until an authentic cached frame frees capacity. A fresh maximum-gap success can now retain all 50 skipped keys without changing the snapshot format or cache capacity.
 
 Rust applications use `PersistentServer<S>` with an implementation of `SnapshotStore` instead of exporting from a raw `Server`:
 
@@ -114,7 +119,7 @@ pub trait SnapshotStore {
     ) -> bool;
 }
 
-let mut server = PersistentServer::create(server_kid, Some(&seed), store.clone())?;
+let mut server = PersistentServer::create(server_kid, Some(&ed25519_seed), Some(&mldsa_seed), store.clone())?;
 
 // Drop the only live owner before restoring it from the store.
 drop(server);

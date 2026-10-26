@@ -17,7 +17,7 @@ variable {Reader WireResponse Result : Type}
 /-- A produced selected record and the actual optional native sealing reply belong to one recorded callback. -/
 def Origin (writer : RawCtxMixedShared.Writer) (trace : Trace) (entry : CtxSuccessfulSeal) : Prop :=
   ∃ (pending : PqxdhServerAuthCtxSend.Pending) (reply : Option (Option RawCtxSourceSend.Encrypted))
-    (nonce : NonceOutput) (width : pending.context.associatedData.length = 153) (record : CtxRomRecord),
+    (nonce : NonceOutput) (width : pending.context.associatedData.length = 281) (record : CtxRomRecord),
     Event.seal pending reply ∈ trace ∧ pending.material = .hidden nonce ∧
     entry = ⟨selectedInput nonce pending.sequence pending.context width, record⟩ ∧
     reply = some ((writer ⟨pending.sequence, pending.context.senderId, record.encode⟩).map
@@ -122,7 +122,7 @@ theorem Origin.single_success (writer : RawCtxMixedShared.Writer)
     (fields : PqxdhServerRegistrationPublication.ResponseFields) (bytes : Pqxdh.Bytes)
     (entry : CtxSuccessfulSeal)
     (origin : Origin writer [.seal pending (some (some encrypted)), .write fields (some (some bytes))] entry) :
-    ∃ (nonce : NonceOutput) (width : pending.context.associatedData.length = 153),
+    ∃ (nonce : NonceOutput) (width : pending.context.associatedData.length = 281),
       pending.material = .hidden nonce ∧
       entry.input = selectedInput nonce pending.sequence pending.context width ∧
       writer ⟨pending.sequence, pending.context.senderId, entry.record.encode⟩ = some encrypted.ciphertext := by
@@ -168,7 +168,7 @@ theorem compiled_records (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
       published = PqxdhServerRegistrationPublication.publish state candidate
         (PqxdhServerAuthCtxBuildSettlement.resolve sealed.advanced) metadata ∧
       ∀ entry ∈ after.seals, entry ∈ before.seals ∨
-        ∃ (nonce : NonceOutput) (width : sealed.context.associatedData.length = 153),
+        ∃ (nonce : NonceOutput) (width : sealed.context.associatedData.length = 281),
           sealed.material = .hidden nonce ∧
           entry.input = selectedInput nonce sealed.sequence sealed.context width ∧
           codec.frameWrite ⟨sealed.sequence, sealed.context.senderId, entry.record.encode⟩ = some encrypted.ciphertext := by
@@ -201,7 +201,7 @@ theorem matched_frame (read : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (delivery : PqxdhPhase2LocalMatching.LocalTarget read raw candidate opened target)
     (entry : CtxSuccessfulSeal) (same : target.toLegacy.sameFullTupleAsSuccessfulSeal entry)
     (pending : PqxdhServerAuthCtxSend.Pending) (nonce : NonceOutput)
-    (width : pending.context.associatedData.length = 153)
+    (width : pending.context.associatedData.length = 281)
     (input : entry.input = selectedInput nonce pending.sequence pending.context width) :
     read raw = some ⟨pending.sequence, pending.context.senderId, entry.record.encode⟩ := by
   have decoded := PqxdhServerAuthDecodedOrigin.matched_frame read raw candidate opened target delivery entry same

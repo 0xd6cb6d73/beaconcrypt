@@ -114,7 +114,7 @@ theorem completedSource_initial_eq_uniform {Result : Type} (decode : RawDecoder)
 def tracedSuffixCache (table : Suffix → CtxDigest) : List Pqxdh.Bytes → CtxSuffixRO.QueryCache
   | [] => ∅
   | input :: prior =>
-    if width : input.length = 197 then
+    if width : input.length = 325 then
       (tracedSuffixCache table prior).cacheQuery input (table ⟨input, width⟩)
     else tracedSuffixCache table prior
 

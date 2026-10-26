@@ -23,7 +23,6 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 import re
-import resource
 import shutil
 import subprocess
 import sys
@@ -649,8 +648,23 @@ def b2s_pins(text):
     raise ValueError("a b2s query file must end with one of the two main processes")
 
 
+def validate_legacy_scope(directory=HERE):
+    """Preserve the explicit projection boundary when renewing source tripwires."""
+    marker = (
+        "(* @beaconcrypt-fidelity-v1 legacy_profiles.scope="
+        "classical_projection:MLDSA_guards_not_globally_lifted *)"
+    )
+    if (directory / "production-transcript-interface.pvl").read_text().count(
+        marker
+    ) != 1:
+        raise ValueError(
+            "legacy profiles require the reviewed classical-projection scope"
+        )
+
+
 def validate_targets(targets=TARGETS, directory=HERE):
     """Check the manifest itself: classes, bounds, libraries and query files."""
+    validate_legacy_scope(directory)
     names = [target.name for target in targets]
     if len(set(names)) != len(names):
         raise ValueError("duplicate fs target name")
@@ -744,6 +758,7 @@ def command(proverif, target, directory=HERE):
 
 def run_process(arguments, log_path, timeout, address_space_kib):
     """Run one process; return (seconds, peak RSS in KiB, exit code, timed out)."""
+    import resource
 
     def limit():
         if address_space_kib:

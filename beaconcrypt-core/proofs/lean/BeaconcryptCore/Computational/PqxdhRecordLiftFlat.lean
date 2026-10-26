@@ -176,7 +176,7 @@ theorem normalBegin_context {Send Receive Material Context : Type}
 
 /-- The selected seal input depends on its context, not on the proof of its width. -/
 theorem selectedInput_congr (material : PqxdhFullSecretInputKdf.NonceOutput) (sequence : Std.U64) (first second : RawCtxSourceSend.SealContext)
-    (firstWidth : first.associatedData.length = 153) (secondWidth : second.associatedData.length = 153)
+    (firstWidth : first.associatedData.length = 281) (secondWidth : second.associatedData.length = 281)
     (same : first = second) :
     RawCtxSelectedMessageSealing.selectedInput material sequence first firstWidth =
       RawCtxSelectedMessageSealing.selectedInput material sequence second secondWidth := by

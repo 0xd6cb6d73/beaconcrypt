@@ -21,7 +21,7 @@ private theorem difference_val (x y : Std.Usize) :
     (⟨BitVec.ofNat _ (x.val - y.val)⟩ : Std.Usize).val = x.val - y.val :=
   Nat.mod_eq_of_lt (lt_of_le_of_lt (Nat.sub_le _ _) x.bv.isLt)
 
-def PayloadView (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
+def PayloadView (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
     (sender : Std.U64) (context : record.OpenFrameContext) : Prop :=
   context.base_ciphertext.val = payload.val.take (payload.val.length - 64) ∧
   context.tag.val = (payload.val.take (payload.val.length - 64)).drop (payload.val.length - 80) ∧
@@ -30,7 +30,7 @@ def PayloadView (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Every payload returns normally and retains its exact original slices and metadata, or rejects at the strict length boundary. -/
-theorem payload_views (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
+theorem payload_views (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
     (sender : Std.U64) :
     ∃ result, record.OpenFrameContext.from_frame payload ad sender = ok result ∧
       match result with
@@ -156,8 +156,8 @@ theorem getters_normal (opening : ReceiveOpen record.OpenFrameContext) :
       (Computational.RawCtxInterpretedArguments.sequence_total view)
 
 structure Primitives (m : Type → Type) (Plaintext Digest : Type) where
-  hash : Std.Array Std.U8 229#usize → m (Option Digest)
-  erase : Std.Array Std.U8 229#usize → m (Std.Array Std.U8 229#usize)
+  hash : Std.Array Std.U8 357#usize → m (Option Digest)
+  erase : Std.Array Std.U8 357#usize → m (Std.Array Std.U8 357#usize)
   compare : Digest → Std.Array Std.U8 64#usize → m Bool
   aead : record.AeadRequest → m (core.option.Option Plaintext)
 
@@ -235,7 +235,7 @@ theorem driver_source {m : Type → Type} [Monad m] [LawfulMonad m] {Plaintext D
       m (RustM (ConcreteRatchetKernel × core.option.Option (record.OpenedRecord Plaintext))) =>
       execute.hash (CommitmentSurface.productionInput (selectedFields opening material sequence)) >>= continuation)
     funext digest
-    apply congrArg (fun continuation : Std.Array Std.U8 229#usize →
+    apply congrArg (fun continuation : Std.Array Std.U8 357#usize →
       m (RustM (ConcreteRatchetKernel × core.option.Option (record.OpenedRecord Plaintext))) =>
       execute.erase (CommitmentSurface.productionInput (selectedFields opening material sequence)) >>= continuation)
     funext erased

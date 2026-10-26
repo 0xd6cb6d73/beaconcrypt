@@ -419,7 +419,7 @@ theorem mergeOwner_none (owner : PqxdhRegistrationSchedule.Owner KemSK) : mergeO
 
 /-- An established owner stays established and terminal after merging. -/
 theorem mergeOwner_terminal (kernel : Option Kernel) (owner : PqxdhRegistrationSchedule.Owner KemSK)
-    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 153#usize)
+    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 281#usize)
     (current : Kernel) (phase : owner.beacon.phase = .established control associatedData current) :
     PqxdhRegistrationSchedule.Terminal (mergeOwner kernel owner) := by
   cases kernel <;> simp [mergeOwner, phase, PqxdhRegistrationSchedule.Terminal]

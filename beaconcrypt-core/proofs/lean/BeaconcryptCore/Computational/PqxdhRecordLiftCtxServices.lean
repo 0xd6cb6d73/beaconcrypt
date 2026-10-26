@@ -56,7 +56,7 @@ def sealRom (crypto : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer) :
 
 /-- The original inner source seal emits exactly its typed record, then logs and invokes the actual writer, even when it fails. -/
 theorem sealRom_typed (crypto : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
-    (input : RawCtxSourceSend.SealInput) (width : input.context.associatedData.length = 153)
+    (input : RawCtxSourceSend.SealInput) (width : input.context.associatedData.length = 281)
     (frames : Frames) :
     (simulateQ (sealRom crypto writer) (RawCtxSourceSeal.sealInput input)).run frames =
       (do
@@ -74,7 +74,7 @@ theorem sealRom_typed (crypto : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer
 
 /-- Invalid source AD width returns ordinary failure and performs no writer call. -/
 theorem sealRom_invalid (crypto : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
-    (input : RawCtxSourceSend.SealInput) (width : input.context.associatedData.length ≠ 153)
+    (input : RawCtxSourceSend.SealInput) (width : input.context.associatedData.length ≠ 281)
     (frames : Frames) :
     (simulateQ (sealRom crypto writer) (RawCtxSourceSeal.sealInput input)).run frames =
       pure (none, frames) := by
@@ -164,7 +164,7 @@ theorem nativeSeal_program (setup : PqxdhServerAuthExperiment.Setup baseSpec Kem
 /-- The actual native inner seal preserves its full cache and attempted frame before any optional writer result. -/
 theorem nativeSeal_typed (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (input : RawCtxSourceSend.SealInput) (width : input.context.associatedData.length = 153)
+    (input : RawCtxSourceSend.SealInput) (width : input.context.associatedData.length = 281)
     (state : CtxRomAuth.CtxRO.QueryCache × Frames) :
     (simulateQ (nativeSeal setup codec) (RawCtxSourceSeal.sealInput input)).run state = (do
       let result ← (simulateQ CtxRomAuth.ctxRandomOracle
@@ -285,7 +285,7 @@ def written (writer : RawCtxMixedShared.Writer) (sequence : Std.U64)
 noncomputable def sealCall (crypto : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
     (input : RawCtxInterpretedArguments.Input RawCtxSelectedMessageKey.Slot RawCtxSourceSend.SealContext) :
     StateT Frames (OracleComp Spec) SealResult := fun frames =>
-  if width : input.context.associatedData.length = 153 then
+  if width : input.context.associatedData.length = 281 then
     match input.material with
     | .hidden nonce => simulateQ RawCtxSelectedSealConsumer.liftSelected (do
         let reply ← ReceiveSpec.query (.inl (.inr (.inr (selectedInput nonce input.sequence input.context width))))
@@ -301,14 +301,14 @@ noncomputable def sealCall (crypto : Pqxdh.Crypto) (writer : RawCtxMixedShared.W
 /-- Invalid AD gives the literal no-writer source failure and no component query. -/
 theorem sealCall_invalid (crypto : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
     (input : RawCtxInterpretedArguments.Input RawCtxSelectedMessageKey.Slot RawCtxSourceSend.SealContext)
-    (width : input.context.associatedData.length ≠ 153) (frames : Frames) :
+    (width : input.context.associatedData.length ≠ 281) (frames : Frames) :
     (sealCall crypto writer input).run frames = pure (.completed none, frames) := by
   simp [sealCall, StateT.run, width]
 
 /-- A known-key seal uses unchecked native sealing on its exact key and nonce, with the same cache and attempted frame even on writer failure. -/
 theorem sealCall_known_cache (real : Bool) (decode : RawDecoder) (crypto : Pqxdh.Crypto) (key : CtxKey)
     (writer : RawCtxMixedShared.Writer) (material : RatchetMaterial) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 281)
     (before : SourceState) (frames : Frames) :
     (fun result => (result.1, result.2.cache)) <$>
       (simulateQ (sourceImpl real decode crypto key)
@@ -326,7 +326,7 @@ theorem sealCall_known_cache (real : Bool) (decode : RawDecoder) (crypto : Pqxdh
 theorem sealCall_selected_fresh (decode : RawDecoder) (crypto : Pqxdh.Crypto)
     (key : PqxdhSecretInputKdf.RootOutput) (writer : RawCtxMixedShared.Writer)
     (nonce : PqxdhFullSecretInputKdf.NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 281)
     (before : SourceState) (frames : Frames) (fresh : nonce ∉ before.selected.1.usedNonces) :
     (simulateQ (sourceImpl true decode crypto key)
       ((sealCall crypto writer ⟨.hidden nonce, sequence, context⟩).run frames)).run before = (do
@@ -349,7 +349,7 @@ theorem sealCall_selected_fresh (decode : RawDecoder) (crypto : Pqxdh.Crypto)
 theorem sealCall_selected_repeat (decode : RawDecoder) (crypto : Pqxdh.Crypto)
     (key : PqxdhSecretInputKdf.RootOutput) (writer : RawCtxMixedShared.Writer)
     (nonce : PqxdhFullSecretInputKdf.NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 281)
     (before : SourceState) (frames : Frames) (used : nonce ∈ before.selected.1.usedNonces) :
     (simulateQ (sourceImpl true decode crypto key)
       ((sealCall crypto writer ⟨.hidden nonce, sequence, context⟩).run frames)).run before =
@@ -506,7 +506,7 @@ theorem openingService_source (setup : PqxdhServerAuthExperiment.Setup baseSpec 
 /-- Invalid AD retains the actual cache and pending frames in the native source seal. -/
 theorem nativeSeal_invalid (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (input : RawCtxSourceSend.SealInput) (width : input.context.associatedData.length ≠ 153)
+    (input : RawCtxSourceSend.SealInput) (width : input.context.associatedData.length ≠ 281)
     (state : CtxRO.QueryCache × Frames) :
     (simulateQ (nativeSeal setup codec) (RawCtxSourceSeal.sealInput input)).run state = pure (none, state) := by
   rw [nativeSeal_program]
@@ -525,7 +525,7 @@ theorem sealCall_source (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (key : PqxdhSecretInputKdf.RootOutput)
     (input : RawCtxInterpretedArguments.Input RawCtxSelectedMessageKey.Slot RawCtxSourceSend.SealContext)
     (before : SourceState) (frames : Frames)
-    (fresh : ∀ nonce, input.material = .hidden nonce → input.context.associatedData.length = 153 →
+    (fresh : ∀ nonce, input.material = .hidden nonce → input.context.associatedData.length = 281 →
       nonce ∉ before.selected.1.usedNonces) :
     sealProjection <$>
       (simulateQ (sourceImpl true decode setup.source.crypto key)
@@ -534,7 +534,7 @@ theorem sealCall_source (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
         (simulateQ (nativeSeal setup codec)
           (RawCtxSourceSeal.sealInput (RawCtxInterpretedArguments.toSealInput
             (RawCtxInterpretedArguments.mapInput (RawCtxSelectedMessageKey.interpret key) input)))).run (before.cache, frames) := by
-  by_cases width : input.context.associatedData.length = 153
+  by_cases width : input.context.associatedData.length = 281
   · rcases input with ⟨material, sequence, context⟩
     cases material with
     | hidden nonce =>
@@ -649,7 +649,7 @@ theorem sealingService_source (setup : PqxdhServerAuthExperiment.Setup baseSpec 
     (pending : PqxdhRecordLiftOpaqueDrivers.LabeledSeal Slot RawCtxSourceSend.SealContext)
     (before : SourceState) (frames : Frames)
     (fresh : ∀ nonce, materialRoute masked pending.material = .hidden nonce →
-      pending.context.associatedData.length = 153 → nonce ∉ before.selected.1.usedNonces) :
+      pending.context.associatedData.length = 281 → nonce ∉ before.selected.1.usedNonces) :
     callbackProjection <$>
       (simulateQ (sourceImpl true decode setup.source.crypto key)
         ((sealingService setup.source.crypto codec.frameWrite masked pending).run.run frames)).run before =
@@ -721,7 +721,7 @@ theorem sealingService_repeat (crypto : Pqxdh.Crypto) (writer : RawCtxMixedShare
     (decode : RawDecoder) (key : PqxdhSecretInputKdf.RootOutput)
     (masked : Mask Slot) (pending : PqxdhRecordLiftOpaqueDrivers.LabeledSeal Slot RawCtxSourceSend.SealContext)
     (nonce : PqxdhFullSecretInputKdf.NonceOutput) (selected : materialRoute masked pending.material = .hidden nonce)
-    (width : pending.context.associatedData.length = 153) (before : SourceState) (frames : Frames)
+    (width : pending.context.associatedData.length = 281) (before : SourceState) (frames : Frames)
     (used : nonce ∈ before.selected.1.usedNonces) :
     (simulateQ (sourceImpl true decode crypto key)
       ((sealingService crypto writer masked pending).run.run frames)).run before =

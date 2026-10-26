@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RawCtxMixedOwner
 /-!
 # Native Beacon lifecycle and established send/raw field wiring
 
-All five source phase variants and their private fields are retained. Only the established variant admits record operations. Its actual outer identity_key_kid supplies the encoded sender; the extracted control accessor supplies target and expected sender; the stored 153-byte array supplies associated data. No equality between the outer identifier and control.assigned_key_id is assumed.
+All five source phase variants and their private fields are retained. Only the established variant admits record operations. Its actual outer identity_key_kid supplies the encoded sender; the extracted control accessor supplies target and expected sender; the stored 281-byte array supplies associated data. No equality between the outer identifier and control.assigned_key_id is assumed.
 
 One whole owner and the same actual primitive interpreter implement sends and raw receives. Complete source/program equalities retain every optional reply and all primitive effects. Raw API attempts, including inactive rejection, have a separate ghost counter; native role fields contain no such counter. Adaptive send/raw calls preserve every non-ratchet phase field, including inactive private keys, with the actual five source callback caps and no new scheduling loss.
 
@@ -25,7 +25,7 @@ inductive Phase (DhPair KemPair Kernel : Type) where
   | fresh (control : pqxdh.BeaconFresh) (prekey : DhPair) (kem : KemPair)
   | freshWithCoins (control : pqxdh.BeaconFresh) (prekey oneTime : DhPair) (kem : KemPair)
   | initSent (control : pqxdh.BeaconInitSent) (prekey oneTime : DhPair) (kem : KemPair)
-  | established (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize) (kernel : Kernel)
+  | established (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize) (kernel : Kernel)
   | aborted (control : pqxdh.BeaconAborted)
 
 /-- Actual outer identity and route fields are distinct from the established control's assigned identifier. -/
@@ -47,13 +47,13 @@ theorem target_exact (control : pqxdh.BeaconEstablished) :
 
 /-- The owner receives the stored associated data and both directions of the same kernel. -/
 def selected {Identity DhPair KemPair : Type} (state : State Identity DhPair KemPair)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
     (kernel : ConcreteRatchetKernel) : RawCtxWholeOwner.OwnerState Unit :=
   ⟨⟨kernel, control.server_binding.identity_key_id, PqxdhRefinement.absBytes associatedData, ()⟩, state.rawAttempts⟩
 
 /-- Reinstall only the whole returned kernel; all native outer/control/AD fields remain the original fields. -/
 def reinstall {Identity DhPair KemPair : Type} (state : State Identity DhPair KemPair)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
     (owner : RawCtxWholeOwner.OwnerState Unit) : State Identity DhPair KemPair :=
   ⟨{ state.beacon with phase := .established control associatedData owner.owner.kernel }, owner.rawAttempts⟩
 
@@ -90,21 +90,21 @@ theorem inactive {Identity DhPair KemPair : Type} (decode : RawCtxReceive.FrameD
   unfold beaconImpl StateT.run
   cases hphase : state.beacon.phase <;> simp_all [Established]
 
-/-- Established owner fields are the actual source target, stored 153-byte AD, whole kernel and current attempt count. -/
+/-- Established owner fields are the actual source target, stored 281-byte AD, whole kernel and current attempt count. -/
 theorem selected_fields {Identity DhPair KemPair : Type} (state : State Identity DhPair KemPair)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
     (kernel : ConcreteRatchetKernel) :
     let owner := selected state control associatedData kernel
     owner.owner.expectedSender = control.server_binding.identity_key_id ∧
       owner.owner.associatedData = PqxdhRefinement.absBytes associatedData ∧
-      owner.owner.associatedData.length = 153 ∧ owner.owner.kernel = kernel ∧
+      owner.owner.associatedData.length = 281 ∧ owner.owner.kernel = kernel ∧
       owner.rawAttempts = state.rawAttempts := by
   simp [selected, PqxdhRefinement.absBytes_length]
 
 /-- Exact source established dispatch retains actual outer sender and publishes the returned kernel before reply. -/
 theorem established {Identity DhPair KemPair : Type} (decode : RawCtxReceive.FrameDecoder)
     (query : RawCtxMixedOwner.SourceSpec.Domain) (state : State Identity DhPair KemPair)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
     (kernel : ConcreteRatchetKernel)
     (hphase : state.beacon.phase = .established control associatedData kernel) :
     (beaconImpl decode query).run state = (do
@@ -115,7 +115,7 @@ theorem established {Identity DhPair KemPair : Type} (decode : RawCtxReceive.Fra
 
 /-- Only the returned whole kernel and ghost attempt count can change during established publication. -/
 theorem reinstall_fields {Identity DhPair KemPair : Type} (state : State Identity DhPair KemPair)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
     (owner : RawCtxWholeOwner.OwnerState Unit) :
     let result := reinstall state control associatedData owner
     result.beacon.identity = state.beacon.identity ∧

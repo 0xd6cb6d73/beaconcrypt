@@ -19,7 +19,7 @@ def At (codec : Codec Reader WireResponse) (pending : pqxdh.PendingServerRegistr
   ∃ (key : Std.U64) (candidate : pqxdh.ServerRegistrationCandidate)
     (binding : pqxdh.RegistrationKeyIdBinding) (sealed : PqxdhServerAuthCtxSend.Pending)
     (encrypted : RawCtxSourceSend.Encrypted) (nonce : NonceOutput)
-    (width : sealed.context.associatedData.length = 153),
+    (width : sealed.context.associatedData.length = 281),
     pqxdh.server_next_key_id state.control = .ok (.Ok key) ∧
     pqxdh.server_prepare_commit state.control pending ⟨state.server.identity, state.identityKeyId⟩
       (if (state.server.peers key).isSome then .Occupied else .Available) = .ok (.Ok candidate) ∧

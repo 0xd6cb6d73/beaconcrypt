@@ -1387,7 +1387,7 @@ theorem ownerEffect_abort {n : Nat} (index : Nat) (before after : PqxdhRegistrat
 /-- An initSent owner that ends established is installed with its known kernel and its shell. -/
 theorem ownerEffect_establish {n : Nat} (index : Nat) (before after : PqxdhRegistrationSchedule.Owner KemSK)
     (initSent : PqxdhDeploymentEnvironment.inactiveTag before.beacon.phase = some .initSent)
-    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 153#usize)
+    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 281#usize)
     (kernel : ConcreteRatchetKernel) (established : after.beacon.phase = .established control associatedData kernel) :
     PqxdhDeploymentEnvironment.ownerEffect (n := n) index before after =
       PqxdhDeploymentEnvironment.issue (.installBeacon index ⟨after.beacon.identityKeyId, control, associatedData⟩
@@ -1399,7 +1399,7 @@ theorem ownerEffect_establish {n : Nat} (index : Nat) (before after : PqxdhRegis
 
 /-- Filling an established owner with its own shell and kernel changes nothing. -/
 theorem fillOwner_self (owner : PqxdhRegistrationSchedule.Owner KemSK) (control : beaconcrypt_core.pqxdh.BeaconEstablished)
-    (associatedData : Std.Array Std.U8 153#usize) (kernel : ConcreteRatchetKernel)
+    (associatedData : Std.Array Std.U8 281#usize) (kernel : ConcreteRatchetKernel)
     (established : owner.beacon.phase = .established control associatedData kernel) :
     fillOwner (some (.established ⟨owner.beacon.identityKeyId, control, associatedData⟩ kernel)) owner = owner := by
   unfold fillOwner

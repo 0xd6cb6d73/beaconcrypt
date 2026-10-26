@@ -23,7 +23,7 @@ structure Occurrence (Owner : Type) where
 def nonce (pending : Pending) : Option NonceOutput :=
   match pending.material with
   | .known _ => none
-  | .hidden value => if pending.context.associatedData.length = 153 then some value else none
+  | .hidden value => if pending.context.associatedData.length = 281 then some value else none
 
 def note {Owner : Type} (occurrence : Occurrence Owner) (before : List (Occurrence Owner)) : List (Occurrence Owner) :=
   if (nonce occurrence.pending).isSome then before ++ [occurrence] else before
@@ -49,7 +49,7 @@ theorem repeated_source (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutp
     (before after : SourceState)
     (supported : (SealResult.repeatedNonce, after) ∈ support ((simulateQ (sourceImpl true decode c key)
       (RawCtxSelectedSealConsumer.call c writer input)).run before)) :
-    ∃ value, input.material = .hidden value ∧ input.context.associatedData.length = 153 ∧
+    ∃ value, input.material = .hidden value ∧ input.context.associatedData.length = 281 ∧
       value ∈ before.selected.1.usedNonces ∧ after = before := by
   rcases input with ⟨material, sequence, context⟩
   cases material with
@@ -59,7 +59,7 @@ theorem repeated_source (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutp
       obtain ⟨reply, _, impossible⟩ := supported
       cases impossible
   | hidden value =>
-      by_cases width : context.associatedData.length = 153
+      by_cases width : context.associatedData.length = 281
       · by_cases used : value ∈ before.selected.1.usedNonces
         · rw [RawCtxSelectedSealConsumer.selected_repeat_call decode c key writer value sequence context width before used] at supported
           simp only [mem_support_pure_iff, Prod.mk.injEq, true_and] at supported
@@ -88,7 +88,7 @@ theorem stopped_source (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutpu
       have same : after = reply.2 := (congrArg Prod.snd equal).symm
       refine ⟨value, ?_, used, same.trans state⟩
       change pending.material = .hidden value at material
-      change pending.context.associatedData.length = 153 at width
+      change pending.context.associatedData.length = 281 at width
       simp only [nonce, material, ite_eq_left width]
   | completed ciphertext =>
       have impossible := congrArg Prod.fst equal
@@ -104,7 +104,7 @@ theorem call_used (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
       (RawCtxSelectedSealConsumer.call c writer input)).run before)) :
     ∀ value ∈ after.selected.1.usedNonces,
       value ∈ before.selected.1.usedNonces ∨
-        (input.material = .hidden value ∧ input.context.associatedData.length = 153) := by
+        (input.material = .hidden value ∧ input.context.associatedData.length = 281) := by
   rcases input with ⟨material, sequence, context⟩
   cases material with
   | known material =>
@@ -117,7 +117,7 @@ theorem call_used (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
       intro value used
       exact Or.inl used
   | hidden value =>
-      by_cases width : context.associatedData.length = 153
+      by_cases width : context.associatedData.length = 281
       · by_cases used : value ∈ before.selected.1.usedNonces
         · rw [RawCtxSelectedSealConsumer.selected_repeat_call decode c key writer value sequence context width before used] at supported
           simp only [mem_support_pure_iff, Prod.mk.injEq] at supported
@@ -181,7 +181,7 @@ theorem scalar_used (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
   · exact Or.inl old
   · obtain ⟨material, width⟩ := selected
     change pending.material = .hidden value at material
-    change pending.context.associatedData.length = 153 at width
+    change pending.context.associatedData.length = 281 at width
     exact Or.inr (by simp only [nonce, material, ite_eq_left width])
 
 /-- Every actual scalar sealing outcome preserves the occurrence invariant, including writer rejection and nonce stopping. -/

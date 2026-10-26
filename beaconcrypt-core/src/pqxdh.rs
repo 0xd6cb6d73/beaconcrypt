@@ -64,7 +64,7 @@ const _: () = assert!(DH_SECRET_SIZE == 32);
 const _: () = assert!(SHARED_SECRET_SIZE == 32);
 const _: () = assert!(RATCHET_CHAIN_SIZE == 32);
 const _: () = assert!(ROOT_KEY_INPUT_SIZE == 192);
-const _: () = assert!(ASSOCIATED_DATA_SIZE == 153);
+const _: () = assert!(ASSOCIATED_DATA_SIZE == 281);
 const _: () = assert!(REGISTRATION_KEY_ID_BINDING_SIZE == 8);
 const _: () = assert!(REGISTRATION_ID_SIZE == 64);
 const _: () = assert!(SIGN_TYPE_ED25519 < 0x80);
@@ -925,6 +925,9 @@ pub const fn server_abort_candidate(candidate: &ServerRegistrationCandidate) -> 
 		"reduc forall server_identity: bitstring, beacon_identity: bitstring;\n  ${build_associated_data}(server_identity, beacon_identity) = beaconcrypt_associated_data(tag_ed25519(server_identity), tag_ed25519(beacon_identity), pqxdh_domain(), symmetric_ratchet_domain())."
 	)
 )]
+/// Build the fixed associated-data prefix and reserve its final 128 bytes for the ordered
+/// BLAKE2b-512 hashes of the Server and Beacon ML-DSA public keys. The production adapter fills
+/// both hashes before using this value for authenticated encryption or CTX commitment.
 pub fn build_associated_data(
 	server_identity_public_key: [u8; SIGN_PUBLIC_KEY_SIZE],
 	beacon_identity_public_key: [u8; SIGN_PUBLIC_KEY_SIZE],
@@ -939,8 +942,10 @@ pub fn build_associated_data(
 			encoded_beacon[i - 33]
 		} else if i < 112 {
 			PQXDH_INFO[i - 66]
-		} else {
+		} else if i < 153 {
 			SYM_RATCHET_INFO[i - 112]
+		} else {
+			0
 		}
 	});
 	output
@@ -1186,7 +1191,8 @@ mod tests {
 		assert_eq!(ad[33], SIGN_TYPE_ED25519);
 		assert_eq!(&ad[34..66], &beacon_id);
 		assert_eq!(&ad[66..112], PQXDH_INFO);
-		assert_eq!(&ad[112..], SYM_RATCHET_INFO);
+		assert_eq!(&ad[112..153], SYM_RATCHET_INFO);
+		assert_eq!(&ad[153..], &[0; 128]);
 
 		assert_eq!(BEACON_RATCHETS.receive_offset(), 0);
 		assert_eq!(BEACON_RATCHETS.send_offset(), 32);

@@ -25,10 +25,10 @@ def corrupt_aead_ciphertext(ciphertext: bytes) -> bytes:
 
 
 def test_encrypt_to_multiple():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    b1 = BeaconCryptBeacon(0, server_pk)
-    b2 = BeaconCryptBeacon(0, server_pk)
+    b1 = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
+    b2 = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
     message = bytes([0x1]) * 32
 
     b1_kid = register_beacon(server, b1)
@@ -40,10 +40,10 @@ def test_encrypt_to_multiple():
 
 
 def test_server_uses_per_beacon_associated_data():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    b1 = BeaconCryptBeacon(0, server_pk)
-    b2 = BeaconCryptBeacon(0, server_pk)
+    b1 = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
+    b2 = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
 
     b1_kid = register_beacon(server, b1)
     b2_kid = register_beacon(server, b2)
@@ -60,10 +60,10 @@ def test_server_uses_per_beacon_associated_data():
 
 
 def test_server_can_encrypt_to_beacon_a_after_registering_beacon_b():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    beacon_a = BeaconCryptBeacon(0, server_pk)
-    beacon_b = BeaconCryptBeacon(0, server_pk)
+    beacon_a = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
+    beacon_b = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
 
     beacon_a_kid = register_beacon(server, beacon_a)
     register_beacon(server, beacon_b)
@@ -74,10 +74,10 @@ def test_server_can_encrypt_to_beacon_a_after_registering_beacon_b():
 
 
 def test_server_can_decrypt_from_beacon_a_after_registering_beacon_b():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    beacon_a = BeaconCryptBeacon(0, server_pk)
-    beacon_b = BeaconCryptBeacon(0, server_pk)
+    beacon_a = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
+    beacon_b = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
 
     beacon_a_kid = register_beacon(server, beacon_a)
     register_beacon(server, beacon_b)
@@ -88,10 +88,10 @@ def test_server_can_decrypt_from_beacon_a_after_registering_beacon_b():
 
 
 def test_server_can_decrypt_from_beacon_a_after_encrypting_to_beacon_b():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    beacon_a = BeaconCryptBeacon(0, server_pk)
-    beacon_b = BeaconCryptBeacon(0, server_pk)
+    beacon_a = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
+    beacon_b = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
 
     beacon_a_kid = register_beacon(server, beacon_a)
     beacon_b_kid = register_beacon(server, beacon_b)
@@ -104,9 +104,9 @@ def test_server_can_decrypt_from_beacon_a_after_encrypting_to_beacon_b():
 
 
 def test_encrypt_multiple():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    b1 = BeaconCryptBeacon(0, server_pk)
+    b1 = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
     message = bytes([0x1]) * 32
 
     b1_kid = register_beacon(server, b1)
@@ -117,9 +117,9 @@ def test_encrypt_multiple():
 
 
 def test_decrypt_multiple():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    beacon = BeaconCryptBeacon(0, server_pk)
+    beacon = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
     message = bytes([0x1]) * 32
 
     beacon_kid = register_beacon(server, beacon)
@@ -134,9 +134,9 @@ def test_decrypt_multiple():
 
 
 def test_decrypt_catch_up():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    beacon = BeaconCryptBeacon(0, server_pk)
+    beacon = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
     message = bytes([0x1]) * 32
 
     beacon_kid = register_beacon(server, beacon)
@@ -151,9 +151,9 @@ def test_decrypt_catch_up():
 
 
 def test_beacon_encrypts_to_server():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    beacon = BeaconCryptBeacon(0, server_pk)
+    beacon = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
     message = b"beacon to server"
 
     beacon_kid = register_beacon(server, beacon)
@@ -165,8 +165,8 @@ def test_beacon_encrypts_to_server():
 
 
 def test_server_encrypt_and_update_returns_serialized_ratchet_snapshot():
-    server = BeaconCryptServer(0, None)
-    beacon = BeaconCryptBeacon(0, server.id_pk())
+    server = BeaconCryptServer(0, None, None)
+    beacon = BeaconCryptBeacon(0, server.id_pk(), server.mldsa_public_key())
     message = b"server to beacon with snapshot"
 
     beacon_kid = register_beacon(server, beacon)
@@ -189,8 +189,8 @@ def test_server_encrypt_and_update_returns_serialized_ratchet_snapshot():
 
 
 def test_server_decrypt_and_update_returns_serialized_ratchet_snapshot():
-    server = BeaconCryptServer(0, None)
-    beacon = BeaconCryptBeacon(0, server.id_pk())
+    server = BeaconCryptServer(0, None, None)
+    beacon = BeaconCryptBeacon(0, server.id_pk(), server.mldsa_public_key())
     message = b"beacon to server with snapshot"
 
     beacon_kid = register_beacon(server, beacon)
@@ -214,9 +214,9 @@ def test_server_decrypt_and_update_returns_serialized_ratchet_snapshot():
 
 
 def test_authenticated_beacon_message_rejects_tampering():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    beacon = BeaconCryptBeacon(0, server_pk)
+    beacon = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
     message = b"beacon to server"
 
     beacon_kid = register_beacon(server, beacon)
@@ -229,9 +229,9 @@ def test_authenticated_beacon_message_rejects_tampering():
 
 
 def test_authenticated_server_message_rejects_tampering():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    beacon = BeaconCryptBeacon(0, server_pk)
+    beacon = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
     message = b"server to beacon"
 
     beacon_kid = register_beacon(server, beacon)
@@ -244,9 +244,9 @@ def test_authenticated_server_message_rejects_tampering():
 
 
 def test_decrypt_rejects_wrong_direction():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    beacon = BeaconCryptBeacon(0, server_pk)
+    beacon = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
 
     beacon_kid = register_beacon(server, beacon)
     server_to_beacon = server.encrypt_to_beacon(b"server to beacon", beacon_kid)
@@ -259,10 +259,10 @@ def test_decrypt_rejects_wrong_direction():
 
 
 def test_beacon_cannot_decrypt_message_for_different_beacon():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    b1 = BeaconCryptBeacon(0, server_pk)
-    b2 = BeaconCryptBeacon(0, server_pk)
+    b1 = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
+    b2 = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
     message = b"for b1 only"
 
     b1_kid = register_beacon(server, b1)
@@ -274,9 +274,9 @@ def test_beacon_cannot_decrypt_message_for_different_beacon():
 
 
 def test_ciphertext_cannot_be_replayed():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    beacon = BeaconCryptBeacon(0, server_pk)
+    beacon = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
     message = b"one shot"
 
     beacon_kid = register_beacon(server, beacon)
@@ -288,9 +288,9 @@ def test_ciphertext_cannot_be_replayed():
 
 
 def test_beacon_can_retry_decryption_after_corrupted_aead_message():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    beacon = BeaconCryptBeacon(0, server_pk)
+    beacon = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
     message = bytes([0x01]) * 32
 
     beacon_kid = register_beacon(server, beacon)
@@ -302,9 +302,9 @@ def test_beacon_can_retry_decryption_after_corrupted_aead_message():
 
 
 def test_server_can_retry_decryption_after_corrupted_aead_message():
-    server = BeaconCryptServer(0, None)
+    server = BeaconCryptServer(0, None, None)
     server_pk = server.id_pk()
-    beacon = BeaconCryptBeacon(0, server_pk)
+    beacon = BeaconCryptBeacon(0, server_pk, server.mldsa_public_key())
     message = bytes([0x01]) * 32
 
     beacon_kid = register_beacon(server, beacon)

@@ -30,12 +30,12 @@ static beaconcrypt_SnapshotStoreCallbacks go_store_callbacks(uintptr_t handle) {
 	return callbacks;
 }
 
-beaconcrypt_Server *beaconcrypt_go_server_create_with_store(uint64_t server_kid, const uint8_t *seed, uintptr_t seed_len, uintptr_t token, uint32_t *status_out) {
-	return beaconcrypt_server_create_with_store(server_kid, seed, seed_len, go_store_callbacks(token), status_out);
+beaconcrypt_Server *beaconcrypt_go_server_create_with_store(uint64_t server_kid, const uint8_t *seed, uintptr_t seed_len, const uint8_t *mldsa_seed, uintptr_t mldsa_seed_len, uintptr_t token, uint32_t *status_out) {
+	return beaconcrypt_server_create_with_store(server_kid, seed, seed_len, mldsa_seed, mldsa_seed_len, go_store_callbacks(token), status_out);
 }
 
-beaconcrypt_Server *beaconcrypt_go_server_create_with_store_and_lineage(uint64_t server_kid, const uint8_t *seed, uintptr_t seed_len, uintptr_t token, const uint8_t *lineage, uintptr_t lineage_len, uint32_t *status_out) {
-	return beaconcrypt_server_create_with_store_and_lineage(server_kid, seed, seed_len, go_store_callbacks(token), lineage, lineage_len, status_out);
+beaconcrypt_Server *beaconcrypt_go_server_create_with_store_and_lineage(uint64_t server_kid, const uint8_t *seed, uintptr_t seed_len, const uint8_t *mldsa_seed, uintptr_t mldsa_seed_len, uintptr_t token, const uint8_t *lineage, uintptr_t lineage_len, uint32_t *status_out) {
+	return beaconcrypt_server_create_with_store_and_lineage(server_kid, seed, seed_len, mldsa_seed, mldsa_seed_len, go_store_callbacks(token), lineage, lineage_len, status_out);
 }
 
 beaconcrypt_Server *beaconcrypt_go_server_restore_with_store(uintptr_t token, uint32_t *status_out) {

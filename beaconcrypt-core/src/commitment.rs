@@ -17,10 +17,10 @@ pub const COMMITMENT_TRANSCRIPT_SIZE: usize =
 // Hax exposes those bounds directly to Lean.
 const _: () = assert!(AEAD_KEY_SIZE == 32);
 const _: () = assert!(AEAD_NONCE_SIZE == 12);
-const _: () = assert!(ASSOCIATED_DATA_SIZE == 153);
+const _: () = assert!(ASSOCIATED_DATA_SIZE == 281);
 const _: () = assert!(AEAD_TAG_SIZE == 16);
 const _: () = assert!(ENCODED_U64_SIZE == 8);
-const _: () = assert!(COMMITMENT_TRANSCRIPT_SIZE == 229);
+const _: () = assert!(COMMITMENT_TRANSCRIPT_SIZE == 357);
 
 /// Fixed-width input to the production BLAKE2b-512 commitment operation.
 pub struct CommitmentTranscript {
@@ -68,14 +68,14 @@ pub fn build_commitment_transcript(
 			key[i]
 		} else if i < 44 {
 			nonce[i - 32]
-		} else if i < 197 {
+		} else if i < 325 {
 			associated_data[i - 44]
-		} else if i < 213 {
-			tag[i - 197]
-		} else if i < 221 {
-			sequence[i - 213]
+		} else if i < 341 {
+			tag[i - 325]
+		} else if i < 349 {
+			sequence[i - 341]
 		} else {
-			sender_id[i - 221]
+			sender_id[i - 349]
 		}
 	});
 	CommitmentTranscript { bytes }
@@ -100,9 +100,9 @@ mod tests {
 
 		assert_eq!(&bytes[0..32], &key);
 		assert_eq!(&bytes[32..44], &nonce);
-		assert_eq!(&bytes[44..197], &associated_data);
-		assert_eq!(&bytes[197..213], &tag);
-		assert_eq!(&bytes[213..221], &sequence.to_le_bytes());
-		assert_eq!(&bytes[221..229], &sender_id.to_le_bytes());
+		assert_eq!(&bytes[44..325], &associated_data);
+		assert_eq!(&bytes[325..341], &tag);
+		assert_eq!(&bytes[341..349], &sequence.to_le_bytes());
+		assert_eq!(&bytes[349..357], &sender_id.to_le_bytes());
 	}
 }

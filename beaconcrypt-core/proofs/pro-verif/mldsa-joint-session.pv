@@ -1,0 +1,39 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+query agent_ml: bitstring, server_ml: bitstring, init_hash: bitstring, classical_init: bitstring;
+  event(JointInitAccepted(agent_ml, server_ml, init_hash, classical_init)) &&
+    event(JointProtectedBeacon(agent_ml)) ==>
+  event(JointInitSigned(agent_ml, server_ml, init_hash, classical_init)).
+
+query server_ml: bitstring, init_hash: bitstring, response: bitstring;
+  event(JointResponseVerified(server_ml, init_hash, response)) ==>
+  event(JointResponseSigned(server_ml, init_hash, response)).
+
+query agent_ml: bitstring, server_ml: bitstring, init_hash: bitstring, response: bitstring,
+      root: bitstring, ad: bitstring, assigned: key_id, initial: bitstring;
+  event(JointBeaconCompleted(agent_ml, server_ml, init_hash, response, root, ad, assigned, initial)) ==>
+  event(JointServerCommitted(agent_ml, server_ml, init_hash, response, root, ad, assigned, initial)).
+
+query agent_ml: bitstring, server_ml: bitstring, init_hash: bitstring, root: bitstring, ad: bitstring,
+      seq: sequence, sender: key_id, receiver: key_id, plaintext: bitstring;
+  event(JointRecordReceived(agent_ml, server_ml, init_hash, root, ad, server_to_beacon(), seq, sender, receiver, plaintext)) &&
+    event(JointProtectedBeacon(agent_ml)) ==>
+  event(JointRecordSent(agent_ml, server_ml, init_hash, root, ad, server_to_beacon(), seq, sender, receiver, plaintext)).
+
+query agent_ml: bitstring, server_ml: bitstring, init_hash: bitstring, root: bitstring, ad: bitstring,
+      seq: sequence, sender: key_id, receiver: key_id, plaintext: bitstring;
+  event(JointRecordReceived(agent_ml, server_ml, init_hash, root, ad, beacon_to_server(), seq, sender, receiver, plaintext)) &&
+    event(JointProtectedBeacon(agent_ml)) ==>
+  event(JointRecordSent(agent_ml, server_ml, init_hash, root, ad, beacon_to_server(), seq, sender, receiver, plaintext)).
+
+query attacker(MLDSA_JOINT_INITIAL).
+query attacker(MLDSA_JOINT_SERVER_RECORD).
+query attacker(MLDSA_JOINT_BEACON_RECORD).
+query event(JointHonestComplete()).
+query event(JointServerRecordOpened()).
+query event(JointBeaconRecordOpened()).
+query event(JointOwnedAccepted()).
+query event(JointReplayRejected()).
+query event(JointClassicalRecovered()).
+
+process MldsaJointSession()

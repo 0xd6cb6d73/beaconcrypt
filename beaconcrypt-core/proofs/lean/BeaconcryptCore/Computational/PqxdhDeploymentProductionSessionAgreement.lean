@@ -30,7 +30,7 @@ open PqxdhDeploymentSessionAgreement (A1NoAgreement)
 
 /-- Production form of `PqxdhDeploymentSessionAgreement.ce_a1_agreement` (O21 at the CE-A1 bound, ten of the eleven ServerAuth fields). The statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with the probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`). The bound and the bills conjunct are those of `PqxdhDeploymentProductionRegistration.ce_a1` verbatim. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`); every other premise is the one of `ce_a1_agreement` at the production codec and route. -/
 theorem ce_a1_agreement (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -73,7 +73,7 @@ theorem ce_a1_agreement (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 
 /-- Production form of `PqxdhDeploymentSessionAgreement.ce_a1_agreement_billed` (O21 at the transported deployment budget). The statement at the production codec and route, with the probability read back through `unwrap` on the classical source game (`PqxdhDeploymentProductionTransfer.chance`); the bound and the bills conjunct are those of `PqxdhDeploymentProductionRegistration.ce_a1_billed` verbatim. -/
 theorem ce_a1_agreement_billed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)

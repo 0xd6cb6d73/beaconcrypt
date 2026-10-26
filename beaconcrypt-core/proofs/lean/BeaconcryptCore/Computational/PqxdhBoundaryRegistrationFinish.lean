@@ -21,7 +21,7 @@ theorem callbacks_withReader (setup : Setup baseSpec KemSK) (codec : Codec Reade
 
 /-- Look up the actual public finish owner, run the real local-candidate executor on the original shared native interpreter, and reinstall exactly its returned owner. -/
 noncomputable def executeFinish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (index : Nat) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.State KemSK) :
     ProbComp (RustM (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.State KemSK)) :=
   match state.owners[index]? with
@@ -34,7 +34,7 @@ noncomputable def executeFinish (setup : Setup baseSpec KemSK) (codec : Codec Re
 
 /-- Actual public owner lookup and reinstallation preserve the complete original finish distribution, including both shared caches on rejected and aborted paths. -/
 theorem finish_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (index : Nat) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.State KemSK) :
     executeFinish setup codec reader erased index raw state =
       (fun result => ok result) <$> (PqxdhRegistrationSchedule.finish setup (withReader codec reader) index raw).run state := by
@@ -50,7 +50,7 @@ theorem finish_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 
 /-- Lift the real finish executor to the complete CE native state, retaining both raw-attempt counters and every produced-frame entry. -/
 noncomputable def executeNativeFinish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (index : Nat) (raw : Pqxdh.Bytes) (state : PqxdhDeploymentNative.State KemSK) :
     ProbComp (RustM (Option Pqxdh.Bytes × PqxdhDeploymentNative.State KemSK)) :=
   (fun result => (fun output => (output.1, { state with native := output.2 })) <$> result) <$>
@@ -60,7 +60,7 @@ noncomputable def executeNativeFinish (setup : Setup baseSpec KemSK) (codec : Co
 theorem native_finish_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)
     (serverSeed : PqxdhJointIdentity.IdentitySeed)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (index : Nat) (raw : Pqxdh.Bytes) (state : PqxdhDeploymentNative.State KemSK) :
     executeNativeFinish setup codec reader erased index raw state =
       (fun result => ok result) <$> (PqxdhDeploymentNative.handler setup (withReader codec reader)
@@ -73,7 +73,7 @@ theorem native_finish_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader
 /-- Every complete continuation sees the original finish reply, shared interpreter state and owner registry together. -/
 theorem finish_complete {Result : Type}
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (index : Nat) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.State KemSK)
     (next : RustM (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.State KemSK) → ProbComp Result) :
     executeFinish setup codec reader erased index raw state >>= next =
@@ -86,7 +86,7 @@ theorem native_finish_complete {Result : Type}
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)
     (serverSeed : PqxdhJointIdentity.IdentitySeed)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (index : Nat) (raw : Pqxdh.Bytes) (state : PqxdhDeploymentNative.State KemSK)
     (next : RustM (Option Pqxdh.Bytes × PqxdhDeploymentNative.State KemSK) → ProbComp Result) :
     executeNativeFinish setup codec reader erased index raw state >>= next =

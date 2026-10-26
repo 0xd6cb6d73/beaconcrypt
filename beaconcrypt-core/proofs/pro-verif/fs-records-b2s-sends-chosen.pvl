@@ -9,7 +9,7 @@
    one of this file and fs-records-b2s-sends.pvl is loaded; the
    authentication targets use this one, and S2 and UKSr cannot, because an
    adversary-chosen plaintext makes them false by construction. *)
-(* @beaconcrypt-fs-fidelity key=sends.encrypt src=beaconcrypt/src/beacon.rs:151-162 anchor=pub fn encrypt_message(&mut self, b: &[u8]) -> Option<crate::Encrypted> { *)
+(* @beaconcrypt-fs-fidelity key=sends.encrypt src=beaconcrypt/src/beacon.rs:178-189 anchor=pub fn encrypt_message(&mut self, b: &[u8]) -> Option<crate::Encrypted> { *)
 (* @beaconcrypt-fs-fidelity key=sends.seal src=beaconcrypt/src/ratchet.rs:408-480 anchor=pub(crate) fn encrypt_message_with_ratchet( *)
 (* @beaconcrypt-fs-fidelity key=sends.allocate src=beaconcrypt-core/src/ratchet/concrete.rs:133-155 anchor=pub fn begin_send<Context>(kernel: ConcreteRatchetKernel, context: Context) -> SendStart<Context> { *)
 (* @beaconcrypt-fs-fidelity key=sends.advance src=beaconcrypt-core/src/ratchet/concrete.rs:171-182 anchor=pub fn resume(mut self, response: RatchetKdfResponse) -> SendSeal<Context> { *)

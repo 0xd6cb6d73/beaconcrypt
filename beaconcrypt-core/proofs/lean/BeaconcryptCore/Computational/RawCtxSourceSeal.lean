@@ -1,7 +1,7 @@
 import BeaconcryptCore.Computational.RawCtxSourceSend
 
 /-!
-This module expands the private source sealing capability into actual optional detached AEAD, commitment hashing and frame writing. It preserves production order: AEAD runs before the fallible AD/tag width conversions, then the optional unkeyed hash runs before serialization. Each failure keeps its actual complete primitive state. The commitment uses the existing extracted 229-byte builder, source-selected key/nonce, actual tag, 153-byte associated data, prepared sequence and encoded sender. The API target remains distinct from the encoded sender. Protected-payload reencoding requires the primitive tag16/commit64 width contracts and does not assert canonical Cap'n Proto serialization.
+This module expands the private source sealing capability into actual optional detached AEAD, commitment hashing and frame writing. It preserves production order: AEAD runs before the fallible AD/tag width conversions, then the optional unkeyed hash runs before serialization. Each failure keeps its actual complete primitive state. The commitment uses the existing extracted 357-byte builder, source-selected key/nonce, actual tag, 281-byte associated data, prepared sequence and encoded sender. The API target remains distinct from the encoded sender. Protected-payload reencoding requires the primitive tag16/commit64 width contracts and does not assert canonical Cap'n Proto serialization.
 
 All eighteen statements are operational or query-accounting results. The arbitrary stateful interpreter may retain one shared cache for sealing and opening; no separate hash table, independent key distribution, security advantage or protocol conclusion is assumed. Each application send makes at most one KDF, AEAD, hash and writer call, and each category is bounded by qSend for an adaptive send-only schedule. Exact interpretation retains the complete owner and primitive state, including consumed send material after sealing failure. Successful source execution identifies the actual old-chain/fixed-label KDF reply and all three sealing replies in the same execution, with exactly the writer's returned ciphertext and final state.
 
@@ -50,7 +50,7 @@ def sealInput (input : RawCtxSourceSend.SealInput) : OracleComp SealSpec (Option
   match sealed with
   | none => pure none
   | some (body, tag) =>
-      if input.context.associatedData.length = 153 then
+      if input.context.associatedData.length = 281 then
         if tag.length = 16 then do
           let digest ← SealSpec.query (.inr (.inl (hashInput input tag)))
           match digest with
@@ -67,7 +67,7 @@ theorem sealInput_success {PrimitiveState : Type} {ι : Type} {base : OracleSpec
     (hsupport : (some ciphertext, finalState) ∈ support ((simulateQ impl (sealInput input)).run primitive)) :
     ∃ body tag afterAead commitment afterHash,
       (some (body, tag), afterAead) ∈ support ((impl (.inl (aeadInput input))).run primitive) ∧
-      input.context.associatedData.length = 153 ∧ tag.length = 16 ∧
+      input.context.associatedData.length = 281 ∧ tag.length = 16 ∧
       (some commitment, afterHash) ∈ support ((impl (.inr (.inl (hashInput input tag)))).run afterAead) ∧
       (some ciphertext, finalState) ∈ support
         ((impl (.inr (.inr (frame input body tag commitment)))).run afterHash) := by
@@ -128,9 +128,9 @@ theorem sealInput_bound (input : RawCtxSourceSend.SealInput) (kind : CallKind) :
         · simp
       · simp
 
-/-- The sealing commitment is exactly the extracted 229-byte builder at the source fields. -/
+/-- The sealing commitment is exactly the extracted 357-byte builder at the source fields. -/
 theorem hashInput_extracted (input : RawCtxSourceSend.SealInput) (tagBytes : Pqxdh.Bytes)
-    (ad : Std.Array Std.U8 153#usize) (tag : Std.Array Std.U8 16#usize)
+    (ad : Std.Array Std.U8 281#usize) (tag : Std.Array Std.U8 16#usize)
     (had : absBytes ad = input.context.associatedData) (htag : absBytes tag = tagBytes) :
     ∃ transcript, commitment.build_commitment_transcript input.material.key.bytes
       input.material.nonce.bytes ad tag input.sequence input.context.senderId = ok transcript ∧
@@ -141,8 +141,8 @@ theorem hashInput_extracted (input : RawCtxSourceSend.SealInput) (tagBytes : Pqx
 
 /-- Source width checks produce exactly the commitment interface's input size. -/
 theorem hashInput_length (input : RawCtxSourceSend.SealInput) (tag : Pqxdh.Bytes)
-    (had : input.context.associatedData.length = 153) (htag : tag.length = 16) :
-    (hashInput input tag).length = 229 := by
+    (had : input.context.associatedData.length = 281) (htag : tag.length = 16) :
+    (hashInput input tag).length = 357 := by
   simp [hashInput, Pqxdh.ctxPreimage, absMaterial, had, htag]
 
 /-- Writer arguments retain the original detached body/tag and hash output with exact source metadata. -/
@@ -167,7 +167,7 @@ theorem sealInput_run {PrimitiveState : Type} {ι : Type} {base : OracleSpec ι}
       match sealed.1 with
       | none => pure (none, sealed.2)
       | some (body, tag) =>
-          if input.context.associatedData.length = 153 then
+          if input.context.associatedData.length = 281 then
             if tag.length = 16 then do
               let digest ← (impl (.inr (.inl (hashInput input tag)))).run sealed.2
               match digest.1 with
@@ -334,7 +334,7 @@ theorem adapter_success_primitives {PrimitiveState : Type} {ι : Type} {base : O
       message = RawCtxSourceSend.encrypted input message.ciphertext ∧
       (some (body, tag), afterAead) ∈ support
         ((impl (.inr (.inl (aeadInput input)))).run primitive) ∧
-      input.context.associatedData.length = 153 ∧ tag.length = 16 ∧
+      input.context.associatedData.length = 281 ∧ tag.length = 16 ∧
       (some commitment, afterHash) ∈ support
         ((impl (.inr (.inr (.inl (hashInput input tag))))).run afterAead) ∧
       (some message.ciphertext, finalState) ∈ support
@@ -377,7 +377,7 @@ theorem send_success_primitives {PrimitiveState : Type} {ι : Type} {base : Orac
       ∃ body tag afterAead commitment afterHash,
         message = RawCtxSourceSend.encrypted input message.ciphertext ∧
         (some (body, tag), afterAead) ∈ support ((impl (.inr (.inl (aeadInput input)))).run afterKdf) ∧
-        input.context.associatedData.length = 153 ∧ tag.length = 16 ∧
+        input.context.associatedData.length = 281 ∧ tag.length = 16 ∧
         (some commitment, afterHash) ∈ support
           ((impl (.inr (.inr (.inl (hashInput input tag))))).run afterAead) ∧
         (some message.ciphertext, result.2) ∈ support

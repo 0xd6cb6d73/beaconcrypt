@@ -353,7 +353,7 @@ def openPoint (input : RawCtxWholeOwner.OpenInput) : Option CtxRomAuth.CtxRO.Dom
   match RawCtxFrameDecoding.fromPayload input.context.frame.payload with
   | none => none
   | some slices =>
-      if input.context.associatedData.length = 153 then some ((), RawCtxSourceOpen.hashInput input slices)
+      if input.context.associatedData.length = 281 then some ((), RawCtxSourceOpen.hashInput input slices)
       else none
 
 /-- With the native primitive interpreter, a discarded opening changes the shared state only by completing its point of the CTX cache. -/
@@ -371,7 +371,7 @@ theorem discarded_native {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Re
   | none =>
       simp only [simulateQ_pure, StateT.run_pure, map_pure, LazyOracleDiscard.StateLens.completeOpt]
   | some slices =>
-      by_cases width : input.context.associatedData.length = 153
+      by_cases width : input.context.associatedData.length = 281
       · simp only [width, ↓reduceIte]
         rw [RawCtxSourceOpen.openSlices_rom]
         simp only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure, StateT.run_bind, StateT.run_pure,

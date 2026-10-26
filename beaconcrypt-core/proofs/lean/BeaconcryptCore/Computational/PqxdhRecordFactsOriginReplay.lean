@@ -39,7 +39,7 @@ def Matches (frame : RawCtxReceive.DecodedFrame) (entry : CtxSuccessfulSeal) : P
 theorem target_matches (nonce : CtxNonce) (frame : RawCtxReceive.DecodedFrame)
     (ad : Pqxdh.Bytes) (slices : RawCtxFrameDecoding.Slices)
     (parsed : RawCtxFrameDecoding.fromPayload frame.payload = some slices)
-    (width : ad.length = 153) (entry : CtxSuccessfulSeal)
+    (width : ad.length = 281) (entry : CtxSuccessfulSeal)
     (same : (RawCtxKeyFreeDecoder.target nonce frame.sequence frame ad slices parsed width).toLegacy.sameFullTupleAsSuccessfulSeal entry) :
     Matches frame entry := by
   exact ⟨congrArg Pqxdh.RecordAD.seq same.2.1,
@@ -48,7 +48,7 @@ theorem target_matches (nonce : CtxNonce) (frame : RawCtxReceive.DecodedFrame)
 /-- Matching a source-generated seal yields equality of its complete decoded frame. -/
 theorem matches_selected (frame : RawCtxReceive.DecodedFrame) (nonce : CtxNonce)
     (sequence : Std.U64) (context : RawCtxSourceSend.SealContext)
-    (width : context.associatedData.length = 153) (record : CtxRomRecord)
+    (width : context.associatedData.length = 281) (record : CtxRomRecord)
     (same : Matches frame ⟨RawCtxSelectedMessageSealing.selectedInput nonce sequence context width, record⟩) :
     frame = ⟨sequence, context.senderId, record.encode⟩ := by
   have sequenceEq : frame.sequence = sequence := UScalar.eq_of_val_eq same.1

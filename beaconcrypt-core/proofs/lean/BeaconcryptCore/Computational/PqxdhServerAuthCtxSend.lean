@@ -60,7 +60,7 @@ noncomputable def sourceSealing {A : Type} (source : FixedHkdfSha512NoSaltSource
 /-- Before explicit selected-nonce refusal, the callback has the exact original native optional writer result and complete shared cache. -/
 theorem sealing_project {A : Type} (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (key : RootOutput) (read : RawCtxReceive.FrameDecoder) (pending : Pending) (state : State A)
-    (fresh : ∀ nonce, pending.material = .hidden nonce → pending.context.associatedData.length = 153 →
+    (fresh : ∀ nonce, pending.material = .hidden nonce → pending.context.associatedData.length = 281 →
       nonce ∉ state.2.selected.1.usedNonces) :
     (fun result => (some result.1, result.2)) <$> (sourceSealing source writer key pending).run (project state) =
       Prod.map id project <$> (evaluated source key read
@@ -74,7 +74,7 @@ theorem sealing_project {A : Type} (source : FixedHkdfSha512NoSaltSource) (write
 
 /-- Only a reached selected-material seal with valid source AD can refuse a nonce already used by the selected challenger. -/
 def Repeated (pending : Pending) (state : AdaptiveCtxDynamicKnownKeys.SourceState) : Prop :=
-  ∃ nonce, pending.material = .hidden nonce ∧ pending.context.associatedData.length = 153 ∧
+  ∃ nonce, pending.material = .hidden nonce ∧ pending.context.associatedData.length = 281 ∧
     nonce ∈ state.selected.1.usedNonces
 
 noncomputable local instance (pending : Pending) (state : AdaptiveCtxDynamicKnownKeys.SourceState) :

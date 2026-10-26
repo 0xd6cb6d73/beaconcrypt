@@ -8,13 +8,13 @@ B12 (`PqxdhOpenBridges.open_bridge`) equates the experiments' opening step on a 
 
 `mapEffect f` replaces the context of an extracted receive effect by its image under `f` and keeps every other field: the entry kernel, the target, the working control, the staged slots, the counters, the KDF request and the prepared receive. `begin_receive_map` and `resume_map` prove, by unfolding the extracted bodies, that for every `f : C → D` the extracted `begin_receive` with context `f c` returns `mapEffect f` of its result with context `c`, and that the extracted `ReceiveKdf.resume` on the mapped KDF state returns `mapEffect f` of its result on the original state, for every KDF reply. Both are equalities of complete `RustM` results, so they cover failure and divergence as well as every rejection branch; the extracted driver never inspects the context.
 
-`receiveReplies` iterates the extracted phases over a finite list of KDF replies: it runs `begin_receive` and resumes each KDF request with the next reply through `ReceiveKdf.resume`, stopping at the first effect that is not a KDF request (later replies are ignored). It is a hand-written Lean model of the iteration that production's loop performs with the replies of `ratchet_hkdf`. That correspondence is adapter-level trust checked only by review, the fold assumes nothing about how the replies are produced, and no theorem relates it to the transcription `executeReceive` below. `receiveReplies_context` states that the outcome for one context is the outcome for any other context with the context replaced. `open_transfer`, and its instance `open_frame_context_transfer` for `first : RawCtxWholeOwner.OpenContext` and `second : record.OpenFrameContext`, state the corollary needed by B12: if a list of replies drives the receive with `first` to `ReceiveOpenRequested pending`, then `pending.context = first` and the same replies drive the receive with `second` to `ReceiveOpenRequested (withContext pending second)`. `opened_record_bridge` adds B12: when `second` is the frame context that the extracted `record.OpenFrameContext.from_frame` admits for a slice and a 153-byte array representing the payload and associated data of `first`, the experiments' opening step on `pending` equals `executeOpen` on `withContext pending second`, the capability that the extracted phases produce with production's context type, wrapped in `ok`.
+`receiveReplies` iterates the extracted phases over a finite list of KDF replies: it runs `begin_receive` and resumes each KDF request with the next reply through `ReceiveKdf.resume`, stopping at the first effect that is not a KDF request (later replies are ignored). It is a hand-written Lean model of the iteration that production's loop performs with the replies of `ratchet_hkdf`. That correspondence is adapter-level trust checked only by review, the fold assumes nothing about how the replies are produced, and no theorem relates it to the transcription `executeReceive` below. `receiveReplies_context` states that the outcome for one context is the outcome for any other context with the context replaced. `open_transfer`, and its instance `open_frame_context_transfer` for `first : RawCtxWholeOwner.OpenContext` and `second : record.OpenFrameContext`, state the corollary needed by B12: if a list of replies drives the receive with `first` to `ReceiveOpenRequested pending`, then `pending.context = first` and the same replies drive the receive with `second` to `ReceiveOpenRequested (withContext pending second)`. `opened_record_bridge` adds B12: when `second` is the frame context that the extracted `record.OpenFrameContext.from_frame` admits for a slice and a 281-byte array representing the payload and associated data of `first`, the experiments' opening step on `pending` equals `executeOpen` on `withContext pending second`, the capability that the extracted phases produce with production's context type, wrapped in `ok`.
 
 The experiments do not iterate over a list; their driver `RawCtxOwnerOracle.program` issues each KDF request and the opening capability as queries. `program_map` shows that this driver on a mapped effect equals the driver on the original effect with its opening query renamed by `relabel` and its KDF queries unchanged, and `oracle_receive_map` states the same for `RawCtxOwnerOracle.receive`, which begins with the extracted `begin_receive`.
 
 `executeReceive` is a hand-written Lean transcription of the loop of `decrypt_message_with_ratchet`: a rejection returns its kernel without plaintext; a KDF request is read with the extracted `ReceiveKdf.impl.request`, answered by a query of the KDF interface of `RawCtxSourceOpen.NativeSpec` in place of `ratchet_hkdf`, and resumed with the extracted `ReceiveKdf.resume`; an opening capability is passed to `executeOpen`, the transcription of `execute_open` from B12. `executeReceiveFrom` starts the loop with the extracted `begin_receive`. `executeDecoded` transcribes the checks that `decrypt_message_with_ratchet` performs on an already decoded frame: the sender key identifier comparison and the extracted `from_frame` admission, each returning the unchanged kernel without plaintext on rejection. The recursion is well founded on the extracted continuation counter. These three functions are adapter-level trust, checked only by review of `beaconcrypt/src/ratchet.rs`; no Lean statement relates them to the Rust function, including its order of checks, the correspondence of `ratchet_hkdf` with the KDF query and the kernel `take` and `put` around the loop, which the transcription models by taking the kernel as an argument and returning the kernel to reinstall.
 
-`receive_loop_bridge` proves that, when `from_frame` admits `second` for a slice and array representing the payload and associated data of `first`, `executeReceiveFrom` with `second` at the experiments' primitive interface equals, wrapped in `ok`, the experiments' receive driver `RawCtxOwnerOracle.receive` with `first`, interpreted by `RawCtxWholeOwner.adapter` and `RawCtxMixedOwner.receiveAdapter`. `decoded_receive_bridge` extends this to the decoded-frame checks: for every decoded frame whose payload and associated data are represented, `executeDecoded` equals, wrapped in `ok`, the branch of `RawCtxWholeOwner.rawReceive` after decoding and before publication (the `RawCtxReceive.ValidFrame` check followed by the receive driver, or the unchanged kernel without plaintext). The sender comparisons coincide, the extracted admission rejects exactly the payloads of at most 80 bytes, which is the length condition of `ValidFrame`, and the 153-byte representation of the associated data meets its remaining condition. Both equalities hold as programs over the experiments' KDF, hash and AEAD queries, so they cover every reply and every outcome: rejection before any KDF query, rejection after KDF replies, a capability without material, hash failure, commitment mismatch, AEAD failure and success. `ContextBridge` bundles `opened_record_bridge`, `receive_loop_bridge` and `decoded_receive_bridge`, and `context_bridge` proves it; its only premises are the representation conditions of B12, the admission of the frame context by `from_frame` for the first two parts, and, for the first part, that the replies drive the receive with the experiments' context to an opening capability. `receive_loop_native`, `decoded_receive_native` and `decoded_after_root` state the loop and decoded-frame equalities before the embedding into the receive adapter, the last at the interface of the HB-111 target raw-opening site `PqxdhBeaconPhase2Shared.afterRoot`.
+`receive_loop_bridge` proves that, when `from_frame` admits `second` for a slice and array representing the payload and associated data of `first`, `executeReceiveFrom` with `second` at the experiments' primitive interface equals, wrapped in `ok`, the experiments' receive driver `RawCtxOwnerOracle.receive` with `first`, interpreted by `RawCtxWholeOwner.adapter` and `RawCtxMixedOwner.receiveAdapter`. `decoded_receive_bridge` extends this to the decoded-frame checks: for every decoded frame whose payload and associated data are represented, `executeDecoded` equals, wrapped in `ok`, the branch of `RawCtxWholeOwner.rawReceive` after decoding and before publication (the `RawCtxReceive.ValidFrame` check followed by the receive driver, or the unchanged kernel without plaintext). The sender comparisons coincide, the extracted admission rejects exactly the payloads of at most 80 bytes, which is the length condition of `ValidFrame`, and the 281-byte representation of the associated data meets its remaining condition. Both equalities hold as programs over the experiments' KDF, hash and AEAD queries, so they cover every reply and every outcome: rejection before any KDF query, rejection after KDF replies, a capability without material, hash failure, commitment mismatch, AEAD failure and success. `ContextBridge` bundles `opened_record_bridge`, `receive_loop_bridge` and `decoded_receive_bridge`, and `context_bridge` proves it; its only premises are the representation conditions of B12, the admission of the frame context by `from_frame` for the first two parts, and, for the first part, that the replies drive the receive with the experiments' context to an opening capability. `receive_loop_native`, `decoded_receive_native` and `decoded_after_root` state the loop and decoded-frame equalities before the embedding into the receive adapter, the last at the interface of the HB-111 target raw-opening site `PqxdhBeaconPhase2Shared.afterRoot`.
 
 Not covered: frame decoding and the check that decoding consumed the whole input, as performed by `decrypt_message_with_ratchet`, are outside the proof, because messages are arbitrary byte strings that each side knows how to decode; the statements quantify over the decoded frame and a payload slice representing it, so the agreement of production's decoder with the experiments' free decoder, including the target sequence, is not proved. The empty-input rejection that precedes decoding in both `decrypt_message_with_ratchet` and `RawCtxWholeOwner.rawReceive` is not transcribed; the bridges start after decoding. The realisation of the KDF query by `ratchet_hkdf` (HKDF and `RatchetKdfResponse::from_bytes`) is not addressed; both sides use the same KDF interface. The transcriptions are not the Rust code: the loop, the checks and the kernel ownership remain adapter trust as described above, and so does the serialization of operations on one owner, which `RawCtxWholeOwner.rawReceive` assumes. HB-112's experiments run `RawCtxWholeOwner.rawReceive` in `PqxdhBeaconPhase2Publication.afterRoot`, but they also receive through the symbolic chain owner `RawCtxChainOwner.rawReceive` with the pending-query driver `RawCtxPendingOwnerQueries.calls`. `RawCtxPendingOwnerQueries.receive_call` relates that driver to `RawCtxChainReceive.execute` after erasing its pending-query payload, and `RawCtxChainRealization.receive_native` relates `RawCtxChainReceive.execute` to `RawCtxOwnerOracle.receive` under its realization premises. This module does not compose those theorems with `receive_loop_bridge`. The headline theorems are not restated here, and the experiments still execute the hand-written programs.
 -/
@@ -281,9 +281,9 @@ theorem resume_context {C : Type} (pending : ReceiveKdf C) (response : RatchetKd
 /-! ## Connection with B12 -/
 
 /-- B12 at an admitted frame context: if the extracted `from_frame` admits `context` for a slice and array representing the capability's payload and associated data, the experiments' opening step equals `executeOpen` on the capability with that context, wrapped in `ok`. -/
-theorem open_step (erased : Std.Array Std.U8 229#usize)
+theorem open_step (erased : Std.Array Std.U8 357#usize)
     (pending : ReceiveOpen RawCtxWholeOwner.OpenContext)
-    (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize) (context : record.OpenFrameContext)
+    (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize) (context : record.OpenFrameContext)
     (hpayload : RawCtxNativeFramePrelude.sliceBytes payload = pending.context.frame.payload)
     (had : absBytes ad = pending.context.associatedData)
     (hframe : record.OpenFrameContext.from_frame payload ad pending.context.frame.sender =
@@ -300,10 +300,10 @@ theorem open_step (erased : Std.Array Std.U8 229#usize)
     exact hstep
 
 /-- The context gap of B12 for the extracted receive phases, for any finite list of KDF replies (the fold `receiveReplies` is a hand-written model of production's loop): if the replies drive the receive with the experiments' context `first` to `pending`, they drive the receive with production's admitted context `second` to `withContext pending second`, and the experiments' opening step on `pending` equals `executeOpen` on that capability, wrapped in `ok`. -/
-theorem opened_record_bridge (erased : Std.Array Std.U8 229#usize) (kernel : ConcreteRatchetKernel)
+theorem opened_record_bridge (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel)
     (target : Std.U64) (first : RawCtxWholeOwner.OpenContext) (second : record.OpenFrameContext)
     (responses : List RatchetKdfResponse) (pending : ReceiveOpen RawCtxWholeOwner.OpenContext)
-    (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
+    (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
     (hpayload : RawCtxNativeFramePrelude.sliceBytes payload = first.frame.payload)
     (had : absBytes ad = first.associatedData)
     (hframe : record.OpenFrameContext.from_frame payload ad first.frame.sender = ok (.Some second))
@@ -328,7 +328,7 @@ theorem resume_decreasing {C : Type} (pending : ReceiveKdf C) (response : Ratche
   exact RawCtxOwnerOracle.resume_rank pending response
 
 /-- Hand-written Lean transcription of the receive loop of production's `decrypt_message_with_ratchet` (`beaconcrypt/src/ratchet.rs`), adapter-level trust: a rejection returns its kernel without plaintext; a KDF request is read by the extracted `ReceiveKdf.impl.request`, answered by a query of the KDF interface (production calls `ratchet_hkdf`) and resumed by the extracted `ReceiveKdf.resume`; an opening capability is passed to `executeOpen`. The returned kernel is the one production reinstalls with `put`; a `RustM` failure or divergence of an extracted phase is returned unchanged (production has no corresponding return; the bridges show that under their conditions every result is `ok`). -/
-def executeReceive (erased : Std.Array Std.U8 229#usize)
+def executeReceive (erased : Std.Array Std.U8 357#usize)
     (effect : ReceiveEffect record.OpenFrameContext) :
     OracleComp RawCtxSourceOpen.NativeSpec
       (RustM (ConcreteRatchetKernel × core.option.Option RawCtxWholeOwner.Decrypted)) :=
@@ -347,16 +347,16 @@ termination_by effectDepth effect
 decreasing_by exact resume_decreasing pending response next _resumed
 
 /-- Hand-written transcription, adapter-level trust: production's loop started by the extracted `begin_receive` on the taken kernel, the decoded target sequence and the admitted frame context. -/
-def executeReceiveFrom (erased : Std.Array Std.U8 229#usize) (kernel : ConcreteRatchetKernel)
+def executeReceiveFrom (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel)
     (target : Std.U64) (context : record.OpenFrameContext) :
     OracleComp RawCtxSourceOpen.NativeSpec
       (RustM (ConcreteRatchetKernel × core.option.Option RawCtxWholeOwner.Decrypted)) :=
   bindResult (begin_receive kernel target context) (executeReceive erased)
 
 /-- Hand-written transcription, adapter-level trust: the checks of `decrypt_message_with_ratchet` on an already decoded frame. A sender key identifier different from the expected one, or a payload that the extracted `from_frame` rejects, returns the unchanged kernel without plaintext; otherwise the loop runs on the admitted frame context and the frame's sequence. -/
-def executeDecoded (erased : Std.Array Std.U8 229#usize) (kernel : ConcreteRatchetKernel)
+def executeDecoded (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel)
     (expected : Std.U64) (frame : RawCtxReceive.DecodedFrame) (payload : Slice Std.U8)
-    (ad : Std.Array Std.U8 153#usize) :
+    (ad : Std.Array Std.U8 281#usize) :
     OracleComp RawCtxSourceOpen.NativeSpec
       (RustM (ConcreteRatchetKernel × core.option.Option RawCtxWholeOwner.Decrypted)) :=
   if frame.sender = expected then
@@ -367,7 +367,7 @@ def executeDecoded (erased : Std.Array Std.U8 229#usize) (kernel : ConcreteRatch
   else pure (ok (kernel, .None))
 
 /-- Unfolding of the loop at a KDF request. -/
-theorem executeReceive_kdf (erased : Std.Array Std.U8 229#usize)
+theorem executeReceive_kdf (erased : Std.Array Std.U8 357#usize)
     (pending : ReceiveKdf record.OpenFrameContext) :
     executeReceive erased (.ReceiveKdfRequested pending) = (do
       let response ← RawCtxSourceOpen.NativeSpec.query (.inl pending.request)
@@ -380,9 +380,9 @@ theorem executeReceive_kdf (erased : Std.Array Std.U8 229#usize)
 /-! ## Bridges for the whole receive -/
 
 /-- Loop invariant: on every effect carrying the experiments' context `first`, the transcribed loop on the effect with production's admitted context `second` equals, wrapped in `ok`, the experiments' receive driver interpreted at their primitive interface. -/
-theorem executeReceive_loop (erased : Std.Array Std.U8 229#usize)
+theorem executeReceive_loop (erased : Std.Array Std.U8 357#usize)
     (first : RawCtxWholeOwner.OpenContext) (second : record.OpenFrameContext)
-    (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
+    (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
     (hpayload : RawCtxNativeFramePrelude.sliceBytes payload = first.frame.payload)
     (had : absBytes ad = first.associatedData)
     (hframe : record.OpenFrameContext.from_frame payload ad first.frame.sender = ok (.Some second))
@@ -417,9 +417,9 @@ theorem executeReceive_loop (erased : Std.Array Std.U8 229#usize)
         ((resume_context pending response).trans hcontext) rfl
 
 /-- Receive-loop bridge: if the extracted `from_frame` admits `second` for a slice and array representing the payload and associated data of the experiments' context `first`, the transcribed loop started by the extracted `begin_receive` with `second`, at the experiments' primitive interface, equals the experiments' receive driver `RawCtxOwnerOracle.receive` with `first`, interpreted by `RawCtxWholeOwner.adapter` and `RawCtxMixedOwner.receiveAdapter`, wrapped in `ok`. -/
-theorem receive_loop_bridge (erased : Std.Array Std.U8 229#usize) (kernel : ConcreteRatchetKernel)
+theorem receive_loop_bridge (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel)
     (target : Std.U64) (first : RawCtxWholeOwner.OpenContext) (second : record.OpenFrameContext)
-    (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
+    (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
     (hpayload : RawCtxNativeFramePrelude.sliceBytes payload = first.frame.payload)
     (had : absBytes ad = first.associatedData)
     (hframe : record.OpenFrameContext.from_frame payload ad first.frame.sender = ok (.Some second)) :
@@ -435,10 +435,10 @@ theorem receive_loop_bridge (erased : Std.Array Std.U8 229#usize) (kernel : Conc
   rw [executeReceiveFrom, hbegin, PqxdhOpenBridges.bindResult_ok, RawCtxOwnerOracle.receive]
   exact executeReceive_loop erased first second payload ad hpayload had hframe _ (begin_context kernel target first)
 
-/-- Decoded-frame bridge: for every decoded frame whose payload and associated data are represented by a slice and a 153-byte array, the transcribed checks and loop equal, wrapped in `ok`, the branch of `RawCtxWholeOwner.rawReceive` after decoding and before publication (the `RawCtxReceive.ValidFrame` check, then the experiments' receive driver with the decoded frame, or the unchanged kernel without plaintext), at the experiments' primitive interface. -/
-theorem decoded_receive_bridge (erased : Std.Array Std.U8 229#usize) (kernel : ConcreteRatchetKernel)
+/-- Decoded-frame bridge: for every decoded frame whose payload and associated data are represented by a slice and a 281-byte array, the transcribed checks and loop equal, wrapped in `ok`, the branch of `RawCtxWholeOwner.rawReceive` after decoding and before publication (the `RawCtxReceive.ValidFrame` check, then the experiments' receive driver with the decoded frame, or the unchanged kernel without plaintext), at the experiments' primitive interface. -/
+theorem decoded_receive_bridge (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel)
     (expected : Std.U64) (raw : Pqxdh.Bytes) (frame : RawCtxReceive.DecodedFrame)
-    (associatedData : Pqxdh.Bytes) (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
+    (associatedData : Pqxdh.Bytes) (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
     (hpayload : RawCtxNativeFramePrelude.sliceBytes payload = frame.payload)
     (had : absBytes ad = associatedData) :
     simulateQ RawCtxMixedOwner.receiveLift (executeDecoded erased kernel expected frame payload ad) =
@@ -450,7 +450,7 @@ theorem decoded_receive_bridge (erased : Std.Array Std.U8 229#usize) (kernel : C
         else pure (kernel, .None)) := by
   have hlength : frame.payload.length = payload.val.length := by
     rw [← hpayload, RawCtxNativeFramePrelude.sliceBytes, List.length_map]
-  have hadLength : associatedData.length = 153 := by
+  have hadLength : associatedData.length = 281 := by
     rw [← had]; simp [absBytes_length]
   by_cases hsender : frame.sender = expected
   · obtain ⟨result, execution, fields⟩ :=
@@ -477,10 +477,10 @@ theorem decoded_receive_bridge (erased : Std.Array Std.U8 229#usize) (kernel : C
 
 /-- Context completion of B12: (1) for every finite list of KDF replies that drives the receive with the experiments' context to an opening capability, the same replies drive the receive with production's admitted frame context to the capability with the same entry and prepared receive, on which `executeOpen` equals the experiments' opening step; (2) the transcribed receive loop started by the extracted `begin_receive` equals the experiments' receive driver; (3) the transcribed decoded-frame checks and loop equal the branch of `RawCtxWholeOwner.rawReceive` after decoding and before publication. All equalities are wrapped in `ok` and hold at the experiments' primitive interface, under the representation conditions of B12, the admission of the frame context by `from_frame` (parts 1 and 2) and, for part 1, the hypothesis that the replies reach an opening capability. -/
 def ContextBridge : Prop :=
-  (∀ (erased : Std.Array Std.U8 229#usize) (kernel : ConcreteRatchetKernel) (target : Std.U64)
+  (∀ (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel) (target : Std.U64)
       (first : RawCtxWholeOwner.OpenContext) (second : record.OpenFrameContext)
       (responses : List RatchetKdfResponse) (pending : ReceiveOpen RawCtxWholeOwner.OpenContext)
-      (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize),
+      (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize),
     RawCtxNativeFramePrelude.sliceBytes payload = first.frame.payload →
     absBytes ad = first.associatedData →
     record.OpenFrameContext.from_frame payload ad first.frame.sender = ok (.Some second) →
@@ -489,9 +489,9 @@ def ContextBridge : Prop :=
       simulateQ PqxdhOpenBridges.mixedOpen (PqxdhOpenBridges.executeOpen erased (withContext pending second)) =
         (fun result => ok result) <$> simulateQ (RawCtxMixedOwner.receiveAdapter ∘ₛ RawCtxWholeOwner.adapter)
           (RawCtxOwnerOracle.program (Plaintext := RawCtxWholeOwner.Decrypted) (.ReceiveOpenRequested pending))) ∧
-  (∀ (erased : Std.Array Std.U8 229#usize) (kernel : ConcreteRatchetKernel) (target : Std.U64)
+  (∀ (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel) (target : Std.U64)
       (first : RawCtxWholeOwner.OpenContext) (second : record.OpenFrameContext)
-      (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize),
+      (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize),
     RawCtxNativeFramePrelude.sliceBytes payload = first.frame.payload →
     absBytes ad = first.associatedData →
     record.OpenFrameContext.from_frame payload ad first.frame.sender = ok (.Some second) →
@@ -499,9 +499,9 @@ def ContextBridge : Prop :=
       (fun result => ok result) <$> simulateQ RawCtxMixedOwner.receiveAdapter
         (simulateQ RawCtxWholeOwner.adapter
           (RawCtxOwnerOracle.receive (Plaintext := RawCtxWholeOwner.Decrypted) kernel target first))) ∧
-  (∀ (erased : Std.Array Std.U8 229#usize) (kernel : ConcreteRatchetKernel) (expected : Std.U64)
+  (∀ (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel) (expected : Std.U64)
       (raw : Pqxdh.Bytes) (frame : RawCtxReceive.DecodedFrame) (associatedData : Pqxdh.Bytes)
-      (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize),
+      (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize),
     RawCtxNativeFramePrelude.sliceBytes payload = frame.payload →
     absBytes ad = associatedData →
     simulateQ RawCtxMixedOwner.receiveLift (executeDecoded erased kernel expected frame payload ad) =
@@ -525,9 +525,9 @@ theorem context_bridge : ContextBridge :=
 /-! ## Bridges at the native opening interface -/
 
 /-- The loop transcription equals the experiments' driver before any embedding of the primitive interface: for an effect of the experiments' driver carrying the context `first`, `executeReceive` on the same effect with production's admitted context `second` equals, wrapped in `ok`, the experiments' driver `RawCtxOwnerOracle.program` interpreted by the whole-owner adapter and `RawCtxSourceOpen.nativeAdapter`, as programs over `RawCtxSourceOpen.NativeSpec`. -/
-theorem receive_loop_native (erased : Std.Array Std.U8 229#usize)
+theorem receive_loop_native (erased : Std.Array Std.U8 357#usize)
     (first : RawCtxWholeOwner.OpenContext) (second : record.OpenFrameContext)
-    (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
+    (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
     (hpayload : RawCtxNativeFramePrelude.sliceBytes payload = first.frame.payload)
     (had : absBytes ad = first.associatedData)
     (hframe : record.OpenFrameContext.from_frame payload ad first.frame.sender = ok (.Some second))
@@ -562,9 +562,9 @@ theorem receive_loop_native (erased : Std.Array Std.U8 229#usize)
         ((resume_context pending response).trans hcontext) rfl
 
 /-- The decoded-frame checks and loop equal the experiments' post-decoding raw receive before any embedding of the primitive interface: under B12's representation conditions, `executeDecoded` equals, wrapped in `ok`, the branch of `RawCtxWholeOwner.rawReceive` after decoding and before publication, interpreted by `RawCtxSourceOpen.nativeAdapter`. The receive-adapter form `decoded_receive_bridge` follows by composing with `RawCtxMixedOwner.receiveAdapter`. -/
-theorem decoded_receive_native (erased : Std.Array Std.U8 229#usize) (kernel : ConcreteRatchetKernel)
+theorem decoded_receive_native (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel)
     (expected : Std.U64) (raw : Pqxdh.Bytes) (frame : RawCtxReceive.DecodedFrame)
-    (associatedData : Pqxdh.Bytes) (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
+    (associatedData : Pqxdh.Bytes) (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
     (hpayload : RawCtxNativeFramePrelude.sliceBytes payload = frame.payload)
     (had : absBytes ad = associatedData) :
     executeDecoded erased kernel expected frame payload ad =
@@ -576,7 +576,7 @@ theorem decoded_receive_native (erased : Std.Array Std.U8 229#usize) (kernel : C
         else pure (kernel, .None)) := by
   have hlength : frame.payload.length = payload.val.length := by
     rw [← hpayload, RawCtxNativeFramePrelude.sliceBytes, List.length_map]
-  have hadLength : associatedData.length = 153 := by
+  have hadLength : associatedData.length = 281 := by
     rw [← had]; simp [absBytes_length]
   by_cases hsender : frame.sender = expected
   · obtain ⟨result, execution, fields⟩ :=
@@ -612,10 +612,10 @@ theorem decoded_receive_native (erased : Std.Array Std.U8 229#usize) (kernel : C
     simp only [simulateQ_pure, map_pure]
 
 /-- The same equality at the interface of the HB-111 target raw-opening site `PqxdhBeaconPhase2Shared.afterRoot`, which interprets the raw receive with `PqxdhBeaconPhase2Shared.rawLift` over `RawCtxSourceOpen.nativeAdapter` rather than with `RawCtxMixedOwner.receiveAdapter`. -/
-theorem decoded_after_root {Response Shared : Type} (erased : Std.Array Std.U8 229#usize)
+theorem decoded_after_root {Response Shared : Type} (erased : Std.Array Std.U8 357#usize)
     (kernel : ConcreteRatchetKernel) (expected : Std.U64) (raw : Pqxdh.Bytes)
     (frame : RawCtxReceive.DecodedFrame) (associatedData : Pqxdh.Bytes) (payload : Slice Std.U8)
-    (ad : Std.Array Std.U8 153#usize)
+    (ad : Std.Array Std.U8 281#usize)
     (hpayload : RawCtxNativeFramePrelude.sliceBytes payload = frame.payload)
     (had : absBytes ad = associatedData) :
     simulateQ (PqxdhBeaconPhase2Shared.rawLift (Response := Response) (Shared := Shared))

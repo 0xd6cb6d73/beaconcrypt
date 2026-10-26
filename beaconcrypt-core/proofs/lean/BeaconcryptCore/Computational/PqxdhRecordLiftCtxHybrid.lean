@@ -62,7 +62,7 @@ theorem openArguments_facts {Material Context : Type}
 theorem real_open_cache (read : RawCtxReceive.FrameDecoder) (expected : Std.U64) (crypto : Pqxdh.Crypto)
     (key : PqxdhSecretInputKdf.RootOutput) (nonce : PqxdhFullSecretInputKdf.NonceOutput) (sequence : Std.U64)
     (context : RawCtxWholeOwner.OpenContext) (entry : KeyEntry) (cache : CtxRO.QueryCache)
-    (width : context.associatedData.length = 153)
+    (width : context.associatedData.length = 281)
     (nonempty : context.raw.isEmpty = false) (decoded : read context.raw = some context.frame)
     (valid : RawCtxReceive.ValidFrame expected context.associatedData context.frame)
     (sequenceMatches : sequence = context.frame.sequence) (slices : RawCtxFrameDecoding.Slices)
@@ -122,7 +122,7 @@ theorem opening_bare (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
           rfl
       | some input =>
           obtain ⟨sequenceFact, contextFact⟩ := openArguments_facts _ input found
-          have width : input.context.associatedData.length = 153 := contextFact ▸ valid.2.2
+          have width : input.context.associatedData.length = 281 := contextFact ▸ valid.2.2
           simp only [Option.map_some, dite_eq_left width, simulateQ_map, simulateQ_spec_query, StateT.run_map,
             Functor.map_map]
           have sameContext : input.context = pending.context := contextFact
@@ -211,7 +211,7 @@ def sealedReply (writer : RawCtxMixedShared.Writer) (pending : PqxdhRecordLiftPr
 theorem sealing_bare (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
     (pending : PqxdhRecordLiftProtocol.Sealing n) (state : CtxPrivate n)
-    (fresh : pending.context.associatedData.length = 153 →
+    (fresh : pending.context.associatedData.length = 281 →
       (materialAt state.base.chain pending.material).2 ∉ (state.keys pending.material).1.usedNonces) :
     Prod.map id ctxBare <$> (ctxInterpreter (fun _ => .real) id setup codec (.sealing pending)).run state =
       (PqxdhRecordLiftCtxProtocol.bareInterpreter setup codec (fun _ => true) (.sealing pending)).run
@@ -227,7 +227,7 @@ theorem sealing_bare (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
         pending)).run (state.base.primitive.2, state.base.pending)
     pure (result.1, { ctxBare state with cache := result.2.1, pending := result.2.2 }))
   rw [PqxdhRecordLiftCtxServices.sendSeal_inner, eraseSeal_arguments]
-  by_cases width : pending.context.associatedData.length = 153
+  by_cases width : pending.context.associatedData.length = 281
   · have keyEq : RawCtxCanonicalSeal.sourceKey
         ⟨PqxdhRecordLiftMaterialTable.material state.base.chain pending.material, pending.sequence, pending.context⟩ =
         (materialAt state.base.chain pending.material).1 :=
@@ -253,8 +253,8 @@ theorem sealing_bare (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
           ((KeyedSpec n).query (pending.material, .inl (.inr (.inr (RawCtxSelectedMessageSealing.selectedInput
             (materialAt state.base.chain pending.material).2 pending.sequence pending.context width)))) :
             OracleComp (KeyedSpec n) (Option CtxRomRecord)) := by
-      have width' : (replaceContext id pending.context).associatedData.length = 153 := width
-      change (if width'' : (replaceContext id pending.context).associatedData.length = 153 then _ else _) = _
+      have width' : (replaceContext id pending.context).associatedData.length = 281 := width
+      change (if width'' : (replaceContext id pending.context).associatedData.length = 281 then _ else _) = _
       rw [dite_eq_left_of_eq_true (eq_true width'), map_eq_bind_pure_comp]
       congr 1
       funext reply

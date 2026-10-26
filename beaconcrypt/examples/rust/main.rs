@@ -75,12 +75,16 @@ fn main() {
 		path: state_path.clone(),
 	};
 	let _ = fs::remove_file(&state_path);
-	let mut server = PersistentServer::create(SERVER_KID, Some(&server_seed), store.clone())
+	let mut server = PersistentServer::create(SERVER_KID, Some(&server_seed), None, store.clone())
 		.expect("failed to create persistent server");
 
 	// It is assumed that the server's public key is compiled into beacons.
-	let mut beacon = Beacon::try_new(SERVER_KID, server.identity_pk().as_bytes())
-		.expect("failed to create beacon");
+	let mut beacon = Beacon::try_new(
+		SERVER_KID,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	)
+	.expect("failed to create beacon");
 	let transport = Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/rust/transport");
 
 	// The beacon is run and registers.

@@ -25,7 +25,7 @@ set_option backward.isDefEq.respectTransparency false in
 theorem native_valid {Auxiliary : Type} (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
     (kdf : QueryImpl RawCtxSharedPrimitive.KdfSpec
       (StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp))
-    (input : RawCtxSourceSend.SealInput) (width : input.context.associatedData.length = 153)
+    (input : RawCtxSourceSend.SealInput) (width : input.context.associatedData.length = 281)
     (auxiliary : Auxiliary) (cache : CtxRO.QueryCache) :
     (simulateQ (RawCtxMixedShared.sharedImpl c writer kdf) (native input)).run (auxiliary, cache) = (do
       let result ← (simulateQ ctxRandomOracle
@@ -55,7 +55,7 @@ theorem native_valid {Auxiliary : Type} (c : Pqxdh.Crypto) (writer : RawCtxMixed
 theorem native_invalid {Auxiliary : Type} (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
     (kdf : QueryImpl RawCtxSharedPrimitive.KdfSpec
       (StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp))
-    (input : RawCtxSourceSend.SealInput) (width : input.context.associatedData.length ≠ 153)
+    (input : RawCtxSourceSend.SealInput) (width : input.context.associatedData.length ≠ 281)
     (state : RawCtxSharedPrimitive.SharedState Auxiliary) :
     (simulateQ (RawCtxMixedShared.sharedImpl c writer kdf) (native input)).run state =
       pure ((none, []), state) := by
@@ -67,7 +67,7 @@ theorem native_invalid {Auxiliary : Type} (c : Pqxdh.Crypto) (writer : RawCtxMix
 /-- The typed CTX computation retains the produced frame before applying the optional writer. -/
 noncomputable def typed (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
     (input : RawCtxSourceSend.SealInput) : OracleComp CtxRO (Option Pqxdh.Bytes × List Frame) :=
-  if width : input.context.associatedData.length = 153 then do
+  if width : input.context.associatedData.length = 281 then do
     let record ← ctxSeal c (RawCtxCanonicalSeal.sourceKey input) (RawCtxCanonicalSeal.sourceInput input width)
     let frame := RawCtxCanonicalSeal.recordFrame input record
     pure (writer frame, [frame])
@@ -101,7 +101,7 @@ open RawCtxSelectedMessageSealing
 noncomputable def selected (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput)
     (sequence : Std.U64) (context : RawCtxSourceSend.SealContext) :
     OracleComp ReceiveSpec (SealResult × List Frame) :=
-  if width : context.associatedData.length = 153 then do
+  if width : context.associatedData.length = 281 then do
     let reply ← ReceiveSpec.query (.inl (.inr (.inr (selectedInput nonce sequence context width))))
     pure (match reply with
       | none => (.repeatedNonce, [])
@@ -160,7 +160,7 @@ set_option backward.isDefEq.respectTransparency false in
 /-- A fresh selected seal retains the actual challenger-produced frame and complete canonical/dynamic history, even if the writer fails. -/
 theorem selected_fresh (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
     (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 281)
     (before : SourceState) (fresh : nonce ∉ before.selected.1.usedNonces) :
     (simulateQ (sourceImpl true decode c key)
       (call c writer ⟨.hidden nonce, sequence, context⟩)).run before = (do
@@ -185,7 +185,7 @@ set_option backward.isDefEq.respectTransparency false in
 /-- Selected nonce reuse produces an explicit stop and no frame while leaving every dynamic history and the shared cache unchanged. -/
 theorem selected_repeat (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
     (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 281)
     (before : SourceState) (used : nonce ∈ before.selected.1.usedNonces) :
     (simulateQ (sourceImpl true decode c key)
       (call c writer ⟨.hidden nonce, sequence, context⟩)).run before =
@@ -240,7 +240,7 @@ theorem known_cache (real : Bool) (decode : RawDecoder) (c : Pqxdh.Crypto) (key 
 /-- Before the explicit selected-nonce stop, the source seal, optional writer result, produced frame and complete shared cache are identical. -/
 theorem selected_cache (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
     (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 281)
     (before : SourceState) (fresh : nonce ∉ before.selected.1.usedNonces) :
     (fun result => (result.1, result.2.cache)) <$>
       (simulateQ (sourceImpl true decode c key)
@@ -249,7 +249,7 @@ theorem selected_cache (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutpu
         (simulateQ ctxRandomOracle
           (typed c writer (selectedNative key nonce sequence context))).run before.cache := by
   rw [selected_fresh decode c key writer nonce sequence context width before fresh]
-  have inputWidth : (selectedNative key nonce sequence context).context.associatedData.length = 153 := width
+  have inputWidth : (selectedNative key nonce sequence context).context.associatedData.length = 281 := width
   rw [typed, dite_eq_left inputWidth, (selected_input key nonce sequence context width).1,
     (selected_input key nonce sequence context width).2]
   simp only [simulateQ_bind, simulateQ_pure,
@@ -263,7 +263,7 @@ theorem call_cache (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
     (writer : RawCtxMixedShared.Writer)
     (input : RawCtxInterpretedArguments.Input Slot RawCtxSourceSend.SealContext)
     (before : SourceState)
-    (fresh : ∀ nonce, input.material = .hidden nonce → input.context.associatedData.length = 153 →
+    (fresh : ∀ nonce, input.material = .hidden nonce → input.context.associatedData.length = 281 →
       nonce ∉ before.selected.1.usedNonces) :
     (fun result => (result.1, result.2.cache)) <$>
       (simulateQ (sourceImpl true decode c key) (call c writer input)).run before =
@@ -274,7 +274,7 @@ theorem call_cache (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
   cases material with
   | known material => exact known_cache true decode c key writer material sequence context before
   | hidden nonce =>
-      by_cases width : context.associatedData.length = 153
+      by_cases width : context.associatedData.length = 281
       · exact selected_cache decode c key writer nonce sequence context width before (fresh nonce rfl width)
       · simp [call, selected, typed, RawCtxInterpretedArguments.toSealInput,
           RawCtxInterpretedArguments.mapInput, width, StateT.run_pure]
@@ -286,7 +286,7 @@ theorem native_source {Auxiliary : Type} (decode : RawDecoder) (c : Pqxdh.Crypto
       (StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp))
     (input : RawCtxInterpretedArguments.Input Slot RawCtxSourceSend.SealContext)
     (before : SourceState) (auxiliary : Auxiliary)
-    (fresh : ∀ nonce, input.material = .hidden nonce → input.context.associatedData.length = 153 →
+    (fresh : ∀ nonce, input.material = .hidden nonce → input.context.associatedData.length = 281 →
       nonce ∉ before.selected.1.usedNonces) :
     (fun result => (result.1, (auxiliary, result.2.cache))) <$>
       (simulateQ (sourceImpl true decode c key) (call c writer input)).run before =

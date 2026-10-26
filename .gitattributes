@@ -1,3 +1,6 @@
 # Source-fidelity checks compare exact multiline text embedded with include_str!.
 # Keep text files in LF form on every platform, including Windows checkouts.
 * text=auto eol=lf
+
+# Preserve the pinned Aeneas templates' trailing blank lines byte for byte.
+beaconcrypt-core/proofs/lean/BeaconcryptCore/AuthenticationExtraction/*External*.lean whitespace=-blank-at-eof

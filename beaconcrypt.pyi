@@ -52,9 +52,12 @@ def validate_snapshot_successor(
 
 @final
 class BeaconCryptBeacon:
-    def __new__(cls, /, server_kid: int, server_id_pk: bytes) -> BeaconCryptBeacon:
+    def __new__(
+        cls, /, server_kid: int, server_id_pk: bytes, server_mldsa_pk: bytes
+    ) -> BeaconCryptBeacon:
         """Raise ValueError on a bad key length or reported initialization/key-generation failure."""
 
+    def mldsa_public_key(self, /) -> bytes: ...
     def decrypt_server_message(self, /, data: Sequence[int]) -> bytes | None: ...
     def encrypt_message_to_server(self, /, data: Sequence[int]) -> bytes | None: ...
     def generate_registration(self, /) -> bytes | None:
@@ -72,13 +75,16 @@ class BeaconCryptBeacon:
 class BeaconCryptServer:
     """Protocol rejection returns None; persistence failures raise PersistenceError and failed commits poison the owner."""
 
-    def __new__(cls, /, kid: int, id_seed: bytes | None) -> BeaconCryptServer:
+    def __new__(
+        cls, /, kid: int, id_seed: bytes | None, mldsa_seed: bytes | None
+    ) -> BeaconCryptServer:
         """Create an in-memory checkpoint owner; persistence failures raise PersistenceError."""
 
     @staticmethod
     def create_with_store(
         kid: int,
         id_seed: bytes | None,
+        mldsa_seed: bytes | None,
         store: _SnapshotStore,
         lineage: bytes | None = None,
     ) -> BeaconCryptServer:
@@ -114,6 +120,7 @@ class BeaconCryptServer:
         """
 
     def id_pk(self, /) -> bytes: ...
+    def mldsa_public_key(self, /) -> bytes: ...
     def register_beacon(
         self, /, reg_buffer: bytes, initial_message: bytes | None
     ) -> RegResponse | None: ...

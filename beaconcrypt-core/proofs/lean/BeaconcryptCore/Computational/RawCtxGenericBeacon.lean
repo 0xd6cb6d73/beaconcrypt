@@ -13,12 +13,12 @@ namespace BeaconcryptCore.Computational.RawCtxGenericBeacon
 open RawCtxGenericRoleStorage
 
 def selected {Kernel Identity DhPair KemPair : Type} (state : BeaconState Kernel Identity DhPair KemPair)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize) (kernel : Kernel) :
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize) (kernel : Kernel) :
     RawCtxChainOwner.State Kernel Unit :=
   ⟨kernel, control.server_binding.identity_key_id, PqxdhRefinement.absBytes associatedData, (), state.rawAttempts⟩
 
 def reinstall {Kernel Identity DhPair KemPair : Type} (state : BeaconState Kernel Identity DhPair KemPair)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
     (owner : RawCtxChainOwner.State Kernel Unit) : BeaconState Kernel Identity DhPair KemPair :=
   ⟨{ state.beacon with phase := .established control associatedData owner.kernel }, owner.rawAttempts⟩
 
@@ -42,7 +42,7 @@ noncomputable def impl {Kernel Identity DhPair KemPair : Type} {m : Type → Typ
 /-- Source owner selection reads the same native target, associated data, kernel and attempted-receive count. -/
 theorem native_selected {Kernel Identity DhPair KemPair : Type}
     (interpret : Kernel → ConcreteRatchetKernel) (state : BeaconState Kernel Identity DhPair KemPair)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize) (kernel : Kernel) :
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize) (kernel : Kernel) :
     RawCtxBeaconLifecycle.selected (nativeBeacon interpret state) control associatedData (interpret kernel) =
       RawCtxChainOwner.nativeState interpret (selected state control associatedData kernel) := by
   rfl
@@ -50,7 +50,7 @@ theorem native_selected {Kernel Identity DhPair KemPair : Type}
 /-- Publication reinterprets only the returned kernel and preserves the source phase, identities and exact attempt count. -/
 theorem native_reinstall {Kernel Identity DhPair KemPair : Type}
     (interpret : Kernel → ConcreteRatchetKernel) (state : BeaconState Kernel Identity DhPair KemPair)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
     (owner : RawCtxChainOwner.State Kernel Unit) :
     RawCtxBeaconLifecycle.reinstall (nativeBeacon interpret state) control associatedData
       (RawCtxChainOwner.nativeState interpret owner) =
@@ -88,7 +88,7 @@ theorem native_step {Kernel Identity DhPair KemPair : Type} {m : Type → Type*}
 theorem established {Kernel Identity DhPair KemPair : Type} {m : Type → Type*} [Monad m]
     (calls : RawCtxChainOwner.Calls Kernel m) (decode : RawCtxReceive.FrameDecoder)
     (query : RawCtxMixedOwner.SourceSpec.Domain) (state : BeaconState Kernel Identity DhPair KemPair)
-    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize) (kernel : Kernel)
+    (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize) (kernel : Kernel)
     (phase : state.beacon.phase = .established control associatedData kernel) :
     (impl calls decode query).run state = (do
       let result ← (RawCtxChainOwner.ownerImpl calls state.beacon.identityKeyId decode query).run

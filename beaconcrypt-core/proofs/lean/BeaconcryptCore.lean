@@ -1,3 +1,5 @@
+import BeaconcryptCore.Model.Pqxdh.TranscriptAuth
+import BeaconcryptCore.Computational.MldsaTranscriptAuth
 import BeaconcryptCore.Computational.NonceAeadRandomQueryBounds
 import BeaconcryptCore.Computational.AdaptiveCtxPlaintextQueryBounds
 import BeaconcryptCore.Computational.AdaptiveCtxStoppedRaw
@@ -38,6 +40,7 @@ import BeaconcryptCore.Computational.PqxdhJointIdentitySessions
 import BeaconcryptCore.Extraction
 import BeaconcryptCore.Refinement.PqxdhSession
 import BeaconcryptCore.Refinement.PqxdhCommitment
+import BeaconcryptCore.Refinement.TranscriptAuth
 import BeaconcryptCore.Verification.PqxdhCommitmentRefinement
 import BeaconcryptCore.Refinement.RatchetControlRestore
 import BeaconcryptCore.Refinement.RatchetCachedPublication

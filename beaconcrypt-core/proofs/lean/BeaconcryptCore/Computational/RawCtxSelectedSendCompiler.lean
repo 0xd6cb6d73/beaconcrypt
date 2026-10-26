@@ -40,7 +40,7 @@ theorem sealing_project (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (prior : Prior) (parent : Option Entry) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
     (read : RawCtxReceive.FrameDecoder)
     (pending : RawCtxInterpretedSend.Seal Slot RawCtxSourceSend.SealContext) (state : State A)
-    (fresh : ∀ value, pending.material = .hidden value → pending.context.associatedData.length = 153 →
+    (fresh : ∀ value, pending.material = .hidden value → pending.context.associatedData.length = 281 →
       value ∉ state.2.selected.1.usedNonces) :
     (fun result => (some result.1, result.2)) <$>
       (sendServices source writer prior parent key target nonce next (.inr pending)).run (project state) =
@@ -99,13 +99,13 @@ theorem send_cases (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
 
 def Repeated (pending : RawCtxInterpretedSend.Seal Slot RawCtxSourceSend.SealContext)
     (state : AdaptiveCtxDynamicKnownKeys.SourceState) : Prop :=
-  ∃ value, pending.material = .hidden value ∧ pending.context.associatedData.length = 153 ∧ value ∈ state.selected.1.usedNonces
+  ∃ value, pending.material = .hidden value ∧ pending.context.associatedData.length = 281 ∧ value ∈ state.selected.1.usedNonces
 
 local instance (pending : RawCtxInterpretedSend.Seal Slot RawCtxSourceSend.SealContext)
     (state : AdaptiveCtxDynamicKnownKeys.SourceState) : Decidable (Repeated pending state) := by
   unfold Repeated
   cases pending.material with
-  | hidden nonce => exact decidable_of_iff (pending.context.associatedData.length = 153 ∧ nonce ∈ state.selected.1.usedNonces) (by simp)
+  | hidden nonce => exact decidable_of_iff (pending.context.associatedData.length = 281 ∧ nonce ∈ state.selected.1.usedNonces) (by simp)
   | known material => exact decidable_of_iff False (by simp)
 
 /-- The outer stop is exactly an actual repeated selected nonce. Every other branch is the original native optional seal and its full cache; no nonce-freshness premise is assumed. -/

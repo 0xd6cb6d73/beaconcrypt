@@ -12,7 +12,7 @@ variable {Reader Response : Type}
 
 /-- The actual extracted array output has the already verified ordered tagged-identity layout. -/
 theorem source_bytes (server beacon : Std.Array Std.U8 32#usize)
-    (ad : Std.Array Std.U8 153#usize)
+    (ad : Std.Array Std.U8 281#usize)
     (built : pqxdh.build_associated_data server beacon = ok ad) :
     absBytes ad = Pqxdh.assocData (absBytes server) (absBytes beacon) := by
   obtain ⟨actual, generated, bytes⟩ := build_associated_data_abs server beacon
@@ -20,7 +20,7 @@ theorem source_bytes (server beacon : Std.Array Std.U8 32#usize)
 
 /-- Equality of two literal associated-data outputs recovers both ordered raw identity arrays. This is a concrete fixed-layout fact, not a cryptographic or codec contract. -/
 theorem source_identities (server beacon otherServer otherBeacon : Std.Array Std.U8 32#usize)
-    (ad otherAd : Std.Array Std.U8 153#usize)
+    (ad otherAd : Std.Array Std.U8 281#usize)
     (built : pqxdh.build_associated_data server beacon = ok ad)
     (otherBuilt : pqxdh.build_associated_data otherServer otherBeacon = ok otherAd)
     (same : absBytes ad = absBytes otherAd) : server = otherServer ∧ beacon = otherBeacon := by

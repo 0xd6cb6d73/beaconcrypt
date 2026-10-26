@@ -18,13 +18,15 @@ jobs:
       - uses: vercel-labs/setup-zig@83c1594f26b86da8a9a8ddd9b5ee5f3af0f96943 # v1.0.2
         with:
           version: 0.17.0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Test guest ABI and host callbacks
+        run: bash scripts/test-wasm.sh
       - name: Test release packaging
         run: python3 -m unittest discover -s scripts -p 'test_package_wasm.py' -v
       - name: Build Wasm once
         run: bash scripts/build-wasm.sh
-      - uses: actions/setup-go@v6
-        with:
-          go-version-file: go.mod
       - name: Validate the embedded artifact
         run: |
           CGO_ENABLED=0 go test ./...

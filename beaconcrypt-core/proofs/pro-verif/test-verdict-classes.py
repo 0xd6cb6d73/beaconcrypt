@@ -5,7 +5,10 @@
 import copy
 import importlib.util
 from pathlib import Path
+import sys
+import tempfile
 import unittest
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 SPEC = importlib.util.spec_from_file_location(
@@ -31,6 +34,83 @@ class ClassificationTests(unittest.TestCase):
             sum(e.checker == "check-general-registration.py" for e in self.expected),
             2444,
         )
+
+    def test_awk_inventory_uses_short_commands_and_live_probe_file(self):
+        run = CHECK.INVENTORY.subprocess.run
+        probes = set()
+        scenarios = set()
+
+        def checked_run(args, **kwargs):
+            if args[0] != "awk":
+                return run(args, **kwargs)
+            self.assertLess(len(CHECK.INVENTORY.subprocess.list2cmdline(args)), 32767)
+            self.assertEqual(args[:2], ["awk", "-v"])
+            self.assertEqual(args[-2], "-f")
+            path = Path(args[-1])
+            self.assertTrue(path.is_file(), "AWK source must exist during execution")
+            if path.name != "check-results.awk":
+                probes.add(path)
+                scenarios.add(args[2])
+                probe = path.read_text(encoding="utf-8")
+                self.assertGreater(len(probe), 32767)
+                self.assertIn("function reject(message) {}", probe)
+                self.assertIn(
+                    "function require_exact(wanted, label, query_index, found) { print wanted }",
+                    probe,
+                )
+            return run(args, **kwargs)
+
+        with mock.patch.object(CHECK.INVENTORY.subprocess, "run", checked_run):
+            expected = CHECK.INVENTORY.expected_verdicts()
+        CHECK.validate(self.rows, expected)
+        self.assertEqual(len(probes), 1)
+        self.assertGreater(len(scenarios), 1)
+        self.assertTrue(all(not path.exists() for path in probes))
+
+    def test_inventory_without_posix_solver_modules(self):
+        with mock.patch.dict(sys.modules, {"resource": None, "fcntl": None}):
+            expected = CHECK.INVENTORY.expected_verdicts()
+        self.assertEqual(expected, self.expected)
+        CHECK.validate(self.rows, expected)
+        CHECK.validate_scope(self.rows)
+
+    def test_legacy_source_scope_cannot_be_promoted(self):
+        for name in CHECK.LEGACY_SOURCE_CHECKERS:
+            with self.subTest(checker=name):
+                rows = copy.deepcopy(self.rows)
+                row = next(row for row in rows if row["checker"] == name + ".py")
+                self.assertTrue(row["scope"].startswith(CHECK.LEGACY_SOURCE_SCOPE))
+                row["scope"] = row["scope"].removeprefix(CHECK.LEGACY_SOURCE_SCOPE)
+                with self.assertRaises(ValueError):
+                    self.check(rows)
+
+    def test_legacy_checkers_require_explicit_projection_marker(self):
+        marker = (
+            "(* @beaconcrypt-fidelity-v1 legacy_profiles.scope="
+            "classical_projection:MLDSA_guards_not_globally_lifted *)"
+        )
+        original = (HERE / "production-transcript-interface.pvl").read_text()
+        self.assertEqual(original.count(marker), 1)
+        names = CHECK.LEGACY_SOURCE_CHECKERS | {"check-free-schedule"}
+        with tempfile.TemporaryDirectory() as scratch:
+            directory = Path(scratch)
+            for name in names:
+                driver = CHECK.INVENTORY.module(name)
+                for changed in (
+                    original.replace(marker, ""),
+                    original.replace(marker, "(* full ML-DSA source proof *)"),
+                    original + "\n" + marker,
+                ):
+                    (directory / "production-transcript-interface.pvl").write_text(
+                        changed
+                    )
+                    with (
+                        self.subTest(checker=name),
+                        self.assertRaisesRegex(
+                            ValueError, "reviewed classical-projection scope"
+                        ),
+                    ):
+                        driver.validate_targets(directory=directory)
 
     def test_missing_or_duplicate_verdict(self):
         for rows in (self.rows[:-1], self.rows + [self.rows[0]]):
@@ -366,6 +446,205 @@ class ClassificationTests(unittest.TestCase):
                 )[field] = value
                 with self.assertRaises(ValueError):
                     self.check(rows)
+
+
+class MldsaClassificationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.expected = CHECK.INVENTORY.fixture_expectations(
+            "check-mldsa-registration-auth"
+        )
+        cls.rows = [
+            row
+            for row in CHECK.read_rows(HERE / "verdict-classes.tsv")
+            if row["checker"] == "check-mldsa-registration-auth.py"
+        ]
+
+    def check(self, rows):
+        CHECK.validate(rows, self.expected)
+        CHECK.validate_mldsa_scope(rows)
+
+    def test_complete_assumed_interface_roster(self):
+        self.assertEqual(len(self.rows), 14)
+        self.check(self.rows)
+        self.assertEqual(sum(row["class"] == "security" for row in self.rows), 2)
+
+    def test_every_new_verdict_is_required(self):
+        for index in range(len(self.rows)):
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                self.check(self.rows[:index] + self.rows[index + 1 :])
+
+    def test_fixture_and_owned_key_scope_cannot_be_promoted(self):
+        for index, row in enumerate(self.rows):
+            if row["class"] == "security":
+                continue
+            changed = copy.deepcopy(self.rows)
+            changed[index]["class"] = "security"
+            with (
+                self.subTest(target=row["target"], position=row["position"]),
+                self.assertRaises(ValueError),
+            ):
+                self.check(changed)
+
+    def test_provenance_cannot_be_relabelled_or_generalized(self):
+        for index in (0, 1):
+            for field, value in [
+                ("class", "definitional"),
+                ("scope", "unconditional post-quantum protocol security"),
+            ]:
+                changed = copy.deepcopy(self.rows)
+                changed[index][field] = value
+                with (
+                    self.subTest(index=index, field=field),
+                    self.assertRaises(ValueError),
+                ):
+                    self.check(changed)
+
+    def test_assumed_primitive_and_no_enrollment_qualifications_are_pinned(self):
+        for phrase in [
+            "unrevealed",
+            "without enrollment",
+            "unforgeability",
+            "no computational/QPT",
+        ]:
+            changed = copy.deepcopy(self.rows)
+            changed[0]["scope"] = changed[0]["scope"].replace(phrase, "")
+            with self.subTest(phrase=phrase), self.assertRaises(ValueError):
+                self.check(changed)
+
+    def test_response_signature_exclusion_is_pinned(self):
+        changed = copy.deepcopy(self.rows)
+        changed[1]["scope"] = changed[1]["scope"].replace(
+            "excluding signature bytes", "including signature bytes"
+        )
+        with self.assertRaises(ValueError):
+            self.check(changed)
+
+    def test_control_status_formula_and_identity_are_pinned(self):
+        for field, value in [
+            ("status", "true"),
+            ("formula_sha256", "0" * 64),
+            ("target", "without-both-verifiers"),
+        ]:
+            changed = copy.deepcopy(self.rows)
+            changed[-1][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.check(changed)
+
+
+class MldsaJointClassificationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.expected = CHECK.INVENTORY.fixture_expectations("check-mldsa-joint-session")
+        cls.rows = [
+            row
+            for row in CHECK.read_rows(HERE / "verdict-classes.tsv")
+            if row["checker"] == "check-mldsa-joint-session.py"
+        ]
+
+    def check(self, rows):
+        CHECK.validate(rows, self.expected)
+        CHECK.validate_mldsa_joint_scope(rows)
+
+    def test_complete_bounded_joint_roster(self):
+        self.assertEqual(len(self.rows), 19)
+        self.check(self.rows)
+        for cls, count in [
+            ("security", 8),
+            ("witness", 4),
+            ("limitation", 2),
+            ("negative-control", 5),
+        ]:
+            self.assertEqual(sum(row["class"] == cls for row in self.rows), count)
+
+    def test_every_joint_verdict_is_required(self):
+        for index in range(len(self.rows)):
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                self.check(self.rows[:index] + self.rows[index + 1 :])
+
+    def test_owned_key_capability_and_execution_rows_cannot_be_security(self):
+        for index, row in enumerate(self.rows):
+            if row["class"] == "security":
+                continue
+            changed = copy.deepcopy(self.rows)
+            changed[index]["class"] = "security"
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                self.check(changed)
+
+    def test_joint_security_cannot_be_relabelled_or_generalized(self):
+        for index in range(8):
+            for field, value in [
+                ("class", "definitional"),
+                ("scope", "unconditional full-protocol quantum security"),
+            ]:
+                changed = copy.deepcopy(self.rows)
+                changed[index][field] = value
+                with (
+                    self.subTest(index=index, field=field),
+                    self.assertRaises(ValueError),
+                ):
+                    self.check(changed)
+
+    def test_assumptions_and_protected_payload_policy_are_mandatory(self):
+        for phrase in [
+            "unrevealed",
+            "without enrollment",
+            "only after admission",
+            "unforgeability",
+            "ML-KEM public-key binding assumed beyond generic IND-CCA",
+            "public Ed25519/X25519 recovery",
+            "no computational/QPT",
+            "public per-invocation assigned labels abstract concrete counter allocation order",
+        ]:
+            changed = copy.deepcopy(self.rows)
+            changed[0]["scope"] = changed[0]["scope"].replace(phrase, "")
+            with self.subTest(phrase=phrase), self.assertRaises(ValueError):
+                self.check(changed)
+
+    def test_directional_bounds_and_actual_replay_identity_are_mandatory(self):
+        for old, new in [
+            ("two generic Server attempts", "arbitrary Server attempts"),
+            ("one server record sequence2", "all server records"),
+            ("one receive attempt per endpoint", "arbitrary receive schedules"),
+            (
+                "Ed identity plus one-time key, excluding ML keys",
+                "Ed identity plus ML key",
+            ),
+        ]:
+            changed = copy.deepcopy(self.rows)
+            changed[0]["scope"] = changed[0]["scope"].replace(old, new)
+            with self.subTest(old=old), self.assertRaises(ValueError):
+                self.check(changed)
+
+    def test_replay_witness_is_not_an_injective_replay_theorem(self):
+        changed = copy.deepcopy(self.rows)
+        changed[12]["scope"] = changed[12]["scope"].replace(
+            "passive private observation matches insertion and rejection of the same actual registration ID in distinct Server invocations, with the rejecting invocation consuming the matching token released after insertion; no arbitrary replay-schedule theorem",
+            "arbitrary registration and record replay is prevented injectively",
+        )
+        with self.assertRaises(ValueError):
+            self.check(changed)
+
+    def test_quantum_library_and_response_signature_exclusion_are_mandatory(self):
+        for index, old, new in [
+            (0, "quantum-capabilities.pvl", ""),
+            (1, "excluding ML signature bytes", "including ML signature bytes"),
+        ]:
+            changed = copy.deepcopy(self.rows)
+            changed[index]["scope"] = changed[index]["scope"].replace(old, new)
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                self.check(changed)
+
+    def test_control_formula_status_and_identity_are_exact(self):
+        for field, value in [
+            ("status", "unknown"),
+            ("formula_sha256", "0" * 64),
+            ("target", "without-both-verifiers"),
+        ]:
+            changed = copy.deepcopy(self.rows)
+            changed[-1][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.check(changed)
 
 
 if __name__ == "__main__":

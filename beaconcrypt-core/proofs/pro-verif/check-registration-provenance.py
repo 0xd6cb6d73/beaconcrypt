@@ -5,7 +5,6 @@
 import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import fcntl
 import hashlib
 import importlib.util
 import json
@@ -119,10 +118,12 @@ TOKEN_SHA256 = {
     "registration-provenance.pvl": "121a4f12eff4f89c82684491ec2c72f5ad4f0f666e806479b6d219f0988aa307",
 }
 
+# Reviewed classical projection of the ML-DSA source; see doc/impl/mldsa-source-pins.md.
+# Full authentication/AD lifting is not inferred from these whole-file tripwires.
 SOURCE_SHA256 = {
-    "beaconcrypt/src/beacon.rs": "b07624435c15761d86749064cd6fd30f6a0fefcd246b485f0be80dee79d24698",
-    "beaconcrypt/src/server.rs": "bede4addf22f32ead26815a2680aac04312b782d3449ccb931a9635433e9ab72",
-    "beaconcrypt-core/src/pqxdh.rs": "cbb38e9d71b9f67c9c77c99ee34c834d8687cf4a1439a6965a360bb992f5eded",
+    "beaconcrypt/src/beacon.rs": "880a240ccfda92565734d31ae3a7e630e988d3e1ff77666579ed31dafd15fd68",
+    "beaconcrypt/src/server.rs": "1cf58484619c712f3970f1bde06789559ee11e3af50430d42c1e3fe41fded706",
+    "beaconcrypt-core/src/pqxdh.rs": "2f2e1b3c8e02ad605d5078a8ca16ccf569c50a77bda6df787d84722a16806763",
 }
 
 
@@ -131,6 +132,7 @@ def digest(text):
 
 
 def validate_targets(targets=TARGETS, directory=HERE, source_root=None):
+    FS.validate_legacy_scope(directory)
     if tuple(targets) != TARGETS:
         raise ValueError("signature-provenance roster, classes or formulas changed")
     if {p.name for p in directory.glob("registration-provenance-*.pv")} != {
@@ -159,6 +161,8 @@ def validate_targets(targets=TARGETS, directory=HERE, source_root=None):
 
 
 def run(args, logdir):
+    import fcntl
+
     rows = []
     failures = []
     args.lock.parent.mkdir(parents=True, exist_ok=True)

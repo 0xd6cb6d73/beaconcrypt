@@ -19,7 +19,7 @@ namespace BeaconcryptCore.Computational.RawCtxServerRouting
 abbrev Identity := Std.Array Std.U8 32#usize
 
 /-- Exact associated-data builder from the extracted core, in source server/beacon order. -/
-noncomputable def associatedArray (server peer : Identity) : Std.Array Std.U8 153#usize :=
+noncomputable def associatedArray (server peer : Identity) : Std.Array Std.U8 281#usize :=
   (build_associated_data_abs server peer).choose
 
 theorem associatedArray_exact (server peer : Identity) :
@@ -34,8 +34,8 @@ theorem associatedBytes_exact (server peer : Identity) :
   (build_associated_data_abs server peer).choose_spec.2
 
 theorem associatedBytes_length (server peer : Identity) :
-    (associatedBytes server peer).length = 153 := by
-  simp only [associatedBytes, absBytes_length, usize_val_153]
+    (associatedBytes server peer).length = 281 := by
+  simp only [associatedBytes, absBytes_length, usize_val_281]
 
 /-- Distinct assigned handles may store equal public identities; no injectivity is required. -/
 structure Peer (PeerMetadata : Type) where

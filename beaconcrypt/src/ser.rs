@@ -2,6 +2,8 @@
 
 #[cfg(feature = "server")]
 use super::{EstablishedRemote, SignType, encode_sign};
+#[cfg(feature = "server")]
+use crate::auth::MldsaIdentity;
 #[cfg(test)]
 use crate::ratchet::RatchetKernel;
 use crate::ratchet::{AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, RatchetManager};
@@ -234,9 +236,13 @@ impl Serialize for EstablishedRemote<crypto_sign::PublicKey> {
 	where
 		S: Serializer,
 	{
-		let mut state = serializer.serialize_struct("RemotePrincipal", 2)?;
+		let mut state = serializer.serialize_struct("RemotePrincipal", 3)?;
 		state.serialize_field("pk", &EncodedSignaturePublicKey(self.pk()))?;
 		state.serialize_field("ratchet", self.ratchet())?;
+		state.serialize_field(
+			"mldsa_public_key_hash",
+			&ByteBuffer(self.mldsa_public_key_hash()),
+		)?;
 		state.end()
 	}
 }
@@ -256,6 +262,7 @@ struct SerializableServerState<'a> {
 	server_kid: u64,
 	known_ids: &'a HashMap<u64, EstablishedRemote<crypto_sign::PublicKey>>,
 	consumed_registrations: &'a HashSet<[u8; beaconcrypt_core::pqxdh::REGISTRATION_ID_SIZE]>,
+	mldsa_identity: &'a MldsaIdentity,
 }
 
 #[cfg(feature = "server")]
@@ -265,6 +272,7 @@ pub(crate) fn serialize_server_state(
 	server_kid: u64,
 	known_ids: &HashMap<u64, EstablishedRemote<crypto_sign::PublicKey>>,
 	consumed_registrations: &HashSet<[u8; beaconcrypt_core::pqxdh::REGISTRATION_ID_SIZE]>,
+	mldsa_identity: &MldsaIdentity,
 ) -> Option<String> {
 	serde_json::to_string(&SerializableServerState {
 		identity_key,
@@ -272,6 +280,7 @@ pub(crate) fn serialize_server_state(
 		server_kid,
 		known_ids,
 		consumed_registrations,
+		mldsa_identity,
 	})
 	.ok()
 }
@@ -294,7 +303,7 @@ impl Serialize for SerializableServerState<'_> {
 			TypedArray::<{ crypto_sign::SEEDBYTES }, systems::Ed25519, roles::IdentityKey>::new(
 				identity_seed_buffer,
 			);
-		let mut state = serializer.serialize_struct("BeaconCryptPqxdh", 5)?;
+		let mut state = serializer.serialize_struct("BeaconCryptPqxdh", 6)?;
 		state.serialize_field("identity_key", &typed_identity_seed)?;
 		state.serialize_field("identity_key_kid", &self.identity_key_kid)?;
 		state.serialize_field("server_kid", &self.server_kid)?;
@@ -303,6 +312,8 @@ impl Serialize for SerializableServerState<'_> {
 			"consumed_registrations",
 			&SerializableConsumedRegistrations(self.consumed_registrations),
 		)?;
+		let seed = self.mldsa_identity.to_seed();
+		state.serialize_field("mldsa_identity_seed", &ByteBuffer(seed.as_slice()))?;
 		state.end()
 	}
 }

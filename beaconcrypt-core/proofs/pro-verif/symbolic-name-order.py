@@ -4,6 +4,9 @@
 
 This checker does not prove contextual equivalence or run ProVerif. It does
 not reorder a computational sampler or change a maintained process.
+The source pin concerns the classical projection after the mandatory ML-DSA
+guard; it establishes no reordering across that guard or primitive failure.
+See doc/impl/mldsa-source-pins.md for the reviewed source changes.
 """
 
 import argparse
@@ -31,7 +34,7 @@ TOKEN_SHA256 = {
     "fs-common.pvl": "fddb894e764ce90949ab5477bd8f6ee8f6def0ea34bfd0958263d6b8ca9ceb3f",
 }
 SOURCE_SHA256 = {
-    "beaconcrypt/src/server.rs": "bede4addf22f32ead26815a2680aac04312b782d3449ccb931a9635433e9ab72"
+    "beaconcrypt/src/server.rs": "1cf58484619c712f3970f1bde06789559ee11e3af50430d42c1e3fe41fded706"
 }
 NAMES = ("ephemeral_secret", "kem_coins")
 
@@ -116,6 +119,14 @@ def compare(text, macro):
 
 
 def validate(directory=HERE, source_root=None):
+    marker = (
+        "(* @beaconcrypt-fidelity-v1 legacy_profiles.scope="
+        "classical_projection:MLDSA_guards_not_globally_lifted *)"
+    )
+    if (directory / "production-transcript-interface.pvl").read_text().count(
+        marker
+    ) != 1:
+        raise ValueError("E20 requires the reviewed classical-projection scope")
     if source_root is None:
         source_root = HERE.parents[2]
     for name, expected in TOKEN_SHA256.items():

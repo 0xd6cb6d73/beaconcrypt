@@ -8,6 +8,6 @@
 (* @beaconcrypt-fs-fidelity key=binding.root_input src=beaconcrypt-core/src/pqxdh.rs:391-405 anchor=let bytes: [u8; ROOT_KEY_INPUT_SIZE] = core::array::from_fn(|i| { *)
 letfun fs_root_dh2(dh2: bitstring, dh3: bitstring) = dh2.
 
-(* @beaconcrypt-fs-fidelity key=binding.associated_data src=beaconcrypt-core/src/pqxdh.rs:928-947 anchor=pub fn build_associated_data( *)
+(* @beaconcrypt-fs-fidelity key=binding.associated_data src=beaconcrypt-core/src/pqxdh.rs:931-952 anchor=pub fn build_associated_data( *)
 letfun fs_associated_data(server_identity: bitstring, beacon_identity: bitstring) =
   beaconcrypt_core__pqxdh__build_associated_data(server_identity, beacon_identity).

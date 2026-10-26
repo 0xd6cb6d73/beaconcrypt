@@ -39,10 +39,10 @@ def tailCrypto : Crypto :=
     blake2b := fun x => padTo 64 (x.drop (x.length - 64))
     blake2b_length := by intro x; simp }
 
-/-- The commitment input of a well-formed record context is 229 bytes long. -/
+/-- The commitment input of a well-formed record context is 357 bytes long. -/
 theorem ctxPreimage_length {mk : Bytes × Bytes} {ad : RecordAD} {t : Bytes}
     (hw : RecordWf mk ad) (ht : t.length = 16) :
-    (ctxPreimage mk ad t).length = 229 := by
+    (ctxPreimage mk ad t).length = 357 := by
   simp [ctxPreimage, hw.key, hw.nonce, hw.bytes, ht]
 
 /-- Under `tailCrypto` the commitment of a well-formed record context is the trailing
@@ -50,25 +50,25 @@ theorem ctxPreimage_length {mk : Bytes × Bytes} {ad : RecordAD} {t : Bytes}
 theorem tailCrypto_ctxCommit {mk : Bytes × Bytes} {ad : RecordAD} {t : Bytes}
     (hw : RecordWf mk ad) (ht : t.length = 16) :
     ctxCommit tailCrypto mk ad t
-      = (mk.1 ++ mk.2 ++ ad.bytes ++ t).drop 165 ++ LE64 ad.seq ++ LE64 ad.sid := by
-  have hp : (ctxPreimage mk ad t).length = 229 := ctxPreimage_length hw ht
-  have h1 : (mk.1 ++ mk.2 ++ ad.bytes ++ t ++ LE64 ad.seq).length = 221 := by
+      = (mk.1 ++ mk.2 ++ ad.bytes ++ t).drop 293 ++ LE64 ad.seq ++ LE64 ad.sid := by
+  have hp : (ctxPreimage mk ad t).length = 357 := ctxPreimage_length hw ht
+  have h1 : (mk.1 ++ mk.2 ++ ad.bytes ++ t ++ LE64 ad.seq).length = 349 := by
     simp [hw.key, hw.nonce, hw.bytes, ht]
-  have h2 : (mk.1 ++ mk.2 ++ ad.bytes ++ t).length = 213 := by
+  have h2 : (mk.1 ++ mk.2 ++ ad.bytes ++ t).length = 341 := by
     simp [hw.key, hw.nonce, hw.bytes, ht]
-  have hdrop : (ctxPreimage mk ad t).drop 165
-      = (mk.1 ++ mk.2 ++ ad.bytes ++ t).drop 165 ++ LE64 ad.seq ++ LE64 ad.sid := by
+  have hdrop : (ctxPreimage mk ad t).drop 293
+      = (mk.1 ++ mk.2 ++ ad.bytes ++ t).drop 293 ++ LE64 ad.seq ++ LE64 ad.sid := by
     rw [ctxPreimage,
-      List.drop_append_of_le_length (by omega : 165 ≤
+      List.drop_append_of_le_length (by omega : 293 ≤
         (mk.1 ++ mk.2 ++ ad.bytes ++ t ++ LE64 ad.seq).length),
-      List.drop_append_of_le_length (by omega : 165 ≤
+      List.drop_append_of_le_length (by omega : 293 ≤
         (mk.1 ++ mk.2 ++ ad.bytes ++ t).length)]
-  have hlen : ((mk.1 ++ mk.2 ++ ad.bytes ++ t).drop 165 ++ LE64 ad.seq
+  have hlen : ((mk.1 ++ mk.2 ++ ad.bytes ++ t).drop 293 ++ LE64 ad.seq
       ++ LE64 ad.sid).length = 64 := by
     simp only [List.length_append, List.length_drop, LE64_length, h2]
   rw [ctxCommit_eq]
   show padTo 64 ((ctxPreimage mk ad t).drop ((ctxPreimage mk ad t).length - 64)) = _
-  rw [hp, show (229 : ℕ) - 64 = 165 from rfl, hdrop, padTo_of_length hlen]
+  rw [hp, show (357 : ℕ) - 64 = 293 from rfl, hdrop, padTo_of_length hlen]
 
 /-- **The rejection hypothesis is satisfiable.**  Over `tailCrypto`, two well-formed
 record contexts with different wire sequence numbers commit to different values, so
@@ -119,7 +119,7 @@ theorem demoTail_ok : demoTail.Ok :=
   ⟨by decide, by decide, by decide, rfl, by decide⟩
 
 /-- The associated data of the concrete run has the protocol's length. -/
-theorem demoTail_ad_length : demoTail.ad.length = 153 :=
+theorem demoTail_ad_length : demoTail.ad.length = 281 :=
   assocData_length (tailCrypto.edPub_length _) (tailCrypto.edPub_length _)
 
 /-- **A concrete instance of the re-labelling rejection.**  The beacon of the concrete

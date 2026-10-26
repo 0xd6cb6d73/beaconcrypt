@@ -28,7 +28,7 @@ noncomputable def target (nonce : CtxNonce) (sequence : Std.U64)
     (frame : RawCtxReceive.DecodedFrame) (ad : Pqxdh.Bytes)
     (slices : RawCtxFrameDecoding.Slices)
     (parsed : RawCtxFrameDecoding.fromPayload frame.payload = some slices)
-    (width : ad.length = 153) : CtxUnclaimedAcceptance.Target :=
+    (width : ad.length = 281) : CtxUnclaimedAcceptance.Target :=
   ⟨nonce, ⟨⟨ad, sequence.val, frame.sender.val⟩, width, sequence.bv.isLt, frame.sender.bv.isLt⟩,
     record frame slices parsed⟩
 
@@ -49,7 +49,7 @@ noncomputable def decoder (nonce : CtxNonce) (expected : Std.U64)
 theorem target_source (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices)
     (parsed : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (width : input.context.associatedData.length = 153) :
+    (width : input.context.associatedData.length = 281) :
     RawCtxCanonicalOpening.selectedTarget input slices parsed width =
       target (RawCtxSourceOpen.sourceNonce input) input.sequence input.context.frame
         input.context.associatedData slices parsed width := rfl

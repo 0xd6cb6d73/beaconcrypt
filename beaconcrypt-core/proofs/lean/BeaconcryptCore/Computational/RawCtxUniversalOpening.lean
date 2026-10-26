@@ -18,7 +18,7 @@ noncomputable def call (slot : Nat) (read : RawCtxReceive.FrameDecoder) (expecte
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec (Option Pqxdh.Bytes) :=
   match input.material with
   | .hidden nonce =>
-    if width : input.context.associatedData.length = 153 then
+    if width : input.context.associatedData.length = 281 then
       AdaptiveCtxDynamicKnownKeys.Spec.query (.inl (.inr
         (RawCtxUniversalDecoder.pack (RawCtxUniversalDecoder.envelope nonce input.context width))))
     else pure none
@@ -29,7 +29,7 @@ set_option backward.isDefEq.respectTransparency false in
 theorem selected_call (slot : Nat) (read : RawCtxReceive.FrameDecoder) (expected : Std.U64)
     (key : RootOutput) (nonce : NonceOutput) (sequence : Std.U64) (context : RawCtxWholeOwner.OpenContext)
     (c : Pqxdh.Crypto) (state : AdaptiveCtxDynamicKnownKeys.SourceState)
-    (width : context.associatedData.length = 153)
+    (width : context.associatedData.length = 281)
     (nonempty : context.raw.isEmpty = false) (decoded : read context.raw = some context.frame)
     (sequenceMatches : sequence = context.frame.sequence) (slices : RawCtxFrameDecoding.Slices)
     (parsed : RawCtxFrameDecoding.fromPayload context.frame.payload = some slices) :

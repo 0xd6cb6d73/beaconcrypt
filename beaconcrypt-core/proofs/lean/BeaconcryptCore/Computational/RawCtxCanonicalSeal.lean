@@ -25,12 +25,12 @@ def sourceNonce (input : RawCtxSourceSend.SealInput) : CtxNonce :=
   ⟨(absMaterial input.material).2, by simp [absMaterial]⟩
 
 def sourceContext (input : RawCtxSourceSend.SealInput)
-    (had : input.context.associatedData.length = 153) : CtxRecordContext :=
+    (had : input.context.associatedData.length = 281) : CtxRecordContext :=
   ⟨⟨input.context.associatedData, input.sequence.val, input.context.senderId.val⟩,
     had, input.sequence.bv.isLt, input.context.senderId.bv.isLt⟩
 
 def sourceInput (input : RawCtxSourceSend.SealInput)
-    (had : input.context.associatedData.length = 153) : CtxSealInput :=
+    (had : input.context.associatedData.length = 281) : CtxSealInput :=
   ⟨sourceNonce input, sourceContext input had, input.context.plaintext⟩
 
 def recordFrame (input : RawCtxSourceSend.SealInput) (record : CtxRomRecord) :
@@ -48,7 +48,7 @@ def romAdapter (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer) :
 
 /-- The commitment uses the actual selected material and public context, with no distribution assumption. -/
 theorem hashInput_exact (input : RawCtxSourceSend.SealInput)
-    (had : input.context.associatedData.length = 153) (tag : Pqxdh.Bytes) :
+    (had : input.context.associatedData.length = 281) (tag : Pqxdh.Bytes) :
     RawCtxSourceSeal.hashInput input tag =
       outerInput (sourceKey input) (sourceNonce input) (sourceContext input had) tag := by
   rfl
@@ -63,7 +63,7 @@ theorem recordFrame_fields (input : RawCtxSourceSend.SealInput) (record : CtxRom
 
 /-- Actual source sealing equals the existing typed CTX computation followed by the unchanged optional writer. -/
 theorem sealInput_typed (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
-    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 153) :
+    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 281) :
     simulateQ (romAdapter c writer) (RawCtxSourceSeal.sealInput input) = (do
       let record ← ctxSeal c (sourceKey input) (sourceInput input had)
       pure (writer (recordFrame input record))) := by
@@ -75,7 +75,7 @@ theorem sealInput_typed (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
 
 /-- Invalid associated-data width still rejects under the stated total functional AEAD interpretation. -/
 theorem sealInput_invalid (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
-    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length ≠ 153) :
+    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length ≠ 281) :
     simulateQ (romAdapter c writer) (RawCtxSourceSeal.sealInput input) = pure none := by
   simp [RawCtxSourceSeal.sealInput, romAdapter, OracleSpec.query, had]
 
@@ -123,7 +123,7 @@ theorem shared_complete {Auxiliary Result : Type} (c : Pqxdh.Crypto) (writer : R
 theorem shared_seal {Auxiliary : Type} (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
     (kdf : QueryImpl RawCtxSharedPrimitive.KdfSpec
       (StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp))
-    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 153)
+    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 281)
     (auxiliary : Auxiliary) (cache : CtxRO.QueryCache) :
     (simulateQ (sharedImpl c writer kdf) (RawCtxSourceSeal.sealInput input)).run (auxiliary, cache) = (do
       let result ← (simulateQ ctxRandomOracle
@@ -136,7 +136,7 @@ theorem shared_seal {Auxiliary : Type} (c : Pqxdh.Crypto) (writer : RawCtxMixedS
 /-- This total source presentation keeps the actual AD-width rejection and optional frame writer. -/
 def typedSource (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
     (input : RawCtxSourceSend.SealInput) : OracleComp CtxRO (Option Pqxdh.Bytes) :=
-  if had : input.context.associatedData.length = 153 then do
+  if had : input.context.associatedData.length = 281 then do
     let record ← ctxSeal c (sourceKey input) (sourceInput input had)
     pure (writer (recordFrame input record))
   else pure none

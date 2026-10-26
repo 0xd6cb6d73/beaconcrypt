@@ -18,7 +18,7 @@ open CtxRomAuth
 /-- The actual selected callback records the challenger-produced typed record before preserving the writer's optional result. It requires no selected-key argument. -/
 theorem selected_call (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
     (nonce : NonceOutput) (sequence : Std.U64) (context : RawCtxSourceSend.SealContext)
-    (width : context.associatedData.length = 153) (before : State) :
+    (width : context.associatedData.length = 281) (before : State) :
     monitor (RawCtxSelectedSealConsumer.call c writer ⟨.hidden nonce, sequence, context⟩) before =
       (do let reply ← AdaptiveCtxDynamicKnownKeys.Spec.query (.inl (.inl (.inr (.inr
             (selectedInput nonce sequence context width)))))
@@ -36,7 +36,7 @@ theorem selected_call (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
 /-- Every completed selected call carries its actual typed record and writer result; explicit nonce refusal leaves the observer unchanged. A completed writer failure still appends the cryptographic production. -/
 theorem selected_production (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
     (nonce : NonceOutput) (sequence : Std.U64) (context : RawCtxSourceSend.SealContext)
-    (width : context.associatedData.length = 153) (before after : State) (result : SealResult)
+    (width : context.associatedData.length = 281) (before after : State) (result : SealResult)
     (supported : (result, after) ∈ support (monitor
       (RawCtxSelectedSealConsumer.call c writer ⟨.hidden nonce, sequence, context⟩) before)) :
     (result = .repeatedNonce ∧ after = before) ∨
@@ -88,7 +88,7 @@ theorem monitor_seals {Result : Type} (client : OracleComp AdaptiveCtxDynamicKno
 theorem sealing_selected (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
     (pending : RawCtxInterpretedSend.Seal Slot RawCtxSourceSend.SealContext)
     (nonce : NonceOutput) (selectedMaterial : pending.material = .hidden nonce)
-    (width : pending.context.associatedData.length = 153) (before after : State)
+    (width : pending.context.associatedData.length = 281) (before after : State)
     (result : Option (Option RawCtxSourceSend.Encrypted))
     (supported : (result, after) ∈ support (monitor (RawCtxSelectedSealConsumer.sealing c writer pending) before)) :
     (result = none ∧ after = before) ∨
@@ -119,7 +119,7 @@ theorem sealing_provenance (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer
     (supported : (result, after) ∈ support (monitor (RawCtxSelectedSealConsumer.sealing c writer pending) before))
     (entry : CtxSuccessfulSeal) (found : entry ∈ after.seals) :
     entry ∈ before.seals ∨
-      ∃ (nonce : NonceOutput) (width : pending.context.associatedData.length = 153) (record : CtxRomRecord),
+      ∃ (nonce : NonceOutput) (width : pending.context.associatedData.length = 281) (record : CtxRomRecord),
         pending.material = .hidden nonce ∧ entry = ⟨selectedInput nonce pending.sequence pending.context width, record⟩ ∧
         result = some ((writer ⟨pending.sequence, pending.context.senderId, record.encode⟩).map
           (RawCtxInterpretedArguments.encrypted (RawCtxInterpretedArguments.sealArguments pending))) ∧
@@ -134,7 +134,7 @@ theorem sealing_provenance (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer
     have unchanged := monitor_seals (RawCtxSelectedSealConsumer.sealing c writer pending) noSeals before (result, after) supported
     exact Or.inl (unchanged ▸ found)
   | hidden nonce =>
-    by_cases width : pending.context.associatedData.length = 153
+    by_cases width : pending.context.associatedData.length = 281
     · rcases sealing_selected c writer pending nonce material width before after result supported with
         ⟨_, unchanged⟩ | ⟨record, published, history⟩
       · exact Or.inl (unchanged ▸ found)
@@ -181,7 +181,7 @@ theorem send_provenance (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
       ∃ pending, RawCtxInterpretedSend.normalBegin kernel context = .requested pending ∧
         let ready := RawCtxInterpretedSend.ready pending
           (RawCtxSelectedSendCompiler.deriveValue prior parent target nonce next pending.request)
-        ∃ (actualNonce : NonceOutput) (width : ready.context.associatedData.length = 153) (record : CtxRomRecord),
+        ∃ (actualNonce : NonceOutput) (width : ready.context.associatedData.length = 281) (record : CtxRomRecord),
           ready.material = .hidden actualNonce ∧ entry = ⟨selectedInput actualNonce ready.sequence ready.context width, record⟩ ∧
           result = some (ready.advanced, (writer ⟨ready.sequence, ready.context.senderId, record.encode⟩).map
             (RawCtxInterpretedArguments.encrypted (RawCtxInterpretedArguments.sealArguments ready))) ∧
@@ -210,7 +210,7 @@ theorem send_provenance (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
 /-- A match against a produced seal fixes exactly the nonce, authenticated AD, sequence, encoded sender and protected payload. It supplies no installation/session identity or caller target-ID equality. -/
 theorem full_tuple_fields (target : CtxUnclaimedAcceptance.Target) (nonce : NonceOutput)
     (sequence : Std.U64) (context : RawCtxSourceSend.SealContext)
-    (width : context.associatedData.length = 153) (record : CtxRomRecord)
+    (width : context.associatedData.length = 281) (record : CtxRomRecord)
     (same : target.toLegacy.sameFullTupleAsSuccessfulSeal ⟨selectedInput nonce sequence context width, record⟩) :
     target.nonce = nonce ∧ target.context.ad.bytes = context.associatedData ∧
       target.context.ad.seq = sequence.val ∧ target.context.ad.sid = context.senderId.val ∧
@@ -223,14 +223,14 @@ theorem full_tuple_fields (target : CtxUnclaimedAcceptance.Target) (nonce : Nonc
 /-- Mathematical source instrumentation retains the actual typed cryptographic production together with the unchanged optional writer. The selected key is an interpreter parameter here. -/
 noncomputable def production (c : Pqxdh.Crypto) (key : RootOutput) (writer : RawCtxMixedShared.Writer)
     (nonce : NonceOutput) (sequence : Std.U64) (context : RawCtxSourceSend.SealContext)
-    (width : context.associatedData.length = 153) : OracleComp CtxRO (CtxRomRecord × Option Pqxdh.Bytes) := do
+    (width : context.associatedData.length = 281) : OracleComp CtxRO (CtxRomRecord × Option Pqxdh.Bytes) := do
   let record ← ctxSeal c key (selectedInput nonce sequence context width)
   pure (record, writer ⟨sequence, context.senderId, record.encode⟩)
 
 /-- Erasing only the produced-record annotation is exactly the actual native source seal and writer, before arbitrary shared-ROM interpretation and continuation. -/
 theorem production_source (c : Pqxdh.Crypto) (key : RootOutput) (writer : RawCtxMixedShared.Writer)
     (nonce : NonceOutput) (sequence : Std.U64) (context : RawCtxSourceSend.SealContext)
-    (width : context.associatedData.length = 153) :
+    (width : context.associatedData.length = 281) :
     Prod.snd <$> production c key writer nonce sequence context width =
       simulateQ (RawCtxCanonicalSeal.romAdapter c writer)
         (RawCtxSourceSeal.sealInput (selectedNative key nonce sequence context)) := by

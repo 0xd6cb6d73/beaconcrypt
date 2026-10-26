@@ -6,7 +6,7 @@ import BeaconcryptCore.Computational.VCVioForwardOracleComp
 /-!
 # VCVio computational-proof feasibility probe
 
-This module records two framework feasibility probes. The first instantiates VCVio's tight and collision-resistance-chain bounded random-oracle commitment theorems with the exact 229-byte transcript width emitted by Aeneas and a 512-bit digest. The second links a public handler to a private consuming-key interface and checks exact one- and two-call observations and final states.
+This module records two framework feasibility probes. The first instantiates VCVio's tight and collision-resistance-chain bounded random-oracle commitment theorems with the exact 357-byte transcript width emitted by Aeneas and a 512-bit digest. The second links a public handler to a private consuming-key interface and checks exact one- and two-call observations and final states.
 
 The CTX theorems here remain a generic numerical ROM pilot. `BeaconcryptCore.Computational.CtxReduction` separately defines the real ideal-model raw-payload event and proves its factor-one standard-model reduction without using this generic binding game. Connecting this ROM pilot to that event would require an oracle-parametric verifier, while connecting either ideal surface to production still requires the extracted transcript and adapter hash refinement. Treating deployed BLAKE2b-512 as the random oracle in this module is an idealization, not a proof about the primitive.
 
@@ -21,7 +21,7 @@ namespace BeaconcryptCore.Computational.VCVioFeasibility
 /-! ## Production-shaped generic commitment collision game -/
 
 /-- The exact fixed-width byte type stored by Aeneas's extracted production commitment transcript. -/
-abbrev CtxTranscript := Aeneas.Std.Array Aeneas.Std.U8 229#usize
+abbrev CtxTranscript := Aeneas.Std.Array Aeneas.Std.U8 357#usize
 
 instance : DecidableEq CtxTranscript := fun left right =>
   decidable_of_iff (left.val = right.val) Subtype.ext_iff.symm
@@ -33,7 +33,7 @@ local instance : Finite Aeneas.Std.U8 :=
     rfl)
 
 local instance : Finite CtxTranscript := by
-  change Finite (List.Vector Aeneas.Std.U8 229)
+  change Finite (List.Vector Aeneas.Std.U8 357)
   infer_instance
 
 /-- The output width of production BLAKE2b-512. -/

@@ -52,7 +52,7 @@ theorem beaconWrongSequenceSuccess_implies_blake2b_collision
     { h.response.appFrame with seq := claim.sequence } hwin
   rcases hadmitted with ⟨hkey, hnonzero, pt, hopen⟩
   simp only [Pqxdh.HonestRun.response, Pqxdh.HonestRun.frame] at hkey hnonzero hopen
-  have hadLength : h.ad.length = 153 :=
+  have hadLength : h.ad.length = 281 :=
     Pqxdh.assocData_length (h.c.edPub_length h.ikSkS) (h.c.edPub_length h.ikSkB)
   have hsourceWf : Pqxdh.RecordWf (Pqxdh.msgMaterial h.c h.chains.1) h.recordAD := by
     apply Pqxdh.recordWf_msgMaterial
@@ -237,7 +237,7 @@ theorem beaconCrossSessionSuccess_implies_blake2b_collision
   rcases hadmitted with ⟨hkey, hnonzero, pt, hopen⟩
   simp only [BeaconCrossSessionClaim.frame, Pqxdh.HonestRun.response,
     Pqxdh.HonestRun.frame, Nat.reduceSub] at hkey hnonzero hopen
-  have hadLength : h.ad.length = 153 :=
+  have hadLength : h.ad.length = 281 :=
     Pqxdh.assocData_length (h.c.edPub_length h.ikSkS) (h.c.edPub_length h.ikSkB)
   have htargetWf : Pqxdh.RecordWf
       (Ratchet.msgKeyAt (Pqxdh.ratchetCrypto h.c) h.chains.1 0) h.recordAD := by

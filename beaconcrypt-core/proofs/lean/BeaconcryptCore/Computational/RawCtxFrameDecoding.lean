@@ -70,7 +70,7 @@ def validated {Message Root : Type} (reader : Reader Message Root)
 
 /-- Pure payload access and sender validation commute, with the actual native AD width. -/
 theorem sourceFrame_eq_validated {Message Root : Type} (reader : Reader Message Root)
-    (expected : Std.U64) (ad raw : Pqxdh.Bytes) (had : ad.length = 153) :
+    (expected : Std.U64) (ad raw : Pqxdh.Bytes) (had : ad.length = 281) :
     sourceFrame reader expected raw = validated reader expected ad raw := by
   unfold sourceFrame validated decode
   split <;> simp_all only
@@ -213,7 +213,7 @@ noncomputable def sourceReceive {Message Root Metadata : Type} (reader : Reader 
 /-- The complete source prelude feeds exactly the existing owner program and all its private callbacks. -/
 theorem sourceReceive_exact {Message Root Metadata : Type} (reader : Reader Message Root)
     (raw : Pqxdh.Bytes) (state : RawCtxWholeOwner.OwnerState Metadata)
-    (had : state.owner.associatedData.length = 153) :
+    (had : state.owner.associatedData.length = 281) :
     sourceReceive reader raw state = RawCtxWholeOwner.rawReceive (decode reader) raw state := by
   have hframe := sourcePrepared_frame reader state.owner.expectedSender raw
   rw [sourceFrame_eq_validated reader state.owner.expectedSender state.owner.associatedData raw had]
@@ -263,7 +263,7 @@ theorem sourceGame_exact {Message Root Metadata PrimitiveState : Type}
     (impl : QueryImpl RawCtxWholeOwner.PrimitiveSpec (StateT PrimitiveState (OracleComp base)))
     (reader : Reader Message Root) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (primitive : PrimitiveState)
-    (had : state.owner.associatedData.length = 153) :
+    (had : state.owner.associatedData.length = 281) :
     sourceGame impl reader raw state primitive =
       RawCtxWholeOwner.rawGame impl (decode reader) raw state primitive := by
   simp only [sourceGame, sourceReceive_exact reader raw state had, RawCtxWholeOwner.rawGame]
@@ -275,7 +275,7 @@ theorem sourceGame_ready_slot {Message Root Metadata PrimitiveState : Type}
     (impl : QueryImpl RawCtxWholeOwner.PrimitiveSpec (StateT PrimitiveState (OracleComp base)))
     (reader : Reader Message Root) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (primitive : PrimitiveState)
-    (had : state.owner.associatedData.length = 153) :
+    (had : state.owner.associatedData.length = 281) :
     RawCtxNativeSlot.rawGame impl (decode reader) raw (RawCtxNativeSlot.ready state) primitive =
       (fun result => ((.ok result.1.1, RawCtxNativeSlot.ready result.1.2), result.2)) <$>
         sourceGame impl reader raw state primitive := by

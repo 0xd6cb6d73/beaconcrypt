@@ -36,7 +36,7 @@ variable {KemSK : Type}
 /-! ### The public pins of a transcript -/
 
 /-- The associated data of an owner index admitted by a transcript: the extracted builder's output on the pin the transcript's summary records for that owner and some Beacon identity. -/
-def PinOk (transcript : List Entry) (owner : ℕ) (associatedData : Std.Array Std.U8 153#usize) : Prop :=
+def PinOk (transcript : List Entry) (owner : ℕ) (associatedData : Std.Array Std.U8 281#usize) : Prop :=
   ∃ pin keyId beacon, (summarize transcript).owners[owner]? = some (pin, keyId) ∧
     associatedData = RawCtxServerRouting.associatedArray pin beacon
 
@@ -64,7 +64,7 @@ theorem summarize_owners_extend (transcript : List Entry) (entry : Entry) :
 
 /-- A later transcript admits every associated data an earlier one admits. -/
 theorem pinOk_extend (transcript : List Entry) (entry : Entry) (owner : ℕ)
-    (associatedData : Std.Array Std.U8 153#usize) (ok : PinOk transcript owner associatedData) :
+    (associatedData : Std.Array Std.U8 281#usize) (ok : PinOk transcript owner associatedData) :
     PinOk (transcript ++ [entry]) owner associatedData := by
   obtain ⟨pin, keyId, beacon, found, built⟩ := ok
   obtain ⟨extra, extended⟩ := summarize_owners_extend transcript entry

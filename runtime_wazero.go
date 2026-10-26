@@ -28,7 +28,7 @@ import (
 //go:embed internal/wasm/beaconcrypt.wasm
 var wasmModule []byte
 
-const wasmABIVersion = 1
+const wasmABIVersion = 2
 const wasmMemoryPages = 4096 // 256 MiB per endpoint, including temporary buffers.
 
 type wasmEngine struct {

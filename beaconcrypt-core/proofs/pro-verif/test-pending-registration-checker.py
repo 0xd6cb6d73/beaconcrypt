@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location(
     "pending_checker", Path(__file__).with_name("check-pending-registration.py")
@@ -213,6 +214,46 @@ class PendingTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "exact four-target pending roster"):
             CHECKER.validate_targets(targets)
+
+
+class NativeMovedTokenSourceGate(unittest.TestCase):
+    def test_current_authenticated_token(self):
+        CHECKER.check_source()
+
+    def mutate_source(self, old, new):
+        path = CHECKER.HERE.parents[2] / "beaconcrypt/src/server.rs"
+        original = Path.read_text
+        source = original(path)
+        self.assertEqual(source.count(old), 1)
+        changed = source.replace(old, new, 1)
+
+        def read_text(candidate, *args, **kwargs):
+            if candidate == path:
+                return changed
+            return original(candidate, *args, **kwargs)
+
+        with patch.object(Path, "read_text", read_text):
+            with self.assertRaises(ValueError):
+                CHECKER.check_source()
+
+    def test_private_auth_context_moves_with_token(self):
+        self.mutate_source(
+            "control: pending,\n\t\t\tauthentication,\n\t\t} = reg_out;",
+            "control: pending,\n\t\t} = reg_out;",
+        )
+
+    def test_token_server_key_binding_preserved(self):
+        self.mutate_source(
+            "if auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
+            "if false && auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
+        )
+
+    def test_size_preflight_stays_before_token_move(self):
+        self.mutate_source(
+            "registration_response_len(plaintext.len(), next_key_id)?;",
+            "let RegistrationOutput { derived_secret, control: pending, authentication, } = reg_out;\n"
+            "\t\tregistration_response_len(plaintext.len(), next_key_id)?;",
+        )
 
 
 if __name__ == "__main__":

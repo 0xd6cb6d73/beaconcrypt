@@ -173,18 +173,18 @@ theorem array_of_bytes (n : Std.Usize) (bytes : Pqxdh.Bytes) (width : bytes.leng
   ⟨⟨bytes.map concreteByte, by simp [width]⟩, by
     simp [absBytes, List.map_map, Function.comp_def, absByte_concreteByte]⟩
 
-/-- B6 (build_commitment_transcript): whenever the hand-written sealing or opening path reaches its hash call (153-byte associated data, 16-byte tag), the hashed bytes are exactly the output of the extracted 229-byte commitment transcript builder on representing arrays. -/
+/-- B6 (build_commitment_transcript): whenever the hand-written sealing or opening path reaches its hash call (281-byte associated data, 16-byte tag), the hashed bytes are exactly the output of the extracted 357-byte commitment transcript builder on representing arrays. -/
 def CommitmentTranscriptBridge : Prop :=
   (∀ (input : RawCtxSourceSend.SealInput) (tagBytes : Pqxdh.Bytes),
-    input.context.associatedData.length = 153 → tagBytes.length = 16 →
-    ∃ (ad : Std.Array Std.U8 153#usize) (tag : Std.Array Std.U8 16#usize) (transcript : _),
+    input.context.associatedData.length = 281 → tagBytes.length = 16 →
+    ∃ (ad : Std.Array Std.U8 281#usize) (tag : Std.Array Std.U8 16#usize) (transcript : _),
       absBytes ad = input.context.associatedData ∧ absBytes tag = tagBytes ∧
       commitment.build_commitment_transcript input.material.key.bytes input.material.nonce.bytes ad tag
         input.sequence input.context.senderId = ok transcript ∧
       absBytes transcript.bytes = RawCtxSourceSeal.hashInput input tagBytes) ∧
   (∀ (input : RawCtxWholeOwner.OpenInput) (slices : RawCtxFrameDecoding.Slices),
-    input.context.associatedData.length = 153 → slices.tag.length = 16 →
-    ∃ (ad : Std.Array Std.U8 153#usize) (tag : Std.Array Std.U8 16#usize) (transcript : _),
+    input.context.associatedData.length = 281 → slices.tag.length = 16 →
+    ∃ (ad : Std.Array Std.U8 281#usize) (tag : Std.Array Std.U8 16#usize) (transcript : _),
       absBytes ad = input.context.associatedData ∧ absBytes tag = slices.tag ∧
       commitment.build_commitment_transcript input.material.key.bytes input.material.nonce.bytes ad tag
         input.sequence input.context.frame.sender = ok transcript ∧
@@ -194,13 +194,13 @@ def CommitmentTranscriptBridge : Prop :=
 theorem commitment_transcript_bridge : CommitmentTranscriptBridge := by
   constructor
   · intro input tagBytes adWidth tagWidth
-    obtain ⟨ad, adBytes⟩ := array_of_bytes 153#usize _ (by simpa using adWidth)
+    obtain ⟨ad, adBytes⟩ := array_of_bytes 281#usize _ (by simpa using adWidth)
     obtain ⟨tag, tagArray⟩ := array_of_bytes 16#usize tagBytes (by simpa using tagWidth)
     obtain ⟨transcript, built, bytes⟩ :=
       RawCtxSourceSeal.hashInput_extracted input tagBytes ad tag adBytes tagArray
     exact ⟨ad, tag, transcript, adBytes, tagArray, built, bytes⟩
   · intro input slices adWidth tagWidth
-    obtain ⟨ad, adBytes⟩ := array_of_bytes 153#usize _ (by simpa using adWidth)
+    obtain ⟨ad, adBytes⟩ := array_of_bytes 281#usize _ (by simpa using adWidth)
     obtain ⟨tag, tagArray⟩ := array_of_bytes 16#usize slices.tag (by simpa using tagWidth)
     obtain ⟨transcript, built, bytes⟩ :=
       RawCtxSourceOpen.hashInput_extracted input slices ad tag adBytes tagArray
@@ -223,7 +223,7 @@ theorem send_finish_bridge : SendFinishBridge :=
 
 /-- B8 (OpenFrameContext.from_frame): on every represented payload the extracted payload admission and its three slices equal the hand-written splitter, and every payload no longer than the native size bound is represented by a slice. -/
 def FramePayloadBridge : Prop :=
-  (∀ (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize) (sender : Std.U64),
+  (∀ (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize) (sender : Std.U64),
     (RawCtxNativeFramePrelude.projectOption RawCtxNativeFramePrelude.contextSlices <$>
         record.OpenFrameContext.from_frame payload ad sender) =
       ok (RawCtxFrameDecoding.fromPayload (RawCtxNativeFramePrelude.sliceBytes payload))) ∧

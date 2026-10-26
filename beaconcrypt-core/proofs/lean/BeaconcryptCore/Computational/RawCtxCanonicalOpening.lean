@@ -23,7 +23,7 @@ open RawCtxSourceOpen
 noncomputable def selectedTarget (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices)
     (hslices : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (had : input.context.associatedData.length = 153) : CtxUnclaimedAcceptance.Target :=
+    (had : input.context.associatedData.length = 281) : CtxUnclaimedAcceptance.Target :=
   ⟨sourceNonce input, sourceContext input had, sourceRecord input slices hslices⟩
 
 /-- The actual source typed opening invokes the canonical optional opening on the same digest. -/
@@ -51,7 +51,7 @@ noncomputable def sourceOpening (c : Pqxdh.Crypto) (input : RawCtxWholeOwner.Ope
 theorem sourceOpening_canonical (c : Pqxdh.Crypto) (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices)
     (hslices : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (had : input.context.associatedData.length = 153)
+    (had : input.context.associatedData.length = 281)
     (decode : RawDecoder) (state : CanonicalState)
     (hdecode : decode input.context.raw = some (selectedTarget input slices hslices had)) :
     sourceOpening c input (selectedTarget input slices hslices had) state =
@@ -118,7 +118,7 @@ theorem sourceOpening_selected (c : Pqxdh.Crypto) (input : RawCtxWholeOwner.Open
 theorem sourceOpening_continuation {Result : Type} (c : Pqxdh.Crypto)
     (input : RawCtxWholeOwner.OpenInput) (slices : RawCtxFrameDecoding.Slices)
     (hslices : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (had : input.context.associatedData.length = 153) (decode : RawDecoder) (state : CanonicalState)
+    (had : input.context.associatedData.length = 281) (decode : RawDecoder) (state : CanonicalState)
     (hdecode : decode input.context.raw = some (selectedTarget input slices hslices had))
     (next : Option Pqxdh.Bytes × CanonicalState → ProbComp Result) :
     (sourceOpening c input (selectedTarget input slices hslices had) state >>= next) =
@@ -144,7 +144,7 @@ theorem canonicalRaw_uniform (decode : RawDecoder) (c : Pqxdh.Crypto) (key : Ctx
 theorem selectedTarget_fields (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices)
     (hslices : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (had : input.context.associatedData.length = 153) :
+    (had : input.context.associatedData.length = 281) :
     let target := selectedTarget input slices hslices had
     target.nonce.toList = (BeaconcryptCore.Refinement.RepresentationBridge.absMaterial input.material).2 ∧
       target.context.ad.bytes = input.context.associatedData ∧
@@ -161,7 +161,7 @@ theorem sourceOpening_interpretation {PrimitiveState : Type} {ι : Type} {base :
     (c : Pqxdh.Crypto) (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices)
     (hslices : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (had : input.context.associatedData.length = 153) (primitive : PrimitiveState) :
+    (had : input.context.associatedData.length = 281) (primitive : PrimitiveState) :
     (simulateQ impl (simulateQ (romAdapter c) (openInput input))).run primitive =
       (simulateQ impl (do
         let target := selectedTarget input slices hslices had
@@ -181,7 +181,7 @@ theorem sourceOpening_cache_projection (c : Pqxdh.Crypto) (input : RawCtxWholeOw
 theorem sourceOpening_uniform (c : Pqxdh.Crypto) (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices)
     (hslices : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (had : input.context.associatedData.length = 153) (state : CanonicalState) :
+    (had : input.context.associatedData.length = 281) (state : CanonicalState) :
     (sourceOpening c input (selectedTarget input slices hslices had) state).IsTotalQueryBound 64 := by
   rw [sourceOpening_canonical c input slices hslices had
     (fun _ => some (selectedTarget input slices hslices had)) state rfl]

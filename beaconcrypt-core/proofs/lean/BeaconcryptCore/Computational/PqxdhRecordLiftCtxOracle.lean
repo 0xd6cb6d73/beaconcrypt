@@ -342,7 +342,7 @@ theorem opening_with_nonces (setup : PqxdhServerAuthExperiment.Setup baseSpec Ke
 /-- Only a selected valid-width seal changes this ghost history; the change precedes the caller's writer result. -/
 noncomputable def sealNonces (masked : Mask Slot) (pending : LabeledSeal Slot RawCtxSourceSend.SealContext)
     (used : List CtxNonce) : List CtxNonce :=
-  if pending.context.associatedData.length = 153 then
+  if pending.context.associatedData.length = 281 then
     match materialRoute masked pending.material with
     | .hidden nonce => if nonce ∈ used then used else nonce :: used
     | .known _ => used
@@ -356,7 +356,7 @@ theorem sealing_nonces (crypto : Pqxdh.Crypto) (writer : RawCtxMixedShared.Write
     (supported : result ∈ support ((simulateQ (sourceImpl true decode crypto key)
       ((sealingService crypto writer masked pending).run.run frames)).run before)) :
     result.2.selected.1.usedNonces = sealNonces masked pending before.selected.1.usedNonces := by
-  by_cases width : pending.context.associatedData.length = 153
+  by_cases width : pending.context.associatedData.length = 281
   · cases routed : materialRoute masked pending.material with
     | known material =>
         have bill := (sealingService_bills crypto writer masked pending frames).2
@@ -456,7 +456,7 @@ noncomputable def interpreter (slot : Nat) (source : PqxdhJointKdfGame.FixedHkdf
 /-- The source comparator stops exactly before a repeated selected valid-width seal; caller-known aliases carry no nonce restriction. -/
 noncomputable def Refused (masked : Mask Slot) (pending : LabeledSeal Slot RawCtxSourceSend.SealContext)
     (used : List CtxNonce) : Prop :=
-  pending.context.associatedData.length = 153 ∧
+  pending.context.associatedData.length = 281 ∧
     ∃ nonce, materialRoute masked pending.material = .hidden nonce ∧ nonce ∈ used
 
 open Classical in
@@ -536,7 +536,7 @@ theorem interpreter_source (setup : PqxdhServerAuthExperiment.Setup baseSpec Kem
       have stopped : Refused masked pending before.selected.1.usedNonces := ⟨width, nonce, selected, used⟩
       simp only [map_pure, nativeInterpreter, ExceptT.mk, StateT.run, stopped, ite_true, projectResult, project]
     · have fresh : ∀ nonce, materialRoute masked pending.material = .hidden nonce →
-          pending.context.associatedData.length = 153 → nonce ∉ before.selected.1.usedNonces := by
+          pending.context.associatedData.length = 281 → nonce ∉ before.selected.1.usedNonces := by
         intro nonce selected width used
         exact refused ⟨width, nonce, selected, used⟩
       have sealed := sealingService_source setup codec (RawCtxUniversalDecoder.decoder codec.frameRead)

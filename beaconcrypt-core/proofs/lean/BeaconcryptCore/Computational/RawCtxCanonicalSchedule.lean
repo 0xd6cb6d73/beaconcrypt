@@ -37,7 +37,7 @@ noncomputable def recordOpening (input : RawCtxWholeOwner.OpenInput)
   match hslices : RawCtxFrameDecoding.fromPayload input.context.frame.payload with
   | none => withCache state cache
   | some slices =>
-      if had : input.context.associatedData.length = 153 then
+      if had : input.context.associatedData.length = 281 then
         afterOpening state (selectedTarget input slices hslices had) cache
       else withCache state cache
 
@@ -127,7 +127,7 @@ noncomputable def canonicalImpl {Auxiliary : Type} (c : Pqxdh.Crypto)
 theorem recordOpening_selected (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices)
     (hslices : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (had : input.context.associatedData.length = 153)
+    (had : input.context.associatedData.length = 281)
     (state : CanonicalState) (cache : CtxRO.QueryCache) :
     recordOpening input state cache = afterOpening state (selectedTarget input slices hslices had) cache := by
   unfold recordOpening

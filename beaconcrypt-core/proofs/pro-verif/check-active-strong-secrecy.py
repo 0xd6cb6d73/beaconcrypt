@@ -10,7 +10,6 @@ The source adapters and computational plaintext oracle have separate obligations
 import argparse
 from datetime import datetime, timezone
 from dataclasses import dataclass
-import fcntl
 import hashlib
 import importlib.util
 import json
@@ -284,6 +283,8 @@ def main():
         print(f"active strong-secrecy manifest: {len(TARGETS)} targets checked")
         return
     targets = [t for t in TARGETS if args.target is None or t.name in args.target]
+    import fcntl
+
     args.lock.parent.mkdir(parents=True, exist_ok=True)
     with args.lock.open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)

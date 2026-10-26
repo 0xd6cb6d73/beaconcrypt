@@ -48,7 +48,7 @@ noncomputable def openingBad (target : Label n) (decode : RawDecoder)
           (PqxdhRecordLiftChainTable.chain (PqxdhRecordLiftProtocol.cachedSeeds state.base) state.base.chain) pending) with
     | none => false
     | some input =>
-      if width : input.context.associatedData.length = 153 then
+      if width : input.context.associatedData.length = 281 then
         rawBad target decode input.material
           (RawCtxUniversalDecoder.pack (RawCtxUniversalDecoder.envelope
             (PqxdhRecordLiftIdeal.materialAt state.base.chain input.material).2 input.context width)) state

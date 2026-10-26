@@ -44,7 +44,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 
 /-- Production form of `PqxdhDeploymentHeadlineDctClosed.ce_a1_linked_dct` (frozen: `PqxdhDeploymentHeadlineGap.ce_a1_linked` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_a1_linked_dct (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : PqxdhServerAuthSourceCosts.KemCaps)
     (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
@@ -103,7 +103,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 
 /-- Production form of `PqxdhDeploymentHeadlineDctClosed.sym_gap_dct` (frozen: `PqxdhDeploymentHeadlineGap.sym_gap` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem sym_gap_dct (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : PqxdhServerAuthSourceCosts.KemCaps)
     (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
@@ -175,7 +175,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosed.ce_or_s2b_sym_dct` (frozen: `PqxdhDeploymentHeadlineSymbolic.ce_or_s2b_sym` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_or_s2b_sym_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -266,7 +266,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosed.ce_uks_sym_dct` (frozen: `PqxdhDeploymentHeadlineSymbolic.ce_uks_sym` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_uks_sym_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -357,7 +357,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosed.ce_app_sym_dct` (frozen: `PqxdhDeploymentHeadlineSymbolic.ce_app_sym` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_app_sym_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -450,7 +450,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosed.ce_kt_sym_dct` (frozen: `PqxdhDeploymentHeadlineSymbolic.ce_kt_sym` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_kt_sym_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -538,7 +538,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosed.ce_app_beacon_sym_dct` (frozen: `PqxdhDeploymentHeadlineSymbolic.ce_app_beacon_sym` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_app_beacon_sym_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -624,7 +624,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosed.ce_kt_beacon_sym_dct` (frozen: `PqxdhDeploymentHeadlineSymbolic.ce_kt_beacon_sym` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_kt_beacon_sym_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -701,7 +701,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 
 /-- Production form of `PqxdhDeploymentHeadlineDctClosed.symbolic_lor_dct` (frozen: `PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_dct (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -790,7 +790,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosed.symbolic_lor_bound_dct` (frozen: `PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_bound` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_bound_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -902,7 +902,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosed.ce_or_injective_s2b_dct` (frozen: `PqxdhDeploymentHeadlineInjective.ce_or_injective_s2b` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_or_injective_s2b_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -988,7 +988,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosed.ce_or_injective_s2b_full_dct` (frozen: `PqxdhDeploymentHeadlineInjective.ce_or_injective_s2b_full` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_or_injective_s2b_full_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -1107,7 +1107,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_or_s2b_sym_closed_dct` (frozen: `PqxdhDeploymentHeadlineCtClosed.ce_or_s2b_sym_closed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_or_s2b_sym_closed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -1219,7 +1219,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_or_s2b_sym_closed_billed_dct` (frozen: `PqxdhDeploymentHeadlineCtClosed.ce_or_s2b_sym_closed_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_or_s2b_sym_closed_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -1338,7 +1338,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_uks_sym_closed_dct` (frozen: `PqxdhDeploymentHeadlineCtClosed.ce_uks_sym_closed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_uks_sym_closed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -1450,7 +1450,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_uks_sym_closed_billed_dct` (frozen: `PqxdhDeploymentHeadlineCtClosed.ce_uks_sym_closed_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_uks_sym_closed_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -1569,7 +1569,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.symbolic_lor_closed_dct` (frozen: `PqxdhDeploymentHeadlineCtClosed.symbolic_lor_closed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_closed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -1682,7 +1682,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.symbolic_lor_bound_closed_dct` (frozen: `PqxdhDeploymentHeadlineCtClosed.symbolic_lor_bound_closed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_bound_closed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -1826,7 +1826,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.symbolic_lor_bound_closed_billed_dct` (frozen: `PqxdhDeploymentHeadlineCtClosed.symbolic_lor_bound_closed_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_bound_closed_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -1981,7 +1981,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_closed_dct` (frozen: `PqxdhDeploymentHeadlineCtClosed.ce_or_injective_s2b_closed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_or_injective_s2b_closed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -2099,7 +2099,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_closed_billed_dct` (frozen: `PqxdhDeploymentHeadlineCtClosed.ce_or_injective_s2b_closed_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_or_injective_s2b_closed_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -2225,7 +2225,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_full_closed_dct` (frozen: `PqxdhDeploymentHeadlineCtClosed.ce_or_injective_s2b_full_closed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_or_injective_s2b_full_closed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -2343,7 +2343,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_full_closed_billed_dct` (frozen: `PqxdhDeploymentHeadlineCtClosed.ce_or_injective_s2b_full_closed_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_or_injective_s2b_full_closed_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -2497,7 +2497,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_or_s2b_sym_billed_dct` (frozen: `PqxdhDeploymentHeadlineGated.ce_or_s2b_sym_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_or_s2b_sym_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -2644,7 +2644,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_uks_sym_billed_dct` (frozen: `PqxdhDeploymentHeadlineGated.ce_uks_sym_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_uks_sym_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -2791,7 +2791,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_app_beacon_sym_billed_dct` (frozen: `PqxdhDeploymentHeadlineGated.ce_app_beacon_sym_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_app_beacon_sym_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -2933,7 +2933,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_app_sym_billed_dct` (frozen: `PqxdhDeploymentHeadlineGated.ce_app_sym_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_app_sym_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -3085,7 +3085,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.symbolic_lor_bound_billed_dct` (frozen: `PqxdhDeploymentHeadlineGated.symbolic_lor_bound_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_bound_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -3268,7 +3268,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_billed_dct` (frozen: `PqxdhDeploymentHeadlineGated.ce_or_injective_s2b_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_or_injective_s2b_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -3422,7 +3422,7 @@ open Classical in
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_full_billed_dct` (frozen: `PqxdhDeploymentHeadlineGated.ce_or_injective_s2b_full_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_or_injective_s2b_full_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -3517,7 +3517,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLater.ce_app_later_sym_dct` (frozen: `PqxdhDeploymentLaterHeadlineSymbolic.ce_app_later_sym` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_app_later_sym_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -3602,7 +3602,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLater.ce_app_beacon_later_sym_dct` (frozen: `PqxdhDeploymentLaterHeadlineSymbolic.ce_app_beacon_later_sym` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_app_beacon_later_sym_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -3680,7 +3680,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLater.ce_kt_later_sym_dct` (frozen: `PqxdhDeploymentLaterHeadlineSymbolic.ce_kt_later_sym` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_kt_later_sym_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -3756,7 +3756,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct` (frozen: `PqxdhDeploymentLaterHeadlineSymbolic.ce_kt_beacon_later_sym` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_kt_beacon_later_sym_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -3829,7 +3829,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLater.symbolic_lor_later_dct` (frozen: `PqxdhDeploymentLaterHeadlineSymbolicLor.symbolic_lor_later` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_later_dct (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -3913,7 +3913,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLater.symbolic_lor_later_bound_dct` (frozen: `PqxdhDeploymentLaterHeadlineSymbolicLor.symbolic_lor_later_bound` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_later_bound_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -4060,7 +4060,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct` (frozen: `PqxdhDeploymentLaterHeadlineGated.ce_app_later_sym_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_app_later_sym_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -4190,7 +4190,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct_full` (frozen: `ce_app_later_sym_billed_dct` together with `PqxdhDeploymentHeadlineBillsFull.TargetBills` at mode `.P` and adversary `first`, the bills of the attackers behind the KEM and slot reductions of its `epsCt` term (the second conjunct of `PqxdhDeploymentHeadlineDctWorld.ctgap_term_billed`, proved by `PqxdhDeploymentHeadlineBillsFull.target_bills`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_app_later_sym_billed_dct_full (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -4323,7 +4323,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_beacon_later_sym_billed_dct` (frozen: `PqxdhDeploymentLaterHeadlineGated.ce_app_beacon_later_sym_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_app_beacon_later_sym_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -4443,7 +4443,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_beacon_later_sym_billed_dct_full` (frozen: `ce_app_beacon_later_sym_billed_dct` together with `PqxdhDeploymentHeadlineBillsFull.TargetBills` at mode `.P` and adversary `first`, the bills of the attackers behind the KEM and slot reductions of its `epsCt` term (the second conjunct of `PqxdhDeploymentHeadlineDctWorld.ctgap_term_billed`, proved by `PqxdhDeploymentHeadlineBillsFull.target_bills`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_app_beacon_later_sym_billed_dct_full (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -4566,7 +4566,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_billed_dct` (frozen: `PqxdhDeploymentLaterHeadlineGated.symbolic_lor_later_bound_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_later_bound_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -4723,7 +4723,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_billed_dct_full` (frozen: `symbolic_lor_later_bound_billed_dct` together with `PqxdhDeploymentHeadlineBillsFull.TargetBills` at mode `.P` and adversary `first`, the bills of the attackers behind the KEM and slot reductions of its `epsCt` term (the second conjunct of `PqxdhDeploymentHeadlineDctWorld.ctgap_term_billed`, proved by `PqxdhDeploymentHeadlineBillsFull.target_bills`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_later_bound_billed_dct_full (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -4853,7 +4853,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_closed_dct` (frozen: `PqxdhDeploymentLaterHeadlineClosed.symbolic_lor_later_closed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_later_closed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -4936,7 +4936,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_closed_dct` (frozen: `PqxdhDeploymentLaterHeadlineClosed.symbolic_lor_later_bound_closed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_later_bound_closed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -5052,7 +5052,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_closed_billed_dct` (frozen: `PqxdhDeploymentLaterHeadlineClosed.symbolic_lor_later_bound_closed_billed` with the explicit ciphertext-gap term `ctGapTerm` replaced by `epsCt` (`PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_later_bound_closed_billed_dct (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -5179,7 +5179,7 @@ open PqxdhDeploymentHeadlineDctEvent (epsCt)
 /-- Production form of `PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_closed_billed_dct_full` (frozen: `symbolic_lor_later_bound_closed_billed_dct` together with `PqxdhDeploymentHeadlineBillsFull.TargetBills` at mode `.P` and adversary `first`, the bills of the attackers behind the KEM and slot reductions of its `epsCt` term (the second conjunct of `PqxdhDeploymentHeadlineDctWorld.ctgap_term_billed`, proved by `PqxdhDeploymentHeadlineBillsFull.target_bills`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the LQ-F experiment (`PqxdhDeploymentLaterServerGame.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the LQ-F source game `PqxdhBoundaryDeploymentLater.laterSourceGame` (`PqxdhDeploymentProductionTransfer.chance_later`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem symbolic_lor_later_bound_closed_billed_dct_full (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -5297,7 +5297,7 @@ open PqxdhDeploymentHeadlineDctHash (CtxColl)
 
 /-- Production form of `PqxdhDeploymentHeadlineDctWorld.ctgap_term_le` (frozen: the explicit ciphertext-gap term of the frozen headlines is at most `epsCt` (`ctgap_term_world`, then `ctgap_world` at each target)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. The left side `ctGapTerm` of the frozen statement is unfolded to its definition (the probability of `ctGapEvent` on the CE experiment) before it is moved. -/
 theorem ctgap_term_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (phase1 : Phase1ReadBack codec)
     (phase2 : Phase2ReadBack codec) (frameBack : FrameReadBack (PqxdhBoundaryRecordPrelude.withReader codec reader))
@@ -5335,7 +5335,7 @@ open PqxdhDeploymentHeadlineDctHash (CtxColl)
 
 /-- Production form of `PqxdhDeploymentHeadlineDctWorld.ctgap_term_billed` (frozen: `ctgap_term_le` with the bills of every reduction of `epsCt` (`PqxdhDeploymentHeadlineBillsFull.target_bills`, whose KEM and slot fields are quantified over every event and claim, so they bill the KEM and slot losses at `(ctGapNamed, ctClaim)`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); everything else in the conclusion (the closing term `epsCt`, every other term and every bills conjunct) is the frozen text at the production codec and route. The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. The left side `ctGapTerm` of the frozen statement is unfolded to its definition (the probability of `ctGapEvent` on the CE experiment) before it is moved. -/
 theorem ctgap_term_billed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (phase1 : Phase1ReadBack codec)
     (phase2 : Phase2ReadBack codec) (frameBack : FrameReadBack (PqxdhBoundaryRecordPrelude.withReader codec reader))

@@ -4,6 +4,9 @@
 
 This is a source tripwire and exhaustive phase-table comparison, not a Rust
 compiler proof, a primitive representation proof, or a compromise theorem.
+The table covers the four named classical/KEM fields, not all secret material.
+ML-DSA identities are private adapter state; only their public keys and public
+key fingerprints have new getters. See doc/impl/mldsa-source-pins.md.
 """
 
 import argparse
@@ -27,13 +30,13 @@ FIELDS = {
 # Filled with reviewed complete source files, including lifecycle and adapter
 # visibility. Any change requires re-review, even outside a getter body.
 SOURCE_SHA256 = {
-    "beaconcrypt/src/beacon.rs": "b07624435c15761d86749064cd6fd30f6a0fefcd246b485f0be80dee79d24698",
-    "beaconcrypt/src/server.rs": "bede4addf22f32ead26815a2680aac04312b782d3449ccb931a9635433e9ab72",
-    "beaconcrypt/src/ratchet.rs": "89e313030c12de769b7d54288b45a5e300550af330359cbb5b0c6d4ff3d2956b",
-    "beaconcrypt/src/shared.rs": "0592ebe52fcdcd444f1ed92a30c693d84733ec7248c997382e0a498b9cfd3396",
-    "beaconcrypt/src/cbinds.rs": "ca4057bda70356e0c99d2f6ec97dd11fa6e00a37866fc0d2dc8d0a12ff2292a5",
-    "beaconcrypt/src/pybinds.rs": "ca62f790039f79cee010eb3e02006ca91e94dc38289c29d5fcbe959a428745db",
-    "beaconcrypt/src/lib.rs": "2c6dd54893591629d24844687e55ee3d350927645aa85c28ac5f5670f074469d",
+    "beaconcrypt/src/beacon.rs": "880a240ccfda92565734d31ae3a7e630e988d3e1ff77666579ed31dafd15fd68",
+    "beaconcrypt/src/server.rs": "1cf58484619c712f3970f1bde06789559ee11e3af50430d42c1e3fe41fded706",
+    "beaconcrypt/src/ratchet.rs": "bfe86fc2b5589a706c0513505e6cf9249741654538eabe7d2708c8213baf256b",
+    "beaconcrypt/src/shared.rs": "9100666b1a7f037bb792778cb1433ea9b5b03c715ed3e1c482f7362ff2c3d56e",
+    "beaconcrypt/src/cbinds.rs": "82f6680efb5cc6b145944d9a1c3e6468c3394e2ce3c94876349683d288760c36",
+    "beaconcrypt/src/pybinds.rs": "6dc9a248f6eba84f6bbc6cfdf16d741b45a61ea1428caacf3a4d1302a8b19dce",
+    "beaconcrypt/src/lib.rs": "612958dd4b3e1f4cdab304c5a8d3d95e9c9daa0fe9a2ceaf7490bd1b2bf59270",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointLiveRead.lean": "c3866a86f826c1fdc57bf605f7f47832ce6f88344c747819aaa53af3915b76fb",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOwnership.lean": "b802789bbb7ff115b50464900a759b1405db75e0c2212d5105021043971ceaec",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxProtocolReveals.lean": "452bff899641ed154e7a84110407ca07d828f54f29975b4330cba80bc50f42b8",

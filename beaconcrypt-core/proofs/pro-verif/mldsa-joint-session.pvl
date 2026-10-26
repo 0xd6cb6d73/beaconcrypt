@@ -1,0 +1,290 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Bounded joint registration/record profile under the existing public classical-key-recovery equations.
+   ML-DSA verification and the free BLAKE2b/KDF/ML-KEM/AEAD constructors are explicit ideal assumptions, not algorithmic or computational security proofs.
+   One live honest Beacon emits one bundle and tries one response; two generic Server invocations share one nonrollback replay set with a private token serializing each check and insert and attempt one incoming registration each.
+   Each established endpoint attempts one receive per modeled record direction: Server-to-Beacon sequence2 after registration sequence1, and Beacon-to-Server sequence1.
+   No arbitrary ratchet prefix, skipped-key cache, replay-window state, erasure/forward-secrecy, crash/rollback, ML-key compromise, allocation failure, byte parser, or SDK/compiler refinement is claimed.
+   ProtectedBeacon is a query marker, never an enrollment/admission guard; attacker-owned ML keys, including keys attached to a recovered honest Ed identity, remain admitted.
+   Secret server payloads are selected only after admission for the exact protected ML principal; other registrations use public payloads.
+   No ghost root, session label, plaintext, or event term is ever signed or sent on the network. *)
+
+free mldsa_joint_registration: channel.
+free mldsa_joint_server_records: channel.
+free mldsa_joint_beacon_records: channel.
+free mldsa_joint_public_keys: channel.
+
+free MLDSA_JOINT_INITIAL: bitstring [private].
+free MLDSA_JOINT_SERVER_RECORD: bitstring [private].
+free MLDSA_JOINT_BEACON_RECORD: bitstring [private].
+fun mldsa_joint_owned_initial(): bitstring [data].
+fun mldsa_joint_owned_record(): bitstring [data].
+fun mldsa_joint_lock_token(): bitstring [data].
+fun mldsa_joint_released_token(key_id, beaconcrypt_core__pqxdh__t_RegistrationId): bitstring [data].
+fun mldsa_joint_first_id(): key_id [data].
+fun mldsa_joint_second_id(): key_id [data].
+
+table mldsa_joint_consumed(beaconcrypt_core__pqxdh__t_RegistrationId).
+
+event JointProtectedBeacon(bitstring).
+event JointInitSigned(bitstring, bitstring, bitstring, bitstring).
+event JointInitAccepted(bitstring, bitstring, bitstring, bitstring).
+event JointResponseSigned(bitstring, bitstring, bitstring).
+event JointResponseVerified(bitstring, bitstring, bitstring).
+event JointServerCommitted(bitstring, bitstring, bitstring, bitstring, bitstring, bitstring, key_id, bitstring).
+event JointBeaconCompleted(bitstring, bitstring, bitstring, bitstring, bitstring, bitstring, key_id, bitstring).
+event JointRecordSent(bitstring, bitstring, bitstring, bitstring, bitstring, direction, sequence, key_id, key_id, bitstring).
+event JointRecordReceived(bitstring, bitstring, bitstring, bitstring, bitstring, direction, sequence, key_id, key_id, bitstring).
+event JointHonestComplete().
+event JointServerRecordOpened().
+event JointBeaconRecordOpened().
+event JointOwnedAccepted().
+event JointReplayRejected().
+event JointClassicalRecovered().
+
+(* This passive witness joins two distinct invocation labels at the same actual registration ID and observes that the second consumed the first's released token. Token provenance is proof bookkeeping only: every invocation accepts any token, and replacement tokens have no recursive history. Observation sends run in parallel with protocol continuations, so no network or cache action waits for this monitor. *)
+let MldsaJointReplayWitness(accepted: channel, rejected: channel) =
+  in(accepted, (accepted_slot: key_id, registration_id: beaconcrypt_core__pqxdh__t_RegistrationId));
+  in(rejected, (rejected_slot: key_id, =registration_id,
+    =mldsa_joint_released_token(accepted_slot, registration_id)));
+  if rejected_slot = accepted_slot then 0 else event JointReplayRejected().
+
+letfun mldsa_joint_server_input(
+  server_secret: bitstring, ephemeral_secret: bitstring,
+  beacon_identity: bitstring, prekey: bitstring, one_time: bitstring,
+  pq: bitstring, kem_coins: bitstring
+) =
+  let dh1 = x25519_server_dh(server_secret, prekey) in
+  let dh2 = x25519_server_dh(ephemeral_secret, x25519_public_from_ed(beacon_identity)) in
+  let dh3 = x25519_server_dh(ephemeral_secret, prekey) in
+  let dh4 = x25519_server_dh(ephemeral_secret, one_time) in
+  let kem_secret = mlkem_shared_secret(pq, kem_coins) in
+  beaconcrypt_core__pqxdh__build_root_key_input(
+    beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1, dh2, dh3, dh4, kem_secret)).
+
+letfun mldsa_joint_beacon_input(
+  identity_secret: bitstring, prekey_secret: bitstring, one_time_secret: bitstring,
+  pq_secret: bitstring, server_identity: bitstring, ephemeral: bitstring,
+  kem_ciphertext: bitstring
+) =
+  let kem_secret = mlkem_decapsulate(kem_ciphertext, pq_secret) in
+  let dh1 = x25519_beacon_dh(prekey_secret, x25519_public_from_ed(server_identity)) in
+  let dh2 = x25519_beacon_dh(identity_secret, ephemeral) in
+  let dh3 = x25519_beacon_dh(prekey_secret, ephemeral) in
+  let dh4 = x25519_beacon_dh(one_time_secret, ephemeral) in
+  beaconcrypt_core__pqxdh__build_root_key_input(
+    beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1, dh2, dh3, dh4, kem_secret)).
+
+let MldsaJointServerReceive(
+  agent_ml: bitstring, server_ml: bitstring, init_hash: bitstring,
+  root: bitstring, ad: bitstring, assigned: key_id
+) =
+  in(mldsa_joint_beacon_records, incoming_record: bitstring);
+  let crypto_frame(body, tag, commitment, parsed_sequence, parsed_sender) = incoming_record in
+  if parsed_sender = assigned then
+  if parsed_sequence = first_sequence() then
+  let plaintext = open_frame(ratchet_material(beacon_to_server_chain(root)), ad,
+    first_sequence(), assigned, incoming_record) in
+  event JointRecordReceived(agent_ml, server_ml, init_hash, root, ad, beacon_to_server(),
+    first_sequence(), assigned, SERVER_KEY_ID, plaintext);
+  if plaintext = MLDSA_JOINT_BEACON_RECORD then event JointBeaconRecordOpened().
+
+let MldsaJointServerPublish(
+  server_secret: bitstring, server_ml_secret: bitstring,
+  candidate_ml: bitstring, candidate_ed: bitstring, candidate_hash: bitstring,
+  ephemeral: bitstring, kem_ciphertext: bitstring, root: bitstring,
+  assigned: key_id, initial_plaintext: bitstring, record_plaintext: bitstring
+) =
+  let server_ed = ed_public(server_secret) in
+  let server_ml = mldsa_public(server_ml_secret) in
+  let base_ad = beaconcrypt_core__pqxdh__build_associated_data(server_ed, candidate_ed) in
+  let ad = mldsa_ad(base_ad, server_ml, candidate_ml) in
+  let initial_frame = seal_frame(ratchet_material(server_to_beacon_chain(root)), ad,
+    first_sequence(), SERVER_KEY_ID,
+    registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(key_id_encoding(assigned)),
+      initial_plaintext)) in
+  let raw_initial = mldsa_strip(initial_frame) in
+  let response = mldsa_response_fields(server_ed, ephemeral, kem_ciphertext, raw_initial, assigned) in
+  let response_hash = mldsa_response_hash(candidate_hash, response) in
+  let response_signature = mldsa_sign(mldsa_server_input(response_hash),
+    server_ml_secret, mldsa_signing_context()) in
+  event JointResponseSigned(server_ml, candidate_hash, response);
+  event JointServerCommitted(candidate_ml, server_ml, candidate_hash, response, root, ad,
+    assigned, initial_plaintext);
+  out(mldsa_joint_registration, mldsa_signed_kex_response(response, response_signature));
+  let record_sequence = next_sequence(first_sequence()) in
+  let record_material = ratchet_material(ratchet_next(server_to_beacon_chain(root))) in
+  let record_frame = seal_frame(record_material, ad, record_sequence, SERVER_KEY_ID, record_plaintext) in
+  event JointRecordSent(candidate_ml, server_ml, candidate_hash, root, ad, server_to_beacon(),
+    record_sequence, SERVER_KEY_ID, assigned, record_plaintext);
+  out(mldsa_joint_server_records, record_frame);
+  MldsaJointServerReceive(candidate_ml, server_ml, candidate_hash, root, ad, assigned).
+
+let MldsaJointServer(
+  server_secret: bitstring, server_ml_secret: bitstring,
+  protected_ml: bitstring, protected_ed: bitstring, owned_ml: bitstring,
+  assigned: key_id, replay_lock: channel,
+  accepted_observation: channel, rejected_observation: channel
+) =
+  in(mldsa_joint_registration, incoming: bitstring);
+  let mldsa_signed_init_kex(candidate_init, candidate_ml, candidate_signature) = incoming in
+  let server_ed = ed_public(server_secret) in
+  let server_ml = mldsa_public(server_ml_secret) in
+  (* Hash the original signed field projection; only the outer ML signature is excluded. *)
+  let candidate_hash = mldsa_init_hash(SERVER_KEY_ID, server_ed,
+    candidate_ml, server_ml, candidate_init) in
+  let verified_init_input = mldsa_verify(candidate_signature,
+    candidate_ml, mldsa_signing_context()) in
+  if verified_init_input = mldsa_beacon_input(candidate_hash) then
+  let signed_init_kex(encoded_identity, signed_prekey, signed_one_time, signed_pq) = candidate_init in
+  let tag_ed25519(candidate_ed) = encoded_identity in
+  let tag_mlkem768(candidate_pq) = verify_signature(signed_pq, candidate_ed) in
+  let tag_x25519_prekey(candidate_prekey) = verify_signature(signed_prekey, candidate_ed) in
+  let tag_x25519_one_time(candidate_one_time) = verify_signature(signed_one_time, candidate_ed) in
+  let verified_init = beaconcrypt_core__pqxdh__VerifiedInitKex(candidate_ed,
+    candidate_prekey, candidate_one_time, candidate_pq) in
+  let registration_id = beaconcrypt_core__pqxdh__registration_id(verified_init) in
+  new ephemeral_secret: bitstring;
+  new kem_coins: bitstring;
+  let ephemeral = x25519_public(ephemeral_secret) in
+  let kem_ciphertext = mlkem_ciphertext(candidate_pq, kem_coins) in
+  let root_input = mldsa_joint_server_input(server_secret, ephemeral_secret, candidate_ed,
+    candidate_prekey, candidate_one_time, candidate_pq, kem_coins) in
+  let root = pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)) in
+  (* The SDK inserts only after successful root derivation. Private pure computation is moved before the atomic set check; no primitive-call ordering or timing claim is made. A private token serializes the check and insert, and no failing computation occurs while it is held. Token release runs in parallel with caller continuation, so it never requires another invocation to complete. *)
+  in(replay_lock, lock_token: bitstring);
+  get mldsa_joint_consumed(=registration_id) in
+    (
+      out(replay_lock, mldsa_joint_released_token(assigned, registration_id))
+      | out(rejected_observation, (assigned, registration_id, lock_token))
+    )
+  else
+    insert mldsa_joint_consumed(registration_id);
+    (
+      out(replay_lock, mldsa_joint_released_token(assigned, registration_id))
+      | out(accepted_observation, (assigned, registration_id))
+      |
+      event JointInitAccepted(candidate_ml, server_ml, candidate_hash, candidate_init);
+      (
+      (if candidate_ml = owned_ml then if candidate_ed = protected_ed then event JointOwnedAccepted())
+      |
+      (* This branch selects challenge data after admission; it never rejects another ML key. *)
+      (if candidate_ml = protected_ml then
+        MldsaJointServerPublish(server_secret, server_ml_secret, candidate_ml, candidate_ed,
+          candidate_hash, ephemeral, kem_ciphertext, root, assigned, MLDSA_JOINT_INITIAL, MLDSA_JOINT_SERVER_RECORD)
+      else
+        MldsaJointServerPublish(server_secret, server_ml_secret, candidate_ml, candidate_ed,
+          candidate_hash, ephemeral, kem_ciphertext, root, assigned,
+          mldsa_joint_owned_initial(), mldsa_joint_owned_record()))
+      )
+    ).
+
+let MldsaJointBeacon(
+  server_secret: bitstring, server_ml: bitstring,
+  identity_secret: bitstring, ml_secret: bitstring,
+  prekey_secret: bitstring, one_time_secret: bitstring, pq_secret: bitstring
+) =
+  let server_ed = ed_public(server_secret) in
+  let beacon_ed = ed_public(identity_secret) in
+  let beacon_ml = mldsa_public(ml_secret) in
+  let classical_init = signed_init_kex(tag_ed25519(beacon_ed),
+    sign(tag_x25519_prekey(x25519_public(prekey_secret)), identity_secret),
+    sign(tag_x25519_one_time(x25519_public(one_time_secret)), identity_secret),
+    sign(tag_mlkem768(mlkem_public(pq_secret)), identity_secret)) in
+  let init_hash = mldsa_init_hash(SERVER_KEY_ID, server_ed, beacon_ml, server_ml, classical_init) in
+  let init_signature = mldsa_sign(mldsa_beacon_input(init_hash), ml_secret, mldsa_signing_context()) in
+  event JointInitSigned(beacon_ml, server_ml, init_hash, classical_init);
+  out(mldsa_joint_registration, mldsa_signed_init_kex(classical_init, beacon_ml, init_signature));
+  in(mldsa_joint_registration, incoming_response: bitstring);
+  let mldsa_signed_kex_response(response, response_signature) = incoming_response in
+  let expected_response_hash = mldsa_response_hash(init_hash, response) in
+  let verified_response_input = mldsa_verify(response_signature,
+    server_ml, mldsa_signing_context()) in
+  if verified_response_input = mldsa_server_input(expected_response_hash) then
+  event JointResponseVerified(server_ml, init_hash, response);
+  let mldsa_response_fields(response_ed, ephemeral, kem_ciphertext, raw_initial, assigned) = response in
+  let root_input = mldsa_joint_beacon_input(identity_secret, prekey_secret, one_time_secret,
+    pq_secret, response_ed, ephemeral, kem_ciphertext) in
+  (* Core beacon_prepare_finish checks the pinned Ed identity after DH inputs and before root/KDF/CTX. *)
+  if response_ed = server_ed then
+  let root = pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)) in
+  let base_ad = beaconcrypt_core__pqxdh__build_associated_data(response_ed, beacon_ed) in
+  let ad = mldsa_ad(base_ad, server_ml, beacon_ml) in
+  let initial_frame = mldsa_restore(raw_initial, SERVER_KEY_ID) in
+  let initial_payload = open_frame(ratchet_material(server_to_beacon_chain(root)), ad,
+    first_sequence(), SERVER_KEY_ID, initial_frame) in
+  let expected_binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(key_id_encoding(assigned)) in
+  let registration_payload(=expected_binding, initial_plaintext) = initial_payload in
+  (* The restored frame supplies sequence1 and the pinned Server sender; the assigned binding authenticates the new Beacon sender. *)
+  event JointBeaconCompleted(beacon_ml, server_ml, init_hash, response, root, ad, assigned, initial_plaintext);
+  event JointHonestComplete();
+  let beacon_frame = seal_frame(ratchet_material(beacon_to_server_chain(root)), ad,
+    first_sequence(), assigned, MLDSA_JOINT_BEACON_RECORD) in
+  event JointRecordSent(beacon_ml, server_ml, init_hash, root, ad, beacon_to_server(),
+    first_sequence(), assigned, SERVER_KEY_ID, MLDSA_JOINT_BEACON_RECORD);
+  out(mldsa_joint_beacon_records, beacon_frame);
+  in(mldsa_joint_server_records, incoming_record: bitstring);
+  let crypto_frame(body, tag, commitment, parsed_sequence, parsed_sender) = incoming_record in
+  if parsed_sender = SERVER_KEY_ID then
+  if parsed_sequence = next_sequence(first_sequence()) then
+  let record_plaintext = open_frame(ratchet_material(ratchet_next(server_to_beacon_chain(root))), ad,
+    next_sequence(first_sequence()), SERVER_KEY_ID, incoming_record) in
+  event JointRecordReceived(beacon_ml, server_ml, init_hash, root, ad, server_to_beacon(),
+    next_sequence(first_sequence()), SERVER_KEY_ID, assigned, record_plaintext);
+  if record_plaintext = MLDSA_JOINT_SERVER_RECORD then event JointServerRecordOpened().
+
+(* This admitted caller owns its ML and KEM keys and reuses the honest Ed identity only via the actual classical-recovery capability. Its one-time key differs, so the actual Ed+one-time replay identity is fresh. *)
+let MldsaJointOwnedRequest(server_ed: bitstring, server_ml: bitstring,
+  protected_ed: bitstring, owned_ml_secret: bitstring) =
+  let recovered_ed = quantum_recover_ed25519_secret(protected_ed) in
+  new prekey_secret: bitstring;
+  new one_time_secret: bitstring;
+  new pq_secret: bitstring;
+  let owned_ml = mldsa_public(owned_ml_secret) in
+  let classical_init = signed_init_kex(tag_ed25519(protected_ed),
+    sign(tag_x25519_prekey(x25519_public(prekey_secret)), recovered_ed),
+    sign(tag_x25519_one_time(x25519_public(one_time_secret)), recovered_ed),
+    sign(tag_mlkem768(mlkem_public(pq_secret)), recovered_ed)) in
+  let init_hash = mldsa_init_hash(SERVER_KEY_ID, server_ed, owned_ml, server_ml, classical_init) in
+  let signature = mldsa_sign(mldsa_beacon_input(init_hash), owned_ml_secret, mldsa_signing_context()) in
+  out(mldsa_joint_public_keys, (owned_ml_secret, prekey_secret, one_time_secret, pq_secret));
+  out(mldsa_joint_registration, mldsa_signed_init_kex(classical_init, owned_ml, signature)).
+
+let MldsaJointCapabilityWitness(server_secret: bitstring, prekey_secret: bitstring) =
+  let recovered_ed = quantum_recover_ed25519_secret(ed_public(server_secret)) in
+  if recovered_ed = server_secret then
+  let recovered_dh = quantum_recover_x25519_secret(x25519_public(prekey_secret)) in
+  if recovered_dh = prekey_secret then event JointClassicalRecovered().
+
+let MldsaJointSession() =
+  new server_secret: bitstring;
+  new server_ml_secret: bitstring;
+  new identity_secret: bitstring;
+  new ml_secret: bitstring;
+  new owned_ml_secret: bitstring;
+  new prekey_secret: bitstring;
+  new one_time_secret: bitstring;
+  new pq_secret: bitstring;
+  let server_ed = ed_public(server_secret) in
+  let server_ml = mldsa_public(server_ml_secret) in
+  let beacon_ed = ed_public(identity_secret) in
+  let beacon_ml = mldsa_public(ml_secret) in
+  let owned_ml = mldsa_public(owned_ml_secret) in
+  event JointProtectedBeacon(beacon_ml);
+  out(mldsa_joint_public_keys, (server_ed, server_ml, beacon_ed, beacon_ml, owned_ml,
+    x25519_public(prekey_secret), x25519_public(one_time_secret), mlkem_public(pq_secret)));
+  new replay_lock: channel;
+  new accepted_observation: channel;
+  new rejected_observation: channel;
+  (
+    out(replay_lock, mldsa_joint_lock_token())
+    | MldsaJointReplayWitness(accepted_observation, rejected_observation)
+    | MldsaJointServer(server_secret, server_ml_secret, beacon_ml, beacon_ed, owned_ml,
+        mldsa_joint_first_id(), replay_lock, accepted_observation, rejected_observation)
+    | MldsaJointServer(server_secret, server_ml_secret, beacon_ml, beacon_ed, owned_ml,
+        mldsa_joint_second_id(), replay_lock, accepted_observation, rejected_observation)
+    | MldsaJointBeacon(server_secret, server_ml, identity_secret, ml_secret,
+        prekey_secret, one_time_secret, pq_secret)
+    | MldsaJointOwnedRequest(server_ed, server_ml, beacon_ed, owned_ml_secret)
+    | MldsaJointCapabilityWitness(server_secret, prekey_secret)
+  ).

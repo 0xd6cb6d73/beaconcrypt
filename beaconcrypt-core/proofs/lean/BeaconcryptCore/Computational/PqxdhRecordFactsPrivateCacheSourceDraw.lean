@@ -112,7 +112,7 @@ noncomputable def compileHiddenSeal (modes : Label n → KeyMode) (crypto : Pqxd
     (writer : RawCtxMixedShared.Writer) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (pending : PqxdhRecordLiftProtocol.Sealing n) (state : CtxPrivate n) :
     OracleComp (Spec n) (Option RawCtxSourceSend.Encrypted × CtxPrivate n) :=
-  if width : (PqxdhRecordLiftIdeal.replaceContext replace pending.context).associatedData.length = 153 then do
+  if width : (PqxdhRecordLiftIdeal.replaceContext replace pending.context).associatedData.length = 281 then do
     let result ← compileKeyedSeal modes crypto pending.material
       (RawCtxSelectedMessageSealing.selectedInput (materialAt state.base.chain pending.material).2
         pending.sequence (PqxdhRecordLiftIdeal.replaceContext replace pending.context) width) state

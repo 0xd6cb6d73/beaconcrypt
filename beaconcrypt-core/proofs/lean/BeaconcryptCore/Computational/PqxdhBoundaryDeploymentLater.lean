@@ -24,7 +24,7 @@ abbrev RunState (KemSK : Type) := Snap × (PqxdhDeploymentNative.State KemSK × 
 
 /-- The logged source step: a raw accept runs the source-collected logged acceptance `PqxdhBoundaryLoggedAccept.deployment` (PB-03 under LQ-F), which reinstalls the accepted shared state and appends one optional ephemeral-scalar entry to the log; every other command runs the classical source step `PqxdhBoundaryDeploymentStep.sourceStep` on the deployment state and keeps the log. -/
 noncomputable def loggedStep (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : Checks) (serverSeed : IdentitySeed) : Step Spec (PqxdhDeploymentNative.State KemSK × Log)
   | .inr (.accept raw) => fun state => (fun result => (RustM.ok result.1, result.2)) <$>
       (PqxdhBoundaryLoggedAccept.deployment setup (PqxdhBoundaryRecordPrelude.withReader codec reader) checks serverSeed
@@ -34,7 +34,7 @@ noncomputable def loggedStep (setup : Setup baseSpec KemSK) (codec : Codec Reade
 
 /-- The adaptive LQ-F source step: a `finish` first captures the addressed owner's prekey and one-time fields from the pre-command owners (`snapshotAt`, the cut of `PqxdhDeploymentLater.snapImpl`), then every command runs the logged source step. -/
 noncomputable def laterStep (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : Checks) (serverSeed : IdentitySeed) : Step Spec (RunState KemSK) := fun query state =>
   (fun result => (result.1, (snapshotAt state.1 state.2.1.native.owners (finishOwner query), result.2))) <$>
     loggedStep setup codec reader erased checks serverSeed query state.2
@@ -49,7 +49,7 @@ noncomputable def postPhase (setup : Setup baseSpec KemSK) (codec : Codec Reader
 
 /-- The LQ-F source execution from a deployment state: adaptive source execution of `laterStep` on `A₁` wrapped by CE's secrecy layer at the production codec, from the empty snapshot and log; only a successful run enters the modeled reveal and post phase (`PqxdhBoundaryProgram.resume`). -/
 noncomputable def laterSourceExec (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (serverSeed : IdentitySeed) (bounds : FreshBounds) (mode : Mode) (first : OracleComp (ModeSpec mode) X)
     (second : X → Reveal → OracleComp PostSpec Out) (start : PqxdhDeploymentNative.State KemSK) :
     ProbComp (RustM (Out × Ledger) × RunState KemSK) :=
@@ -69,7 +69,7 @@ abbrev GameOutcome (KemSK Out : Type) :=
 
 /-- The adaptive LQ-F source game: source-ordered Server birth, then the LQ-F source execution from the initial deployment state of the created Server. A failed initialization ends the run with no outcome and its returned runtime. -/
 noncomputable def laterSourceGame (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) :
     StateT A ProbComp (Outcome KemSK Out) := fun runtime => do
@@ -93,7 +93,7 @@ def unwrap (outcome : Outcome KemSK Out × A) : GameOutcome KemSK Out × A :=
 
 /-- A command other than a raw accept runs the classical source step on the deployment state and keeps the log. -/
 theorem loggedStep_quiet (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (query : Spec.Domain)
     (notAccept : ∀ raw, query ≠ .inr (.accept raw)) (state : PqxdhDeploymentNative.State KemSK) (log : Log) :
     loggedStep setup codec reader erased checks serverSeed query (state, log) =
@@ -107,7 +107,7 @@ theorem loggedStep_quiet (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
 
 /-- Per-command logged join: for every command and every complete deployment state and log, the logged source step equals the lifted LQ-F logged handler `PqxdhDeploymentLaterServerGame.handler` at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`; the raw accept by the published `PqxdhBoundaryLoggedAccept.deployment_exact`, every other command by `PqxdhBoundaryDeploymentStep.step_exact` and `PqxdhDeploymentLaterServerGame.handler_quiet`. -/
 theorem loggedStep_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : Checks) (serverSeed : IdentitySeed) :
     ∀ query state, loggedStep setup codec reader erased checks serverSeed query state =
       liftStep (PqxdhDeploymentLaterServerGame.handler setup (PqxdhBoundaryRecordPrelude.withReader codec reader) checks
@@ -136,7 +136,7 @@ theorem loggedStep_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
 
 /-- The source `finish` step captures the addressed owner's prekey and one-time fields from the pre-command owners, then runs the classical source finish (PB-06) on the deployment state and keeps the log. -/
 theorem laterStep_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (index : Nat) (raw : Pqxdh.Bytes) (state : RunState KemSK) :
     laterStep setup codec reader erased checks serverSeed (.inr (.finish index raw)) state =
       (fun result => (result.1, (snapshotAt state.1 state.2.1.native.owners (some index), (result.2, state.2.2)))) <$>
@@ -147,7 +147,7 @@ theorem laterStep_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
 
 /-- The source raw-accept step runs the source-collected logged acceptance (W4) on the deployment state and log and keeps the snapshot. -/
 theorem laterStep_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (raw : Pqxdh.Bytes) (state : RunState KemSK) :
     laterStep setup codec reader erased checks serverSeed (.inr (.accept raw)) state =
       (fun result => (RustM.ok result.1, (state.1, result.2))) <$>
@@ -158,7 +158,7 @@ theorem laterStep_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
 
 /-- Every command other than a `finish` and a raw accept runs the classical source step on the deployment state and keeps the snapshot and the log. -/
 theorem laterStep_quiet (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (query : Spec.Domain)
     (notAccept : ∀ raw, query ≠ .inr (.accept raw)) (notFinish : finishOwner query = none) (state : RunState KemSK) :
     laterStep setup codec reader erased checks serverSeed query state =
@@ -171,7 +171,7 @@ theorem laterStep_quiet (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 
 /-- PB-13 per-command join: for every command and every run state (snapshot, complete deployment state, ephemeral log), the LQ-F source step equals the lifted LQ-F snapshot handler `PqxdhDeploymentLaterServerGame.snapImpl` at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, for every `checks`. This is the operational premise of `PqxdhBoundaryProgram.source_exact`. -/
 theorem laterStep_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : Checks) (serverSeed : IdentitySeed) :
     ∀ query state, laterStep setup codec reader erased checks serverSeed query state =
       liftStep (PqxdhDeploymentLaterServerGame.snapImpl setup (PqxdhBoundaryRecordPrelude.withReader codec reader) checks
@@ -188,7 +188,7 @@ theorem laterStep_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 
 /-- Every supported outcome of every LQ-F source step is `ok` with a supported reply and complete poststate of the LQ-F snapshot handler; the entry-state placeholder of the adapted record and finish executors is never observed. -/
 theorem laterStep_normal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (query : Spec.Domain) (state : RunState KemSK)
     (result : RustM (Spec.Range query) × RunState KemSK)
     (supported : result ∈ support (laterStep setup codec reader erased checks serverSeed query state)) :
@@ -201,7 +201,7 @@ theorem laterStep_normal (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
 
 /-- Whole-program LQ-F source join: for every native-interface program and every run state, adaptive source execution of `laterStep` is the simulation under the LQ-F snapshot handler at the production instance, with each reply and the complete poststate, by `PqxdhBoundaryProgram.source_exact` and `laterStep_exact`. -/
 theorem execute_exact {Z : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (work : OracleComp Spec Z) (state : RunState KemSK) :
     PqxdhBoundaryProgram.execute (laterStep setup codec reader erased checks serverSeed) work state =
       (fun result => (RustM.ok result.1, result.2)) <$>
@@ -211,7 +211,7 @@ theorem execute_exact {Z : Type} (setup : Setup baseSpec KemSK) (codec : Codec R
 
 /-- The LQ-F source execution from any deployment state is the LQ-F later execution `PqxdhDeploymentLaterServerGame.exec` at the production instance, with `A₂`'s output and the run's ledger wrapped in `ok` and the snapshot, the final deployment state and the log unchanged. -/
 theorem exec_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (serverSeed : IdentitySeed) (bounds : FreshBounds) (mode : Mode) (first : OracleComp (ModeSpec mode) X)
     (second : X → Reveal → OracleComp PostSpec Out) (start : PqxdhDeploymentNative.State KemSK) :
     laterSourceExec setup codec reader erased checks serverSeed bounds mode first second start =
@@ -228,7 +228,7 @@ theorem unwrap_okMap (outcome : GameOutcome KemSK Out × A) : unwrap (okMap outc
 
 /-- PB-13 LQ-F join: for every setup, codec, frame reader, buffer, `checks`, initialization, identity index, bounds, mode, run-phase adversary `A₁`, post-phase adversary `A₂` and runtime, the LQ-F source game equals the LQ-F game `PqxdhDeploymentLaterServerGame.game` at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model` on the full returned value (created Server, `A₂`'s output, the run's ledger, the finish snapshot, the complete final deployment state and the ephemeral log, runtime), up to the `ok` wrapper `okMap`. -/
 theorem later (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (runtime : A) :
     (laterSourceGame setup codec reader erased checks ensureInit identityIndex bounds mode first second).run runtime =
@@ -245,7 +245,7 @@ theorem later (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
 
 /-- The index-0 instance of `later`, the identity index of the CE-12-L headline game (PB-D pin #415). -/
 theorem later_zero (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (mode : Mode)
     (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (runtime : A) :
     (laterSourceGame setup codec reader erased checks ensureInit 0 bounds mode first second).run runtime =
@@ -255,7 +255,7 @@ theorem later_zero (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
 
 /-- Every supported outcome of the LQ-F source game is the `okMap` image of a supported outcome of the LQ-F game at the production instance; in particular the source game never returns a `fail` or `div` result. -/
 theorem later_normal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (runtime : A)
     (outcome : Outcome KemSK Out × A)
@@ -271,7 +271,7 @@ theorem later_normal (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 
 /-- Any continuation of the LQ-F source game sees exactly the LQ-F game's returned value through `okMap`; no projection, success conditioning or event premise is introduced, and no ghost (snapshot or log) is forgotten. -/
 theorem later_continuation (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (runtime : A)
     (next : Outcome KemSK Out × A → ProbComp Y) :
@@ -284,7 +284,7 @@ theorem later_continuation (setup : Setup baseSpec KemSK) (codec : Codec Reader 
 
 /-- Generic observation transfer for item 8: for every observation `observe` of the LQ-F game's returned value, observing the LQ-F source game through `unwrap` is the same computation as observing the LQ-F game at the production instance. -/
 theorem later_observe {Z : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (runtime : A)
     (observe : GameOutcome KemSK Out × A → Z) :
@@ -297,7 +297,7 @@ theorem later_observe {Z : Type} (setup : Setup baseSpec KemSK) (codec : Codec R
 
 /-- Generic distribution transfer for item 8 in the evaluation-measure form `𝒟[·]`: for every observation `observe` of the LQ-F game's returned value into a measurable space, the evaluation measure of observing the LQ-F source game through `unwrap` equals that of observing the LQ-F game at the production instance. -/
 theorem later_evalDist {Z : Type} [MeasurableSpace Z] (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (runtime : A)
     (observe : GameOutcome KemSK Out × A → Z) :
@@ -311,7 +311,7 @@ theorem later_evalDist {Z : Type} [MeasurableSpace Z] (setup : Setup baseSpec Ke
 
 /-- Generic event transfer for item 8: for every event `event` of the LQ-F game's returned value, its probability in the LQ-F game at the production instance equals the probability of `event ∘ unwrap` in the LQ-F source game. -/
 theorem later_probEvent (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
     (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (runtime : A)
     (event : GameOutcome KemSK Out × A → Prop) :

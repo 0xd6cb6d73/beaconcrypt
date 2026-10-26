@@ -15,7 +15,8 @@ import sys
 
 NAME = re.compile(r"[A-Za-z_][A-Za-z_0-9.]*\Z")
 DECLARATION = re.compile(r"^(?:@\[[^\]]*\]\s*)?def\s+([\w.]+)", re.M)
-IDEAL_MODEL_DIGEST = "92278ec925928ba1b0162d12a15b738c7f05cdd8f76e4d7d7b2cbddc07e48d3c"
+# Includes the reviewed transcript byte model and current AD281/CTX357 core layouts.
+IDEAL_MODEL_DIGEST = "c7acbc9e3aa1b262a31fdcc68838de236bd6f52294e8e53f5ee9c3134f917518"
 
 
 def check_models(proof_root: Path) -> None:

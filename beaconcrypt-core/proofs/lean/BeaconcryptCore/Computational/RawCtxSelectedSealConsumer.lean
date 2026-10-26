@@ -74,7 +74,7 @@ noncomputable def call (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
 /-- The complete selected sealing callback reaches the original native inner seal and writer before the explicit nonce-stop event, preserving every other component history. -/
 theorem selected_fresh_call (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
     (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 281)
     (before : SourceState) (fresh : nonce ∉ before.selected.1.usedNonces) :
     (simulateQ (sourceImpl true decode c key)
       (call c writer ⟨.hidden nonce, sequence, context⟩)).run before = (do
@@ -90,7 +90,7 @@ theorem selected_fresh_call (decode : RawDecoder) (c : Pqxdh.Crypto) (key : Root
 /-- A repeated selected nonce propagates an explicit stop while preserving the entire dynamic state; it is not translated into native writer failure. -/
 theorem selected_repeat_call (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
     (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 281)
     (before : SourceState) (used : nonce ∈ before.selected.1.usedNonces) :
     (simulateQ (sourceImpl true decode c key)
       (call c writer ⟨.hidden nonce, sequence, context⟩)).run before = pure (.repeatedNonce, before) := by
@@ -146,7 +146,7 @@ theorem known_source_cache (real : Bool) (decode : RawDecoder) (c : Pqxdh.Crypto
 /-- Before the separately recorded selected-nonce stop, the dynamic callback projects to exactly the native source seal, writer and cache. -/
 theorem selected_source_cache (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
     (writer : RawCtxMixedShared.Writer) (nonce : NonceOutput) (sequence : Std.U64)
-    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 153)
+    (context : RawCtxSourceSend.SealContext) (width : context.associatedData.length = 281)
     (before : SourceState) (fresh : nonce ∉ before.selected.1.usedNonces) :
     (fun result => (result.1, result.2.cache)) <$>
       (simulateQ (sourceImpl true decode c key)
@@ -243,7 +243,7 @@ theorem call_source_cache (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOu
     (writer : RawCtxMixedShared.Writer)
     (input : RawCtxInterpretedArguments.Input Slot RawCtxSourceSend.SealContext)
     (before : SourceState)
-    (fresh : ∀ nonce, input.material = .hidden nonce → input.context.associatedData.length = 153 →
+    (fresh : ∀ nonce, input.material = .hidden nonce → input.context.associatedData.length = 281 →
       nonce ∉ before.selected.1.usedNonces) :
     (fun result => (result.1, result.2.cache)) <$>
       (simulateQ (sourceImpl true decode c key) (call c writer input)).run before =
@@ -255,7 +255,7 @@ theorem call_source_cache (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOu
   cases material with
   | known material => exact known_source_cache true decode c key writer material sequence context before
   | hidden nonce =>
-    by_cases width : context.associatedData.length = 153
+    by_cases width : context.associatedData.length = 281
     · exact selected_source_cache decode c key writer nonce sequence context width before (fresh nonce rfl width)
     · rw [RawCtxCanonicalSeal.sealInput_invalid c writer _ width]
       simp only [call, RawCtxSelectedMessageSealing.selected, width, ↓reduceDIte,
@@ -278,7 +278,7 @@ theorem sealing_source (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutpu
     (writer : RawCtxMixedShared.Writer)
     (pending : RawCtxInterpretedSend.Seal Slot RawCtxSourceSend.SealContext)
     (before : SourceState)
-    (fresh : ∀ nonce, pending.material = .hidden nonce → pending.context.associatedData.length = 153 →
+    (fresh : ∀ nonce, pending.material = .hidden nonce → pending.context.associatedData.length = 281 →
       nonce ∉ before.selected.1.usedNonces) :
     (fun result => (result.1, result.2.cache)) <$>
       (simulateQ (sourceImpl true decode c key) (sealing c writer pending)).run before =
@@ -321,7 +321,7 @@ theorem sealing_repeat (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutpu
     (writer : RawCtxMixedShared.Writer)
     (pending : RawCtxInterpretedSend.Seal Slot RawCtxSourceSend.SealContext)
     (nonce : NonceOutput) (material : pending.material = .hidden nonce)
-    (width : pending.context.associatedData.length = 153)
+    (width : pending.context.associatedData.length = 281)
     (before : SourceState) (used : nonce ∈ before.selected.1.usedNonces) :
     (simulateQ (sourceImpl true decode c key) (sealing c writer pending)).run before = pure (none, before) := by
   have arguments : RawCtxInterpretedArguments.sealArguments pending = ⟨.hidden nonce, pending.sequence, pending.context⟩ := by

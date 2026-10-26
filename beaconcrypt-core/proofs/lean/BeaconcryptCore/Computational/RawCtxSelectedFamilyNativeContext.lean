@@ -122,7 +122,7 @@ private theorem updated_server (target : RootOutput) (before : NativeFamily M P 
     exact known_beacon target (before.2 other)
 
 private theorem updated_beacon (target : RootOutput) (before : NativeFamily M P I D K S B)
-    (index : Fin B) (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 153#usize)
+    (index : Fin B) (control : pqxdh.BeaconEstablished) (associatedData : Array Std.U8 281#usize)
     (owner : RawCtxPendingOwnerTails.Owner RawCtxSelectedChain.Slot Unit) :
     mapRoles (nativeKernel target)
       ((mapRoles knownKernel before).1, Function.update (mapRoles knownKernel before).2 index

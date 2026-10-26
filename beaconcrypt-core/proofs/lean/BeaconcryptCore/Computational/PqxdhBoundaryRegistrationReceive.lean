@@ -38,7 +38,7 @@ theorem receive_adapter : receiveTail (Response := Response) ∘ₛ RawCtxMixedO
 
 /-- Execute the real candidate-local receive boundary; this does not use any installed persistent owner. -/
 noncomputable def localReceive (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel) :
     OracleComp (NativeTailSpec Response)
       (RustM (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxWholeOwner.OwnerState Unit)) :=
@@ -47,7 +47,7 @@ noncomputable def localReceive (reader : RawCtxNativeFramePrelude.Reader Message
 
 /-- Uniform in every raw input and decoded sequence, the local source executor is exactly the original native tail receive, retaining its complete optional result and candidate kernel. -/
 theorem local_receive_exact (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel) :
     localReceive (Response := Response) reader erased raw candidate kernel =
       (fun result => ok result) <$> simulateQ nativeTailAdapter
@@ -62,7 +62,7 @@ theorem local_receive_exact (reader : RawCtxNativeFramePrelude.Reader Message Ro
 
 /-- Real registration order: initial KDF, application getter, complete local receive, then afterOpening's sequence-one and binding gates. -/
 noncomputable def executeAfterRoot (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (prepared : Prepared Response) (root : Word32) :
+    (erased : Std.Array Std.U8 357#usize) (prepared : Prepared Response) (root : Word32) :
     OracleComp (NativeTailSpec Response) (RustM (Option Staged)) := do
   let candidate := clearedCandidate prepared.candidate
   let initial ← (NativeTailSpec Response).query (.inr (.initial (PqxdhInitialRatchetComplementarity.beaconPending root).request))
@@ -76,7 +76,7 @@ noncomputable def executeAfterRoot (reader : RawCtxNativeFramePrelude.Reader Mes
 
 /-- Exact full real Publication.afterRoot program under nativeTailAdapter, uniform over all decoded sequences and failures. The receive uses only the finish's local candidate kernel; the sequence-one gate is applied after its full reply. -/
 theorem after_root_exact (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (prepared : Prepared Response) (root : Word32) :
+    (erased : Std.Array Std.U8 357#usize) (prepared : Prepared Response) (root : Word32) :
     executeAfterRoot reader erased prepared root =
       (fun result => ok result) <$> simulateQ nativeTailAdapter
         (afterRoot (RawCtxFrameDecoding.decode reader.model) prepared root) := by
@@ -95,7 +95,7 @@ theorem after_root_exact (reader : RawCtxNativeFramePrelude.Reader Message Root)
 
 /-- Exact real root request and optional reply, followed by the same local candidate receive executor. -/
 noncomputable def executeTail (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (prepared : Prepared Response) :
+    (erased : Std.Array Std.U8 357#usize) (prepared : Prepared Response) :
     OracleComp (NativeTailSpec Response) (RustM (Option Staged)) := do
   let root ← (NativeTailSpec Response).query (.inr (.root prepared.candidate.root_key_input))
   match root with
@@ -104,7 +104,7 @@ noncomputable def executeTail (reader : RawCtxNativeFramePrelude.Reader Message 
 
 /-- Root processing retains the identical request and interpreter point, including rejection effects, without assuming any functional root answer. -/
 theorem tail_exact (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (prepared : Prepared Response) :
+    (erased : Std.Array Std.U8 357#usize) (prepared : Prepared Response) :
     executeTail reader erased prepared =
       (fun result => ok result) <$> simulateQ nativeTailAdapter
         (tail (RawCtxFrameDecoding.decode reader.model) prepared) := by
@@ -119,7 +119,7 @@ theorem tail_exact (reader : RawCtxNativeFramePrelude.Reader Message Root)
 theorem after_root_complete {ι PrimitiveState Result : Type} {base : OracleSpec ι}
     (handler : QueryImpl (NativeTailSpec Response) (StateT PrimitiveState (OracleComp base)))
     (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (prepared : Prepared Response) (root : Word32)
+    (erased : Std.Array Std.U8 357#usize) (prepared : Prepared Response) (root : Word32)
     (state : PrimitiveState) (next : RustM (Option Staged) × PrimitiveState → OracleComp base Result) :
     (simulateQ handler (executeAfterRoot reader erased prepared root)).run state >>= next =
       (simulateQ handler (simulateQ nativeTailAdapter
@@ -131,7 +131,7 @@ theorem after_root_complete {ι PrimitiveState Result : Type} {base : OracleSpec
 theorem tail_complete {ι PrimitiveState Result : Type} {base : OracleSpec ι}
     (handler : QueryImpl (NativeTailSpec Response) (StateT PrimitiveState (OracleComp base)))
     (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (prepared : Prepared Response)
+    (erased : Std.Array Std.U8 357#usize) (prepared : Prepared Response)
     (state : PrimitiveState) (next : RustM (Option Staged) × PrimitiveState → OracleComp base Result) :
     (simulateQ handler (executeTail reader erased prepared)).run state >>= next =
       (simulateQ handler (simulateQ nativeTailAdapter
@@ -150,7 +150,7 @@ theorem tail_lift : nativeAdapter (I := I) (D := D) (K := K) (X := X) (Response 
 
 /-- Run actual preparation, real root and local receive on InitSent; the unchanged finish retains active abort and inactive no-op. -/
 noncomputable def executeRegistration (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes) (state : PqxdhBeaconPhase2Preparation.State I D K) :
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes) (state : PqxdhBeaconPhase2Preparation.State I D K) :
     OracleComp (NativeSpec I D K X Response) (RustM (Option Pqxdh.Bytes × PqxdhBeaconPhase2Preparation.State I D K)) :=
   match state.beacon.phase with
   | .initSent control prekey oneTime kem => do
@@ -165,7 +165,7 @@ noncomputable def executeRegistration (reader : RawCtxNativeFramePrelude.Reader 
 
 /-- The real full native registration program has the identical returned bytes/state and every primitive request, with only the explicit normal-return wrapper. -/
 theorem registration_exact (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes) (state : PqxdhBeaconPhase2Preparation.State I D K) :
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes) (state : PqxdhBeaconPhase2Preparation.State I D K) :
     executeRegistration (X := X) (Response := Response) reader erased raw state =
       (fun result => ok result) <$> nativeOwner (RawCtxFrameDecoding.decode reader.model) raw state := by
   unfold executeRegistration nativeOwner owner
@@ -184,7 +184,7 @@ theorem registration_exact (reader : RawCtxNativeFramePrelude.Reader Message Roo
 theorem registration_complete {ι PrimitiveState Result : Type} {base : OracleSpec ι}
     (handler : QueryImpl (NativeSpec I D K X Response) (StateT PrimitiveState (OracleComp base)))
     (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D K) (primitive : PrimitiveState)
     (next : RustM (Option Pqxdh.Bytes × PqxdhBeaconPhase2Preparation.State I D K) × PrimitiveState → OracleComp base Result) :
     (simulateQ handler (executeRegistration reader erased raw state)).run primitive >>= next =
@@ -196,7 +196,7 @@ theorem registration_complete {ι PrimitiveState Result : Type} {base : OracleSp
 theorem registration_failure {PrimitiveState : Type}
     (handler : QueryImpl (NativeSpec I D K X Response) (StateT PrimitiveState ProbComp))
     (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (erased : Std.Array Std.U8 229#usize) (raw : Pqxdh.Bytes)
+    (erased : Std.Array Std.U8 357#usize) (raw : Pqxdh.Bytes)
     (state after : PqxdhBeaconPhase2Preparation.State I D K) (primitive final : PrimitiveState)
     (supported : (ok (none, after), final) ∈ support
       ((simulateQ handler (executeRegistration reader erased raw state)).run primitive)) :

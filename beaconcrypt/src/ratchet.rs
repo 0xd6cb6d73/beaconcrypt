@@ -674,4 +674,70 @@ mod raw_receive_tests {
 			b"payload"
 		);
 	}
+
+	#[test]
+	fn each_mldsa_key_hash_byte_is_bound_without_consuming_a_rejected_key() {
+		let mut sender = RatchetManager::default();
+		let mut receiver = RatchetManager::default();
+		let mut associated_data = [0x51; AD_SIZE];
+		associated_data[153..217].fill(0x61);
+		associated_data[217..281].fill(0x71);
+		let encrypted =
+			encrypt_message_with_ratchet(b"payload", 9, 7, &associated_data, &mut sender).unwrap();
+		let before = serde_json::to_string(&receiver).unwrap();
+		for index in 153..281 {
+			let mut changed = associated_data;
+			changed[index] ^= 1;
+			assert!(
+				decrypt_message_with_ratchet(&encrypted.ciphertext, 7, &changed, &mut receiver)
+					.is_none(),
+				"changed authentication-key hash byte {index} was accepted"
+			);
+			assert_eq!(serde_json::to_string(&receiver).unwrap(), before);
+		}
+		assert_eq!(
+			decrypt_message_with_ratchet(&encrypted.ciphertext, 7, &associated_data, &mut receiver)
+				.unwrap()
+				.plaintext,
+			b"payload"
+		);
+		let accepted = serde_json::to_string(&receiver).unwrap();
+		assert!(
+			decrypt_message_with_ratchet(&encrypted.ciphertext, 7, &associated_data, &mut receiver)
+				.is_none()
+		);
+		assert_eq!(serde_json::to_string(&receiver).unwrap(), accepted);
+	}
+}
+
+#[cfg(test)]
+mod initial_kdf_tests {
+	use super::*;
+	use beaconcrypt_core::pqxdh::{start_beacon_ratchet_kdf, start_server_ratchet_kdf};
+
+	#[test]
+	fn initial_ratchet_hkdf_matches_known_answer_and_orders_complementary_chains() {
+		libsodium_rs::ensure_init().unwrap();
+		// Independently reproduced by both KAT generators' [ratchet] step 1: HKDF's
+		// 64-byte expansion is the prefix of that step's 76-byte expansion.
+		let expected_hex = concat!(
+			"f57007f1b1c7a62a7d6cdfa5df07538c43d83656906764d607e627401906e42a",
+			"5936897d8bd06b7daf70bd0d64b2f607a055fd843ddb779051cb975bbb02b1d3"
+		);
+		let expected: [u8; 64] = core::array::from_fn(|index| {
+			u8::from_str_radix(&expected_hex[index * 2..index * 2 + 2], 16).unwrap()
+		});
+		let root = [0x24; KDF_STATE_SIZE];
+		let beacon_pending = start_beacon_ratchet_kdf(&root);
+		assert_eq!(initial_ratchet_hkdf(beacon_pending.request()), expected);
+		let beacon = finish_initial_ratchet_kdf(beacon_pending);
+		let server = finish_initial_ratchet_kdf(start_server_ratchet_kdf(&root));
+		assert_eq!(beacon.receive_chain().as_bytes(), &expected[..32]);
+		assert_eq!(beacon.send_chain().as_bytes(), &expected[32..]);
+		assert_eq!(server.send_chain().as_bytes(), &expected[..32]);
+		assert_eq!(server.receive_chain().as_bytes(), &expected[32..]);
+
+		let changed = start_beacon_ratchet_kdf(&[0x25; KDF_STATE_SIZE]);
+		assert_ne!(initial_ratchet_hkdf(changed.request()), expected);
+	}
 }

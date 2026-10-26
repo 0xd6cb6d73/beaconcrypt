@@ -25,7 +25,7 @@ func TestMaxMessageSize(t *testing.T) {
 
 func TestNewBeaconRejectsIncorrectKeyLengths(t *testing.T) {
 	for _, length := range []int{0, 1, 31, 33, 64} {
-		beacon, err := NewBeacon(19, make([]byte, length))
+		beacon, err := NewBeacon(19, make([]byte, length), make([]byte, MLDSA65PublicKeySize))
 		if beacon != nil || !errors.Is(err, ErrCrypto) {
 			t.Fatalf("key length %d: got beacon %v, error %v", length, beacon, err)
 		}
@@ -159,10 +159,19 @@ func newServer(t *testing.T) *Server {
 	return server
 }
 
-func newBeacon(t *testing.T, serverPK []byte) *Beacon {
+func mustServerMLDSAPublicKey(t *testing.T, server *Server) []byte {
+	t.Helper()
+	key, err := server.MLDSAPublicKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return key
+}
+
+func newBeacon(t *testing.T, server *Server, serverPK []byte) *Beacon {
 	t.Helper()
 
-	beacon, err := NewBeacon(0, serverPK)
+	beacon, err := NewBeacon(0, serverPK, mustServerMLDSAPublicKey(t, server))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -176,7 +185,7 @@ func TestRegister(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 
 	if registerBeacon(t, server, beacon) == nil {
 		t.Fatal("expected registration to return initial message")
@@ -189,7 +198,7 @@ func TestRegisterWithoutInitialMessageReturnsWitness(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 
 	regOut := registerBeaconWithInitial(t, server, beacon, nil)
 	if regOut.KeyID != 1 {
@@ -213,12 +222,12 @@ func TestServerFromSeedUsesStableIdentity(t *testing.T) {
 		0x65, 0x32, 0x15, 0x77, 0x1d, 0xe2, 0x43, 0xa6,
 		0x3a, 0xc0, 0x48, 0xa1, 0x8b, 0x59, 0xda, 0x29,
 	}
-	serverA, err := NewServerFromSeed(0, seed)
+	serverA, err := NewServerFromSeed(0, seed, make([]byte, 32))
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(serverA.Close)
-	serverB, err := NewServerFromSeed(0, seed)
+	serverB, err := NewServerFromSeed(0, seed, make([]byte, 32))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -238,6 +247,11 @@ func TestServerFromSeedUsesStableIdentity(t *testing.T) {
 	if !bytes.Equal(pkA, expectedPK) {
 		t.Fatalf("unexpected seeded server public key: got %x want %x", pkA, expectedPK)
 	}
+	mlA := mustServerMLDSAPublicKey(t, serverA)
+	mlB := mustServerMLDSAPublicKey(t, serverB)
+	if len(mlA) != MLDSA65PublicKeySize || !bytes.Equal(mlA, mlB) {
+		t.Fatal("seeded ML-DSA public keys differ or have the wrong width")
+	}
 }
 
 func TestServerCheckpointExportsRestoresAndContinues(t *testing.T) {
@@ -246,7 +260,7 @@ func TestServerCheckpointExportsRestoresAndContinues(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	response := registerBeacon(t, server, beacon)
 
 	checkpoint, err := server.ExportState()
@@ -303,14 +317,14 @@ func TestMalformedRegistrationIsRejected(t *testing.T) {
 	}
 }
 
-func TestBeaconRejectsRegistrationResponseFromWrongServer(t *testing.T) {
+func TestRegistrationIsBoundToTheIntendedServer(t *testing.T) {
 	expectedServer := newServer(t)
 	expectedServerPK, err := expectedServer.IdentityPK()
 	if err != nil {
 		t.Fatal(err)
 	}
 	wrongServer := newServer(t)
-	beacon := newBeacon(t, expectedServerPK)
+	beacon := newBeacon(t, expectedServer, expectedServerPK)
 
 	phase1, err := beacon.GenerateRegistration()
 	if err != nil {
@@ -319,13 +333,8 @@ func TestBeaconRejectsRegistrationResponseFromWrongServer(t *testing.T) {
 	if _, err := expectedServer.RegisterBeacon(phase1, []byte("expected server")); err != nil {
 		t.Fatal(err)
 	}
-	wrongResponse, err := wrongServer.RegisterBeacon(phase1, []byte("wrong server"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := beacon.ProcessInitialMessage(wrongResponse.Serialized); err == nil {
-		t.Fatal("expected registration response from wrong server to be rejected")
+	if response, err := wrongServer.RegisterBeacon(phase1, []byte("wrong server")); response != nil || err == nil {
+		t.Fatal("registration was accepted by a server outside its authenticated transcript")
 	}
 }
 
@@ -335,8 +344,8 @@ func TestEncryptToMultiple(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b1 := newBeacon(t, serverPK)
-	b2 := newBeacon(t, serverPK)
+	b1 := newBeacon(t, server, serverPK)
+	b2 := newBeacon(t, server, serverPK)
 	message := bytes.Repeat([]byte{0x01}, 32)
 
 	b1Registration := registerBeacon(t, server, b1)
@@ -361,8 +370,8 @@ func TestServerUsesPerBeaconAssociatedData(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b1 := newBeacon(t, serverPK)
-	b2 := newBeacon(t, serverPK)
+	b1 := newBeacon(t, server, serverPK)
+	b2 := newBeacon(t, server, serverPK)
 
 	b1Registration := registerBeacon(t, server, b1)
 	b2Registration := registerBeacon(t, server, b2)
@@ -414,8 +423,8 @@ func TestServerCanEncryptToBeaconAAfterRegisteringBeaconB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beaconA := newBeacon(t, serverPK)
-	beaconB := newBeacon(t, serverPK)
+	beaconA := newBeacon(t, server, serverPK)
+	beaconB := newBeacon(t, server, serverPK)
 
 	beaconARegistration := registerBeacon(t, server, beaconA)
 	registerBeacon(t, server, beaconB)
@@ -440,8 +449,8 @@ func TestServerCanDecryptFromBeaconAAfterRegisteringBeaconB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beaconA := newBeacon(t, serverPK)
-	beaconB := newBeacon(t, serverPK)
+	beaconA := newBeacon(t, server, serverPK)
+	beaconB := newBeacon(t, server, serverPK)
 
 	registerBeacon(t, server, beaconA)
 	registerBeacon(t, server, beaconB)
@@ -466,8 +475,8 @@ func TestServerCanDecryptFromBeaconAAfterEncryptingToBeaconB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beaconA := newBeacon(t, serverPK)
-	beaconB := newBeacon(t, serverPK)
+	beaconA := newBeacon(t, server, serverPK)
+	beaconB := newBeacon(t, server, serverPK)
 
 	registerBeacon(t, server, beaconA)
 	beaconBRegistration := registerBeacon(t, server, beaconB)
@@ -503,7 +512,7 @@ func TestEncryptMultiple(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b1 := newBeacon(t, serverPK)
+	b1 := newBeacon(t, server, serverPK)
 	message := bytes.Repeat([]byte{0x01}, 32)
 
 	b1Registration := registerBeacon(t, server, b1)
@@ -527,7 +536,7 @@ func TestDecryptMultiple(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	message := bytes.Repeat([]byte{0x01}, 32)
 
 	registration := registerBeacon(t, server, beacon)
@@ -562,7 +571,7 @@ func TestDecryptCatchUp(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	message := bytes.Repeat([]byte{0x01}, 32)
 
 	registration := registerBeacon(t, server, beacon)
@@ -597,7 +606,7 @@ func TestBeaconEncryptsToServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	message := []byte("beacon to server")
 
 	registerBeacon(t, server, beacon)
@@ -620,7 +629,7 @@ func TestServerEncryptAndUpdateReturnsSerializedRatchetSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	registration := registerBeacon(t, server, beacon)
 	message := []byte("server to beacon with snapshot")
 
@@ -662,7 +671,7 @@ func TestServerDecryptAndUpdateReturnsSerializedRatchetSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	registration := registerBeacon(t, server, beacon)
 	message := []byte("beacon to server with snapshot")
 
@@ -704,7 +713,7 @@ func TestServerEncryptAndUpdateJSONReturnsDirectionalRatchetSnapshot(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	registration := registerBeacon(t, server, beacon)
 	message := []byte("server to beacon with JSON snapshot")
 
@@ -746,7 +755,7 @@ func TestServerDecryptAndUpdateJSONReturnsDirectionalRatchetSnapshot(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	registration := registerBeacon(t, server, beacon)
 	message := []byte("beacon to server with JSON snapshot")
 
@@ -813,7 +822,7 @@ func TestAuthenticatedBeaconMessageRejectsTampering(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 
 	registerBeacon(t, server, beacon)
 	ciphertext, err := beacon.EncryptToServer([]byte("beacon to server"))
@@ -833,7 +842,7 @@ func TestAuthenticatedServerMessageRejectsTampering(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 
 	registration := registerBeacon(t, server, beacon)
 	ciphertext, err := server.EncryptToBeacon(registration.KeyID, []byte("server to beacon"))
@@ -853,7 +862,7 @@ func TestDecryptRejectsWrongDirection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 
 	registration := registerBeacon(t, server, beacon)
 	serverToBeacon, err := server.EncryptToBeacon(registration.KeyID, []byte("server to beacon"))
@@ -879,8 +888,8 @@ func TestBeaconCannotDecryptMessageForDifferentBeacon(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b1 := newBeacon(t, serverPK)
-	b2 := newBeacon(t, serverPK)
+	b1 := newBeacon(t, server, serverPK)
+	b2 := newBeacon(t, server, serverPK)
 
 	b1Registration := registerBeacon(t, server, b1)
 	registerBeacon(t, server, b2)
@@ -900,7 +909,7 @@ func TestCiphertextCannotBeReplayed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	message := []byte("one shot")
 
 	registration := registerBeacon(t, server, beacon)
@@ -926,7 +935,7 @@ func TestBeaconCanRetryDecryptionAfterCorruptedAEADMessage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	message := bytes.Repeat([]byte{0x01}, 32)
 
 	registration := registerBeacon(t, server, beacon)
@@ -954,7 +963,7 @@ func TestServerCanRetryDecryptionAfterCorruptedAEADMessage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	message := bytes.Repeat([]byte{0x01}, 32)
 
 	registerBeacon(t, server, beacon)
@@ -982,7 +991,7 @@ func TestRejectedReceiveLeavesServerCheckpointUnchanged(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	message := bytes.Repeat([]byte{0x5A}, 32)
 
 	registerBeacon(t, server, beacon)
@@ -1029,7 +1038,7 @@ func TestConcurrentHandleUseIsSerialized(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, serverPK)
+	beacon := newBeacon(t, server, serverPK)
 	registration := registerBeacon(t, server, beacon)
 
 	const workers = 16
@@ -1068,7 +1077,7 @@ func TestConcurrentCloseIsSafe(t *testing.T) {
 		server.Close()
 		t.Fatal(err)
 	}
-	beacon, err := NewBeacon(0, serverPK)
+	beacon, err := NewBeacon(0, serverPK, mustServerMLDSAPublicKey(t, server))
 	if err != nil {
 		server.Close()
 		t.Fatal(err)

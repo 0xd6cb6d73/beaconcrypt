@@ -48,7 +48,7 @@ theorem shared_publication {Auxiliary : Type} (c : Pqxdh.Crypto)
     (encode : RawCtxReceive.DecodedFrame → Pqxdh.Bytes) (writes : WritesOn writer encode)
     (kdf : QueryImpl RawCtxSharedPrimitive.KdfSpec
       (StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp))
-    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 153)
+    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 281)
     (bounded : admitted input) (auxiliary : Auxiliary) (cache : CtxRO.QueryCache) :
     (simulateQ (sharedImpl c writer kdf) (RawCtxSourceSeal.sealInput input)).run (auxiliary, cache) = (do
       let result ← (simulateQ ctxRandomOracle
@@ -79,7 +79,7 @@ theorem source_publication {Auxiliary : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (lengths : BodyLength source.crypto) (writer : RawCtxMixedShared.Writer)
     (encode : RawCtxReceive.DecodedFrame → Pqxdh.Bytes) (writes : WritesOn writer encode)
-    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 153)
+    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 281)
     (bounded : admitted input) (auxiliary : Auxiliary) (cache : CtxRO.QueryCache) :
     (LiveRecordEvents.sourceSealing source writer input).run (auxiliary, cache) = (do
       let result ← (simulateQ ctxRandomOracle
@@ -94,7 +94,7 @@ theorem source_supported {Auxiliary : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (lengths : BodyLength source.crypto) (writer : RawCtxMixedShared.Writer)
     (encode : RawCtxReceive.DecodedFrame → Pqxdh.Bytes) (writes : WritesOn writer encode)
-    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 153)
+    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 281)
     (bounded : admitted input) (auxiliary : Auxiliary) (cache : CtxRO.QueryCache)
     (result : Option Pqxdh.Bytes × RawCtxSharedPrimitive.SharedState Auxiliary) :
     result ∈ support ((LiveRecordEvents.sourceSealing source writer input).run (auxiliary, cache)) ↔
@@ -110,7 +110,7 @@ theorem source_no_failure {Auxiliary : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (lengths : BodyLength source.crypto) (writer : RawCtxMixedShared.Writer)
     (encode : RawCtxReceive.DecodedFrame → Pqxdh.Bytes) (writes : WritesOn writer encode)
-    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 153)
+    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 281)
     (bounded : admitted input) (auxiliary : Auxiliary) (cache : CtxRO.QueryCache)
     (after : RawCtxSharedPrimitive.SharedState Auxiliary) :
     (none, after) ∉ support ((LiveRecordEvents.sourceSealing source writer input).run (auxiliary, cache)) := by
@@ -119,7 +119,7 @@ theorem source_no_failure {Auxiliary : Type}
 
 /-- A supported source CTX record has exactly the plaintext length plus tag16 and commitment64. -/
 theorem protected_length (c : Pqxdh.Crypto) (lengths : BodyLength c)
-    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 153)
+    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 281)
     (cache after : CtxRO.QueryCache) (record : CtxRomRecord)
     (actual : (record, after) ∈ support ((simulateQ ctxRandomOracle
       (ctxSeal c (sourceKey input) (sourceInput input had))).run cache)) :
@@ -137,7 +137,7 @@ theorem source_decode {Auxiliary Message Root : Type}
     (lengths : BodyLength source.crypto) (writer : RawCtxMixedShared.Writer)
     (encode : RawCtxReceive.DecodedFrame → Pqxdh.Bytes) (writes : WritesOn writer encode)
     (reader : RawCtxFrameDecoding.Reader Message Root) (reads : ReadsOn reader encode)
-    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 153)
+    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 281)
     (bounded : admitted input) (auxiliary : Auxiliary) (cache afterCache : CtxRO.QueryCache)
     (raw : Pqxdh.Bytes) (afterAuxiliary : Auxiliary)
     (actual : (some raw, (afterAuxiliary, afterCache)) ∈ support
@@ -163,7 +163,7 @@ theorem pending_publication {Auxiliary : Type}
     (lengths : BodyLength source.crypto) (writer : RawCtxMixedShared.Writer)
     (encode : RawCtxReceive.DecodedFrame → Pqxdh.Bytes) (writes : WritesOn writer encode)
     (pending : SendSeal RawCtxSourceSend.SealContext)
-    (had : pending.context.associatedData.length = 153)
+    (had : pending.context.associatedData.length = 281)
     (bounded : admitted (RawCtxSourceSend.arguments pending))
     (auxiliary : Auxiliary) (cache : CtxRO.QueryCache) :
     (simulateQ (liveOwnerSendPrimitive (RawCtxSourceHkdf.response source.crypto)
@@ -187,7 +187,7 @@ theorem source_continued {Auxiliary Result : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (lengths : BodyLength source.crypto) (writer : RawCtxMixedShared.Writer)
     (encode : RawCtxReceive.DecodedFrame → Pqxdh.Bytes) (writes : WritesOn writer encode)
-    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 153)
+    (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 281)
     (bounded : admitted input) (auxiliary : Auxiliary) (cache : CtxRO.QueryCache)
     (next : Option Pqxdh.Bytes → StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp Result) :
     ((LiveRecordEvents.sourceSealing source writer input) >>= next).run (auxiliary, cache) = (do

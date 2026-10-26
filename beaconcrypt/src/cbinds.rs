@@ -334,20 +334,25 @@ pub extern "C" fn beaconcrypt_free_buffer(buffer: Buffer) {
 	}
 }
 
-/// Create a server with a randomly generated identity key.
+/// Create a server with independently generated Ed25519 and ML-DSA-65 identity keys.
 ///
 /// Returns an owned handle, or null on failure. Release a non-null handle with `beaconcrypt_server_free`.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_new(server_kid: u64) -> *mut Server {
 	server_result(
-		PersistentServer::create(server_kid, None, Box::<BindingSnapshotStore>::default()),
+		PersistentServer::create(
+			server_kid,
+			None,
+			None,
+			Box::<BindingSnapshotStore>::default(),
+		),
 		std::ptr::null_mut(),
 	)
 }
 
-/// Create a server with an optional deterministic identity seed.
+/// Create a server with independent optional Ed25519 and ML-DSA-65 identity seeds.
 ///
-/// A null pointer or zero length selects a random identity key. A non-empty seed must contain exactly `beaconcrypt_ED25519_SEED_SIZE` readable bytes.
+/// Each null pointer or zero length selects an independently generated identity key. Each non-empty seed must contain exactly 32 readable secret bytes.
 ///
 /// Returns an owned handle, or null when creation fails. Release a non-null handle with `beaconcrypt_server_free`.
 #[unsafe(no_mangle)]
@@ -355,22 +360,32 @@ pub extern "C" fn beaconcrypt_server_new_from_seed(
 	server_kid: u64,
 	seed_ptr: *const u8,
 	seed_len: usize,
+	mldsa_seed_ptr: *const u8,
+	mldsa_seed_len: usize,
 ) -> *mut Server {
 	let seed = unsafe { input(seed_ptr, seed_len) };
+	let mldsa_seed = unsafe { input(mldsa_seed_ptr, mldsa_seed_len) };
 	server_result(
-		PersistentServer::create(server_kid, seed, Box::<BindingSnapshotStore>::default()),
+		PersistentServer::create(
+			server_kid,
+			seed,
+			mldsa_seed,
+			Box::<BindingSnapshotStore>::default(),
+		),
 		std::ptr::null_mut(),
 	)
 }
 
 /// Create a server whose results are released only after the store's durable compare-and-swap succeeds.
 ///
-/// The callbacks take ownership of their context even when construction fails. A null seed or zero seed length selects a random identity. `status_out` may be null; otherwise it receives a `beaconcrypt_STATUS_*` code. Returns null on failure.
+/// The callbacks take ownership of their context even when construction fails. Each null seed or zero seed length selects an independently generated identity. `status_out` may be null; otherwise it receives a `beaconcrypt_STATUS_*` code. Returns null on failure.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_create_with_store(
 	server_kid: u64,
 	seed_ptr: *const u8,
 	seed_len: usize,
+	mldsa_seed_ptr: *const u8,
+	mldsa_seed_len: usize,
 	callbacks: SnapshotStoreCallbacks,
 	status_out: *mut u32,
 ) -> *mut Server {
@@ -378,8 +393,9 @@ pub extern "C" fn beaconcrypt_server_create_with_store(
 		return std::ptr::null_mut();
 	};
 	let seed = unsafe { input(seed_ptr, seed_len) };
+	let mldsa_seed = unsafe { input(mldsa_seed_ptr, mldsa_seed_len) };
 	server_result(
-		PersistentServer::create(server_kid, seed, store),
+		PersistentServer::create(server_kid, seed, mldsa_seed, store),
 		status_out,
 	)
 }
@@ -392,6 +408,8 @@ pub extern "C" fn beaconcrypt_server_create_with_store_and_lineage(
 	server_kid: u64,
 	seed_ptr: *const u8,
 	seed_len: usize,
+	mldsa_seed_ptr: *const u8,
+	mldsa_seed_len: usize,
 	callbacks: SnapshotStoreCallbacks,
 	lineage_ptr: *const u8,
 	lineage_len: usize,
@@ -407,10 +425,12 @@ pub extern "C" fn beaconcrypt_server_create_with_store_and_lineage(
 		return std::ptr::null_mut();
 	};
 	let seed = unsafe { input(seed_ptr, seed_len) };
+	let mldsa_seed = unsafe { input(mldsa_seed_ptr, mldsa_seed_len) };
 	server_result(
 		PersistentServer::create_with_lineage(
 			server_kid,
 			seed,
+			mldsa_seed,
 			store,
 			SnapshotLineage::from_bytes(lineage),
 		),
@@ -550,9 +570,9 @@ pub extern "C" fn beaconcrypt_server_export_state(handle: *const Server) -> Buff
 		.unwrap_or_else(empty_buffer)
 }
 
-/// Create a beacon bound to a server identity public key.
+/// Create a beacon bound to both server identity public keys.
 ///
-/// `server_pk_ptr` must point to an Ed25519 public key of the length implied by the API constants.
+/// `server_pk_ptr` must point to an Ed25519 public key, and `server_mldsa_pk_ptr` must point to an ML-DSA-65 public key of `beaconcrypt_MLDSA_PUBLIC_KEY_LEN` bytes. Both pins are mandatory.
 ///
 /// Returns an owned handle, or null for absent or incorrectly sized input or a reported initialization/key-generation failure. Release a non-null handle with `beaconcrypt_beacon_free`.
 #[unsafe(no_mangle)]
@@ -560,11 +580,16 @@ pub extern "C" fn beaconcrypt_beacon_new(
 	server_kid: u64,
 	server_pk_ptr: *const u8,
 	server_pk_len: usize,
+	server_mldsa_pk_ptr: *const u8,
+	server_mldsa_pk_len: usize,
 ) -> *mut Beacon {
 	let Some(server_pk) = (unsafe { input(server_pk_ptr, server_pk_len) }) else {
 		return std::ptr::null_mut();
 	};
-	Beacon::try_new(server_kid, server_pk)
+	let Some(server_mldsa_pk) = (unsafe { input(server_mldsa_pk_ptr, server_mldsa_pk_len) }) else {
+		return std::ptr::null_mut();
+	};
+	Beacon::try_new(server_kid, server_pk, server_mldsa_pk)
 		.map(|beacon| Box::into_raw(Box::new(beacon)))
 		.unwrap_or(std::ptr::null_mut())
 }
@@ -609,6 +634,28 @@ pub extern "C" fn beaconcrypt_beacon_identity_pk(handle: *const Beacon) -> Buffe
 	}
 	let provider = unsafe { &*handle };
 	into_buffer(provider.identity_pk().as_ref().to_vec())
+}
+
+/// Copy the server's ML-DSA-65 public key into a caller-owned buffer.
+/// Returns an empty buffer for a null handle and preserves the last operation's status.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_mldsa_public_key(handle: *const Server) -> Buffer {
+	if handle.is_null() {
+		return empty_buffer();
+	}
+	let provider = unsafe { &*handle };
+	into_buffer(provider.0.mldsa_public_key().to_vec())
+}
+
+/// Copy the beacon's ML-DSA-65 public key into a caller-owned buffer.
+/// Returns an empty buffer for a null handle.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_beacon_mldsa_public_key(handle: *const Beacon) -> Buffer {
+	if handle.is_null() {
+		return empty_buffer();
+	}
+	let provider = unsafe { &*handle };
+	into_buffer(provider.mldsa_public_key().to_vec())
 }
 
 /// Generate the beacon's serialized registration bundle.
@@ -1038,6 +1085,8 @@ mod tests {
 			19,
 			[7; 32].as_ptr(),
 			32,
+			[8; 32].as_ptr(),
+			32,
 			callbacks(state, destroyed, LoadMode::Normal),
 			[9; 32].as_ptr(),
 			32,
@@ -1057,7 +1106,8 @@ mod tests {
 
 	fn register(server: &OwnedServer) -> (Beacon, u64) {
 		let public_key = copy_buffer(beaconcrypt_server_identity_pk(server.0));
-		let mut beacon = Beacon::new(19, &public_key);
+		let mldsa_key = copy_buffer(beaconcrypt_server_mldsa_public_key(server.0));
+		let mut beacon = Beacon::new(19, &public_key, &mldsa_key);
 		let registration = beacon.get_registration_bundle().unwrap();
 		let response = beaconcrypt_register_beacon(
 			server.0,
@@ -1080,6 +1130,10 @@ mod tests {
 		assert_eq!(server.head().lineage, [9; 32]);
 		assert_eq!(server.head().generation, 0);
 		assert_eq!(state.lock().unwrap().head, Some(server.head()));
+		assert_eq!(
+			copy_buffer(beaconcrypt_server_mldsa_public_key(server.0)),
+			crate::MldsaIdentity::from_seed([8; 32]).public_key()
+		);
 		let (mut beacon, kid) = register(&server);
 		assert_eq!(server.head().generation, 2);
 		assert_eq!(state.lock().unwrap().head, Some(server.head()));
@@ -1155,6 +1209,7 @@ mod tests {
 			assert!(beaconcrypt_server_is_poisoned(server.0));
 			assert_eq!(server.head().generation, 2);
 			beaconcrypt_free_buffer(beaconcrypt_server_identity_pk(server.0));
+			beaconcrypt_free_buffer(beaconcrypt_server_mldsa_public_key(server.0));
 			assert_eq!(
 				beaconcrypt_server_last_status(server.0),
 				STATUS_STALE_GENERATION
@@ -1329,6 +1384,8 @@ mod tests {
 				19,
 				std::ptr::null(),
 				0,
+				std::ptr::null(),
+				0,
 				invalid,
 				[9; 31].as_ptr(),
 				31,
@@ -1343,6 +1400,8 @@ mod tests {
 				19,
 				[7; 31].as_ptr(),
 				31,
+				std::ptr::null(),
+				0,
 				callbacks(&state, &destroyed, LoadMode::Normal),
 				&mut status
 			)
@@ -1365,6 +1424,8 @@ mod tests {
 				19,
 				std::ptr::null(),
 				0,
+				std::ptr::null(),
+				0,
 				callbacks(&state, &destroyed, LoadMode::Normal),
 				&mut status
 			)
@@ -1376,8 +1437,16 @@ mod tests {
 		let mut invalid = callbacks(&state, &destroyed, LoadMode::Normal);
 		invalid.compare_and_swap = None;
 		assert!(
-			beaconcrypt_server_create_with_store(19, std::ptr::null(), 0, invalid, &mut status)
-				.is_null()
+			beaconcrypt_server_create_with_store(
+				19,
+				std::ptr::null(),
+				0,
+				std::ptr::null(),
+				0,
+				invalid,
+				&mut status
+			)
+			.is_null()
 		);
 		assert_eq!(status, STATUS_INVALID_ARGUMENT);
 		assert_eq!(destroyed.load(Ordering::SeqCst), 2);
@@ -1386,6 +1455,8 @@ mod tests {
 		borrowed.destroy = None;
 		let server = OwnedServer(beaconcrypt_server_create_with_store(
 			19,
+			std::ptr::null(),
+			0,
 			std::ptr::null(),
 			0,
 			borrowed,
@@ -1481,13 +1552,117 @@ mod tests {
 	}
 
 	#[test]
+	fn c_seeded_mldsa_identity_and_public_key_getters() {
+		let server = OwnedServer(beaconcrypt_server_new_from_seed(
+			19,
+			[7; 32].as_ptr(),
+			32,
+			[8; 32].as_ptr(),
+			32,
+		));
+		assert!(!server.0.is_null());
+		let public_key = copy_buffer(beaconcrypt_server_identity_pk(server.0));
+		let mldsa_key = copy_buffer(beaconcrypt_server_mldsa_public_key(server.0));
+		assert_eq!(
+			mldsa_key,
+			crate::MldsaIdentity::from_seed([8; 32]).public_key()
+		);
+		let beacon = beaconcrypt_beacon_new(
+			19,
+			public_key.as_ptr(),
+			public_key.len(),
+			mldsa_key.as_ptr(),
+			mldsa_key.len(),
+		);
+		assert!(!beacon.is_null());
+		let beacon_key = copy_buffer(beaconcrypt_beacon_mldsa_public_key(beacon));
+		assert_eq!(beacon_key.len(), crate::MLDSA_PUBLIC_KEY_LEN);
+		assert_ne!(beacon_key, mldsa_key);
+		beaconcrypt_beacon_free(beacon);
+	}
+
+	#[test]
 	fn c_constructors_reject_malformed_lengths() {
+		let server = OwnedServer(beaconcrypt_server_new(19));
+		assert!(!server.0.is_null());
+		let public_key = copy_buffer(beaconcrypt_server_identity_pk(server.0));
+		let mldsa_key = copy_buffer(beaconcrypt_server_mldsa_public_key(server.0));
+		assert_eq!(mldsa_key.len(), crate::MLDSA_PUBLIC_KEY_LEN);
 		for length in [1, 31, 33, 64] {
 			let bytes = vec![7; length];
-			assert!(beaconcrypt_beacon_new(19, bytes.as_ptr(), bytes.len()).is_null());
-			assert!(beaconcrypt_server_new_from_seed(19, bytes.as_ptr(), bytes.len()).is_null());
+			assert!(
+				beaconcrypt_beacon_new(
+					19,
+					bytes.as_ptr(),
+					bytes.len(),
+					mldsa_key.as_ptr(),
+					mldsa_key.len()
+				)
+				.is_null()
+			);
+			assert!(
+				beaconcrypt_server_new_from_seed(
+					19,
+					bytes.as_ptr(),
+					bytes.len(),
+					std::ptr::null(),
+					0
+				)
+				.is_null()
+			);
+			assert!(
+				beaconcrypt_server_new_from_seed(
+					19,
+					std::ptr::null(),
+					0,
+					bytes.as_ptr(),
+					bytes.len()
+				)
+				.is_null()
+			);
 		}
-		assert!(beaconcrypt_beacon_new(19, std::ptr::null(), 0).is_null());
+		for length in [
+			0,
+			32,
+			crate::MLDSA_PUBLIC_KEY_LEN - 1,
+			crate::MLDSA_PUBLIC_KEY_LEN + 1,
+		] {
+			let bytes = vec![7; length];
+			assert!(
+				beaconcrypt_beacon_new(
+					19,
+					public_key.as_ptr(),
+					public_key.len(),
+					bytes.as_ptr(),
+					bytes.len()
+				)
+				.is_null()
+			);
+		}
+		assert!(
+			beaconcrypt_beacon_new(
+				19,
+				public_key.as_ptr(),
+				public_key.len(),
+				std::ptr::null(),
+				0
+			)
+			.is_null()
+		);
+		assert!(
+			beaconcrypt_beacon_new(19, std::ptr::null(), 0, mldsa_key.as_ptr(), mldsa_key.len())
+				.is_null()
+		);
+		assert!(
+			beaconcrypt_server_mldsa_public_key(std::ptr::null())
+				.ptr
+				.is_null()
+		);
+		assert!(
+			beaconcrypt_beacon_mldsa_public_key(std::ptr::null())
+				.ptr
+				.is_null()
+		);
 		beaconcrypt_free_buffer(empty_buffer());
 		beaconcrypt_free_buffer(into_buffer(Vec::with_capacity(32)));
 		beaconcrypt_free_buffer(into_buffer(vec![7; 48]));

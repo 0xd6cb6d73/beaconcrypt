@@ -38,6 +38,15 @@ class NameOrderChecks(unittest.TestCase):
             self.assertGreater(len(result["continuation"]), 280)
             self.assertNotEqual(result["early_sha256"], result["late_sha256"])
 
+    def test_classical_projection_scope_cannot_be_removed(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            directory = Path(scratch)
+            (directory / "production-transcript-interface.pvl").write_text(
+                "(* unreviewed full ML-DSA claim *)"
+            )
+            with self.assertRaisesRegex(ValueError, "classical-projection scope"):
+                CHECKER.validate(directory=directory)
+
     def test_no_early_secret_use_or_shadowing(self):
         for name, macro in CHECKER.MACROS.items():
             text = (CHECKER.HERE / name).read_text()

@@ -64,6 +64,8 @@ jobs:
             target: check-generated-proverif-phase2-response-binding
           - name: ProVerif CBOR registration implicit metadata
             target: check-generated-proverif-cbor-registration
+          - name: ProVerif assumed ML-DSA authentication and joint sessions
+            target: verify-proverif-mldsa-joint
           - name: ProVerif weakened Phase 2 assigned ID binding
             target: check-generated-proverif-phase2-assigned-id-weak
           - name: ProVerif native Phase 2 X25519 encoding alias

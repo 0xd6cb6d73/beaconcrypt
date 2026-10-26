@@ -5,7 +5,6 @@
 import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import fcntl
 import hashlib
 import importlib.util
 import json
@@ -151,13 +150,15 @@ TOKEN_SHA256 = {
     "tasking-origin-sends.pvl": "8c48ea0b0e74f9a022761ec0e463ecbdd303d37a206467f317939fcb4a5a0b29",
     "tasking-origin.pvl": "ebefb3ea873a8565f03730d7af1283453108d377ee8de93c2ab3f5b137e3bfde",
 }
+# Reviewed classical projection of the ML-DSA source; see doc/impl/mldsa-source-pins.md.
+# Full authentication/AD lifting is not inferred from these whole-file tripwires.
 SOURCE_SHA256 = {
-    "beaconcrypt/src/beacon.rs": "b07624435c15761d86749064cd6fd30f6a0fefcd246b485f0be80dee79d24698",
-    "beaconcrypt/src/server.rs": "bede4addf22f32ead26815a2680aac04312b782d3449ccb931a9635433e9ab72",
-    "beaconcrypt/src/ratchet.rs": "89e313030c12de769b7d54288b45a5e300550af330359cbb5b0c6d4ff3d2956b",
-    "beaconcrypt/src/shared.rs": "0592ebe52fcdcd444f1ed92a30c693d84733ec7248c997382e0a498b9cfd3396",
-    "beaconcrypt/src/pqxdh.rs": "a215beed072e1f9a38036fc96dd5d33c2cb751a95504397d8b53411d5f49b3ee",
-    "beaconcrypt-core/src/pqxdh.rs": "cbb38e9d71b9f67c9c77c99ee34c834d8687cf4a1439a6965a360bb992f5eded",
+    "beaconcrypt/src/beacon.rs": "880a240ccfda92565734d31ae3a7e630e988d3e1ff77666579ed31dafd15fd68",
+    "beaconcrypt/src/server.rs": "1cf58484619c712f3970f1bde06789559ee11e3af50430d42c1e3fe41fded706",
+    "beaconcrypt/src/ratchet.rs": "bfe86fc2b5589a706c0513505e6cf9249741654538eabe7d2708c8213baf256b",
+    "beaconcrypt/src/shared.rs": "9100666b1a7f037bb792778cb1433ea9b5b03c715ed3e1c482f7362ff2c3d56e",
+    "beaconcrypt/src/pqxdh.rs": "892c9b689b6ccfcec08d5d76707667d181c22e021f6b7106495844f5c8ca2fd1",
+    "beaconcrypt-core/src/pqxdh.rs": "2f2e1b3c8e02ad605d5078a8ca16ccf569c50a77bda6df787d84722a16806763",
     "beaconcrypt-core/src/pqxdh/concrete.rs": "b3a22f8a7c4adb087e217d58e2d302a057fd5ae224cd8fe2c44777472e469c50",
     "beaconcrypt-core/src/ratchet.rs": "3ed4d65ed1a63605819f8e685707d47b718a91ea9ee23069da88501c8031fa51",
     "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
@@ -173,6 +174,7 @@ def digest(text):
 
 
 def validate_targets(targets=TARGETS, directory=HERE, source_root=None):
+    FS.validate_legacy_scope(directory)
     if tuple(targets) != TARGETS:
         raise ValueError("tasking-origin roster, classes or formulas changed")
     if {p.name for p in directory.glob("tasking-origin-*.pv")} != {
@@ -198,6 +200,8 @@ def validate_targets(targets=TARGETS, directory=HERE, source_root=None):
 
 
 def run(args, logdir):
+    import fcntl
+
     rows = []
     failures = []
     args.lock.parent.mkdir(parents=True, exist_ok=True)

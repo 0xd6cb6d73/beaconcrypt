@@ -63,9 +63,9 @@ def peerView (codec : Codec Reader Response) (log : Log) (kid : Std.U64) : Optio
   let peer ← identityOf codec raw
   pure (server, peer)
 
-/-- Public reconstruction of an established owner: its outer key ID (the assigned key ID of its finish input), its established control (the pinned binding from `create` and the assigned key ID) and its 153-byte associated data (pin and the identity key read from its bundle bytes). -/
+/-- Public reconstruction of an established owner: its outer key ID (the assigned key ID of its finish input), its established control (the pinned binding from `create` and the assigned key ID) and its 281-byte associated data (pin and the identity key read from its bundle bytes). -/
 noncomputable def ownerView (codec : Codec Reader Response) (log : Log) (index : Nat) :
-    Option (Std.U64 × beaconcrypt_core.pqxdh.BeaconEstablished × Std.Array Std.U8 153#usize) := do
+    Option (Std.U64 × beaconcrypt_core.pqxdh.BeaconEstablished × Std.Array Std.U8 281#usize) := do
   let created ← log.owners[index]?
   let bundle ← log.bundles index
   let beacon ← identityOf codec bundle

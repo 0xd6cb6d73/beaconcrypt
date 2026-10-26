@@ -83,7 +83,7 @@ noncomputable def openingResult (frameRead : RawCtxReceive.FrameDecoder)
           (PqxdhRecordLiftChainTable.chain (PqxdhRecordLiftProtocol.cachedSeeds state.base) state.base.chain) pending) with
     | none => (.None, state)
     | some input =>
-      if width : input.context.associatedData.length = 153 then
+      if width : input.context.associatedData.length = 281 then
         let result := keyedRawResult (RawCtxUniversalDecoder.decoder frameRead) input.material
           (RawCtxUniversalDecoder.pack (RawCtxUniversalDecoder.envelope
             (PqxdhRecordLiftIdeal.materialAt state.base.chain input.material).2 input.context width)) state

@@ -23,7 +23,7 @@ def projectOption {α β : Type} (f : α → β) : core.option.Option α → Opt
   | .Some value => some (f value)
 
 /-- The extracted payload admission and its three retained slices equal the computational splitter on every represented payload. -/
-theorem payload_exact (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
+theorem payload_exact (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
     (sender : Std.U64) :
     (projectOption contextSlices <$> record.OpenFrameContext.from_frame payload ad sender) =
       ok (RawCtxFrameDecoding.fromPayload (sliceBytes payload)) := by
@@ -81,7 +81,7 @@ def Prepared.project (prepared : Prepared) : RawCtxReceive.DecodedFrame × RawCt
 
 /-- The actual adapter order: empty input, complete framing, root, sender pin, payload pointer, extracted payload admission, and sequence getter. -/
 def prepare {Message Root : Type} (reader : Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (expected : Std.U64) (raw : Pqxdh.Bytes) :
+    (ad : Std.Array Std.U8 281#usize) (expected : Std.U64) (raw : Pqxdh.Bytes) :
     RustM (Option Prepared) := do
   if raw.isEmpty then ok none else do
     let parsed ← complete reader raw
@@ -99,7 +99,7 @@ def prepare {Message Root : Type} (reader : Reader Message Root)
 set_option backward.isDefEq.respectTransparency false in
 /-- The extracted framing and payload gates instantiate the complete computational prelude, including every rejection. -/
 theorem prepare_exact {Message Root : Type} (reader : Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (expected : Std.U64) (raw : Pqxdh.Bytes) :
+    (ad : Std.Array Std.U8 281#usize) (expected : Std.U64) (raw : Pqxdh.Bytes) :
     (Option.map Prepared.project <$> prepare reader ad expected raw) =
       ok (RawCtxFrameDecoding.sourcePrepared reader.model expected raw) := by
   unfold prepare RawCtxFrameDecoding.sourcePrepared
@@ -129,7 +129,7 @@ theorem prepare_exact {Message Root : Type} (reader : Reader Message Root)
 
 /-- Successful native preparation supplies exactly the same parsed frame and retained slices to the computational source. -/
 theorem prepare_success {Message Root : Type} (reader : Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (expected : Std.U64) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (expected : Std.U64) (raw : Pqxdh.Bytes)
     (prepared : Prepared) (execution : prepare reader ad expected raw = ok (some prepared)) :
     RawCtxFrameDecoding.sourcePrepared reader.model expected raw = some prepared.project := by
   have projected := prepare_exact reader ad expected raw
@@ -138,7 +138,7 @@ theorem prepare_success {Message Root : Type} (reader : Reader Message Root)
 
 /-- Native preparation always has a normal optional result; parser and admission errors remain explicit rejection. -/
 theorem prepare_normal {Message Root : Type} (reader : Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (expected : Std.U64) (raw : Pqxdh.Bytes) :
+    (ad : Std.Array Std.U8 281#usize) (expected : Std.U64) (raw : Pqxdh.Bytes) :
     ∃ result, prepare reader ad expected raw = ok result := by
   have projected := prepare_exact reader ad expected raw
   cases execution : prepare reader ad expected raw with
@@ -152,17 +152,17 @@ theorem prepare_normal {Message Root : Type} (reader : Reader Message Root)
 
 /-- The normalized native result is justified by actual extraction totality, rather than a parser-success premise. -/
 noncomputable def prepared {Message Root : Type} (reader : Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (expected : Std.U64) (raw : Pqxdh.Bytes) : Option Prepared :=
+    (ad : Std.Array Std.U8 281#usize) (expected : Std.U64) (raw : Pqxdh.Bytes) : Option Prepared :=
   (prepare_normal reader ad expected raw).choose
 
 theorem prepared_exact {Message Root : Type} (reader : Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (expected : Std.U64) (raw : Pqxdh.Bytes) :
+    (ad : Std.Array Std.U8 281#usize) (expected : Std.U64) (raw : Pqxdh.Bytes) :
     prepare reader ad expected raw = ok (prepared reader ad expected raw) :=
   (prepare_normal reader ad expected raw).choose_spec
 
 /-- Arbitrary complete continuations receive the identical normalized native fields and rejection outcomes. -/
 theorem continuation_exact {Message Root Result : Type} (reader : Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (expected : Std.U64) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (expected : Std.U64) (raw : Pqxdh.Bytes)
     (next : Option (RawCtxReceive.DecodedFrame × RawCtxFrameDecoding.Slices) → Result) :
     next ((prepared reader ad expected raw).map Prepared.project) =
       next (RawCtxFrameDecoding.sourcePrepared reader.model expected raw) := by
@@ -172,7 +172,7 @@ theorem continuation_exact {Message Root Result : Type} (reader : Reader Message
 
 /-- Actual successful preparation retains the source raw buffer, parsed fields, sender pin and exact borrowed payload slices. -/
 theorem accepted_fields {Message Root : Type} (reader : Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (expected : Std.U64) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (expected : Std.U64) (raw : Pqxdh.Bytes)
     (value : Prepared) (execution : prepare reader ad expected raw = ok (some value)) :
     raw ≠ [] ∧ value.frame.sender = expected ∧
       RawCtxFrameDecoding.decode reader.model raw = some value.frame ∧
@@ -182,7 +182,7 @@ theorem accepted_fields {Message Root : Type} (reader : Reader Message Root)
 
 /-- Execute the existing complete source receive after the extracted native prelude. The projection changes only private context representation. -/
 noncomputable def receive {Message Root Metadata : Type} (reader : Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) :
     OracleComp RawCtxWholeOwner.PrimitiveSpec
       (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxWholeOwner.OwnerState Metadata) :=
@@ -195,7 +195,7 @@ noncomputable def receive {Message Root Metadata : Type} (reader : Reader Messag
 
 /-- Whole receive compilation preserves the actual optional plaintext and complete private owner state. -/
 theorem receive_source {Message Root Metadata : Type} (reader : Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) :
     receive reader ad raw state = RawCtxFrameDecoding.sourceReceive reader.model raw state := by
   unfold receive RawCtxFrameDecoding.sourceReceive
@@ -207,7 +207,7 @@ theorem receive_source {Message Root Metadata : Type} (reader : Reader Message R
 /-- Any stateful primitive interpretation retains its entire evaluated distribution and poststate after the native prelude is installed. -/
 theorem game_exact {Message Root Metadata PrimitiveState ι : Type} {base : OracleSpec ι}
     (impl : QueryImpl RawCtxWholeOwner.PrimitiveSpec (StateT PrimitiveState (OracleComp base)))
-    (reader : Reader Message Root) (ad : Std.Array Std.U8 153#usize) (raw : Pqxdh.Bytes)
+    (reader : Reader Message Root) (ad : Std.Array Std.U8 281#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (primitive : PrimitiveState)
     (associated : state.owner.associatedData = absBytes ad) :
     (simulateQ impl (receive reader ad raw state)).run primitive =
@@ -217,7 +217,7 @@ theorem game_exact {Message Root Metadata PrimitiveState ι : Type} {base : Orac
 
 /-- The retained native context uses the selected owner's AD and the very same decoded sender. -/
 theorem prepare_context {Message Root : Type} (reader : Reader Message Root)
-    (ad : Std.Array Std.U8 153#usize) (expected : Std.U64) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 281#usize) (expected : Std.U64) (raw : Pqxdh.Bytes)
     (value : Prepared) (execution : prepare reader ad expected raw = ok (some value)) :
     value.context.associated_data = ad ∧ value.context.sender_kid = value.frame.sender := by
   unfold prepare at execution
