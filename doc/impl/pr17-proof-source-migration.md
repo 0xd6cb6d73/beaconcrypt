@@ -36,3 +36,15 @@ Rust and release CI now run the complete workspace test command. The active `.co
 - `make -C beaconcrypt-core check-inventory`, shell syntax validation and `git diff --check` passed. Extra inventory mutation probes reject new backend files, backend source drift and backend symlinks.
 
 Validation used Rust 1.99.1. On this NixOS host, the existing GNU Make binary was placed on `PATH` and `SHELL` was set to the installed Bash path because `/bin/bash` is absent; no Nix shell or build was started. Focused source and inventory checks do not replace Lean extraction/typechecking, ProVerif security runs, primitive implementation proofs or end-to-end composition. No full native/WASI implementation mutation campaign was rerun for this guard-only change; production code and configured implementation-mutant exclusions are unchanged.
+
+## CI follow-up: inventory runner environment
+
+Formal-verification run `40384919712` at commit `8263ab5e7f27269a843a1a872e7769d6dfe86427` passed the source-fidelity job and initially reported thirty-nine successful components, five running components and one failed inventory job. The failure was `rg: command not found`: installing Nix did not put the proof shell's ripgrep on Ubuntu's host `PATH`, and `check-inventory` runs directly rather than entering that shell itself.
+
+The workflow now runs only the inventory matrix target in the existing locked `path:.#proofs` environment, which already declares ripgrep. All other component commands, the complete matrix, required aggregate and inventory assertions remain unchanged. The reviewed manifest updates only the workflow fingerprint for this follow-up. This change supplies a declared tool rather than skipping or replacing its scans.
+
+A dispatcher smoke check exercised all forty-five targets with successful and failing stub commands: all ninety cases selected the intended command and preserved its exit status. The complete inventory check also passed locally with the workflow's new fingerprint. Validation started no Nix shell, build, extraction, prover, full proof toolchain or remote workflow rerun; the existing GitHub run was still in progress when the fix was prepared.
+
+## Workflow concurrency
+
+The formal-verification workflow uses one top-level concurrency group, `formal-verification`, with `cancel-in-progress: true`. The group is shared by every branch and trigger type, so a later run cancels the previous run instead of allowing simultaneous workflow instances. Matrix components retain their existing parallel execution within the surviving run. The reviewed workflow fingerprint is refreshed; proof targets and assertions are unchanged. This change accompanies the inventory runner fix.

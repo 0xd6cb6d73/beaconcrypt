@@ -8,6 +8,10 @@ on:
   merge_group:
   workflow_dispatch:
 
+concurrency:
+  group: formal-verification
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -132,7 +136,14 @@ jobs:
           skipPush: true
 
       - name: Regenerate and verify formal proof artifacts
-        run: make -C beaconcrypt-core ${{ matrix.target }}
+        run: |
+          if [[ "${{ matrix.target }}" == check-inventory ]]; then
+            nix --extra-experimental-features 'nix-command flakes' \
+              develop --no-update-lock-file 'path:.#proofs' -c \
+              make -C beaconcrypt-core check-inventory
+          else
+            make -C beaconcrypt-core ${{ matrix.target }}
+          fi
 
   proofs:
     # Preserve this required-check context; the matrix above also verifies Lean.
