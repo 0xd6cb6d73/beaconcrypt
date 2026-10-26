@@ -100,49 +100,55 @@ def awk_expectations(directory=HERE):
     probe = probe.replace(baseline, baseline + "\n      print wanted")
     scenarios = sorted(set(re.findall(r'scenario == "([^"]+)"', source)))
     rows = []
-    for scenario in scenarios:
-        found = subprocess.run(
-            ["awk", "-v", "scenario=" + scenario, probe],
-            input="Verification summary:\n",
-            text=True,
-            capture_output=True,
-            check=True,
-        ).stdout.splitlines()
-        expected = [line for line in found if line.startswith("Query ")]
-        if scenario.endswith("-equivalence"):
-            expected = ["Query Observational equivalence is true."]
-        if not expected:
-            raise ValueError(f"no legacy expectations extracted: {scenario}")
-        # AWK's compromise map iteration is unordered, as is that result gate.
-        if scenario == "compromise":
-            expected.sort()
-        primary = ["RESULT " + line[6:] for line in expected]
-        if scenario.endswith("-equivalence"):
-            synthetic = primary[0] + "\nVerification summary:\n"
-        else:
-            traces = sum(line.endswith(" is false.") for line in expected)
-            synthetic = (
-                "\n".join(
-                    primary
-                    + ["A trace has been found."] * traces
-                    + ["Verification summary:"]
-                    + expected
+    # Windows limits process command lines to 32,767 characters; the probe is much larger.
+    # Close the file before AWK opens it, and keep it available for every scenario.
+    with tempfile.TemporaryDirectory(prefix="beaconcrypt-verdict-awk-") as tmp:
+        probe_path = Path(tmp) / "expectations.awk"
+        probe_path.write_text(probe, encoding="utf-8", newline="\n")
+        for scenario in scenarios:
+            found = subprocess.run(
+                ["awk", "-v", "scenario=" + scenario, "-f", str(probe_path)],
+                input="Verification summary:\n",
+                text=True,
+                capture_output=True,
+                check=True,
+            ).stdout.splitlines()
+            expected = [line for line in found if line.startswith("Query ")]
+            if scenario.endswith("-equivalence"):
+                expected = ["Query Observational equivalence is true."]
+            if not expected:
+                raise ValueError(f"no legacy expectations extracted: {scenario}")
+            # AWK's compromise map iteration is unordered, as is that result gate.
+            if scenario == "compromise":
+                expected.sort()
+            primary = ["RESULT " + line[6:] for line in expected]
+            if scenario.endswith("-equivalence"):
+                synthetic = primary[0] + "\nVerification summary:\n"
+            else:
+                traces = sum(line.endswith(" is false.") for line in expected)
+                synthetic = (
+                    "\n".join(
+                        primary
+                        + ["A trace has been found."] * traces
+                        + ["Verification summary:"]
+                        + expected
+                    )
+                    + "\n"
                 )
-                + "\n"
+            checked = subprocess.run(
+                ["awk", "-v", "scenario=" + scenario, "-f", str(path)],
+                input=synthetic,
+                text=True,
+                capture_output=True,
             )
-        checked = subprocess.run(
-            ["awk", "-v", "scenario=" + scenario, "-f", str(path)],
-            input=synthetic,
-            text=True,
-            capture_output=True,
-        )
-        if checked.returncode:
-            raise ValueError(
-                f"legacy enumeration rejected for {scenario}: {checked.stderr}"
+            if checked.returncode:
+                raise ValueError(
+                    f"legacy enumeration rejected for {scenario}: {checked.stderr}"
+                )
+            rows.extend(
+                verdict(path.name, scenario, i, line)
+                for i, line in enumerate(expected, 1)
             )
-        rows.extend(
-            verdict(path.name, scenario, i, line) for i, line in enumerate(expected, 1)
-        )
     return rows
 
 

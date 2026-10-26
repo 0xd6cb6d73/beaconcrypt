@@ -7,6 +7,7 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 SPEC = importlib.util.spec_from_file_location(
@@ -32,6 +33,38 @@ class ClassificationTests(unittest.TestCase):
             sum(e.checker == "check-general-registration.py" for e in self.expected),
             2444,
         )
+
+    def test_awk_inventory_uses_short_commands_and_live_probe_file(self):
+        run = CHECK.INVENTORY.subprocess.run
+        probes = set()
+        scenarios = set()
+
+        def checked_run(args, **kwargs):
+            if args[0] != "awk":
+                return run(args, **kwargs)
+            self.assertLess(len(CHECK.INVENTORY.subprocess.list2cmdline(args)), 32767)
+            self.assertEqual(args[:2], ["awk", "-v"])
+            self.assertEqual(args[-2], "-f")
+            path = Path(args[-1])
+            self.assertTrue(path.is_file(), "AWK source must exist during execution")
+            if path.name != "check-results.awk":
+                probes.add(path)
+                scenarios.add(args[2])
+                probe = path.read_text(encoding="utf-8")
+                self.assertGreater(len(probe), 32767)
+                self.assertIn("function reject(message) {}", probe)
+                self.assertIn(
+                    "function require_exact(wanted, label, query_index, found) { print wanted }",
+                    probe,
+                )
+            return run(args, **kwargs)
+
+        with mock.patch.object(CHECK.INVENTORY.subprocess, "run", checked_run):
+            expected = CHECK.INVENTORY.expected_verdicts()
+        CHECK.validate(self.rows, expected)
+        self.assertEqual(len(probes), 1)
+        self.assertGreater(len(scenarios), 1)
+        self.assertTrue(all(not path.exists() for path in probes))
 
     def test_legacy_source_scope_cannot_be_promoted(self):
         for name in CHECK.LEGACY_SOURCE_CHECKERS:
