@@ -19,11 +19,11 @@ the missing artifact.
 
 ## Build the guest from source
 
-Install the versions in [wasm-toolchain.json](../scripts/wasm-toolchain.json): Rust 1.97.1 and its `wasm32-wasip1` target. Then run:
+Install the versions in [wasm-toolchain.json](../scripts/wasm-toolchain.json): Rust 1.99.1 and its `wasm32-wasip1` target. Then run:
 
 ```sh
-rustup toolchain install 1.97.1 --profile minimal --target wasm32-wasip1
-RUSTUP_TOOLCHAIN=1.97.1 bash scripts/build-wasm.sh
+rustup toolchain install 1.99.1 --profile minimal --target wasm32-wasip1
+RUSTUP_TOOLCHAIN=1.99.1 bash scripts/build-wasm.sh
 CGO_ENABLED=0 go test ./...
 CGO_ENABLED=1 go test -tags=beaconcrypt_wazero ./...
 ```

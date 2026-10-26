@@ -18,6 +18,9 @@ on:
 permissions:
   contents: read
 
+env:
+  RUSTUP_TOOLCHAIN: 1.99.1
+
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -26,6 +29,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+      - name: Install Rust 1.99.1
+        run: rustup toolchain install 1.99.1 --profile minimal
 
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
@@ -49,6 +54,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+      - name: Install Rust 1.99.1
+        run: rustup toolchain install 1.99.1 --profile minimal
 
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
@@ -130,6 +137,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+      - name: Install Rust 1.99.1
+        run: rustup toolchain install 1.99.1 --profile minimal
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       - name: Set up Python
@@ -137,6 +146,13 @@ jobs:
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
+        env:
+          # Linux wheels build inside containers with their own Rust installation.
+          CIBW_ENVIRONMENT_LINUX: 'PATH="$HOME/.cargo/bin:$PATH" RUSTUP_TOOLCHAIN=1.99.1'
+          CIBW_BEFORE_ALL_WINDOWS: rustup target add i686-pc-windows-msvc --toolchain 1.99.1
+          CIBW_BEFORE_BUILD_LINUX: >-
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
+            sh -s -- -y --profile minimal --default-toolchain 1.99.1
         with:
           output-dir: dist/
 

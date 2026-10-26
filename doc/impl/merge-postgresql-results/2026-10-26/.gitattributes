@@ -1,0 +1,3 @@
+# Preserve the checksummed analysis outputs exactly as the exporter wrote them.
+analysis/*.csv -text whitespace=cr-at-eol
+analysis/tables.md whitespace=-blank-at-eof

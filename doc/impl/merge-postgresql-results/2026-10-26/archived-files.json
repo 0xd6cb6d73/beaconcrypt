@@ -1,0 +1,258 @@
+{
+  "collection/axis-01-postgres-peers-1-attempt-01-lease.log": {
+    "size": 1356,
+    "sha256": "466a2ce937f974cb2e3f391147550d3a48076eeee98a1c219a339f72dbe4edd9"
+  },
+  "collection/axis-01-postgres-peers-1-attempt-01-reservation.json": {
+    "size": 191,
+    "sha256": "6ee1014b0e0ca3565733f50a3cd45af746073250f4d1e859eea4270e1578d86f"
+  },
+  "collection/axis-02-postgres-peers-100-attempt-01-lease.log": {
+    "size": 1360,
+    "sha256": "3e26358f5c638afa5c799d90ef644b6150454ef1895faee3274a91d4786b125a"
+  },
+  "collection/axis-02-postgres-peers-100-attempt-01-reservation.json": {
+    "size": 191,
+    "sha256": "0e67f45d835164ed762cc400b351263a7b8847d2a6ca2c90c7be4624e8b1625a"
+  },
+  "collection/axis-03-postgres-peers-1000-attempt-01-lease.log": {
+    "size": 1362,
+    "sha256": "5ba4907e49cd296089b9c9e8e7bbbb2c8eb8f271c79ec152129612ec05a78a6a"
+  },
+  "collection/axis-03-postgres-peers-1000-attempt-01-reservation.json": {
+    "size": 191,
+    "sha256": "e9fa2fc1ff11f9be7895f8fed743be5d40e8a3fd177d1d08ff80f78b7b34da08"
+  },
+  "collection/build-receipt.json": {
+    "size": 12600,
+    "sha256": "6276474012f905d7ab1d9dbd3f574d2b317f9cc028a78d8d5c0f97d69e02adf2"
+  },
+  "collection/collection-events.jsonl": {
+    "size": 5359569,
+    "sha256": "7c2e9dfadd3805411ced6a5a8e365e381220cfe53b64c3304ebe7969d5c32d6e"
+  },
+  "collection/collection-plan.json": {
+    "size": 19098,
+    "sha256": "bbffe7afcaa7814d95f24cfeb31789aa50ad03572476d5cb9a1e3a10e48c5687"
+  },
+  "collection/collection-retained.json": {
+    "size": 3613,
+    "sha256": "3e0c65128a07bf0c09617042e063a9778e5a9df174681426c840a3da024119c4"
+  },
+  "collection/hybrid_guard.py": {
+    "size": 17164,
+    "sha256": "768a4ff08a33ee21870597d46a186b2b03c82a9c26635e312991cf6c9f8b27db"
+  },
+  "collection/prepare-concurrent.py": {
+    "size": 7683,
+    "sha256": "7a6e49c6b7e2099061401005b6f1332f44f9dfc0cd498d9549fa51d0bf69ec2a"
+  },
+  "collection/run-quiet-hybrid.py": {
+    "size": 22568,
+    "sha256": "767006461032e8cb40df16940ebd110703333b32a4a88687a629d5e65977f942"
+  },
+  "collection/summarize.py": {
+    "size": 48889,
+    "sha256": "b603a0fbea9e4550fcde9512b2ddfe201400569146fa0f37533b19e7a01527cb"
+  },
+  "collection/test_hybrid_guard.py": {
+    "size": 11446,
+    "sha256": "87c37979098b2ee61c7860efef95910efd5c3a856b7b25d3481575e96c728079"
+  },
+  "collection/validation-receipt.json": {
+    "size": 12226,
+    "sha256": "6de4a4dc56b4028402cad630fa29fb444b2b352ed9457fd0903cb460cd973284"
+  },
+  "collection/wait-quiet-hybrid.py": {
+    "size": 10525,
+    "sha256": "c92fb9eb645dab32c61ccbaadc67d19cad187bc941ca3a822f450b79dad11785"
+  },
+  "collection/axis-01-postgres-peers-1-attempt-01/attempt.json": {
+    "size": 1042,
+    "sha256": "886a199c718e50c680fc5a238fde2d18235439078bfba154a9b28275e98c576f"
+  },
+  "collection/axis-01-postgres-peers-1-attempt-01/benchmark.log": {
+    "size": 2433,
+    "sha256": "89314d97f2573681c82424f647c1994be2e74eca67eebf86370c6aba549479a3"
+  },
+  "collection/axis-01-postgres-peers-1-attempt-01/environment-preflight.json": {
+    "size": 1670,
+    "sha256": "38448fb156868dc4714a944c341d7a4d9c8b3a5b89d65ef3fe7158edaa13a72d"
+  },
+  "collection/axis-01-postgres-peers-1-attempt-01/postgres-provenance.json": {
+    "size": 97706,
+    "sha256": "60b2d5aa842547ad0f43345b75447176037321114870fc8f66b587adbe3cc1e2"
+  },
+  "collection/axis-01-postgres-peers-1-attempt-01/postgres.log": {
+    "size": 45343,
+    "sha256": "6e85dbb969287280b31e47a1299a1d1129f975abe1ab991341bacca6f3bbde51"
+  },
+  "collection/axis-01-postgres-peers-1-attempt-01/quiet-window.jsonl": {
+    "size": 2796376,
+    "sha256": "b3e493ef73adf3b6d4e5750950245ff56118a118cf894e9793cc63b8db53cfec"
+  },
+  "collection/axis-01-postgres-peers-1-attempt-01/report.json": {
+    "size": 24325492,
+    "sha256": "119aae70b12613c629e60a6af73d591820732d490a8639a1985f349b5656ac2c"
+  },
+  "collection/axis-01-postgres-peers-1-attempt-01/server-control.log": {
+    "size": 66,
+    "sha256": "1c9a8fafee5ebb551b9824e63f3cc0d0fb97a642a57f4850db4265ac273f270a"
+  },
+  "collection/axis-01-postgres-peers-1-attempt-01/summary.json": {
+    "size": 867368,
+    "sha256": "ca372a0e8bf185be2721255f7c8465015d014233d018abc18e6944eb8d799a8a"
+  },
+  "collection/axis-01-postgres-peers-1-attempt-01/summary.md": {
+    "size": 19303,
+    "sha256": "5875491b69590d240ec862733947dff887acfa44539e232ddc8c202d91c4f13a"
+  },
+  "collection/axis-02-postgres-peers-100-attempt-01/attempt.json": {
+    "size": 1046,
+    "sha256": "899e45f2a9bf7cf035fb74b11aa6e946c78942f53e600dc4fb4e077dd83115b6"
+  },
+  "collection/axis-02-postgres-peers-100-attempt-01/benchmark.log": {
+    "size": 2553,
+    "sha256": "840de355274f83263ccfa3735ec3d6e9f491fa047437c17c6fe421cfc20b766e"
+  },
+  "collection/axis-02-postgres-peers-100-attempt-01/environment-preflight.json": {
+    "size": 1670,
+    "sha256": "444c1b18e42d832457cfc2f6820b67f25a5f08046f1211c341bc09d583e96500"
+  },
+  "collection/axis-02-postgres-peers-100-attempt-01/postgres-provenance.json": {
+    "size": 97707,
+    "sha256": "9e8878be9f18091d387ec3f5d3aeb1dbcc3c4fa38156c4baf782a55e20396a76"
+  },
+  "collection/axis-02-postgres-peers-100-attempt-01/postgres.log": {
+    "size": 49103,
+    "sha256": "97b0470550edaaaff373bd333617e1bb8c68fac8f2eaecf5496d92552caf28aa"
+  },
+  "collection/axis-02-postgres-peers-100-attempt-01/quiet-window.jsonl": {
+    "size": 10866762,
+    "sha256": "c1cdafca9e2864249ba8d973878cb8826c5621f52590593427807e50bcef030b"
+  },
+  "collection/axis-02-postgres-peers-100-attempt-01/report.json": {
+    "size": 537372398,
+    "sha256": "705c04f6a0f3a472fb1c2e12b73cfaad449c9b88295647ebd923ca5bafcf3bfc"
+  },
+  "collection/axis-02-postgres-peers-100-attempt-01/server-control.log": {
+    "size": 66,
+    "sha256": "1c9a8fafee5ebb551b9824e63f3cc0d0fb97a642a57f4850db4265ac273f270a"
+  },
+  "collection/axis-02-postgres-peers-100-attempt-01/summary.json": {
+    "size": 1067453,
+    "sha256": "8147729055f0c0d68b71edbdda8bc9c1c871a66fd3a3c5cb860b2e0c46e4578a"
+  },
+  "collection/axis-02-postgres-peers-100-attempt-01/summary.md": {
+    "size": 20263,
+    "sha256": "7a3942925c2eecd0080be7e8204e954d34de461443e4bbb764b8f9ae8b7ecb57"
+  },
+  "collection/axis-03-postgres-peers-1000-attempt-01/attempt.json": {
+    "size": 1048,
+    "sha256": "92af4158b28f431fde212bfebc428d6d1a32d0123f2786363b85e5943952d4a4"
+  },
+  "collection/axis-03-postgres-peers-1000-attempt-01/benchmark.log": {
+    "size": 2592,
+    "sha256": "2da0190c424219a8d93d6e65134ea326309d7067addbea7cefb3e98cb295a530"
+  },
+  "collection/axis-03-postgres-peers-1000-attempt-01/environment-preflight.json": {
+    "size": 1670,
+    "sha256": "2fa961ff42ee77b48e728f552b20ba9e358d185ebec45d2019fcbb72fda928e6"
+  },
+  "collection/axis-03-postgres-peers-1000-attempt-01/postgres-provenance.json": {
+    "size": 97711,
+    "sha256": "8a068c9d9f60910f5a8a9dcf2fd87c86fafdfb2717c617ec4cec41dd49dbc498"
+  },
+  "collection/axis-03-postgres-peers-1000-attempt-01/postgres.log": {
+    "size": 93214,
+    "sha256": "7dd5178b5b4be3a87ab2c2b94895202cc74a1595774f4574008185b4d7585391"
+  },
+  "collection/axis-03-postgres-peers-1000-attempt-01/quiet-window.jsonl": {
+    "size": 44008425,
+    "sha256": "361b4f34ee5d257c2b448dcc1898e4e8b0e5c66d01cb5c792ca437e99f5c6b73"
+  },
+  "collection/axis-03-postgres-peers-1000-attempt-01/report.json": {
+    "size": 541041678,
+    "sha256": "d6c9168fb23191c1120a956b3335ee51785d43484aa18a3ab2e0800e15caa58e"
+  },
+  "collection/axis-03-postgres-peers-1000-attempt-01/server-control.log": {
+    "size": 66,
+    "sha256": "1c9a8fafee5ebb551b9824e63f3cc0d0fb97a642a57f4850db4265ac273f270a"
+  },
+  "collection/axis-03-postgres-peers-1000-attempt-01/summary.json": {
+    "size": 1073658,
+    "sha256": "b46018d4095c6c0b0da12d041b173da61e23110e9efe7d2e7d74bc19db919253"
+  },
+  "collection/axis-03-postgres-peers-1000-attempt-01/summary.md": {
+    "size": 20556,
+    "sha256": "10488576983308ee1fe484670ac88194d194c747f9f643ae1c2ad375c3a81027"
+  },
+  "validation/build-release.py": {
+    "size": 2473,
+    "sha256": "79ea05c58f5820496f58c26764caeb73b04d762d6c0c3240f5b1981a3c3cd6aa"
+  },
+  "validation/source_hashes.py": {
+    "size": 1135,
+    "sha256": "9ff9d6d688e1e1f5d84a9e0ef9344fbeaec27337ebd4b47f7e972196717b7e6f"
+  },
+  "validation/freeze-plan.py": {
+    "size": 2955,
+    "sha256": "83e6f73d6cd8dad1c923ba1cef707a110a7b2aa3aed15caeaad8529b154d3707"
+  },
+  "validation/build-receipt.json": {
+    "size": 12600,
+    "sha256": "6276474012f905d7ab1d9dbd3f574d2b317f9cc028a78d8d5c0f97d69e02adf2"
+  },
+  "validation/release-build.log": {
+    "size": 4574,
+    "sha256": "783f5b1ed9382209be50578ad58febb9f7a5b9811766850b8ef1f93cc0f27e3e"
+  },
+  "validation/build-validation-wrapper.log": {
+    "size": 575,
+    "sha256": "193c42a4d0ca0413186d9bd33bd75a550a8d62588ee1b57b966ad872888ebc7a"
+  },
+  "validation/validation.sh": {
+    "size": 1211,
+    "sha256": "a223840962ed0a07edf101e77ba136bd639195d55da4a62c0ad84e94bc744bb1"
+  },
+  "validation/validation.log": {
+    "size": 9086,
+    "sha256": "7aa9b7d782bbe3476d434ec8b74c4cc06894346d2a9e29446ec4e0d488561034"
+  },
+  "validation/validation-receipt.json": {
+    "size": 12226,
+    "sha256": "6de4a4dc56b4028402cad630fa29fb444b2b352ed9457fd0903cb460cd973284"
+  },
+  "validation/validation-postgres.log": {
+    "size": 75425,
+    "sha256": "4552d12ae00878fae3288e4e0f673fac765a5d39de9b25b28cc0c24a287c2fd9"
+  },
+  "validation/validation-pg-stop.log": {
+    "size": 56,
+    "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+  },
+  "validation/postgres-cluster.json": {
+    "size": 370,
+    "sha256": "0328a587052037626f951b024058cedfaf46ceb957fb55432e3592bdaffc2a35"
+  },
+  "validation/instrumentation-policy.json": {
+    "size": 255,
+    "sha256": "a3fbd80d4f025317c3f8f53f1c53fcde2ccbc7c8df0e15da97eeaa0ee8dd72c9"
+  },
+  "validation/restore-tools.log": {
+    "size": 1148,
+    "sha256": "fff8703104e13d7dcf9a459b28153ec80aa9973264759aea251b232940b89a7b"
+  },
+  "validation/driver.log": {
+    "size": 3332,
+    "sha256": "bc859ac2670d6efb024a331fabdfac4c7ff7379efa40eae4289e77b9eeb0986c"
+  },
+  "validation/driver.exit": {
+    "size": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "validation/analysis.log": {
+    "size": 581,
+    "sha256": "4d28089df7a35ba84ba80f41366e9aa2c0e5f4dbd3c8b42932bee5e2b7d113b5"
+  }
+}

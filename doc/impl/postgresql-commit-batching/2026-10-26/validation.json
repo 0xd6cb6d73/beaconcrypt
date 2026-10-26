@@ -1,0 +1,134 @@
+{
+  "source_commit": "df7280abb65fe9ead29a677b48233ded77aff19f",
+  "base_commit": "1c84d64bb54144bc778f6dc44b006b3e1375443e",
+  "branch": "codex/pg-batching",
+  "worktree": "/home/user/worktrees/beaconcrypt-pg-batching",
+  "source_sha256": {
+    "beaconcrypt/examples/persistence_bench/postgres.rs": "8b21774c2739e9c4f4a9ddfe4a18f92c8c6f5433305fea99be30ccf704a4d71a",
+    "beaconcrypt/examples/persistence_bench/postgres_batch.rs": "bc17e203a61e00dc1aa642584502aec8c9ce5fa3798b823a41ab6410c3be9f8f",
+    "beaconcrypt/examples/persistence_bench/postgres_batch_tests.rs": "5ed713cdbb4e955de7b7ca184ff3c9d6fd46f5746a13b5d72605ed863fb56473",
+    "beaconcrypt/examples/persistence_bench/postgres_batch_sql_tests.rs": "d1f448eda80aaf1a5a9502b1c8883dd7644fc447977a1ac38cea711698d92e71",
+    "beaconcrypt/examples/persistence_bench/batched_postgres_tests.rs": "8be8e239fac09e869384590ce455fa479051ffbafb812ff7c4a1cc0206472663",
+    "beaconcrypt/examples/persistence_bench/main.rs": "79260dc9ad521378c3a724e272ed18bf5891139f3a67d4a1bd870a303f1a9773",
+    "beaconcrypt/examples/persistence_bench/summarize.py": "8efe2f88d8974fe72bd93e0be9cdc79915f5c133ad2085866beb7f9eb83cead5"
+  },
+  "unchanged_trees": {
+    "beaconcrypt/src": {
+      "base": "1544ffe8b63bd05bdafff294e8994f8f1cb3aa03",
+      "measured": "1544ffe8b63bd05bdafff294e8994f8f1cb3aa03"
+    },
+    "beaconcrypt-core": {
+      "base": "16ef0be42e3fff3facf21da48b48da7a7756910c",
+      "measured": "16ef0be42e3fff3facf21da48b48da7a7756910c"
+    },
+    "beaconcrypt-crypto": {
+      "base": "c42da0ff2a642b531313f6416ce7b1d9f0d00ac7",
+      "measured": "c42da0ff2a642b531313f6416ce7b1d9f0d00ac7"
+    },
+    "beaconcrypt-parse": {
+      "base": "71429faa29c35153a53089a2df453ee7fb6972cb",
+      "measured": "71429faa29c35153a53089a2df453ee7fb6972cb"
+    },
+    "beaconcrypt-ffi": {
+      "base": "ed8205c61a60b565fcdfc4447c58f90d5b598024",
+      "measured": "ed8205c61a60b565fcdfc4447c58f90d5b598024"
+    },
+    "beaconcrypt-wasm": {
+      "base": "bf870e718297d87e3e3d2099cae4c2364d8321d6",
+      "measured": "bf870e718297d87e3e3d2099cae4c2364d8321d6"
+    }
+  },
+  "tests": {
+    "first_full_live_example": 103,
+    "first_full_exclusion": "Existing explicitly-owned-cluster restart test; all other ignored PostgreSQL tests included",
+    "final_selected_example": 25,
+    "final_property_cases": 256,
+    "final_property_seed": 130363,
+    "row_and_cached_integrations": 25,
+    "python_summarizer": 9,
+    "clippy": "workspace --all-targets --all-features passed with existing warnings",
+    "no_std": [
+      "pqxdh,beacon",
+      "pqxdh,server"
+    ]
+  },
+  "mutations": {
+    "scope": "Complete catalog in the changed PostgreSQL storage code; not a workspace-wide rerun",
+    "total": 81,
+    "caught": 67,
+    "unviable": 14,
+    "timeouts": 0,
+    "unresolved_misses": 0,
+    "seed": 104729,
+    "case_count": 64,
+    "review": "All compiler-invalid cases independently verified as Rust errors. One Inner::drop survivor was caught after adding an accepted-queue drain test; only tests changed between the complete catalog run and the focused rerun.",
+    "excluded_attempts": "Superseded early implementation campaign and two stale shared-target baseline attempts are not validation evidence. Final root checks force source freshness and pass.",
+    "discovery": "A scratch source copy appends the alias in mutation-alias.toml to beaconcrypt/Cargo.toml so cargo-mutants discovers the example; actual tests use --example=persistence_bench. Published manifests are unchanged."
+  },
+  "benchmark": {
+    "binary_sha256": "6b34b4aeb6d1ee6e6428ff5eb36d7b0d6c51ed1b8f4075a036cd09c85dc829de",
+    "settings": "PostgreSQL 16.15 loopback TCP; fsync, synchronous_commit, full_page_writes on",
+    "leases": [
+      "00002936",
+      "00002937"
+    ],
+    "quiet": "No other active coordination leases before either run; full 19800 MiB reservation and 60 s settling per collection; physical-host noise remains possible.",
+    "initial": {
+      "directory": "bench",
+      "wait_us": 100,
+      "order": [
+        1,
+        8,
+        8,
+        1,
+        1,
+        8
+      ],
+      "pairs": [
+        [
+          1,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          6
+        ]
+      ]
+    },
+    "followup": {
+      "directory": "bench-2ms",
+      "wait_us": 2000,
+      "order": [
+        1,
+        8,
+        8,
+        1
+      ],
+      "pairs": [
+        [
+          1,
+          2
+        ],
+        [
+          4,
+          3
+        ]
+      ]
+    },
+    "workload": "512 callbacks of 512000 bytes, 1000 registered peers, 32 active peers, 8 owners. Other schedules use 1 ms offered horizon and are smoke coverage only. State persistence only; application outbox payload persistence and provider transports excluded."
+  },
+  "commands": [
+    "cargo test --locked -p beaconcrypt --test row_persistence --test cached_row_persistence",
+    "cargo test --locked -p beaconcrypt --example persistence_bench -- --include-ignored --skip postgres_crash_restart_preserves_committed_receipt_and_discards_uncommitted_rows --test-threads=1",
+    "cargo clippy --locked --workspace --all-targets --all-features",
+    "cargo check --locked -p beaconcrypt --no-default-features --features pqxdh,beacon --lib",
+    "cargo check --locked -p beaconcrypt --no-default-features --features pqxdh,server --lib",
+    "python3 -m unittest discover -s beaconcrypt/examples/persistence_bench -p test_*summary.py",
+    "cargo fmt --all -- --check",
+    "cargo build --locked -p beaconcrypt --release --example persistence_bench"
+  ]
+}

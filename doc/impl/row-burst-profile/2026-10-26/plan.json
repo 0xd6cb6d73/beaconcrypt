@@ -1,0 +1,36 @@
+{
+  "source": "f3491c00",
+  "diagnostic_worktree": "/home/user/worktrees/beaconcrypt-row-burst-profile",
+  "scope": "PostgreSQL 16.15 loopback TCP; no protocol/library/SQL changes",
+  "workload": {
+    "registered_peers": 1000,
+    "active_peers": 32,
+    "owners": 8,
+    "messages": 512,
+    "plaintext_bytes_each": 512000,
+    "queue_jobs": 256,
+    "queue_bytes": 16777216
+  },
+  "runs": {
+    "baseline_pairs": 6,
+    "sampled_pairs": 4
+  },
+  "sampling": {
+    "cpu_clock_hz": 999,
+    "call_graph": "DWARF, 8192-byte stack",
+    "database_wait_poll_sleep_ms": 2,
+    "sync_syscalls": [
+      "fdatasync",
+      "fsync"
+    ],
+    "perf_enabled": "only between measured server barriers; no setup/client generation/verification"
+  },
+  "interpretation": "diagnostic runs; sampled timing is perturbed, no assumption of causation from before/after collection",
+  "followup": {
+    "reason": "Fresh burst-only runs did not reproduce a consistent cached slowdown; retain original preceding workload history",
+    "history_pairs": 2,
+    "case_history": "13 original workloads including preceding 64/256-message bursts; snapshot arm omitted",
+    "sampling": "enabled only for final burst512",
+    "source_commit": "a98489c67a300922ed00e59279a9b21dfa0c70a1"
+  }
+}

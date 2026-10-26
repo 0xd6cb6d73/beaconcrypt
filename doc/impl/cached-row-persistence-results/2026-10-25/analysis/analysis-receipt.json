@@ -1,0 +1,637 @@
+{
+  "created_utc": "2026-10-25T13:45:59.967494+00:00",
+  "analysis_plan": {
+    "declared_utc": "2026-10-25T12:20:38.951268+00:00",
+    "timings_inspected": false,
+    "selection": "Only first complete validated attempts under the v2 quiet-VM plan; older stricter collection preserved but excluded. No fastest-trial selection.",
+    "primary_unit": "Paired per-trial batch duration ratio within backend, peer count, scenario, direction. Three balanced trials; publish all ratios and min/median/max. No pooled operation percentiles or significance claims.",
+    "full_tables": "All 72 backend/peer/scenario/direction groups, with per-trial rates, latencies and counters, plus machine-readable CSV.",
+    "concise_display": "Small stream and largest burst, both directions, all peer counts and backends; discuss regular larger/mixed and smaller burst observations using the full tables. These display cases were chosen before viewing timing data.",
+    "noise": "Summarize sampled host-steal, exact controller instrumentation CPU, unknown VM CPU, swapping and guard status. Host-steal telemetry is not complete physical-host interference measurement.",
+    "scope": "Native single-worker, resident handles, warm eligible peer cache, durable commit per successful operation, localhost PostgreSQL and file-backed SQLite; excludes Mythic transport/application journaling. No end-to-end integration speedup claim."
+  },
+  "analysis_plan_sha256": "4450b721243b36bd544b8da3f6c9dc0139a34706aa514e5e0c2a4a58ba42f325",
+  "collection_plan_sha256": "9bc49b4c0ac309368998e71f58c13c4e9520bf0c72c96991f5404403abe2c997",
+  "retained_index_sha256": "17e3829e72822567829041ff3b063002627c9a9de79b253219b0efcf73778c09",
+  "summarizer_sha256": "8df3345bb2997e0898df7ed3c50eeeed4634a1f2746531852d716146230eb555",
+  "exporter_sha256": "a0ddb290ff37555ae3b7c40714810c93f05746b4130390367980635b56c9c5a6",
+  "binary_sha256": "985d56867fad436512aaff69878aa3e1c91793cc9dc00288b587c19144713b66",
+  "source_commit": "9f9c51d7911dae8c7b6ea4020cac38c8ad0c78bb",
+  "groups": 72,
+  "paired_trial_rows": 216,
+  "arm_batch_records": 648,
+  "operations": 324864,
+  "plaintext_bytes": 47584641024,
+  "validated_counter_records": 702,
+  "axes": [
+    {
+      "axis_index": 0,
+      "backend": "sqlite",
+      "peers": 1,
+      "attempt": 2,
+      "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025-v2/axis-01-sqlite-peers-1-attempt-02",
+      "report_sha256": "4c27bed30063ab0963a268bf8f09b3f317cc7a24c7175c2a21e1151564e32e2e",
+      "summary_sha256": "ba15c56227089092e5af12d691318635b4ef52a4a6af2b1dce1ce65034229db0",
+      "attempt_sha256": "4fa58f03ae279d4454bfe6e71f75c32c42fd63abb546a8d5b84eebc722566567",
+      "noise": {
+        "journal_sha256": "f00d0c803f16f37d07e7eb5ce79856d45f9e5a3d338a8273ba1ea8a02906a5f9",
+        "start_utc": "2026-10-25T12:38:45.404296+00:00",
+        "finish_utc": "2026-10-25T12:44:49.650291+00:00",
+        "invocation_seconds": 364.2459957168903,
+        "samples": 73,
+        "cpu_windows": 72,
+        "overlapping_cpu_windows": 0,
+        "cpu_windows_starting_before_invocation": 0,
+        "all_guard_checks_passed": true,
+        "guard_check_counts": {
+          "lease_reservation": 73,
+          "no_waiters": 73,
+          "no_lean_slots": 73,
+          "no_proverif_lock": 73,
+          "no_pvmatrix": 73,
+          "no_integration_lease": 73,
+          "no_competing_recognized_processes": 73,
+          "process_cpu_accounting_available": 73,
+          "instrumentation_identity_matches": 73,
+          "no_new_memory_ticket": 73,
+          "no_new_lean_ticket": 73,
+          "bounded_monitor_gap": 73,
+          "cpu_counter_continuity": 73,
+          "cpu_baselines_complete": 73,
+          "outside_per_process_cpu_below_limit": 73,
+          "outside_aggregate_cpu_below_limit": 73,
+          "system_swap_below_limit": 73,
+          "sufficient_disk_space": 73
+        },
+        "maximum_sample_gap_seconds": 5.130981987109408,
+        "sample_distributions": {
+          "system_steal_cores": {
+            "count": 72,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.0019592940946232635,
+            "max": 0.0919470119005312
+          },
+          "instrumentation_aggregate_cores": {
+            "count": 72,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.01957058819772334,
+            "max": 0.046892204007988283
+          },
+          "outside_aggregate_cores": {
+            "count": 72,
+            "min": 0.019566512765219996,
+            "median": 0.033213385421371866,
+            "p95": 0.04694283781957,
+            "max": 0.0627792354649071
+          },
+          "outside_max_process_cores": {
+            "count": 72,
+            "min": 0.005862590501312707,
+            "median": 0.007828264490707766,
+            "p95": 0.011718089332967852,
+            "max": 0.03326999993612968
+          },
+          "swap_pages_per_second": {
+            "count": 72,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.0,
+            "max": 0.19574045143539126
+          },
+          "interval_seconds": {
+            "count": 72,
+            "min": 1.2743066940456629,
+            "median": 5.111090794671327,
+            "p95": 5.122510221088305,
+            "max": 5.130981987109408
+          }
+        },
+        "start_finish_cumulative_counter_deltas": {
+          "system_steal_ticks": 89,
+          "swap_in_pages": 1,
+          "swap_out_pages": 0
+        },
+        "host_steal_cpu_seconds_from_endpoints": 0.89,
+        "controller_identity": {
+          "pid": 1426259,
+          "start_ticks": 120432725,
+          "executable": "/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/bin/.codex-wrapped",
+          "cgroup": "0::/user.slice/user-1000.slice/session-111.scope"
+        },
+        "method": "Distributions are unweighted recorded CPU-window rates; overlapping windows are never summed. Start/finish steal and swap differences use cumulative counters once. The invocation includes fixture setup and verification, not only timed batches. Host-steal telemetry does not establish physical-host isolation; short-lived unobserved work and below-threshold activity remain possible."
+      }
+    },
+    {
+      "axis_index": 1,
+      "backend": "postgres",
+      "peers": 1,
+      "attempt": 1,
+      "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025-v2/axis-02-postgres-peers-1-attempt-01",
+      "report_sha256": "760110c89a89a1b5cd2fa9a90ba4c7c300bb3f78d4fd238b0062627daf5cff30",
+      "summary_sha256": "b915d9b328a887c85373f6d39959741a35c4c4a8046a35b7733b52e9ed505b34",
+      "attempt_sha256": "badd420838e0b7fc13f777baa23c69061ec82effc019269f28e41e2bbe687649",
+      "noise": {
+        "journal_sha256": "a76147e06febd573d66d98bfbce11e753b8858ba77bd73cdc93b312ffa310231",
+        "start_utc": "2026-10-25T12:48:55.741085+00:00",
+        "finish_utc": "2026-10-25T12:51:14.486921+00:00",
+        "invocation_seconds": 138.74583412404172,
+        "samples": 29,
+        "cpu_windows": 28,
+        "overlapping_cpu_windows": 1,
+        "cpu_windows_starting_before_invocation": 0,
+        "all_guard_checks_passed": true,
+        "guard_check_counts": {
+          "lease_reservation": 29,
+          "no_waiters": 29,
+          "no_lean_slots": 29,
+          "no_proverif_lock": 29,
+          "no_pvmatrix": 29,
+          "no_integration_lease": 29,
+          "no_competing_recognized_processes": 29,
+          "process_cpu_accounting_available": 29,
+          "instrumentation_identity_matches": 29,
+          "owned_postmaster_live": 29,
+          "only_owned_postgres_clients": 29,
+          "owned_postgres_listener": 29,
+          "no_new_memory_ticket": 29,
+          "no_new_lean_ticket": 29,
+          "bounded_monitor_gap": 29,
+          "cpu_counter_continuity": 29,
+          "cpu_baselines_complete": 29,
+          "outside_per_process_cpu_below_limit": 29,
+          "outside_aggregate_cpu_below_limit": 29,
+          "system_swap_below_limit": 29,
+          "sufficient_disk_space": 29,
+          "sufficient_postgres_disk_space": 29
+        },
+        "maximum_sample_gap_seconds": 5.182043242035434,
+        "sample_distributions": {
+          "system_steal_cores": {
+            "count": 28,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.001956009304154313,
+            "max": 0.003912287634000041
+          },
+          "instrumentation_aggregate_cores": {
+            "count": 28,
+            "min": 0.0,
+            "median": 0.0019541078545758394,
+            "p95": 0.01760408373738882,
+            "max": 0.06846503359500071
+          },
+          "outside_aggregate_cores": {
+            "count": 28,
+            "min": 0.015648074433234505,
+            "median": 0.0234370300157367,
+            "p95": 0.03318196186890678,
+            "max": 0.037105814849492214
+          },
+          "outside_max_process_cores": {
+            "count": 28,
+            "min": 0.0039052520219827257,
+            "median": 0.0058678806840955465,
+            "p95": 0.011578444485622015,
+            "max": 0.011717625741944909
+          },
+          "swap_pages_per_second": {
+            "count": 28,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.0,
+            "max": 0.19561438170000206
+          },
+          "interval_seconds": {
+            "count": 28,
+            "min": 5.110560481902212,
+            "median": 5.116304422146641,
+            "p95": 5.182043242035434,
+            "max": 5.651971156941727
+          }
+        },
+        "start_finish_cumulative_counter_deltas": {
+          "system_steal_ticks": 12,
+          "swap_in_pages": 1,
+          "swap_out_pages": 0
+        },
+        "host_steal_cpu_seconds_from_endpoints": 0.12,
+        "controller_identity": {
+          "pid": 1426259,
+          "start_ticks": 120432725,
+          "executable": "/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/bin/.codex-wrapped",
+          "cgroup": "0::/user.slice/user-1000.slice/session-111.scope"
+        },
+        "method": "Distributions are unweighted recorded CPU-window rates; overlapping windows are never summed. Start/finish steal and swap differences use cumulative counters once. The invocation includes fixture setup and verification, not only timed batches. Host-steal telemetry does not establish physical-host isolation; short-lived unobserved work and below-threshold activity remain possible."
+      }
+    },
+    {
+      "axis_index": 2,
+      "backend": "postgres",
+      "peers": 100,
+      "attempt": 1,
+      "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025-v2/axis-03-postgres-peers-100-attempt-01",
+      "report_sha256": "3ee18c18692581e5d5c1ca80c9646bbc22698f4be58764a8f816c7bf0e497fdc",
+      "summary_sha256": "59cda4fc6b174ec415597e4278bf888e9b8a51b3d5ebded5bfa6bb8548a8b968",
+      "attempt_sha256": "91de696896d18a1ceaad2564c13f2c8a2bed94ca4e6f4b140152c17e89d53eb6",
+      "noise": {
+        "journal_sha256": "bc7fb5806238454f51cae26d4d089e3de4a99237f99f98bd7d2ef7ac0a524e57",
+        "start_utc": "2026-10-25T12:55:20.711741+00:00",
+        "finish_utc": "2026-10-25T12:58:29.639361+00:00",
+        "invocation_seconds": 188.92762501793914,
+        "samples": 38,
+        "cpu_windows": 37,
+        "overlapping_cpu_windows": 0,
+        "cpu_windows_starting_before_invocation": 0,
+        "all_guard_checks_passed": true,
+        "guard_check_counts": {
+          "lease_reservation": 38,
+          "no_waiters": 38,
+          "no_lean_slots": 38,
+          "no_proverif_lock": 38,
+          "no_pvmatrix": 38,
+          "no_integration_lease": 38,
+          "no_competing_recognized_processes": 38,
+          "process_cpu_accounting_available": 38,
+          "instrumentation_identity_matches": 38,
+          "owned_postmaster_live": 38,
+          "only_owned_postgres_clients": 38,
+          "owned_postgres_listener": 38,
+          "no_new_memory_ticket": 38,
+          "no_new_lean_ticket": 38,
+          "bounded_monitor_gap": 38,
+          "cpu_counter_continuity": 38,
+          "cpu_baselines_complete": 38,
+          "outside_per_process_cpu_below_limit": 38,
+          "outside_aggregate_cpu_below_limit": 38,
+          "system_swap_below_limit": 38,
+          "sufficient_disk_space": 38,
+          "sufficient_postgres_disk_space": 38
+        },
+        "maximum_sample_gap_seconds": 5.1411052260082215,
+        "sample_distributions": {
+          "system_steal_cores": {
+            "count": 37,
+            "min": 0.0,
+            "median": 0.0019484798833186016,
+            "p95": 0.009725535230645762,
+            "max": 0.011715397529018281
+          },
+          "instrumentation_aggregate_cores": {
+            "count": 37,
+            "min": 0.0,
+            "median": 0.0019542701809299222,
+            "p95": 0.3319362633221846,
+            "max": 0.7897134607284357
+          },
+          "outside_aggregate_cores": {
+            "count": 37,
+            "min": 0.009771696202857064,
+            "median": 0.023420756487100923,
+            "p95": 0.03131643386276277,
+            "max": 0.14266172320788434
+          },
+          "outside_max_process_cores": {
+            "count": 37,
+            "min": 0.003907140402921146,
+            "median": 0.0058673924248023104,
+            "p95": 0.009785890380518438,
+            "max": 0.12116475121765519
+          },
+          "swap_pages_per_second": {
+            "count": 37,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.5835321138387457,
+            "max": 0.8519956097454706
+          },
+          "interval_seconds": {
+            "count": 37,
+            "min": 4.694859872804955,
+            "median": 5.116436437005177,
+            "p95": 5.137130899121985,
+            "max": 5.1411052260082215
+          }
+        },
+        "start_finish_cumulative_counter_deltas": {
+          "system_steal_ticks": 30,
+          "swap_in_pages": 7,
+          "swap_out_pages": 0
+        },
+        "host_steal_cpu_seconds_from_endpoints": 0.3,
+        "controller_identity": {
+          "pid": 1426259,
+          "start_ticks": 120432725,
+          "executable": "/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/bin/.codex-wrapped",
+          "cgroup": "0::/user.slice/user-1000.slice/session-111.scope"
+        },
+        "method": "Distributions are unweighted recorded CPU-window rates; overlapping windows are never summed. Start/finish steal and swap differences use cumulative counters once. The invocation includes fixture setup and verification, not only timed batches. Host-steal telemetry does not establish physical-host isolation; short-lived unobserved work and below-threshold activity remain possible."
+      }
+    },
+    {
+      "axis_index": 3,
+      "backend": "sqlite",
+      "peers": 100,
+      "attempt": 1,
+      "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025-v2/axis-04-sqlite-peers-100-attempt-01",
+      "report_sha256": "9dd2b4afc2c5ff995d189223135129242998a6ff29441742d2cf99159043f01b",
+      "summary_sha256": "d050a35b89cf0af08eb69cced0c7d7b2d0f816bbe20326df5c665023cbeba57b",
+      "attempt_sha256": "7eee101dce11dfa92b0fbb633c04d212f8f916ea5dc08daa56c2360ae7a9e143",
+      "noise": {
+        "journal_sha256": "5d9d928b9737c89b23baa2e649cffca786e1e83d2075007ca620d8764dd028db",
+        "start_utc": "2026-10-25T13:02:35.704304+00:00",
+        "finish_utc": "2026-10-25T13:09:15.193319+00:00",
+        "invocation_seconds": 399.4890111128334,
+        "samples": 80,
+        "cpu_windows": 79,
+        "overlapping_cpu_windows": 1,
+        "cpu_windows_starting_before_invocation": 0,
+        "all_guard_checks_passed": true,
+        "guard_check_counts": {
+          "lease_reservation": 80,
+          "no_waiters": 80,
+          "no_lean_slots": 80,
+          "no_proverif_lock": 80,
+          "no_pvmatrix": 80,
+          "no_integration_lease": 80,
+          "no_competing_recognized_processes": 80,
+          "process_cpu_accounting_available": 80,
+          "instrumentation_identity_matches": 80,
+          "no_new_memory_ticket": 80,
+          "no_new_lean_ticket": 80,
+          "bounded_monitor_gap": 80,
+          "cpu_counter_continuity": 80,
+          "cpu_baselines_complete": 80,
+          "outside_per_process_cpu_below_limit": 80,
+          "outside_aggregate_cpu_below_limit": 80,
+          "system_swap_below_limit": 80,
+          "sufficient_disk_space": 80
+        },
+        "maximum_sample_gap_seconds": 5.127009443938732,
+        "sample_distributions": {
+          "system_steal_cores": {
+            "count": 79,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.00195765571999445,
+            "max": 0.06070392700424348
+          },
+          "instrumentation_aggregate_cores": {
+            "count": 79,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.017585780615141468,
+            "max": 0.021515202179627047
+          },
+          "outside_aggregate_cores": {
+            "count": 79,
+            "min": 0.019554425560948736,
+            "median": 0.03125730056997782,
+            "p95": 0.043067501914025016,
+            "max": 0.056710591770233326
+          },
+          "outside_max_process_cores": {
+            "count": 79,
+            "min": 0.00585854703874463,
+            "median": 0.007821930036383151,
+            "p95": 0.009788068616823868,
+            "max": 0.033244140003240226
+          },
+          "swap_pages_per_second": {
+            "count": 79,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.0,
+            "max": 0.19561810311582742
+          },
+          "interval_seconds": {
+            "count": 79,
+            "min": 5.102421896997839,
+            "median": 5.112956190016121,
+            "p95": 5.122694442979991,
+            "max": 5.7947653769515455
+          }
+        },
+        "start_finish_cumulative_counter_deltas": {
+          "system_steal_ticks": 62,
+          "swap_in_pages": 2,
+          "swap_out_pages": 0
+        },
+        "host_steal_cpu_seconds_from_endpoints": 0.62,
+        "controller_identity": {
+          "pid": 1426259,
+          "start_ticks": 120432725,
+          "executable": "/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/bin/.codex-wrapped",
+          "cgroup": "0::/user.slice/user-1000.slice/session-111.scope"
+        },
+        "method": "Distributions are unweighted recorded CPU-window rates; overlapping windows are never summed. Start/finish steal and swap differences use cumulative counters once. The invocation includes fixture setup and verification, not only timed batches. Host-steal telemetry does not establish physical-host isolation; short-lived unobserved work and below-threshold activity remain possible."
+      }
+    },
+    {
+      "axis_index": 4,
+      "backend": "sqlite",
+      "peers": 1000,
+      "attempt": 1,
+      "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025-v2/axis-05-sqlite-peers-1000-attempt-01",
+      "report_sha256": "00ab8347b3dec404260bdd68349536563828cbf5975411a014d6329024ffd499",
+      "summary_sha256": "45f5ba75a2c0a514721769bebc420086d9cc04b84f9c12aa6fdeaf0a77364781",
+      "attempt_sha256": "655803a16fdcf3c8a2dbb66af631631286b7df3f362140ca43040f3d6ba1fdb6",
+      "noise": {
+        "journal_sha256": "a0173413b33d3345aac7605702856d165c5090dd120295a4fe973ba796378b44",
+        "start_utc": "2026-10-25T13:13:21.038641+00:00",
+        "finish_utc": "2026-10-25T13:27:40.876852+00:00",
+        "invocation_seconds": 859.8382091328967,
+        "samples": 170,
+        "cpu_windows": 169,
+        "overlapping_cpu_windows": 1,
+        "cpu_windows_starting_before_invocation": 0,
+        "all_guard_checks_passed": true,
+        "guard_check_counts": {
+          "lease_reservation": 170,
+          "no_waiters": 170,
+          "no_lean_slots": 170,
+          "no_proverif_lock": 170,
+          "no_pvmatrix": 170,
+          "no_integration_lease": 170,
+          "no_competing_recognized_processes": 170,
+          "process_cpu_accounting_available": 170,
+          "instrumentation_identity_matches": 170,
+          "no_new_memory_ticket": 170,
+          "no_new_lean_ticket": 170,
+          "bounded_monitor_gap": 170,
+          "cpu_counter_continuity": 170,
+          "cpu_baselines_complete": 170,
+          "outside_per_process_cpu_below_limit": 170,
+          "outside_aggregate_cpu_below_limit": 170,
+          "system_swap_below_limit": 170,
+          "sufficient_disk_space": 170
+        },
+        "maximum_sample_gap_seconds": 5.131432154914364,
+        "sample_distributions": {
+          "system_steal_cores": {
+            "count": 169,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.001957533318370014,
+            "max": 0.009780814868961927
+          },
+          "instrumentation_aggregate_cores": {
+            "count": 169,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.015648756172137263,
+            "max": 0.021510787815581946
+          },
+          "outside_aggregate_cores": {
+            "count": 169,
+            "min": 0.013687148609267065,
+            "median": 0.027428844889205856,
+            "p95": 0.04505619656028346,
+            "max": 0.12903920367986493
+          },
+          "outside_max_process_cores": {
+            "count": 169,
+            "min": 0.0039042656021845584,
+            "median": 0.007808355125528754,
+            "p95": 0.013699633555925529,
+            "max": 0.1094878091829157
+          },
+          "swap_pages_per_second": {
+            "count": 169,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.0,
+            "max": 23.457720389693158
+          },
+          "interval_seconds": {
+            "count": 169,
+            "min": 5.1014203620143235,
+            "median": 5.112509148893878,
+            "p95": 5.121220230124891,
+            "max": 5.99213713593781
+          }
+        },
+        "start_finish_cumulative_counter_deltas": {
+          "system_steal_ticks": 58,
+          "swap_in_pages": 124,
+          "swap_out_pages": 0
+        },
+        "host_steal_cpu_seconds_from_endpoints": 0.58,
+        "controller_identity": {
+          "pid": 1426259,
+          "start_ticks": 120432725,
+          "executable": "/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/bin/.codex-wrapped",
+          "cgroup": "0::/user.slice/user-1000.slice/session-111.scope"
+        },
+        "method": "Distributions are unweighted recorded CPU-window rates; overlapping windows are never summed. Start/finish steal and swap differences use cumulative counters once. The invocation includes fixture setup and verification, not only timed batches. Host-steal telemetry does not establish physical-host isolation; short-lived unobserved work and below-threshold activity remain possible."
+      }
+    },
+    {
+      "axis_index": 5,
+      "backend": "postgres",
+      "peers": 1000,
+      "attempt": 1,
+      "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025-v2/axis-06-postgres-peers-1000-attempt-01",
+      "report_sha256": "f9cd2181289a6718d113c29128e119beef9dc1766d65d08fe6a0137e0e58ba11",
+      "summary_sha256": "141ad9ebed08e50aeeedb8c5c8dfd4bbdc34ee791d7dcac718322f18cb64e16d",
+      "attempt_sha256": "97c3b049e7ca421940b007ccadce0da5e7d262fa8eb8544735795a4dd0737997",
+      "noise": {
+        "journal_sha256": "4d624d93db000a3a752418b6da7a3da13d91e6a5456d3357aac8541d0c71ca46",
+        "start_utc": "2026-10-25T13:31:46.940685+00:00",
+        "finish_utc": "2026-10-25T13:45:24.090694+00:00",
+        "invocation_seconds": 817.1500135480892,
+        "samples": 161,
+        "cpu_windows": 160,
+        "overlapping_cpu_windows": 0,
+        "cpu_windows_starting_before_invocation": 0,
+        "all_guard_checks_passed": true,
+        "guard_check_counts": {
+          "lease_reservation": 161,
+          "no_waiters": 161,
+          "no_lean_slots": 161,
+          "no_proverif_lock": 161,
+          "no_pvmatrix": 161,
+          "no_integration_lease": 161,
+          "no_competing_recognized_processes": 161,
+          "process_cpu_accounting_available": 161,
+          "instrumentation_identity_matches": 161,
+          "owned_postmaster_live": 161,
+          "only_owned_postgres_clients": 161,
+          "owned_postgres_listener": 161,
+          "no_new_memory_ticket": 161,
+          "no_new_lean_ticket": 161,
+          "bounded_monitor_gap": 161,
+          "cpu_counter_continuity": 161,
+          "cpu_baselines_complete": 161,
+          "outside_per_process_cpu_below_limit": 161,
+          "outside_aggregate_cpu_below_limit": 161,
+          "system_swap_below_limit": 161,
+          "sufficient_disk_space": 161,
+          "sufficient_postgres_disk_space": 161
+        },
+        "maximum_sample_gap_seconds": 5.184354612836614,
+        "sample_distributions": {
+          "system_steal_cores": {
+            "count": 160,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.0019573833026488804,
+            "max": 0.011729254358164697
+          },
+          "instrumentation_aggregate_cores": {
+            "count": 160,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.02153343041724773,
+            "max": 0.029256685924706545
+          },
+          "outside_aggregate_cores": {
+            "count": 160,
+            "min": 0.009785689461387432,
+            "median": 0.0195653755033322,
+            "p95": 0.02930082210747353,
+            "max": 0.11342737272228384
+          },
+          "outside_max_process_cores": {
+            "count": 160,
+            "min": 0.003901911986812905,
+            "median": 0.005865194849308935,
+            "p95": 0.009644402000626757,
+            "max": 0.08604835172035326
+          },
+          "swap_pages_per_second": {
+            "count": 160,
+            "min": 0.0,
+            "median": 0.0,
+            "p95": 0.0,
+            "max": 1.9542291451657832
+          },
+          "interval_seconds": {
+            "count": 160,
+            "min": 3.5325914518907666,
+            "median": 5.116084708017297,
+            "p95": 5.12703319801949,
+            "max": 5.184354612836614
+          }
+        },
+        "start_finish_cumulative_counter_deltas": {
+          "system_steal_ticks": 84,
+          "swap_in_pages": 23,
+          "swap_out_pages": 0
+        },
+        "host_steal_cpu_seconds_from_endpoints": 0.84,
+        "controller_identity": {
+          "pid": 1426259,
+          "start_ticks": 120432725,
+          "executable": "/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/bin/.codex-wrapped",
+          "cgroup": "0::/user.slice/user-1000.slice/session-111.scope"
+        },
+        "method": "Distributions are unweighted recorded CPU-window rates; overlapping windows are never summed. Start/finish steal and swap differences use cumulative counters once. The invocation includes fixture setup and verification, not only timed batches. Host-steal telemetry does not establish physical-host isolation; short-lived unobserved work and below-threshold activity remain possible."
+      }
+    }
+  ],
+  "selection": "Only the predeclared retained index; no timing-based filtering or alternate attempt selection.",
+  "statistics": "Ratios computed within matched trials; group summaries are min/median/max of those ratios. Raw per-trial percentiles remain separate. No cross-trial latency pooling or significance claims.",
+  "counters": "Logical row API/SQL accounting only; byte metrics overlap and are not summed as traffic. Saved fetches do not imply elimination of database-side validation. SQLite sql calls snapshot/row/cached=4/5/4 per message; PostgreSQL query exchanges=1/2/1. Both row modes store one successor per successful message."
+}

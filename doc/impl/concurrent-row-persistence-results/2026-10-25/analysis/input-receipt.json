@@ -1,0 +1,851 @@
+{
+  "selection": "Five primary axes explicitly selected after the user stopped SQLite 1000; no timing-based selection or fabricated campaign completion.",
+  "excluded": "Original SQLite1 is historical. Failed/interrupted/stopped SQLite1000 attempts are not primary observations.",
+  "campaigns": [
+    {
+      "campaign": "collection-20261025",
+      "scope": "selected individually retained axes from an incomplete/stopped campaign",
+      "plan_path": "collection-20261025/collection-plan.json",
+      "plan_sha256": "08e26deea1453ab7d179d29eb1a9e9b0a8c5fcb7390ca6b49818010e230744bf",
+      "source_commit": "e26909af1d1aeb1ee48bf197b8be6c6b35ef643e",
+      "binary_sha256": "5dcd5f30b005b1652bd2980963186190952d3d9fda68bdee33b0824553c51e80",
+      "source_sha256": {
+        ".cargo/config.toml": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        ".cargo/mutants-wasm.toml": "8d73b38a159dec311b961a06dc0766f82f92e2f4bd65e247d367bf15be9902e1",
+        ".cargo/mutants.toml": "b979656437c9c6f04b7cc03d577916a30173da78c779a0d907d34ffc9ce3bd08",
+        "Cargo.lock": "c287ee8497290a8536e7431b9e6824c63cbf36da896aa83f4d6af3c39e6f848d",
+        "Cargo.toml": "c68d4cabebbaa64d93df20057becce3eeafd87b64ca16ff4c343c1adc730b80e",
+        "beaconcrypt-core/Cargo.toml": "2a02a8689522b93a4969ed31a861c8d18a686c3fd7417e5b6bfeb201734a1beb",
+        "beaconcrypt-core/src/authentication.rs": "794db37d54728df926e9c5f150ded8734eb7521d5781fa3fc4e2f4b2c1f5d1ef",
+        "beaconcrypt-core/src/commitment.rs": "44bd939e02cbfd02671142fae08b83e9e971b8955c6a84c04cc309c17c087a48",
+        "beaconcrypt-core/src/constants.rs": "748979a5b3b340b692bc10a687a27250ef5e6e2a67d43876a32585177226ef0a",
+        "beaconcrypt-core/src/lib.rs": "ab0db6ff490ccbaf95540cf1b89f2ccc813d3c61a4c52d002ee170851b064ffd",
+        "beaconcrypt-core/src/pqxdh.rs": "2f2e1b3c8e02ad605d5078a8ca16ccf569c50a77bda6df787d84722a16806763",
+        "beaconcrypt-core/src/pqxdh/concrete.rs": "b3a22f8a7c4adb087e217d58e2d302a057fd5ae224cd8fe2c44777472e469c50",
+        "beaconcrypt-core/src/ratchet.rs": "3ed4d65ed1a63605819f8e685707d47b718a91ea9ee23069da88501c8031fa51",
+        "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
+        "beaconcrypt-core/src/ratchet/control.rs": "6c17cc0dbe7445be04dc3ab123a60ecbf3d757da6337a7132d5dafd3e06f5639",
+        "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
+        "beaconcrypt-core/src/record.rs": "2246e63184225fe95f7596454db9380a71c88702b2b57756513cfdcdd9d6623d",
+        "beaconcrypt-parse/Cargo.toml": "9ed4ed614fbd1de0b8bb0c650a50e6e7f15276f59cdab6cd6c8ce6f2d67ff8ed",
+        "beaconcrypt-parse/src/generated/cbordetver.rs": "e60e27d58b3fe7eeaca202e9751b596c88884b4a76d5bf57a345a21861066d6c",
+        "beaconcrypt-parse/src/generated/cbordetveraux.rs": "36420e78b9feed0a4c4a1b6a57b28aeba16ae38be9c61f5ff8165fa088ac3589",
+        "beaconcrypt-parse/src/generated/transport.rs": "218245bef2baa287d6d2a77f6013fe7d78c887b4416a88756618240ad83e3fa8",
+        "beaconcrypt-parse/src/lib.rs": "8d67fe4808bdfe00bf59e2d56a0488f9fea29cce0356f0d045263ec81e2c47f3",
+        "beaconcrypt-parse/src/preflight_tests.rs": "c0e3299054d9003e28dc060d5c3d83e8b5a98219d0f4605ec4482d3ae658479f",
+        "beaconcrypt-parse/src/sizing.rs": "22ea4eca8af17246f985a4658a1b8e47367295289db88b29303cb3cddb4cc770",
+        "beaconcrypt-wasm/Cargo.toml": "8c0ce05e37d07423947ec188b944529eb8f3f6f5cf7d75ae80088769f7b237f3",
+        "beaconcrypt-wasm/src/abi.rs": "548bb7d9e90f8a9e6b65577b203d07ca19715370b2c06aa9fc5af0587df7023d",
+        "beaconcrypt-wasm/src/abi_tests.rs": "82f0ad94b7aa097bb27f53c65d5a658597107cbadd19a31bfe64ead660bcbddb",
+        "beaconcrypt-wasm/src/lib.rs": "2324e8e90549faba475cf0436ca48fd656d497b185040a19721f7e6ca6a5c108",
+        "beaconcrypt-wasm/src/store.rs": "523b5aa4cdf8c0bb383d085bfd505472feba9ebd4ce84cc62712d33b2896d137",
+        "beaconcrypt-wasm/src/store_tests.rs": "304e48e430e556284fe6ab1fb2cf7cc41ad1be1f5782c90e6549bdde81ab4079",
+        "beaconcrypt-wasm/src/tests.rs": "af4b26f346bb193c26e58e1a1aab013bc291d33bac1fdef89c7dbc6692ec26d4",
+        "beaconcrypt/Cargo.toml": "ffa3540fa36cf74027bf31c780b0197147b724de50626961569b4de9ddf4bb6e",
+        "beaconcrypt/build.rs": "aca35eb7a5fba80d3ccdb4da75981dc9b8532ca5074b36695ddb7184ee938034",
+        "beaconcrypt/examples/persistence_bench/adapter_tests.rs": "e7061c743ce2638e38d268a25e40c0b73bbb37cd19bcd40cb492c155e2cefc96",
+        "beaconcrypt/examples/persistence_bench/buffered.rs": "c1496501b9c7bbe6b3945e965d664a43ea561d45db5045a50e64a6ccb746fc3e",
+        "beaconcrypt/examples/persistence_bench/concurrency.rs": "c57839dbfde48c43d44f6a55e7d6e603e0d8ddac46584ff602e8fa8da86397f6",
+        "beaconcrypt/examples/persistence_bench/concurrency_contracts.rs": "069011ec73f2e946c14cb38166cb532e62b7c7f3e7792caec451d34778954368",
+        "beaconcrypt/examples/persistence_bench/concurrency_duplex_tests.rs": "ea2db5c30ec3bb33e3311f2538f356a43a76ffa27919e3cdef849a36d34742c1",
+        "beaconcrypt/examples/persistence_bench/concurrency_runtime_tests.rs": "f9648876681da6cbc1dad09ef9c2054a97085396496bb304134554f44d0e6bbd",
+        "beaconcrypt/examples/persistence_bench/concurrency_schedule.rs": "daa4b4ed33dbbd6e87a6f53de3f44ab749f4c7df66b17bbaa51619889c8580ed",
+        "beaconcrypt/examples/persistence_bench/concurrency_schedule_tests.rs": "0857b43926f07e28b6c302ef742ec3579d3d58365f1cd4d456c61ebb1218dd4b",
+        "beaconcrypt/examples/persistence_bench/database.rs": "9be9f213708329ecd6bb3d34de5f06411cd5e00124de65b9ac0ee010d6a971ef",
+        "beaconcrypt/examples/persistence_bench/main.rs": "ace2dd6d8665da30c45f3b06a382cfa972c23fb1f7945ae23954f093279b1d92",
+        "beaconcrypt/examples/persistence_bench/main_tests.rs": "4330ded4c29d8158b8d2b87cfff0c8a65bc925af861499378b234968cce228de",
+        "beaconcrypt/examples/persistence_bench/native_postgres_tests.rs": "87bea07af6a79160586efb8068263d6c35ba010fecddc23a32369d7f50d183d6",
+        "beaconcrypt/examples/persistence_bench/postgres.rs": "7f502d9f66008945dea6e4f6556362f966a44b906a4682733491b30cdd2901ab",
+        "beaconcrypt/examples/persistence_bench/summarize.py": "b603a0fbea9e4550fcde9512b2ddfe201400569146fa0f37533b19e7a01527cb",
+        "beaconcrypt/examples/persistence_bench/test_concurrent_summary.py": "9787ccf1f6b89255abaa62473e86af261b8fe68f06bd7ed7f427b6d21d4ab133",
+        "beaconcrypt/examples/persistence_bench/test_summarize.py": "282ab5a3fc85d50ee3398999a27ae2c77d3f449a2f144742701baa05f4095eae",
+        "beaconcrypt/src/auth.rs": "18f0604c5f5812f8ab477fbffa2d4b1e0b955378e4f799d7eb843dfd8da9fb3a",
+        "beaconcrypt/src/beacon.rs": "880a240ccfda92565734d31ae3a7e630e988d3e1ff77666579ed31dafd15fd68",
+        "beaconcrypt/src/cbinds.rs": "0a0872c7586414e5cdbbbda18c7856639fc5627388b719b0cb4c0456d7c00aff",
+        "beaconcrypt/src/deser.rs": "fa64f80818cb27ba479a3fa5b0f719ce286eacac5437e0abe39df39cddfbe6a0",
+        "beaconcrypt/src/error.rs": "45e9cd7bd2de08de9eea4bdb5bce9f279fc46c9fa091371557968385ee922a87",
+        "beaconcrypt/src/lib.rs": "33f42a2d5adbf566b6dfd6198c7ba737ce240708fbb8d9c35f9a592e0014a72f",
+        "beaconcrypt/src/persistence.rs": "4e3cd48185eaf3eb104179be3b7adc2db22a465efc6651cd28d27283339a3a6d",
+        "beaconcrypt/src/pqxdh.rs": "892c9b689b6ccfcec08d5d76707667d181c22e021f6b7106495844f5c8ca2fd1",
+        "beaconcrypt/src/pybinds.rs": "6dc9a248f6eba84f6bbc6cfdf16d741b45a61ea1428caacf3a4d1302a8b19dce",
+        "beaconcrypt/src/ratchet.rs": "bfe86fc2b5589a706c0513505e6cf9249741654538eabe7d2708c8213baf256b",
+        "beaconcrypt/src/row_binding_server.rs": "5ddeec7dc556184fe11f7faa8759c7ba21a7a205a7c7c766b97c895af4545ff7",
+        "beaconcrypt/src/row_cbinds.rs": "438d30fa1c47d017b822519187e6e9ad4facec64b55a7179d88a5a5ea8ea47c6",
+        "beaconcrypt/src/row_persistence.rs": "90b6c022ab3763d69b440a9728b8c457fd809b05d0f91a7e32e7443d50251ace",
+        "beaconcrypt/src/row_pybinds.rs": "22dcc8999043f7f33bf3e0d4b44c8abff33536964c10a64f4812f562351bb091",
+        "beaconcrypt/src/ser.rs": "4477cb381c2257af28b45b212a8c50c9a6bd635dd15f50985db1b61b2900feda",
+        "beaconcrypt/src/server.rs": "ffd3a2d4402fb1919791266bc49035a98efeec7323d033f593f6ab1c9211d6b6",
+        "beaconcrypt/src/shared.rs": "9100666b1a7f037bb792778cb1433ea9b5b03c715ed3e1c482f7362ff2c3d56e",
+        "beaconcrypt/src/wire.rs": "b9538d2b232796009909f02ec2b35e2181ccbb20f27989ae6b59b15c3066870c",
+        "beaconcrypt/tests/beacon.rs": "6447ff276b66591beb1dd5f430db53fe2a12b991446063b52f230a6d7169d6f8",
+        "beaconcrypt/tests/c_persistence.c": "fa41df1097774fc16df42311dc13d900e07a3d700d2ec00976e77395713c5cba",
+        "beaconcrypt/tests/cached_row_persistence.rs": "8bccd1c16fd49b2ac64e93661e06498e830299b12bf8a9e9f5a93846c33521e1",
+        "beaconcrypt/tests/common/mod.rs": "3f61b11dd07777a2650b5ea8456b53a545443e5ec00860e1efb3485ff3a6e216",
+        "beaconcrypt/tests/construction.rs": "0361854570ec15dafbbb7c6ae3e380f2bd84b1000ccc16f28de3ed13231edd58",
+        "beaconcrypt/tests/message_size.rs": "8e0dfd913950969ec172eb5373443fbc8ddd96cb1f112fb6256c876b91d1ce5f",
+        "beaconcrypt/tests/mldsa.rs": "020ffa6c9f49b052d92266b93611fde4ac5dcabda9cf9db905da7fb7a70c8b14",
+        "beaconcrypt/tests/persistence_properties.rs": "cb851916faf30a43022513988d5e22a45deb8e94be0faa7fcfb011aeac71a960",
+        "beaconcrypt/tests/protocol.rs": "68dec0bc4da9586ca4ddc6ed140a21e2ff2db41c2eb8da5c6202137fa1bab219",
+        "beaconcrypt/tests/ratchet_properties.rs": "cd063df154901c1993d5b6955ad70c908fb4d9095250984f5cbca970def6ad44",
+        "beaconcrypt/tests/raw_receive.rs": "e61202c757b6b6104b350634558eb9d6b630482d321ca01e4541e4389c721304",
+        "beaconcrypt/tests/record_opening.rs": "1c6e7a464a62090f33121de4aca5847d5b9a7da2ac44fb21c8a12960012caed2",
+        "beaconcrypt/tests/registration_completion.rs": "6da214cb0be67162d328cc9c785f8bc770e0a9fe45c3b16cd47c578160437dcb",
+        "beaconcrypt/tests/registration_properties.rs": "2212b0f0ceb34e7fa223a0a8bb113e511227687953fadd7ac5467a39dbde7d80",
+        "beaconcrypt/tests/registration_response_alias.rs": "1e4bb259ed2855bf4b5795f8dc4e7c9a2cd866e42baed074167d87a081bef352",
+        "beaconcrypt/tests/rooterberg.rs": "1608c6769bf58bfd59609549d3204e4cca3aab002f816f055c7492e89140e175",
+        "beaconcrypt/tests/row_persistence.rs": "f1dca8b0f59958508c0fff685e3a3a2f781a0f4595f10a71ef4c78f2d5613368",
+        "beaconcrypt/tests/server.rs": "244ba61a86df5f140bdeec7d928270b3d36863f9cc9863672fcc1a77d994fb48",
+        "beaconcrypt/tests/wycheproof.rs": "989055b51853766be4799f3a861f6c4a9ee6a8f14bb14f6ddc89ff770c1d4bd6",
+        "rustfmt.toml": "92d66a79ce67abd5b193f564b87f1b3a2cf28f6562a0b50cc3083ce2130c6fe8"
+      },
+      "cpu_limits": {
+        "minimum_interval_seconds": 1.0,
+        "outside_process_cores": 0.25,
+        "outside_aggregate_cores": 0.5,
+        "system_steal_cores": null,
+        "swap_pages_per_second": 256
+      },
+      "collection_events_sha256": "bb53844dfbea158391ef306ab0cff65f57ca28db65167c16d5b596e9fa9bbbb1",
+      "authoritative_completed_collection": false
+    },
+    {
+      "campaign": "collection-sqlite-wait-v2",
+      "scope": "selected individually retained axes from an incomplete/stopped campaign",
+      "plan_path": "collection-sqlite-wait-v2/collection-plan.json",
+      "plan_sha256": "347970a9b69659cca181a32c8f7898fca9fa74e8e5e34a44514c6d5ba4bf134e",
+      "source_commit": "77d5633d6a180b9c9ca37b1ceddbaaab303c2f3b",
+      "binary_sha256": "097a0d6dd53666fad470597ce0ccd8db06fe1de84161b2bf376751b6076b553d",
+      "source_sha256": {
+        ".cargo/config.toml": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        ".cargo/mutants-wasm.toml": "8d73b38a159dec311b961a06dc0766f82f92e2f4bd65e247d367bf15be9902e1",
+        ".cargo/mutants.toml": "b979656437c9c6f04b7cc03d577916a30173da78c779a0d907d34ffc9ce3bd08",
+        "Cargo.lock": "c287ee8497290a8536e7431b9e6824c63cbf36da896aa83f4d6af3c39e6f848d",
+        "Cargo.toml": "c68d4cabebbaa64d93df20057becce3eeafd87b64ca16ff4c343c1adc730b80e",
+        "beaconcrypt-core/Cargo.toml": "2a02a8689522b93a4969ed31a861c8d18a686c3fd7417e5b6bfeb201734a1beb",
+        "beaconcrypt-core/src/authentication.rs": "794db37d54728df926e9c5f150ded8734eb7521d5781fa3fc4e2f4b2c1f5d1ef",
+        "beaconcrypt-core/src/commitment.rs": "44bd939e02cbfd02671142fae08b83e9e971b8955c6a84c04cc309c17c087a48",
+        "beaconcrypt-core/src/constants.rs": "748979a5b3b340b692bc10a687a27250ef5e6e2a67d43876a32585177226ef0a",
+        "beaconcrypt-core/src/lib.rs": "ab0db6ff490ccbaf95540cf1b89f2ccc813d3c61a4c52d002ee170851b064ffd",
+        "beaconcrypt-core/src/pqxdh.rs": "2f2e1b3c8e02ad605d5078a8ca16ccf569c50a77bda6df787d84722a16806763",
+        "beaconcrypt-core/src/pqxdh/concrete.rs": "b3a22f8a7c4adb087e217d58e2d302a057fd5ae224cd8fe2c44777472e469c50",
+        "beaconcrypt-core/src/ratchet.rs": "3ed4d65ed1a63605819f8e685707d47b718a91ea9ee23069da88501c8031fa51",
+        "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
+        "beaconcrypt-core/src/ratchet/control.rs": "6c17cc0dbe7445be04dc3ab123a60ecbf3d757da6337a7132d5dafd3e06f5639",
+        "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
+        "beaconcrypt-core/src/record.rs": "2246e63184225fe95f7596454db9380a71c88702b2b57756513cfdcdd9d6623d",
+        "beaconcrypt-parse/Cargo.toml": "9ed4ed614fbd1de0b8bb0c650a50e6e7f15276f59cdab6cd6c8ce6f2d67ff8ed",
+        "beaconcrypt-parse/src/generated/cbordetver.rs": "e60e27d58b3fe7eeaca202e9751b596c88884b4a76d5bf57a345a21861066d6c",
+        "beaconcrypt-parse/src/generated/cbordetveraux.rs": "36420e78b9feed0a4c4a1b6a57b28aeba16ae38be9c61f5ff8165fa088ac3589",
+        "beaconcrypt-parse/src/generated/transport.rs": "218245bef2baa287d6d2a77f6013fe7d78c887b4416a88756618240ad83e3fa8",
+        "beaconcrypt-parse/src/lib.rs": "8d67fe4808bdfe00bf59e2d56a0488f9fea29cce0356f0d045263ec81e2c47f3",
+        "beaconcrypt-parse/src/preflight_tests.rs": "c0e3299054d9003e28dc060d5c3d83e8b5a98219d0f4605ec4482d3ae658479f",
+        "beaconcrypt-parse/src/sizing.rs": "22ea4eca8af17246f985a4658a1b8e47367295289db88b29303cb3cddb4cc770",
+        "beaconcrypt-wasm/Cargo.toml": "8c0ce05e37d07423947ec188b944529eb8f3f6f5cf7d75ae80088769f7b237f3",
+        "beaconcrypt-wasm/src/abi.rs": "548bb7d9e90f8a9e6b65577b203d07ca19715370b2c06aa9fc5af0587df7023d",
+        "beaconcrypt-wasm/src/abi_tests.rs": "82f0ad94b7aa097bb27f53c65d5a658597107cbadd19a31bfe64ead660bcbddb",
+        "beaconcrypt-wasm/src/lib.rs": "2324e8e90549faba475cf0436ca48fd656d497b185040a19721f7e6ca6a5c108",
+        "beaconcrypt-wasm/src/store.rs": "523b5aa4cdf8c0bb383d085bfd505472feba9ebd4ce84cc62712d33b2896d137",
+        "beaconcrypt-wasm/src/store_tests.rs": "304e48e430e556284fe6ab1fb2cf7cc41ad1be1f5782c90e6549bdde81ab4079",
+        "beaconcrypt-wasm/src/tests.rs": "af4b26f346bb193c26e58e1a1aab013bc291d33bac1fdef89c7dbc6692ec26d4",
+        "beaconcrypt/Cargo.toml": "ffa3540fa36cf74027bf31c780b0197147b724de50626961569b4de9ddf4bb6e",
+        "beaconcrypt/build.rs": "aca35eb7a5fba80d3ccdb4da75981dc9b8532ca5074b36695ddb7184ee938034",
+        "beaconcrypt/examples/persistence_bench/adapter_tests.rs": "e7061c743ce2638e38d268a25e40c0b73bbb37cd19bcd40cb492c155e2cefc96",
+        "beaconcrypt/examples/persistence_bench/buffered.rs": "c1496501b9c7bbe6b3945e965d664a43ea561d45db5045a50e64a6ccb746fc3e",
+        "beaconcrypt/examples/persistence_bench/concurrency.rs": "c57839dbfde48c43d44f6a55e7d6e603e0d8ddac46584ff602e8fa8da86397f6",
+        "beaconcrypt/examples/persistence_bench/concurrency_contracts.rs": "069011ec73f2e946c14cb38166cb532e62b7c7f3e7792caec451d34778954368",
+        "beaconcrypt/examples/persistence_bench/concurrency_duplex_tests.rs": "ea2db5c30ec3bb33e3311f2538f356a43a76ffa27919e3cdef849a36d34742c1",
+        "beaconcrypt/examples/persistence_bench/concurrency_runtime_tests.rs": "f9648876681da6cbc1dad09ef9c2054a97085396496bb304134554f44d0e6bbd",
+        "beaconcrypt/examples/persistence_bench/concurrency_schedule.rs": "daa4b4ed33dbbd6e87a6f53de3f44ab749f4c7df66b17bbaa51619889c8580ed",
+        "beaconcrypt/examples/persistence_bench/concurrency_schedule_tests.rs": "0857b43926f07e28b6c302ef742ec3579d3d58365f1cd4d456c61ebb1218dd4b",
+        "beaconcrypt/examples/persistence_bench/database.rs": "d31904051244fdddd2dcdb83d489897a71e9d0d51808542272d4ba084fdc273d",
+        "beaconcrypt/examples/persistence_bench/main.rs": "ace2dd6d8665da30c45f3b06a382cfa972c23fb1f7945ae23954f093279b1d92",
+        "beaconcrypt/examples/persistence_bench/main_tests.rs": "4f5e30497c037c176b7abe0e5934991fd990d47f203ec52c6ddbc5bd9107fb3e",
+        "beaconcrypt/examples/persistence_bench/native_postgres_tests.rs": "87bea07af6a79160586efb8068263d6c35ba010fecddc23a32369d7f50d183d6",
+        "beaconcrypt/examples/persistence_bench/postgres.rs": "7f502d9f66008945dea6e4f6556362f966a44b906a4682733491b30cdd2901ab",
+        "beaconcrypt/examples/persistence_bench/summarize.py": "b603a0fbea9e4550fcde9512b2ddfe201400569146fa0f37533b19e7a01527cb",
+        "beaconcrypt/examples/persistence_bench/test_concurrent_summary.py": "9787ccf1f6b89255abaa62473e86af261b8fe68f06bd7ed7f427b6d21d4ab133",
+        "beaconcrypt/examples/persistence_bench/test_summarize.py": "282ab5a3fc85d50ee3398999a27ae2c77d3f449a2f144742701baa05f4095eae",
+        "beaconcrypt/src/auth.rs": "18f0604c5f5812f8ab477fbffa2d4b1e0b955378e4f799d7eb843dfd8da9fb3a",
+        "beaconcrypt/src/beacon.rs": "880a240ccfda92565734d31ae3a7e630e988d3e1ff77666579ed31dafd15fd68",
+        "beaconcrypt/src/cbinds.rs": "0a0872c7586414e5cdbbbda18c7856639fc5627388b719b0cb4c0456d7c00aff",
+        "beaconcrypt/src/deser.rs": "fa64f80818cb27ba479a3fa5b0f719ce286eacac5437e0abe39df39cddfbe6a0",
+        "beaconcrypt/src/error.rs": "45e9cd7bd2de08de9eea4bdb5bce9f279fc46c9fa091371557968385ee922a87",
+        "beaconcrypt/src/lib.rs": "33f42a2d5adbf566b6dfd6198c7ba737ce240708fbb8d9c35f9a592e0014a72f",
+        "beaconcrypt/src/persistence.rs": "4e3cd48185eaf3eb104179be3b7adc2db22a465efc6651cd28d27283339a3a6d",
+        "beaconcrypt/src/pqxdh.rs": "892c9b689b6ccfcec08d5d76707667d181c22e021f6b7106495844f5c8ca2fd1",
+        "beaconcrypt/src/pybinds.rs": "6dc9a248f6eba84f6bbc6cfdf16d741b45a61ea1428caacf3a4d1302a8b19dce",
+        "beaconcrypt/src/ratchet.rs": "bfe86fc2b5589a706c0513505e6cf9249741654538eabe7d2708c8213baf256b",
+        "beaconcrypt/src/row_binding_server.rs": "5ddeec7dc556184fe11f7faa8759c7ba21a7a205a7c7c766b97c895af4545ff7",
+        "beaconcrypt/src/row_cbinds.rs": "438d30fa1c47d017b822519187e6e9ad4facec64b55a7179d88a5a5ea8ea47c6",
+        "beaconcrypt/src/row_persistence.rs": "90b6c022ab3763d69b440a9728b8c457fd809b05d0f91a7e32e7443d50251ace",
+        "beaconcrypt/src/row_pybinds.rs": "22dcc8999043f7f33bf3e0d4b44c8abff33536964c10a64f4812f562351bb091",
+        "beaconcrypt/src/ser.rs": "4477cb381c2257af28b45b212a8c50c9a6bd635dd15f50985db1b61b2900feda",
+        "beaconcrypt/src/server.rs": "ffd3a2d4402fb1919791266bc49035a98efeec7323d033f593f6ab1c9211d6b6",
+        "beaconcrypt/src/shared.rs": "9100666b1a7f037bb792778cb1433ea9b5b03c715ed3e1c482f7362ff2c3d56e",
+        "beaconcrypt/src/wire.rs": "b9538d2b232796009909f02ec2b35e2181ccbb20f27989ae6b59b15c3066870c",
+        "beaconcrypt/tests/beacon.rs": "6447ff276b66591beb1dd5f430db53fe2a12b991446063b52f230a6d7169d6f8",
+        "beaconcrypt/tests/c_persistence.c": "fa41df1097774fc16df42311dc13d900e07a3d700d2ec00976e77395713c5cba",
+        "beaconcrypt/tests/cached_row_persistence.rs": "8bccd1c16fd49b2ac64e93661e06498e830299b12bf8a9e9f5a93846c33521e1",
+        "beaconcrypt/tests/common/mod.rs": "3f61b11dd07777a2650b5ea8456b53a545443e5ec00860e1efb3485ff3a6e216",
+        "beaconcrypt/tests/construction.rs": "0361854570ec15dafbbb7c6ae3e380f2bd84b1000ccc16f28de3ed13231edd58",
+        "beaconcrypt/tests/message_size.rs": "8e0dfd913950969ec172eb5373443fbc8ddd96cb1f112fb6256c876b91d1ce5f",
+        "beaconcrypt/tests/mldsa.rs": "020ffa6c9f49b052d92266b93611fde4ac5dcabda9cf9db905da7fb7a70c8b14",
+        "beaconcrypt/tests/persistence_properties.rs": "cb851916faf30a43022513988d5e22a45deb8e94be0faa7fcfb011aeac71a960",
+        "beaconcrypt/tests/protocol.rs": "68dec0bc4da9586ca4ddc6ed140a21e2ff2db41c2eb8da5c6202137fa1bab219",
+        "beaconcrypt/tests/ratchet_properties.rs": "cd063df154901c1993d5b6955ad70c908fb4d9095250984f5cbca970def6ad44",
+        "beaconcrypt/tests/raw_receive.rs": "e61202c757b6b6104b350634558eb9d6b630482d321ca01e4541e4389c721304",
+        "beaconcrypt/tests/record_opening.rs": "1c6e7a464a62090f33121de4aca5847d5b9a7da2ac44fb21c8a12960012caed2",
+        "beaconcrypt/tests/registration_completion.rs": "6da214cb0be67162d328cc9c785f8bc770e0a9fe45c3b16cd47c578160437dcb",
+        "beaconcrypt/tests/registration_properties.rs": "2212b0f0ceb34e7fa223a0a8bb113e511227687953fadd7ac5467a39dbde7d80",
+        "beaconcrypt/tests/registration_response_alias.rs": "1e4bb259ed2855bf4b5795f8dc4e7c9a2cd866e42baed074167d87a081bef352",
+        "beaconcrypt/tests/rooterberg.rs": "1608c6769bf58bfd59609549d3204e4cca3aab002f816f055c7492e89140e175",
+        "beaconcrypt/tests/row_persistence.rs": "f1dca8b0f59958508c0fff685e3a3a2f781a0f4595f10a71ef4c78f2d5613368",
+        "beaconcrypt/tests/server.rs": "244ba61a86df5f140bdeec7d928270b3d36863f9cc9863672fcc1a77d994fb48",
+        "beaconcrypt/tests/wycheproof.rs": "989055b51853766be4799f3a861f6c4a9ee6a8f14bb14f6ddc89ff770c1d4bd6",
+        "rustfmt.toml": "92d66a79ce67abd5b193f564b87f1b3a2cf28f6562a0b50cc3083ce2130c6fe8"
+      },
+      "cpu_limits": {
+        "minimum_interval_seconds": 1.0,
+        "outside_process_cores": 0.25,
+        "outside_aggregate_cores": 0.5,
+        "system_steal_cores": null,
+        "swap_pages_per_second": 256
+      },
+      "collection_events_sha256": "3813254ea736d8770292e8915c60cea1d628f23a4379d2af66bca44956d54f8e",
+      "authoritative_completed_collection": false
+    },
+    {
+      "campaign": "collection-postgres-final",
+      "scope": "completed declared one-axis collection",
+      "plan_path": "collection-postgres-final/collection-plan.json",
+      "plan_sha256": "122fde0d67266cf4efb74edb8fb9121845936ef3cf7ea09cfa146d9079cfaec3",
+      "source_commit": "77d5633d6a180b9c9ca37b1ceddbaaab303c2f3b",
+      "binary_sha256": "097a0d6dd53666fad470597ce0ccd8db06fe1de84161b2bf376751b6076b553d",
+      "source_sha256": {
+        ".cargo/config.toml": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        ".cargo/mutants-wasm.toml": "8d73b38a159dec311b961a06dc0766f82f92e2f4bd65e247d367bf15be9902e1",
+        ".cargo/mutants.toml": "b979656437c9c6f04b7cc03d577916a30173da78c779a0d907d34ffc9ce3bd08",
+        "Cargo.lock": "c287ee8497290a8536e7431b9e6824c63cbf36da896aa83f4d6af3c39e6f848d",
+        "Cargo.toml": "c68d4cabebbaa64d93df20057becce3eeafd87b64ca16ff4c343c1adc730b80e",
+        "beaconcrypt-core/Cargo.toml": "2a02a8689522b93a4969ed31a861c8d18a686c3fd7417e5b6bfeb201734a1beb",
+        "beaconcrypt-core/src/authentication.rs": "794db37d54728df926e9c5f150ded8734eb7521d5781fa3fc4e2f4b2c1f5d1ef",
+        "beaconcrypt-core/src/commitment.rs": "44bd939e02cbfd02671142fae08b83e9e971b8955c6a84c04cc309c17c087a48",
+        "beaconcrypt-core/src/constants.rs": "748979a5b3b340b692bc10a687a27250ef5e6e2a67d43876a32585177226ef0a",
+        "beaconcrypt-core/src/lib.rs": "ab0db6ff490ccbaf95540cf1b89f2ccc813d3c61a4c52d002ee170851b064ffd",
+        "beaconcrypt-core/src/pqxdh.rs": "2f2e1b3c8e02ad605d5078a8ca16ccf569c50a77bda6df787d84722a16806763",
+        "beaconcrypt-core/src/pqxdh/concrete.rs": "b3a22f8a7c4adb087e217d58e2d302a057fd5ae224cd8fe2c44777472e469c50",
+        "beaconcrypt-core/src/ratchet.rs": "3ed4d65ed1a63605819f8e685707d47b718a91ea9ee23069da88501c8031fa51",
+        "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
+        "beaconcrypt-core/src/ratchet/control.rs": "6c17cc0dbe7445be04dc3ab123a60ecbf3d757da6337a7132d5dafd3e06f5639",
+        "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
+        "beaconcrypt-core/src/record.rs": "2246e63184225fe95f7596454db9380a71c88702b2b57756513cfdcdd9d6623d",
+        "beaconcrypt-parse/Cargo.toml": "9ed4ed614fbd1de0b8bb0c650a50e6e7f15276f59cdab6cd6c8ce6f2d67ff8ed",
+        "beaconcrypt-parse/src/generated/cbordetver.rs": "e60e27d58b3fe7eeaca202e9751b596c88884b4a76d5bf57a345a21861066d6c",
+        "beaconcrypt-parse/src/generated/cbordetveraux.rs": "36420e78b9feed0a4c4a1b6a57b28aeba16ae38be9c61f5ff8165fa088ac3589",
+        "beaconcrypt-parse/src/generated/transport.rs": "218245bef2baa287d6d2a77f6013fe7d78c887b4416a88756618240ad83e3fa8",
+        "beaconcrypt-parse/src/lib.rs": "8d67fe4808bdfe00bf59e2d56a0488f9fea29cce0356f0d045263ec81e2c47f3",
+        "beaconcrypt-parse/src/preflight_tests.rs": "c0e3299054d9003e28dc060d5c3d83e8b5a98219d0f4605ec4482d3ae658479f",
+        "beaconcrypt-parse/src/sizing.rs": "22ea4eca8af17246f985a4658a1b8e47367295289db88b29303cb3cddb4cc770",
+        "beaconcrypt-wasm/Cargo.toml": "8c0ce05e37d07423947ec188b944529eb8f3f6f5cf7d75ae80088769f7b237f3",
+        "beaconcrypt-wasm/src/abi.rs": "548bb7d9e90f8a9e6b65577b203d07ca19715370b2c06aa9fc5af0587df7023d",
+        "beaconcrypt-wasm/src/abi_tests.rs": "82f0ad94b7aa097bb27f53c65d5a658597107cbadd19a31bfe64ead660bcbddb",
+        "beaconcrypt-wasm/src/lib.rs": "2324e8e90549faba475cf0436ca48fd656d497b185040a19721f7e6ca6a5c108",
+        "beaconcrypt-wasm/src/store.rs": "523b5aa4cdf8c0bb383d085bfd505472feba9ebd4ce84cc62712d33b2896d137",
+        "beaconcrypt-wasm/src/store_tests.rs": "304e48e430e556284fe6ab1fb2cf7cc41ad1be1f5782c90e6549bdde81ab4079",
+        "beaconcrypt-wasm/src/tests.rs": "af4b26f346bb193c26e58e1a1aab013bc291d33bac1fdef89c7dbc6692ec26d4",
+        "beaconcrypt/Cargo.toml": "ffa3540fa36cf74027bf31c780b0197147b724de50626961569b4de9ddf4bb6e",
+        "beaconcrypt/build.rs": "aca35eb7a5fba80d3ccdb4da75981dc9b8532ca5074b36695ddb7184ee938034",
+        "beaconcrypt/examples/persistence_bench/adapter_tests.rs": "e7061c743ce2638e38d268a25e40c0b73bbb37cd19bcd40cb492c155e2cefc96",
+        "beaconcrypt/examples/persistence_bench/buffered.rs": "c1496501b9c7bbe6b3945e965d664a43ea561d45db5045a50e64a6ccb746fc3e",
+        "beaconcrypt/examples/persistence_bench/concurrency.rs": "c57839dbfde48c43d44f6a55e7d6e603e0d8ddac46584ff602e8fa8da86397f6",
+        "beaconcrypt/examples/persistence_bench/concurrency_contracts.rs": "069011ec73f2e946c14cb38166cb532e62b7c7f3e7792caec451d34778954368",
+        "beaconcrypt/examples/persistence_bench/concurrency_duplex_tests.rs": "ea2db5c30ec3bb33e3311f2538f356a43a76ffa27919e3cdef849a36d34742c1",
+        "beaconcrypt/examples/persistence_bench/concurrency_runtime_tests.rs": "f9648876681da6cbc1dad09ef9c2054a97085396496bb304134554f44d0e6bbd",
+        "beaconcrypt/examples/persistence_bench/concurrency_schedule.rs": "daa4b4ed33dbbd6e87a6f53de3f44ab749f4c7df66b17bbaa51619889c8580ed",
+        "beaconcrypt/examples/persistence_bench/concurrency_schedule_tests.rs": "0857b43926f07e28b6c302ef742ec3579d3d58365f1cd4d456c61ebb1218dd4b",
+        "beaconcrypt/examples/persistence_bench/database.rs": "d31904051244fdddd2dcdb83d489897a71e9d0d51808542272d4ba084fdc273d",
+        "beaconcrypt/examples/persistence_bench/main.rs": "ace2dd6d8665da30c45f3b06a382cfa972c23fb1f7945ae23954f093279b1d92",
+        "beaconcrypt/examples/persistence_bench/main_tests.rs": "4f5e30497c037c176b7abe0e5934991fd990d47f203ec52c6ddbc5bd9107fb3e",
+        "beaconcrypt/examples/persistence_bench/native_postgres_tests.rs": "87bea07af6a79160586efb8068263d6c35ba010fecddc23a32369d7f50d183d6",
+        "beaconcrypt/examples/persistence_bench/postgres.rs": "7f502d9f66008945dea6e4f6556362f966a44b906a4682733491b30cdd2901ab",
+        "beaconcrypt/examples/persistence_bench/summarize.py": "b603a0fbea9e4550fcde9512b2ddfe201400569146fa0f37533b19e7a01527cb",
+        "beaconcrypt/examples/persistence_bench/test_concurrent_summary.py": "9787ccf1f6b89255abaa62473e86af261b8fe68f06bd7ed7f427b6d21d4ab133",
+        "beaconcrypt/examples/persistence_bench/test_summarize.py": "282ab5a3fc85d50ee3398999a27ae2c77d3f449a2f144742701baa05f4095eae",
+        "beaconcrypt/src/auth.rs": "18f0604c5f5812f8ab477fbffa2d4b1e0b955378e4f799d7eb843dfd8da9fb3a",
+        "beaconcrypt/src/beacon.rs": "880a240ccfda92565734d31ae3a7e630e988d3e1ff77666579ed31dafd15fd68",
+        "beaconcrypt/src/cbinds.rs": "0a0872c7586414e5cdbbbda18c7856639fc5627388b719b0cb4c0456d7c00aff",
+        "beaconcrypt/src/deser.rs": "fa64f80818cb27ba479a3fa5b0f719ce286eacac5437e0abe39df39cddfbe6a0",
+        "beaconcrypt/src/error.rs": "45e9cd7bd2de08de9eea4bdb5bce9f279fc46c9fa091371557968385ee922a87",
+        "beaconcrypt/src/lib.rs": "33f42a2d5adbf566b6dfd6198c7ba737ce240708fbb8d9c35f9a592e0014a72f",
+        "beaconcrypt/src/persistence.rs": "4e3cd48185eaf3eb104179be3b7adc2db22a465efc6651cd28d27283339a3a6d",
+        "beaconcrypt/src/pqxdh.rs": "892c9b689b6ccfcec08d5d76707667d181c22e021f6b7106495844f5c8ca2fd1",
+        "beaconcrypt/src/pybinds.rs": "6dc9a248f6eba84f6bbc6cfdf16d741b45a61ea1428caacf3a4d1302a8b19dce",
+        "beaconcrypt/src/ratchet.rs": "bfe86fc2b5589a706c0513505e6cf9249741654538eabe7d2708c8213baf256b",
+        "beaconcrypt/src/row_binding_server.rs": "5ddeec7dc556184fe11f7faa8759c7ba21a7a205a7c7c766b97c895af4545ff7",
+        "beaconcrypt/src/row_cbinds.rs": "438d30fa1c47d017b822519187e6e9ad4facec64b55a7179d88a5a5ea8ea47c6",
+        "beaconcrypt/src/row_persistence.rs": "90b6c022ab3763d69b440a9728b8c457fd809b05d0f91a7e32e7443d50251ace",
+        "beaconcrypt/src/row_pybinds.rs": "22dcc8999043f7f33bf3e0d4b44c8abff33536964c10a64f4812f562351bb091",
+        "beaconcrypt/src/ser.rs": "4477cb381c2257af28b45b212a8c50c9a6bd635dd15f50985db1b61b2900feda",
+        "beaconcrypt/src/server.rs": "ffd3a2d4402fb1919791266bc49035a98efeec7323d033f593f6ab1c9211d6b6",
+        "beaconcrypt/src/shared.rs": "9100666b1a7f037bb792778cb1433ea9b5b03c715ed3e1c482f7362ff2c3d56e",
+        "beaconcrypt/src/wire.rs": "b9538d2b232796009909f02ec2b35e2181ccbb20f27989ae6b59b15c3066870c",
+        "beaconcrypt/tests/beacon.rs": "6447ff276b66591beb1dd5f430db53fe2a12b991446063b52f230a6d7169d6f8",
+        "beaconcrypt/tests/c_persistence.c": "fa41df1097774fc16df42311dc13d900e07a3d700d2ec00976e77395713c5cba",
+        "beaconcrypt/tests/cached_row_persistence.rs": "8bccd1c16fd49b2ac64e93661e06498e830299b12bf8a9e9f5a93846c33521e1",
+        "beaconcrypt/tests/common/mod.rs": "3f61b11dd07777a2650b5ea8456b53a545443e5ec00860e1efb3485ff3a6e216",
+        "beaconcrypt/tests/construction.rs": "0361854570ec15dafbbb7c6ae3e380f2bd84b1000ccc16f28de3ed13231edd58",
+        "beaconcrypt/tests/message_size.rs": "8e0dfd913950969ec172eb5373443fbc8ddd96cb1f112fb6256c876b91d1ce5f",
+        "beaconcrypt/tests/mldsa.rs": "020ffa6c9f49b052d92266b93611fde4ac5dcabda9cf9db905da7fb7a70c8b14",
+        "beaconcrypt/tests/persistence_properties.rs": "cb851916faf30a43022513988d5e22a45deb8e94be0faa7fcfb011aeac71a960",
+        "beaconcrypt/tests/protocol.rs": "68dec0bc4da9586ca4ddc6ed140a21e2ff2db41c2eb8da5c6202137fa1bab219",
+        "beaconcrypt/tests/ratchet_properties.rs": "cd063df154901c1993d5b6955ad70c908fb4d9095250984f5cbca970def6ad44",
+        "beaconcrypt/tests/raw_receive.rs": "e61202c757b6b6104b350634558eb9d6b630482d321ca01e4541e4389c721304",
+        "beaconcrypt/tests/record_opening.rs": "1c6e7a464a62090f33121de4aca5847d5b9a7da2ac44fb21c8a12960012caed2",
+        "beaconcrypt/tests/registration_completion.rs": "6da214cb0be67162d328cc9c785f8bc770e0a9fe45c3b16cd47c578160437dcb",
+        "beaconcrypt/tests/registration_properties.rs": "2212b0f0ceb34e7fa223a0a8bb113e511227687953fadd7ac5467a39dbde7d80",
+        "beaconcrypt/tests/registration_response_alias.rs": "1e4bb259ed2855bf4b5795f8dc4e7c9a2cd866e42baed074167d87a081bef352",
+        "beaconcrypt/tests/rooterberg.rs": "1608c6769bf58bfd59609549d3204e4cca3aab002f816f055c7492e89140e175",
+        "beaconcrypt/tests/row_persistence.rs": "f1dca8b0f59958508c0fff685e3a3a2f781a0f4595f10a71ef4c78f2d5613368",
+        "beaconcrypt/tests/server.rs": "244ba61a86df5f140bdeec7d928270b3d36863f9cc9863672fcc1a77d994fb48",
+        "beaconcrypt/tests/wycheproof.rs": "989055b51853766be4799f3a861f6c4a9ee6a8f14bb14f6ddc89ff770c1d4bd6",
+        "rustfmt.toml": "92d66a79ce67abd5b193f564b87f1b3a2cf28f6562a0b50cc3083ce2130c6fe8"
+      },
+      "cpu_limits": {
+        "minimum_interval_seconds": 1.0,
+        "outside_process_cores": 1.0,
+        "outside_aggregate_cores": 2.0,
+        "system_steal_cores": null,
+        "swap_pages_per_second": 256
+      },
+      "collection_events_sha256": "2f86782e64724d82b33924bbfcd52c61b65053c54935f155c89a6eb469906a4d",
+      "authoritative_completed_collection": true
+    }
+  ],
+  "changed_source_files_between_builds": [
+    "beaconcrypt/examples/persistence_bench/database.rs",
+    "beaconcrypt/examples/persistence_bench/main_tests.rs"
+  ],
+  "user_stop_receipt": {
+    "path": "collection-sqlite-wait-v2/USER-DIRECTED-STOP.json",
+    "sha256": "96201ca4e9e706d418a986d347510c208365bddf397d0cceebd0623fc804279f"
+  },
+  "completed_final_campaign_validation": {
+    "plan_path": "/tmp/bc-arc-scratch/row-persistence-20261025/concurrent/collection-postgres-final/collection-plan.json",
+    "plan_sha256": "122fde0d67266cf4efb74edb8fb9121845936ef3cf7ea09cfa146d9079cfaec3",
+    "retained_manifest_path": "/tmp/bc-arc-scratch/row-persistence-20261025/concurrent/collection-postgres-final/collection-retained.json",
+    "retained_manifest_sha256": "204dce3d5dd53e4698475429d92e0b93259d60c3680c10a6101f08696c8c6b3c",
+    "collection_events_path": "/tmp/bc-arc-scratch/row-persistence-20261025/concurrent/collection-postgres-final/collection-events.jsonl",
+    "collection_events_sha256": "2f86782e64724d82b33924bbfcd52c61b65053c54935f155c89a6eb469906a4d",
+    "summarizer_path": "/tmp/bc-arc-scratch/row-persistence-20261025/concurrent/collection-postgres-final/summarize.py",
+    "summarizer_sha256": "b603a0fbea9e4550fcde9512b2ddfe201400569146fa0f37533b19e7a01527cb",
+    "binary_sha256": "097a0d6dd53666fad470597ce0ccd8db06fe1de84161b2bf376751b6076b553d",
+    "inputs": [
+      {
+        "backend": "postgres",
+        "registered_peers": 1000,
+        "report_path": "/tmp/bc-arc-scratch/row-persistence-20261025/concurrent/collection-postgres-final/axis-01-postgres-peers-1000-attempt-01/report.json",
+        "report_sha256": "affc7c7c0e666f7615196c28c2650413cba9cc1986ae7369f018ed4a105e4268",
+        "attempt_path": "/tmp/bc-arc-scratch/row-persistence-20261025/concurrent/collection-postgres-final/axis-01-postgres-peers-1000-attempt-01/attempt.json",
+        "attempt_sha256": "354db6257039bc17c447364f8745a9b96176234bc8a9e32d642f57ac3481c4d2",
+        "summary_sha256": "b3858286a01a745bca7a60eee9e84b49184eb5ffb0a25c54be0cec5a37d9504d"
+      }
+    ]
+  },
+  "inputs_from_incomplete_campaigns": [
+    {
+      "campaign": "collection-20261025",
+      "backend": "postgres",
+      "registered_peers": 1,
+      "report_path": "collection-20261025/axis-02-postgres-peers-1-attempt-02/report.json",
+      "report_sha256": "2c69e73cb08cf5b314696dda01b46034c992838e21de54d66d475cb484c7907c",
+      "attempt_path": "collection-20261025/axis-02-postgres-peers-1-attempt-02/attempt.json",
+      "attempt_sha256": "44f2ce84790de47a72f1f241e60945dc4fcf5c3e016c902af6262e6a1a22f423",
+      "summary_sha256": "9656e157d89b7d532c388d77e1124e7a407faa98aeeb63b7031130e9e2b1da29",
+      "retained_attempt": {
+        "axis_index": 1,
+        "axis": {
+          "backend": "postgres",
+          "peers": 1
+        },
+        "attempt": 2,
+        "started_utc": "2026-10-25T17:22:58.520522+00:00",
+        "scope": "coord-00002868-hybrid-persistence-benchmark-concurrent.scope",
+        "status": "retained",
+        "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/concurrent/collection-20261025/axis-02-postgres-peers-1-attempt-02",
+        "plan_sha256": "08e26deea1453ab7d179d29eb1a9e9b0a8c5fcb7390ca6b49818010e230744bf",
+        "binary_sha256": "5dcd5f30b005b1652bd2980963186190952d3d9fda68bdee33b0824553c51e80",
+        "measurement_start_utc": "2026-10-25T17:24:00.371840+00:00",
+        "measurement_finish_utc": "2026-10-25T17:27:05.761463+00:00",
+        "report_sha256": "2c69e73cb08cf5b314696dda01b46034c992838e21de54d66d475cb484c7907c",
+        "summary_sha256": "9656e157d89b7d532c388d77e1124e7a407faa98aeeb63b7031130e9e2b1da29",
+        "trials": 3,
+        "arms": [
+          "snapshot",
+          "row",
+          "cached_row"
+        ],
+        "interrupted_schema_policy": "Preserved; no SQL schema cleanup by the guard",
+        "finished_utc": "2026-10-25T17:27:06.368865+00:00"
+      }
+    },
+    {
+      "campaign": "collection-20261025",
+      "backend": "postgres",
+      "registered_peers": 100,
+      "report_path": "collection-20261025/axis-03-postgres-peers-100-attempt-01/report.json",
+      "report_sha256": "8f6052003a3dab2cdb855f620cb54fd69dc5ef0efd6a200a63f334341ea08363",
+      "attempt_path": "collection-20261025/axis-03-postgres-peers-100-attempt-01/attempt.json",
+      "attempt_sha256": "328d6009d11b5c1200a8a8ea263ec96d9effed78884aebccfb510e8946d546dd",
+      "summary_sha256": "d4c52a26d637989f3b4bd26a050551b3a59cfebdc553ab77d6d1cb2e23b4b243",
+      "retained_attempt": {
+        "axis_index": 2,
+        "axis": {
+          "backend": "postgres",
+          "peers": 100
+        },
+        "attempt": 1,
+        "started_utc": "2026-10-25T17:30:10.339926+00:00",
+        "scope": "coord-00002869-hybrid-persistence-benchmark-concurrent.scope",
+        "status": "retained",
+        "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/concurrent/collection-20261025/axis-03-postgres-peers-100-attempt-01",
+        "plan_sha256": "08e26deea1453ab7d179d29eb1a9e9b0a8c5fcb7390ca6b49818010e230744bf",
+        "binary_sha256": "5dcd5f30b005b1652bd2980963186190952d3d9fda68bdee33b0824553c51e80",
+        "measurement_start_utc": "2026-10-25T17:31:12.147957+00:00",
+        "measurement_finish_utc": "2026-10-25T17:46:37.049076+00:00",
+        "report_sha256": "8f6052003a3dab2cdb855f620cb54fd69dc5ef0efd6a200a63f334341ea08363",
+        "summary_sha256": "d4c52a26d637989f3b4bd26a050551b3a59cfebdc553ab77d6d1cb2e23b4b243",
+        "trials": 3,
+        "arms": [
+          "snapshot",
+          "row",
+          "cached_row"
+        ],
+        "interrupted_schema_policy": "Preserved; no SQL schema cleanup by the guard",
+        "finished_utc": "2026-10-25T17:46:50.058729+00:00"
+      }
+    },
+    {
+      "campaign": "collection-sqlite-wait-v2",
+      "backend": "sqlite",
+      "registered_peers": 1,
+      "report_path": "collection-sqlite-wait-v2/axis-01-sqlite-peers-1-attempt-01/report.json",
+      "report_sha256": "3321858849ff013cf5df7f9b667e8621923a9f0d954fc87b47d348ee961fb082",
+      "attempt_path": "collection-sqlite-wait-v2/axis-01-sqlite-peers-1-attempt-01/attempt.json",
+      "attempt_sha256": "d81e9b937a32e3c5c89a6eacb153bc633b81edba6d652467d1a856bc84678027",
+      "summary_sha256": "606aeea2f9f45a48a2ecec1e0b99c57e197759360912342c07e4735b68cd6909",
+      "retained_attempt": {
+        "axis_index": 0,
+        "axis": {
+          "backend": "sqlite",
+          "peers": 1
+        },
+        "attempt": 1,
+        "started_utc": "2026-10-25T18:00:21.439422+00:00",
+        "scope": "coord-00002873-hybrid-persistence-benchmark-concurrent.scope",
+        "status": "retained",
+        "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/concurrent/collection-sqlite-wait-v2/axis-01-sqlite-peers-1-attempt-01",
+        "plan_sha256": "347970a9b69659cca181a32c8f7898fca9fa74e8e5e34a44514c6d5ba4bf134e",
+        "binary_sha256": "097a0d6dd53666fad470597ce0ccd8db06fe1de84161b2bf376751b6076b553d",
+        "measurement_start_utc": "2026-10-25T18:01:22.991653+00:00",
+        "measurement_finish_utc": "2026-10-25T18:05:08.316425+00:00",
+        "report_sha256": "3321858849ff013cf5df7f9b667e8621923a9f0d954fc87b47d348ee961fb082",
+        "summary_sha256": "606aeea2f9f45a48a2ecec1e0b99c57e197759360912342c07e4735b68cd6909",
+        "trials": 3,
+        "arms": [
+          "snapshot",
+          "row",
+          "cached_row"
+        ],
+        "interrupted_schema_policy": "Preserved; no SQL schema cleanup by the guard",
+        "finished_utc": "2026-10-25T18:05:08.825916+00:00"
+      }
+    },
+    {
+      "campaign": "collection-sqlite-wait-v2",
+      "backend": "sqlite",
+      "registered_peers": 100,
+      "report_path": "collection-sqlite-wait-v2/axis-02-sqlite-peers-100-attempt-01/report.json",
+      "report_sha256": "5c25d0126feb8d15eb4e17e251ce3b5e11bd51263ebb4c18a5be8736d751cb68",
+      "attempt_path": "collection-sqlite-wait-v2/axis-02-sqlite-peers-100-attempt-01/attempt.json",
+      "attempt_sha256": "1ec96fc771ec12e45495acc60c9ed7783f595a86f79c7fb5fab7e90cf2b300e6",
+      "summary_sha256": "a861bf98be566776b908844dfef4e0d3143dea9aa242e88f682fc780715fcffa",
+      "retained_attempt": {
+        "axis_index": 1,
+        "axis": {
+          "backend": "sqlite",
+          "peers": 100
+        },
+        "attempt": 1,
+        "started_utc": "2026-10-25T18:08:12.695138+00:00",
+        "scope": "coord-00002874-hybrid-persistence-benchmark-concurrent.scope",
+        "status": "retained",
+        "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/concurrent/collection-sqlite-wait-v2/axis-02-sqlite-peers-100-attempt-01",
+        "plan_sha256": "347970a9b69659cca181a32c8f7898fca9fa74e8e5e34a44514c6d5ba4bf134e",
+        "binary_sha256": "097a0d6dd53666fad470597ce0ccd8db06fe1de84161b2bf376751b6076b553d",
+        "measurement_start_utc": "2026-10-25T18:09:14.241093+00:00",
+        "measurement_finish_utc": "2026-10-25T18:58:47.639943+00:00",
+        "report_sha256": "5c25d0126feb8d15eb4e17e251ce3b5e11bd51263ebb4c18a5be8736d751cb68",
+        "summary_sha256": "a861bf98be566776b908844dfef4e0d3143dea9aa242e88f682fc780715fcffa",
+        "trials": 3,
+        "arms": [
+          "snapshot",
+          "row",
+          "cached_row"
+        ],
+        "interrupted_schema_policy": "Preserved; no SQL schema cleanup by the guard",
+        "finished_utc": "2026-10-25T18:59:00.606675+00:00"
+      }
+    }
+  ],
+  "engine_path": "analyze-results.py",
+  "engine_sha256": "66616ea6ef6005ea315fd4df7043e229e40e7f5276463d4a1cfe350f6518a054",
+  "wrapper_path": "/tmp/bc-arc-scratch/row-persistence-20261025/concurrent/analyze-final.py",
+  "wrapper_sha256": "5af0c04a8ebfbee06e9a8ab7746b318dbd5366a81008656c7879ac33d6f857e0",
+  "measured_counters_and_concurrency": [
+    {
+      "backend": "postgres",
+      "registered_peers": 1,
+      "arm": "snapshot",
+      "active_peers": [
+        1
+      ],
+      "owner_workers": [
+        1
+      ],
+      "network_exchanges_per_completed": [
+        1.0
+      ],
+      "loads_per_completed": [
+        0.0
+      ],
+      "expects_per_completed": [
+        0.0
+      ],
+      "peak_owner": 1,
+      "peak_native": 1,
+      "peak_database_client_calls": 1
+    },
+    {
+      "backend": "postgres",
+      "registered_peers": 1,
+      "arm": "row",
+      "active_peers": [
+        1
+      ],
+      "owner_workers": [
+        1
+      ],
+      "network_exchanges_per_completed": [
+        2.0
+      ],
+      "loads_per_completed": [
+        1.0
+      ],
+      "expects_per_completed": [
+        0.0
+      ],
+      "peak_owner": 1,
+      "peak_native": 1,
+      "peak_database_client_calls": 1
+    },
+    {
+      "backend": "postgres",
+      "registered_peers": 1,
+      "arm": "cached_row",
+      "active_peers": [
+        1
+      ],
+      "owner_workers": [
+        1
+      ],
+      "network_exchanges_per_completed": [
+        1.0
+      ],
+      "loads_per_completed": [
+        0.0
+      ],
+      "expects_per_completed": [
+        1.0
+      ],
+      "peak_owner": 1,
+      "peak_native": 1,
+      "peak_database_client_calls": 1
+    },
+    {
+      "backend": "postgres",
+      "registered_peers": 100,
+      "arm": "snapshot",
+      "active_peers": [
+        32
+      ],
+      "owner_workers": [
+        1
+      ],
+      "network_exchanges_per_completed": [
+        1.0
+      ],
+      "loads_per_completed": [
+        0.0
+      ],
+      "expects_per_completed": [
+        0.0
+      ],
+      "peak_owner": 1,
+      "peak_native": 1,
+      "peak_database_client_calls": 1
+    },
+    {
+      "backend": "postgres",
+      "registered_peers": 100,
+      "arm": "row",
+      "active_peers": [
+        32
+      ],
+      "owner_workers": [
+        8
+      ],
+      "network_exchanges_per_completed": [
+        2.0
+      ],
+      "loads_per_completed": [
+        1.0
+      ],
+      "expects_per_completed": [
+        0.0
+      ],
+      "peak_owner": 8,
+      "peak_native": 8,
+      "peak_database_client_calls": 8
+    },
+    {
+      "backend": "postgres",
+      "registered_peers": 100,
+      "arm": "cached_row",
+      "active_peers": [
+        32
+      ],
+      "owner_workers": [
+        8
+      ],
+      "network_exchanges_per_completed": [
+        1.0
+      ],
+      "loads_per_completed": [
+        0.0
+      ],
+      "expects_per_completed": [
+        1.0
+      ],
+      "peak_owner": 8,
+      "peak_native": 8,
+      "peak_database_client_calls": 8
+    },
+    {
+      "backend": "sqlite",
+      "registered_peers": 1,
+      "arm": "snapshot",
+      "active_peers": [
+        1
+      ],
+      "owner_workers": [
+        1
+      ],
+      "network_exchanges_per_completed": [
+        0.0
+      ],
+      "loads_per_completed": [
+        0.0
+      ],
+      "expects_per_completed": [
+        0.0
+      ],
+      "peak_owner": 1,
+      "peak_native": 1,
+      "peak_database_client_calls": 1
+    },
+    {
+      "backend": "sqlite",
+      "registered_peers": 1,
+      "arm": "row",
+      "active_peers": [
+        1
+      ],
+      "owner_workers": [
+        1
+      ],
+      "network_exchanges_per_completed": [
+        0.0
+      ],
+      "loads_per_completed": [
+        1.0
+      ],
+      "expects_per_completed": [
+        0.0
+      ],
+      "peak_owner": 1,
+      "peak_native": 1,
+      "peak_database_client_calls": 1
+    },
+    {
+      "backend": "sqlite",
+      "registered_peers": 1,
+      "arm": "cached_row",
+      "active_peers": [
+        1
+      ],
+      "owner_workers": [
+        1
+      ],
+      "network_exchanges_per_completed": [
+        0.0
+      ],
+      "loads_per_completed": [
+        0.0
+      ],
+      "expects_per_completed": [
+        1.0
+      ],
+      "peak_owner": 1,
+      "peak_native": 1,
+      "peak_database_client_calls": 1
+    },
+    {
+      "backend": "sqlite",
+      "registered_peers": 100,
+      "arm": "snapshot",
+      "active_peers": [
+        32
+      ],
+      "owner_workers": [
+        1
+      ],
+      "network_exchanges_per_completed": [
+        0.0
+      ],
+      "loads_per_completed": [
+        0.0
+      ],
+      "expects_per_completed": [
+        0.0
+      ],
+      "peak_owner": 1,
+      "peak_native": 1,
+      "peak_database_client_calls": 1
+    },
+    {
+      "backend": "sqlite",
+      "registered_peers": 100,
+      "arm": "row",
+      "active_peers": [
+        32
+      ],
+      "owner_workers": [
+        8
+      ],
+      "network_exchanges_per_completed": [
+        0.0
+      ],
+      "loads_per_completed": [
+        1.0
+      ],
+      "expects_per_completed": [
+        0.0
+      ],
+      "peak_owner": 8,
+      "peak_native": 8,
+      "peak_database_client_calls": 8
+    },
+    {
+      "backend": "sqlite",
+      "registered_peers": 100,
+      "arm": "cached_row",
+      "active_peers": [
+        32
+      ],
+      "owner_workers": [
+        8
+      ],
+      "network_exchanges_per_completed": [
+        0.0
+      ],
+      "loads_per_completed": [
+        0.0
+      ],
+      "expects_per_completed": [
+        1.0
+      ],
+      "peak_owner": 8,
+      "peak_native": 8,
+      "peak_database_client_calls": 8
+    },
+    {
+      "backend": "postgres",
+      "registered_peers": 1000,
+      "arm": "snapshot",
+      "active_peers": [
+        32
+      ],
+      "owner_workers": [
+        1
+      ],
+      "network_exchanges_per_completed": [
+        1.0
+      ],
+      "loads_per_completed": [
+        0.0
+      ],
+      "expects_per_completed": [
+        0.0
+      ],
+      "peak_owner": 1,
+      "peak_native": 1,
+      "peak_database_client_calls": 1
+    },
+    {
+      "backend": "postgres",
+      "registered_peers": 1000,
+      "arm": "row",
+      "active_peers": [
+        32
+      ],
+      "owner_workers": [
+        8
+      ],
+      "network_exchanges_per_completed": [
+        2.0
+      ],
+      "loads_per_completed": [
+        1.0
+      ],
+      "expects_per_completed": [
+        0.0
+      ],
+      "peak_owner": 8,
+      "peak_native": 8,
+      "peak_database_client_calls": 8
+    },
+    {
+      "backend": "postgres",
+      "registered_peers": 1000,
+      "arm": "cached_row",
+      "active_peers": [
+        32
+      ],
+      "owner_workers": [
+        8
+      ],
+      "network_exchanges_per_completed": [
+        1.0
+      ],
+      "loads_per_completed": [
+        0.0
+      ],
+      "expects_per_completed": [
+        1.0
+      ],
+      "peak_owner": 8,
+      "peak_native": 8,
+      "peak_database_client_calls": 8
+    }
+  ]
+}

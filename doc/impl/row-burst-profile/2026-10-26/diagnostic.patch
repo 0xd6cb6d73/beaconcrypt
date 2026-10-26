@@ -1,0 +1,275 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 6c8534e0..e5bd1881 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -117,6 +117,7 @@ dependencies = [
+  "beaconcrypt-crypto",
+  "beaconcrypt-parse",
+  "hashbrown 0.17.1",
++ "libc",
+  "libsodium-rs",
+  "ml-dsa",
+  "postgres",
+diff --git a/beaconcrypt/Cargo.toml b/beaconcrypt/Cargo.toml
+index 94687042..f637afc2 100644
+--- a/beaconcrypt/Cargo.toml
++++ b/beaconcrypt/Cargo.toml
+@@ -63,6 +63,7 @@ path = "tests/wycheproof.rs"
+ required-features = ["pqxdh"]
+ 
+ [dev-dependencies]
++libc = "0.2"
+ libsodium-rs = "=0.3.0"
+ beaconcrypt-core = { path = "../beaconcrypt-core", features = ["test-utils"] }
+ proptest = { version = "1", default-features = false, features = ["std"] }
+diff --git a/beaconcrypt/examples/persistence_bench/concurrency.rs b/beaconcrypt/examples/persistence_bench/concurrency.rs
+index 0fd3bea5..3ee13fb8 100644
+--- a/beaconcrypt/examples/persistence_bench/concurrency.rs
++++ b/beaconcrypt/examples/persistence_bench/concurrency.rs
+@@ -6,6 +6,9 @@
+ #[path = "concurrency_runtime_tests.rs"]
+ mod tests;
+ 
++#[path = "profile.rs"]
++mod profile;
++
+ use std::{
+ 	collections::VecDeque,
+ 	fs::OpenOptions,
+@@ -526,6 +529,7 @@ impl Worker {
+ 		let mut outputs = Vec::with_capacity(count);
+ 		counts.enable_trace(epoch, count * 2);
+ 		let mut wire_bytes = 0_u64;
++		let scheduler_start = profile::scheduler_runtime_ns()?;
+ 		while let Some(queued) = self.queue.pop() {
+ 			let job = &self.jobs[queued.id];
+ 			let owner_start_ns = nanos(epoch.elapsed());
+@@ -588,6 +592,9 @@ impl Worker {
+ 			// Materialize JSON only after every worker leaves the measured phase.
+ 			observations.push((job.id, timing));
+ 		}
++		let scheduler_runtime_ns = profile::scheduler_runtime_ns()?
++			.checked_sub(scheduler_start)
++			.ok_or("scheduler runtime moved backwards")?;
+ 		let database = counts.take();
+ 		let spans = counts.take_trace();
+ 		finished.arrive();
+@@ -623,7 +630,7 @@ impl Worker {
+ 			let metrics = timings(job, &timing, self.deadline_budget_ns)?;
+ 			checked.push(json!({"id":id,"peer":job.peer,"lane":job.peer%self.logical_lanes,"worker":self.index,"timing":timing,"metrics":metrics,"outcome":"completed","conflicts":0,"retries":0,"attempts":1}));
+ 		}
+-		let report = json!({"worker":self.index,"peers":self.peers.iter().map(|p|p.index).collect::<Vec<_>>(),"warm_database_open_ns":open_ns,
++		let report = json!({"worker":self.index,"scheduler_runtime_ns":scheduler_runtime_ns,"peers":self.peers.iter().map(|p|p.index).collect::<Vec<_>>(),"warm_database_open_ns":open_ns,
+ 			"cold_open_database":cold,"warm_database":warm,"database":database,"db_spans":spans,
+ 			"cached_peers":server.cached_peers(),"cache_capacity":server.cached_peers().map(|_|self.peers.len())});
+ 		Ok(WorkerResult {
+@@ -681,6 +688,7 @@ fn measure(
+ 	trial: usize,
+ 	pair_order: usize,
+ ) -> Result<Value> {
++	let mut profiler = profile::Control::open()?;
+ 	let active = config.active_peers.unwrap().min(fixture.peers.len());
+ 	let lanes = concurrent.workers.min(active);
+ 	let owners = if matches!(fixture.arm, Arm::Snapshot) {
+@@ -744,7 +752,17 @@ fn measure(
+ 			logical_lanes: lanes,
+ 		};
+ 		let ready = ready_tx.clone();
+-		workers.push(thread::spawn(move || worker.run(ready)));
++		let name = if matches!(fixture.arm, Arm::Cached) {
++			"cache"
++		} else {
++			fixture.arm.label()
++		};
++		workers.push(
++			thread::Builder::new()
++				.name(format!("{name}-owner-{index}"))
++				.spawn(move || worker.run(ready))
++				.expect("spawn diagnostic owner"),
++		);
+ 	}
+ 	drop(ready_tx);
+ 	drop(finished_tx);
+@@ -816,6 +834,16 @@ fn measure(
+ 			failures
+ 		}));
+ 	}
++	if let Err(error) = profiler.boundary("begin", fixture.arm.label(), trial) {
++		gate.release(Err(error.to_string()));
++		for producer in producers {
++			let _ = producer.join();
++		}
++		for worker in workers {
++			let _ = worker.join();
++		}
++		return Err(error.into());
++	}
+ 	let epoch = measurement_epoch(Instant::now());
+ 	gate.release(Ok(epoch));
+ 	let mut failures = Vec::new();
+@@ -837,6 +865,9 @@ fn measure(
+ 			}
+ 		}
+ 	}
++	if let Err(error) = profiler.boundary("end", fixture.arm.label(), trial) {
++		thread_error = Some(error.to_string());
++	}
+ 	verification.release(match &thread_error {
+ 		Some(error) => Err(error.clone()),
+ 		None => Ok(epoch),
+@@ -926,6 +957,8 @@ fn measure(
+ pub fn run(options: Options) -> Result<()> {
+ 	let source_environment = environment();
+ 	let mut config = options.config;
++	// Isolated diagnostic subset: preserve the existing scheduling and correctness checks.
++	config.burst_chunks = vec![512];
+ 	config.active_peers = Some(config.active_peers.unwrap_or(32));
+ 	// Validate all schedules and memory/queue bounds before creating any database fixture.
+ 	let plans = config
+@@ -937,6 +970,12 @@ pub fn run(options: Options) -> Result<()> {
+ 				&options.concurrency,
+ 				config.active_peers.unwrap().min(peers),
+ 			)
++			.map(|cases| {
++				cases
++					.into_iter()
++					.filter(|case| case.name == "burst_512")
++					.collect::<Vec<_>>()
++			})
+ 		})
+ 		.collect::<Result<Vec<_>>>()?;
+ 	let mut output = OpenOptions::new()
+@@ -961,12 +1000,12 @@ pub fn run(options: Options) -> Result<()> {
+ 		large: payload(config.large_bytes, 2),
+ 		chunk: payload(config.burst_chunk_bytes, 3),
+ 	});
+-	let mut report = json!({"schema_version":3,"arms":["snapshot","row","cached_row"],"backend":config.backend,"status":"running",
++	let mut report = json!({"schema_version":3,"diagnostic":"row/cached burst_512 only; not the full benchmark matrix","arms":["row","cached_row"],"backend":config.backend,"status":"running",
+ 		"component":"native durable persistence with concurrent offered-load callbacks","config":config,"concurrency":options.concurrency,"environment":source_environment,
+ 		"fixture_workspace":directory.path(),"filesystem_type":filesystem_type,"fixtures":[],"results":[],
+-		"scope":"Snapshot: one resident owner and connection. Row/cached: stable per-peer owner lanes with independent connections to one authoritative database. No provider transport or application receipt journal.",
++		"scope":"Diagnostic row/cached burst_512 only: stable per-peer owner lanes with independent connections to one authoritative database. No provider transport or application receipt journal.",
+ 		"timing":"Immutable absolute arrivals include upstream backlog, bounded-queue waiting and native service. All offered work drains; deadline misses do not cancel it. Unexpected errors or drain cap make the report failed. Pre-generation, warmup and client verification are outside timing.",
+-		"queue_policy":"Same logical feeder lanes and aggregate queued-job/queued-plaintext-byte limits. Snapshot shares its queue; rows partition capacity by lane. Blocked feeders retain all original planned arrival times. In-service work is additional to waiting queue capacity.",
++		"queue_policy":"Same logical feeder lanes and aggregate queued-job/queued-plaintext-byte limits, partitioned by row lane. Blocked feeders retain all original planned arrival times. In-service work is additional to waiting queue capacity.",
+ 		"overlap_definition":"Owner and native API spans include database calls. Database client-call spans include lock/network/commit waiting, not database server CPU execution. Distinct worker intervals establish overlapping requests, not necessarily overlapping physical writes.",
+ 		"byte_metrics":"Logical values, plaintext and query exchanges are not physical disk/network I/O. Precomputed requests/results are retained for verification and are harness memory.",
+ 		"retries":"No automatic retries. Unexpected conflicts/storage errors fail the case and cancel remaining work explicitly."});
+@@ -975,8 +1014,8 @@ pub fn run(options: Options) -> Result<()> {
+ 		for (peer_index, (&peers, cases)) in config.peer_counts.iter().zip(&plans).enumerate() {
+ 			for trial in 1..=config.trials {
+ 				let mut fixtures = Vec::new();
+-				let mut arms = [Arm::Snapshot, Arm::Row, Arm::Cached];
+-				arms.rotate_left((trial - 1 + peer_index) % 3);
++				let mut arms = [Arm::Row, Arm::Cached];
++				arms.rotate_left((trial - 1 + peer_index) % 2);
+ 				for arm in arms {
+ 					let fixture = ConcurrentFixture::new(
+ 						arm,
+@@ -991,9 +1030,9 @@ pub fn run(options: Options) -> Result<()> {
+ 				}
+ 				fixtures.sort_by_key(|fixture| fixture.arm.index());
+ 				for (case_index, case) in cases.iter().enumerate() {
+-					let first = (trial - 1 + peer_index + case_index) % 3;
+-					for order in 0..3 {
+-						let index = (first + order) % 3;
++					let first = (trial - 1 + peer_index + case_index) % 2;
++					for order in 0..2 {
++						let index = (first + order) % 2;
+ 						let result = measure(
+ 							&mut fixtures[index],
+ 							case,
+diff --git a/beaconcrypt/examples/persistence_bench/profile.rs b/beaconcrypt/examples/persistence_bench/profile.rs
+new file mode 100644
+index 00000000..ba9864f0
+--- /dev/null
++++ b/beaconcrypt/examples/persistence_bench/profile.rs
+@@ -0,0 +1,88 @@
++// SPDX-License-Identifier: 0BSD
++
++//! Linux-only diagnostic boundaries; no probes run inside individual callbacks.
++
++use std::{
++	fs::File,
++	io::{self, BufRead, BufReader, Write},
++};
++
++pub(super) struct Control(Option<(File, BufReader<File>)>);
++
++impl Control {
++	pub(super) fn open() -> io::Result<Self> {
++		Ok(Self(
++			match (
++				std::env::var_os("BC_PROFILE_CONTROL"),
++				std::env::var_os("BC_PROFILE_ACK"),
++			) {
++				(None, None) => None,
++				(Some(control), Some(ack)) => Some((
++					File::options().write(true).open(control)?,
++					BufReader::new(File::open(ack)?),
++				)),
++				_ => {
++					return Err(io::Error::other(
++						"set both BC_PROFILE_CONTROL and BC_PROFILE_ACK",
++					));
++				}
++			},
++		))
++	}
++
++	pub(super) fn boundary(&mut self, event: &str, arm: &str, trial: usize) -> io::Result<()> {
++		let ended = if event == "end" {
++			Some(monotonic_ns()?)
++		} else {
++			None
++		};
++		if let Some((control, ack)) = &mut self.0 {
++			writeln!(
++				control,
++				"{}",
++				if event == "begin" {
++					"enable"
++				} else {
++					"disable"
++				}
++			)?;
++			control.flush()?;
++			// This perf version sends the terminating NUL as well as the newline.
++			let mut reply = Vec::new();
++			ack.read_until(0, &mut reply)?;
++			if reply != b"ack\n\0" {
++				return Err(io::Error::other(
++					"missing or invalid perf control acknowledgement",
++				));
++			}
++		}
++		let monotonic_ns = ended.map_or_else(monotonic_ns, Ok)?;
++		eprintln!(
++			"{}",
++			serde_json::json!({"profile_marker":true,"event":event,"arm":arm,"trial":trial,
++			"monotonic_ns":monotonic_ns})
++		);
++		Ok(())
++	}
++}
++
++fn monotonic_ns() -> io::Result<u64> {
++	let mut now = libc::timespec {
++		tv_sec: 0,
++		tv_nsec: 0,
++	};
++	if unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut now) } != 0 {
++		return Err(io::Error::last_os_error());
++	}
++	Ok(now.tv_sec as u64 * 1_000_000_000 + now.tv_nsec as u64)
++}
++
++pub(super) fn scheduler_runtime_ns() -> Result<u64, String> {
++	std::fs::read_to_string("/proc/thread-self/schedstat")
++		.map_err(|error| error.to_string())?
++		.split_whitespace()
++		.next()
++		.ok_or_else(|| "missing scheduler runtime".to_owned())?
++		.parse::<u64>()
++		.map_err(|error| error.to_string())
++}

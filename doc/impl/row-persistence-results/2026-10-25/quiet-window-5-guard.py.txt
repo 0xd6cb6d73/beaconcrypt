@@ -1,0 +1,145 @@
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+SCRATCH = Path('/tmp/bc-arc-scratch/row-persistence-20261025')
+WORKSPACE = Path('/home/user/worktrees/beaconcrypt-row-persistence')
+BINARY = WORKSPACE / 'target/release/examples/persistence_bench'
+COORD = '/tmp/bc-coord/coord.sh'
+os.environ['PATH'] = '/home/user/.rustup/toolchains/1.96.0-x86_64-unknown-linux-gnu/bin:' + os.environ['PATH']
+os.environ['RUSTFLAGS'] = '-C linker-features=-lld'
+SCOPE = os.environ.get('COORD_LEASE_SCOPE')
+if not SCOPE or 'row-persistence-benchmark' not in SCOPE:
+    raise SystemExit('Run only inside the coordinated full-budget benchmark lease')
+if not BINARY.is_file():
+    raise SystemExit('Build the release benchmark before reserving the quiet window')
+build_receipt = json.loads((SCRATCH / 'benchmark-build.json').read_text())
+if hashlib.sha256(BINARY.read_bytes()).hexdigest() != build_receipt['binary_sha256']:
+    raise SystemExit('Benchmark binary changed after its recorded build')
+if subprocess.check_output(['git', 'status', '--porcelain'], cwd=WORKSPACE, text=True):
+    raise SystemExit('Benchmark source worktree is dirty; no measurement started')
+if subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=WORKSPACE, text=True).strip() != build_receipt['source_commit']:
+    raise SystemExit('Benchmark source revision changed after preflight preparation')
+for relative, expected in build_receipt['source_sha256'].items():
+    if hashlib.sha256((WORKSPACE / relative).read_bytes()).hexdigest() != expected:
+        raise SystemExit('Compiled source changed: ' + relative)
+HEAVY = {'cargo', 'cargo-mutants', 'cargo-nextest', 'rustc', 'rust-lld', 'ld', 'ld.lld',
+         'lean', 'lake', 'proverif', 'go', 'zig', 'cc', 'gcc', 'clang', 'cc1', 'cc1plus',
+         'compile', 'link', 'make', 'ninja', 'nix', 'nix-build', 'nix-store',
+         'nix-collect-gar', 'hax-driver', 'hax-engine', 'hax-rustc-drive', 'dune', 'ocamlopt', 'ocamlc'}
+
+def heavy_processes():
+    found = []
+    for path in Path('/proc').iterdir():
+        if not path.name.isdecimal():
+            continue
+        try:
+            comm = (path/'comm').read_text().strip()
+            stat = (path/'stat').read_text().rsplit(')', 1)[1].split()
+            if comm in HEAVY and stat[0] != 'Z':
+                found.append({'pid': int(path.name), 'comm': comm})
+        except (FileNotFoundError, ProcessLookupError, PermissionError):
+            continue
+    return found
+
+def state():
+    ledger = subprocess.check_output([COORD, 'lease', 'list'], text=True)
+    active = [line for line in ledger.splitlines() if line.startswith('lease\t')]
+    busy = heavy_processes()
+    quiet = (len(active) == 1 and SCOPE in active[0] and 'lean slots: 0 of 4 busy' in ledger
+             and 'proverif.lock: free' in ledger and 'pvmatrix: none' in ledger
+             and 'integration lease: free' in ledger and not busy)
+    return {'time_unix': time.time(), 'quiet': quiet, 'leases': ledger,
+            'heavy_processes': busy,
+            'lean_ticket_sequence': Path('/tmp/bc-coord/leases/leanq/.seq').read_text().strip(),
+            'loadavg': Path('/proc/loadavg').read_text().strip(),
+            'meminfo': Path('/proc/meminfo').read_text(),
+            'vmstat': Path('/proc/vmstat').read_text(), 'cpu_stat': Path('/proc/stat').read_text(),
+            'diskstats': Path('/proc/diskstats').read_text(), 'disk_free_bytes': os.statvfs(WORKSPACE).f_bavail * os.statvfs(WORKSPACE).f_frsize}
+
+log_path = SCRATCH / 'benchmark-quiet-window.jsonl'
+with log_path.open('x') as log:
+    def record(value):
+        log.write(json.dumps(value) + '\n')
+        log.flush()
+    initial = state()
+    record({'event': 'preflight', **initial,
+            'binary_sha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(),
+            'monitored_process_names': sorted(HEAVY),
+            'guard_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=WORKSPACE, text=True).strip(),
+            'status': subprocess.check_output(['git', 'status', '--porcelain'], cwd=WORKSPACE, text=True),
+            'thermal_readings': {str(path): path.read_text().strip() for pattern in ['/sys/class/thermal/thermal_zone*/temp', '/sys/class/hwmon/hwmon*/temp*_input'] for path in __import__('glob').glob(pattern) for path in [Path(path)] if os.access(path, os.R_OK)}})
+    print('Benchmark lease reserved; waiting for 60 continuous seconds without competing work', flush=True)
+    if not initial['quiet']:
+        raise SystemExit('Quiet interval interrupted before reservation preflight; no benchmark started')
+    deadline = time.monotonic() + 600
+    previous_lean_sequence = initial['lean_ticket_sequence']
+    quiet_since = time.monotonic() if initial['quiet'] else None
+    while quiet_since is None or time.monotonic() - quiet_since < 60:
+        if time.monotonic() >= deadline:
+            raise SystemExit('No quiet window within ten minutes; no benchmark started')
+        time.sleep(5)
+        sample = state()
+        if sample['lean_ticket_sequence'] != previous_lean_sequence:
+            sample['quiet'] = False
+            sample['new_lean_ticket_since_sample'] = True
+        previous_lean_sequence = sample['lean_ticket_sequence']
+        record({'event': 'settling', **sample})
+        if not sample['quiet']:
+            raise SystemExit('Quiet interval interrupted during settling; no benchmark started')
+        elif quiet_since is None:
+            quiet_since = time.monotonic()
+    cases = [('peers-100', ['--peers', '100']), ('peers-1000', ['--peers', '1000'])]
+    for name, args in cases:
+        command = [str(BINARY), '--run', '--output', str(SCRATCH / ('persistence-' + name + '.json')),
+                   '--database-directory', str(WORKSPACE), *args]
+        start = state()
+        if start['lean_ticket_sequence'] != previous_lean_sequence:
+            start['quiet'] = False
+            start['new_lean_ticket_since_sample'] = True
+        previous_lean_sequence = start['lean_ticket_sequence']
+        record({'event': 'start', 'case': name, 'command': command, **start})
+        if not start['quiet']:
+            raise SystemExit('Competing work appeared before benchmark start')
+        print('RUN:', ' '.join(command), flush=True)
+        with (SCRATCH / ('benchmark-' + name + '.log')).open('x') as output:
+            process = subprocess.Popen(command, cwd=WORKSPACE, stdout=output, stderr=subprocess.STDOUT)
+            contaminated = False
+            try:
+                while process.poll() is None:
+                    time.sleep(5)
+                    sample = state()
+                    if sample['lean_ticket_sequence'] != previous_lean_sequence:
+                        sample['quiet'] = False
+                        sample['new_lean_ticket_since_sample'] = True
+                    previous_lean_sequence = sample['lean_ticket_sequence']
+                    record({'event': 'sample', 'case': name, **sample})
+                    if not sample['quiet']:
+                        contaminated = True
+                        process.terminate()
+                        try:
+                            process.wait(timeout=10)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            process.wait()
+                        break
+            finally:
+                if process.poll() is None:
+                    process.terminate()
+                    process.wait(timeout=10)
+            final = state()
+            if final['lean_ticket_sequence'] != previous_lean_sequence:
+                final['quiet'] = False
+                final['new_lean_ticket_since_sample'] = True
+            previous_lean_sequence = final['lean_ticket_sequence']
+            record({'event': 'finish', 'case': name, 'exit_code': process.returncode,
+                    'contaminated': contaminated or not final['quiet'], **final})
+            if contaminated or not final['quiet'] or process.returncode:
+                raise SystemExit('Benchmark failed or was contaminated; do not publish this window')
+        print('Completed quiet benchmark:', name, flush=True)
+    record({'event': 'complete', **state()})

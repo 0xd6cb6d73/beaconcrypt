@@ -65,7 +65,7 @@ class PackagingTest(unittest.TestCase):
             "Cargo.lock": b"# pinned fixture\n",
             "beaconcrypt-crypto/Cargo.toml": b'[package]\nname="beaconcrypt-crypto"\n',
             "beaconcrypt-crypto/src/lib.rs": b"#![no_std]\n",
-            "scripts/wasm-toolchain.json": b'{"rust":"1.97.1","target":"wasm32-wasip1","wasm_abi_version":1}',
+            "scripts/wasm-toolchain.json": b'{"rust":"1.99.1","target":"wasm32-wasip1","wasm_abi_version":1}',
             "internal/wasm/beaconcrypt.wasm": guest(),
             "internal/wasm/runtime.go": b"package wasm\n",
             "testdata/fixture.json": b'{"fixture":true}',
@@ -84,8 +84,8 @@ class PackagingTest(unittest.TestCase):
 
     def record_build(self):
         versions = {
-            ("rustc", "--version"): "rustc 1.97.1 (fixture)",
-            ("cargo", "--version"): "cargo 1.97.1 (fixture)",
+            ("rustc", "--version"): "rustc 1.99.1 (fixture)",
+            ("cargo", "--version"): "cargo 1.99.1 (fixture)",
         }
         original_command = packager.command
         with patch.object(
@@ -99,8 +99,8 @@ class PackagingTest(unittest.TestCase):
 
     def test_rust_only_provenance_and_crypto_input_tracking(self):
         versions = {
-            ("rustc", "--version"): "rustc 1.97.1 (fixture)",
-            ("cargo", "--version"): "cargo 1.97.1 (fixture)",
+            ("rustc", "--version"): "rustc 1.99.1 (fixture)",
+            ("cargo", "--version"): "cargo 1.99.1 (fixture)",
         }
         with patch.object(
             packager, "command", side_effect=lambda repo, *args: versions[args]

@@ -1,0 +1,13 @@
+{
+  "current_catalog": 1640,
+  "fresh_run_1_cases": 1326,
+  "fresh_run_2_cases": 322,
+  "overlapping_cases": 8,
+  "caught": 1188,
+  "unviable": 452,
+  "missed": 0,
+  "timeout": 0,
+  "uncovered_current": 0,
+  "stale_historical_entries_not_counted": 86,
+  "final_outcome_names_match_catalog": true
+}

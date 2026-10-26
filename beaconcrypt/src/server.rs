@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: 0BSD
 
+#[cfg(not(target_has_atomic = "ptr"))]
+use alloc::rc::Rc as SharedIdentity;
+#[cfg(target_has_atomic = "ptr")]
+use alloc::sync::Arc as SharedIdentity;
 use alloc::{string::String, vec::Vec};
 use core::marker::PhantomData;
 
@@ -21,10 +25,14 @@ use beaconcrypt_crypto::{TryCryptoRng, crypto_sign};
 use beaconcrypt_parse::{KexResponse, decode_init};
 use zeroize::Zeroizing;
 
-pub struct Server {
+struct ServerIdentity {
 	identity_key: crypto_sign::KeyPair,
 	mldsa_identity: MldsaIdentity,
 	identity_key_kid: u64,
+}
+
+pub struct Server {
+	identity: SharedIdentity<ServerIdentity>,
 	control: verified_pqxdh::ServerState,
 	known_ids: HashMap<u64, EstablishedRemote<crypto_sign::PublicKey>>,
 	consumed_registrations: HashSet<[u8; verified_pqxdh::REGISTRATION_ID_SIZE]>,
@@ -37,6 +45,13 @@ pub struct RegResponse {
 
 pub struct RegistrationOutput {
 	registration: beaconcrypt_core::peer::ConsumedRegistration,
+	registration_id: [u8; verified_pqxdh::REGISTRATION_ID_SIZE],
+}
+
+impl RegistrationOutput {
+	pub(crate) fn row_registration_id(&self) -> [u8; verified_pqxdh::REGISTRATION_ID_SIZE] {
+		self.registration_id
+	}
 }
 
 // This interpreter borrows the exact byte view already selected by core.
@@ -201,9 +216,11 @@ impl Server {
 		let known_ids = map_with_key(identity_key.secret_key.as_bytes());
 		let consumed_registrations = set_with_key(identity_key.secret_key.as_bytes());
 		Ok(Self {
-			identity_key,
-			mldsa_identity,
-			identity_key_kid: server_kid,
+			identity: SharedIdentity::new(ServerIdentity {
+				identity_key,
+				mldsa_identity,
+				identity_key_kid: server_kid,
+			}),
 			control: verified_pqxdh::ServerState::new(server_kid),
 			known_ids,
 			consumed_registrations,
@@ -211,14 +228,14 @@ impl Server {
 	}
 	/// Provision this signing key alongside the Ed25519 server identity.
 	pub fn mldsa_public_key(&self) -> [u8; MLDSA_PUBLIC_KEY_LEN] {
-		self.mldsa_identity.public_key()
+		self.identity.mldsa_identity.public_key()
 	}
 
 	fn authentication_pin(&self) -> Option<ServerAuthenticationPin> {
 		auth::fingerprint_pin(
 			verified_pqxdh::ServerBinding {
 				identity_public_key: *self.identity_pk().as_bytes(),
-				identity_key_id: self.identity_key_kid,
+				identity_key_id: self.identity_key_kid(),
 			},
 			self.mldsa_public_key(),
 		)
@@ -231,19 +248,70 @@ impl Server {
 
 	#[cfg(test)]
 	pub(crate) fn set_identity_kid(&mut self, k: u64) {
-		self.identity_key_kid = k
+		SharedIdentity::get_mut(&mut self.identity)
+			.expect("test identity has no outstanding row session")
+			.identity_key_kid = k
 	}
 	pub fn identity_key_kid(&self) -> u64 {
-		self.identity_key_kid
+		self.identity.identity_key_kid
 	}
 	pub fn identity_pk(&self) -> &crypto_sign::PublicKey {
-		&self.identity_key.public_key
+		&self.identity.identity_key.public_key
 	}
 	pub fn identity_sk(&self) -> &crypto_sign::SecretKey {
-		&self.identity_key.secret_key
+		&self.identity.identity_key.secret_key
 	}
 	pub fn server_kid(&self) -> u64 {
 		self.control.last_key_id()
+	}
+
+	/// Create operation-local state while retaining the already expanded immutable identity.
+	/// Peers and registration history are supplied by the surrounding database transaction.
+	pub(crate) fn row_session(&self, last_key_id: u64) -> Self {
+		Self {
+			identity: SharedIdentity::clone(&self.identity),
+			control: verified_pqxdh::ServerState::new(last_key_id),
+			known_ids: HashMap::with_hasher(self.known_ids.hasher().clone()),
+			consumed_registrations: HashSet::with_hasher(
+				self.consumed_registrations.hasher().clone(),
+			),
+		}
+	}
+
+	pub(crate) fn put_row_peer(
+		&mut self,
+		kid: u64,
+		peer: EstablishedRemote<crypto_sign::PublicKey>,
+	) -> Option<()> {
+		self.known_ids.try_reserve(1).ok()?;
+		match self.known_ids.entry(kid) {
+			hashbrown::hash_map::Entry::Vacant(entry) => {
+				entry.insert(peer);
+				Some(())
+			}
+			hashbrown::hash_map::Entry::Occupied(_) => None,
+		}
+	}
+
+	pub(crate) fn take_row_peer(
+		&mut self,
+		kid: u64,
+	) -> Option<EstablishedRemote<crypto_sign::PublicKey>> {
+		self.known_ids.remove(&kid)
+	}
+
+	/// Restore a trusted peer row using this identity and the selected row's peer identifier.
+	pub(crate) fn deserialize_row_peer(
+		&self,
+		kid: u64,
+		payload: &[u8],
+	) -> Option<EstablishedRemote<crypto_sign::PublicKey>> {
+		crate::shared::deserialize_row_peer(payload, self.authentication_pin()?, kid)
+	}
+
+	/// Encode only the immutable identity using the existing checked snapshot payload codec.
+	pub(crate) fn serialize_row_identity(&self) -> Option<String> {
+		self.row_session(self.identity_key_kid()).serialize_state()
 	}
 	#[cfg(test)]
 	pub(crate) fn add_known_kid(&mut self, k: u64, pk: crypto_sign::PublicKey) {
@@ -302,7 +370,7 @@ impl Server {
 	}
 	pub fn encrypt_message(&mut self, b: &[u8], k: u64) -> Option<crate::Encrypted> {
 		let ad = self.associated_data(k)?;
-		let sender = self.identity_key_kid;
+		let sender = self.identity_key_kid();
 		encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)
 	}
 	pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> {
@@ -356,12 +424,12 @@ impl Server {
 
 	pub(crate) fn serialize_state(&self) -> Option<String> {
 		serialize_server_state(
-			&self.identity_key,
-			self.identity_key_kid,
+			&self.identity.identity_key,
+			self.identity_key_kid(),
 			self.control.last_key_id(),
 			&self.known_ids,
 			&self.consumed_registrations,
-			&self.mldsa_identity,
+			&self.identity.mldsa_identity,
 		)
 	}
 
@@ -375,9 +443,11 @@ impl Server {
 			mldsa_identity,
 		) = deserialize_server_state(server_state)?;
 		Some(Self {
-			identity_key: id_keypair,
-			mldsa_identity,
-			identity_key_kid,
+			identity: SharedIdentity::new(ServerIdentity {
+				identity_key: id_keypair,
+				mldsa_identity,
+				identity_key_kid,
+			}),
 			control: verified_pqxdh::ServerState::new(server_kid),
 			known_ids,
 			consumed_registrations,
@@ -457,11 +527,15 @@ impl Server {
 			_ => return None,
 		};
 		let pending = beaconcrypt_core::peer::begin_registration_insert(agreement);
+		let registration_id = *pending.request().as_bytes();
 		let inserted = self
 			.consumed_registrations
 			.insert(*pending.request().as_bytes());
 		let registration = pending.resume(inserted)?;
-		Some(RegistrationOutput { registration })
+		Some(RegistrationOutput {
+			registration,
+			registration_id,
+		})
 	}
 }
 
@@ -479,7 +553,7 @@ impl ProviderServer for Server {
 		let control = self.control;
 		let application = beaconcrypt_core::transport::normalize_registration_application(data);
 		let plaintext = registration_application_bytes(&application);
-		let RegistrationOutput { registration } = reg_out;
+		let RegistrationOutput { registration, .. } = reg_out;
 		let lookup = beaconcrypt_core::peer::begin_completion_lookup(
 			control,
 			self.authentication_pin()?,
@@ -508,7 +582,10 @@ impl ProviderServer for Server {
 		let pending = pending.resume(ciphertext.as_deref()).ok()?;
 		let hash = auth::execute_hash(&pending.request());
 		let pending = pending.resume(hash).ok()?;
-		let signature = self.mldsa_identity.sign_requested(&pending.request());
+		let signature = self
+			.identity
+			.mldsa_identity
+			.sign_requested(&pending.request());
 		let ready = pending.resume(signature.as_deref()).ok()?;
 		let message = ready.message();
 		let buffer = crate::wire::encode_response(KexResponse {
@@ -568,6 +645,124 @@ impl ProviderServer for Server {
 					.expect("an accepted receive update must be serializable as JSON")
 			})
 			.into_option()
+	}
+}
+
+#[cfg(test)]
+mod row_tests {
+	use super::*;
+
+	#[test]
+	#[cfg(feature = "beacon")]
+	fn restored_row_binding_survives_peer_insertion_collision() {
+		use crate::{Beacon, ProviderBeacon};
+
+		#[cfg(target_has_atomic = "ptr")]
+		{
+			fn assert_send_sync<T: Send + Sync>() {}
+			assert_send_sync::<Server>();
+		}
+
+		let mut server = Server::new(7, Some(&[11; 32]), Some(&[12; 32]));
+		let mut beacon = Beacon::new(
+			7,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+		);
+		let registration = beacon.get_registration_bundle().unwrap();
+		let pending = server.get_shared_secret(&registration).unwrap();
+		let response = server.build_registration_response(pending, None).unwrap();
+		beacon.finish_registration(&response.serialized).unwrap();
+		let peer = server.take_row_peer(response.kid).unwrap();
+		let payload = Zeroizing::new(serde_json::to_vec(&peer).unwrap());
+		let restored = server.deserialize_row_peer(response.kid, &payload).unwrap();
+		let binding = restored.binding();
+		assert_eq!(binding.server_binding(), peer.binding().server_binding());
+		assert_eq!(binding.assigned_key_id(), response.kid);
+		assert_eq!(
+			binding.beacon_identity_public_key(),
+			beacon.identity_pk().as_bytes()
+		);
+		assert_eq!(
+			binding.server_fingerprint(),
+			peer.binding().server_fingerprint()
+		);
+		assert_eq!(
+			binding.beacon_fingerprint(),
+			peer.binding().beacon_fingerprint()
+		);
+		assert_eq!(
+			binding.associated_data(),
+			&beacon.associated_data().unwrap()
+		);
+		let rebound = server
+			.deserialize_row_peer(response.kid + 1, &payload)
+			.unwrap();
+		assert_eq!(rebound.binding().assigned_key_id(), response.kid + 1);
+
+		let mut session = server.row_session(response.kid);
+		assert!(session.put_row_peer(response.kid, restored).is_some());
+		let mut other_session = server.row_session(response.kid);
+		let other_key = crypto_sign::KeyPair::from_seed(&[13; 32]).unwrap();
+		other_session.add_known_kid(response.kid, other_key.public_key);
+		let replacement = other_session.take_row_peer(response.kid).unwrap();
+		assert!(session.put_row_peer(response.kid, replacement).is_none());
+		assert_eq!(
+			serde_json::to_vec(session.known_ids.get(&response.kid).unwrap()).unwrap(),
+			*payload
+		);
+
+		let encrypted = session
+			.encrypt_message(b"restored row", response.kid)
+			.unwrap();
+		assert_eq!(
+			beacon.decrypt_message(&encrypted).unwrap().plaintext,
+			b"restored row"
+		);
+		let encrypted = beacon.encrypt_message(b"same row binding").unwrap();
+		assert_eq!(
+			session.decrypt_message(&encrypted).unwrap().plaintext,
+			b"same row binding"
+		);
+	}
+
+	#[test]
+	fn row_sessions_retain_identity_without_copying_protocol_state() {
+		let mut server = Server::new(7, Some(&[11; 32]), Some(&[12; 32]));
+		let peer_key = crypto_sign::KeyPair::from_seed(&[13; 32]).unwrap();
+		server.add_known_kid(8, peer_key.public_key.clone());
+		server.consumed_registrations.insert([14; 64]);
+		server.control = verified_pqxdh::ServerState::new(99);
+		let original = server.serialize_state().unwrap();
+
+		let mut session = server.row_session(42);
+		assert!(SharedIdentity::ptr_eq(&server.identity, &session.identity));
+		assert_eq!(session.server_kid(), 42);
+		assert_eq!(session.identity_key_kid(), 7);
+		assert!(session.pk_by_kid(8).is_none());
+		assert!(session.consumed_registrations.is_empty());
+		let peer = server.take_row_peer(8).unwrap();
+		assert!(server.take_row_peer(8).is_none());
+		assert!(session.put_row_peer(8, peer).is_some());
+		assert_eq!(session.pk_by_kid(8), Some(&peer_key.public_key));
+		let peer = session.take_row_peer(8).unwrap();
+		assert!(server.put_row_peer(8, peer).is_some());
+		assert_eq!(server.serialize_state().unwrap(), original);
+
+		let identity = server.serialize_row_identity().unwrap();
+		let restored = Server::deserialize_state(&identity).unwrap();
+		assert_eq!(restored.identity_key_kid(), 7);
+		assert_eq!(restored.server_kid(), 7);
+		assert_eq!(restored.identity_pk(), server.identity_pk());
+		assert_eq!(
+			restored.identity_sk().as_bytes(),
+			server.identity_sk().as_bytes()
+		);
+		assert_eq!(restored.mldsa_public_key(), server.mldsa_public_key());
+		assert!(restored.known_ids.is_empty());
+		assert!(restored.consumed_registrations.is_empty());
+		assert_eq!(restored.serialize_state().unwrap(), identity);
+		assert_eq!(server.serialize_state().unwrap(), original);
 	}
 }
 
@@ -738,7 +933,9 @@ mod size_tests {
 		let expected = server.associated_data(response.kid).unwrap();
 		// There is no production identity-replacement API. This private change
 		// distinguishes a stored session binding from recomputation on each record.
-		server.mldsa_identity = MldsaIdentity::from_seed([9; 32]);
+		SharedIdentity::get_mut(&mut server.identity)
+			.expect("test identity has no outstanding row session")
+			.mldsa_identity = MldsaIdentity::from_seed([9; 32]);
 		assert_ne!(
 			auth::public_key_hash(&server.mldsa_public_key())
 				.unwrap()

@@ -1,0 +1,17 @@
+{
+  "axis_index": 1,
+  "axis": {
+    "backend": "postgres",
+    "peers": 1
+  },
+  "attempt": 1,
+  "started_utc": "2026-10-25T12:15:09.567303+00:00",
+  "scope": "coord-00002812-hybrid-persistence-benchmark-please-no-lean.scope",
+  "status": "discarded_interference",
+  "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025/axis-02-postgres-peers-1-attempt-01",
+  "plan_sha256": "96dd9c282257a7fa83f7cbafa4cea47ed5bbde8cb8099ad29f2cff940af7e9c5",
+  "binary_sha256": "985d56867fad436512aaff69878aa3e1c91793cc9dc00288b587c19144713b66",
+  "reason": "quiet checks failed: outside_per_process_cpu_below_limit",
+  "interrupted_schema_policy": "Preserved; no SQL schema cleanup by the guard",
+  "finished_utc": "2026-10-25T12:15:30.711377+00:00"
+}

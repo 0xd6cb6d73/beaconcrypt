@@ -1,0 +1,26 @@
+{
+  "axis_index": 3,
+  "axis": {
+    "backend": "sqlite",
+    "peers": 100
+  },
+  "attempt": 1,
+  "started_utc": "2026-10-25T13:01:34.005093+00:00",
+  "scope": "coord-00002817-hybrid-persistence-benchmark-please-no-lean.scope",
+  "status": "retained",
+  "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025-v2/axis-04-sqlite-peers-100-attempt-01",
+  "plan_sha256": "9bc49b4c0ac309368998e71f58c13c4e9520bf0c72c96991f5404403abe2c997",
+  "binary_sha256": "985d56867fad436512aaff69878aa3e1c91793cc9dc00288b587c19144713b66",
+  "measurement_start_utc": "2026-10-25T13:02:35.704304+00:00",
+  "measurement_finish_utc": "2026-10-25T13:09:15.193319+00:00",
+  "report_sha256": "9dd2b4afc2c5ff995d189223135129242998a6ff29441742d2cf99159043f01b",
+  "summary_sha256": "d050a35b89cf0af08eb69cced0c7d7b2d0f816bbe20326df5c665023cbeba57b",
+  "trials": 3,
+  "arms": [
+    "snapshot",
+    "row",
+    "cached_row"
+  ],
+  "interrupted_schema_policy": "Preserved; no SQL schema cleanup by the guard",
+  "finished_utc": "2026-10-25T13:09:15.255834+00:00"
+}

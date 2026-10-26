@@ -221,7 +221,11 @@ func callbackBytes(ptr *C.uint8_t, length C.uintptr_t) ([]byte, error) {
 	if uint64(length) > uint64(^uint(0)>>1) || (ptr == nil && length != 0) {
 		return nil, errors.New("invalid snapshot callback buffer")
 	}
-	return append([]byte(nil), unsafe.Slice((*byte)(unsafe.Pointer(ptr)), int(length))...), nil
+	// A successfully delivered empty value is present. Row absence is signalled
+	// separately by the load callback, so do not collapse empty bytes to nil.
+	value := make([]byte, int(length))
+	copy(value, unsafe.Slice((*byte)(unsafe.Pointer(ptr)), int(length)))
+	return value, nil
 }
 
 //export beaconcryptGoStoreLoad

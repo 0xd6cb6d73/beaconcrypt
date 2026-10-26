@@ -5,7 +5,7 @@ edition = "2024"
 license-file = "../LICENSE"
 readme = "../README.md"
 description = "Cryptographic transport for C2 channels"
-rust-version = "1.96"
+rust-version = "1.99.1"
 repository = "https://github.com/0xd6cb6d73/beaconcrypt"
 
 [lib]
@@ -15,6 +15,26 @@ crate-type = ["rlib"]
 [[example]]
 name = "rust"
 path = "examples/rust/main.rs"
+required-features = ["std", "pqxdh", "beacon", "server"]
+
+[[example]]
+name = "sqlite"
+path = "examples/sqlite/main.rs"
+required-features = ["std", "pqxdh", "beacon", "server"]
+
+[[example]]
+name = "persistence_bench"
+path = "examples/persistence_bench/main.rs"
+required-features = ["std", "pqxdh", "beacon", "server"]
+
+[[test]]
+name = "row_persistence"
+path = "tests/row_persistence.rs"
+required-features = ["std", "pqxdh", "beacon", "server"]
+
+[[test]]
+name = "cached_row_persistence"
+path = "tests/cached_row_persistence.rs"
 required-features = ["std", "pqxdh", "beacon", "server"]
 
 [[test]]
@@ -46,8 +66,11 @@ required-features = ["pqxdh"]
 libsodium-rs = "=0.3.0"
 beaconcrypt-core = { path = "../beaconcrypt-core", features = ["test-utils"] }
 proptest = { version = "1", default-features = false, features = ["std"] }
+postgres = "0.19.14"
+rusqlite = { version = "0.40.2", features = ["bundled"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tempfile = "3"
 
 [dependencies]
 beaconcrypt-core = { version = "0.1.1", path = "../beaconcrypt-core" }

@@ -1,0 +1,4 @@
+# Preserve checksummed CSV bytes written by the analysis helper.
+analysis/*.csv -text whitespace=cr-at-eol
+# Unified diff context includes a prefix space before original tabs and blank lines.
+*.patch -whitespace
