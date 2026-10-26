@@ -16,13 +16,23 @@ use beaconcrypt::{
 use postgres::{Client, Config, NoTls, Statement, config::Host};
 use serde_json::{Value, json};
 
-use super::{Result, buffered::Buffered, database::Counters};
+use super::{
+	Result,
+	buffered::Buffered,
+	database::Counters,
+	postgres_batch::{BatchConfig, Batcher, ChangeSet, RowChanges},
+};
+
+#[cfg(test)]
+#[path = "postgres_batch_sql_tests.rs"]
+mod batch_sql_tests;
 
 pub struct PgFixture {
 	config: Config,
 	pub(super) schema: String,
 	pub settings: Value,
 	cleanup: bool,
+	batcher: Option<Batcher>,
 }
 
 /// Validate both host names and address overrides before any connection is attempted.
@@ -62,6 +72,7 @@ impl PgFixture {
 			schema,
 			settings,
 			cleanup: true,
+			batcher: None,
 		});
 		// A VOLATILE function's statements obtain fresh READ COMMITTED snapshots. In particular,
 		// validation runs AFTER any advisory-lock wait, rather than using the calling SELECT's
@@ -99,6 +110,64 @@ END $body$;
 		Ok(result)
 	}
 
+	/// Share one durable commit connection across independent resident row owners.
+	pub fn create_batched(
+		dsn: &str,
+		lineage: SnapshotLineage,
+		config: BatchConfig,
+	) -> Result<Rc<Self>> {
+		let mut fixture = Self::create(dsn, lineage)?;
+		let mut client = fixture.connect()?;
+		// Prelock the whole union, rather than acquiring differently ordered subsets for each
+		// request. Each request validates separately: a stale expectation has no writes, while a
+		// SQL exception rolls back this entire outer statement, including earlier requests.
+		client.batch_execute(&format!(r#"
+CREATE FUNCTION {s}.commit_batch(read_keys bytea[], expected_values bytea[], write_keys bytea[], write_values bytea[], read_sizes integer[], write_sizes integer[])
+RETURNS boolean[] LANGUAGE plpgsql VOLATILE AS $body$
+DECLARE lock_id bigint; i integer; read_start integer := 1; write_start integer := 1;
+ outcomes boolean[] := ARRAY[]::boolean[];
+BEGIN
+ IF cardinality(read_keys) <> cardinality(expected_values)
+  OR cardinality(write_keys) <> cardinality(write_values)
+  OR cardinality(read_sizes) <> cardinality(write_sizes)
+  OR EXISTS(SELECT FROM unnest(read_sizes || write_sizes) AS sizes(n) WHERE n < 0)
+  OR (SELECT coalesce(sum(n),0) FROM unnest(read_sizes) AS sizes(n)) <> cardinality(read_keys)
+  OR (SELECT coalesce(sum(n),0) FROM unnest(write_sizes) AS sizes(n)) <> cardinality(write_keys) THEN
+  RAISE EXCEPTION 'invalid benchmark durable batch';
+ END IF;
+ FOR lock_id IN
+  SELECT DISTINCT hashtextextended('{s}:' || encode(k, 'hex'), 0) AS id
+  FROM unnest(read_keys || write_keys) AS keys(k) ORDER BY id
+ LOOP
+  PERFORM pg_advisory_xact_lock(lock_id);
+ END LOOP;
+ FOR i IN 1..cardinality(read_sizes) LOOP
+  outcomes := array_append(outcomes, {s}.commit_rows(
+   read_keys[read_start:read_start+read_sizes[i]-1],
+   expected_values[read_start:read_start+read_sizes[i]-1],
+   write_keys[write_start:write_start+write_sizes[i]-1],
+   write_values[write_start:write_start+write_sizes[i]-1]));
+  read_start := read_start + read_sizes[i];
+  write_start := write_start + write_sizes[i];
+ END LOOP;
+ RETURN outcomes;
+END $body$;
+"#, s=fixture.schema))?;
+		let statement = client.prepare(&format!(
+			"SELECT {}.commit_batch($1,$2,$3,$4,$5,$6)",
+			fixture.schema
+		))?;
+		let batcher = Batcher::start(config, move |changes| {
+			commit_batch(&mut client, &statement, changes)
+		})?;
+		let owned = Rc::get_mut(&mut fixture).expect("new fixture has one owner");
+		owned.batcher = Some(batcher);
+		owned.settings["transport"] = json!(
+			"loopback TCP, prepared statements, owner read connections and one shared durable commit connection"
+		);
+		Ok(fixture)
+	}
+
 	pub(super) fn connect(&self) -> Result<Client> {
 		let mut client = self.config.connect(NoTls)?;
 		client.batch_execute("SET synchronous_commit=on; SET default_transaction_isolation='read committed'; SET statement_timeout='30s'; SET lock_timeout='10s'")?;
@@ -130,7 +199,13 @@ END $body$;
 			schema: self.schema.clone(),
 			settings: self.settings.clone(),
 			cleanup: false,
+			batcher: self.batcher.clone(),
 		}
+	}
+
+	#[cfg(test)]
+	pub(super) fn batch_pending_for_test(&self) -> usize {
+		self.batcher.as_ref().map_or(0, Batcher::pending_for_test)
 	}
 
 	#[cfg(test)]
@@ -148,6 +223,12 @@ impl Drop for PgFixture {
 		if !self.cleanup {
 			return;
 		}
+		if let Some(batcher) = &self.batcher
+			&& let Err(error) = batcher.shutdown()
+		{
+			eprintln!("could not shut down benchmark batch coordinator: {error}");
+			return; // Preserve the owned schema if coordinator termination cannot be confirmed.
+		}
 		if let Ok(mut client) = self.config.connect(NoTls)
 			&& let Err(error) =
 				client.batch_execute(&format!("DROP SCHEMA {} CASCADE", self.schema))
@@ -155,6 +236,54 @@ impl Drop for PgFixture {
 			eprintln!("could not clean benchmark schema {}: {error}", self.schema);
 		}
 	}
+}
+
+fn commit_batch(
+	client: &mut Client,
+	statement: &Statement,
+	changes: &[ChangeSet],
+) -> std::result::Result<Vec<bool>, RowError> {
+	let mut read_keys = Vec::new();
+	let mut expected = Vec::new();
+	let mut write_keys = Vec::new();
+	let mut values = Vec::new();
+	let mut read_sizes = Vec::new();
+	let mut write_sizes = Vec::new();
+	for change in changes {
+		read_sizes.push(i32::try_from(change.reads.len()).map_err(|_| {
+			RowError::Storage("batch read set exceeds PostgreSQL array limits".into())
+		})?);
+		write_sizes.push(i32::try_from(change.writes.len()).map_err(|_| {
+			RowError::Storage("batch write set exceeds PostgreSQL array limits".into())
+		})?);
+		for (key, value) in &change.reads {
+			read_keys.push(key.as_slice());
+			expected.push(value.as_deref());
+		}
+		for (key, value) in &change.writes {
+			write_keys.push(key.as_slice());
+			values.push(value.as_slice());
+		}
+	}
+	// query_one drains the response through ReadyForQuery, so successful return includes the
+	// implicit outer transaction's durable COMMIT acknowledgement (synchronous_commit=on).
+	// DataRow alone would not establish that boundary. Any error, including a lost COMMIT
+	// acknowledgement, propagates to every caller; the coordinator must never retry callbacks.
+	client
+		.query_one(
+			statement,
+			&[
+				&read_keys,
+				&expected,
+				&write_keys,
+				&values,
+				&read_sizes,
+				&write_sizes,
+			],
+		)
+		.map_err(storage)?
+		.try_get(0)
+		.map_err(storage)
 }
 
 fn settings(client: &mut Client) -> Result<Value> {
@@ -351,23 +480,46 @@ impl RowStore for PgRowStore {
 		if let Some(error) = pending.failure {
 			return Err(error);
 		}
+		self.counts
+			.validation_rows
+			.set(self.counts.validation_rows.get() + pending.reads.len() as u64);
+		self.counts.validation_bytes_sent.set(
+			self.counts.validation_bytes_sent.get()
+				+ pending
+					.reads
+					.values()
+					.filter_map(Option::as_ref)
+					.map(|v| v.len() as u64)
+					.sum::<u64>(),
+		);
+		if let Some(batcher) = &self._fixture.batcher {
+			let writes = pending.writes.len() as u64;
+			let written_bytes = pending.writes.values().map(|v| v.len() as u64).sum::<u64>();
+			let call = self.counts.call("row_batch_commit");
+			let receipt = batcher.commit(ChangeSet::new(RowChanges {
+				reads: pending.reads,
+				writes: pending.writes,
+			}))?;
+			drop(call);
+			if receipt.leader {
+				request(&self.counts);
+				self.counts
+					.transactions
+					.set(self.counts.transactions.get() + 1);
+			}
+			receipt.status?;
+			self.counts.writes.set(self.counts.writes.get() + writes);
+			self.counts
+				.value_bytes_written
+				.set(self.counts.value_bytes_written.get() + written_bytes);
+			return Ok(());
+		}
 		let (read_keys, expected): (Vec<_>, Vec<_>) = pending.reads.into_iter().unzip();
 		let (write_keys, values): (Vec<_>, Vec<_>) = pending.writes.into_iter().unzip();
 		request(&self.counts);
 		self.counts
 			.transactions
 			.set(self.counts.transactions.get() + 1);
-		self.counts
-			.validation_rows
-			.set(self.counts.validation_rows.get() + read_keys.len() as u64);
-		self.counts.validation_bytes_sent.set(
-			self.counts.validation_bytes_sent.get()
-				+ expected
-					.iter()
-					.filter_map(Option::as_ref)
-					.map(|v| v.len() as u64)
-					.sum::<u64>(),
-		);
 		let call = self.counts.call("row_commit");
 		let committed: bool = self
 			.client

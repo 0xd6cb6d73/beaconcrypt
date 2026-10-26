@@ -612,9 +612,11 @@ def concurrent_overlap(intervals):
     }
 
 
-def concurrent_counters(db, backend, arm, count):
+def concurrent_counters(db, backend, arm, count, batched=False):
     validate_counters(db, 2)
-    expected = {"transactions": count, "writes": count}
+    commits = db["transactions"] if batched else count
+    require(0 <= commits <= count, "invalid physical commit count")
+    expected = {"transactions": commits, "writes": count}
     if arm == "snapshot":
         expected.update(
             loads=0, expects=0, stores=0, value_bytes_read=0, value_bytes_expected=0
@@ -649,10 +651,10 @@ def concurrent_counters(db, backend, arm, count):
         )
         expected.update(
             network_exchanges=(
-                (1 if cached else 2) * count if backend == "postgres" else 0
+                (commits + (0 if cached else count)) if backend == "postgres" else 0
             ),
             sql_calls=(
-                (1 if cached else 2) * count
+                (commits + (0 if cached else count))
                 if backend == "postgres"
                 else (4 if cached else 5) * count
             ),
@@ -676,6 +678,8 @@ def concurrent_counters(db, backend, arm, count):
 def validate_concurrent_result(result, report, jobs, peer_schedule, horizon, lanes):
     arm, backend = result["arm"], report["backend"]
     config, concurrent = report["config"], report["concurrency"]
+    batch_size = config.get("pg_batch_size", 1)
+    batched = batch_size > 1 and arm != "snapshot"
     require(
         result["status"] == "complete"
         and result["outputs_verified"] is True
@@ -863,7 +867,7 @@ def validate_concurrent_result(result, report, jobs, peer_schedule, horizon, lan
             ),
             "one owner ran overlapping callbacks",
         )
-        concurrent_counters(worker["database"], backend, arm, len(values))
+        concurrent_counters(worker["database"], backend, arm, len(values), batched)
         if total_database is None:
             total_database = {key: 0 for key in worker["database"]}
         require(
@@ -876,7 +880,7 @@ def validate_concurrent_result(result, report, jobs, peer_schedule, horizon, lan
             {"snapshot_commit": len(values)}
             if arm == "snapshot"
             else {
-                "row_commit": len(values),
+                "row_batch_commit" if batched else "row_commit": len(values),
                 **({"row_load": len(values)} if arm == "row" else {}),
             }
         )
@@ -907,6 +911,13 @@ def validate_concurrent_result(result, report, jobs, peer_schedule, horizon, lan
             kinds[span["kind"]] += 1
             db_spans.append((start, end))
         require(kinds == expected_kinds, "missing or extra database call spans")
+    if batched:
+        require(
+            (count + batch_size - 1) // batch_size
+            <= total_database["transactions"]
+            <= count,
+            "physical commit count outside batch bounds",
+        )
     overlaps = {
         "owner": concurrent_overlap(owner_spans),
         "native": concurrent_overlap(native_spans),
@@ -973,6 +984,15 @@ def summarize_concurrent(report):
         report["backend"] in ("sqlite", "postgres")
         and report["backend"] == config["backend"],
         "backend mismatch",
+    )
+    batch_size = integer(config.get("pg_batch_size", 1), "pg_batch_size", 1)
+    require(
+        batch_size <= 64 and (batch_size == 1 or report["backend"] == "postgres"),
+        "invalid PostgreSQL batching configuration",
+    )
+    require(
+        integer(config.get("pg_batch_wait_us", 100), "pg_batch_wait_us") <= 10000,
+        "invalid batch wait",
     )
     peers = unique_positive(config["peer_counts"], "peer_counts")
     trials = integer(config["trials"], "trials", 1)
@@ -1103,7 +1123,7 @@ def summarize_concurrent(report):
         "groups": groups,
         "latency_definition": "Planned arrival to durable completion includes scheduler lag, blocked admission, queue waiting for an owner worker, owner dispatch overhead, native API service, and completion overhead. Deadlines classify completions; no cancellation/retry is hidden. Per-trial operation distributions are never pooled across trials.",
         "owner_timing_definition": "queue_wait_ns measures admission to owner dequeue, including waiting for the serial owner. owner_wait_ns measures owner dequeue to native-call entry: dispatch/pre-native overhead, not mutex contention. This actor-style runtime has no separately contended owner mutex.",
-        "overlap_definition": "Half-open worker/native API/database client-call intervals prove concurrent outstanding work, not physical simultaneous writes or database CPU execution.",
+        "overlap_definition": "Half-open worker/native API/database client-call intervals prove concurrent outstanding work, not physical simultaneous writes or database CPU execution. With PostgreSQL batching, row_batch_commit includes coordinator queue/fill waiting and acknowledgement of a shared durable commit; one coordinator connection executes batches serially.",
         "comparison_definition": "Ratios divide paired full-drain batch durations. All offered arrivals stay in the denominator; publish deadline success and queueing alongside ratios. No significance or provider end-to-end speedup claim.",
         "storage_definition": "Logical row/SQL counters and queued plaintext bytes are not physical I/O or total process memory.",
     }

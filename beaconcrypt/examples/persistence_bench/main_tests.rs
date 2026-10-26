@@ -69,7 +69,7 @@ fn cli_defaults_and_every_override_reach_the_declared_configuration() {
 	assert!(defaults.database_directory.is_none());
 	assert_eq!(
 		serde_json::to_value(defaults.config).unwrap(),
-		json!({"backend":"sqlite","peer_counts":[1,100,1000],"trials":3,"extra_registrations":0,"active_peers":null,"small_bytes":1024,"small_messages":1024,"large_bytes":65536,"large_messages":128,"mixed_messages":1024,"large_every":16,"burst_chunk_bytes":512000,"burst_chunks":[64,256,512],"warmup_messages":16})
+		json!({"backend":"sqlite","pg_batch_size":1,"pg_batch_wait_us":100,"peer_counts":[1,100,1000],"trials":3,"extra_registrations":0,"active_peers":null,"small_bytes":1024,"small_messages":1024,"large_bytes":65536,"large_messages":128,"mixed_messages":1024,"large_every":16,"burst_chunk_bytes":512000,"burst_chunks":[64,256,512],"warmup_messages":16})
 	);
 	assert_eq!(
 		serde_json::to_value(defaults.concurrency).unwrap(),
@@ -140,7 +140,7 @@ fn cli_defaults_and_every_override_reach_the_declared_configuration() {
 	);
 	assert_eq!(
 		serde_json::to_value(overridden.config).unwrap(),
-		json!({"backend":"postgres","peer_counts":[2,7],"trials":2,"extra_registrations":3,"active_peers":2,"small_bytes":13,"small_messages":5,"large_bytes":37,"large_messages":7,"mixed_messages":9,"large_every":3,"burst_chunk_bytes":65,"burst_chunks":[2,5],"warmup_messages":0})
+		json!({"backend":"postgres","pg_batch_size":1,"pg_batch_wait_us":100,"peer_counts":[2,7],"trials":2,"extra_registrations":3,"active_peers":2,"small_bytes":13,"small_messages":5,"large_bytes":37,"large_messages":7,"mixed_messages":9,"large_every":3,"burst_chunk_bytes":65,"burst_chunks":[2,5],"warmup_messages":0})
 	);
 	assert_eq!(
 		serde_json::to_value(overridden.concurrency).unwrap(),
@@ -328,6 +328,8 @@ fn small_options(directory: &std::path::Path, backend: &str) -> Options {
 	Options {
 		config: Config {
 			backend: backend.into(),
+			pg_batch_size: 1,
+			pg_batch_wait_us: 100,
 			peer_counts: vec![1, 2],
 			trials: 3,
 			extra_registrations: 1,
@@ -733,4 +735,35 @@ fn tmpfs_fixture_rejection(concurrent: bool) {
 		.map(|entry| entry.unwrap().path())
 		.collect::<Vec<_>>();
 	assert_eq!(remaining, vec![path]);
+}
+
+#[test]
+fn postgres_batching_is_opt_in_and_bounded() {
+	for args in [
+		vec!["--run", "--pg-batch-size", "0"],
+		vec!["--run", "--pg-batch-size", "8"],
+		vec!["--run", "--backend", "postgres", "--pg-batch-size", "65"],
+		vec![
+			"--run",
+			"--backend",
+			"postgres",
+			"--pg-batch-wait-us",
+			"10001",
+		],
+	] {
+		assert!(parse(&args).is_err());
+	}
+	let options = parse(&[
+		"--run",
+		"--backend",
+		"postgres",
+		"--pg-batch-size",
+		"8",
+		"--pg-batch-wait-us",
+		"0",
+	])
+	.unwrap()
+	.unwrap();
+	assert_eq!(options.config.pg_batch_size, 8);
+	assert_eq!(options.config.pg_batch_wait_us, 0);
 }
