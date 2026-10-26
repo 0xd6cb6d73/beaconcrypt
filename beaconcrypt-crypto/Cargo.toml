@@ -2,7 +2,7 @@
 name = "beaconcrypt-crypto"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.96"
+rust-version = "1.99.1"
 license-file = "../LICENSE"
 description = "Portable RustCrypto and Dalek primitives for beaconcrypt"
 
