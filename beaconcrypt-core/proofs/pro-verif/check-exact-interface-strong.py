@@ -9,7 +9,6 @@ No public optional-plaintext or completed computational/global result is claimed
 import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import fcntl
 import hashlib
 import importlib.util
 import json
@@ -302,6 +301,8 @@ def check_output(output, target):
 
 
 def run(args, logdir):
+    import fcntl
+
     rows = []
     failures = []
     args.lock.parent.mkdir(parents=True, exist_ok=True)

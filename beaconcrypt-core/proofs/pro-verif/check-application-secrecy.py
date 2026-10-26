@@ -5,7 +5,6 @@
 import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import fcntl
 import hashlib
 import importlib.util
 import json
@@ -210,6 +209,8 @@ def validate_targets(targets=TARGETS, directory=HERE, source_root=None):
 
 
 def run(args, logdir):
+    import fcntl
+
     rows = []
     failures = []
     args.lock.parent.mkdir(parents=True, exist_ok=True)

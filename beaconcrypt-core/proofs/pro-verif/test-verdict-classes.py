@@ -5,6 +5,7 @@
 import copy
 import importlib.util
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -65,6 +66,13 @@ class ClassificationTests(unittest.TestCase):
         self.assertEqual(len(probes), 1)
         self.assertGreater(len(scenarios), 1)
         self.assertTrue(all(not path.exists() for path in probes))
+
+    def test_inventory_without_posix_solver_modules(self):
+        with mock.patch.dict(sys.modules, {"resource": None, "fcntl": None}):
+            expected = CHECK.INVENTORY.expected_verdicts()
+        self.assertEqual(expected, self.expected)
+        CHECK.validate(self.rows, expected)
+        CHECK.validate_scope(self.rows)
 
     def test_legacy_source_scope_cannot_be_promoted(self):
         for name in CHECK.LEGACY_SOURCE_CHECKERS:

@@ -10,7 +10,6 @@ traces. The finite cases follow the source cache bound and exact chain relation.
 import argparse
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
-import fcntl
 import hashlib
 import importlib.util
 import json
@@ -259,6 +258,8 @@ def check_output(output, target):
 
 
 def run(args, logdir):
+    import fcntl
+
     rows, failures = [], []
     args.lock.parent.mkdir(parents=True, exist_ok=True)
     for target in TARGETS:

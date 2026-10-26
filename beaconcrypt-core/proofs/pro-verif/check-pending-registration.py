@@ -8,7 +8,6 @@ replicated protocol authentication or a computational security reduction.
 
 import argparse
 from dataclasses import dataclass
-import fcntl
 import importlib.util
 from pathlib import Path
 import re
@@ -326,6 +325,8 @@ def main():
         for target in TARGETS
         if args.target is None or target.name in args.target
     ]
+    import fcntl
+
     args.lock.parent.mkdir(parents=True, exist_ok=True)
     with args.lock.open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)

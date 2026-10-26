@@ -23,7 +23,6 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 import re
-import resource
 import shutil
 import subprocess
 import sys
@@ -759,6 +758,7 @@ def command(proverif, target, directory=HERE):
 
 def run_process(arguments, log_path, timeout, address_space_kib):
     """Run one process; return (seconds, peak RSS in KiB, exit code, timed out)."""
+    import resource
 
     def limit():
         if address_space_kib:
