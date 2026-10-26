@@ -2,7 +2,7 @@
 name = "beaconcrypt-wasm"
 version = "0.6.1"
 edition = "2024"
-rust-version = "1.96"
+rust-version = "1.99.1"
 license-file = "../LICENSE"
 description = "WASI guest ABI for Beaconcrypt's Go bindings"
 publish = false

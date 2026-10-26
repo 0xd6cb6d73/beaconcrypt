@@ -6,7 +6,7 @@ The repository root is a virtual Cargo workspace. The public adapter crate lives
 
 ## Build, Test, and Development Commands
 
-Install a Rust toolchain (the crate declares Rust 1.96), Cap'n Proto binaries, and initialize submodules:
+Install Rust 1.99.1 for the runtime crates, Cap'n Proto binaries, and initialize submodules. `beaconcrypt-core` retains Rust 1.92 compatibility and its separately pinned Aeneas extraction toolchain:
 
 ```bash
 git submodule update --init --recursive
