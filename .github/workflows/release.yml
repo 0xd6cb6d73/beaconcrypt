@@ -162,6 +162,8 @@ jobs:
     - name: Run runtime tests (proof-source migration deferred)
       env:
         CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: gcc
+        # The prebuilt MinGW libsodium test dependency needs RtlGenRandom from advapi32.
+        RUSTFLAGS: -l advapi32
       run: >-
         cargo test --verbose --workspace --target x86_64-pc-windows-gnu --locked --
         --skip free_schedule_rust_fidelity_annotations_are_exact
