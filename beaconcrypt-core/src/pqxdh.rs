@@ -345,6 +345,7 @@ pub fn validate_init_kex(message: InitKex) -> Result<VerifiedInitKex, Registrati
 }
 
 /// Four classical DH results followed by the post-quantum KEM secret.
+#[cfg_attr(not(hax_compilation), derive(zeroize::Zeroize, zeroize::ZeroizeOnDrop))]
 pub struct PqxdhSharedSecrets {
 	pub dh1: [u8; DH_SECRET_SIZE],
 	pub dh2: [u8; DH_SECRET_SIZE],
@@ -355,6 +356,7 @@ pub struct PqxdhSharedSecrets {
 
 /// Exact `Padding || DH1 || DH2 || DH3 || DH4 || SS` input to the opaque
 /// PQXDH HKDF operation.
+#[cfg_attr(not(hax_compilation), derive(zeroize::Zeroize, zeroize::ZeroizeOnDrop))]
 pub struct RootKeyInput {
 	bytes: [u8; ROOT_KEY_INPUT_SIZE],
 }
@@ -368,6 +370,11 @@ impl RootKeyInput {
 	/// the concrete transcript immediately after the opaque HKDF call.
 	pub fn as_mut_bytes(&mut self) -> &mut [u8; ROOT_KEY_INPUT_SIZE] {
 		&mut self.bytes
+	}
+
+	/// Replace the consumed transcript; the native value is zeroized before replacement.
+	pub fn clear(&mut self) {
+		*self = Self { bytes: [0; 192] };
 	}
 }
 
@@ -664,7 +671,7 @@ impl BeaconAborted {
 	}
 }
 
-pub const fn beacon_commit(authenticated: AuthenticatedBeaconRegistration) -> BeaconEstablished {
+pub fn beacon_commit(authenticated: AuthenticatedBeaconRegistration) -> BeaconEstablished {
 	let candidate = authenticated.candidate;
 	BeaconEstablished {
 		server_binding: candidate.server_binding,
@@ -672,7 +679,7 @@ pub const fn beacon_commit(authenticated: AuthenticatedBeaconRegistration) -> Be
 	}
 }
 
-pub const fn beacon_abort_candidate(candidate: BeaconRegistrationCandidate) -> BeaconAborted {
+pub fn beacon_abort_candidate(candidate: BeaconRegistrationCandidate) -> BeaconAborted {
 	BeaconAborted {
 		server_key_id: candidate.server_binding.identity_key_id,
 	}

@@ -1,0 +1,87 @@
+{
+  "baseline_commit": "278204b921ae31a3e900cf21f690184173e531f5",
+  "host": "x86_64-unknown-linux-gnu",
+  "baseline": [
+    {
+      "artifact": "target/release/libbeaconcrypt.a",
+      "bytes": 27426196,
+      "sha256": "cb69b176bfb1a9cc0c9758b675070eb81a1f99f3b2ca70851b79d39c2869e0ef"
+    },
+    {
+      "artifact": "target/release/libbeaconcrypt.so",
+      "bytes": 1127776,
+      "sha256": "54c63a322f6851933535fd350ef5adb2cd195ec6daec3e158bbe4f80f4e3ad65"
+    },
+    {
+      "artifact": "target/release/libbeaconcrypt.rlib",
+      "bytes": 2498312,
+      "sha256": "c707018cc2d094b56a934ffbd91242c1f7c135f0b95e83cc7c473bee227cc872"
+    },
+    {
+      "artifact": "target-release-cli/release/libbeaconcrypt.a",
+      "bytes": 2932612,
+      "sha256": "ac844389455bd01398a313b1f54aa7946b4e330cc7c53a4d73632483d0aa6e4d"
+    },
+    {
+      "artifact": "target-release-beacon/release/libbeaconcrypt.a",
+      "bytes": 2073588,
+      "sha256": "f4a730a0a572942ca9aeae42b643c755a6c2ad8db03e80486124e4e0e85830e9"
+    }
+  ],
+  "commands": {
+    "ordinary": {
+      "rust": "1.96.0",
+      "command": "cargo build -p beaconcrypt --release --features gobinds --locked",
+      "after_command": "cargo build -p beaconcrypt-ffi --release --features gobinds --locked",
+      "after_rust_command": "cargo build -p beaconcrypt --release --features gobinds --locked"
+    },
+    "release_cli": {
+      "rust": "nightly-2026-08-18 (1.100.0-nightly 8fa1c96cf)",
+      "command": "cargo rustc -p beaconcrypt --release -Z build-std=std,panic_abort --no-default-features --features gobinds --crate-type=staticlib --locked",
+      "after_command": "cargo rustc -p beaconcrypt-ffi --release -Z build-std=std,panic_abort --no-default-features --features gobinds --crate-type=staticlib --locked"
+    },
+    "release_beacon": {
+      "rust": "nightly-2026-08-18 (1.100.0-nightly 8fa1c96cf)",
+      "command": "cargo rustc -p beaconcrypt --release -Z build-std=std,panic_abort --no-default-features --features beacon --crate-type=staticlib --locked",
+      "after_command": "cargo rustc -p beaconcrypt-ffi --release -Z build-std=std,panic_abort --no-default-features --features std,beacon --crate-type=staticlib --locked",
+      "feature_note": "The baseline beacon feature implicitly required std through libsodium. The migrated hosted beacon selects std explicitly; portable beacon leaves std disabled."
+    }
+  },
+  "environment": {
+    "RUSTFLAGS": "-C linker-features=-lld",
+    "notes": "Select the recorded toolchain bin directory and GNU make in PATH; the installed Rust LLD wrapper refers to a garbage-collected Nix path. Identical linker flag used for all before/after artifacts. Default Cargo host target x86_64-unknown-linux-gnu."
+  },
+  "after": [
+    {
+      "artifact": "target/release/libbeaconcrypt.a",
+      "bytes": 8738698,
+      "sha256": "2b40f04fadffeb772e2b16e0bd2c1c905710de324476194fa6c71e73d2450539",
+      "retained_copy": "/tmp/bc-arc-scratch/no-std-rustcrypto/measured-native-release/target/release/libbeaconcrypt.a"
+    },
+    {
+      "artifact": "target/release/libbeaconcrypt.so",
+      "bytes": 1089968,
+      "sha256": "52f12627697d4023878e6b5553fa424ba848ed82f7c1e9f850facc3f2d292b49",
+      "retained_copy": "/tmp/bc-arc-scratch/no-std-rustcrypto/measured-native-release/target/release/libbeaconcrypt.so"
+    },
+    {
+      "artifact": "target/release/libbeaconcrypt.rlib",
+      "bytes": 2083458,
+      "sha256": "aea4b80d74ec528d56309a601914a8608bb114e7dfe99ea544b88e14f613a165",
+      "retained_copy": "/tmp/bc-arc-scratch/no-std-rustcrypto/measured-native-release/target/release/libbeaconcrypt.rlib"
+    },
+    {
+      "artifact": "target-release-cli/release/libbeaconcrypt.a",
+      "bytes": 2021706,
+      "sha256": "e80363884e9feda127120bef7989d5703f6a4a61054e6318a8191b626af87747",
+      "retained_copy": "/tmp/bc-arc-scratch/no-std-rustcrypto/measured-native-release/target-release-cli/release/libbeaconcrypt.a"
+    },
+    {
+      "artifact": "target-release-beacon/release/libbeaconcrypt.a",
+      "bytes": 908898,
+      "sha256": "c7058461d4dffe24affdde2c3dc3f05be54ba4687ec84b12fc6104cea1284a45",
+      "retained_copy": "/tmp/bc-arc-scratch/no-std-rustcrypto/measured-native-release/target-release-beacon/release/libbeaconcrypt.a"
+    }
+  ],
+  "packaging_note": "After migration, beaconcrypt is rlib-only for ordinary no_std dependency builds. beaconcrypt-ffi compiles the same adapter source as staticlib/cdylib with unchanged native artifact names. Native commands change only the selected package; hosted beacon additionally selects std explicitly. Rust rlib is measured separately under the same ordinary compiler/features/profile."
+}

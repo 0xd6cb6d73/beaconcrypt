@@ -18,7 +18,7 @@ fn prepare<'a>(
 	kernel: ConcreteRatchetKernel,
 	sequence: u64,
 	payload: &'a [u8],
-	ad: &'a [u8; 281],
+	ad: &[u8; 281],
 ) -> OpenCommitment<'a> {
 	let context = OpenFrameContext::from_frame(payload, ad, 0x0807_0605_0403_0201).unwrap();
 	let mut effect = begin_receive(kernel, sequence, context);
@@ -74,12 +74,14 @@ fn complete_reader_and_empty_body_boundaries_remain_strict() {
 #[test]
 fn selected_request_retains_actual_payload_material_and_plaintext_metadata() {
 	let payload = core::array::from_fn::<_, 100, _>(|i| i as u8);
-	let ad = [0xA3; 281];
+	let mut ad = [0xA3; 281];
+	let retained_ad = ad;
 	let pending = prepare(kernel(), 3, &payload, &ad);
+	ad.fill(0xB4);
 	let transcript = pending.transcript().as_bytes();
 	assert_eq!(&transcript[..32], &[12; 32]);
 	assert_eq!(&transcript[32..44], &[12; 12]);
-	assert_eq!(&transcript[44..325], &ad);
+	assert_eq!(&transcript[44..325], &retained_ad);
 	assert_eq!(&transcript[325..341], &payload[20..36]);
 	assert_eq!(&transcript[341..349], &3u64.to_le_bytes());
 	assert_eq!(&transcript[349..], &0x0807_0605_0403_0201u64.to_le_bytes());
@@ -90,7 +92,7 @@ fn selected_request_retains_actual_payload_material_and_plaintext_metadata() {
 	let request = opening.request().unwrap();
 	assert_eq!(request.ciphertext.as_ptr(), payload.as_ptr());
 	assert_eq!(request.ciphertext, &payload[..36]);
-	assert_eq!(request.associated_data.as_ptr(), ad.as_ptr());
+	assert_eq!(request.associated_data, &retained_ad);
 	assert_eq!(request.key, &[12; 32]);
 	assert_eq!(request.nonce, &[12; 12]);
 	let (kernel, opened) = opening.finish(Some([42, 43]));

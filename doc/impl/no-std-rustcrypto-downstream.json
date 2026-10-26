@@ -1,0 +1,213 @@
+{
+  "scope": "Independent downstream no_std library build regression for native artifact packaging",
+  "prepared_utc": "2026-10-25T01:55:31.774283+00:00",
+  "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+  "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+  "target": "thumbv7em-none-eabihf",
+  "consumer": "Independent Cargo workspace containing a #![no_std] library with a path dependency on beaconcrypt, default-features=false, no allocator or panic handler. Role-gated functions instantiate caller-RNG constructors and the combined registration API.",
+  "artifact_type_cli_override_used": false,
+  "only_main_manifest_crate_types_changed": true,
+  "negative": {
+    "lease": "00002677",
+    "manifest_crate_types": [
+      "cdylib",
+      "staticlib",
+      "rlib"
+    ],
+    "main_manifest_sha256": "01711e0489e46d67547e67c76a668a05e284e46c2f8ae9d981a498ec2187bf3d",
+    "commands": [
+      {
+        "label": "beacon",
+        "argv": [
+          "cargo",
+          "build",
+          "--manifest-path",
+          "/tmp/bc-arc-scratch/no-std-rustcrypto/downstream-smoke/Cargo.toml",
+          "--lib",
+          "--locked",
+          "--offline",
+          "--no-default-features",
+          "--features",
+          "beacon",
+          "--target",
+          "thumbv7em-none-eabihf"
+        ],
+        "exit_code": 101,
+        "seconds": 21.357,
+        "log_sha256": "9180c4d205f2ac37e0b5308fe2a82d475b0688fe2acfc0efc152464d48084668"
+      },
+      {
+        "label": "server",
+        "argv": [
+          "cargo",
+          "build",
+          "--manifest-path",
+          "/tmp/bc-arc-scratch/no-std-rustcrypto/downstream-smoke/Cargo.toml",
+          "--lib",
+          "--locked",
+          "--offline",
+          "--no-default-features",
+          "--features",
+          "server",
+          "--target",
+          "thumbv7em-none-eabihf"
+        ],
+        "exit_code": 101,
+        "seconds": 11.467,
+        "log_sha256": "32153137afaa478f4d832567c1e7ffeed85af11153af25f3108242a02f71c1ba"
+      },
+      {
+        "label": "beacon-server",
+        "argv": [
+          "cargo",
+          "build",
+          "--manifest-path",
+          "/tmp/bc-arc-scratch/no-std-rustcrypto/downstream-smoke/Cargo.toml",
+          "--lib",
+          "--locked",
+          "--offline",
+          "--no-default-features",
+          "--features",
+          "beacon,server",
+          "--target",
+          "thumbv7em-none-eabihf"
+        ],
+        "exit_code": 101,
+        "seconds": 1.278,
+        "log_sha256": "58dbf618bb0893fca27814c26164a4bdd6029b883911b63946812a5ca8b15570"
+      }
+    ],
+    "expected_diagnostics": [
+      "no global memory allocator found but one is required",
+      "#[panic_handler] function required, but not found"
+    ]
+  },
+  "positive": {
+    "lease": "00002680",
+    "reserved_memory_mib": 2048,
+    "manifest_crate_types": [
+      "rlib"
+    ],
+    "main_manifest_sha256": "cc21f552ed67468f8dd74c4ef25b705da3d7a0779fd6cb47ab919cee7cd840d4",
+    "commands": [
+      {
+        "label": "no-role",
+        "argv": [
+          "cargo",
+          "build",
+          "--manifest-path",
+          "/tmp/bc-arc-scratch/no-std-rustcrypto/downstream-smoke/Cargo.toml",
+          "--lib",
+          "--locked",
+          "--offline",
+          "--no-default-features",
+          "--target",
+          "thumbv7em-none-eabihf"
+        ],
+        "exit_code": 0,
+        "seconds": 0.876,
+        "log_sha256": "e1d35c6994a5a37dc53b0b2b2130258ba47d0c90bc641cdadfcbef1b45ec4a57"
+      },
+      {
+        "label": "beacon",
+        "argv": [
+          "cargo",
+          "build",
+          "--manifest-path",
+          "/tmp/bc-arc-scratch/no-std-rustcrypto/downstream-smoke/Cargo.toml",
+          "--lib",
+          "--locked",
+          "--offline",
+          "--no-default-features",
+          "--features",
+          "beacon",
+          "--target",
+          "thumbv7em-none-eabihf"
+        ],
+        "exit_code": 0,
+        "seconds": 2.987,
+        "log_sha256": "06661d4710a93fc11040412dad601bb6d7e6f1879be8438933d886903e2a4a51"
+      },
+      {
+        "label": "server",
+        "argv": [
+          "cargo",
+          "build",
+          "--manifest-path",
+          "/tmp/bc-arc-scratch/no-std-rustcrypto/downstream-smoke/Cargo.toml",
+          "--lib",
+          "--locked",
+          "--offline",
+          "--no-default-features",
+          "--features",
+          "server",
+          "--target",
+          "thumbv7em-none-eabihf"
+        ],
+        "exit_code": 0,
+        "seconds": 4.568,
+        "log_sha256": "5a72a47a84bae9fafe93b9c04f1565897e8ce66ac97ce2123d68418831ccf05c"
+      },
+      {
+        "label": "beacon-server",
+        "argv": [
+          "cargo",
+          "build",
+          "--manifest-path",
+          "/tmp/bc-arc-scratch/no-std-rustcrypto/downstream-smoke/Cargo.toml",
+          "--lib",
+          "--locked",
+          "--offline",
+          "--no-default-features",
+          "--features",
+          "beacon,server",
+          "--target",
+          "thumbv7em-none-eabihf"
+        ],
+        "exit_code": 0,
+        "seconds": 5.318,
+        "log_sha256": "05b0fda24b4501bf33644592ff8d5f62a1de0032cdb058d2339f82a26a986e38"
+      },
+      {
+        "label": "persistent-script",
+        "argv": [
+          "bash",
+          "/home/user/worktrees/beaconcrypt-no-std/scripts/check-no-std.sh"
+        ],
+        "exit_code": 0,
+        "seconds": 1.339,
+        "log_sha256": "f82aba3e3fca5782b54708ea084937dcd163a8904f3d089169baab7345e5682a"
+      }
+    ],
+    "no_role_warning_note": "The no-role configuration compiles successfully and emits dead-code warnings for unused protocol internals; role-enabled builds are warning-free in these receipts."
+  },
+  "host_linker_workaround": {
+    "wrapper_sha256": "63a98127f43527c6c8678793b2631e4a1a562fabd1e3c719ac9d1b55cbad4db1",
+    "purpose": "The locally installed Rust host LLD wrapper refers to a garbage-collected Nix path; a wrapper disables LLD only for host compilations. This workaround does not alter Thumb flags or crate types and is unnecessary with a normal rustup installation."
+  },
+  "persistent_smoke_script": {
+    "path": "scripts/check-no-std.sh",
+    "sha256": "79cb7884d2b6d74cbe801373ca22486d1152a3c60849522bc2a09c35c177a3bd",
+    "command": "bash scripts/check-no-std.sh",
+    "target_environment_override": "BEACONCRYPT_NO_STD_TARGET",
+    "variants": [
+      "no roles",
+      "beacon",
+      "server",
+      "beacon,server"
+    ],
+    "validated_under_lease": "00002680",
+    "uses_cargo_build": true,
+    "uses_crate_type_override": false
+  },
+  "ci": {
+    "workflow": ".github/workflows/rust.yml",
+    "job": "no-std-downstream",
+    "toolchain": "1.96.0",
+    "target": "thumbv7em-none-eabihf",
+    "uses_independent_consumer": true,
+    "native_c_harness_build_package": "beaconcrypt-ffi"
+  },
+  "native_artifact_packaging": "The main Rust package emits an rlib; beaconcrypt-ffi emits hosted staticlib/cdylib artifacts from the shared adapter source.",
+  "no_proof_changes": true
+}

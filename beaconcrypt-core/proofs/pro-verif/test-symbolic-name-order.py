@@ -135,11 +135,11 @@ class NameOrderChecks(unittest.TestCase):
                 path = root / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_bytes((CHECKER.HERE.parents[2] / name).read_bytes())
-            path = root / "beaconcrypt/src/server.rs"
+            path = root / "beaconcrypt/src/pqxdh.rs"
             text = path.read_text()
             changed = text.replace(
-                "let ephemeral = crypto_kx::KeyPair::generate().ok()?;",
-                "let ephemeral = changed_generator()?;",
+                "server_ephemeral = crypto_kx::KeyPair::generate().ok();",
+                "server_ephemeral = changed_generator();",
                 1,
             )
             self.assertNotEqual(changed, text)

@@ -1,25 +1,36 @@
 // SPDX-License-Identifier: 0BSD
 
-use crate::auth::{self, AuthRole, MLDSA_PUBLIC_KEY_LEN, MldsaIdentity};
+use alloc::vec::Vec;
+
+#[cfg(test)]
+use crate::auth::AuthRole;
+use crate::auth::{self, MLDSA_PUBLIC_KEY_LEN, MldsaIdentity};
+use crate::pqxdh::AD_SIZE;
+#[cfg(test)]
 use crate::pqxdh::mldsa_associated_data;
-use crate::pqxdh::{AD_SIZE, derive_root_key_input, shared_secrets, zeroize_shared_secrets};
+#[cfg(test)]
+use crate::pqxdh::{derive_root_key_input, shared_secrets, zeroize_shared_secrets};
+#[cfg(test)]
+use crate::ratchet::finish_initial_ratchet_kdf;
 use crate::ratchet::{
-	RatchetManager, RatchetStatus, decrypt_message_with_ratchet,
-	decrypt_registration_message_with_ratchet, encrypt_message_with_ratchet,
-	finish_initial_ratchet_kdf,
+	RatchetManager, RatchetStatus, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
 };
-use crate::shared::DhSecret;
 
 struct RegistrationAuthentication {
 	identity: MldsaIdentity,
-	server_public_key: [u8; MLDSA_PUBLIC_KEY_LEN],
-	init_hash: Option<[u8; 64]>,
+	server_pin: ServerAuthenticationPin,
 }
 
-use beaconcrypt_core::pqxdh::{self as verified_pqxdh, start_beacon_candidate_ratchet_kdf};
+use beaconcrypt_core::pqxdh as verified_pqxdh;
+use beaconcrypt_core::registration::BeaconPending;
+use beaconcrypt_core::session::{ServerAuthenticationPin, SessionBinding};
+#[cfg(test)]
+use beaconcrypt_crypto::crypto_scalarmult;
+use beaconcrypt_crypto::{TryCryptoRng, crypto_kem, crypto_kx, crypto_sign};
 use beaconcrypt_parse::{InitKex, decode_response};
-use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init};
 
+// Keep owned fixed-size keys and ratchets inline; callers choose the handle's storage location.
+#[allow(clippy::large_enum_variant)]
 enum BeaconState {
 	Fresh {
 		control: verified_pqxdh::BeaconFresh,
@@ -33,14 +44,14 @@ enum BeaconState {
 		pq_key: crypto_kem::mlkem768::KeyPair,
 	},
 	InitSent {
-		control: verified_pqxdh::BeaconInitSent,
+		pending: BeaconPending,
 		prekey: crypto_kx::KeyPair,
 		onetime_key: crypto_kx::KeyPair,
 		pq_key: crypto_kem::mlkem768::KeyPair,
 	},
 	Established {
 		control: verified_pqxdh::BeaconEstablished,
-		associated_data: [u8; AD_SIZE],
+		binding: SessionBinding,
 		ratchet: RatchetManager,
 	},
 	Aborted {
@@ -58,44 +69,63 @@ pub struct Beacon {
 }
 
 pub trait ProviderBeacon {
+	#[cfg(feature = "std")]
 	fn get_registration_bundle(&mut self) -> Option<Vec<u8>>;
 	fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>>;
 }
 
 impl Beacon {
-	/// Construct a beacon, panicking if initialization, input validation or key generation fails.
+	/// Construct a beacon, panicking if input validation or key generation fails.
 	/// Use [`Self::try_new`] when inputs or dependency failures must be recoverable.
+	#[cfg(feature = "std")]
 	pub fn new(server_kid: u64, server_id_pk: &[u8], server_mldsa_pk: &[u8]) -> Self {
 		Self::try_new(server_kid, server_id_pk, server_mldsa_pk)
 			.expect("Failed to construct beacon")
 	}
 
-	/// Construct a beacon without panicking on reported initialization, key-length or key-generation errors.
-	/// Allocation failure and failures inside the native RNG remain process-level failures.
+	/// Construct a beacon with operating-system entropy, returning input or RNG failures.
+	#[cfg(feature = "std")]
 	pub fn try_new(
 		server_kid: u64,
 		server_id_pk: &[u8],
 		server_mldsa_pk: &[u8],
 	) -> Result<Self, crate::KeyGenError> {
-		ensure_init().map_err(|_| crate::KeyGenError)?;
+		Self::try_new_with_rng(
+			server_kid,
+			server_id_pk,
+			server_mldsa_pk,
+			&mut beaconcrypt_crypto::OsRng,
+		)
+	}
+
+	/// Construct a beacon with caller-provided cryptographic entropy.
+	pub fn try_new_with_rng<R: TryCryptoRng + ?Sized>(
+		server_kid: u64,
+		server_id_pk: &[u8],
+		server_mldsa_pk: &[u8],
+		rng: &mut R,
+	) -> Result<Self, crate::KeyGenError> {
 		let id =
 			crypto_sign::PublicKey::from_bytes(server_id_pk).map_err(|_| crate::KeyGenError)?;
 		let server_public_key = server_mldsa_pk.try_into().map_err(|_| crate::KeyGenError)?;
+		let server_binding = verified_pqxdh::ServerBinding {
+			identity_public_key: *id.as_bytes(),
+			identity_key_id: server_kid,
+		};
 		let authentication = RegistrationAuthentication {
-			identity: MldsaIdentity::generate()?,
-			server_public_key,
-			init_hash: None,
+			identity: MldsaIdentity::generate_with_rng(rng)?,
+			server_pin: auth::fingerprint_pin(server_binding, server_public_key)
+				.ok_or(crate::KeyGenError)?,
 		};
 		Ok(Self {
-			identity_key: crypto_sign::KeyPair::generate().map_err(|_| crate::KeyGenError)?,
+			identity_key: crypto_sign::KeyPair::generate_with_rng(rng)
+				.map_err(|_| crate::KeyGenError)?,
 			identity_key_kid: server_kid,
 			state: BeaconState::Fresh {
-				control: verified_pqxdh::BeaconFresh::new(verified_pqxdh::ServerBinding {
-					identity_public_key: *id.as_bytes(),
-					identity_key_id: server_kid,
-				}),
-				prekey: crypto_kx::KeyPair::generate().map_err(|_| crate::KeyGenError)?,
-				pq_key: crypto_kem::mlkem768::KeyPair::generate()
+				control: verified_pqxdh::BeaconFresh::new(server_binding),
+				prekey: crypto_kx::KeyPair::generate_with_rng(rng)
+					.map_err(|_| crate::KeyGenError)?,
+				pq_key: crypto_kem::mlkem768::KeyPair::generate_with_rng(rng)
 					.map_err(|_| crate::KeyGenError)?,
 			},
 			server_id: id,
@@ -124,7 +154,7 @@ impl Beacon {
 			BeaconState::Fresh { control, .. } | BeaconState::FreshWithCoins { control, .. } => {
 				control.server_key_id()
 			}
-			BeaconState::InitSent { control, .. } => control.server_key_id(),
+			BeaconState::InitSent { pending, .. } => pending.server_key_id(),
 			BeaconState::Established { control, .. } => control.server_key_id(),
 			BeaconState::Aborted { control } => control.server_key_id(),
 		}
@@ -153,10 +183,8 @@ impl Beacon {
 		}
 	}
 	pub fn associated_data(&self) -> Option<[u8; AD_SIZE]> {
-		match self.state {
-			BeaconState::Established {
-				associated_data, ..
-			} => Some(associated_data),
+		match &self.state {
+			BeaconState::Established { binding, .. } => Some(*binding.associated_data()),
 			_ => None,
 		}
 	}
@@ -166,45 +194,39 @@ impl Beacon {
 			_ => None,
 		}
 	}
-	#[cfg(test)]
-	pub(crate) fn set_associated_data(&mut self, data: [u8; AD_SIZE]) {
-		if let BeaconState::Established {
-			associated_data, ..
-		} = &mut self.state
-		{
-			*associated_data = data
-		}
-	}
 	pub fn encrypt_message(&mut self, b: &[u8]) -> Option<crate::Encrypted> {
 		let sender = self.identity_key_kid;
 		let BeaconState::Established {
 			control,
-			associated_data,
+			binding,
 			ratchet,
 		} = &mut self.state
 		else {
 			return None;
 		};
-		encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, ratchet)
+		encrypt_message_with_ratchet(
+			b,
+			control.server_key_id(),
+			sender,
+			binding.associated_data(),
+			ratchet,
+		)
 	}
 	pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> {
 		let BeaconState::Established {
 			control,
-			associated_data,
+			binding,
 			ratchet,
 		} = &mut self.state
 		else {
 			return None;
 		};
-		decrypt_message_with_ratchet(b, control.server_key_id(), associated_data, ratchet)
-	}
-
-	fn abort_registration(&mut self, control: verified_pqxdh::BeaconInitSent) {
-		let server_kid = control.server_key_id();
-		self.identity_key_kid = server_kid;
-		self.state = BeaconState::Aborted {
-			control: verified_pqxdh::beacon_abort_init(control),
-		};
+		decrypt_message_with_ratchet(
+			b,
+			control.server_key_id(),
+			binding.associated_data(),
+			ratchet,
+		)
 	}
 
 	pub fn get_prekey_pk(&self) -> Option<&crypto_kx::PublicKey> {
@@ -245,8 +267,17 @@ impl Beacon {
 	///
 	/// This compatibility helper preserves the former public API while keeping
 	/// the key in a dedicated fresh phase rather than an unrelated `Option`.
+	#[cfg(feature = "std")]
 	pub fn new_onetime_keypair(&mut self) -> Option<()> {
-		let onetime_key = crypto_kx::KeyPair::generate().ok()?;
+		self.new_onetime_keypair_with_rng(&mut beaconcrypt_crypto::OsRng)
+	}
+
+	/// Pre-generate one-time registration coins with caller-provided entropy.
+	pub fn new_onetime_keypair_with_rng<R: TryCryptoRng + ?Sized>(
+		&mut self,
+		rng: &mut R,
+	) -> Option<()> {
+		let onetime_key = crypto_kx::KeyPair::generate_with_rng(rng).ok()?;
 		if let BeaconState::FreshWithCoins {
 			onetime_key: current,
 			..
@@ -262,7 +293,7 @@ impl Beacon {
 		let fallback = BeaconState::Aborted {
 			control: verified_pqxdh::beacon_abort_fresh(control),
 		};
-		let previous = std::mem::replace(&mut self.state, fallback);
+		let previous = core::mem::replace(&mut self.state, fallback);
 		match previous {
 			BeaconState::Fresh { prekey, pq_key, .. } => {
 				self.state = BeaconState::FreshWithCoins {
@@ -282,7 +313,7 @@ impl Beacon {
 
 	pub fn delete_onetime_keypair(&mut self) {
 		let server_kid = self.server_kid();
-		let phase = std::mem::replace(
+		let phase = core::mem::replace(
 			&mut self.state,
 			BeaconState::Aborted {
 				control: verified_pqxdh::BeaconAborted::new(server_kid),
@@ -299,8 +330,8 @@ impl Beacon {
 				prekey,
 				pq_key,
 			},
-			BeaconState::InitSent { control, .. } => BeaconState::Aborted {
-				control: verified_pqxdh::beacon_abort_init(control),
+			BeaconState::InitSent { pending, .. } => BeaconState::Aborted {
+				control: pending.abort(),
 			},
 			other => other,
 		};
@@ -311,9 +342,7 @@ impl Beacon {
 			BeaconState::Fresh { control, .. } | BeaconState::FreshWithCoins { control, .. } => {
 				Some(verified_pqxdh::beacon_abort_fresh(*control))
 			}
-			BeaconState::InitSent { control, .. } => {
-				Some(verified_pqxdh::beacon_abort_init(*control))
-			}
+			BeaconState::InitSent { pending, .. } => Some(pending.aborted_state()),
 			_ => None,
 		};
 		if let Some(control) = aborted {
@@ -322,10 +351,14 @@ impl Beacon {
 	}
 }
 
-impl ProviderBeacon for Beacon {
-	fn get_registration_bundle(&mut self) -> Option<Vec<u8>> {
+impl Beacon {
+	/// Build the one-use registration bundle using caller-provided entropy.
+	pub fn get_registration_bundle_with_rng<R: TryCryptoRng + ?Sized>(
+		&mut self,
+		rng: &mut R,
+	) -> Option<Vec<u8>> {
 		let mut generated_onetime = if matches!(&self.state, BeaconState::Fresh { .. }) {
-			Some(crypto_kx::KeyPair::generate().ok()?)
+			Some(crypto_kx::KeyPair::generate_with_rng(rng).ok()?)
 		} else {
 			None
 		};
@@ -336,14 +369,9 @@ impl ProviderBeacon for Beacon {
 				pq_key,
 			} => (
 				*control,
-				prekey.public_key.as_bytes().try_into().ok()?,
+				*prekey.public_key.as_bytes(),
 				*pq_key.public_key.as_bytes(),
-				generated_onetime
-					.as_ref()?
-					.public_key
-					.as_bytes()
-					.try_into()
-					.ok()?,
+				*generated_onetime.as_ref()?.public_key.as_bytes(),
 			),
 			BeaconState::FreshWithCoins {
 				control,
@@ -352,13 +380,14 @@ impl ProviderBeacon for Beacon {
 				pq_key,
 			} => (
 				*control,
-				prekey.public_key.as_bytes().try_into().ok()?,
+				*prekey.public_key.as_bytes(),
 				*pq_key.public_key.as_bytes(),
-				onetime_key.public_key.as_bytes().try_into().ok()?,
+				*onetime_key.public_key.as_bytes(),
 			),
 			_ => return None,
 		};
-		let started = verified_pqxdh::beacon_start(
+		use beaconcrypt_core::registration::{self as registration, BeaconInitEffect};
+		let mut effect = registration::begin_beacon_init(
 			control,
 			verified_pqxdh::BeaconStartInputs {
 				identity_public_key: *self.identity_pk().as_bytes(),
@@ -368,39 +397,53 @@ impl ProviderBeacon for Beacon {
 			verified_pqxdh::BeaconCoins {
 				one_time_public_key: onetime_public,
 			},
+			self.authentication.server_pin,
+			self.mldsa_public_key(),
 		);
-		let prekey_sig = crypto_sign::sign(started.message.prekey(), self.identity_sk()).ok()?;
-		let onetime_sig =
-			crypto_sign::sign(started.message.one_time_key(), self.identity_sk()).ok()?;
-		let pq_sig = crypto_sign::sign(started.message.pq_key(), self.identity_sk()).ok()?;
-		let public_key = self.mldsa_public_key();
-		let init = InitKex {
-			identity_key: started.message.identity_key(),
-			pre_key: &prekey_sig,
-			one_time_key: &onetime_sig,
-			pq_key: &pq_sig,
-			mldsa_public_key: &public_key,
-			signature: &[],
+		let ready = loop {
+			effect = match effect {
+				BeaconInitEffect::Rejected(_) => return None,
+				BeaconInitEffect::Ready(ready) => break ready,
+				BeaconInitEffect::Ed25519SigningRequested(pending) => {
+					let request = pending.request();
+					let signed = if self.identity_pk().as_bytes() == request.public_key {
+						crypto_sign::sign(request.message, self.identity_sk()).ok()
+					} else {
+						None
+					};
+					pending.resume(signed.as_deref())
+				}
+				BeaconInitEffect::FingerprintRequested(pending) => {
+					let fingerprint = auth::execute_hash(&pending.request());
+					pending.resume(fingerprint)
+				}
+				BeaconInitEffect::HashRequested(pending) => {
+					let hash = auth::execute_hash(&pending.request());
+					pending.resume(hash)
+				}
+				BeaconInitEffect::MldsaSigningRequested(pending) => {
+					let signature = self
+						.authentication
+						.identity
+						.sign_requested(&pending.request());
+					pending.resume(signature.as_deref())
+				}
+			};
 		};
-		let init_hash = auth::init_transcript_hash(
-			&init,
-			self.server_kid(),
-			self.server_id.as_bytes(),
-			&self.authentication.server_public_key,
-		)?;
-		let signature = self
-			.authentication
-			.identity
-			.sign(AuthRole::Beacon, &init_hash)?;
+		let message = ready.message();
 		let buffer = crate::wire::encode_init(InitKex {
-			signature: &signature,
-			..init
-		})?;
-
+			identity_key: message.fields.identity_key,
+			pre_key: message.fields.pre_key,
+			one_time_key: message.fields.one_time_key,
+			pq_key: message.fields.pq_key,
+			mldsa_public_key: message.fields.mldsa_public_key,
+			signature: message.signature,
+		});
+		let (pending, buffer) = ready.publish(buffer).ok()?.into_parts();
 		let fallback = BeaconState::Aborted {
-			control: verified_pqxdh::beacon_abort_fresh(control),
+			control: pending.aborted_state(),
 		};
-		let previous = std::mem::replace(&mut self.state, fallback);
+		let previous = core::mem::replace(&mut self.state, fallback);
 		match previous {
 			BeaconState::Fresh { prekey, pq_key, .. } => {
 				let Some(onetime_key) = generated_onetime.take() else {
@@ -412,7 +455,7 @@ impl ProviderBeacon for Beacon {
 					return None;
 				};
 				self.state = BeaconState::InitSent {
-					control: started.state,
+					pending,
 					prekey,
 					onetime_key,
 					pq_key,
@@ -425,7 +468,7 @@ impl ProviderBeacon for Beacon {
 				..
 			} => {
 				self.state = BeaconState::InitSent {
-					control: started.state,
+					pending,
 					prekey,
 					onetime_key,
 					pq_key,
@@ -436,128 +479,125 @@ impl ProviderBeacon for Beacon {
 				return None;
 			}
 		}
-		self.authentication.init_hash = Some(init_hash);
 		Some(buffer)
 	}
+}
 
-	/// Returns the server's intitial message or a single 0xFF byte if the server didn't provide one. A return value of `None` MUST be treated as a protocol failure
+impl ProviderBeacon for Beacon {
+	#[cfg(feature = "std")]
+	fn get_registration_bundle(&mut self) -> Option<Vec<u8>> {
+		self.get_registration_bundle_with_rng(&mut beaconcrypt_crypto::OsRng)
+	}
+
 	fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {
-		let control = match &self.state {
-			BeaconState::InitSent { control, .. } => *control,
+		use beaconcrypt_core::agreement::{self, AgreementEffect};
+		use beaconcrypt_core::registration::{self as registration, ResponsePacket};
+		let aborted = match &self.state {
+			BeaconState::InitSent { pending, .. } => pending.aborted_state(),
 			_ => return None,
 		};
-
-		let staged = (|| {
-			let (prekey_secret, onetime_secret, pq_secret) = match &self.state {
-				BeaconState::InitSent {
-					prekey,
-					onetime_key,
-					pq_key,
-					..
-				} => (
-					&prekey.secret_key,
-					&onetime_key.secret_key,
-					&pq_key.secret_key,
-				),
-				_ => return None,
-			};
-			let response = decode_response(bytes)?;
-			let hash =
-				auth::response_transcript_hash(self.authentication.init_hash.as_ref()?, &response)?;
-			if !auth::verify(
-				&self.authentication.server_public_key,
-				AuthRole::Server,
-				&hash,
-				response.signature,
-			) {
-				return None;
-			}
-			let kem_ciphertext =
-				crypto_kem::mlkem768::Ciphertext::from_bytes(response.kem_cipher_text).ok()?;
-			let ephemeral = crypto_kx::PublicKey::from_bytes(response.ephemeral_key).ok()?;
-			let response_server = crypto_sign::PublicKey::from_bytes(response.identity_key).ok()?;
-			let server_kex_id = crypto_sign::ed25519_pk_to_curve25519(&response_server).ok()?;
-			let beacon_kex_id = crypto_sign::ed25519_sk_to_curve25519(self.identity_sk()).ok()?;
-			let kem_shared = crypto_kem::mlkem768::decapsulate(&kem_ciphertext, pq_secret).ok()?;
-			let dh1: DhSecret =
-				crypto_scalarmult::scalarmult(prekey_secret.as_bytes(), &server_kex_id)
-					.ok()?
-					.into();
-			let dh2: DhSecret = crypto_scalarmult::scalarmult(&beacon_kex_id, ephemeral.as_bytes())
-				.ok()?
-				.into();
-			let dh3: DhSecret =
-				crypto_scalarmult::scalarmult(prekey_secret.as_bytes(), ephemeral.as_bytes())
-					.ok()?
-					.into();
-			let dh4: DhSecret =
-				crypto_scalarmult::scalarmult(onetime_secret.as_bytes(), ephemeral.as_bytes())
-					.ok()?
-					.into();
-			let mut finish_inputs = verified_pqxdh::BeaconFinishInputs {
-				response_server_identity: *response_server.as_bytes(),
-				assigned_key_id: response.key_id,
-				shared_secrets: shared_secrets(dh1, dh2, dh3, dh4, &kem_shared)?,
-			};
-			let prepared = verified_pqxdh::beacon_prepare_finish(control, &finish_inputs);
-			zeroize_shared_secrets(&mut finish_inputs.shared_secrets);
-			let mut candidate = prepared.ok()?;
-			let derived_secret = derive_root_key_input(candidate.root_key_input_mut())?;
-			let pending = start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array());
-			let mut ratchet = RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));
-			let associated_data = mldsa_associated_data(
-				candidate.associated_data(),
-				&auth::public_key_hash(&self.authentication.server_public_key)?,
-				&auth::public_key_hash(&self.mldsa_public_key())?,
-			);
-			let decrypted = decrypt_registration_message_with_ratchet(
+		let previous =
+			core::mem::replace(&mut self.state, BeaconState::Aborted { control: aborted });
+		let BeaconState::InitSent {
+			pending,
+			prekey,
+			onetime_key,
+			pq_key,
+		} = previous
+		else {
+			return None;
+		};
+		let packet = decode_response(bytes).and_then(|response| {
+			ResponsePacket::from_slices(
+				response.identity_key,
+				response.ephemeral_key,
+				response.kem_cipher_text,
+				response.key_id,
 				response.app_cipher_text,
-				candidate.server_key_id(),
-				&associated_data,
-				&mut ratchet,
-			)?;
-			if decrypted.seq != 1 {
-				return None;
-			}
-			let authenticated_server_key_id = decrypted.key_id;
-			let mut authenticated_plaintext = decrypted.plaintext;
-			if authenticated_plaintext.len() <= verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE {
-				return None;
-			}
-			let plaintext =
-				authenticated_plaintext.split_off(verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE);
-			let binding = authenticated_plaintext.as_slice().try_into().ok()?;
-			let authenticated = verified_pqxdh::authenticate_registration_key_id_binding(
-				candidate,
-				authenticated_server_key_id,
-				binding,
+				response.signature,
 			)
-			.ok()?;
-			Some((authenticated, associated_data, ratchet, plaintext))
-		})();
-
-		let Some((authenticated, associated_data, ratchet, plaintext)) = staged else {
-			self.abort_registration(control);
-			return None;
+		});
+		let authenticated = match auth::authenticate_response(pending, packet) {
+			Ok(authenticated) => authenticated,
+			Err(control) => {
+				self.state = BeaconState::Aborted { control };
+				return None;
+			}
 		};
-
-		let server_binding = authenticated.server_binding();
-		let server_kid = server_binding.identity_key_id;
-		if self.server_kid() != server_kid {
-			self.abort_registration(control);
-			return None;
-		}
-		if self.server_id.as_bytes() != &server_binding.identity_public_key {
-			self.abort_registration(control);
-			return None;
-		}
-		self.identity_key_kid = authenticated.assigned_key_id();
-		self.state = BeaconState::Established {
-			control: verified_pqxdh::beacon_commit(authenticated),
-			associated_data,
-			ratchet,
+		let effect = crate::pqxdh::execute_beacon_agreement(
+			agreement::begin_beacon_agreement(authenticated),
+			crate::pqxdh::RegistrationKeys {
+				identity_secret: self.identity_sk(),
+				beacon_prekey: Some(&prekey.secret_key),
+				beacon_one_time: Some(&onetime_key.secret_key),
+				beacon_kem: Some(&pq_key.secret_key),
+			},
+		);
+		let agreement = match effect {
+			AgreementEffect::BeaconComplete(agreement) => agreement,
+			AgreementEffect::Rejected(Some(control)) => {
+				self.state = BeaconState::Aborted { control };
+				return None;
+			}
+			_ => return None,
 		};
-		Some(plaintext)
+		let pending = registration::begin_beacon_completion(agreement);
+		let response = verified_pqxdh::InitialRatchetKdfResponse::from_bytes(
+			crate::ratchet::initial_ratchet_hkdf(pending.request()),
+		);
+		let mut effect = match pending.resume(Some(response)) {
+			Ok(effect) => effect,
+			Err(control) => {
+				self.state = BeaconState::Aborted { control };
+				return None;
+			}
+		};
+		loop {
+			let next = match effect {
+				registration::BeaconInitialOpen::KdfRequested(pending) => {
+					let response = crate::ratchet::ratchet_hkdf(pending.request());
+					pending.resume(Some(response))
+				}
+				registration::BeaconInitialOpen::CommitmentRequested(mut pending) => {
+					let commitment =
+						crate::ratchet::execute_commitment_hash(pending.transcript_mut());
+					let matches = match commitment {
+						Some(commitment) => beaconcrypt_crypto::utils::memcmp(
+							&commitment,
+							pending.supplied_commitment(),
+						),
+						None => false,
+					};
+					pending.resume(matches)
+				}
+				registration::BeaconInitialOpen::AeadRequested(pending) => {
+					let plaintext = crate::ratchet::execute_open_request(pending.request());
+					let completed = match pending.finish(plaintext.as_deref()) {
+						Ok(completed) => completed,
+						Err(control) => {
+							self.state = BeaconState::Aborted { control };
+							return None;
+						}
+					};
+					let (control, binding, kernel, application) = completed.into_parts();
+					let plaintext = application.to_vec();
+					self.identity_key_kid = binding.assigned_key_id();
+					self.state = BeaconState::Established {
+						control,
+						binding,
+						ratchet: RatchetManager::from_kernel(kernel),
+					};
+					return Some(plaintext);
+				}
+			};
+			effect = match next {
+				Ok(effect) => effect,
+				Err(control) => {
+					self.state = BeaconState::Aborted { control };
+					return None;
+				}
+			};
+		}
 	}
 }
 
@@ -565,6 +605,90 @@ impl ProviderBeacon for Beacon {
 mod tests {
 	use super::*;
 	use crate::{ProviderServer, Server};
+
+	#[test]
+	fn caller_entropy_failures_preserve_registration_state() {
+		use crate::auth::TestRng;
+
+		let mut server =
+			Server::try_new_with_rng(19, Some(&[7; 32]), Some(&[8; 32]), &mut TestRng::new(0))
+				.unwrap();
+		for fail_after in 0..4 {
+			assert!(
+				Beacon::try_new_with_rng(
+					19,
+					server.identity_pk().as_bytes(),
+					&server.mldsa_public_key(),
+					&mut TestRng::new(fail_after),
+				)
+				.is_err(),
+				"constructor entropy draw {fail_after}"
+			);
+		}
+		let mut rng = TestRng::new(usize::MAX);
+		let mut beacon = Beacon::try_new_with_rng(
+			19,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+			&mut rng,
+		)
+		.unwrap();
+		assert_eq!(rng.calls, 4);
+		assert!(
+			beacon
+				.get_registration_bundle_with_rng(&mut TestRng::new(0))
+				.is_none()
+		);
+		assert!(matches!(beacon.state, BeaconState::Fresh { .. }));
+		assert!(beacon.get_onetime_pk().is_none());
+		beacon.new_onetime_keypair_with_rng(&mut rng).unwrap();
+		let onetime = *beacon.get_onetime_pk().unwrap().as_bytes();
+		assert!(
+			beacon
+				.new_onetime_keypair_with_rng(&mut TestRng::new(0))
+				.is_none()
+		);
+		assert_eq!(beacon.get_onetime_pk().unwrap().as_bytes(), &onetime);
+		let bundle = beacon
+			.get_registration_bundle_with_rng(&mut TestRng::new(0))
+			.unwrap();
+		let before = server.serialize_state().unwrap();
+		for fail_after in 0..2 {
+			assert!(
+				server
+					.get_shared_secret_with_rng(&bundle, &mut TestRng::new(fail_after))
+					.is_none()
+			);
+			assert_eq!(server.serialize_state().unwrap(), before);
+		}
+		let registration = server
+			.get_shared_secret_with_rng(&bundle, &mut rng)
+			.unwrap();
+		let response = server
+			.build_registration_response(registration, Some(b"welcome"))
+			.unwrap();
+		assert_eq!(
+			beacon.finish_registration(&response.serialized).unwrap(),
+			b"welcome"
+		);
+		assert!(
+			server
+				.get_shared_secret_with_rng(&bundle, &mut rng)
+				.is_none()
+		);
+		let frame = beacon.encrypt_message(b"portable beacon").unwrap();
+		assert_eq!(
+			server.decrypt_message(&frame.ciphertext).unwrap().plaintext,
+			b"portable beacon"
+		);
+		let frame = server
+			.encrypt_message(b"portable server", response.kid)
+			.unwrap();
+		assert_eq!(
+			beacon.decrypt_message(&frame.ciphertext).unwrap().plaintext,
+			b"portable server"
+		);
+	}
 
 	#[test]
 	fn first_sequence_still_requires_nonempty_bound_plaintext() {
@@ -578,9 +702,44 @@ mod tests {
 			);
 			let init = beacon.get_registration_bundle().unwrap();
 			let accepted = server.get_shared_secret(&init).unwrap();
-			// A test-only sender at the actual initial chain lets malformed plaintext reach the binding checks at sequence one.
-			let pending =
-				verified_pqxdh::start_server_ratchet_kdf(accepted.derived_secret.as_array());
+			let original = server.build_registration_response(accepted, None).unwrap();
+			let response = decode_response(&original.serialized).unwrap();
+			// Reconstruct the honest root from the receiver's retained test keys rather than exporting the opaque server agreement.
+			let server_kex = crypto_sign::ed25519_pk_to_curve25519(server.identity_pk()).unwrap();
+			let beacon_kex = crypto_sign::ed25519_sk_to_curve25519(beacon.identity_sk()).unwrap();
+			let ciphertext =
+				crypto_kem::mlkem768::Ciphertext::from_bytes(response.kem_cipher_text).unwrap();
+			let kem =
+				crypto_kem::mlkem768::decapsulate(&ciphertext, beacon.pq_sk().unwrap()).unwrap();
+			let mut secrets = shared_secrets(
+				crypto_scalarmult::scalarmult(
+					beacon.get_prekey_sk().unwrap().as_bytes(),
+					&server_kex,
+				)
+				.unwrap()
+				.into(),
+				crypto_scalarmult::scalarmult(&beacon_kex, response.ephemeral_key)
+					.unwrap()
+					.into(),
+				crypto_scalarmult::scalarmult(
+					beacon.get_prekey_sk().unwrap().as_bytes(),
+					response.ephemeral_key,
+				)
+				.unwrap()
+				.into(),
+				crypto_scalarmult::scalarmult(
+					beacon.get_onetime_sk().unwrap().as_bytes(),
+					response.ephemeral_key,
+				)
+				.unwrap()
+				.into(),
+				&kem,
+			)
+			.unwrap();
+			let mut input = verified_pqxdh::build_root_key_input(&secrets).unwrap();
+			zeroize_shared_secrets(&mut secrets);
+			let root = derive_root_key_input(&mut input).unwrap();
+			let pending = verified_pqxdh::start_server_ratchet_kdf(root.as_array());
 			let mut sender = RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));
 			let ad = mldsa_associated_data(
 				&verified_pqxdh::build_associated_data(
@@ -590,7 +749,6 @@ mod tests {
 				&auth::public_key_hash(&server.mldsa_public_key()).unwrap(),
 				&auth::public_key_hash(&beacon.mldsa_public_key()).unwrap(),
 			);
-			let original = server.build_registration_response(accepted, None).unwrap();
 			let payload = if case < 8 {
 				original.kid.to_le_bytes()[..case + 1].to_vec()
 			} else {
@@ -616,11 +774,14 @@ mod tests {
 				app_cipher_text: raw_frame.cipher_text,
 				signature: &[],
 			};
-			let hash = auth::response_transcript_hash(
-				beacon.authentication.init_hash.as_ref().unwrap(),
-				&rewritten,
+			let init_hash = auth::init_transcript_hash(
+				&beaconcrypt_parse::decode_init(&init).unwrap(),
+				server.identity_key_kid(),
+				server.identity_pk().as_bytes(),
+				&server.mldsa_public_key(),
 			)
 			.unwrap();
+			let hash = auth::response_transcript_hash(&init_hash, &rewritten).unwrap();
 			let signature = MldsaIdentity::from_seed(mldsa_seed)
 				.sign(AuthRole::Server, &hash)
 				.unwrap();

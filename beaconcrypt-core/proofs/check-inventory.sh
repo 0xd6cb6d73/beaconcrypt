@@ -45,17 +45,17 @@ done < "$manifest"
 declare -A expected_category_counts=(
 	[adapter-rust]=14
 	[adapter-schema]=1
-	[parser-rust]=6
-	[core-rust]=11
+	[parser-rust]=5
+	[core-rust]=17
 	[control]=17
 	[generated-lean]=13
 	[generated-proverif]=1
-	[handwritten-lean]=2023
+	[handwritten-lean]=2063
 	[handwritten-proverif]=298
 	[inventory]=2
 	[lean-control]=13
 	[lean-dependency-overlay]=4
-	[validation]=73
+	[validation]=82
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -177,9 +177,18 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/test-mldsa-joint-session-checker.py \
 	proofs/extract-authentication.py \
 	tests/authentication.rs \
+	tests/session.rs \
+	tests/agreement.rs \
+	tests/registration.rs \
+	tests/record_effects.rs \
+	tests/transport.rs \
 	tests/mldsa_joint_fidelity.rs \
 	tests/general_registration_admission.rs \
 	tests/proverif_transcript_fidelity.rs \
+	tests/fidelity/registration_effects.rs \
+	tests/fidelity/record_effects.rs \
+	tests/fidelity/transport.rs \
+	tests/fidelity/peer_effects.rs \
 	> "$tmp_dir/validation"
 compare_set validation "$tmp_dir/validation"
 
@@ -953,9 +962,28 @@ for scenario_process in \
 			"${scenario_process} top-level process"
 done
 
+record_fidelity_effects=tests/fidelity/record_effects.rs
+require_line_count 1 '^#\[path = "fidelity/record_effects\.rs"\]$' tests/proverif_transcript_fidelity.rs "record fidelity module import"
+require_line_count 1 '^mod record_effects;$' tests/proverif_transcript_fidelity.rs "record fidelity module binding"
+require_line_count 1 '^[[:space:]]*core_record_effects: String,$' tests/proverif_transcript_fidelity.rs "mutable core record source"
+require_line_count 1 '^[[:space:]]*core_record_effects: CORE_RECORD_EFFECTS\.to_owned\(\),$' tests/proverif_transcript_fidelity.rs "production core record snapshot"
+require_line_count 3 '^#\[test\]$' "$record_fidelity_effects" "record fidelity tests"
+peer_fidelity_effects=tests/fidelity/peer_effects.rs
+require_line_count 1 '^#\[path = "fidelity/peer_effects\.rs"\]$' tests/proverif_transcript_fidelity.rs "peer fidelity module import"
+require_line_count 1 '^mod peer_effects;$' tests/proverif_transcript_fidelity.rs "peer fidelity module binding"
+require_line_count 1 '^[[:space:]]*core_peer: String,$' tests/proverif_transcript_fidelity.rs "mutable core peer source"
+require_line_count 1 '^[[:space:]]*core_peer: CORE_PEER\.to_owned\(\),$' tests/proverif_transcript_fidelity.rs "production core peer snapshot"
+require_line_count 2 '^#\[test\]$' "$peer_fidelity_effects" "peer fidelity tests"
+transport_fidelity_effects=tests/fidelity/transport.rs
+require_line_count 1 '^#\[path = "fidelity/transport\.rs"\]$' tests/proverif_transcript_fidelity.rs "transport fidelity module import"
+require_line_count 1 '^mod transport;$' tests/proverif_transcript_fidelity.rs "transport fidelity module binding"
+require_line_count 1 '^const TRANSPORT_SIZING: &str = include_str!\("\.\./src/transport\.rs"\);$' tests/proverif_transcript_fidelity.rs "mutable transport snapshot selects extracted core policy"
+require_line_count 1 '^[[:space:]]*transport_sizing: String,$' tests/proverif_transcript_fidelity.rs "mutable transport source"
+require_line_count 1 '^[[:space:]]*transport_sizing: TRANSPORT_SIZING\.to_owned\(\),$' tests/proverif_transcript_fidelity.rs "production transport source snapshot"
+require_line_count 1 '^#\[test\]$' "$transport_fidelity_effects" "transport fidelity tests"
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 51 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_AUTH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_AUTHENTICATION|CORE_RECORD|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|TRANSPORT_SCHEMA|TRANSPORT_PARSER|TRANSPORT_SIZING|ADAPTER_WIRE|CBOR_REGISTRATION_MODEL|MLDSA_AUTH_MODEL|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLDSA_REGISTRATION_MODEL|MLDSA_REGISTRATION_QUERIES|MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
+require_line_count 56 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_AUTH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_AUTHENTICATION|CORE_SESSION|CORE_REGISTRATION|CORE_AGREEMENT|CORE_PEER|CORE_RECORD|CORE_RECORD_EFFECTS|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|TRANSPORT_SCHEMA|TRANSPORT_PARSER|TRANSPORT_SIZING|ADAPTER_WIRE|CBOR_REGISTRATION_MODEL|MLDSA_AUTH_MODEL|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLDSA_REGISTRATION_MODEL|MLDSA_REGISTRATION_QUERIES|MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 3 '^const (CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA): &str = TRANSPORT_SCHEMA;$' \
 	"$fidelity_test" "shared CBOR schema aliases"
@@ -963,7 +991,7 @@ require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable source fixture"
-require_line_count 31 '^#\[test\]$' \
+require_line_count 32 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
@@ -1015,7 +1043,7 @@ require_line_count 1 '^fn validate_mldsa_source\(snapshot: &Snapshot\) -> Result
 	"$fidelity_test" "ML-DSA native transcript/source validator"
 require_line_count 1 '^fn validate_mldsa_model\(snapshot: &Snapshot\) -> Result<\(\), String> \{$' \
 	"$fidelity_test" "ML-DSA assumed-interface symbolic transcription validator"
-require_line_count 1 '^const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 90;$' \
+require_line_count 1 '^const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 60;$' \
 	"$fidelity_test" "ML-DSA exact source/model mutation count"
 require_occurrence_count 1 \
 	'(?s)fn mldsa_transcript_source_and_model_mutations_are_rejected\(\) \{.*?assert_eq!\(checked, MLDSA_TRANSCRIPT_MUTATION_COUNT\);\s*\}' \
@@ -1042,44 +1070,21 @@ for mldsa_transcript_mutation in \
 	mldsa_signed_spaces \
 	mldsa_signed_separator \
 	mldsa_signed_hash \
-	mldsa_sign_context_substitution \
-	mldsa_verify_context_substitution \
-	mldsa_verify_public_key_substitution \
-	mldsa_verify_signature_substitution \
 	mldsa_keyed_transcript_hash \
 	mldsa_transcript_hash_output_size \
 	mldsa_variable_length_big_endian \
 	mldsa_variable_field_bytes_substitution \
-	mldsa_public_key_hash_length \
-	mldsa_public_key_hash_bytes \
 	mldsa_request_server_id_big_endian \
 	mldsa_request_ed_pin_omitted \
 	mldsa_request_beacon_ml_key_omitted \
 	mldsa_request_server_ml_key_omitted \
 	mldsa_request_classical_field_order \
-	mldsa_request_hashes_signature \
 	mldsa_response_request_hash_omitted \
 	mldsa_response_field_order \
 	mldsa_response_assigned_id_big_endian \
-	mldsa_response_hashes_signature \
 	mldsa_ad_server_hash_slot \
 	mldsa_ad_beacon_hash_slot \
 	mldsa_token_context_public \
-	mldsa_init_self_presented_key_substituted \
-	mldsa_init_verification_role \
-	mldsa_init_verification_bypass \
-	mldsa_token_request_hash_substitution \
-	mldsa_token_server_key_binding_bypass \
-	mldsa_response_signs_wrong_request_hash \
-	mldsa_response_signing_role \
-	mldsa_response_published_signature_substitution \
-	mldsa_request_published_ml_key_substitution \
-	mldsa_request_signing_role \
-	mldsa_request_retained_hash_substitution \
-	mldsa_response_verification_pin_substitution \
-	mldsa_response_verification_request_substitution \
-	mldsa_response_verification_role \
-	mldsa_response_verification_bypass \
 	mldsa_model_context_match \
 	mldsa_model_request_pin_order \
 	mldsa_model_request_field_omitted \
@@ -1114,26 +1119,20 @@ for mldsa_transcript_mutation in \
 	mldsa_core_response_length_substitution \
 	mldsa_core_response_ciphertext_substitution \
 	mldsa_core_response_private_prefix \
-	mldsa_adapter_request_identity_mapping \
-	mldsa_adapter_request_signature_role_shared \
-	mldsa_adapter_request_server_pin_substitution \
-	mldsa_adapter_request_extra_hash_bytes \
-	mldsa_adapter_response_ephemeral_mapping \
-	mldsa_adapter_response_core_request_hash_substitution \
-	mldsa_adapter_response_extra_hash_bytes \
-	mldsa_adapter_ad_hashes_reversed; do
+	mldsa_adapter_request_signature_role_shared; do
 	require_line_count 1 "^[[:space:]]*\"${mldsa_transcript_mutation}\",$" \
 		"$fidelity_test" "ML-DSA ${mldsa_transcript_mutation} source/model control"
 done
 require_line_count 1 '^fn validate_record_opening_source\(snapshot: &Snapshot\) -> Result<\(\), String> \{$' \
 	"$fidelity_test" "native record source validator"
 require_occurrence_count 1 \
-	'(?s)fn record_opening_source_mutations_are_rejected\(\) \{.*?assert_eq!\(checked, 30\);\s*\}' \
-	"native record thirty-control count assertion" "$fidelity_test"
+	'(?s)fn record_opening_source_mutations_are_rejected\(\) \{.*?assert_eq!\(checked, 21\);\s*\}' \
+	"native record twenty-one retained controls count assertion" "$fidelity_test"
 for record_control in core_reader_inverts_remainder core_reader_discards_message core_payload_wrong_overhead native_wrapper_import_substituted core_begin_wrong_nonce core_begin_wrong_ad core_begin_drops_original_opening core_transcript_reads_substitute core_transcript_erases_substitute core_supplied_commitment_substituted core_resume_inverts_comparison core_resume_skips_rejection core_resume_replaces_capability core_request_wrong_material core_request_wrong_context core_request_wrong_ciphertext core_request_wrong_key core_finish_none_becomes_plaintext core_finish_wrong_sender core_finish_wrong_sequence core_finish_discards_actual_some native_hash_failure_short_circuits native_hash_uses_wrong_transcript native_hash_omits_erase native_hash_none_passes native_compare_result_ignored native_resume_forced_true native_rejected_commitment_drops_kernel native_aead_request_substituted native_optional_plaintext_substituted; do
-	require_line_count 1 "^[[:space:]]*\"${record_control}\",$" "$fidelity_test" "native record control ${record_control}"
+	case "$record_control" in native_hash_*|native_compare_result_ignored|native_resume_forced_true|native_rejected_commitment_drops_kernel|native_aead_request_substituted|native_optional_plaintext_substituted) record_control_file="$record_fidelity_effects" ;; *) record_control_file="$fidelity_test" ;; esac
+	require_line_count 1 "^[[:space:]]*\"${record_control}\",$" "$record_control_file" "native record control ${record_control}"
 done
-require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;$' \
+require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 201;$' \
 	"$fidelity_test" "CryptoFrame exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, CRYPTOFRAME_WIRE_MUTATION_COUNT\);\s*\}' \
@@ -1160,7 +1159,7 @@ for cryptoframe_mutation_family in \
 	cryptoframe_ctx_pair_transposition_ \
 	cryptoframe_ctx_omits_and_duplicates_field_; do
 	require_occurrence_count 1 "$cryptoframe_mutation_family" \
-		"CryptoFrame ${cryptoframe_mutation_family} mutation family" "$fidelity_test"
+		"CryptoFrame ${cryptoframe_mutation_family} mutation family" "$fidelity_test" "$record_fidelity_effects"
 done
 for cbor_mutation in \
 	cbor_registration_raw_field_count \
@@ -1212,9 +1211,15 @@ for cbor_mutation in \
 	cbor_receive_sequence \
 	cbor_registration_implicit_sequence \
 	cbor_registration_pinned_sender; do
-	require_occurrence_count 1 "$cbor_mutation" "CBOR ${cbor_mutation} mutation" "$fidelity_test"
+	# This control retains its matrix, diagnostic and native/core mutation routing.
+	# The latter routes the size-preflight mutation to the actual native delegate.
+	if [[ "$cbor_mutation" == cbor_response_size_precheck ]]; then
+		require_occurrence_count 3 "$cbor_mutation" "CBOR ${cbor_mutation} mutation, diagnostic and source routing" "$fidelity_test"
+	else
+		require_occurrence_count 1 "$cbor_mutation" "CBOR ${cbor_mutation} mutation" "$fidelity_test" "$record_fidelity_effects"
+	fi
 done
-require_line_count 1 '^const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 157;$' \
+require_line_count 1 '^const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 117;$' \
 	"$fidelity_test" "Phase-1 exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn phase1_registration_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, PHASE1_REGISTRATION_MUTATION_COUNT\);\s*\}' \
@@ -1223,27 +1228,19 @@ for phase1_mutation_family in \
 	phase1_schema_same_typed_permutation_ \
 	phase1_schema_omits_field_ \
 	phase1_schema_renames_ \
-	phase1_beacon_field_ \
-	phase1_beacon_signature_ \
-	phase1_server_consumer_ \
-	phase1_from_encoded_swaps_x25519_roles \
 	phase1_symbolic_declaration_transposition_ \
 	phase1_symbolic_active_quantum_producer_transposition_ \
 	phase1_symbolic_active_quantum_consumer_transposition_ \
 	phase1_core_prekey_uses_one_time_role \
 	phase1_core_prekey_validates_one_time_role \
-	phase1_server_accepts_mlkem_identity_tag \
-	phase1_server_decodes_identity_with_tag \
 	phase1_symbolic_signature_verifies_under_x25519_key \
-	phase1_server_reorders_pq_and_prekey_verification \
 	phase1_symbolic_reorders_prekey_and_one_time_gates \
-	phase1_beacon_duplicates_one_time_signature \
 	phase1_core_reorders_prekey_and_one_time_fields \
 	phase1_core_reorders_prekey_and_one_time_validation; do
 	require_occurrence_count 1 "$phase1_mutation_family" \
 		"Phase-1 ${phase1_mutation_family} mutation family" "$fidelity_test"
 done
-require_line_count 1 '^const ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT: usize = 242;$' \
+require_line_count 1 '^const ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT: usize = 214;$' \
 	"$fidelity_test" "endpoint frame-context exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT\);\s*\}' \
@@ -1257,10 +1254,6 @@ for endpoint_mutation_family in \
 	endpoint_server_receive_fail_open \
 	endpoint_beacon_send_target_uses_assigned_id \
 	endpoint_beacon_receive_expected_sender_uses_assigned_id \
-	endpoint_registration_server_map_discards_peer_identity \
-	endpoint_registration_server_publishes_control_before_peer_insert \
-	endpoint_registration_beacon_expected_sender_uses_outer_id \
-	endpoint_registration_beacon_assigns_local_id_before_server_binding_checks \
 	endpoint_symbolic_\{family\}_\{field\}_\{call_index\} \
 	endpoint_symbolic_honest_server_open_count_increases \
 	endpoint_symbolic_server_seal_count_increases \
@@ -1275,7 +1268,7 @@ for endpoint_mutation_family in \
 	require_occurrence_count 1 "$endpoint_mutation_family" \
 		"endpoint frame-context ${endpoint_mutation_family} mutation family" "$fidelity_test"
 done
-require_line_count 1 '^const RATCHET_EFFECT_DRIVER_MUTATION_COUNT: usize = 154;$' \
+require_line_count 1 '^const RATCHET_EFFECT_DRIVER_MUTATION_COUNT: usize = 106;$' \
 	"$fidelity_test" "ratchet effect-driver exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, RATCHET_EFFECT_DRIVER_MUTATION_COUNT\);\s*\}' \
@@ -1305,7 +1298,7 @@ for ratchet_driver_mutation_family in \
 	ratchet_driver_proverif_renames_ideal_open \
 	ratchet_driver_proverif_exposes_\{concrete_step\}; do
 	require_occurrence_count 1 "$ratchet_driver_mutation_family" \
-		"ratchet effect-driver ${ratchet_driver_mutation_family} mutation family" "$fidelity_test"
+		"ratchet effect-driver ${ratchet_driver_mutation_family} mutation family" "$fidelity_test" "$record_fidelity_effects"
 done
 require_line_count 1 '^const FINITE_RECEIVE_STATE_FIXTURE_MUTATION_COUNT: usize = 1_230;$' \
 	"$fidelity_test" "finite receive-state fixture exact mutation count"
@@ -1333,7 +1326,7 @@ for receive_fixture_mutation_family in \
 	require_occurrence_count 1 "$receive_fixture_mutation_family" \
 		"finite receive-state ${receive_fixture_mutation_family} mutation family" "$fidelity_test"
 done
-require_line_count 1 '^const REGISTRATION_LIFECYCLE_MUTATION_COUNT: usize = 177;$' \
+require_line_count 1 '^const REGISTRATION_LIFECYCLE_MUTATION_COUNT: usize = 116;$' \
 	"$fidelity_test" "registration lifecycle exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn registration_lifecycle_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, REGISTRATION_LIFECYCLE_MUTATION_COUNT\);\s*\}' \
@@ -1342,12 +1335,6 @@ for registration_lifecycle_mutation_family in \
 	registration_lifecycle_fact_\{key\} \
 	registration_identifier_first_half_uses_prekey \
 	registration_proverif_projection_uses_pq \
-	registration_pretransition_failure_changes_state \
-	registration_finish_server_key_id_mismatch_keeps_init \
-	registration_finish_server_identity_mismatch_keeps_init \
-	registration_server_dh4_moves_before_status_gate \
-	registration_server_consumes_different_id_before_crypto \
-	registration_server_explicit_failure_after_consumption \
 	registration_honest_different_guard_is_duplicated \
 	registration_honest_guard_and_bundle_are_sequential \
 	registration_malicious_server_adds_replay_guard \
@@ -1355,7 +1342,7 @@ for registration_lifecycle_mutation_family in \
 	require_occurrence_count 1 "$registration_lifecycle_mutation_family" \
 		"registration lifecycle ${registration_lifecycle_mutation_family} mutation family" "$fidelity_test"
 done
-require_line_count 1 '^const INITIAL_RATCHET_MUTATION_COUNT: usize = 223;$' \
+require_line_count 1 '^const INITIAL_RATCHET_MUTATION_COUNT: usize = 192;$' \
 	"$fidelity_test" "initial-ratchet exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn initial_ratchet_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, INITIAL_RATCHET_MUTATION_COUNT\);\s*\}' \
@@ -1364,11 +1351,6 @@ for initial_ratchet_mutation_family in \
 	initial_ratchet_fact_\{key\} \
 	initial_ratchet_derived_root_alias_size_drifts \
 	initial_ratchet_derived_root_accessor_substitutes_data \
-	initial_ratchet_server_output_consumer_borrows_value \
-	initial_ratchet_server_handoff_root_is_shadowed \
-	initial_ratchet_server_kdf_pending_is_shadowed \
-	initial_ratchet_beacon_root_is_shadowed \
-	initial_ratchet_beacon_kdf_pending_is_shadowed \
 	initial_ratchet_candidate_role_methods_swap_together \
 	initial_ratchet_left_and_right_slices_swap \
 	initial_ratchet_request_input_accessor_substituted \
@@ -1387,17 +1369,15 @@ for initial_ratchet_mutation_family in \
 	initial_ratchet_pv_honest_beacon_initial_material_uses_wrong_chain \
 	initial_ratchet_pv_server_root_is_shadowed; do
 	require_occurrence_count 1 "$initial_ratchet_mutation_family" \
-		"initial-ratchet ${initial_ratchet_mutation_family} mutation family" "$fidelity_test"
+		"initial-ratchet ${initial_ratchet_mutation_family} mutation family" "$fidelity_test" "$record_fidelity_effects"
 done
-require_line_count 1 '^const LATER_REGISTRATION_MUTATION_COUNT: usize = 422;$' \
+require_line_count 1 '^const LATER_REGISTRATION_MUTATION_COUNT: usize = 387;$' \
 	"$fidelity_test" "later-sequence registration exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn later_registration_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, LATER_REGISTRATION_MUTATION_COUNT\);\s*\}' \
 	"later-sequence registration mutation matrix count assertion" "$fidelity_test"
 for later_registration_mutation_family in \
 	later_registration_fact_\{key\} \
-	later_registration_beacon_first_sequence_gate_\{name\} \
-	later_registration_beacon_first_sequence_gate_after_binding \
 	later_registration_adapter_adds_first_sequence_gate \
 	later_registration_core_begin_entry_substituted \
 	later_registration_core_staged_sequence_substituted \
@@ -1422,7 +1402,7 @@ for later_registration_mutation_family in \
 	later_registration_checker_result_\{index\}_polarity_mutated \
 	later_registration_checker_query_count_mutated; do
 	require_occurrence_count 1 "$later_registration_mutation_family" \
-		"later-sequence registration ${later_registration_mutation_family} mutation family" "$fidelity_test"
+		"later-sequence registration ${later_registration_mutation_family} mutation family" "$fidelity_test" "$record_fidelity_effects"
 done
 require_line_count 1 '^\s*"later_registration_make_scenario_removed",$' \
 	"$fidelity_test" "later-sequence registration scenario-removal mutation"
@@ -1466,16 +1446,6 @@ for mutation_name in \
 	reordered_phase2_schema_fields \
 	omitted_phase2_schema_field \
 	renamed_phase2_schema_field \
-	swapped_phase2_server_identity_mapping \
-	swapped_phase2_server_ephemeral_mapping \
-	swapped_phase2_server_kem_mapping \
-	swapped_phase2_server_frame_mapping \
-	swapped_phase2_server_key_id_mapping \
-	swapped_phase2_beacon_identity_mapping \
-	swapped_phase2_beacon_ephemeral_mapping \
-	swapped_phase2_beacon_kem_mapping \
-	swapped_phase2_beacon_frame_mapping \
-	swapped_phase2_beacon_key_id_mapping \
 	agreement_without_selected_pqpk \
 	agreement_without_kem_ciphertext \
 	ctx_without_key \
@@ -1485,10 +1455,624 @@ for mutation_name in \
 	ctx_without_sequence \
 	ctx_without_sender_id; do
 	require_occurrence_count 1 "\"${mutation_name}\"" \
-		"transcript-fidelity ${mutation_name} mutation" "$fidelity_test"
+		"transcript-fidelity ${mutation_name} mutation" "$fidelity_test" "$record_fidelity_effects"
 done
+# The registration source controls moved with their production logic into extracted core phases.
+# Retain the independent model/record/kernel controls above and pin the actual new operands,
+# continuations, negative-test execution, and both mutable source snapshots here.
+fidelity_effects=tests/fidelity/registration_effects.rs
+require_line_count 1 '^#\[path = "fidelity/registration_effects\.rs"\]$' \
+	"$fidelity_test" "extracted registration fidelity module import"
+require_line_count 1 '^mod registration_effects;$' "$fidelity_test" \
+	"extracted registration fidelity module binding"
+require_line_count 4 '^#\[test\]$' "$fidelity_effects" \
+	"extracted registration fidelity tests"
+for registration_fidelity_test in \
+	extracted_registration_operand_and_continuation_mutations_are_rejected \
+	registration_failure_bypass_and_publication_order_controls_are_rejected \
+	registration_capabilities_keep_private_provenance_and_native_erasure \
+	registration_wire_fields_and_attached_signature_roles_cannot_be_substituted; do
+	require_line_count 1 "^fn ${registration_fidelity_test}\\(\\) \\{$" \
+		"$fidelity_effects" "extracted registration ${registration_fidelity_test} test"
+done
+for registration_source in registration agreement; do
+	require_line_count 1 "^[[:space:]]*core_${registration_source}: String,$" \
+		"$fidelity_test" "mutable core ${registration_source} source"
+	require_line_count 1 "^[[:space:]]*core_${registration_source}: CORE_${registration_source^^}\\.to_owned\\(\\),$" \
+		"$fidelity_test" "production core ${registration_source} source snapshot"
+done
+python3 - "$fidelity_test" "$fidelity_effects" "$record_fidelity_effects" "$peer_fidelity_effects" "$transport_fidelity_effects" <<'PY_REGISTRATION_FIDELITY'
+import ast
+import hashlib
+import json
+from pathlib import Path
+import re
+import sys
+
+main = Path(sys.argv[1]).read_text()
+source = Path(sys.argv[2]).read_text()
+records = Path(sys.argv[3]).read_text()
+peers = Path(sys.argv[4]).read_text()
+transport = Path(sys.argv[5]).read_text()
+
+def require(condition, label):
+    if not condition:
+        raise SystemExit(f"registration fidelity inventory changed: {label}")
+
+def function(text, name):
+    found = re.search(r"(?ms)^(?:pub\(super\) )?fn " + name + r"\b.*?^\}", text)
+    require(found is not None, f"function {name}")
+    return re.sub(r"\s+", "", found[0])
+
+def once(text, value, label):
+    require(text.count(value) == 1, label)
+
+expected_counts = {'ADDITIONAL': 58,
+ 'AUTHENTICATION': 30,
+ 'NATIVE_AUTHENTICATION': 8,
+ 'AGREEMENT': 8,
+ 'COMPLETION': 9,
+ 'BEACON_LIFECYCLE': 19,
+ 'SERVER_LIFECYCLE': 5,
+ 'DH_REQUESTS': 8,
+ 'NATIVE_AGREEMENT': 7}
+tables = {}
+for name, count in expected_counts.items():
+    found = re.search(r"^const " + name + r":.*?= &\[(.*?)^\];", source, re.M | re.S)
+    require(found is not None, f"reviewed {name} contracts")
+    tables[name] = ast.literal_eval("[" + found[1] + "]")
+    require(len(tables[name]) == count, f"reviewed {name} contract count")
+
+# These exact security operands replace the obsolete adapter-local control markers.
+# Authentication, initial record metadata, all eight DH roles, and actual native
+# signature/KEM/HKDF interpretation retain the reviewed field and continuation order.
+reviewed = {'AUTHENTICATION': [("impl<'a> InitPacket",
+                     'fields',
+                     'InitFields{identity_key:self.identity_key,pre_key:self.pre_key,one_time_key:self.one_time_key,pq_key:self.pq_key,mldsa_public_key:self.mldsa_public_key,}',
+                     'MLDSA request transcript field order and pins'),
+                    ('',
+                     'begin_init_authentication',
+                     'build_init_transcript(packet.fields(),server.identity_key_id,&server.identity_public_key,server_pin.public_key(),)',
+                     'MLDSA request transcript field order and pins'),
+                    ("impl<'a> InitHash",
+                     'request',
+                     'HashRequest::Single(&self.input)',
+                     'MLDSA exact init hash request'),
+                    ("impl<'a> InitHash",
+                     'resume',
+                     'input:build_signature_input(AuthRole::Beacon,&init_hash)',
+                     'MLDSA request verification precedes classical and stateful work'),
+                    ("impl<'a> InitMldsaVerification",
+                     'request',
+                     'MldsaVerificationRequest{public_key:self.state.packet.mldsa_public_key,input:&self.input,context:SIGNING_CONTEXT,signature:self.state.packet.signature,}',
+                     'MLDSA request verification precedes classical and stateful work'),
+                    ("impl<'a> InitMldsaVerification",
+                     'resume',
+                     'if!verified||self.state.packet.identity_key[0]!=SIGN_TYPE_ED25519{returnInitAuthentication::Rejected;}',
+                     'MLDSA request verification precedes classical and stateful work'),
+                    ("impl<'a> InitMldsaVerification",
+                     'resume',
+                     'stage:SignedKeyStage::PqKey',
+                     'Phase-1 Server source evaluation order'),
+                    ("impl<'a> InitEd25519Verification",
+                     'request',
+                     'SignedKeyStage::PreKey=>self.state.packet.pre_key,SignedKeyStage::OneTimeKey=>self.state.packet.one_time_key,SignedKeyStage::PqKey=>self.state.packet.pq_key,',
+                     'Phase-1 Server signature request mapping'),
+                    ("impl<'a> InitEd25519Verification",
+                     'request',
+                     'Ed25519VerificationRequest{public_key:&self.public_key,signed,}',
+                     'Phase-1 Server identity decoder'),
+                    ("impl<'a> InitEd25519Verification",
+                     'resume',
+                     'letSome(opened)=openedelse{returnInitAuthentication::Rejected;};',
+                     'Phase-1 Server signature failure'),
+                    ("impl<'a> InitEd25519Verification",
+                     'resume',
+                     'ifopened!=&self.request().signed[64..]{returnInitAuthentication::Rejected;}',
+                     'Phase-1 Server exact attached message'),
+                    ("impl<'a> InitEd25519Verification",
+                     'resume',
+                     'InitKex::from_encoded(*self.state.packet.identity_key,self.pre_key,one_time_key,self.pq_key,)',
+                     'Phase-1 Server from_encoded mapping'),
+                    ("impl<'a> InitEd25519Verification",
+                     'resume',
+                     'letOk(registration)=validate_init_kex(message)else{returnInitAuthentication::Rejected;};',
+                     'Phase-1 Server typed tag validation'),
+                    ("impl<'a> InitBeaconFingerprint",
+                     'request',
+                     'HashRequest::Single(self.state.packet.mldsa_public_key)',
+                     'MLDSA public-key fingerprint'),
+                    ("impl<'a> InitBeaconFingerprint",
+                     'resume',
+                     'RegistrationBinding::new(self.server_pin,self.state.init_hash,*self.registration.beacon_identity_public_key(),fingerprint,)',
+                     'MLDSA private accepted-token context'),
+                    ('',
+                     'begin_response_authentication',
+                     'build_response_prefix(pending.binding.init_hash(),&packet.public.identity_key,&packet.public.ephemeral_key,&packet.public.kem_cipher_text,application_len,)',
+                     'MLDSA complete response transcript'),
+                    ("impl<'a> ResponseHash",
+                     'request',
+                     'HashRequest::Triple([&self.prefix,self.packet.application,&self.assigned_id])',
+                     'MLDSA complete response transcript'),
+                    ("impl<'a> ResponseHash",
+                     'resume',
+                     'input:build_signature_input(AuthRole::Server,&digest)',
+                     'MLDSA pinned response verification before KEM, DH and installation'),
+                    ("impl<'a> ResponseMldsaVerification",
+                     'request',
+                     'MldsaVerificationRequest{public_key:self.pending.binding.server_pin().public_key(),input:&self.input,context:SIGNING_CONTEXT,signature:self.packet.signature,}',
+                     'MLDSA pinned response verification before KEM, DH and installation'),
+                    ("impl<'a> ResponseMldsaVerification",
+                     'resume',
+                     'if!verified{returnErr(self.pending.abort());}',
+                     'MLDSA pinned response verification before KEM, DH and installation'),
+                    ('impl BeaconInitState',
+                     'fields',
+                     'InitFields{identity_key:self.started.message.identity_key(),pre_key:&self.pre_key,one_time_key:&self.one_time_key,pq_key:&self.pq_key,mldsa_public_key:&self.beacon_mldsa,}',
+                     'Phase-1 Beacon field mapping'),
+                    ('impl BeaconEd25519Signing',
+                     'request',
+                     'SignedKeyStage::PreKey=>self.state.started.message.prekey(),SignedKeyStage::OneTimeKey=>self.state.started.message.one_time_key(),SignedKeyStage::PqKey=>self.state.started.message.pq_key(),',
+                     'Phase-1 Beacon attached-signature inputs'),
+                    ('impl BeaconEd25519Signing',
+                     'request',
+                     'public_key:&self.state.beacon_identity,role:AuthRole::Beacon,message,',
+                     'Phase-1 Beacon attached-signature identity'),
+                    ('impl BeaconEd25519Signing',
+                     'resume',
+                     'ifsigned.get(64..)!=Some(self.request().message){returnBeaconInitEffect::Rejected(self.state.original_control);}',
+                     'Phase-1 Beacon exact signed message'),
+                    ('impl BeaconFingerprint',
+                     'resume',
+                     'build_init_transcript(self.state.fields(),server.identity_key_id,&server.identity_public_key,self.state.server_pin.public_key(),)',
+                     'MLDSA request transcript field order and pins'),
+                    ('impl BeaconInitHash',
+                     'resume',
+                     'input:build_signature_input(AuthRole::Beacon,&init_hash)',
+                     'MLDSA request signing and retained hash before publication'),
+                    ('impl BeaconMldsaSigning',
+                     'request',
+                     'role:AuthRole::Beacon,public_key:&self.state.beacon_mldsa,input:&self.input,context:SIGNING_CONTEXT,',
+                     'MLDSA request signing and retained hash before publication'),
+                    ('impl BeaconMldsaSigning',
+                     'resume',
+                     'RegistrationBinding::new(self.state.server_pin,self.init_hash,self.state.beacon_identity,self.fingerprint,)',
+                     'MLDSA request signing and retained hash before publication'),
+                    ('impl BeaconInitReady',
+                     'publish',
+                     'letencoded=matchencoded{Some(encoded)=>encoded,None=>returnErr(self.state.original_control),};',
+                     'registration serialization-to-InitSent order'),
+                    ('impl BeaconInitReady',
+                     'publish',
+                     'pending:BeaconPending{control:self.state.started.state,binding:self.binding,},encoded,',
+                     'registration Fresh success transition and restoration')],
+ 'NATIVE_AUTHENTICATION': [('execute_hash',
+                            'forpartinparts{state.update(part);}',
+                            'MLDSA adapter exact hash request interpretation'),
+                           ('verify_requested',
+                            'VerifyingKey::decode(encoded_key).verify_with_context(request.input,&request.context,&signature,)',
+                            'MLDSA canonical parsing and verification context'),
+                           ('verify_requested',
+                            'Signature::<MlDsa65>::try_from(request.signature.as_slice())',
+                            'MLDSA canonical parsing and verification context'),
+                           ('verify_requested',
+                            '<&EncodedVerifyingKey<MlDsa65>>::try_from(request.public_key.as_slice())',
+                            'MLDSA canonical parsing and verification context'),
+                           ('sign_requested',
+                            'ifself.public_key()!=*request.public_key{returnNone;}',
+                            'MLDSA signing identity selection'),
+                           ('sign_requested',
+                            '.sign_deterministic(request.input,&request.context)',
+                            'MLDSA signing context and input'),
+                           ('authenticate_init',
+                            'letverified=verify_requested(&pending.request());pending.resume(verified)',
+                            'MLDSA actual init verifier response'),
+                           ('authenticate_response',
+                            'letverified=verify_requested(&pending.request());pending.resume(verified)',
+                            'MLDSA actual response verifier response')],
+ 'COMPLETION': [('',
+                 'begin_beacon_completion',
+                 'start_beacon_candidate_ratchet_kdf(&agreement.candidate,agreement.root.as_bytes(),)',
+                 'initial ratchet Beacon root and candidate handoff'),
+                ('',
+                 'begin_server_completion',
+                 'ifapplication.is_empty()||!agreement.binding.matches_server(current_pin){returnErr(rejected);}',
+                 'MLDSA token binding and signed publication precede commit'),
+                ('',
+                 'begin_server_completion',
+                 'server_prepare_commit(control,agreement.pending,current_pin.binding(),availability,)',
+                 'registration Server candidate preparation'),
+                ('',
+                 'begin_server_completion',
+                 'start_server_candidate_ratchet_kdf(&candidate,agreement.root.as_bytes())',
+                 'initial ratchet Server root and candidate handoff'),
+                ("impl<'a> ServerResponseHash",
+                 'request',
+                 'HashRequest::Triple([&self.prefix,self.ciphertext,&self.assigned_id])',
+                 'MLDSA complete response transcript'),
+                ("impl<'a> ServerResponseSigning",
+                 'request',
+                 'role:AuthRole::Server,public_key:self.binding.server_pin().public_key(),input:&self.input,context:SIGNING_CONTEXT,',
+                 'MLDSA token binding and signed publication precede commit'),
+                ('impl ServerResponseReady',
+                 'message',
+                 'SignedResponseView{identity_key:self.candidate.server_identity_public_key(),ephemeral_key:self.candidate.ephemeral_public_key(),kem_cipher_text:self.candidate.kem_ciphertext(),key_id:self.candidate.key_id(),application_ciphertext:self.ciphertext,signature:&self.signature,}',
+                 'Phase-2 signed response field mapping'),
+                ('impl ServerResponseReady',
+                 'publish',
+                 'letencoded=matchencoded{Some(encoded)=>encoded,None=>returnErr(rejected),};',
+                 'MLDSA token binding and signed publication precede commit'),
+                ('impl ServerResponseReady',
+                 'publish',
+                 'letbinding=self.binding.finish(self.candidate.key_id());let(control,_)=crate::pqxdh::server_commit(self.candidate);',
+                 'MLDSA token binding and signed publication precede commit')],
+ 'DH_REQUESTS': ['(AgreementInput::Server{registration,..},DhPosition::First)=>DhRequest{secret_role:DhSecretRole::LocalIdentity,public_key:registration.beacon_prekey_public_key(),}',
+                 '(AgreementInput::Server{..},DhPosition::Second)=>DhRequest{secret_role:DhSecretRole::ServerEphemeral,public_key:&self.state.remote_identity,}',
+                 '(AgreementInput::Server{registration,..},DhPosition::Third)=>DhRequest{secret_role:DhSecretRole::ServerEphemeral,public_key:registration.beacon_prekey_public_key(),}',
+                 '(AgreementInput::Server{registration,..},DhPosition::Fourth)=>DhRequest{secret_role:DhSecretRole::ServerEphemeral,public_key:registration.beacon_one_time_public_key(),}',
+                 '(AgreementInput::Beacon{..},DhPosition::First)=>DhRequest{secret_role:DhSecretRole::BeaconPrekey,public_key:&self.state.remote_identity,}',
+                 '(AgreementInput::Beacon{response,..},DhPosition::Second)=>DhRequest{secret_role:DhSecretRole::LocalIdentity,public_key:&response.ephemeral_key,}',
+                 '(AgreementInput::Beacon{response,..},DhPosition::Third)=>DhRequest{secret_role:DhSecretRole::BeaconPrekey,public_key:&response.ephemeral_key,}',
+                 '(AgreementInput::Beacon{response,..},DhPosition::Fourth)=>DhRequest{secret_role:DhSecretRole::BeaconOneTime,public_key:&response.ephemeral_key,}'],
+ 'NATIVE_AGREEMENT': ['crypto_kem::mlkem768::PublicKey::from_bytes(pending.public_key()?)',
+                      'crypto_kem::mlkem768::Ciphertext::from_bytes(pending.ciphertext()?)',
+                      'crypto_kem::mlkem768::decapsulate(&ciphertext,keys.beacon_kem?)',
+                      'crypto_scalarmult::scalarmult(secret,request.public_key)',
+                      'crypto_kdf::hkdf::sha512::extract(None,request.input)',
+                      'crypto_kdf::hkdf::sha512::expand(32,Some(request.info),&prk)',
+                      'pending.resume(root)']}
+for name, rows in reviewed.items():
+    require(tables[name] == rows, f"reviewed {name} operands and order")
+selected_additional = [('core-pqxdh',
+  'impl RootKeyInput',
+  'clear',
+  '*self=Self{bytes:[0;192]};',
+  'registration consumed root transcript is cleared'),
+ ('server',
+  '',
+  'get_shared_secret',
+  'lookup.resume(consumed)',
+  'registration Server replay-status gate'),
+ ('server',
+  '',
+  'get_shared_secret',
+  'self.consumed_registrations.try_reserve(1).ok()?;',
+  'registration Server consumed-set reservation'),
+ ('beacon',
+  '',
+  'finish_registration',
+  'ResponsePacket::from_slices(response.identity_key,response.ephemeral_key,response.kem_cipher_text,response.key_id,response.app_cipher_text,response.signature,)',
+  'registration complete fixed-width authenticated response mapping'),
+ ('beacon',
+  '',
+  'finish_registration',
+  'InitialRatchetKdfResponse::from_bytes(crate::ratchet::initial_ratchet_hkdf(pending.request()),)',
+  'initial ratchet Beacon exact native 64-byte response'),
+ ('server',
+  '',
+  'build_registration_response',
+  'InitialRatchetKdfResponse::from_bytes(crate::ratchet::initial_ratchet_hkdf(pending.request()),)',
+  'initial ratchet Server exact native 64-byte response'),
+ ('registration',
+  'impl AuthenticatedInit',
+  'into_parts',
+  '(self.registration,self.binding)',
+  'registration authenticated request decomposition'),
+ ('registration',
+  "impl<'a> AuthenticatedResponse",
+  'into_parts',
+  '(self.pending.control,self.pending.binding,self.packet.public,self.packet.application,)',
+  'registration authenticated response decomposition'),
+ ('registration',
+  "impl<'a> BeaconInitialKdf",
+  'resume',
+  'crate::pqxdh::resume_initial_ratchet_kdf(self.pending,response)',
+  'initial ratchet Beacon same pending and response'),
+ ('registration',
+  "impl<'a> ServerInitialKdf",
+  'resume',
+  'crate::pqxdh::resume_initial_ratchet_kdf(self.pending,response)',
+  'initial ratchet Server same pending and response'),
+ ('registration',
+  "impl<'a> CompletedBeacon",
+  'into_parts',
+  '(self.control,self.binding,self.kernel,self.application)',
+  'registration completed Beacon exact result parts'),
+ ('registration',
+  'impl<Encoded> PublishedServerResponse',
+  'into_parts',
+  '(self.control,self.binding,self.kernel,self.encoded)',
+  'registration published Server exact result parts'),
+ ('agreement',
+  "impl<'a> RootKdfPending",
+  'resume',
+  'AgreementCandidate::Server{pending,..}=>pending.root_key_input_mut().clear(),AgreementCandidate::Beacon{candidate,..}=>candidate.root_key_input_mut().clear(),',
+  'registration immediate root transcript erasure'),
+ ('auth',
+  '',
+  'execute_hash',
+  'HashRequest::Single(input)=>state.update(input)',
+  'MLDSA adapter exact single hash request'),
+ ('auth',
+  '',
+  'authenticate_init',
+  'libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key)',
+  'Phase-1 actual requested Ed25519 verifier identity'),
+ ('auth',
+  '',
+  'authenticate_init',
+  'libsodium_rs::crypto_sign::verify(request.signed,&public_key)',
+  'Phase-1 actual requested Ed25519 signature verification'),
+ ('auth',
+  '',
+  'authenticate_init',
+  'pending.resume(opened.as_deref())',
+  'Phase-1 actual Ed25519 opened-message continuation'),
+ ('auth',
+  '',
+  'authenticate_response',
+  'begin_response_authentication(pending,packet)?;letdigest=execute_hash(&pending.request());letpending=pending.resume(digest)?;letverified=verify_requested(&pending.request());pending.resume(verified)',
+  'MLDSA native response hash-before-verification order'),
+ ('pqxdh',
+  '',
+  'execute_agreement',
+  'crypto_sign::PublicKey::from_bytes(pending.public_key())',
+  'registration exact Ed25519 conversion input'),
+ ('pqxdh',
+  '',
+  'execute_agreement',
+  '.and_then(|key|crypto_sign::ed25519_pk_to_curve25519(&key).ok());pending.resume(converted)',
+  'registration actual public conversion response'),
+ ('pqxdh',
+  '',
+  'execute_agreement',
+  'crypto_sign::ed25519_sk_to_curve25519(keys.identity_secret).ok().map(Zeroizing::new);pending.resume(local_identity.is_some())',
+  'registration actual secret conversion response'),
+ ('pqxdh',
+  '',
+  'execute_agreement',
+  'server_ephemeral=crypto_kx::KeyPair::generate().ok();',
+  'registration actual fresh ephemeral generation'),
+ ('pqxdh',
+  '',
+  'execute_agreement',
+  'Some((*ciphertext.as_bytes(),*shared.as_bytes()))',
+  'registration actual encapsulation result parts'),
+ ('pqxdh',
+  '',
+  'execute_agreement',
+  'DhSecretRole::LocalIdentity=>{local_identity.as_ref().map(|key|key.as_slice())}',
+  'registration local identity secret-role interpretation'),
+ ('pqxdh',
+  '',
+  'execute_agreement',
+  'DhSecretRole::ServerEphemeral=>server_ephemeral.as_ref().map(|key|key.secret_key.as_bytes()),',
+  'registration generated ephemeral secret-role interpretation'),
+ ('pqxdh',
+  '',
+  'execute_agreement',
+  'DhSecretRole::BeaconPrekey=>keys.beacon_prekey.map(|key|key.as_bytes()),',
+  'registration beacon prekey secret-role interpretation'),
+ ('pqxdh',
+  '',
+  'execute_agreement',
+  'DhSecretRole::BeaconOneTime=>keys.beacon_one_time.map(|key|key.as_bytes()),',
+  'registration beacon one-time secret-role interpretation'),
+ ('beacon',
+  '',
+  'finish_registration',
+  'RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:Some(&prekey.secret_key),beacon_one_time:Some(&onetime_key.secret_key),beacon_kem:Some(&pq_key.secret_key),}',
+  'registration Beacon secret handles belong to pending request'),
+ ('server',
+  '',
+  'get_shared_secret',
+  'InitPacket::from_slices(registration.identity_key,registration.pre_key,registration.one_time_key,registration.pq_key,registration.mldsa_public_key,registration.signature,)',
+  'registration complete fixed-width init parser mapping'),
+ ('server',
+  '',
+  'get_shared_secret',
+  'RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:None,beacon_one_time:None,beacon_kem:None,}',
+  'registration Server local secret handles'),
+ ('server',
+  '',
+  'build_registration_response',
+  'KexResponse{identity_key:message.identity_key,ephemeral_key:message.ephemeral_key,kem_cipher_text:message.kem_cipher_text,key_id:message.key_id,app_cipher_text:message.application_ciphertext,signature:message.signature,}',
+  'Phase-2 complete signed serializer mapping'),
+ ('server',
+  '',
+  'build_registration_response',
+  'letremote_kid=pending.request();',
+  'registration assigned target comes from published binding'),
+ ('server',
+  '',
+  'build_registration_response',
+  'crypto_sign::PublicKey::from_bytes(peer.binding().beacon_identity_public_key()).ok()?',
+  'registration established peer identity comes from binding'),
+ ('server',
+  '',
+  'build_registration_response',
+  'entry.insert(EstablishedRemote::from_peer(public_key,peer));',
+  'registration established peer retains exact identity kernel and binding'),
+ ('server',
+  '',
+  'build_registration_response',
+  'Some(RegResponse{serialized:buffer,kid:remote_kid,})',
+  'registration returned target and serialized payload')]
+# Keep the original extracted agreement replay-status rejection as well as the new owned lookup.
+selected_additional.append(('agreement', '', 'begin_server_agreement',
+    'ifpqxdh::validate_registration_status(status).is_err(){returnAgreementEffect::Rejected(None);}',
+    'registration core replay status gate'))
+for row in selected_additional:
+    require(tables["ADDITIONAL"].count(row) == 1, f"actual core/native handoff: {row[4]}")
+
+for name, call in [
+    ("validate_phase1_source", "authentication"),
+    ("validate_mldsa_source", "runtime"),
+    ("validate_phase2_source", "runtime"),
+    ("validate_endpoint_frame_context_wiring", "runtime"),
+    ("validate_registration_lifecycle", "lifecycle"),
+    ("validate_initial_ratchet_fidelity", "runtime"),
+    ("validate_later_registration_fidelity", "runtime"),
+]:
+    once(function(main, name), f"registration_effects::{call}(snapshot)?;", f"{name} delegates actual registration checks")
+
+for name, statements in {
+    "runtime": ["authentication(snapshot)?;", "inADDITIONAL{check(snapshot,name,scope,function,wanted,label)?;}", "agreement(snapshot)?;", "completion(snapshot)?;"],
+    "lifecycle": ["runtime(snapshot)?;", "inBEACON_LIFECYCLE", "inSERVER_LIFECYCLE"],
+    "authentication": ["inAUTHENTICATION", "inNATIVE_AUTHENTICATION"],
+    "agreement": ["inAGREEMENT", "inDH_REQUESTS", "inNATIVE_AGREEMENT"],
+    "completion": ["inCOMPLETION"],
+}.items():
+    text = function(source, name)
+    for statement in statements:
+        once(text, statement, f"{name}: {statement}")
+
+runtime = function(source, "runtime")
+for declaration in [
+    "#[cfg_attr(not(hax_compilation),derive(zeroize::Zeroize,zeroize::ZeroizeOnDrop))]pubstructRootKeyInput{bytes:[u8;ROOT_KEY_INPUT_SIZE],}",
+    "pubstructAuthenticatedInit{registration:VerifiedInitKex,binding:RegistrationBinding,}",
+    "pubstructAuthenticatedResponse<'a>{pending:BeaconPending,packet:ResponsePacket<'a>,}",
+    "pubstructBeaconPending{control:crate::pqxdh::BeaconInitSent,binding:RegistrationBinding,}",
+]:
+    once(runtime, declaration, f"actual private provenance/native erasure declaration: {declaration}")
+
+for name, prefix in [("source", "&snapshot"), ("source_mut", "&mutsnapshot")]:
+    text = function(source, name)
+    once(text, '"registration"=>' + prefix + '.core_registration,', f"{name} selects actual core registration source")
+    once(text, '"agreement"=>' + prefix + '.core_agreement,', f"{name} selects actual core agreement source")
+once(function(source, "check"), 'require_once(&body(snapshot,name,scope,function)?,&compact(wanted),label,)', "exact contract checks are active")
+once(function(source, "replace_contract"), 'source.replace_range(start..end,to);', "actual source mutation is active")
+
+matrix = function(source, "extracted_registration_operand_and_continuation_mutations_are_rejected")
+for statement in [
+    "contracts.extend_from_slice(ADDITIONAL);", "inAUTHENTICATION.iter().chain(COMPLETION)",
+    "inAGREEMENT", "inNATIVE_AUTHENTICATION", "inBEACON_LIFECYCLE", "inDH_REQUESTS", "inNATIVE_AGREEMENT",
+    "ifwanted.contains(from)", "wanted.replacen(from,to,1)",
+    'assert_eq!(count,507,"reviewedregistrationcoverageunexpectedlychanged");',
+]:
+    once(matrix, statement, f"507 exact operand/continuation controls: {statement}")
+once(function(source, "registration_failure_bypass_and_publication_order_controls_are_rejected"), "assert_eq!(count,28);", "28 failure/bypass/order controls")
+once(function(source, "registration_wire_fields_and_attached_signature_roles_cannot_be_substituted"), "assert_eq!(checked,54);", "54 field/signature-role substitution controls")
+capabilities = function(source, "registration_capabilities_keep_private_provenance_and_native_erasure")
+for statement in ["pubstructAuthenticatedInit", "pubstructAuthenticatedResponse", "pubstructBeaconPending", "ZeroizeOnDrop"]:
+    require(statement in capabilities, f"private capability and native erasure control: {statement}")
+require(capabilities.count(r"\npubstructRootKeyInput") == 2, "native erasure control mutates the actual RootKeyInput declaration")
+require(source.count("lifecycle(&baseline).unwrap();") == 4, "every new matrix checks its positive baseline")
+require(source.count("lifecycle(&changed).is_err()") == 6, "all six new negative-control dispatches reject their mutant")
+
+# Actual core-owned record continuations supersede the complete-record callback seam.
+# Pin every reviewed body/field/mutation tuple, plus execution of all validators and controls.
+record_pins = {'BODIES': {'count': 58,
+            'sha256': '27ac54347b73b9856c5bc9957ee3814af7975d7e8a1da86e7d67646fac6cd0af'},
+ 'DECLARATIONS': {'count': 11,
+                  'sha256': 'd146e391f621db1b6c2ad9794486fd5da41470811b93474bcae8dbbedf0c81b2'},
+ 'MIGRATED': {'count': 87,
+              'sha256': 'ffb1d20d8b6799e9a5c2f932c81018bc7acad629015ce9741665b69f277bb142'}}
+for name, pin in record_pins.items():
+    found = re.search(r"^const " + name + r":.*?= &\[(.*?)^\];", records, re.M | re.S)
+    require(found is not None, f"reviewed record {name} table")
+    rows = ast.literal_eval("[" + found[1] + "]")
+    require(len(rows) == pin["count"], f"reviewed record {name} count")
+    digest = hashlib.sha256(json.dumps(rows, separators=(",", ":")).encode()).hexdigest()
+    require(digest == pin["sha256"], f"reviewed record {name} operands/order/failure controls")
+for name in ["validate_cryptoframe_source", "validate_record_opening_source", "validate_ratchet_effect_driver", "validate_later_registration_fidelity"]:
+    once(function(main, name), "record_effects::validate(snapshot)?;", f"{name} delegates actual record continuations")
+once(function(source, "lifecycle"), "super::record_effects::validate(snapshot)?;", "registration lifecycle composes actual record continuations")
+for name in ["validate_ratchet_effect_driver", "validate_later_registration_fidelity"]:
+    once(function(main, name), "validate_record_opening_source(snapshot)?;", f"{name} retains exact core open guards")
+for statement in ["inBODIES{", "actual!=expected", "inDECLARATIONS{", 'core.contains("take_kernel")', 'core.contains("usealloc::")', 'core.contains("usestd::")']:
+    once(function(records, "validate"), statement, f"record validator remains active: {statement}")
+for name, constant in [
+    ("exact_record_controller_bodies_and_private_requests_are_required", "BODY_MUTATION_COUNT"),
+    ("record_request_privacy_and_part_types_cannot_be_weakened", "DECLARATION_MUTATION_COUNT"),
+    ("every_moved_record_operand_failure_and_bypass_control_is_rejected", "MIGRATED_CONTROL_COUNT"),
+]:
+    text = function(records, name)
+    once(text, f"assert_eq!(checked,{constant});", f"record control count {name}")
+    require("validate(&baseline).unwrap();" in text, f"record positive baseline {name}")
+body_matrix = function(records, "exact_record_controller_bodies_and_private_requests_are_required")
+for statement in ["inBODIES{", "super::registration_effects::replace_contract(", "validate(&changed).is_err()"]:
+    once(body_matrix, statement, f"actual record body mutation execution: {statement}")
+require(body_matrix.count("recordbodybypass") == 2 and body_matrix.count("recordearlyreturn") == 1, "both record body bypass controls execute")
+once(function(records, "change_declaration"), "source.replace_range(", "actual record declaration mutation executes")
+once(function(records, "record_request_privacy_and_part_types_cannot_be_weakened"), "change_declaration(&mutchanged,declaration,from,to);", "record declaration mutations execute")
+relocated = function(records, "every_moved_record_operand_failure_and_bypass_control_is_rejected")
+for statement in ["inMIGRATED{", "super::registration_effects::replace_contract(", "super::validate(&changed).unwrap_err()", "error.contains(diagnostic)"]:
+    once(relocated, statement, f"relocated record controls execute: {statement}")
+for name, count in [("BODY_MUTATION_COUNT", 116), ("DECLARATION_MUTATION_COUNT", 11), ("MIGRATED_CONTROL_COUNT", 87)]:
+    once(records, f"const {name}: usize = {count};", f"reviewed exact record count {name}")
+
+
+# Core peer owners bind actual replay and vacant-insertion replies to one-use continuations.
+# The native collection implementation remains an explicit boundary; retain exact handoffs.
+peer_pins = {'BODIES': {'count': 30,
+            'sha256': 'c43a187993358b3d2be4ed90521cb973ff980d77e7735dced2daad19ff1eb0ce'},
+ 'DECLARATIONS': {'count': 10,
+                  'sha256': '498b374eb32ee0e41abccf9c656f4965058ee2766bffbe8483f2ee358eb7567a'}}
+for name, pin in peer_pins.items():
+    found = re.search(r"^const " + name + r":.*?= &\[(.*?)^\];", peers, re.M | re.S)
+    require(found is not None, f"reviewed peer {name} table")
+    rows = ast.literal_eval("[" + found[1] + "]")
+    require(len(rows) == pin["count"], f"reviewed peer {name} count")
+    digest = hashlib.sha256(json.dumps(rows, separators=(",", ":")).encode()).hexdigest()
+    require(digest == pin["sha256"], f"reviewed peer {name} operands/order/ownership")
+once(function(source, "lifecycle"), "super::peer_effects::validate(snapshot)?;", "registration lifecycle composes peer collection effects")
+for name, prefix in [("source", "&snapshot"), ("source_mut", "&mutsnapshot")]:
+    once(function(source, name), '"peer"=>' + prefix + '.core_peer,', f"{name} selects actual core peer source")
+for name, prefix in [("source", "&snapshot"), ("replace_once", "&mutsnapshot")]:
+    text = function(peers, name)
+    for selected, field in [("peer", "core_peer"), ("shared", "adapter_shared"), ("server", "adapter_server")]:
+        once(text, '"' + selected + '"=>' + prefix + '.' + field + ',', f"peer {name} selects {selected}")
+peer_validator = function(peers, "validate")
+for statement in ["inBODIES{", "actual.matches(expected).count()==1", "actual==expected", "if!exact{", "inDECLARATIONS{", "raw.matches(declaration).count()!=1", 'raw.contains("usealloc::")', 'raw.contains("usestd::")', 'raw.contains("#[derive(Clone")', 'raw.contains("#[derive(Copy")']:
+    once(peer_validator, statement, f"peer validator remains active: {statement}")
+once(function(peers, "selected_body"), "rust_body(raw,function)", "peer validator inspects actual Rust bodies")
+once(function(peers, "replace_once"), "raw.replace_range(", "peer mutations change actual source")
+peer_bodies = function(peers, "peer_controller_and_interpreter_omission_duplication_and_bypass_are_rejected")
+for statement in ["validate(&baseline).unwrap();", "inBODIES{", "String::new()", 'format!("{expected}{expected}")', '"panic!(\\"peerbypass\\")".to_owned()', "replace_once(&mutchanged,name,scope,expected,&replacement);", "validate(&changed).is_err()", "assert_eq!(checked,90);"]:
+    once(peer_bodies, statement, f"90 peer omission/duplication/body controls: {statement}")
+peer_declarations = function(peers, "peer_tokens_and_stored_metadata_cannot_expose_mutable_public_fields")
+for statement in ["validate(&baseline).unwrap();", "inDECLARATIONS{", 'format!("{}pub{}",&declaration[..start],&declaration[start..])', 'replace_once(&mutchanged,name,"",declaration,&altered);', "assert_eq!(checked,10);", '"#[derive(Clone)]"', '"#[derive(Copy)]"', '"usealloc::vec::Vec;"', '"usestd::collections::HashMap;"', "changed.core_peer.insert_str(0,prefix);"]:
+    once(peer_declarations, statement, f"peer private-field/escape control: {statement}")
+require(peer_declarations.count("validate(&changed).is_err()") == 2, "both peer field and ownership-escape matrices reject mutations")
+
+
+# Exact extracted transport policy, including every length slot and native admission call.
+transport_pin = {'count': 13, 'sha256': '68e389d1524f8d9b6b52fb35bfa737acda8c9b0a3795002fc5d4e30682dffd28'}
+found = re.search(r"^const CONTRACTS:.*?= &\[(.*?)^\];", transport, re.M | re.S)
+require(found is not None, "reviewed transport contracts")
+rows = ast.literal_eval("[" + found[1] + "]")
+require(len(rows) == transport_pin["count"], "reviewed transport contract count")
+require(hashlib.sha256(json.dumps(rows, separators=(",", ":")).encode()).hexdigest() == transport_pin["sha256"], "reviewed transport exact operands and field order")
+once(function(main, "validate_cryptoframe_source"), "validate_cbor_transport(snapshot)?;", "frame validation composes complete transport admission")
+once(function(main, "validate_cbor_transport"), "transport::validate(snapshot)?;", "CBOR validation delegates exact extracted transport bodies")
+once(function(main, "cryptoframe_wire_mutation_matrix_is_complete_and_rejected"),
+    'ifname=="cbor_response_size_precheck"{replace_once(&mutsnapshot.adapter_server,from,to)}else{replace_once(&mutsnapshot.transport_sizing,from,to)}',
+    "response preflight control retains actual native/core mutation routing")
+transport_validator = function(transport, "validate")
+for statement in ["inCONTRACTS{", "rust_body(&snapshot.transport_sizing,name)?!=expected", '"pubconstMAX_MESSAGE_SIZE:usize=33_554_432;"', '"pubconstREGISTRATION_WITNESS:[u8;1]=[0xff];"']:
+    once(transport_validator, statement, f"transport validator remains active: {statement}")
+transport_controls = function(transport, "extracted_transport_policy_bypass_controls_are_rejected")
+for statement in ["validate(&original).unwrap();", "incontrols{", "expected.matches(from).count()", "expected.replacen(from,to,1)", "replace_body(&mutchanged.transport_sizing,name,&changed_body);", "checked+=1;", "assert_eq!(checked,TRANSPORT_MUTATION_COUNT);"]:
+    require(statement in transport_controls, f"actual transport source control execution: {statement}")
+for statement in ['"complete-messageconstant"', '"registrationwitnessconstant"', '[("encoded_init_len",6),("encoded_response_len",5)]', "forfieldin0..fields{", 'format!(".bytes(lengths[{field}])")', 'format!(".bytes(lengths[{}])",(field+1)%fields)', 'forreplacementin[String::new(),', 'forreplacementin["",substitute]', 'inCONTRACTS{', '"panic!(\\"transportbypass\\")"']:
+    once(transport_controls, statement, f"all transport field/bypass controls execute: {statement}")
+require(transport_controls.count("validate(&changed).unwrap_err().contains(\"CBOR\")") == 8, "all eight transport source-control families reject mutants")
+once(transport, "const TRANSPORT_MUTATION_COUNT: usize = 61;", "61 transport method, constant, every-field and native-view controls")
+once(transport, 'const RENDER_BODY: &str = "matchrequest{beaconcrypt_core::transport::RegistrationApplication::Witness(bytes)=>bytes,beaconcrypt_core::transport::RegistrationApplication::Provided(bytes)=>bytes,}";', "native view interpreter retains both exact source-selected byte arrays")
+for statement in ['rust_body(&snapshot.adapter_server,"registration_application_bytes")?!=RENDER_BODY', '"registration_application_bytes(&application).len()"', '"letplaintext=registration_application_bytes(&application);"']:
+    once(transport_validator, statement, f"actual native representation checks remain active: {statement}")
+for statement in ['"RegistrationApplication::Provided(bytes)=>bytes"', '"RegistrationApplication::Witness(bytes)=>bytes"', 'RENDER_BODY.replacen(from,to,1)', 'replace_body(&mutchanged.adapter_server,"registration_application_bytes",&body,);', 'replace_body(&mutchanged.adapter_server,function,&body);', '"panic!(\\"viewbypass\\")"']:
+    once(transport_controls, statement, f"native view rendering/control mutation executes: {statement}")
+for statement in ["if!declaration{breakstart;}", "b';'ifparentheses==0&&brackets==0=>{declaration=true;break;}", "search_start=start+marker.len();"]:
+    once(function(transport, "replace_body"), statement, f"transport source mutation skips trait declarations: {statement}")
+once(function(transport, "replace_body"), "source.replace_range(open+1..end-1,body);", "transport mutations replace the actual Rust body")
+
+print("Registration/record/peer/transport fidelity inventory: 56 synchronized inputs, 32+4+3+2+1 tests, 593 registration plus 214 record plus 104 peer plus 61 transport negative controls; 87 old names retained")
+PY_REGISTRATION_FIDELITY
+
 require_line_count 1 \
-	'^exclude = \["Makefile", "proofs/\*\*", "tests/proverif_transcript_fidelity\.rs"\]$' \
+	'^exclude = \["Makefile", "proofs/\*\*", "tests/proverif_transcript_fidelity\.rs", "tests/fidelity/\*\*"\]$' \
 	Cargo.toml "transcript-fidelity publication exclusion"
 require_line_count 1 \
 	'^PROVERIF_INTERFACE := \$\(PROVERIF_DIR\)/production-transcript-interface\.pvl$' \
@@ -1583,15 +2167,27 @@ require_line_count 1 '^            target: check-generated-proverif-phase2-assig
 	"dedicated weak Phase-2 assigned-ID CI target"
 
 
-# CBOR registration fixes the sequence and sender before the common payload opener.
+# The core owns initial sequence selection and opening metadata; native clauses only interpret its requests.
 require_occurrence_count 1 \
-	'let decrypted = decrypt_registration_message_with_ratchet\(\s*response\.app_cipher_text,\s*candidate\.server_key_id\(\),\s*&associated_data,\s*&mut ratchet,\s*\)\?;\s*if decrypted\.seq != 1 \{\s*return None;\s*\}\s*let authenticated_server_key_id = decrypted\.key_id;' \
-	"Beacon implicit-sequence registration opening before binding" "$adapter_dir/src/beacon.rs"
+	'let kernel = crate::pqxdh::resume_initial_ratchet_kdf\(self\.pending, response\);\s*let effect = records::begin_record_receive\(\s*kernel,\s*1,\s*self\.agreement\.application_ciphertext,\s*self\.agreement\.binding\.associated_data\(\),\s*self\.agreement\.candidate\.server_key_id\(\),\s*\);\s*normalize_beacon_open\(self\.agreement, effect\)' \
+	'core initial opening selects the actual initial kernel, sequence one, ciphertext, full AD and pinned sender' src/registration.rs
 require_occurrence_count 1 \
-	'pub\(crate\) fn decrypt_registration_message_with_ratchet\([\s\S]*?\) -> Option<Decrypted> \{\s*decrypt_payload_with_ratchet\(ciphertext, 1, sender_kid, associated_data, ratchet\)\s*\}' \
-	"registration raw-payload opening fixes sequence one and pinned sender" "$adapter_dir/src/ratchet.rs"
+	'registration::BeaconInitialOpen::AeadRequested\(pending\) => \{\s*let plaintext = crate::ratchet::execute_open_request\(pending\.request\(\)\);\s*let completed = match pending\.finish\(plaintext\.as_deref\(\)\) \{\s*Ok\(completed\) => completed,\s*Err\(control\) => \{\s*self\.state = BeaconState::Aborted \{ control \};\s*return None;\s*\}\s*\};\s*let \(control, binding, kernel, application\) = completed\.into_parts\(\);' \
+	'Beacon interprets the selected core AEAD request and finishes only its actual plaintext reply' "$adapter_dir/src/beacon.rs"
+require_occurrence_count 1 \
+	'let \(kernel, opened\) = self\.pending\.finish\(plaintext\);\s*let opened = match opened \{\s*Some\(opened\) => opened,\s*None => return Err\(rejected\),\s*\};\s*if opened\.plaintext\.len\(\) <= crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE \{\s*return Err\(rejected\);\s*\}\s*let \(prefix, application\) = opened\s*\.plaintext\s*\.split_at\(crate::pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE\);' \
+	'core initial nonempty and prefix gates consume only source-owned opening metadata and kernel' src/registration.rs
+require_occurrence_count 1 \
+	'let effect = records::begin_record_receive\(\s*ratchet\.refined\.take\(\),\s*key_seq,\s*ciphertext,\s*associated_data,\s*kid,\s*\);\s*let \(kernel, opened\) = execute_record_receive\(effect\);\s*ratchet\.refined\.put\(kernel\);\s*opened' \
+	'generic receive preserves supplied sequence, ciphertext, AD, sender and exact returned kernel' "$adapter_dir/src/ratchet.rs"
+require_occurrence_count 1 \
+	'impl RecordReceiveAead<[^>]+> \{[\s\S]*?pub fn finish<Plaintext>\(\s*self,\s*plaintext: Option<Plaintext>,\s*\) -> \(ConcreteRatchetKernel, Option<OpenedRecord<Plaintext>>\) \{\s*self\.pending\.finish\(plaintext\)\s*\}' \
+	'record AEAD completion delegates the actual optional plaintext to its retained opening capability' src/record_effects.rs
+require_occurrence_count 1 \
+	'let key_id = self\.opening\.context\(\)\.sender_kid;\s*let seq = self\.opening\.sequence\(\);\s*let opened = OpenedRecord \{\s*plaintext,\s*key_id,\s*seq,\s*\};\s*self\.opening\.finish\(Some\(opened\)\)' \
+	'record metadata comes from the selected opening context and sequence before kernel publication' src/record.rs
 require_line_count 1 '^pub const MAX_MESSAGE_SIZE: usize = 33_554_432;$' \
-	"$parser_dir/src/sizing.rs" "complete CBOR message size limit"
+	src/transport.rs "complete CBOR message size limit"
 for record in \
 	'init-kex = \[2, 0, identity-key:' \
 	'kex-response = \[2, 1, identity-key:' \
@@ -1600,7 +2196,7 @@ for record in \
 		"CBOR fixed version, kind and field prefix ${record}"
 done
 require_line_count 1 \
-	'^\(\* @beaconcrypt-fidelity-v1 later_registration\.source\.beacon\.first_gate=raw_helper_fixes_sequence_1;finish_registration_checks_decrypted\.seq_ne_1_defensively_before_binding \*\)$' \
+	'^\(\* @beaconcrypt-fidelity-v1 later_registration\.source\.beacon\.first_gate=core_begin_record_receive_fixes_sequence_1_and_pinned_sender;owned_BeaconRecordAead\.finish_checks_nonempty_assigned_ID_prefix_before_binding \*\)$' \
 	"$transcript_interface" "sequence-one source fidelity fact"
 require_line_count 1 \
 	'^\(\* @beaconcrypt-fidelity-v1 later_registration\.adapter\.no_first_gate=generic_receive_has_no_first_sequence_special_case \*\)$' \
@@ -48931,6 +49527,41 @@ require_line_count 1 '^theorem accept_footprint([[:space:]]|$)' "$selected_sourc
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationAccept\.accept_footprint$' "$selected_source_module" "PqxdhBoundaryRegistrationAccept dependency accept_footprint"
 require_line_count 1 '^theorem collect_replay([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationAccept theorem collect_replay"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationAccept\.collect_replay$' "$selected_source_module" "PqxdhBoundaryRegistrationAccept dependency collect_replay"
+
+# Source-owned CBOR size, sender and application admission.
+require_occurrence_count 1 \
+	'pub use beaconcrypt_core::transport::\{\s*MAX_MESSAGE_SIZE, encoded_frame_len, encoded_init_len, encoded_response_len,\s*\};' \
+	'parser reexports the actual extracted sizing policies' "$parser_dir/src/lib.rs"
+require_occurrence_count 1 \
+	'if !beaconcrypt_core::transport::complete_message_size_admitted\(input\.len\(\)\) \{\s*return None;\s*\}' \
+	'parser applies the extracted complete-message admission before scanning' "$parser_dir/src/lib.rs"
+require_occurrence_count 1 \
+	'pub const fn complete_message_size_admitted\(length: usize\) -> bool \{\s*length <= MAX_MESSAGE_SIZE\s*\}' \
+	'core complete-message admission is inclusive' src/transport.rs
+require_line_count 1 '^pub const REGISTRATION_WITNESS: \[u8; 1\] = \[0xff\];$' \
+	src/transport.rs 'core normalized registration witness'
+require_line_count 1 '^[[:space:]]*None => RegistrationApplication::Witness\(REGISTRATION_WITNESS\),$' \
+	src/transport.rs 'only an omitted application selects the owned witness request'
+require_line_count 1 '^[[:space:]]*Some\(bytes\) => RegistrationApplication::Provided\(bytes\),$' \
+	src/transport.rs 'provided request retains empty bytes and the original borrowing'
+require_line_count 2 '^[[:space:]]*beaconcrypt_core::transport::RegistrationApplication::(Witness|Provided)\(bytes\) => bytes,$' \
+	"$adapter_dir/src/server.rs" 'native view renderer borrows both exact source-selected variants'
+require_occurrence_count 1 \
+	'beaconcrypt_core::transport::protected_frame_len\(plaintext_len, sequence, sender\)' \
+	'native frame preflight delegates exact metadata and plaintext length' "$adapter_dir/src/wire.rs"
+require_occurrence_count 1 \
+	'beaconcrypt_core::transport::registration_response_len\(application_len, assigned_key_id\)' \
+	'native response preflight delegates complete signed response sizing' "$adapter_dir/src/server.rs"
+require_occurrence_count 2 \
+	'let application = beaconcrypt_core::transport::normalize_registration_application\(data\);' \
+	'both response preflight and construction use core normalization' "$adapter_dir/src/server.rs"
+require_occurrence_count 1 \
+	'let admitted = beaconcrypt_core::transport::admit_frame\(\s*frame\.seq,\s*frame\.key_id,\s*frame\.cipher_text,\s*expected_sender_kid,\s*\)\?;\s*decrypt_payload_with_ratchet\(\s*admitted\.ciphertext,\s*admitted\.sequence,\s*admitted\.sender,\s*associated_data,\s*ratchet,\s*\)' \
+	'core sender admission precedes receive and retains all parsed frame fields' "$adapter_dir/src/ratchet.rs"
+require_line_count 1 '^theorem init_size : initLen = 6757 := by$' \
+	proofs/lean/BeaconcryptCore/Computational/CborSizing.lean 'current mandatory-ML registration request size'
+require_line_count 1 '^    byteStringLen payload \+ argumentLen assigned \+ byteStringLen 3309$' \
+	proofs/lean/BeaconcryptCore/Computational/CborSizing.lean 'current response size includes mandatory ML signature'
 
 # CBOR transport extension: complete-message admission and implicit registration metadata.
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborSizing.lean

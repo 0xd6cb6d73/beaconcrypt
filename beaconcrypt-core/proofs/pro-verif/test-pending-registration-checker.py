@@ -220,8 +220,8 @@ class NativeMovedTokenSourceGate(unittest.TestCase):
     def test_current_authenticated_token(self):
         CHECKER.check_source()
 
-    def mutate_source(self, old, new):
-        path = CHECKER.HERE.parents[2] / "beaconcrypt/src/server.rs"
+    def mutate_source(self, old, new, relative="beaconcrypt/src/server.rs"):
+        path = CHECKER.HERE.parents[2] / relative
         original = Path.read_text
         source = original(path)
         self.assertEqual(source.count(old), 1)
@@ -236,23 +236,60 @@ class NativeMovedTokenSourceGate(unittest.TestCase):
             with self.assertRaises(ValueError):
                 CHECKER.check_source()
 
-    def test_private_auth_context_moves_with_token(self):
+    def test_private_agreement_moves_with_token(self):
         self.mutate_source(
-            "control: pending,\n\t\t\tauthentication,\n\t\t} = reg_out;",
-            "control: pending,\n\t\t} = reg_out;",
+            "registration: beaconcrypt_core::peer::ConsumedRegistration,",
+            "pub registration: beaconcrypt_core::peer::ConsumedRegistration,",
         )
 
     def test_token_server_key_binding_preserved(self):
         self.mutate_source(
-            "if auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
-            "if false && auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
+            "if application.is_empty() || !agreement.binding.matches_server(current_pin)",
+            "if application.is_empty() || false && !agreement.binding.matches_server(current_pin)",
+            "beaconcrypt-core/src/registration.rs",
         )
 
-    def test_size_preflight_stays_before_token_move(self):
+    def test_size_preflight_stays_before_completion_resume(self):
         self.mutate_source(
             "registration_response_len(plaintext.len(), next_key_id)?;",
-            "let RegistrationOutput { derived_secret, control: pending, authentication, } = reg_out;\n"
-            "\t\tregistration_response_len(plaintext.len(), next_key_id)?;",
+            "let _ = 0;",
+        )
+
+    def test_completion_uses_current_counter(self):
+        self.mutate_source(
+            "control,\n\t\t\tself.authentication_pin()?,",
+            "self.identity_key_kid,\n\t\t\tself.authentication_pin()?,",
+        )
+
+    def test_serialization_failure_preserves_counter(self):
+        self.mutate_source(
+            "let encoded = match encoded {\n\t\t\tSome(encoded) => encoded,\n\t\t\tNone => return Err(rejected),\n\t\t};",
+            "let encoded = match encoded {\n\t\t\tSome(encoded) => encoded,\n\t\t\tNone => panic!(),\n\t\t};",
+            "beaconcrypt-core/src/registration.rs",
+        )
+
+    def test_record_writer_failure_cannot_publish(self):
+        self.mutate_source(
+            "pending.resume(ciphertext.as_deref()).ok()?",
+            "pending.resume(Some(&[])).ok()?",
+        )
+
+    def test_record_commitment_reply_cannot_be_ignored(self):
+        self.mutate_source(
+            "pending.resume(commitment).ok()?",
+            "pending.resume(Some([0; 64])).ok()?",
+        )
+
+    def test_application_normalization_uses_actual_optional_input(self):
+        self.mutate_source(
+            "normalize_registration_application(data);\n\t\tlet plaintext = registration_application_bytes(&application);",
+            "normalize_registration_application(None);\n\t\tlet plaintext = registration_application_bytes(&application);",
+        )
+
+    def test_application_uses_the_actual_normalized_view(self):
+        self.mutate_source(
+            "let plaintext = registration_application_bytes(&application);",
+            "let plaintext = &[0xff];",
         )
 
 

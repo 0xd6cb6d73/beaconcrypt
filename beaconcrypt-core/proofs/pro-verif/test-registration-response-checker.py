@@ -112,8 +112,8 @@ class NativeResponseSourceGate(unittest.TestCase):
     def test_current_signed_source(self):
         CHECKER.check_source_order()
 
-    def mutate_source(self, old, new):
-        path = CHECKER.HERE.parents[2] / "beaconcrypt/src/server.rs"
+    def mutate_source(self, old, new, relative="beaconcrypt/src/server.rs"):
+        path = CHECKER.HERE.parents[2] / relative
         original = Path.read_text
         source = original(path)
         self.assertEqual(source.count(old), 1)
@@ -130,44 +130,93 @@ class NativeResponseSourceGate(unittest.TestCase):
 
     def test_token_server_key_binding_preserved(self):
         self.mutate_source(
-            "if auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
-            "if false && auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
+            "if application.is_empty() || !agreement.binding.matches_server(current_pin)",
+            "if application.is_empty() || false && !agreement.binding.matches_server(current_pin)",
+            "beaconcrypt-core/src/registration.rs",
         )
 
     def test_response_uses_accepted_request_hash(self):
         self.mutate_source(
-            "auth::response_transcript_hash(&authentication.init_hash, &response)",
-            "auth::response_transcript_hash(&[0; 64], &response)",
+            "build_response_prefix(\n\t\t\tself.state.binding.init_hash(),",
+            "build_response_prefix(\n\t\t\t&[0; 64],",
+            "beaconcrypt-core/src/registration.rs",
         )
 
     def test_response_signer_role_preserved(self):
         self.mutate_source(
-            "self.mldsa_identity.sign(AuthRole::Server, &hash)",
-            "self.mldsa_identity.sign(AuthRole::Beacon, &hash)",
+            "role: AuthRole::Server,\n\t\t\tpublic_key: self.binding.server_pin().public_key(),",
+            "role: AuthRole::Beacon,\n\t\t\tpublic_key: self.binding.server_pin().public_key(),",
+            "beaconcrypt-core/src/registration.rs",
         )
 
     def test_complete_signed_encoding_preserved(self):
-        self.mutate_source(
-            "signature: &signature,\n\t\t\t..response",
-            "signature: &[],\n\t\t\t..response",
-        )
+        self.mutate_source("signature: message.signature,", "signature: &[],")
 
     def test_peer_map_key_preserved(self):
         self.mutate_source(
-            "let old = self.known_ids.insert(\n\t\t\tremote_kid,",
-            "let old = self.known_ids.insert(\n\t\t\tself.identity_key_kid,",
+            "self.known_ids.entry(remote_kid)",
+            "self.known_ids.entry(self.identity_key_kid)",
         )
 
-    def test_peer_auth_hash_preserved(self):
+    def test_peer_binding_assignment_preserved(self):
         self.mutate_source(
-            "EstablishedRemote::new(public_key, ratchet, authentication.beacon_hash)",
-            "EstablishedRemote::new(public_key, ratchet, authentication.server_hash)",
+            "self.binding.finish(self.candidate.key_id())",
+            "self.binding.finish(0)",
+            "beaconcrypt-core/src/registration.rs",
         )
 
-    def test_signing_precedes_commit(self):
-        old = "let signature = self.mldsa_identity.sign(AuthRole::Server, &hash)?;"
-        commit = "let (next_control, established_peer) = verified_pqxdh::server_commit(candidate);"
-        self.mutate_source(old, commit + "\n\t\t" + old)
+    def test_serialization_precedes_pure_commit(self):
+        self.mutate_source(
+            "let encoded = match encoded {\n\t\t\tSome(encoded) => encoded,\n\t\t\tNone => return Err(rejected),\n\t\t};",
+            "let (next, _) = crate::pqxdh::server_commit(self.candidate);\n\t\tlet encoded = match encoded {\n\t\t\tSome(encoded) => encoded,\n\t\t\tNone => return Err(rejected),\n\t\t};",
+            "beaconcrypt-core/src/registration.rs",
+        )
+
+    def test_exact_record_request_interpreted(self):
+        self.mutate_source(
+            "self.candidate.key_id(),\n\t\t\tself.candidate.server_identity_key_id(),",
+            "self.candidate.server_identity_key_id(),\n\t\t\tself.candidate.key_id(),",
+            "beaconcrypt-core/src/registration.rs",
+        )
+
+    def test_core_hash_parts_are_ordered(self):
+        self.mutate_source(
+            "HashRequest::Triple([&self.prefix, self.ciphertext, &self.assigned_id])",
+            "HashRequest::Triple([&self.assigned_id, self.ciphertext, &self.prefix])",
+            "beaconcrypt-core/src/registration.rs",
+        )
+
+    def test_record_aead_reply_is_not_substituted(self):
+        self.mutate_source(
+            "pending.resume(detached_view).ok()?",
+            "pending.resume(Some((&[], [0; 16]))).ok()?",
+        )
+
+    def test_record_hash_reply_is_not_substituted(self):
+        self.mutate_source(
+            "pending.resume(commitment).ok()?",
+            "pending.resume(Some([0; 64])).ok()?",
+        )
+
+    def test_record_writer_reply_is_not_substituted(self):
+        self.mutate_source(
+            "pending.resume(ciphertext.as_deref()).ok()?",
+            "pending.resume(Some(&[])).ok()?",
+        )
+
+    def test_written_record_length_is_checked_before_signing(self):
+        self.mutate_source(
+            "if ciphertext.len() != length {",
+            "if false && ciphertext.len() != length {",
+            "beaconcrypt-core/src/registration.rs",
+        )
+
+    def test_assigned_identifier_prefix_is_core_owned(self):
+        self.mutate_source(
+            "registration_key_id_binding(assigned_kid).as_bytes()",
+            "registration_key_id_binding(sender_kid).as_bytes()",
+            "beaconcrypt-core/src/record_effects.rs",
+        )
 
 
 if __name__ == "__main__":

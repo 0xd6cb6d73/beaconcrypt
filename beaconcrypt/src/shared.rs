@@ -1,25 +1,31 @@
 // SPDX-License-Identifier: 0BSD
 
+use alloc::vec::Vec;
+
 #[cfg(feature = "server")]
 use crate::error::DecodingError;
 #[cfg(any(feature = "server", test))]
 use crate::error::EncodingError;
-use libsodium_rs::utils::memcmp;
-use std::any::TypeId;
-use std::marker::{PhantomData, PhantomPinned};
 #[cfg(any(feature = "server", test))]
-use std::vec;
+use alloc::vec;
+#[cfg(test)]
+use beaconcrypt_crypto::utils::memcmp;
+#[cfg(test)]
+use core::any::TypeId;
+#[cfg(test)]
+use core::marker::{PhantomData, PhantomPinned};
+#[cfg(test)]
 use zeroize::Zeroizing;
 
 use crate::ratchet::KDF_STATE_SIZE;
 #[cfg(any(feature = "server", test))]
-use crate::ratchet::RatchetManager;
+use crate::ratchet::{RatchetKernel, RatchetManager};
 
 #[cfg(test)]
 use crate::ratchet::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, AEAD_TAG_LEN, AeadKey, AeadNonce, COMMITMENT_SIZE,
 	KDF_RATCHET_OUTPUT_LEN, KdfRecvState, KdfSendState, KeyMaterial, MESSAGE_OVERHEAD,
-	RATCHET_MAX_GAP, RatchetKernel, SendChain, build_commitment, decrypt_message_with_ratchet,
+	RATCHET_MAX_GAP, SendChain, build_commitment, decrypt_message_with_ratchet,
 	encrypt_message_with_ratchet, ratchet_hkdf,
 };
 #[cfg(test)]
@@ -27,7 +33,7 @@ use beaconcrypt_core::pqxdh::ASSOCIATED_DATA_SIZE as AD_SIZE;
 #[cfg(test)]
 use beaconcrypt_core::ratchet as verified_ratchet;
 #[cfg(test)]
-use libsodium_rs::crypto_aead;
+use beaconcrypt_crypto::crypto_aead;
 
 #[cfg(feature = "server")]
 #[path = "deser.rs"]
@@ -47,9 +53,6 @@ const _: () = assert!(KEX_KDF_OUT_LEN == KDF_STATE_SIZE);
 pub const DH_OUT_LEN: usize = 32;
 #[cfg(feature = "pqxdh")]
 pub const ED25519_SEED_SIZE: usize = 32;
-#[cfg(feature = "server")]
-/// Byte sequence used to test successful keychain derivation during registration. Used only if the server doesn't provide an initial message
-pub const REGISTRATION_WITNESS: &[u8; 1] = &[0xFF; 1];
 
 #[repr(u8)]
 #[derive(PartialEq)]
@@ -173,7 +176,7 @@ pub fn decode_kem(encoded_pk: &[u8], expected: KemType) -> Result<Vec<u8>, Decod
 }
 
 pub(crate) mod systems {
-	#[cfg(feature = "pqxdh")]
+	#[cfg(all(test, feature = "pqxdh"))]
 	#[derive(PartialEq)]
 	pub struct X25519;
 	#[cfg(feature = "server")]
@@ -182,6 +185,7 @@ pub(crate) mod systems {
 	#[cfg(any(feature = "server", test))]
 	#[derive(PartialEq)]
 	pub struct HkdfSha512;
+	#[cfg(test)]
 	#[derive(PartialEq)]
 	pub struct Pqxdh;
 	#[cfg(feature = "server")]
@@ -245,6 +249,7 @@ pub(crate) mod systems {
 pub mod roles {
 	#[cfg(feature = "server")]
 	pub trait ChainKey {}
+	#[cfg(test)]
 	#[derive(PartialEq)]
 	pub struct DerivedSecret;
 	#[cfg(any(feature = "server", test))]
@@ -340,6 +345,7 @@ pub mod roles {
 }
 
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
+#[cfg(test)]
 pub struct SecretArr<const S: usize, System, Role> {
 	data: Zeroizing<[u8; S]>,
 	// what cryptosystem this is used in (X25519, ML-KEM...)
@@ -349,6 +355,7 @@ pub struct SecretArr<const S: usize, System, Role> {
 	_pin: PhantomPinned,
 }
 
+#[cfg(test)]
 impl<const S: usize, System: 'static, Role: 'static, OtherSystem: 'static, OtherRole: 'static>
 	PartialEq<SecretArr<S, OtherSystem, OtherRole>> for SecretArr<S, System, Role>
 {
@@ -361,6 +368,7 @@ impl<const S: usize, System: 'static, Role: 'static, OtherSystem: 'static, Other
 	}
 }
 
+#[cfg(test)]
 impl<const S: usize, System, Role> From<[u8; S]> for SecretArr<S, System, Role> {
 	fn from(value: [u8; S]) -> Self {
 		SecretArr {
@@ -373,6 +381,7 @@ impl<const S: usize, System, Role> From<[u8; S]> for SecretArr<S, System, Role> 
 }
 
 /// `value` MUST be exactly the size expected by the type
+#[cfg(test)]
 impl<const S: usize, System, Role> From<Vec<u8>> for SecretArr<S, System, Role> {
 	fn from(value: Vec<u8>) -> Self {
 		if value.len() == S {
@@ -388,6 +397,7 @@ impl<const S: usize, System, Role> From<Vec<u8>> for SecretArr<S, System, Role> 
 	}
 }
 
+#[cfg(test)]
 impl<const S: usize, System, Role> Default for SecretArr<S, System, Role> {
 	fn default() -> Self {
 		SecretArr {
@@ -399,6 +409,7 @@ impl<const S: usize, System, Role> Default for SecretArr<S, System, Role> {
 	}
 }
 
+#[cfg(test)]
 impl<const S: usize, System, Role> SecretArr<S, System, Role> {
 	pub fn as_slice(&self) -> &[u8] {
 		self.data.as_slice()
@@ -419,6 +430,7 @@ impl<const S: usize, System, Role> SecretArr<S, System, Role> {
 	}
 }
 
+#[cfg(test)]
 impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 	fn clone(&self) -> Self {
 		Self {
@@ -430,8 +442,9 @@ impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 	}
 }
 
-#[cfg(feature = "pqxdh")]
+#[cfg(all(test, feature = "pqxdh"))]
 pub type DhSecret = SecretArr<DH_OUT_LEN, systems::X25519, roles::DerivedSecret>;
+#[cfg(test)]
 pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
 
 #[cfg(any(feature = "server", test))]
@@ -440,8 +453,7 @@ pub trait SignaturePk {}
 #[cfg(any(feature = "server", test))]
 pub struct EstablishedRemote<PkType: SignaturePk> {
 	pk: PkType,
-	ratchet: RatchetManager,
-	mldsa_public_key_hash: [u8; 64],
+	peer: beaconcrypt_core::peer::Peer<RatchetManager>,
 }
 
 #[cfg(any(feature = "server", test))]
@@ -449,16 +461,27 @@ impl<PkType: SignaturePk> EstablishedRemote<PkType> {
 	pub(crate) fn new(
 		pk: PkType,
 		ratchet: RatchetManager,
-		mldsa_public_key_hash: [u8; 64],
+		binding: beaconcrypt_core::session::SessionBinding,
 	) -> Self {
 		Self {
 			pk,
-			ratchet,
-			mldsa_public_key_hash,
+			peer: beaconcrypt_core::peer::Peer::from_trusted_parts(binding, ratchet),
 		}
 	}
+
+	pub(crate) fn from_peer(pk: PkType, peer: beaconcrypt_core::peer::Peer<RatchetKernel>) -> Self {
+		Self {
+			pk,
+			peer: map_peer_ratchet(peer),
+		}
+	}
+
 	pub(crate) fn mldsa_public_key_hash(&self) -> &[u8; 64] {
-		&self.mldsa_public_key_hash
+		self.peer.binding().beacon_fingerprint()
+	}
+
+	pub(crate) fn binding(&self) -> &beaconcrypt_core::session::SessionBinding {
+		self.peer.binding()
 	}
 
 	pub fn pk(&self) -> &PkType {
@@ -466,12 +489,20 @@ impl<PkType: SignaturePk> EstablishedRemote<PkType> {
 	}
 
 	pub(crate) fn ratchet(&self) -> &RatchetManager {
-		&self.ratchet
+		self.peer.ratchet()
 	}
 
 	pub(crate) fn ratchet_mut(&mut self) -> &mut RatchetManager {
-		&mut self.ratchet
+		self.peer.ratchet_mut()
 	}
+}
+
+#[cfg(any(feature = "server", test))]
+fn map_peer_ratchet(
+	peer: beaconcrypt_core::peer::Peer<RatchetKernel>,
+) -> beaconcrypt_core::peer::Peer<RatchetManager> {
+	let (binding, kernel) = peer.into_parts();
+	beaconcrypt_core::peer::Peer::from_trusted_parts(binding, RatchetManager::from_kernel(kernel))
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -490,7 +521,7 @@ pub struct Encrypted {
 	pub seq: u64,
 }
 
-impl std::ops::Deref for Encrypted {
+impl core::ops::Deref for Encrypted {
 	type Target = [u8];
 
 	fn deref(&self) -> &Self::Target {
@@ -498,7 +529,7 @@ impl std::ops::Deref for Encrypted {
 	}
 }
 
-impl std::ops::DerefMut for Encrypted {
+impl core::ops::DerefMut for Encrypted {
 	fn deref_mut(&mut self) -> &mut Self::Target {
 		&mut self.ciphertext
 	}
@@ -1688,7 +1719,16 @@ mod tests {
 		let mut principal = EstablishedRemote::new(
 			TestPublicKey([1, 2, 3, 4]),
 			RatchetManager::default(),
-			[7; 64],
+			beaconcrypt_core::session::SessionBinding::from_trusted_metadata(
+				beaconcrypt_core::pqxdh::ServerBinding {
+					identity_public_key: [2; 32],
+					identity_key_id: 3,
+				},
+				5,
+				[6; 32],
+				[7; 64],
+				[8; 64],
+			),
 		);
 		assert_eq!(principal.pk().0, [1, 2, 3, 4]);
 		assert!(principal.ratchet().recv_key(1).is_none());

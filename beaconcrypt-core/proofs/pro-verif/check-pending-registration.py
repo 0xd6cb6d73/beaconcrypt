@@ -18,6 +18,11 @@ SPEC = importlib.util.spec_from_file_location(
 )
 FS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(FS)
+SOURCE_SPEC = importlib.util.spec_from_file_location(
+    "pending_source_base", HERE / "check-registration-set.py"
+)
+SOURCE = importlib.util.module_from_spec(SOURCE_SPEC)
+SOURCE_SPEC.loader.exec_module(SOURCE)
 NORMAL = "fs-pending-use.pvl"
 CONTROL = "fs-control-pending-reuse.pvl"
 
@@ -221,43 +226,81 @@ def check_publication(directory=HERE):
 
 
 def check_source(directory=HERE):
+    """Reviewed moved-capability/core publication mapping, with the existing symbolic scope."""
     root = directory.parents[2]
-    source = (root / "beaconcrypt/src/server.rs").read_text()
-    start = source.rindex("\n\tfn build_registration_response(")
-    body = source[start : source.index("\n\tfn encrypt_and_update(", start)]
-    compact = " ".join(body.split())
-    if "reg_out: RegistrationOutput," not in compact:
+    SOURCE.check_record_effect_source(root)
+    body = SOURCE.rust_body(
+        root,
+        "beaconcrypt/src/server.rs",
+        "fn build_registration_response(",
+        "impl ProviderServer for Server {",
+    )
+    if "reg_out:RegistrationOutput," not in body:
         raise ValueError("source response token is no longer passed by move")
     if "consumed_registrations" in body:
         raise ValueError("builder now observes the accepting consumed set")
-    for anchor in (
-        "let RegistrationOutput { derived_secret, control: pending, authentication, } = reg_out;",
-        "let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;",
-        "let plaintext = data.unwrap_or(REGISTRATION_WITNESS);",
-        "registration_response_len(plaintext.len(), next_key_id)?;",
-        "if plaintext.is_empty() { return None; }",
-        "self.control = next_control; Some(RegResponse",
-    ):
-        if anchor not in compact:
-            raise ValueError(
-                f"source moved-token/counter/payload/publication boundary changed: {anchor}"
-            )
-    ordered = (
-        "let plaintext = data.unwrap_or(REGISTRATION_WITNESS);",
-        "let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;",
-        "registration_response_len(plaintext.len(), next_key_id)?;",
-        "let RegistrationOutput {",
-        "if auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
-        "if plaintext.is_empty()",
-        "encrypt_registration_message_with_ratchet(",
-        "crate::wire::encode_response(KexResponse {",
-        "self.control = next_control;",
+    output = SOURCE.rust_body(
+        root, "beaconcrypt/src/server.rs", "pub struct RegistrationOutput"
     )
-    positions = [compact.index(anchor) for anchor in ordered]
-    if positions != sorted(positions):
+    if (
+        output
+        != "pubstructRegistrationOutput{registration:beaconcrypt_core::peer::ConsumedRegistration,}"
+    ):
         raise ValueError(
-            "source size admission/token consumption/publication order changed"
+            "opaque authenticated agreement no longer owns the complete pending token"
         )
+    SOURCE.source_order(
+        root,
+        "beaconcrypt/src/server.rs",
+        "fn build_registration_response(",
+        [
+            "let control = self.control;",
+            "let application = beaconcrypt_core::transport::normalize_registration_application(data);",
+            "let plaintext = registration_application_bytes(&application);",
+            "let RegistrationOutput { registration } = reg_out;",
+            "beaconcrypt_core::peer::begin_completion_lookup(control, self.authentication_pin()?, registration, plaintext,)",
+            "let next_key_id = lookup.request();",
+            "registration_response_len(plaintext.len(), next_key_id)?;",
+            "lookup.resume(self.known_ids.contains_key(&next_key_id))",
+            "crate::ratchet::ratchet_hkdf(pending.request())",
+            "crate::ratchet::execute_seal_request(pending.request())",
+            "pending.resume(detached_view).ok()?",
+            "crate::ratchet::execute_commitment_hash(pending.transcript_mut())",
+            "pending.resume(commitment).ok()?",
+            "crate::ratchet::execute_write_request(pending.request())",
+            "pending.resume(ciphertext.as_deref()).ok()?",
+            "crate::wire::encode_response(KexResponse {",
+            "beaconcrypt_core::peer::begin_peer_insert(control, ready.publish(buffer).ok()?).ok()?;",
+            "finish.finish(inserted).ok()?.into_parts()",
+            "self.control = next_control;",
+            "Some(RegResponse",
+        ],
+        "impl ProviderServer for Server {",
+    )
+    SOURCE.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn begin_server_completion",
+        [
+            "let rejected = control;",
+            "if application.is_empty() || !agreement.binding.matches_server(current_pin) { return Err(rejected); }",
+            "crate::pqxdh::server_prepare_commit(control, agreement.pending, current_pin.binding(), availability,)",
+            "crate::pqxdh::start_server_candidate_ratchet_kdf(&candidate, agreement.root.as_bytes())",
+        ],
+    )
+    SOURCE.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn publish<Encoded>(",
+        [
+            "let rejected = crate::pqxdh::server_abort_candidate(&self.candidate);",
+            "let encoded = match encoded { Some(encoded) => encoded, None => return Err(rejected), };",
+            "self.binding.finish(self.candidate.key_id())",
+            "crate::pqxdh::server_commit(self.candidate)",
+            "Ok(PublishedServerResponse",
+        ],
+        "impl ServerResponseReady<'_>",
+    )
 
 
 def validate_targets(targets=TARGETS, directory=HERE):

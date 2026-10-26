@@ -1,0 +1,39 @@
+nextest-version = "0.9.149"
+
+[profile.mutants]
+test-threads = 2
+fail-fast = true
+retries = 0
+default-filter = 'not (package(=beaconcrypt-core) & binary(=proverif_transcript_fidelity) & (test(=free_schedule_rust_fidelity_annotations_are_exact) | test(=mldsa_transcript_source_and_model_mutations_are_rejected) | test(=production_manifest_symbolic_model_and_adapters_are_exact) | test(=proverif_verdict_classes_cover_every_checker_and_profile) | test(=registration_lifecycle_mutation_matrix_is_complete_and_rejected)))'
+
+[[profile.mutants.overrides]]
+filter = 'binary(=message_size)'
+priority = -100
+
+[[profile.mutants.overrides]]
+filter = 'binary(/properties$/)'
+priority = -90
+
+[[profile.mutants.overrides]]
+filter = 'binary(=proverif_transcript_fidelity)'
+priority = -50
+
+[[profile.mutants.overrides]]
+filter = 'package(=beaconcrypt-crypto)'
+priority = 100
+
+[[profile.mutants.overrides]]
+filter = 'package(=beaconcrypt-core)'
+priority = 90
+
+[[profile.mutants.overrides]]
+filter = 'package(=beaconcrypt-parse)'
+priority = 80
+
+[[profile.mutants.overrides]]
+filter = 'package(=beaconcrypt) & binary(=backend_compat)'
+priority = 70
+
+[[profile.mutants.overrides]]
+filter = 'package(=beaconcrypt) & kind(lib)'
+priority = 60

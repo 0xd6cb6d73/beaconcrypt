@@ -1,0 +1,40 @@
+# The lifecycle merge retains the proof-source guards unchanged; exact deferrals are recorded in no-std-core-lifecycle-deferred.json.
+nextest-version = "0.9.149"
+
+[profile.mutants]
+test-threads = 2
+fail-fast = true
+retries = 0
+default-filter = 'not (package(=beaconcrypt-core) & binary(=proverif_transcript_fidelity) & (test(=free_schedule_rust_fidelity_annotations_are_exact) | test(=mldsa_transcript_source_and_model_mutations_are_rejected) | test(=production_manifest_symbolic_model_and_adapters_are_exact) | test(=proverif_verdict_classes_cover_every_checker_and_profile) | test(=registration_lifecycle_mutation_matrix_is_complete_and_rejected) | test(=cryptoframe_wire_mutation_matrix_is_complete_and_rejected) | test(=endpoint_frame_context_mutation_matrix_is_complete_and_rejected) | test(=initial_ratchet_mutation_matrix_is_complete_and_rejected) | test(=initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous) | test(=later_registration_mutation_matrix_is_complete_and_rejected) | test(=later_registration_sequence_three_poststate_is_exact_and_nonvacuous) | test(=peer_effects::peer_controller_and_interpreter_omission_duplication_and_bypass_are_rejected) | test(=peer_effects::peer_tokens_and_stored_metadata_cannot_expose_mutable_public_fields) | test(=ratchet_effect_driver_mutation_matrix_is_complete_and_rejected) | test(=record_effects::every_moved_record_operand_failure_and_bypass_control_is_rejected) | test(=record_effects::exact_record_controller_bodies_and_private_requests_are_required) | test(=record_effects::record_request_privacy_and_part_types_cannot_be_weakened) | test(=record_opening_source_mutations_are_rejected) | test(=registration_effects::extracted_registration_operand_and_continuation_mutations_are_rejected) | test(=registration_effects::registration_capabilities_keep_private_provenance_and_native_erasure) | test(=registration_effects::registration_failure_bypass_and_publication_order_controls_are_rejected) | test(=registration_effects::registration_wire_fields_and_attached_signature_roles_cannot_be_substituted)))'
+
+[[profile.mutants.overrides]]
+filter = 'binary(=message_size)'
+priority = -100
+
+[[profile.mutants.overrides]]
+filter = 'binary(/properties$/)'
+priority = -90
+
+[[profile.mutants.overrides]]
+filter = 'binary(=proverif_transcript_fidelity)'
+priority = -50
+
+[[profile.mutants.overrides]]
+filter = 'package(=beaconcrypt-crypto)'
+priority = 100
+
+[[profile.mutants.overrides]]
+filter = 'package(=beaconcrypt-core)'
+priority = 90
+
+[[profile.mutants.overrides]]
+filter = 'package(=beaconcrypt-parse)'
+priority = 80
+
+[[profile.mutants.overrides]]
+filter = 'package(=beaconcrypt) & binary(=backend_compat)'
+priority = 70
+
+[[profile.mutants.overrides]]
+filter = 'package(=beaconcrypt) & kind(lib)'
+priority = 60

@@ -26,6 +26,1058 @@ noncomputable section
 
 namespace beaconcrypt_core
 
+/-- [beaconcrypt_core::pqxdh::beacon_abort_init]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 688:0-692:1
+    Visibility: public -/
+def pqxdh.beacon_abort_init
+  (state : pqxdh.BeaconInitSent) : RustM pqxdh.BeaconAborted := do
+  ok { server_key_id := state.expected_server_binding.identity_key_id }
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::AgreementState<'a>}::reject]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 83:4-90:5 -/
+def agreement.AgreementState.reject
+  (self : agreement.AgreementState) : RustM agreement.AgreementEffect := do
+  match self.input with
+  | agreement.AgreementInput.Server _ _ _ _ =>
+    ok (agreement.AgreementEffect.Rejected core.option.Option.None)
+  | agreement.AgreementInput.Beacon control _ _ _ =>
+    let ba ← pqxdh.beacon_abort_init control
+    ok (agreement.AgreementEffect.Rejected (core.option.Option.Some ba))
+
+/-- [beaconcrypt_core::ratchet::{beaconcrypt_core::ratchet::RatchetChain}::from_bytes]:
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 73:4-75:5
+    Visibility: public -/
+def ratchet.RatchetChain.from_bytes
+  (bytes : Array Std.U8 32#usize) : RustM ratchet.RatchetChain := do
+  ok { bytes }
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::AgreementState<'a>}::new]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 92:4-104:5 -/
+def agreement.AgreementState.new
+  (input : agreement.AgreementInput) : RustM agreement.AgreementState := do
+  let a := Array.repeat 32#usize 0#u8
+  let a1 := Array.repeat 32#usize 0#u8
+  let a2 := Array.repeat 1088#usize 0#u8
+  let a3 := Array.repeat 32#usize 0#u8
+  let rc ← ratchet.RatchetChain.from_bytes a3
+  let a4 := Array.repeat 32#usize 0#u8
+  let rc1 ← ratchet.RatchetChain.from_bytes a4
+  let a5 := Array.repeat 32#usize 0#u8
+  let rc2 ← ratchet.RatchetChain.from_bytes a5
+  let a6 := Array.repeat 32#usize 0#u8
+  let rc3 ← ratchet.RatchetChain.from_bytes a6
+  let a7 := Array.repeat 32#usize 0#u8
+  let rc4 ← ratchet.RatchetChain.from_bytes a7
+  ok
+    {
+      input,
+      remote_identity := a,
+      ephemeral_public_key := a1,
+      kem_ciphertext := a2,
+      dh1 := rc,
+      dh2 := rc1,
+      dh3 := rc2,
+      dh4 := rc3,
+      kem := rc4
+    }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::AuthenticatedInit}::into_parts]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 361:4-363:5 -/
+def registration.AuthenticatedInit.into_parts
+  (self : registration.AuthenticatedInit) :
+  RustM (pqxdh.VerifiedInitKex × session.RegistrationBinding)
+  := do
+  ok (self.registration, self.binding)
+
+/-- [beaconcrypt_core::pqxdh::validate_registration_status]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 245:0-252:1
+    Visibility: public -/
+def pqxdh.validate_registration_status
+  (registration_status : pqxdh.RegistrationStatus) :
+  RustM (core.result.Result Unit pqxdh.RegistrationError)
+  := do
+  let b ←
+    match registration_status with
+    | pqxdh.RegistrationStatus.Fresh => ok false
+    | pqxdh.RegistrationStatus.Consumed => ok true
+  if b
+  then ok (core.result.Result.Err pqxdh.RegistrationError.RegistrationReplay)
+  else ok (core.result.Result.Ok ())
+
+/-- [beaconcrypt_core::agreement::begin_server_agreement]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 108:0-125:1
+    Visibility: public -/
+def agreement.begin_server_agreement
+  (control : pqxdh.ServerState) (status : pqxdh.RegistrationStatus)
+  (authenticated : registration.AuthenticatedInit) :
+  RustM agreement.AgreementEffect
+  := do
+  let r ← pqxdh.validate_registration_status status
+  let b ← core.result.Result.is_err r
+  if b
+  then ok (agreement.AgreementEffect.Rejected core.option.Option.None)
+  else
+    let (registration1, binding) ←
+      registration.AuthenticatedInit.into_parts authenticated
+    let «as» ←
+      agreement.AgreementState.new (agreement.AgreementInput.Server control
+        status registration1 binding)
+    ok (agreement.AgreementEffect.GenerateEphemeral { state := «as» })
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::server_pin]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 90:4-92:5
+    Visibility: public -/
+def session.RegistrationBinding.impl.server_pin
+  (self : session.RegistrationBinding) :
+  RustM session.ServerAuthenticationPin
+  := do
+  ok self.server_pin
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::ServerAuthenticationPin}::binding]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 36:4-38:5
+    Visibility: public -/
+def session.ServerAuthenticationPin.impl.binding
+  (self : session.ServerAuthenticationPin) : RustM pqxdh.ServerBinding := do
+  ok self.binding
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::AuthenticatedResponse<'a>}::into_parts]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 517:4-531:5 -/
+def registration.AuthenticatedResponse.into_parts
+  (self : registration.AuthenticatedResponse) :
+  RustM (pqxdh.BeaconInitSent × session.RegistrationBinding ×
+    agreement.ResponsePublic × (Slice Std.U8))
+  := do
+  ok (self.pending.control, self.pending.binding, self.packet.public,
+    self.packet.application)
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconInitSent}::expected_server_binding]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 290:4-292:5
+    Visibility: public -/
+def pqxdh.BeaconInitSent.impl.expected_server_binding
+  (self : pqxdh.BeaconInitSent) : RustM pqxdh.ServerBinding := do
+  ok self.expected_server_binding
+
+/-- [beaconcrypt_core::agreement::begin_beacon_agreement]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 128:0-145:1
+    Visibility: public -/
+def agreement.begin_beacon_agreement
+  (authenticated : registration.AuthenticatedResponse) :
+  RustM agreement.AgreementEffect
+  := do
+  let (control, binding, response, application_ciphertext) ←
+    registration.AuthenticatedResponse.into_parts authenticated
+  let expected ← pqxdh.BeaconInitSent.impl.expected_server_binding control
+  let sap ← session.RegistrationBinding.impl.server_pin binding
+  let pinned ← session.ServerAuthenticationPin.impl.binding sap
+  if expected.identity_key_id != pinned.identity_key_id
+  then
+    let ba ← pqxdh.beacon_abort_init control
+    ok (agreement.AgreementEffect.Rejected (core.option.Option.Some ba))
+  else
+    let b ←
+      core.Array.Insts.CoreCmpPartialEqArray.ne
+        core.U8.Insts.CoreCmpPartialEqU8 expected.identity_public_key
+        pinned.identity_public_key
+    if b
+    then
+      let ba ← pqxdh.beacon_abort_init control
+      ok (agreement.AgreementEffect.Rejected (core.option.Option.Some ba))
+    else
+      let «as» ←
+        agreement.AgreementState.new (agreement.AgreementInput.Beacon control
+          binding response application_ciphertext)
+      ok (agreement.AgreementEffect.ConvertPublic { state := «as» })
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::beacon_identity_public_key]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 175:4-177:5
+    Visibility: public -/
+def pqxdh.VerifiedInitKex.impl.beacon_identity_public_key
+  (self : pqxdh.VerifiedInitKex) : RustM (Array Std.U8 32#usize) := do
+  ok self.beacon_identity_public_key
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::PublicConversionPending<'a>}::public_key]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 152:4-159:5
+    Visibility: public -/
+def agreement.PublicConversionPending.public_key
+  (self : agreement.PublicConversionPending) :
+  RustM (Array Std.U8 32#usize)
+  := do
+  match self.state.input with
+  | agreement.AgreementInput.Server _ _ registration1 _ =>
+    pqxdh.VerifiedInitKex.impl.beacon_identity_public_key registration1
+  | agreement.AgreementInput.Beacon _ _ response _ => ok response.identity_key
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::PublicConversionPending<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 161:4-167:5
+    Visibility: public -/
+def agreement.PublicConversionPending.resume
+  (self : agreement.PublicConversionPending)
+  (converted : core.option.Option (Array Std.U8 32#usize)) :
+  RustM agreement.AgreementEffect
+  := do
+  match converted with
+  | core.option.Option.None => agreement.AgreementState.reject self.state
+  | core.option.Option.Some converted1 =>
+    ok (agreement.AgreementEffect.ConvertSecret
+      { state := { self.state with remote_identity := converted1 } })
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::SecretConversionPending<'a>}::secret_role]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 176:4-178:5
+    Visibility: public -/
+def agreement.SecretConversionPending.secret_role
+  (self : agreement.SecretConversionPending) :
+  RustM agreement.DhSecretRole
+  := do
+  ok agreement.DhSecretRole.LocalIdentity
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::SecretConversionPending<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 180:4-193:5
+    Visibility: public -/
+def agreement.SecretConversionPending.resume
+  (self : agreement.SecretConversionPending) (converted : Bool) :
+  RustM agreement.AgreementEffect
+  := do
+  if converted
+  then
+    match self.state.input with
+    | agreement.AgreementInput.Server _ _ _ _ =>
+      ok (agreement.AgreementEffect.Dh
+        { state := self.state, position := agreement.DhPosition.First })
+    | agreement.AgreementInput.Beacon _ _ _ _ =>
+      ok (agreement.AgreementEffect.Decapsulate { state := self.state })
+  else agreement.AgreementState.reject self.state
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::EphemeralPending<'a>}::role]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 201:4-203:5
+    Visibility: public -/
+def agreement.EphemeralPending.role
+  (self : agreement.EphemeralPending) : RustM agreement.EphemeralRole := do
+  ok agreement.EphemeralRole.ServerEphemeral
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::EphemeralPending<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 205:4-211:5
+    Visibility: public -/
+def agreement.EphemeralPending.resume
+  (self : agreement.EphemeralPending)
+  (public_key : core.option.Option (Array Std.U8 32#usize)) :
+  RustM agreement.AgreementEffect
+  := do
+  match public_key with
+  | core.option.Option.None => agreement.AgreementState.reject self.state
+  | core.option.Option.Some public_key1 =>
+    ok (agreement.AgreementEffect.Encapsulate
+      { state := { self.state with ephemeral_public_key := public_key1 } })
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::beacon_pq_public_key]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 187:4-189:5
+    Visibility: public -/
+def pqxdh.VerifiedInitKex.impl.beacon_pq_public_key
+  (self : pqxdh.VerifiedInitKex) : RustM (Array Std.U8 1184#usize) := do
+  ok self.beacon_pq_public_key
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::EncapsulationPending<'a>}::public_key]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 219:4-226:5
+    Visibility: public -/
+def agreement.EncapsulationPending.public_key
+  (self : agreement.EncapsulationPending) :
+  RustM (core.option.Option (Array Std.U8 1184#usize))
+  := do
+  match self.state.input with
+  | agreement.AgreementInput.Server _ _ registration1 _ =>
+    let a ← pqxdh.VerifiedInitKex.impl.beacon_pq_public_key registration1
+    ok (core.option.Option.Some a)
+  | agreement.AgreementInput.Beacon _ _ _ _ => ok core.option.Option.None
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::EncapsulationPending<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 228:4-235:5
+    Visibility: public -/
+def agreement.EncapsulationPending.resume
+  (self : agreement.EncapsulationPending)
+  (result : core.option.Option ((Array Std.U8 1088#usize) × (Array Std.U8
+  32#usize))) :
+  RustM agreement.AgreementEffect
+  := do
+  match result with
+  | core.option.Option.None => agreement.AgreementState.reject self.state
+  | core.option.Option.Some p =>
+    let (ciphertext, shared) := p
+    let rc ← ratchet.RatchetChain.from_bytes shared
+    ok (agreement.AgreementEffect.ConvertPublic
+      { state := { self.state with kem_ciphertext := ciphertext, kem := rc } })
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::DecapsulationPending<'a>}::ciphertext]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 243:4-248:5
+    Visibility: public -/
+def agreement.DecapsulationPending.ciphertext
+  (self : agreement.DecapsulationPending) :
+  RustM (core.option.Option (Array Std.U8 1088#usize))
+  := do
+  match self.state.input with
+  | agreement.AgreementInput.Server _ _ _ _ => ok core.option.Option.None
+  | agreement.AgreementInput.Beacon _ _ response _ =>
+    ok (core.option.Option.Some response.kem_cipher_text)
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::DecapsulationPending<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 250:4-259:5
+    Visibility: public -/
+def agreement.DecapsulationPending.resume
+  (self : agreement.DecapsulationPending)
+  (shared : core.option.Option (Array Std.U8 32#usize)) :
+  RustM agreement.AgreementEffect
+  := do
+  match shared with
+  | core.option.Option.None => agreement.AgreementState.reject self.state
+  | core.option.Option.Some shared1 =>
+    let rc ← ratchet.RatchetChain.from_bytes shared1
+    ok (agreement.AgreementEffect.Dh
+      {
+        state := { self.state with kem := rc },
+        position := agreement.DhPosition.First
+      })
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::beacon_one_time_public_key]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 183:4-185:5
+    Visibility: public -/
+def pqxdh.VerifiedInitKex.impl.beacon_one_time_public_key
+  (self : pqxdh.VerifiedInitKex) : RustM (Array Std.U8 32#usize) := do
+  ok self.beacon_one_time_public_key
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::beacon_prekey_public_key]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 179:4-181:5
+    Visibility: public -/
+def pqxdh.VerifiedInitKex.impl.beacon_prekey_public_key
+  (self : pqxdh.VerifiedInitKex) : RustM (Array Std.U8 32#usize) := do
+  ok self.beacon_prekey_public_key
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::DhPending<'a>}::request]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 280:4-315:5
+    Visibility: public -/
+def agreement.DhPending.request
+  (self : agreement.DhPending) : RustM agreement.DhRequest := do
+  match self.state.input with
+  | agreement.AgreementInput.Server _ _ registration1 _ =>
+    match self.position with
+    | agreement.DhPosition.First =>
+      let a ←
+        pqxdh.VerifiedInitKex.impl.beacon_prekey_public_key registration1
+      ok
+        { secret_role := agreement.DhSecretRole.LocalIdentity, public_key := a
+        }
+    | agreement.DhPosition.Second =>
+      ok
+        {
+          secret_role := agreement.DhSecretRole.ServerEphemeral,
+          public_key := self.state.remote_identity
+        }
+    | agreement.DhPosition.Third =>
+      let a ←
+        pqxdh.VerifiedInitKex.impl.beacon_prekey_public_key registration1
+      ok
+        {
+          secret_role := agreement.DhSecretRole.ServerEphemeral,
+          public_key := a
+        }
+    | agreement.DhPosition.Fourth =>
+      let a ←
+        pqxdh.VerifiedInitKex.impl.beacon_one_time_public_key registration1
+      ok
+        {
+          secret_role := agreement.DhSecretRole.ServerEphemeral,
+          public_key := a
+        }
+  | agreement.AgreementInput.Beacon _ _ response _ =>
+    match self.position with
+    | agreement.DhPosition.First =>
+      ok
+        {
+          secret_role := agreement.DhSecretRole.BeaconPrekey,
+          public_key := self.state.remote_identity
+        }
+    | agreement.DhPosition.Second =>
+      ok
+        {
+          secret_role := agreement.DhSecretRole.LocalIdentity,
+          public_key := response.ephemeral_key
+        }
+    | agreement.DhPosition.Third =>
+      ok
+        {
+          secret_role := agreement.DhSecretRole.BeaconPrekey,
+          public_key := response.ephemeral_key
+        }
+    | agreement.DhPosition.Fourth =>
+      ok
+        {
+          secret_role := agreement.DhSecretRole.BeaconOneTime,
+          public_key := response.ephemeral_key
+        }
+
+/-- [beaconcrypt_core::ratchet::{beaconcrypt_core::ratchet::RatchetChain}::as_bytes]:
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 77:4-79:5
+    Visibility: public -/
+def ratchet.RatchetChain.as_bytes
+  (self : ratchet.RatchetChain) : RustM (Array Std.U8 32#usize) := do
+  ok self.bytes
+
+/-- [beaconcrypt_core::pqxdh::is_all_zero]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1020:0-1022:1 -/
+def pqxdh.is_all_zero (bytes : Array Std.U8 32#usize) : RustM Bool := do
+  let a := Array.repeat 32#usize 0#u8
+  core.Array.Insts.CoreCmpPartialEqArray.eq core.U8.Insts.CoreCmpPartialEqU8
+    bytes a
+
+/-- [beaconcrypt_core::pqxdh::PQXDH_PADDING_SIZE]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 27:0-27:41
+    Visibility: public -/
+@[global_simps, irreducible]
+def pqxdh.PQXDH_PADDING_SIZE : Std.Usize := 32#usize
+
+/-- [beaconcrypt_core::pqxdh::DH_SECRET_SIZE]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 26:0-26:37
+    Visibility: public -/
+@[global_simps, irreducible] def pqxdh.DH_SECRET_SIZE : Std.Usize := 32#usize
+
+/-- [beaconcrypt_core::pqxdh::build_root_key_input::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::build_root_key_input::closure<'_0>}::call_mut]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 398:64-412:5 -/
+def
+  pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+  (c : pqxdh.build_root_key_input.closure) (tupled_args : Std.Usize) :
+  RustM (Std.U8 × pqxdh.build_root_key_input.closure)
+  := do
+  if tupled_args < pqxdh.PQXDH_PADDING_SIZE
+  then ok (255#u8, c)
+  else
+    let i ← pqxdh.PQXDH_PADDING_SIZE + pqxdh.DH_SECRET_SIZE
+    if tupled_args < i
+    then
+      let i1 ← tupled_args - pqxdh.PQXDH_PADDING_SIZE
+      let i2 ← Array.index_usize c.dh1 i1
+      ok (i2, c)
+    else
+      let i1 ← 2#usize * pqxdh.DH_SECRET_SIZE
+      let i2 ← pqxdh.PQXDH_PADDING_SIZE + i1
+      if tupled_args < i2
+      then
+        let i3 ← tupled_args - pqxdh.PQXDH_PADDING_SIZE
+        let i4 ← i3 - pqxdh.DH_SECRET_SIZE
+        let i5 ← Array.index_usize c.dh2 i4
+        ok (i5, c)
+      else
+        let i3 ← 3#usize * pqxdh.DH_SECRET_SIZE
+        let i4 ← pqxdh.PQXDH_PADDING_SIZE + i3
+        if tupled_args < i4
+        then
+          let i5 ← tupled_args - pqxdh.PQXDH_PADDING_SIZE
+          let i6 ← i5 - i1
+          let i7 ← Array.index_usize c.dh3 i6
+          ok (i7, c)
+        else
+          let i5 ← 4#usize * pqxdh.DH_SECRET_SIZE
+          let i6 ← pqxdh.PQXDH_PADDING_SIZE + i5
+          if tupled_args < i6
+          then
+            let i7 ← tupled_args - pqxdh.PQXDH_PADDING_SIZE
+            let i8 ← i7 - i3
+            let i9 ← Array.index_usize c.dh4 i8
+            ok (i9, c)
+          else
+            let i7 ← tupled_args - pqxdh.PQXDH_PADDING_SIZE
+            let i8 ← i7 - i5
+            let i9 ← Array.index_usize c.kem_shared_secret i8
+            ok (i9, c)
+
+/-- [beaconcrypt_core::pqxdh::build_root_key_input::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::build_root_key_input::closure<'_0>}::call_once]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 398:64-412:5 -/
+def
+  pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+  (c : pqxdh.build_root_key_input.closure) (i : Std.Usize) : RustM Std.U8 := do
+  let (i1, _) ←
+    pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+      c i
+  ok i1
+
+/-- Trait implementation: [beaconcrypt_core::pqxdh::build_root_key_input::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::build_root_key_input::closure<'_0>}]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 398:64-412:5 -/
+@[reducible]
+def pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  : core.ops.function.FnOnce pqxdh.build_root_key_input.closure Std.Usize
+  Std.U8 := {
+  call_once :=
+    pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+}
+
+/-- Trait implementation: [beaconcrypt_core::pqxdh::build_root_key_input::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::build_root_key_input::closure<'_0>}]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 398:64-412:5 -/
+@[reducible]
+def pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
+  core.ops.function.FnMut pqxdh.build_root_key_input.closure Std.Usize Std.U8
+  := {
+  FnOnceInst :=
+    pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  call_mut :=
+    pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+}
+
+/-- [beaconcrypt_core::pqxdh::build_root_key_input]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 387:0-414:1
+    Visibility: public -/
+def pqxdh.build_root_key_input
+  (secrets : pqxdh.PqxdhSharedSecrets) :
+  RustM (core.result.Result pqxdh.RootKeyInput pqxdh.RegistrationError)
+  := do
+  let b ← pqxdh.is_all_zero secrets.dh1
+  if b
+  then ok (core.result.Result.Err pqxdh.RegistrationError.InvalidDhOutput)
+  else
+    let b1 ← pqxdh.is_all_zero secrets.dh2
+    if b1
+    then ok (core.result.Result.Err pqxdh.RegistrationError.InvalidDhOutput)
+    else
+      let b2 ← pqxdh.is_all_zero secrets.dh3
+      if b2
+      then ok (core.result.Result.Err pqxdh.RegistrationError.InvalidDhOutput)
+      else
+        let b3 ← pqxdh.is_all_zero secrets.dh4
+        if b3
+        then
+          ok (core.result.Result.Err pqxdh.RegistrationError.InvalidDhOutput)
+        else
+          let bytes ←
+            core.array.from_fn 192#usize
+              pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+              secrets
+          ok (core.result.Result.Ok { bytes })
+
+/-- [beaconcrypt_core::pqxdh::SIGN_PUBLIC_KEY_SIZE]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 21:0-21:43
+    Visibility: public -/
+@[global_simps, irreducible]
+def pqxdh.SIGN_PUBLIC_KEY_SIZE : Std.Usize := 32#usize
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::closure<'_0>}::call_mut]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 196:69-202:9 -/
+def
+  pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+  (c : pqxdh.VerifiedInitKex.registration_id.closure) (tupled_args : Std.Usize)
+  :
+  RustM (Std.U8 × pqxdh.VerifiedInitKex.registration_id.closure)
+  := do
+  if tupled_args < pqxdh.SIGN_PUBLIC_KEY_SIZE
+  then
+    let i ← Array.index_usize c.beacon_identity_public_key tupled_args
+    ok (i, c)
+  else
+    let i ← tupled_args - pqxdh.SIGN_PUBLIC_KEY_SIZE
+    let i1 ← Array.index_usize c.beacon_one_time_public_key i
+    ok (i1, c)
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::closure<'_0>}::call_once]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 196:69-202:9 -/
+def
+  pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+  (c : pqxdh.VerifiedInitKex.registration_id.closure) (i : Std.Usize) :
+  RustM Std.U8
+  := do
+  let (i1, _) ←
+    pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+      c i
+  ok i1
+
+/-- Trait implementation: [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::closure<'_0>}]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 196:69-202:9 -/
+@[reducible]
+def
+  pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  : core.ops.function.FnOnce pqxdh.VerifiedInitKex.registration_id.closure
+  Std.Usize Std.U8 := {
+  call_once :=
+    pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+}
+
+/-- Trait implementation: [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::closure<'_0>}]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 196:69-202:9 -/
+@[reducible]
+def
+  pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+  : core.ops.function.FnMut pqxdh.VerifiedInitKex.registration_id.closure
+  Std.Usize Std.U8 := {
+  FnOnceInst :=
+    pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  call_mut :=
+    pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+}
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 195:4-204:5
+    Visibility: public -/
+def pqxdh.VerifiedInitKex.registration_id
+  (self : pqxdh.VerifiedInitKex) : RustM pqxdh.RegistrationId := do
+  let bytes ←
+    core.array.from_fn 64#usize
+      pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+      self
+  ok { bytes }
+
+/-- [beaconcrypt_core::pqxdh::registration_id]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 218:0-220:1
+    Visibility: public -/
+def pqxdh.registration_id
+  (registration1 : pqxdh.VerifiedInitKex) : RustM pqxdh.RegistrationId := do
+  pqxdh.VerifiedInitKex.registration_id registration1
+
+/-- [beaconcrypt_core::pqxdh::server_accept]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 755:0-782:1
+    Visibility: public -/
+def pqxdh.server_accept
+  (state : pqxdh.ServerState) (registration1 : pqxdh.VerifiedInitKex)
+  (registration_status : pqxdh.RegistrationStatus)
+  (server_binding : pqxdh.ServerBinding) (coins : pqxdh.ServerCoins)
+  (shared_secrets : pqxdh.PqxdhSharedSecrets) :
+  RustM (core.result.Result (pqxdh.ServerState ×
+    pqxdh.PendingServerRegistration) pqxdh.RegistrationError)
+  := do
+  let r ← pqxdh.validate_registration_status registration_status
+  match r with
+  | core.result.Result.Ok _ =>
+    let r1 ← pqxdh.build_root_key_input shared_secrets
+    match r1 with
+    | core.result.Result.Ok value =>
+      let ri ← pqxdh.registration_id registration1
+      ok (core.result.Result.Ok (state,
+        {
+          server_binding,
+          registration_id := ri,
+          beacon_identity_public_key :=
+            registration1.beacon_identity_public_key,
+          ephemeral_public_key := coins.ephemeral_public_key,
+          kem_ciphertext := coins.kem_ciphertext,
+          root_key_input := value
+        }))
+    | core.result.Result.Err err => ok (core.result.Result.Err err)
+  | core.result.Result.Err err => ok (core.result.Result.Err err)
+
+/-- [beaconcrypt_core::pqxdh::SIGN_TYPE_ED25519]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 35:0-35:36
+    Visibility: public -/
+@[global_simps, irreducible] def pqxdh.SIGN_TYPE_ED25519 : Std.U8 := 1#u8
+
+/-- [beaconcrypt_core::pqxdh::tag_sign_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::tag_sign_key::closure<'_0>}::call_mut]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 963:29-963:83 -/
+def pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+  (c : pqxdh.tag_sign_key.closure) (tupled_args : Std.Usize) :
+  RustM (Std.U8 × pqxdh.tag_sign_key.closure)
+  := do
+  if tupled_args < 1#usize
+  then ok (pqxdh.SIGN_TYPE_ED25519, c)
+  else
+    let i ← tupled_args - 1#usize
+    let i1 ← Array.index_usize c i
+    ok (i1, c)
+
+/-- [beaconcrypt_core::pqxdh::tag_sign_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::tag_sign_key::closure<'_0>}::call_once]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 963:29-963:83 -/
+def
+  pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+  (c : pqxdh.tag_sign_key.closure) (i : Std.Usize) : RustM Std.U8 := do
+  let (i1, _) ←
+    pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+      c i
+  ok i1
+
+/-- Trait implementation: [beaconcrypt_core::pqxdh::tag_sign_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::tag_sign_key::closure<'_0>}]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 963:29-963:83 -/
+@[reducible]
+def pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8 :
+  core.ops.function.FnOnce pqxdh.tag_sign_key.closure Std.Usize Std.U8 := {
+  call_once :=
+    pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+}
+
+/-- Trait implementation: [beaconcrypt_core::pqxdh::tag_sign_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::tag_sign_key::closure<'_0>}]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 963:29-963:83 -/
+@[reducible]
+def pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
+  core.ops.function.FnMut pqxdh.tag_sign_key.closure Std.Usize Std.U8 := {
+  FnOnceInst :=
+    pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  call_mut :=
+    pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+}
+
+/-- [beaconcrypt_core::pqxdh::tag_sign_key]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 961:0-965:1 -/
+def pqxdh.tag_sign_key
+  (key : Array Std.U8 32#usize) : RustM (Array Std.U8 33#usize) := do
+  core.array.from_fn 33#usize
+    pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 key
+
+/-- [beaconcrypt_core::ratchet::SYM_RATCHET_INFO]
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 57:0-58:49
+    Visibility: public -/
+@[global_simps, irreducible]
+def ratchet.SYM_RATCHET_INFO : Array Std.U8 41#usize :=
+  Array.make 41#usize [
+    83#u8, 121#u8, 109#u8, 82#u8, 97#u8, 116#u8, 99#u8, 104#u8, 101#u8, 116#u8,
+    95#u8, 72#u8, 75#u8, 68#u8, 70#u8, 95#u8, 83#u8, 72#u8, 65#u8, 45#u8,
+    53#u8, 49#u8, 50#u8, 95#u8, 67#u8, 72#u8, 65#u8, 67#u8, 72#u8, 65#u8,
+    50#u8, 48#u8, 95#u8, 80#u8, 79#u8, 76#u8, 89#u8, 49#u8, 51#u8, 48#u8, 53#u8
+    ]
+
+/-- [beaconcrypt_core::pqxdh::SYM_RATCHET_INFO]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 52:0-52:92
+    Visibility: public -/
+@[global_simps, irreducible]
+def pqxdh.SYM_RATCHET_INFO : Array Std.U8 41#usize := ratchet.SYM_RATCHET_INFO
+
+/-- [beaconcrypt_core::pqxdh::PQXDH_INFO]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 50:0-50:84
+    Visibility: public -/
+@[global_simps, irreducible]
+def pqxdh.PQXDH_INFO : Array Std.U8 46#usize :=
+  Array.make 46#usize [
+    66#u8, 101#u8, 97#u8, 99#u8, 111#u8, 110#u8, 99#u8, 114#u8, 121#u8, 112#u8,
+    116#u8, 80#u8, 113#u8, 120#u8, 100#u8, 104#u8, 95#u8, 67#u8, 85#u8, 82#u8,
+    86#u8, 69#u8, 50#u8, 53#u8, 53#u8, 49#u8, 57#u8, 95#u8, 83#u8, 72#u8,
+    65#u8, 45#u8, 53#u8, 49#u8, 50#u8, 95#u8, 77#u8, 76#u8, 45#u8, 75#u8,
+    69#u8, 77#u8, 45#u8, 55#u8, 54#u8, 56#u8
+    ]
+
+/-- [beaconcrypt_core::pqxdh::build_associated_data::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::build_associated_data::closure<'_0, '_1>}::call_mut]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 945:66-957:5 -/
+def
+  pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+  (c : pqxdh.build_associated_data.closure) (tupled_args : Std.Usize) :
+  RustM (Std.U8 × pqxdh.build_associated_data.closure)
+  := do
+  let (a, a1) := c
+  if tupled_args < 33#usize
+  then let i ← Array.index_usize a tupled_args
+       ok (i, c)
+  else
+    if tupled_args < 66#usize
+    then
+      let i ← tupled_args - 33#usize
+      let i1 ← Array.index_usize a1 i
+      ok (i1, c)
+    else
+      if tupled_args < 112#usize
+      then
+        let i ← tupled_args - 66#usize
+        let i1 ← Array.index_usize pqxdh.PQXDH_INFO i
+        ok (i1, c)
+      else
+        if tupled_args < 153#usize
+        then
+          let i ← tupled_args - 112#usize
+          let i1 ← Array.index_usize pqxdh.SYM_RATCHET_INFO i
+          ok (i1, c)
+        else ok (0#u8, c)
+
+/-- [beaconcrypt_core::pqxdh::build_associated_data::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::build_associated_data::closure<'_0, '_1>}::call_once]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 945:66-957:5 -/
+def
+  pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+  (c : pqxdh.build_associated_data.closure) (i : Std.Usize) :
+  RustM Std.U8
+  := do
+  let (i1, _) ←
+    pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+      c i
+  ok i1
+
+/-- Trait implementation: [beaconcrypt_core::pqxdh::build_associated_data::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::build_associated_data::closure<'_0, '_1>}]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 945:66-957:5 -/
+@[reducible]
+def pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  : core.ops.function.FnOnce pqxdh.build_associated_data.closure Std.Usize
+  Std.U8 := {
+  call_once :=
+    pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+}
+
+/-- Trait implementation: [beaconcrypt_core::pqxdh::build_associated_data::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::build_associated_data::closure<'_0, '_1>}]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 945:66-957:5 -/
+@[reducible]
+def pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+  : core.ops.function.FnMut pqxdh.build_associated_data.closure Std.Usize
+  Std.U8 := {
+  FnOnceInst :=
+    pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  call_mut :=
+    pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+}
+
+/-- [beaconcrypt_core::pqxdh::build_associated_data]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 938:0-959:1
+    Visibility: public -/
+def pqxdh.build_associated_data
+  (server_identity_public_key : Array Std.U8 32#usize)
+  (beacon_identity_public_key : Array Std.U8 32#usize) :
+  RustM (Array Std.U8 281#usize)
+  := do
+  let encoded_server ← pqxdh.tag_sign_key server_identity_public_key
+  let encoded_beacon ← pqxdh.tag_sign_key beacon_identity_public_key
+  core.array.from_fn 281#usize
+    pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+    (encoded_server, encoded_beacon)
+
+/-- [beaconcrypt_core::pqxdh::beacon_prepare_finish]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 548:0-569:1
+    Visibility: public -/
+def pqxdh.beacon_prepare_finish
+  (state : pqxdh.BeaconInitSent) (inputs : pqxdh.BeaconFinishInputs) :
+  RustM (core.result.Result pqxdh.BeaconRegistrationCandidate
+    pqxdh.RegistrationError)
+  := do
+  let b ←
+    core.Array.Insts.CoreCmpPartialEqArray.eq core.U8.Insts.CoreCmpPartialEqU8
+      state.expected_server_binding.identity_public_key
+      inputs.response_server_identity
+  if b
+  then
+    let r ← pqxdh.build_root_key_input inputs.shared_secrets
+    match r with
+    | core.result.Result.Ok value =>
+      let associated_data ←
+        pqxdh.build_associated_data
+          state.expected_server_binding.identity_public_key
+          state.beacon_identity_public_key
+      ok (core.result.Result.Ok
+        {
+          server_binding := state.expected_server_binding,
+          assigned_key_id := inputs.assigned_key_id,
+          root_key_input := value,
+          associated_data
+        })
+    | core.result.Result.Err err => ok (core.result.Result.Err err)
+  else ok (core.result.Result.Err pqxdh.RegistrationError.IdentityMismatch)
+
+/-- [beaconcrypt_core::agreement::finish_dh]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 363:0-416:1 -/
+def agreement.finish_dh
+  (state : agreement.AgreementState) : RustM agreement.AgreementEffect := do
+  let a ← ratchet.RatchetChain.as_bytes state.dh1
+  let a1 ← ratchet.RatchetChain.as_bytes state.dh2
+  let a2 ← ratchet.RatchetChain.as_bytes state.dh3
+  let a3 ← ratchet.RatchetChain.as_bytes state.dh4
+  let a4 ← ratchet.RatchetChain.as_bytes state.kem
+  match state.input with
+  | agreement.AgreementInput.Server control status registration1 binding =>
+    let sap ← session.RegistrationBinding.impl.server_pin binding
+    let sb ← session.ServerAuthenticationPin.impl.binding sap
+    let accepted ←
+      pqxdh.server_accept control registration1 status sb
+        {
+          ephemeral_public_key := state.ephemeral_public_key,
+          kem_ciphertext := state.kem_ciphertext
+        }
+        { dh1 := a, dh2 := a1, dh3 := a2, dh4 := a3, kem_shared_secret := a4 }
+    match accepted with
+    | core.result.Result.Ok p =>
+      let (_, pending) := p
+      ok (agreement.AgreementEffect.RootKdf
+        { candidate := (agreement.AgreementCandidate.Server pending binding) })
+    | core.result.Result.Err _ =>
+      ok (agreement.AgreementEffect.Rejected core.option.Option.None)
+  | agreement.AgreementInput.Beacon control binding response
+    application_ciphertext =>
+    let r ←
+      pqxdh.beacon_prepare_finish control
+        {
+          response_server_identity := response.identity_key,
+          assigned_key_id := response.key_id,
+          shared_secrets :=
+            {
+              dh1 := a,
+              dh2 := a1,
+              dh3 := a2,
+              dh4 := a3,
+              kem_shared_secret := a4
+            }
+        }
+    match r with
+    | core.result.Result.Ok candidate =>
+      ok (agreement.AgreementEffect.RootKdf
+        {
+          candidate :=
+            (agreement.AgreementCandidate.Beacon
+              candidate
+              binding
+              application_ciphertext)
+        })
+    | core.result.Result.Err _ =>
+      let ba ← pqxdh.beacon_abort_init control
+      ok (agreement.AgreementEffect.Rejected (core.option.Option.Some ba))
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::DhPending<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 317:4-348:5
+    Visibility: public -/
+def agreement.DhPending.resume
+  (self : agreement.DhPending)
+  (shared : core.option.Option (Array Std.U8 32#usize)) :
+  RustM agreement.AgreementEffect
+  := do
+  match shared with
+  | core.option.Option.None => agreement.AgreementState.reject self.state
+  | core.option.Option.Some shared1 =>
+    match self.position with
+    | agreement.DhPosition.First =>
+      let rc ← ratchet.RatchetChain.from_bytes shared1
+      ok (agreement.AgreementEffect.Dh
+        {
+          state := { self.state with dh1 := rc },
+          position := agreement.DhPosition.Second
+        })
+    | agreement.DhPosition.Second =>
+      let rc ← ratchet.RatchetChain.from_bytes shared1
+      ok (agreement.AgreementEffect.Dh
+        {
+          state := { self.state with dh2 := rc },
+          position := agreement.DhPosition.Third
+        })
+    | agreement.DhPosition.Third =>
+      let rc ← ratchet.RatchetChain.from_bytes shared1
+      ok (agreement.AgreementEffect.Dh
+        {
+          state := { self.state with dh3 := rc },
+          position := agreement.DhPosition.Fourth
+        })
+    | agreement.DhPosition.Fourth =>
+      let rc ← ratchet.RatchetChain.from_bytes shared1
+      agreement.finish_dh { self.state with dh4 := rc }
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::PendingServerRegistration}::root_key_input]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 745:4-747:5
+    Visibility: public -/
+def pqxdh.PendingServerRegistration.impl.root_key_input
+  (self : pqxdh.PendingServerRegistration) : RustM pqxdh.RootKeyInput := do
+  ok self.root_key_input
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconRegistrationCandidate}::root_key_input]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 521:4-523:5
+    Visibility: public -/
+def pqxdh.BeaconRegistrationCandidate.impl.root_key_input
+  (self : pqxdh.BeaconRegistrationCandidate) : RustM pqxdh.RootKeyInput := do
+  ok self.root_key_input
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::RootKeyInput}::as_bytes]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 365:4-367:5
+    Visibility: public -/
+def pqxdh.RootKeyInput.as_bytes
+  (self : pqxdh.RootKeyInput) : RustM (Array Std.U8 192#usize) := do
+  ok self.bytes
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::RootKdfPending<'a>}::request]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 429:4-438:5
+    Visibility: public -/
+def agreement.RootKdfPending.request
+  (self : agreement.RootKdfPending) : RustM agreement.RootKdfRequest := do
+  match self.candidate with
+  | agreement.AgreementCandidate.Server pending _ =>
+    let rki ← pqxdh.PendingServerRegistration.impl.root_key_input pending
+    let input ← pqxdh.RootKeyInput.as_bytes rki
+    ok { input, info := pqxdh.PQXDH_INFO }
+  | agreement.AgreementCandidate.Beacon candidate _ _ =>
+    let rki ← pqxdh.BeaconRegistrationCandidate.impl.root_key_input candidate
+    let input ← pqxdh.RootKeyInput.as_bytes rki
+    ok { input, info := pqxdh.PQXDH_INFO }
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::PendingServerRegistration}::root_key_input_mut]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 749:4-751:5
+    Visibility: public -/
+def pqxdh.PendingServerRegistration.root_key_input_mut
+  (self : pqxdh.PendingServerRegistration) :
+  RustM (pqxdh.RootKeyInput × (pqxdh.RootKeyInput →
+    pqxdh.PendingServerRegistration))
+  := do
+  let back := fun rki => { self with root_key_input := rki }
+  ok (self.root_key_input, back)
+
+/-- [beaconcrypt_core::pqxdh::beacon_abort_candidate]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 682:0-686:1
+    Visibility: public -/
+def pqxdh.beacon_abort_candidate
+  (candidate : pqxdh.BeaconRegistrationCandidate) :
+  RustM pqxdh.BeaconAborted
+  := do
+  ok { server_key_id := candidate.server_binding.identity_key_id }
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconRegistrationCandidate}::root_key_input_mut]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 525:4-527:5
+    Visibility: public -/
+def pqxdh.BeaconRegistrationCandidate.root_key_input_mut
+  (self : pqxdh.BeaconRegistrationCandidate) :
+  RustM (pqxdh.RootKeyInput × (pqxdh.RootKeyInput →
+    pqxdh.BeaconRegistrationCandidate))
+  := do
+  let back := fun rki => { self with root_key_input := rki }
+  ok (self.root_key_input, back)
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::RootKeyInput}::clear]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 376:4-378:5
+    Visibility: public -/
+def pqxdh.RootKeyInput.clear
+  (self : pqxdh.RootKeyInput) : RustM pqxdh.RootKeyInput := do
+  let a := Array.repeat 192#usize 0#u8
+  ok { bytes := a }
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::RootKdfPending<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 440:4-473:5
+    Visibility: public -/
+def agreement.RootKdfPending.resume
+  (self : agreement.RootKdfPending)
+  (root : core.option.Option (Array Std.U8 32#usize)) :
+  RustM agreement.AgreementEffect
+  := do
+  match root with
+  | core.option.Option.None =>
+    match self.candidate with
+    | agreement.AgreementCandidate.Server _ _ =>
+      ok (agreement.AgreementEffect.Rejected core.option.Option.None)
+    | agreement.AgreementCandidate.Beacon candidate _ _ =>
+      let ba ← pqxdh.beacon_abort_candidate candidate
+      ok (agreement.AgreementEffect.Rejected (core.option.Option.Some ba))
+  | core.option.Option.Some root1 =>
+    let ac ←
+      match self.candidate with
+      | agreement.AgreementCandidate.Server pending rb =>
+        do
+        let (rki, root_key_input_mut_back) ←
+          pqxdh.PendingServerRegistration.root_key_input_mut pending
+        let rki1 ← pqxdh.RootKeyInput.clear rki
+        let pending1 := root_key_input_mut_back rki1
+        ok (agreement.AgreementCandidate.Server pending1 rb)
+      | agreement.AgreementCandidate.Beacon candidate rb s =>
+        do
+        let (rki, root_key_input_mut_back) ←
+          pqxdh.BeaconRegistrationCandidate.root_key_input_mut candidate
+        let rki1 ← pqxdh.RootKeyInput.clear rki
+        let candidate1 := root_key_input_mut_back rki1
+        ok (agreement.AgreementCandidate.Beacon candidate1 rb s)
+    let root2 ← ratchet.RatchetChain.from_bytes root1
+    match ac with
+    | agreement.AgreementCandidate.Server pending binding =>
+      ok (agreement.AgreementEffect.ServerComplete
+        { pending, binding, root := root2 })
+    | agreement.AgreementCandidate.Beacon candidate binding
+      application_ciphertext =>
+      ok (agreement.AgreementEffect.BeaconComplete
+        { candidate, binding, root := root2, application_ciphertext })
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::PendingServerRegistration}::registration_id]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 737:4-739:5
+    Visibility: public -/
+def pqxdh.PendingServerRegistration.impl.registration_id
+  (self : pqxdh.PendingServerRegistration) : RustM pqxdh.RegistrationId := do
+  ok self.registration_id
+
+/-- [beaconcrypt_core::agreement::{beaconcrypt_core::agreement::ServerAgreement}::registration_id]:
+    Source: 'beaconcrypt-core/src/agreement.rs', lines 484:4-486:5
+    Visibility: public -/
+def agreement.ServerAgreement.registration_id
+  (self : agreement.ServerAgreement) : RustM pqxdh.RegistrationId := do
+  pqxdh.PendingServerRegistration.impl.registration_id self.pending
+
 /-- [beaconcrypt_core::authentication::INIT_DOMAIN]
     Source: 'beaconcrypt-core/src/authentication.rs', lines 8:0-8:81
     Visibility: public -/
@@ -840,6 +1892,430 @@ def commitment.build_commitment_transcript
       (key, nonce, associated_data, tag, sequence1, sender_id1)
   ok { bytes }
 
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::Peer<Ratchet>}::from_trusted_parts]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 26:4-28:5
+    Visibility: public -/
+def peer.Peer.from_trusted_parts
+  {Ratchet : Type} (binding : session.SessionBinding) (ratchet1 : Ratchet) :
+  RustM (peer.Peer Ratchet)
+  := do
+  ok { binding, ratchet := ratchet1 }
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::assigned_key_id]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 160:4-162:5
+    Visibility: public -/
+def session.SessionBinding.impl.assigned_key_id
+  (self : session.SessionBinding) : RustM Std.U64 := do
+  ok self.assigned_key_id
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::Peer<Ratchet>}::key_id]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 30:4-32:5
+    Visibility: public -/
+def peer.Peer.key_id
+  {Ratchet : Type} (self : peer.Peer Ratchet) : RustM Std.U64 := do
+  session.SessionBinding.impl.assigned_key_id self.binding
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::Peer<Ratchet>}::binding]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 34:4-36:5
+    Visibility: public -/
+def peer.Peer.impl.binding
+  {Ratchet : Type} (self : peer.Peer Ratchet) :
+  RustM session.SessionBinding
+  := do
+  ok self.binding
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::Peer<Ratchet>}::ratchet]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 38:4-40:5
+    Visibility: public -/
+def peer.Peer.impl.ratchet
+  {Ratchet : Type} (self : peer.Peer Ratchet) : RustM Ratchet := do
+  ok self.ratchet
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::Peer<Ratchet>}::ratchet_mut]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 42:4-44:5
+    Visibility: public -/
+def peer.Peer.ratchet_mut
+  {Ratchet : Type} (self : peer.Peer Ratchet) :
+  RustM (Ratchet × (Ratchet → peer.Peer Ratchet))
+  := do
+  let back := fun t => { self with ratchet := t }
+  ok (self.ratchet, back)
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::Peer<Ratchet>}::into_parts]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 46:4-48:5
+    Visibility: public -/
+def peer.Peer.into_parts
+  {Ratchet : Type} (self : peer.Peer Ratchet) :
+  RustM (session.SessionBinding × Ratchet)
+  := do
+  ok (self.binding, self.ratchet)
+
+/-- [beaconcrypt_core::peer::begin_registration_lookup]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 57:0-65:1
+    Visibility: public -/
+def peer.begin_registration_lookup
+  (control : pqxdh.ServerState)
+  (authenticated : registration.AuthenticatedInit) :
+  RustM peer.RegistrationLookup
+  := do
+  ok { control, authenticated }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::AuthenticatedInit}::registration_id]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 357:4-359:5
+    Visibility: public -/
+def registration.AuthenticatedInit.registration_id
+  (self : registration.AuthenticatedInit) : RustM pqxdh.RegistrationId := do
+  pqxdh.registration_id self.registration
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::RegistrationLookup}::request]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 68:4-70:5
+    Visibility: public -/
+def peer.RegistrationLookup.request
+  (self : peer.RegistrationLookup) : RustM pqxdh.RegistrationId := do
+  registration.AuthenticatedInit.registration_id self.authenticated
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::RegistrationLookup}::resume]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 72:4-81:5
+    Visibility: public -/
+def peer.RegistrationLookup.resume
+  (self : peer.RegistrationLookup) (consumed : Bool) :
+  RustM agreement.AgreementEffect
+  := do
+  if consumed
+  then ok (agreement.AgreementEffect.Rejected core.option.Option.None)
+  else
+    agreement.begin_server_agreement self.control
+      pqxdh.RegistrationStatus.Fresh self.authenticated
+
+/-- [beaconcrypt_core::peer::begin_registration_insert]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 89:0-91:1
+    Visibility: public -/
+def peer.begin_registration_insert
+  (agreement1 : agreement.ServerAgreement) :
+  RustM peer.RegistrationInsert
+  := do
+  ok { agreement := agreement1 }
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::RegistrationInsert}::request]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 94:4-96:5
+    Visibility: public -/
+def peer.RegistrationInsert.request
+  (self : peer.RegistrationInsert) : RustM pqxdh.RegistrationId := do
+  agreement.ServerAgreement.registration_id self.agreement
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::RegistrationInsert}::resume]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 99:4-106:5
+    Visibility: public -/
+def peer.RegistrationInsert.resume
+  (self : peer.RegistrationInsert) (inserted : Bool) :
+  RustM (core.option.Option peer.ConsumedRegistration)
+  := do
+  if inserted
+  then ok (core.option.Option.Some { agreement := self.agreement })
+  else ok core.option.Option.None
+
+/-- [beaconcrypt_core::pqxdh::server_next_key_id]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 845:0-851:1
+    Visibility: public -/
+def pqxdh.server_next_key_id
+  (state : pqxdh.ServerState) :
+  RustM (core.result.Result Std.U64 pqxdh.RegistrationError)
+  := do
+  if state.last_key_id = core.num.U64.MAX
+  then ok (core.result.Result.Err pqxdh.RegistrationError.KeyIdExhausted)
+  else let i ← state.last_key_id + 1#u64
+       ok (core.result.Result.Ok i)
+
+/-- [beaconcrypt_core::peer::begin_completion_lookup]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 123:0-140:1
+    Visibility: public -/
+def peer.begin_completion_lookup
+  (control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin)
+  (registration1 : peer.ConsumedRegistration) (application : Slice Std.U8) :
+  RustM (core.result.Result peer.CompletionLookup pqxdh.ServerState)
+  := do
+  let r ← pqxdh.server_next_key_id control
+  match r with
+  | core.result.Result.Ok key_id =>
+    ok (core.result.Result.Ok
+      { control, pin, registration := registration1, application, key_id })
+  | core.result.Result.Err _ => ok (core.result.Result.Err control)
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::CompletionLookup<'a>}::request]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 143:4-145:5
+    Visibility: public -/
+def peer.CompletionLookup.request
+  (self : peer.CompletionLookup) : RustM Std.U64 := do
+  ok self.key_id
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::matches_server]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 99:4-104:5
+    Visibility: public -/
+def session.RegistrationBinding.matches_server
+  (self : session.RegistrationBinding)
+  (current : session.ServerAuthenticationPin) :
+  RustM Bool
+  := do
+  if self.server_pin.binding.identity_key_id = current.binding.identity_key_id
+  then
+    let b ←
+      core.Array.Insts.CoreCmpPartialEqArray.eq
+        core.U8.Insts.CoreCmpPartialEqU8
+        self.server_pin.binding.identity_public_key
+        current.binding.identity_public_key
+    if b
+    then
+      let b1 ←
+        core.Array.Insts.CoreCmpPartialEqArray.eq
+          core.U8.Insts.CoreCmpPartialEqU8 self.server_pin.public_key
+          current.public_key
+      if b1
+      then
+        core.Array.Insts.CoreCmpPartialEqArray.eq
+          core.U8.Insts.CoreCmpPartialEqU8 self.server_pin.fingerprint
+          current.fingerprint
+      else ok false
+    else ok false
+  else ok false
+
+/-- [beaconcrypt_core::pqxdh::server_prepare_commit]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 854:0-889:1
+    Visibility: public -/
+def pqxdh.server_prepare_commit
+  (state : pqxdh.ServerState) (pending : pqxdh.PendingServerRegistration)
+  (current_server_binding : pqxdh.ServerBinding)
+  (key_id_availability : pqxdh.KeyIdAvailability) :
+  RustM (core.result.Result pqxdh.ServerRegistrationCandidate
+    pqxdh.RegistrationError)
+  := do
+  if pending.server_binding.identity_key_id =
+    current_server_binding.identity_key_id
+  then
+    let b ←
+      core.Array.Insts.CoreCmpPartialEqArray.eq
+        core.U8.Insts.CoreCmpPartialEqU8
+        pending.server_binding.identity_public_key
+        current_server_binding.identity_public_key
+    if b
+    then
+      let r ← pqxdh.server_next_key_id state
+      match r with
+      | core.result.Result.Ok value =>
+        let b1 ←
+          match key_id_availability with
+          | pqxdh.KeyIdAvailability.Available => ok false
+          | pqxdh.KeyIdAvailability.Occupied => ok true
+        if b1
+        then ok (core.result.Result.Err pqxdh.RegistrationError.KeyIdCollision)
+        else
+          let a ←
+            pqxdh.build_associated_data
+              current_server_binding.identity_public_key
+              pending.beacon_identity_public_key
+          ok (core.result.Result.Ok
+            {
+              previous_state := state,
+              next_state := { last_key_id := value },
+              key_id := value,
+              beacon_identity_public_key := pending.beacon_identity_public_key,
+              server_identity_public_key :=
+                current_server_binding.identity_public_key,
+              server_identity_key_id := current_server_binding.identity_key_id,
+              ephemeral_public_key := pending.ephemeral_public_key,
+              kem_ciphertext := pending.kem_ciphertext,
+              associated_data := a
+            })
+      | core.result.Result.Err err => ok (core.result.Result.Err err)
+    else ok (core.result.Result.Err pqxdh.RegistrationError.IdentityMismatch)
+  else ok (core.result.Result.Err pqxdh.RegistrationError.IdentityMismatch)
+
+/-- [beaconcrypt_core::ratchet::RATCHET_CHAIN_SIZE]
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 53:0-53:41
+    Visibility: public -/
+@[global_simps, irreducible]
+def ratchet.RATCHET_CHAIN_SIZE : Std.Usize := 32#usize
+
+/-- [beaconcrypt_core::pqxdh::RATCHET_CHAIN_SIZE]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 28:0-28:73
+    Visibility: public -/
+@[global_simps, irreducible]
+def pqxdh.RATCHET_CHAIN_SIZE : Std.Usize := ratchet.RATCHET_CHAIN_SIZE
+
+/-- [beaconcrypt_core::pqxdh::SERVER_RATCHETS]
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 439:0-442:2 -/
+@[global_simps, irreducible]
+def pqxdh.SERVER_RATCHETS : RustM pqxdh.RatchetInitialization := do
+  let i ← lift (UScalar.cast .U8 pqxdh.RATCHET_CHAIN_SIZE)
+  ok { send_offset := 0#u8, receive_offset := i }
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerRegistrationCandidate}::ratchet_initialization]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 828:4-830:5
+    Visibility: public -/
+def pqxdh.ServerRegistrationCandidate.ratchet_initialization
+  (self : pqxdh.ServerRegistrationCandidate) :
+  RustM pqxdh.RatchetInitialization
+  := do
+  pqxdh.SERVER_RATCHETS
+
+/-- [beaconcrypt_core::ratchet::{beaconcrypt_core::ratchet::SymmetricRatchetKdfRequest}::new]:
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 168:4-173:5 -/
+def ratchet.SymmetricRatchetKdfRequest.new
+  (input : Array Std.U8 32#usize) :
+  RustM ratchet.SymmetricRatchetKdfRequest
+  := do
+  ok { input, info := ratchet.SYM_RATCHET_INFO }
+
+/-- [beaconcrypt_core::pqxdh::concrete::start_initial_ratchet_kdf]:
+    Source: 'beaconcrypt-core/src/pqxdh/concrete.rs', lines 64:0-72:1
+    Visibility: public -/
+def pqxdh.concrete.start_initial_ratchet_kdf
+  (root : Array Std.U8 32#usize) (initialization : pqxdh.RatchetInitialization)
+  :
+  RustM pqxdh.concrete.InitialRatchetKdfPending
+  := do
+  let srkr ← ratchet.SymmetricRatchetKdfRequest.new root
+  ok { request := srkr, initialization }
+
+/-- [beaconcrypt_core::pqxdh::concrete::start_server_candidate_ratchet_kdf]:
+    Source: 'beaconcrypt-core/src/pqxdh/concrete.rs', lines 110:0-115:1
+    Visibility: public -/
+def pqxdh.concrete.start_server_candidate_ratchet_kdf
+  (candidate : pqxdh.ServerRegistrationCandidate)
+  (root : Array Std.U8 32#usize) :
+  RustM pqxdh.concrete.InitialRatchetKdfPending
+  := do
+  let ri ← pqxdh.ServerRegistrationCandidate.ratchet_initialization candidate
+  pqxdh.concrete.start_initial_ratchet_kdf root ri
+
+/-- [beaconcrypt_core::registration::begin_server_completion]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1011:0-1039:1
+    Visibility: public -/
+def registration.begin_server_completion
+  (control : pqxdh.ServerState) (current_pin : session.ServerAuthenticationPin)
+  (availability : pqxdh.KeyIdAvailability)
+  (agreement1 : agreement.ServerAgreement) (application : Slice Std.U8) :
+  RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState)
+  := do
+  let b ← core.slice.Slice.is_empty application
+  if b
+  then ok (core.result.Result.Err control)
+  else
+    let b1 ←
+      session.RegistrationBinding.matches_server agreement1.binding current_pin
+    if b1
+    then
+      let sb ← session.ServerAuthenticationPin.impl.binding current_pin
+      let r ←
+        pqxdh.server_prepare_commit control agreement1.pending sb availability
+      match r with
+      | core.result.Result.Ok candidate =>
+        let a ← ratchet.RatchetChain.as_bytes agreement1.root
+        let pending ←
+          pqxdh.concrete.start_server_candidate_ratchet_kdf candidate a
+        ok (core.result.Result.Ok
+          { candidate, binding := agreement1.binding, application, pending })
+      | core.result.Result.Err _ => ok (core.result.Result.Err control)
+    else ok (core.result.Result.Err control)
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::CompletionLookup<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 148:4-161:5
+    Visibility: public -/
+def peer.CompletionLookup.resume
+  (self : peer.CompletionLookup) (occupied : Bool) :
+  RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState)
+  := do
+  let availability ←
+    if occupied
+    then ok pqxdh.KeyIdAvailability.Occupied
+    else ok pqxdh.KeyIdAvailability.Available
+  registration.begin_server_completion self.control self.pin availability
+    self.registration.agreement self.application
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::PublishedServerResponse<Encoded>}::into_parts]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1348:4-1357:5
+    Visibility: public -/
+def registration.PublishedServerResponse.into_parts
+  {Encoded : Type} (self : registration.PublishedServerResponse Encoded) :
+  RustM (pqxdh.ServerState × session.SessionBinding ×
+    ratchet.concrete.ConcreteRatchetKernel × Encoded)
+  := do
+  ok (self.control, self.binding, self.kernel, self.encoded)
+
+/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerState}::last_key_id]:
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 712:4-714:5
+    Visibility: public -/
+def pqxdh.ServerState.impl.last_key_id
+  (self : pqxdh.ServerState) : RustM Std.U64 := do
+  ok self.last_key_id
+
+/-- [beaconcrypt_core::peer::begin_peer_insert]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 172:0-190:1
+    Visibility: public -/
+def peer.begin_peer_insert
+  {Encoded : Type} (control : pqxdh.ServerState)
+  (published : registration.PublishedServerResponse Encoded) :
+  RustM (core.result.Result (peer.PeerInsert Encoded) pqxdh.ServerState)
+  := do
+  let r ← pqxdh.server_next_key_id control
+  match r with
+  | core.result.Result.Ok key_id =>
+    let (next, binding, kernel, encoded) ←
+      registration.PublishedServerResponse.into_parts published
+    let i ← pqxdh.ServerState.impl.last_key_id next
+    if i != key_id
+    then ok (core.result.Result.Err control)
+    else
+      let p ← peer.Peer.from_trusted_parts binding kernel
+      ok (core.result.Result.Ok
+        { previous := control, next, peer := p, encoded })
+  | core.result.Result.Err _ => ok (core.result.Result.Err control)
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::PeerInsert<Encoded>}::request]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 193:4-195:5
+    Visibility: public -/
+def peer.PeerInsert.request
+  {Encoded : Type} (self : peer.PeerInsert Encoded) : RustM Std.U64 := do
+  peer.Peer.key_id self.peer
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::PeerInsert<Encoded>}::into_parts]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 198:4-209:5
+    Visibility: public -/
+def peer.PeerInsert.into_parts
+  {Encoded : Type} (self : peer.PeerInsert Encoded) :
+  RustM ((peer.Peer ratchet.concrete.ConcreteRatchetKernel) ×
+    (peer.PublicationFinish Encoded))
+  := do
+  let key_id ← peer.Peer.key_id self.peer
+  ok (self.peer,
+    {
+      previous := self.previous,
+      next := self.next,
+      key_id,
+      encoded := self.encoded
+    })
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::PublicationFinish<Encoded>}::finish]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 221:4-230:5
+    Visibility: public -/
+def peer.PublicationFinish.finish
+  {Encoded : Type} (self : peer.PublicationFinish Encoded) (inserted : Bool) :
+  RustM (core.result.Result (peer.PublishedPeer Encoded) pqxdh.ServerState)
+  := do
+  if inserted
+  then
+    ok (core.result.Result.Ok
+      { control := self.next, key_id := self.key_id, encoded := self.encoded })
+  else ok (core.result.Result.Err self.previous)
+
+/-- [beaconcrypt_core::peer::{beaconcrypt_core::peer::PublishedPeer<Encoded>}::into_parts]:
+    Source: 'beaconcrypt-core/src/peer.rs', lines 240:4-242:5
+    Visibility: public -/
+def peer.PublishedPeer.into_parts
+  {Encoded : Type} (self : peer.PublishedPeer Encoded) :
+  RustM (pqxdh.ServerState × Std.U64 × Encoded)
+  := do
+  ok (self.control, self.key_id, self.encoded)
+
 /-- [beaconcrypt_core::pqxdh::concrete::{beaconcrypt_core::pqxdh::concrete::InitialRatchetKdfPending}::request]:
     Source: 'beaconcrypt-core/src/pqxdh/concrete.rs', lines 33:4-35:5
     Visibility: public -/
@@ -866,37 +2342,6 @@ def pqxdh.concrete.InitialRatchetKdfResponse.as_bytes
   RustM (Array Std.U8 64#usize)
   := do
   ok self.bytes
-
-/-- [beaconcrypt_core::ratchet::SYM_RATCHET_INFO]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 57:0-58:49
-    Visibility: public -/
-@[global_simps, irreducible]
-def ratchet.SYM_RATCHET_INFO : Array Std.U8 41#usize :=
-  Array.make 41#usize [
-    83#u8, 121#u8, 109#u8, 82#u8, 97#u8, 116#u8, 99#u8, 104#u8, 101#u8, 116#u8,
-    95#u8, 72#u8, 75#u8, 68#u8, 70#u8, 95#u8, 83#u8, 72#u8, 65#u8, 45#u8,
-    53#u8, 49#u8, 50#u8, 95#u8, 67#u8, 72#u8, 65#u8, 67#u8, 72#u8, 65#u8,
-    50#u8, 48#u8, 95#u8, 80#u8, 79#u8, 76#u8, 89#u8, 49#u8, 51#u8, 48#u8, 53#u8
-    ]
-
-/-- [beaconcrypt_core::ratchet::{beaconcrypt_core::ratchet::SymmetricRatchetKdfRequest}::new]:
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 168:4-173:5 -/
-def ratchet.SymmetricRatchetKdfRequest.new
-  (input : Array Std.U8 32#usize) :
-  RustM ratchet.SymmetricRatchetKdfRequest
-  := do
-  ok { input, info := ratchet.SYM_RATCHET_INFO }
-
-/-- [beaconcrypt_core::pqxdh::concrete::start_initial_ratchet_kdf]:
-    Source: 'beaconcrypt-core/src/pqxdh/concrete.rs', lines 64:0-72:1
-    Visibility: public -/
-def pqxdh.concrete.start_initial_ratchet_kdf
-  (root : Array Std.U8 32#usize) (initialization : pqxdh.RatchetInitialization)
-  :
-  RustM pqxdh.concrete.InitialRatchetKdfPending
-  := do
-  let srkr ← ratchet.SymmetricRatchetKdfRequest.new root
-  ok { request := srkr, initialization }
 
 /-- [beaconcrypt_core::ratchet::refined::empty_material_slots]:
     Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 38:0-48:1 -/
@@ -988,27 +2433,8 @@ def ratchet.concrete.ConcreteRatchetKernel.new
   ratchet.concrete.ConcreteRatchetKernel.from_counters 0#u64 0#u64 send_chain
     receive_chain
 
-/-- [beaconcrypt_core::ratchet::{beaconcrypt_core::ratchet::RatchetChain}::from_bytes]:
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 73:4-75:5
-    Visibility: public -/
-def ratchet.RatchetChain.from_bytes
-  (bytes : Array Std.U8 32#usize) : RustM ratchet.RatchetChain := do
-  ok { bytes }
-
-/-- [beaconcrypt_core::ratchet::RATCHET_CHAIN_SIZE]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 53:0-53:41
-    Visibility: public -/
-@[global_simps, irreducible]
-def ratchet.RATCHET_CHAIN_SIZE : Std.Usize := 32#usize
-
-/-- [beaconcrypt_core::pqxdh::RATCHET_CHAIN_SIZE]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 28:0-28:73
-    Visibility: public -/
-@[global_simps, irreducible]
-def pqxdh.RATCHET_CHAIN_SIZE : Std.Usize := ratchet.RATCHET_CHAIN_SIZE
-
 /-- [beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::closure#1<'_0>}::call_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 475:37-475:71 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 482:37-482:71 -/
 def
   pqxdh.split_initial_ratchet_kdf_output.closure_1.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
   (c : pqxdh.split_initial_ratchet_kdf_output.closure_1)
@@ -1020,7 +2446,7 @@ def
   ok (i1, c)
 
 /-- [beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::closure#1<'_0>}::call_once]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 475:37-475:71 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 482:37-482:71 -/
 def
   pqxdh.split_initial_ratchet_kdf_output.closure_1.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
   (c : pqxdh.split_initial_ratchet_kdf_output.closure_1) (i : Std.Usize) :
@@ -1032,7 +2458,7 @@ def
   ok i1
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::closure#1<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 475:37-475:71 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 482:37-482:71 -/
 @[reducible]
 def
   pqxdh.split_initial_ratchet_kdf_output.closure_1.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
@@ -1043,7 +2469,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::closure#1<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 475:37-475:71 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 482:37-482:71 -/
 @[reducible]
 def
   pqxdh.split_initial_ratchet_kdf_output.closure_1.Insts.CoreOpsFunctionFnMutTupleUsizeU8
@@ -1056,7 +2482,7 @@ def
 }
 
 /-- [beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::closure<'_0>}::call_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 474:36-474:49 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 481:36-481:49 -/
 def
   pqxdh.split_initial_ratchet_kdf_output.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
   (c : pqxdh.split_initial_ratchet_kdf_output.closure)
@@ -1067,7 +2493,7 @@ def
   ok (i, c)
 
 /-- [beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::closure<'_0>}::call_once]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 474:36-474:49 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 481:36-481:49 -/
 def
   pqxdh.split_initial_ratchet_kdf_output.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
   (c : pqxdh.split_initial_ratchet_kdf_output.closure) (i : Std.Usize) :
@@ -1079,7 +2505,7 @@ def
   ok i1
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 474:36-474:49 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 481:36-481:49 -/
 @[reducible]
 def
   pqxdh.split_initial_ratchet_kdf_output.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
@@ -1090,7 +2516,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 474:36-474:49 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 481:36-481:49 -/
 @[reducible]
 def
   pqxdh.split_initial_ratchet_kdf_output.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
@@ -1103,7 +2529,7 @@ def
 }
 
 /-- [beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 470:0-488:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 477:0-495:1
     Visibility: public -/
 def pqxdh.split_initial_ratchet_kdf_output
   (output : Array Std.U8 64#usize)
@@ -1129,7 +2555,7 @@ def pqxdh.split_initial_ratchet_kdf_output
     ok { send_chain := rc, receive_chain := rc1 }
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::InitialRatchetChains}::into_parts]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 464:4-466:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 471:4-473:5
     Visibility: public -/
 def pqxdh.InitialRatchetChains.into_parts
   (self : pqxdh.InitialRatchetChains) :
@@ -1153,7 +2579,7 @@ def pqxdh.concrete.resume_initial_ratchet_kdf
   ratchet.concrete.ConcreteRatchetKernel.new send_chain receive_chain
 
 /-- [beaconcrypt_core::pqxdh::BEACON_RATCHETS]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 428:0-431:2 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 435:0-438:2 -/
 @[global_simps, irreducible]
 def pqxdh.BEACON_RATCHETS : RustM pqxdh.RatchetInitialization := do
   let i ← lift (UScalar.cast .U8 pqxdh.RATCHET_CHAIN_SIZE)
@@ -1169,13 +2595,6 @@ def pqxdh.concrete.start_beacon_ratchet_kdf
   let ri ← pqxdh.BEACON_RATCHETS
   pqxdh.concrete.start_initial_ratchet_kdf root ri
 
-/-- [beaconcrypt_core::pqxdh::SERVER_RATCHETS]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 432:0-435:2 -/
-@[global_simps, irreducible]
-def pqxdh.SERVER_RATCHETS : RustM pqxdh.RatchetInitialization := do
-  let i ← lift (UScalar.cast .U8 pqxdh.RATCHET_CHAIN_SIZE)
-  ok { send_offset := 0#u8, receive_offset := i }
-
 /-- [beaconcrypt_core::pqxdh::concrete::start_server_ratchet_kdf]:
     Source: 'beaconcrypt-core/src/pqxdh/concrete.rs', lines 95:0-97:1
     Visibility: public -/
@@ -1187,7 +2606,7 @@ def pqxdh.concrete.start_server_ratchet_kdf
   pqxdh.concrete.start_initial_ratchet_kdf root ri
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconRegistrationCandidate}::ratchet_initialization]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 526:4-528:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 533:4-535:5
     Visibility: public -/
 def pqxdh.BeaconRegistrationCandidate.ratchet_initialization
   (self : pqxdh.BeaconRegistrationCandidate) :
@@ -1205,32 +2624,6 @@ def pqxdh.concrete.start_beacon_candidate_ratchet_kdf
   := do
   let ri ← pqxdh.BeaconRegistrationCandidate.ratchet_initialization candidate
   pqxdh.concrete.start_initial_ratchet_kdf root ri
-
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerRegistrationCandidate}::ratchet_initialization]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 821:4-823:5
-    Visibility: public -/
-def pqxdh.ServerRegistrationCandidate.ratchet_initialization
-  (self : pqxdh.ServerRegistrationCandidate) :
-  RustM pqxdh.RatchetInitialization
-  := do
-  pqxdh.SERVER_RATCHETS
-
-/-- [beaconcrypt_core::pqxdh::concrete::start_server_candidate_ratchet_kdf]:
-    Source: 'beaconcrypt-core/src/pqxdh/concrete.rs', lines 110:0-115:1
-    Visibility: public -/
-def pqxdh.concrete.start_server_candidate_ratchet_kdf
-  (candidate : pqxdh.ServerRegistrationCandidate)
-  (root : Array Std.U8 32#usize) :
-  RustM pqxdh.concrete.InitialRatchetKdfPending
-  := do
-  let ri ← pqxdh.ServerRegistrationCandidate.ratchet_initialization candidate
-  pqxdh.concrete.start_initial_ratchet_kdf root ri
-
-/-- [beaconcrypt_core::pqxdh::SIGN_PUBLIC_KEY_SIZE]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 21:0-21:43
-    Visibility: public -/
-@[global_simps, irreducible]
-def pqxdh.SIGN_PUBLIC_KEY_SIZE : Std.Usize := 32#usize
 
 /-- [beaconcrypt_core::pqxdh::X25519_PUBLIC_KEY_SIZE]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 22:0-22:45
@@ -1255,17 +2648,6 @@ def pqxdh.MLKEM768_CIPHERTEXT_SIZE : Std.Usize := 1088#usize
     Visibility: public -/
 @[global_simps, irreducible]
 def pqxdh.SHARED_SECRET_SIZE : Std.Usize := 32#usize
-
-/-- [beaconcrypt_core::pqxdh::DH_SECRET_SIZE]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 26:0-26:37
-    Visibility: public -/
-@[global_simps, irreducible] def pqxdh.DH_SECRET_SIZE : Std.Usize := 32#usize
-
-/-- [beaconcrypt_core::pqxdh::PQXDH_PADDING_SIZE]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 27:0-27:41
-    Visibility: public -/
-@[global_simps, irreducible]
-def pqxdh.PQXDH_PADDING_SIZE : Std.Usize := 32#usize
 
 /-- [beaconcrypt_core::pqxdh::INITIAL_RATCHET_KDF_OUTPUT_SIZE]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 30:0-30:74
@@ -1293,11 +2675,6 @@ def pqxdh.REGISTRATION_KEY_ID_BINDING_SIZE : Std.Usize := 8#usize
 @[global_simps, irreducible]
 def pqxdh.REGISTRATION_ID_SIZE : RustM Std.Usize :=
   pqxdh.SIGN_PUBLIC_KEY_SIZE + pqxdh.X25519_PUBLIC_KEY_SIZE
-
-/-- [beaconcrypt_core::pqxdh::SIGN_TYPE_ED25519]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 35:0-35:36
-    Visibility: public -/
-@[global_simps, irreducible] def pqxdh.SIGN_TYPE_ED25519 : Std.U8 := 1#u8
 
 /-- [beaconcrypt_core::pqxdh::KEM_TYPE_MLKEM768]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 36:0-36:36
@@ -1340,19 +2717,6 @@ def pqxdh.ENCODED_X25519_PUBLIC_KEY_SIZE : RustM Std.Usize :=
 def pqxdh.ENCODED_MLKEM768_PUBLIC_KEY_SIZE : RustM Std.Usize :=
   pqxdh.MLKEM768_PUBLIC_KEY_SIZE + 1#usize
 
-/-- [beaconcrypt_core::pqxdh::PQXDH_INFO]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 50:0-50:84
-    Visibility: public -/
-@[global_simps, irreducible]
-def pqxdh.PQXDH_INFO : Array Std.U8 46#usize :=
-  Array.make 46#usize [
-    66#u8, 101#u8, 97#u8, 99#u8, 111#u8, 110#u8, 99#u8, 114#u8, 121#u8, 112#u8,
-    116#u8, 80#u8, 113#u8, 120#u8, 100#u8, 104#u8, 95#u8, 67#u8, 85#u8, 82#u8,
-    86#u8, 69#u8, 50#u8, 53#u8, 53#u8, 49#u8, 57#u8, 95#u8, 83#u8, 72#u8,
-    65#u8, 45#u8, 53#u8, 49#u8, 50#u8, 95#u8, 77#u8, 76#u8, 45#u8, 75#u8,
-    69#u8, 77#u8, 45#u8, 55#u8, 54#u8, 56#u8
-    ]
-
 /-- [beaconcrypt_core::ratchet::SYM_RATCHET_INFO_SIZE]
     Source: 'beaconcrypt-core/src/ratchet.rs', lines 56:0-56:44
     Visibility: public -/
@@ -1364,12 +2728,6 @@ def ratchet.SYM_RATCHET_INFO_SIZE : Std.Usize := 41#usize
     Visibility: public -/
 @[global_simps, irreducible]
 def pqxdh.SYM_RATCHET_INFO_SIZE : Std.Usize := ratchet.SYM_RATCHET_INFO_SIZE
-
-/-- [beaconcrypt_core::pqxdh::SYM_RATCHET_INFO]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 52:0-52:92
-    Visibility: public -/
-@[global_simps, irreducible]
-def pqxdh.SYM_RATCHET_INFO : Array Std.U8 41#usize := ratchet.SYM_RATCHET_INFO
 
 /-- [beaconcrypt_core::pqxdh::ROOT_KEY_INPUT_SIZE]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 54:0-55:67
@@ -1660,105 +3018,6 @@ def pqxdh.VerifiedInitKex.Insts.CoreMarkerCopy : core.marker.Copy
   cloneCloneInst := pqxdh.VerifiedInitKex.Insts.CoreCloneClone
 }
 
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::beacon_identity_public_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 175:4-177:5
-    Visibility: public -/
-def pqxdh.VerifiedInitKex.impl.beacon_identity_public_key
-  (self : pqxdh.VerifiedInitKex) : RustM (Array Std.U8 32#usize) := do
-  ok self.beacon_identity_public_key
-
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::beacon_prekey_public_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 179:4-181:5
-    Visibility: public -/
-def pqxdh.VerifiedInitKex.impl.beacon_prekey_public_key
-  (self : pqxdh.VerifiedInitKex) : RustM (Array Std.U8 32#usize) := do
-  ok self.beacon_prekey_public_key
-
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::beacon_one_time_public_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 183:4-185:5
-    Visibility: public -/
-def pqxdh.VerifiedInitKex.impl.beacon_one_time_public_key
-  (self : pqxdh.VerifiedInitKex) : RustM (Array Std.U8 32#usize) := do
-  ok self.beacon_one_time_public_key
-
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::beacon_pq_public_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 187:4-189:5
-    Visibility: public -/
-def pqxdh.VerifiedInitKex.impl.beacon_pq_public_key
-  (self : pqxdh.VerifiedInitKex) : RustM (Array Std.U8 1184#usize) := do
-  ok self.beacon_pq_public_key
-
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::closure<'_0>}::call_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 196:69-202:9 -/
-def
-  pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-  (c : pqxdh.VerifiedInitKex.registration_id.closure) (tupled_args : Std.Usize)
-  :
-  RustM (Std.U8 × pqxdh.VerifiedInitKex.registration_id.closure)
-  := do
-  if tupled_args < pqxdh.SIGN_PUBLIC_KEY_SIZE
-  then
-    let i ← Array.index_usize c.beacon_identity_public_key tupled_args
-    ok (i, c)
-  else
-    let i ← tupled_args - pqxdh.SIGN_PUBLIC_KEY_SIZE
-    let i1 ← Array.index_usize c.beacon_one_time_public_key i
-    ok (i1, c)
-
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::closure<'_0>}::call_once]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 196:69-202:9 -/
-def
-  pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
-  (c : pqxdh.VerifiedInitKex.registration_id.closure) (i : Std.Usize) :
-  RustM Std.U8
-  := do
-  let (i1, _) ←
-    pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-      c i
-  ok i1
-
-/-- Trait implementation: [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 196:69-202:9 -/
-@[reducible]
-def
-  pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
-  : core.ops.function.FnOnce pqxdh.VerifiedInitKex.registration_id.closure
-  Std.Usize Std.U8 := {
-  call_once :=
-    pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
-}
-
-/-- Trait implementation: [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 196:69-202:9 -/
-@[reducible]
-def
-  pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
-  : core.ops.function.FnMut pqxdh.VerifiedInitKex.registration_id.closure
-  Std.Usize Std.U8 := {
-  FnOnceInst :=
-    pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
-  call_mut :=
-    pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-}
-
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::VerifiedInitKex}::registration_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 195:4-204:5
-    Visibility: public -/
-def pqxdh.VerifiedInitKex.registration_id
-  (self : pqxdh.VerifiedInitKex) : RustM pqxdh.RegistrationId := do
-  let bytes ←
-    core.array.from_fn 64#usize
-      pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
-      self
-  ok { bytes }
-
-/-- [beaconcrypt_core::pqxdh::registration_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 218:0-220:1
-    Visibility: public -/
-def pqxdh.registration_id
-  (registration : pqxdh.VerifiedInitKex) : RustM pqxdh.RegistrationId := do
-  pqxdh.VerifiedInitKex.registration_id registration
-
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::RegistrationId}::clone]:
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 224:9-224:14
     Visibility: public -/
@@ -1815,21 +3074,6 @@ def pqxdh.RegistrationStatus.Insts.CoreMarkerCopy : core.marker.Copy
   pqxdh.RegistrationStatus := {
   cloneCloneInst := pqxdh.RegistrationStatus.Insts.CoreCloneClone
 }
-
-/-- [beaconcrypt_core::pqxdh::validate_registration_status]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 245:0-252:1
-    Visibility: public -/
-def pqxdh.validate_registration_status
-  (registration_status : pqxdh.RegistrationStatus) :
-  RustM (core.result.Result Unit pqxdh.RegistrationError)
-  := do
-  let b ←
-    match registration_status with
-    | pqxdh.RegistrationStatus.Fresh => ok false
-    | pqxdh.RegistrationStatus.Consumed => ok true
-  if b
-  then ok (core.result.Result.Err pqxdh.RegistrationError.RegistrationReplay)
-  else ok (core.result.Result.Ok ())
 
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconFresh}::clone]:
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 255:9-255:14
@@ -1911,13 +3155,6 @@ def pqxdh.BeaconInitSent.server_key_id
   (self : pqxdh.BeaconInitSent) : RustM Std.U64 := do
   ok self.expected_server_binding.identity_key_id
 
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconInitSent}::expected_server_binding]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 290:4-292:5
-    Visibility: public -/
-def pqxdh.BeaconInitSent.impl.expected_server_binding
-  (self : pqxdh.BeaconInitSent) : RustM pqxdh.ServerBinding := do
-  ok self.expected_server_binding
-
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconStart}::clone]:
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 295:9-295:14
     Visibility: public -/
@@ -1944,7 +3181,7 @@ def pqxdh.BeaconStart.Insts.CoreMarkerCopy : core.marker.Copy pqxdh.BeaconStart
 }
 
 /-- [beaconcrypt_core::pqxdh::tag_mlkem768_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::tag_mlkem768_key::closure<'_0>}::call_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 978:29-978:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 985:29-985:83 -/
 def
   pqxdh.tag_mlkem768_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
   (c : pqxdh.tag_mlkem768_key.closure) (tupled_args : Std.Usize) :
@@ -1958,7 +3195,7 @@ def
     ok (i1, c)
 
 /-- [beaconcrypt_core::pqxdh::tag_mlkem768_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::tag_mlkem768_key::closure<'_0>}::call_once]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 978:29-978:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 985:29-985:83 -/
 def
   pqxdh.tag_mlkem768_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
   (c : pqxdh.tag_mlkem768_key.closure) (i : Std.Usize) : RustM Std.U8 := do
@@ -1968,7 +3205,7 @@ def
   ok i1
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::tag_mlkem768_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::tag_mlkem768_key::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 978:29-978:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 985:29-985:83 -/
 @[reducible]
 def pqxdh.tag_mlkem768_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8 :
   core.ops.function.FnOnce pqxdh.tag_mlkem768_key.closure Std.Usize Std.U8 := {
@@ -1977,7 +3214,7 @@ def pqxdh.tag_mlkem768_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8 :
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::tag_mlkem768_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::tag_mlkem768_key::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 978:29-978:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 985:29-985:83 -/
 @[reducible]
 def pqxdh.tag_mlkem768_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
   core.ops.function.FnMut pqxdh.tag_mlkem768_key.closure Std.Usize Std.U8 := {
@@ -1988,14 +3225,14 @@ def pqxdh.tag_mlkem768_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
 }
 
 /-- [beaconcrypt_core::pqxdh::tag_mlkem768_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 976:0-980:1 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 983:0-987:1 -/
 def pqxdh.tag_mlkem768_key
   (key : Array Std.U8 1184#usize) : RustM (Array Std.U8 1185#usize) := do
   core.array.from_fn 1185#usize
     pqxdh.tag_mlkem768_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 key
 
 /-- [beaconcrypt_core::pqxdh::tag_x25519_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::tag_x25519_key::closure<'_0, '_1>}::call_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 964:76-972:5 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 971:76-979:5 -/
 def
   pqxdh.tag_x25519_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
   (c : pqxdh.tag_x25519_key.closure) (tupled_args : Std.Usize) :
@@ -2013,7 +3250,7 @@ def
       ok (i2, c)
 
 /-- [beaconcrypt_core::pqxdh::tag_x25519_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::tag_x25519_key::closure<'_0, '_1>}::call_once]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 964:76-972:5 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 971:76-979:5 -/
 def
   pqxdh.tag_x25519_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
   (c : pqxdh.tag_x25519_key.closure) (i : Std.Usize) : RustM Std.U8 := do
@@ -2023,7 +3260,7 @@ def
   ok i1
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::tag_x25519_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::tag_x25519_key::closure<'_0, '_1>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 964:76-972:5 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 971:76-979:5 -/
 @[reducible]
 def pqxdh.tag_x25519_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8 :
   core.ops.function.FnOnce pqxdh.tag_x25519_key.closure Std.Usize Std.U8 := {
@@ -2032,7 +3269,7 @@ def pqxdh.tag_x25519_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8 :
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::tag_x25519_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::tag_x25519_key::closure<'_0, '_1>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 964:76-972:5 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 971:76-979:5 -/
 @[reducible]
 def pqxdh.tag_x25519_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
   core.ops.function.FnMut pqxdh.tag_x25519_key.closure Std.Usize Std.U8 := {
@@ -2043,7 +3280,7 @@ def pqxdh.tag_x25519_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
 }
 
 /-- [beaconcrypt_core::pqxdh::tag_x25519_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 960:0-974:1 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 967:0-981:1 -/
 def pqxdh.tag_x25519_key
   (role : Std.U8) (key : Array Std.U8 32#usize) :
   RustM (Array Std.U8 34#usize)
@@ -2051,56 +3288,6 @@ def pqxdh.tag_x25519_key
   core.array.from_fn 34#usize
     pqxdh.tag_x25519_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 (role,
     key)
-
-/-- [beaconcrypt_core::pqxdh::tag_sign_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::tag_sign_key::closure<'_0>}::call_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 956:29-956:83 -/
-def pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-  (c : pqxdh.tag_sign_key.closure) (tupled_args : Std.Usize) :
-  RustM (Std.U8 × pqxdh.tag_sign_key.closure)
-  := do
-  if tupled_args < 1#usize
-  then ok (pqxdh.SIGN_TYPE_ED25519, c)
-  else
-    let i ← tupled_args - 1#usize
-    let i1 ← Array.index_usize c i
-    ok (i1, c)
-
-/-- [beaconcrypt_core::pqxdh::tag_sign_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::tag_sign_key::closure<'_0>}::call_once]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 956:29-956:83 -/
-def
-  pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
-  (c : pqxdh.tag_sign_key.closure) (i : Std.Usize) : RustM Std.U8 := do
-  let (i1, _) ←
-    pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-      c i
-  ok i1
-
-/-- Trait implementation: [beaconcrypt_core::pqxdh::tag_sign_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::tag_sign_key::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 956:29-956:83 -/
-@[reducible]
-def pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8 :
-  core.ops.function.FnOnce pqxdh.tag_sign_key.closure Std.Usize Std.U8 := {
-  call_once :=
-    pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
-}
-
-/-- Trait implementation: [beaconcrypt_core::pqxdh::tag_sign_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::tag_sign_key::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 956:29-956:83 -/
-@[reducible]
-def pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
-  core.ops.function.FnMut pqxdh.tag_sign_key.closure Std.Usize Std.U8 := {
-  FnOnceInst :=
-    pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
-  call_mut :=
-    pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-}
-
-/-- [beaconcrypt_core::pqxdh::tag_sign_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 954:0-958:1 -/
-def pqxdh.tag_sign_key
-  (key : Array Std.U8 32#usize) : RustM (Array Std.U8 33#usize) := do
-  core.array.from_fn 33#usize
-    pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 key
 
 /-- [beaconcrypt_core::pqxdh::beacon_start]:
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 304:0-321:1
@@ -2128,7 +3315,7 @@ def pqxdh.beacon_start
     }
 
 /-- [beaconcrypt_core::pqxdh::untag_mlkem768_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::untag_mlkem768_key::closure<'_0>}::call_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1009:67-1009:85 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1016:67-1016:85 -/
 def
   pqxdh.untag_mlkem768_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
   (c : pqxdh.untag_mlkem768_key.closure) (tupled_args : Std.Usize) :
@@ -2139,7 +3326,7 @@ def
   ok (i1, c)
 
 /-- [beaconcrypt_core::pqxdh::untag_mlkem768_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::untag_mlkem768_key::closure<'_0>}::call_once]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1009:67-1009:85 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1016:67-1016:85 -/
 def
   pqxdh.untag_mlkem768_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
   (c : pqxdh.untag_mlkem768_key.closure) (i : Std.Usize) : RustM Std.U8 := do
@@ -2149,7 +3336,7 @@ def
   ok i1
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::untag_mlkem768_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::untag_mlkem768_key::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1009:67-1009:85 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1016:67-1016:85 -/
 @[reducible]
 def pqxdh.untag_mlkem768_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8 :
   core.ops.function.FnOnce pqxdh.untag_mlkem768_key.closure Std.Usize Std.U8
@@ -2159,7 +3346,7 @@ def pqxdh.untag_mlkem768_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8 :
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::untag_mlkem768_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::untag_mlkem768_key::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1009:67-1009:85 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1016:67-1016:85 -/
 @[reducible]
 def pqxdh.untag_mlkem768_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
   core.ops.function.FnMut pqxdh.untag_mlkem768_key.closure Std.Usize Std.U8
@@ -2171,7 +3358,7 @@ def pqxdh.untag_mlkem768_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
 }
 
 /-- [beaconcrypt_core::pqxdh::untag_mlkem768_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1003:0-1011:1 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1010:0-1018:1 -/
 def pqxdh.untag_mlkem768_key
   (encoded : Array Std.U8 1185#usize) :
   RustM (core.option.Option (Array Std.U8 1184#usize))
@@ -2187,7 +3374,7 @@ def pqxdh.untag_mlkem768_key
   else ok core.option.Option.None
 
 /-- [beaconcrypt_core::pqxdh::untag_x25519_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::untag_x25519_key::closure<'_0>}::call_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 999:65-999:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1006:65-1006:83 -/
 def
   pqxdh.untag_x25519_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
   (c : pqxdh.untag_x25519_key.closure) (tupled_args : Std.Usize) :
@@ -2198,7 +3385,7 @@ def
   ok (i1, c)
 
 /-- [beaconcrypt_core::pqxdh::untag_x25519_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::untag_x25519_key::closure<'_0>}::call_once]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 999:65-999:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1006:65-1006:83 -/
 def
   pqxdh.untag_x25519_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
   (c : pqxdh.untag_x25519_key.closure) (i : Std.Usize) : RustM Std.U8 := do
@@ -2208,7 +3395,7 @@ def
   ok i1
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::untag_x25519_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::untag_x25519_key::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 999:65-999:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1006:65-1006:83 -/
 @[reducible]
 def pqxdh.untag_x25519_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8 :
   core.ops.function.FnOnce pqxdh.untag_x25519_key.closure Std.Usize Std.U8 := {
@@ -2217,7 +3404,7 @@ def pqxdh.untag_x25519_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8 :
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::untag_x25519_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::untag_x25519_key::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 999:65-999:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1006:65-1006:83 -/
 @[reducible]
 def pqxdh.untag_x25519_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
   core.ops.function.FnMut pqxdh.untag_x25519_key.closure Std.Usize Std.U8 := {
@@ -2228,7 +3415,7 @@ def pqxdh.untag_x25519_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
 }
 
 /-- [beaconcrypt_core::pqxdh::untag_x25519_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 992:0-1001:1 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 999:0-1008:1 -/
 def pqxdh.untag_x25519_key
   (encoded : Array Std.U8 34#usize) (expected_role : Std.U8) :
   RustM (core.option.Option (Array Std.U8 32#usize))
@@ -2248,7 +3435,7 @@ def pqxdh.untag_x25519_key
   else ok core.option.Option.None
 
 /-- [beaconcrypt_core::pqxdh::untag_sign_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::untag_sign_key::closure<'_0>}::call_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 988:63-988:81 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 995:63-995:81 -/
 def
   pqxdh.untag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
   (c : pqxdh.untag_sign_key.closure) (tupled_args : Std.Usize) :
@@ -2259,7 +3446,7 @@ def
   ok (i1, c)
 
 /-- [beaconcrypt_core::pqxdh::untag_sign_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::untag_sign_key::closure<'_0>}::call_once]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 988:63-988:81 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 995:63-995:81 -/
 def
   pqxdh.untag_sign_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
   (c : pqxdh.untag_sign_key.closure) (i : Std.Usize) : RustM Std.U8 := do
@@ -2269,7 +3456,7 @@ def
   ok i1
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::untag_sign_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::untag_sign_key::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 988:63-988:81 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 995:63-995:81 -/
 @[reducible]
 def pqxdh.untag_sign_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8 :
   core.ops.function.FnOnce pqxdh.untag_sign_key.closure Std.Usize Std.U8 := {
@@ -2278,7 +3465,7 @@ def pqxdh.untag_sign_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8 :
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::untag_sign_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::untag_sign_key::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 988:63-988:81 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 995:63-995:81 -/
 @[reducible]
 def pqxdh.untag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
   core.ops.function.FnMut pqxdh.untag_sign_key.closure Std.Usize Std.U8 := {
@@ -2289,7 +3476,7 @@ def pqxdh.untag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
 }
 
 /-- [beaconcrypt_core::pqxdh::untag_sign_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 982:0-990:1 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 989:0-997:1 -/
 def pqxdh.untag_sign_key
   (encoded : Array Std.U8 33#usize) :
   RustM (core.option.Option (Array Std.U8 32#usize))
@@ -2341,15 +3528,8 @@ def pqxdh.validate_init_kex
               beacon_pq_public_key := pq
             })
 
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::RootKeyInput}::as_bytes]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 363:4-365:5
-    Visibility: public -/
-def pqxdh.RootKeyInput.as_bytes
-  (self : pqxdh.RootKeyInput) : RustM (Array Std.U8 192#usize) := do
-  ok self.bytes
-
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::RootKeyInput}::as_mut_bytes]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 369:4-371:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 371:4-373:5
     Visibility: public -/
 def pqxdh.RootKeyInput.as_mut_bytes
   (self : pqxdh.RootKeyInput) :
@@ -2359,126 +3539,8 @@ def pqxdh.RootKeyInput.as_mut_bytes
   let back := fun a => ({ bytes := a } : pqxdh.RootKeyInput)
   ok (self.bytes, back)
 
-/-- [beaconcrypt_core::pqxdh::is_all_zero]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1013:0-1015:1 -/
-def pqxdh.is_all_zero (bytes : Array Std.U8 32#usize) : RustM Bool := do
-  let a := Array.repeat 32#usize 0#u8
-  core.Array.Insts.CoreCmpPartialEqArray.eq core.U8.Insts.CoreCmpPartialEqU8
-    bytes a
-
-/-- [beaconcrypt_core::pqxdh::build_root_key_input::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::build_root_key_input::closure<'_0>}::call_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 391:64-405:5 -/
-def
-  pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-  (c : pqxdh.build_root_key_input.closure) (tupled_args : Std.Usize) :
-  RustM (Std.U8 × pqxdh.build_root_key_input.closure)
-  := do
-  if tupled_args < pqxdh.PQXDH_PADDING_SIZE
-  then ok (255#u8, c)
-  else
-    let i ← pqxdh.PQXDH_PADDING_SIZE + pqxdh.DH_SECRET_SIZE
-    if tupled_args < i
-    then
-      let i1 ← tupled_args - pqxdh.PQXDH_PADDING_SIZE
-      let i2 ← Array.index_usize c.dh1 i1
-      ok (i2, c)
-    else
-      let i1 ← 2#usize * pqxdh.DH_SECRET_SIZE
-      let i2 ← pqxdh.PQXDH_PADDING_SIZE + i1
-      if tupled_args < i2
-      then
-        let i3 ← tupled_args - pqxdh.PQXDH_PADDING_SIZE
-        let i4 ← i3 - pqxdh.DH_SECRET_SIZE
-        let i5 ← Array.index_usize c.dh2 i4
-        ok (i5, c)
-      else
-        let i3 ← 3#usize * pqxdh.DH_SECRET_SIZE
-        let i4 ← pqxdh.PQXDH_PADDING_SIZE + i3
-        if tupled_args < i4
-        then
-          let i5 ← tupled_args - pqxdh.PQXDH_PADDING_SIZE
-          let i6 ← i5 - i1
-          let i7 ← Array.index_usize c.dh3 i6
-          ok (i7, c)
-        else
-          let i5 ← 4#usize * pqxdh.DH_SECRET_SIZE
-          let i6 ← pqxdh.PQXDH_PADDING_SIZE + i5
-          if tupled_args < i6
-          then
-            let i7 ← tupled_args - pqxdh.PQXDH_PADDING_SIZE
-            let i8 ← i7 - i3
-            let i9 ← Array.index_usize c.dh4 i8
-            ok (i9, c)
-          else
-            let i7 ← tupled_args - pqxdh.PQXDH_PADDING_SIZE
-            let i8 ← i7 - i5
-            let i9 ← Array.index_usize c.kem_shared_secret i8
-            ok (i9, c)
-
-/-- [beaconcrypt_core::pqxdh::build_root_key_input::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::build_root_key_input::closure<'_0>}::call_once]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 391:64-405:5 -/
-def
-  pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
-  (c : pqxdh.build_root_key_input.closure) (i : Std.Usize) : RustM Std.U8 := do
-  let (i1, _) ←
-    pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-      c i
-  ok i1
-
-/-- Trait implementation: [beaconcrypt_core::pqxdh::build_root_key_input::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::build_root_key_input::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 391:64-405:5 -/
-@[reducible]
-def pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
-  : core.ops.function.FnOnce pqxdh.build_root_key_input.closure Std.Usize
-  Std.U8 := {
-  call_once :=
-    pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
-}
-
-/-- Trait implementation: [beaconcrypt_core::pqxdh::build_root_key_input::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::build_root_key_input::closure<'_0>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 391:64-405:5 -/
-@[reducible]
-def pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8 :
-  core.ops.function.FnMut pqxdh.build_root_key_input.closure Std.Usize Std.U8
-  := {
-  FnOnceInst :=
-    pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
-  call_mut :=
-    pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-}
-
-/-- [beaconcrypt_core::pqxdh::build_root_key_input]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 380:0-407:1
-    Visibility: public -/
-def pqxdh.build_root_key_input
-  (secrets : pqxdh.PqxdhSharedSecrets) :
-  RustM (core.result.Result pqxdh.RootKeyInput pqxdh.RegistrationError)
-  := do
-  let b ← pqxdh.is_all_zero secrets.dh1
-  if b
-  then ok (core.result.Result.Err pqxdh.RegistrationError.InvalidDhOutput)
-  else
-    let b1 ← pqxdh.is_all_zero secrets.dh2
-    if b1
-    then ok (core.result.Result.Err pqxdh.RegistrationError.InvalidDhOutput)
-    else
-      let b2 ← pqxdh.is_all_zero secrets.dh3
-      if b2
-      then ok (core.result.Result.Err pqxdh.RegistrationError.InvalidDhOutput)
-      else
-        let b3 ← pqxdh.is_all_zero secrets.dh4
-        if b3
-        then
-          ok (core.result.Result.Err pqxdh.RegistrationError.InvalidDhOutput)
-        else
-          let bytes ←
-            core.array.from_fn 192#usize
-              pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
-              secrets
-          ok (core.result.Result.Ok { bytes })
-
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::RatchetInitialization}::clone]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 411:9-411:14
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 418:9-418:14
     Visibility: public -/
 def pqxdh.RatchetInitialization.Insts.CoreCloneClone.clone
   (self : pqxdh.RatchetInitialization) :
@@ -2487,7 +3549,7 @@ def pqxdh.RatchetInitialization.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::RatchetInitialization}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 411:9-411:14 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 418:9-418:14 -/
 @[reducible]
 impl_def pqxdh.RatchetInitialization.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.RatchetInitialization := {
@@ -2497,7 +3559,7 @@ impl_def pqxdh.RatchetInitialization.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::RatchetInitialization}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 411:16-411:20 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 418:16-418:20 -/
 @[reducible]
 def pqxdh.RatchetInitialization.Insts.CoreMarkerCopy : core.marker.Copy
   pqxdh.RatchetInitialization := {
@@ -2505,88 +3567,70 @@ def pqxdh.RatchetInitialization.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::RatchetInitialization}::send_offset]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 419:4-421:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 426:4-428:5
     Visibility: public -/
 def pqxdh.RatchetInitialization.impl.send_offset
   (self : pqxdh.RatchetInitialization) : RustM Std.U8 := do
   ok self.send_offset
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::RatchetInitialization}::receive_offset]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 423:4-425:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 430:4-432:5
     Visibility: public -/
 def pqxdh.RatchetInitialization.impl.receive_offset
   (self : pqxdh.RatchetInitialization) : RustM Std.U8 := do
   ok self.receive_offset
 
 /-- [beaconcrypt_core::pqxdh::beacon_ratchet_initialization]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 439:0-441:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 446:0-448:1
     Visibility: public -/
 def pqxdh.beacon_ratchet_initialization
   : RustM pqxdh.RatchetInitialization := do
   pqxdh.BEACON_RATCHETS
 
 /-- [beaconcrypt_core::pqxdh::server_ratchet_initialization]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 445:0-447:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 452:0-454:1
     Visibility: public -/
 def pqxdh.server_ratchet_initialization
   : RustM pqxdh.RatchetInitialization := do
   pqxdh.SERVER_RATCHETS
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::InitialRatchetChains}::send_chain]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 456:4-458:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 463:4-465:5
     Visibility: public -/
 def pqxdh.InitialRatchetChains.impl.send_chain
   (self : pqxdh.InitialRatchetChains) : RustM ratchet.RatchetChain := do
   ok self.send_chain
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::InitialRatchetChains}::receive_chain]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 460:4-462:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 467:4-469:5
     Visibility: public -/
 def pqxdh.InitialRatchetChains.impl.receive_chain
   (self : pqxdh.InitialRatchetChains) : RustM ratchet.RatchetChain := do
   ok self.receive_chain
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconRegistrationCandidate}::server_key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 502:4-504:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 509:4-511:5
     Visibility: public -/
 def pqxdh.BeaconRegistrationCandidate.server_key_id
   (self : pqxdh.BeaconRegistrationCandidate) : RustM Std.U64 := do
   ok self.server_binding.identity_key_id
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconRegistrationCandidate}::server_binding]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 506:4-508:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 513:4-515:5
     Visibility: public -/
 def pqxdh.BeaconRegistrationCandidate.impl.server_binding
   (self : pqxdh.BeaconRegistrationCandidate) : RustM pqxdh.ServerBinding := do
   ok self.server_binding
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconRegistrationCandidate}::assigned_key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 510:4-512:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 517:4-519:5
     Visibility: public -/
 def pqxdh.BeaconRegistrationCandidate.impl.assigned_key_id
   (self : pqxdh.BeaconRegistrationCandidate) : RustM Std.U64 := do
   ok self.assigned_key_id
 
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconRegistrationCandidate}::root_key_input]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 514:4-516:5
-    Visibility: public -/
-def pqxdh.BeaconRegistrationCandidate.impl.root_key_input
-  (self : pqxdh.BeaconRegistrationCandidate) : RustM pqxdh.RootKeyInput := do
-  ok self.root_key_input
-
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconRegistrationCandidate}::root_key_input_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 518:4-520:5
-    Visibility: public -/
-def pqxdh.BeaconRegistrationCandidate.root_key_input_mut
-  (self : pqxdh.BeaconRegistrationCandidate) :
-  RustM (pqxdh.RootKeyInput × (pqxdh.RootKeyInput →
-    pqxdh.BeaconRegistrationCandidate))
-  := do
-  let back := fun rki => { self with root_key_input := rki }
-  ok (self.root_key_input, back)
-
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconRegistrationCandidate}::associated_data]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 522:4-524:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 529:4-531:5
     Visibility: public -/
 def pqxdh.BeaconRegistrationCandidate.impl.associated_data
   (self : pqxdh.BeaconRegistrationCandidate) :
@@ -2595,7 +3639,7 @@ def pqxdh.BeaconRegistrationCandidate.impl.associated_data
   ok self.associated_data
 
 /-- [beaconcrypt_core::pqxdh::registration_key_id_binding]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 579:0-592:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 586:0-599:1
     Visibility: public -/
 def pqxdh.registration_key_id_binding
   (key_id : Std.U64) : RustM pqxdh.RegistrationKeyIdBinding := do
@@ -2617,7 +3661,7 @@ def pqxdh.registration_key_id_binding
   ok { bytes := (Array.make 8#usize [ i, i2, i4, i6, i8, i10, i12, i14 ]) }
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconRegistrationCandidate}::key_id_binding]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 530:4-532:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 537:4-539:5
     Visibility: public -/
 def pqxdh.BeaconRegistrationCandidate.key_id_binding
   (self : pqxdh.BeaconRegistrationCandidate) :
@@ -2625,118 +3669,8 @@ def pqxdh.BeaconRegistrationCandidate.key_id_binding
   := do
   pqxdh.registration_key_id_binding self.assigned_key_id
 
-/-- [beaconcrypt_core::pqxdh::build_associated_data::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::build_associated_data::closure<'_0, '_1>}::call_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 938:66-950:5 -/
-def
-  pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-  (c : pqxdh.build_associated_data.closure) (tupled_args : Std.Usize) :
-  RustM (Std.U8 × pqxdh.build_associated_data.closure)
-  := do
-  let (a, a1) := c
-  if tupled_args < 33#usize
-  then let i ← Array.index_usize a tupled_args
-       ok (i, c)
-  else
-    if tupled_args < 66#usize
-    then
-      let i ← tupled_args - 33#usize
-      let i1 ← Array.index_usize a1 i
-      ok (i1, c)
-    else
-      if tupled_args < 112#usize
-      then
-        let i ← tupled_args - 66#usize
-        let i1 ← Array.index_usize pqxdh.PQXDH_INFO i
-        ok (i1, c)
-      else
-        if tupled_args < 153#usize
-        then
-          let i ← tupled_args - 112#usize
-          let i1 ← Array.index_usize pqxdh.SYM_RATCHET_INFO i
-          ok (i1, c)
-        else ok (0#u8, c)
-
-/-- [beaconcrypt_core::pqxdh::build_associated_data::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::build_associated_data::closure<'_0, '_1>}::call_once]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 938:66-950:5 -/
-def
-  pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
-  (c : pqxdh.build_associated_data.closure) (i : Std.Usize) :
-  RustM Std.U8
-  := do
-  let (i1, _) ←
-    pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-      c i
-  ok i1
-
-/-- Trait implementation: [beaconcrypt_core::pqxdh::build_associated_data::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::pqxdh::build_associated_data::closure<'_0, '_1>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 938:66-950:5 -/
-@[reducible]
-def pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
-  : core.ops.function.FnOnce pqxdh.build_associated_data.closure Std.Usize
-  Std.U8 := {
-  call_once :=
-    pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
-}
-
-/-- Trait implementation: [beaconcrypt_core::pqxdh::build_associated_data::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::pqxdh::build_associated_data::closure<'_0, '_1>}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 938:66-950:5 -/
-@[reducible]
-def pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
-  : core.ops.function.FnMut pqxdh.build_associated_data.closure Std.Usize
-  Std.U8 := {
-  FnOnceInst :=
-    pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
-  call_mut :=
-    pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-}
-
-/-- [beaconcrypt_core::pqxdh::build_associated_data]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 931:0-952:1
-    Visibility: public -/
-def pqxdh.build_associated_data
-  (server_identity_public_key : Array Std.U8 32#usize)
-  (beacon_identity_public_key : Array Std.U8 32#usize) :
-  RustM (Array Std.U8 281#usize)
-  := do
-  let encoded_server ← pqxdh.tag_sign_key server_identity_public_key
-  let encoded_beacon ← pqxdh.tag_sign_key beacon_identity_public_key
-  core.array.from_fn 281#usize
-    pqxdh.build_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
-    (encoded_server, encoded_beacon)
-
-/-- [beaconcrypt_core::pqxdh::beacon_prepare_finish]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 541:0-562:1
-    Visibility: public -/
-def pqxdh.beacon_prepare_finish
-  (state : pqxdh.BeaconInitSent) (inputs : pqxdh.BeaconFinishInputs) :
-  RustM (core.result.Result pqxdh.BeaconRegistrationCandidate
-    pqxdh.RegistrationError)
-  := do
-  let b ←
-    core.Array.Insts.CoreCmpPartialEqArray.eq core.U8.Insts.CoreCmpPartialEqU8
-      state.expected_server_binding.identity_public_key
-      inputs.response_server_identity
-  if b
-  then
-    let r ← pqxdh.build_root_key_input inputs.shared_secrets
-    match r with
-    | core.result.Result.Ok value =>
-      let associated_data ←
-        pqxdh.build_associated_data
-          state.expected_server_binding.identity_public_key
-          state.beacon_identity_public_key
-      ok (core.result.Result.Ok
-        {
-          server_binding := state.expected_server_binding,
-          assigned_key_id := inputs.assigned_key_id,
-          root_key_input := value,
-          associated_data
-        })
-    | core.result.Result.Err err => ok (core.result.Result.Err err)
-  else ok (core.result.Result.Err pqxdh.RegistrationError.IdentityMismatch)
-
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::RegistrationKeyIdBinding}::clone]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 567:9-567:14
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 574:9-574:14
     Visibility: public -/
 def pqxdh.RegistrationKeyIdBinding.Insts.CoreCloneClone.clone
   (self : pqxdh.RegistrationKeyIdBinding) :
@@ -2745,7 +3679,7 @@ def pqxdh.RegistrationKeyIdBinding.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::RegistrationKeyIdBinding}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 567:9-567:14 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 574:9-574:14 -/
 @[reducible]
 impl_def pqxdh.RegistrationKeyIdBinding.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.RegistrationKeyIdBinding := {
@@ -2755,7 +3689,7 @@ impl_def pqxdh.RegistrationKeyIdBinding.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::RegistrationKeyIdBinding}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 567:16-567:20 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 574:16-574:20 -/
 @[reducible]
 def pqxdh.RegistrationKeyIdBinding.Insts.CoreMarkerCopy : core.marker.Copy
   pqxdh.RegistrationKeyIdBinding := {
@@ -2763,14 +3697,14 @@ def pqxdh.RegistrationKeyIdBinding.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::RegistrationKeyIdBinding}::as_bytes]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 574:4-576:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 581:4-583:5
     Visibility: public -/
 def pqxdh.RegistrationKeyIdBinding.as_bytes
   (self : pqxdh.RegistrationKeyIdBinding) : RustM (Array Std.U8 8#usize) := do
   ok self.bytes
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::AuthenticatedBeaconRegistration}::server_binding]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 601:4-603:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 608:4-610:5
     Visibility: public -/
 def pqxdh.AuthenticatedBeaconRegistration.server_binding
   (self : pqxdh.AuthenticatedBeaconRegistration) :
@@ -2779,21 +3713,21 @@ def pqxdh.AuthenticatedBeaconRegistration.server_binding
   ok self.candidate.server_binding
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::AuthenticatedBeaconRegistration}::server_key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 605:4-607:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 612:4-614:5
     Visibility: public -/
 def pqxdh.AuthenticatedBeaconRegistration.server_key_id
   (self : pqxdh.AuthenticatedBeaconRegistration) : RustM Std.U64 := do
   ok self.candidate.server_binding.identity_key_id
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::AuthenticatedBeaconRegistration}::assigned_key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 609:4-611:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 616:4-618:5
     Visibility: public -/
 def pqxdh.AuthenticatedBeaconRegistration.assigned_key_id
   (self : pqxdh.AuthenticatedBeaconRegistration) : RustM Std.U64 := do
   ok self.candidate.assigned_key_id
 
 /-- [beaconcrypt_core::pqxdh::authenticate_registration_key_id_binding]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 616:0-628:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 623:0-635:1
     Visibility: public -/
 def pqxdh.authenticate_registration_key_id_binding
   (candidate : pqxdh.BeaconRegistrationCandidate)
@@ -2814,14 +3748,14 @@ def pqxdh.authenticate_registration_key_id_binding
   else ok (core.result.Result.Err pqxdh.RegistrationError.IdentityMismatch)
 
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconEstablished}::clone]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 630:9-630:14
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 637:9-637:14
     Visibility: public -/
 def pqxdh.BeaconEstablished.Insts.CoreCloneClone.clone
   (self : pqxdh.BeaconEstablished) : RustM pqxdh.BeaconEstablished := do
   ok self
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconEstablished}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 630:9-630:14 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 637:9-637:14 -/
 @[reducible]
 impl_def pqxdh.BeaconEstablished.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.BeaconEstablished := {
@@ -2831,7 +3765,7 @@ impl_def pqxdh.BeaconEstablished.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::BeaconEstablished}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 630:16-630:20 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 637:16-637:20 -/
 @[reducible]
 def pqxdh.BeaconEstablished.Insts.CoreMarkerCopy : core.marker.Copy
   pqxdh.BeaconEstablished := {
@@ -2839,35 +3773,35 @@ def pqxdh.BeaconEstablished.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconEstablished}::server_key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 638:4-640:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 645:4-647:5
     Visibility: public -/
 def pqxdh.BeaconEstablished.server_key_id
   (self : pqxdh.BeaconEstablished) : RustM Std.U64 := do
   ok self.server_binding.identity_key_id
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconEstablished}::server_binding]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 642:4-644:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 649:4-651:5
     Visibility: public -/
 def pqxdh.BeaconEstablished.impl.server_binding
   (self : pqxdh.BeaconEstablished) : RustM pqxdh.ServerBinding := do
   ok self.server_binding
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconEstablished}::assigned_key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 646:4-648:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 653:4-655:5
     Visibility: public -/
 def pqxdh.BeaconEstablished.impl.assigned_key_id
   (self : pqxdh.BeaconEstablished) : RustM Std.U64 := do
   ok self.assigned_key_id
 
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconAborted}::clone]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 651:9-651:14
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 658:9-658:14
     Visibility: public -/
 def pqxdh.BeaconAborted.Insts.CoreCloneClone.clone
   (self : pqxdh.BeaconAborted) : RustM pqxdh.BeaconAborted := do
   ok self
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconAborted}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 651:9-651:14 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 658:9-658:14 -/
 @[reducible]
 impl_def pqxdh.BeaconAborted.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.BeaconAborted := {
@@ -2877,7 +3811,7 @@ impl_def pqxdh.BeaconAborted.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::BeaconAborted}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 651:16-651:20 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 658:16-658:20 -/
 @[reducible]
 def pqxdh.BeaconAborted.Insts.CoreMarkerCopy : core.marker.Copy
   pqxdh.BeaconAborted := {
@@ -2885,21 +3819,21 @@ def pqxdh.BeaconAborted.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconAborted}::new]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 658:4-660:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 665:4-667:5
     Visibility: public -/
 def pqxdh.BeaconAborted.new
   (server_key_id : Std.U64) : RustM pqxdh.BeaconAborted := do
   ok { server_key_id }
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::BeaconAborted}::server_key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 662:4-664:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 669:4-671:5
     Visibility: public -/
 def pqxdh.BeaconAborted.impl.server_key_id
   (self : pqxdh.BeaconAborted) : RustM Std.U64 := do
   ok self.server_key_id
 
 /-- [beaconcrypt_core::pqxdh::beacon_commit]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 667:0-673:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 674:0-680:1
     Visibility: public -/
 def pqxdh.beacon_commit
   (authenticated : pqxdh.AuthenticatedBeaconRegistration) :
@@ -2911,38 +3845,22 @@ def pqxdh.beacon_commit
       assigned_key_id := authenticated.candidate.assigned_key_id
     }
 
-/-- [beaconcrypt_core::pqxdh::beacon_abort_candidate]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 675:0-679:1
-    Visibility: public -/
-def pqxdh.beacon_abort_candidate
-  (candidate : pqxdh.BeaconRegistrationCandidate) :
-  RustM pqxdh.BeaconAborted
-  := do
-  ok { server_key_id := candidate.server_binding.identity_key_id }
-
-/-- [beaconcrypt_core::pqxdh::beacon_abort_init]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 681:0-685:1
-    Visibility: public -/
-def pqxdh.beacon_abort_init
-  (state : pqxdh.BeaconInitSent) : RustM pqxdh.BeaconAborted := do
-  ok { server_key_id := state.expected_server_binding.identity_key_id }
-
 /-- [beaconcrypt_core::pqxdh::beacon_abort_fresh]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 687:0-691:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 694:0-698:1
     Visibility: public -/
 def pqxdh.beacon_abort_fresh
   (state : pqxdh.BeaconFresh) : RustM pqxdh.BeaconAborted := do
   ok { server_key_id := state.expected_server_binding.identity_key_id }
 
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::ServerState}::clone]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 694:9-694:14
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 701:9-701:14
     Visibility: public -/
 def pqxdh.ServerState.Insts.CoreCloneClone.clone
   (self : pqxdh.ServerState) : RustM pqxdh.ServerState := do
   ok self
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::ServerState}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 694:9-694:14 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 701:9-701:14 -/
 @[reducible]
 impl_def pqxdh.ServerState.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.ServerState := {
@@ -2952,7 +3870,7 @@ impl_def pqxdh.ServerState.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::ServerState}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 694:16-694:20 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 701:16-701:20 -/
 @[reducible]
 def pqxdh.ServerState.Insts.CoreMarkerCopy : core.marker.Copy pqxdh.ServerState
   := {
@@ -2960,28 +3878,21 @@ def pqxdh.ServerState.Insts.CoreMarkerCopy : core.marker.Copy pqxdh.ServerState
 }
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerState}::new]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 701:4-703:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 708:4-710:5
     Visibility: public -/
 def pqxdh.ServerState.new
   (last_key_id : Std.U64) : RustM pqxdh.ServerState := do
   ok { last_key_id }
 
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerState}::last_key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 705:4-707:5
-    Visibility: public -/
-def pqxdh.ServerState.impl.last_key_id
-  (self : pqxdh.ServerState) : RustM Std.U64 := do
-  ok self.last_key_id
-
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::ServerCoins}::clone]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 711:9-711:14
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 718:9-718:14
     Visibility: public -/
 def pqxdh.ServerCoins.Insts.CoreCloneClone.clone
   (self : pqxdh.ServerCoins) : RustM pqxdh.ServerCoins := do
   ok self
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::ServerCoins}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 711:9-711:14 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 718:9-718:14 -/
 @[reducible]
 impl_def pqxdh.ServerCoins.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.ServerCoins := {
@@ -2991,22 +3902,15 @@ impl_def pqxdh.ServerCoins.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::ServerCoins}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 711:16-711:20 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 718:16-718:20 -/
 @[reducible]
 def pqxdh.ServerCoins.Insts.CoreMarkerCopy : core.marker.Copy pqxdh.ServerCoins
   := {
   cloneCloneInst := pqxdh.ServerCoins.Insts.CoreCloneClone
 }
 
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::PendingServerRegistration}::registration_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 730:4-732:5
-    Visibility: public -/
-def pqxdh.PendingServerRegistration.impl.registration_id
-  (self : pqxdh.PendingServerRegistration) : RustM pqxdh.RegistrationId := do
-  ok self.registration_id
-
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::PendingServerRegistration}::beacon_identity_public_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 734:4-736:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 741:4-743:5
     Visibility: public -/
 def pqxdh.PendingServerRegistration.impl.beacon_identity_public_key
   (self : pqxdh.PendingServerRegistration) :
@@ -3014,63 +3918,15 @@ def pqxdh.PendingServerRegistration.impl.beacon_identity_public_key
   := do
   ok self.beacon_identity_public_key
 
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::PendingServerRegistration}::root_key_input]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 738:4-740:5
-    Visibility: public -/
-def pqxdh.PendingServerRegistration.impl.root_key_input
-  (self : pqxdh.PendingServerRegistration) : RustM pqxdh.RootKeyInput := do
-  ok self.root_key_input
-
-/-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::PendingServerRegistration}::root_key_input_mut]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 742:4-744:5
-    Visibility: public -/
-def pqxdh.PendingServerRegistration.root_key_input_mut
-  (self : pqxdh.PendingServerRegistration) :
-  RustM (pqxdh.RootKeyInput × (pqxdh.RootKeyInput →
-    pqxdh.PendingServerRegistration))
-  := do
-  let back := fun rki => { self with root_key_input := rki }
-  ok (self.root_key_input, back)
-
-/-- [beaconcrypt_core::pqxdh::server_accept]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 748:0-775:1
-    Visibility: public -/
-def pqxdh.server_accept
-  (state : pqxdh.ServerState) (registration : pqxdh.VerifiedInitKex)
-  (registration_status : pqxdh.RegistrationStatus)
-  (server_binding : pqxdh.ServerBinding) (coins : pqxdh.ServerCoins)
-  (shared_secrets : pqxdh.PqxdhSharedSecrets) :
-  RustM (core.result.Result (pqxdh.ServerState ×
-    pqxdh.PendingServerRegistration) pqxdh.RegistrationError)
-  := do
-  let r ← pqxdh.validate_registration_status registration_status
-  match r with
-  | core.result.Result.Ok _ =>
-    let r1 ← pqxdh.build_root_key_input shared_secrets
-    match r1 with
-    | core.result.Result.Ok value =>
-      let ri ← pqxdh.registration_id registration
-      ok (core.result.Result.Ok (state,
-        {
-          server_binding,
-          registration_id := ri,
-          beacon_identity_public_key := registration.beacon_identity_public_key,
-          ephemeral_public_key := coins.ephemeral_public_key,
-          kem_ciphertext := coins.kem_ciphertext,
-          root_key_input := value
-        }))
-    | core.result.Result.Err err => ok (core.result.Result.Err err)
-  | core.result.Result.Err err => ok (core.result.Result.Err err)
-
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerRegistrationCandidate}::key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 793:4-795:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 800:4-802:5
     Visibility: public -/
 def pqxdh.ServerRegistrationCandidate.impl.key_id
   (self : pqxdh.ServerRegistrationCandidate) : RustM Std.U64 := do
   ok self.key_id
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerRegistrationCandidate}::beacon_identity_public_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 797:4-799:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 804:4-806:5
     Visibility: public -/
 def pqxdh.ServerRegistrationCandidate.impl.beacon_identity_public_key
   (self : pqxdh.ServerRegistrationCandidate) :
@@ -3079,7 +3935,7 @@ def pqxdh.ServerRegistrationCandidate.impl.beacon_identity_public_key
   ok self.beacon_identity_public_key
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerRegistrationCandidate}::server_identity_public_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 801:4-803:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 808:4-810:5
     Visibility: public -/
 def pqxdh.ServerRegistrationCandidate.impl.server_identity_public_key
   (self : pqxdh.ServerRegistrationCandidate) :
@@ -3088,14 +3944,14 @@ def pqxdh.ServerRegistrationCandidate.impl.server_identity_public_key
   ok self.server_identity_public_key
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerRegistrationCandidate}::server_identity_key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 805:4-807:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 812:4-814:5
     Visibility: public -/
 def pqxdh.ServerRegistrationCandidate.impl.server_identity_key_id
   (self : pqxdh.ServerRegistrationCandidate) : RustM Std.U64 := do
   ok self.server_identity_key_id
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerRegistrationCandidate}::ephemeral_public_key]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 809:4-811:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 816:4-818:5
     Visibility: public -/
 def pqxdh.ServerRegistrationCandidate.impl.ephemeral_public_key
   (self : pqxdh.ServerRegistrationCandidate) :
@@ -3104,7 +3960,7 @@ def pqxdh.ServerRegistrationCandidate.impl.ephemeral_public_key
   ok self.ephemeral_public_key
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerRegistrationCandidate}::kem_ciphertext]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 813:4-815:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 820:4-822:5
     Visibility: public -/
 def pqxdh.ServerRegistrationCandidate.impl.kem_ciphertext
   (self : pqxdh.ServerRegistrationCandidate) :
@@ -3113,7 +3969,7 @@ def pqxdh.ServerRegistrationCandidate.impl.kem_ciphertext
   ok self.kem_ciphertext
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerRegistrationCandidate}::associated_data]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 817:4-819:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 824:4-826:5
     Visibility: public -/
 def pqxdh.ServerRegistrationCandidate.impl.associated_data
   (self : pqxdh.ServerRegistrationCandidate) :
@@ -3122,7 +3978,7 @@ def pqxdh.ServerRegistrationCandidate.impl.associated_data
   ok self.associated_data
 
 /-- [beaconcrypt_core::pqxdh::{beaconcrypt_core::pqxdh::ServerRegistrationCandidate}::key_id_binding]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 825:4-827:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 832:4-834:5
     Visibility: public -/
 def pqxdh.ServerRegistrationCandidate.key_id_binding
   (self : pqxdh.ServerRegistrationCandidate) :
@@ -3131,14 +3987,14 @@ def pqxdh.ServerRegistrationCandidate.key_id_binding
   pqxdh.registration_key_id_binding self.key_id
 
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::KeyIdAvailability}::clone]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 830:9-830:14
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 837:9-837:14
     Visibility: public -/
 def pqxdh.KeyIdAvailability.Insts.CoreCloneClone.clone
   (self : pqxdh.KeyIdAvailability) : RustM pqxdh.KeyIdAvailability := do
   ok self
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::KeyIdAvailability}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 830:9-830:14 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 837:9-837:14 -/
 @[reducible]
 impl_def pqxdh.KeyIdAvailability.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.KeyIdAvailability := {
@@ -3148,78 +4004,15 @@ impl_def pqxdh.KeyIdAvailability.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::KeyIdAvailability}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 830:16-830:20 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 837:16-837:20 -/
 @[reducible]
 def pqxdh.KeyIdAvailability.Insts.CoreMarkerCopy : core.marker.Copy
   pqxdh.KeyIdAvailability := {
   cloneCloneInst := pqxdh.KeyIdAvailability.Insts.CoreCloneClone
 }
 
-/-- [beaconcrypt_core::pqxdh::server_next_key_id]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 838:0-844:1
-    Visibility: public -/
-def pqxdh.server_next_key_id
-  (state : pqxdh.ServerState) :
-  RustM (core.result.Result Std.U64 pqxdh.RegistrationError)
-  := do
-  if state.last_key_id = core.num.U64.MAX
-  then ok (core.result.Result.Err pqxdh.RegistrationError.KeyIdExhausted)
-  else let i ← state.last_key_id + 1#u64
-       ok (core.result.Result.Ok i)
-
-/-- [beaconcrypt_core::pqxdh::server_prepare_commit]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 847:0-882:1
-    Visibility: public -/
-def pqxdh.server_prepare_commit
-  (state : pqxdh.ServerState) (pending : pqxdh.PendingServerRegistration)
-  (current_server_binding : pqxdh.ServerBinding)
-  (key_id_availability : pqxdh.KeyIdAvailability) :
-  RustM (core.result.Result pqxdh.ServerRegistrationCandidate
-    pqxdh.RegistrationError)
-  := do
-  if pending.server_binding.identity_key_id =
-    current_server_binding.identity_key_id
-  then
-    let b ←
-      core.Array.Insts.CoreCmpPartialEqArray.eq
-        core.U8.Insts.CoreCmpPartialEqU8
-        pending.server_binding.identity_public_key
-        current_server_binding.identity_public_key
-    if b
-    then
-      let r ← pqxdh.server_next_key_id state
-      match r with
-      | core.result.Result.Ok value =>
-        let b1 ←
-          match key_id_availability with
-          | pqxdh.KeyIdAvailability.Available => ok false
-          | pqxdh.KeyIdAvailability.Occupied => ok true
-        if b1
-        then ok (core.result.Result.Err pqxdh.RegistrationError.KeyIdCollision)
-        else
-          let a ←
-            pqxdh.build_associated_data
-              current_server_binding.identity_public_key
-              pending.beacon_identity_public_key
-          ok (core.result.Result.Ok
-            {
-              previous_state := state,
-              next_state := { last_key_id := value },
-              key_id := value,
-              beacon_identity_public_key := pending.beacon_identity_public_key,
-              server_identity_public_key :=
-                current_server_binding.identity_public_key,
-              server_identity_key_id := current_server_binding.identity_key_id,
-              ephemeral_public_key := pending.ephemeral_public_key,
-              kem_ciphertext := pending.kem_ciphertext,
-              associated_data := a
-            })
-      | core.result.Result.Err err => ok (core.result.Result.Err err)
-    else ok (core.result.Result.Err pqxdh.RegistrationError.IdentityMismatch)
-  else ok (core.result.Result.Err pqxdh.RegistrationError.IdentityMismatch)
-
 /-- [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::EstablishedPeer}::clone]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 884:9-884:14
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 891:9-891:14
     Visibility: public -/
 def pqxdh.EstablishedPeer.Insts.CoreCloneClone.clone
   (self : pqxdh.EstablishedPeer) : RustM pqxdh.EstablishedPeer := do
@@ -3233,7 +4026,7 @@ def pqxdh.EstablishedPeer.Insts.CoreCloneClone.clone
   ok { key_id := i, identity_public_key := a, associated_data := a1 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::EstablishedPeer}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 884:9-884:14 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 891:9-891:14 -/
 @[reducible]
 impl_def pqxdh.EstablishedPeer.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.EstablishedPeer := {
@@ -3243,7 +4036,7 @@ impl_def pqxdh.EstablishedPeer.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [beaconcrypt_core::pqxdh::{impl core::cmp::PartialEq<beaconcrypt_core::pqxdh::EstablishedPeer> for beaconcrypt_core::pqxdh::EstablishedPeer}::eq]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 892:4-896:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 899:4-903:5
     Visibility: public -/
 def pqxdh.EstablishedPeer.Insts.CoreCmpPartialEqEstablishedPeer.eq
   (self : pqxdh.EstablishedPeer) (other : pqxdh.EstablishedPeer) :
@@ -3264,7 +4057,7 @@ def pqxdh.EstablishedPeer.Insts.CoreCmpPartialEqEstablishedPeer.eq
   else ok false
 
 /-- [beaconcrypt_core::pqxdh::{impl core::cmp::PartialEq<beaconcrypt_core::pqxdh::EstablishedPeer> for beaconcrypt_core::pqxdh::EstablishedPeer}::ne]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 898:4-900:5
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 905:4-907:5
     Visibility: public -/
 def pqxdh.EstablishedPeer.Insts.CoreCmpPartialEqEstablishedPeer.ne
   (self : pqxdh.EstablishedPeer) (other : pqxdh.EstablishedPeer) :
@@ -3275,7 +4068,7 @@ def pqxdh.EstablishedPeer.Insts.CoreCmpPartialEqEstablishedPeer.ne
   ok (¬ b)
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::cmp::PartialEq<beaconcrypt_core::pqxdh::EstablishedPeer> for beaconcrypt_core::pqxdh::EstablishedPeer}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 891:0-901:1 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 898:0-908:1 -/
 @[reducible]
 def pqxdh.EstablishedPeer.Insts.CoreCmpPartialEqEstablishedPeer :
   core.cmp.PartialEq pqxdh.EstablishedPeer pqxdh.EstablishedPeer := {
@@ -3284,7 +4077,7 @@ def pqxdh.EstablishedPeer.Insts.CoreCmpPartialEqEstablishedPeer :
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::cmp::Eq for beaconcrypt_core::pqxdh::EstablishedPeer}]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 903:0-903:30 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 910:0-910:30 -/
 @[reducible]
 def pqxdh.EstablishedPeer.Insts.CoreCmpEq : core.cmp.Eq pqxdh.EstablishedPeer
   := {
@@ -3292,7 +4085,7 @@ def pqxdh.EstablishedPeer.Insts.CoreCmpEq : core.cmp.Eq pqxdh.EstablishedPeer
 }
 
 /-- [beaconcrypt_core::pqxdh::server_commit]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 905:0-914:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 912:0-921:1
     Visibility: public -/
 def pqxdh.server_commit
   (candidate : pqxdh.ServerRegistrationCandidate) :
@@ -3306,7 +4099,7 @@ def pqxdh.server_commit
     })
 
 /-- [beaconcrypt_core::pqxdh::server_abort_candidate]:
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 916:0-918:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 923:0-925:1
     Visibility: public -/
 def pqxdh.server_abort_candidate
   (candidate : pqxdh.ServerRegistrationCandidate) :
@@ -3697,13 +4490,6 @@ def ratchet.concrete.ratchet_step_from_response
       chain := output.next_chain,
       material := { key := output.key, nonce := output.nonce }
     }
-
-/-- [beaconcrypt_core::ratchet::{beaconcrypt_core::ratchet::RatchetChain}::as_bytes]:
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 77:4-79:5
-    Visibility: public -/
-def ratchet.RatchetChain.as_bytes
-  (self : ratchet.RatchetChain) : RustM (Array Std.U8 32#usize) := do
-  ok self.bytes
 
 /-- [beaconcrypt_core::ratchet::control::{beaconcrypt_core::ratchet::control::SendKey}::unavailable]:
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 118:4-123:5 -/
@@ -5510,13 +6296,13 @@ def ratchet.control.PeerRatchetState.Insts.CoreMarkerCopy : core.marker.Copy
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 536:0-549:1
     Visibility: public -/
 def ratchet.control.replace_ratchet_for_peer
-  (requested_peer : Std.U64) (peer : ratchet.control.PeerRatchetState)
+  (requested_peer : Std.U64) (peer1 : ratchet.control.PeerRatchetState)
   (replacement : ratchet.control.RatchetState) :
   RustM ratchet.control.PeerRatchetState
   := do
-  if requested_peer = peer.peer_id
-  then ok { peer with ratchet := replacement }
-  else ok peer
+  if requested_peer = peer1.peer_id
+  then ok { peer1 with ratchet := replacement }
+  else ok peer1
 
 /-- [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::PeerSendAdvance}::clone]:
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 552:9-552:14
@@ -5548,19 +6334,19 @@ def ratchet.control.PeerSendAdvance.Insts.CoreMarkerCopy : core.marker.Copy
 /-- [beaconcrypt_core::ratchet::control::advance_send_for_peer]:
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 565:0-583:1 -/
 def ratchet.control.advance_send_for_peer
-  (requested_peer : Std.U64) (peer : ratchet.control.PeerRatchetState) :
+  (requested_peer : Std.U64) (peer1 : ratchet.control.PeerRatchetState) :
   RustM ratchet.control.PeerSendAdvance
   := do
-  if requested_peer = peer.peer_id
+  if requested_peer = peer1.peer_id
   then
-    let advanced ← ratchet.control.advance_send peer.ratchet
+    let advanced ← ratchet.control.advance_send peer1.ratchet
     let prs ←
-      ratchet.control.replace_ratchet_for_peer requested_peer peer
+      ratchet.control.replace_ratchet_for_peer requested_peer peer1
         advanced.state
     ok { peer := prs, sequence := advanced.sequence, key := advanced.key }
   else
     let sk ← ratchet.control.SendKey.unavailable
-    ok { peer, sequence := core.option.Option.None, key := sk }
+    ok { peer := peer1, sequence := core.option.Option.None, key := sk }
 
 /-- [beaconcrypt_core::ratchet::refined::{beaconcrypt_core::ratchet::refined::RefinedRatchet<SendChain, ReceiveChain, Material>}::new]:
     Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 111:4-113:5
@@ -5895,5 +6681,2183 @@ def record.OpenAead.finish
     ratchet.concrete.ReceiveOpen.finish self.opening (core.option.Option.Some
       ({ plaintext, key_id := ofc.sender_kid, seq } : record.OpenedRecord
       Plaintext))
+
+/-- [beaconcrypt_core::record_effects::{impl core::clone::Clone for beaconcrypt_core::record_effects::RecordEncoding}::clone]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 20:9-20:14
+    Visibility: public -/
+def record_effects.RecordEncoding.Insts.CoreCloneClone.clone
+  (self : record_effects.RecordEncoding) :
+  RustM record_effects.RecordEncoding
+  := do
+  ok self
+
+/-- Trait implementation: [beaconcrypt_core::record_effects::{impl core::clone::Clone for beaconcrypt_core::record_effects::RecordEncoding}]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 20:9-20:14 -/
+@[reducible]
+impl_def record_effects.RecordEncoding.Insts.CoreCloneClone : core.clone.Clone
+  record_effects.RecordEncoding := {
+  clone := record_effects.RecordEncoding.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    record_effects.RecordEncoding.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [beaconcrypt_core::record_effects::{impl core::marker::Copy for beaconcrypt_core::record_effects::RecordEncoding}]
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 20:16-20:20 -/
+@[reducible]
+def record_effects.RecordEncoding.Insts.CoreMarkerCopy : core.marker.Copy
+  record_effects.RecordEncoding := {
+  cloneCloneInst := record_effects.RecordEncoding.Insts.CoreCloneClone
+}
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::SealFrameContext<'a>}::new]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 37:4-52:5
+    Visibility: public -/
+def record_effects.SealFrameContext.new
+  (plaintext : Slice Std.U8) (target_kid : Std.U64) (sender_kid : Std.U64)
+  (associated_data : Array Std.U8 281#usize)
+  (encoding : record_effects.RecordEncoding) :
+  RustM record_effects.SealFrameContext
+  := do
+  ok
+    {
+      plaintext,
+      «prefix» := core.option.Option.None,
+      associated_data,
+      target_kid,
+      sender_kid,
+      encoding
+    }
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::SealFrameContext<'a>}::registration]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 55:4-70:5
+    Visibility: public -/
+def record_effects.SealFrameContext.registration
+  (application : Slice Std.U8) (assigned_kid : Std.U64) (sender_kid : Std.U64)
+  (associated_data : Array Std.U8 281#usize) :
+  RustM record_effects.SealFrameContext
+  := do
+  let rkib ← pqxdh.registration_key_id_binding assigned_kid
+  let «prefix» ← pqxdh.RegistrationKeyIdBinding.as_bytes rkib
+  ok
+    {
+      plaintext := application,
+      «prefix» := (core.option.Option.Some «prefix»),
+      associated_data,
+      target_kid := assigned_kid,
+      sender_kid,
+      encoding := record_effects.RecordEncoding.Raw
+    }
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::SealFrameContext<'a>}::plaintext_request]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 72:4-80:5 -/
+def record_effects.SealFrameContext.plaintext_request
+  (self : record_effects.SealFrameContext) :
+  RustM record_effects.SealPlaintextRequest
+  := do
+  match self.prefix with
+  | core.option.Option.None =>
+    ok (record_effects.SealPlaintextRequest.Single self.plaintext)
+  | core.option.Option.Some «prefix» =>
+    ok (record_effects.SealPlaintextRequest.Prefixed «prefix» self.plaintext)
+
+/-- [beaconcrypt_core::record_effects::begin_record_send]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 94:0-107:1
+    Visibility: public -/
+def record_effects.begin_record_send
+  (kernel : ratchet.concrete.ConcreteRatchetKernel)
+  (context : record_effects.SealFrameContext) :
+  RustM record_effects.RecordSendStart
+  := do
+  let b ← core.slice.Slice.is_empty context.plaintext
+  if b
+  then
+    let b1 ← core.option.Option.is_none context.prefix
+    if b1
+    then ok (record_effects.RecordSendStart.Rejected kernel)
+    else
+      let ss ← ratchet.concrete.begin_send kernel context
+      match ss with
+      | ratchet.concrete.SendStart.SendExhausted kernel1 _ =>
+        ok (record_effects.RecordSendStart.Rejected kernel1)
+      | ratchet.concrete.SendStart.SendKdfRequested sk =>
+        ok (record_effects.RecordSendStart.KdfRequested { pending := sk })
+  else
+    let ss ← ratchet.concrete.begin_send kernel context
+    match ss with
+    | ratchet.concrete.SendStart.SendExhausted kernel1 _ =>
+      ok (record_effects.RecordSendStart.Rejected kernel1)
+    | ratchet.concrete.SendStart.SendKdfRequested sk =>
+      ok (record_effects.RecordSendStart.KdfRequested { pending := sk })
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::RecordSendKdf<'a>}::request]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 110:4-112:5
+    Visibility: public -/
+def record_effects.RecordSendKdf.request
+  (self : record_effects.RecordSendKdf) :
+  RustM ratchet.SymmetricRatchetKdfRequest
+  := do
+  ratchet.concrete.SendKdf.impl.request self.pending
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::RecordSendKdf<'a>}::cancel]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 114:4-116:5
+    Visibility: public -/
+def record_effects.RecordSendKdf.cancel
+  (self : record_effects.RecordSendKdf) :
+  RustM ratchet.concrete.ConcreteRatchetKernel
+  := do
+  let (crk, _) ← ratchet.concrete.SendKdf.cancel self.pending
+  ok crk
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::RecordSendKdf<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 118:4-122:5
+    Visibility: public -/
+def record_effects.RecordSendKdf.resume
+  (self : record_effects.RecordSendKdf) (response : ratchet.RatchetKdfResponse)
+  :
+  RustM record_effects.SealAead
+  := do
+  let ss ← ratchet.concrete.SendKdf.resume self.pending response
+  ok { «seal» := ss }
+
+/-- [beaconcrypt_core::record_effects::reject_send]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 142:0-144:1 -/
+def record_effects.reject_send
+  (pending : ratchet.concrete.SendSeal record_effects.SealFrameContext) :
+  RustM (ratchet.concrete.ConcreteRatchetKernel × (core.option.Option Unit))
+  := do
+  ratchet.concrete.SendSeal.finish pending core.option.Option.None
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::SealAead<'a>}::request]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 157:4-166:5
+    Visibility: public -/
+def record_effects.SealAead.request
+  (self : record_effects.SealAead) : RustM record_effects.AeadSealRequest := do
+  let material ← ratchet.concrete.SendSeal.impl.material self.seal
+  let context ← ratchet.concrete.SendSeal.impl.context self.seal
+  let rk ← ratchet.RatchetMaterial.impl.key material
+  let a ← ratchet.RatchetKey.as_bytes rk
+  let rn ← ratchet.RatchetMaterial.impl.nonce material
+  let a1 ← ratchet.RatchetNonce.as_bytes rn
+  let spr ← record_effects.SealFrameContext.plaintext_request context
+  ok
+    {
+      key := a,
+      nonce := a1,
+      associated_data := context.associated_data,
+      plaintext := spr
+    }
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::SealAead<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 168:4-191:5
+    Visibility: public -/
+def record_effects.SealAead.resume
+  (self : record_effects.SealAead)
+  (detached : core.option.Option ((Slice Std.U8) × (Array Std.U8 16#usize))) :
+  RustM record_effects.SealAfterAead
+  := do
+  match detached with
+  | core.option.Option.None =>
+    let (crk, _) ← record_effects.reject_send self.seal
+    ok (record_effects.SealAfterAead.Rejected crk)
+  | core.option.Option.Some p =>
+    let (ciphertext, tag) := p
+    let material ← ratchet.concrete.SendSeal.impl.material self.seal
+    let context ← ratchet.concrete.SendSeal.impl.context self.seal
+    let rk ← ratchet.RatchetMaterial.impl.key material
+    let a ← ratchet.RatchetKey.as_bytes rk
+    let rn ← ratchet.RatchetMaterial.impl.nonce material
+    let a1 ← ratchet.RatchetNonce.as_bytes rn
+    let i ← ratchet.concrete.SendSeal.impl.sequence self.seal
+    let transcript ←
+      commitment.build_commitment_transcript a a1 context.associated_data tag i
+        context.sender_kid
+    ok (record_effects.SealAfterAead.CommitmentRequested
+      { «seal» := self.seal, ciphertext, tag, transcript })
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::SealCommitment<'a, 'ciphertext>}::transcript]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 208:4-210:5
+    Visibility: public -/
+def record_effects.SealCommitment.impl.transcript
+  (self : record_effects.SealCommitment) :
+  RustM commitment.CommitmentTranscript
+  := do
+  ok self.transcript
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::SealCommitment<'a, 'ciphertext>}::transcript_mut]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 212:4-214:5
+    Visibility: public -/
+def record_effects.SealCommitment.transcript_mut
+  (self : record_effects.SealCommitment) :
+  RustM (commitment.CommitmentTranscript × (commitment.CommitmentTranscript
+    → record_effects.SealCommitment))
+  := do
+  let back := fun ct => { self with transcript := ct }
+  ok (self.transcript, back)
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::SealCommitment<'a, 'ciphertext>}::resume]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 216:4-229:5
+    Visibility: public -/
+def record_effects.SealCommitment.resume
+  (self : record_effects.SealCommitment)
+  (commitment1 : core.option.Option (Array Std.U8 64#usize)) :
+  RustM record_effects.SealAfterCommitment
+  := do
+  match commitment1 with
+  | core.option.Option.None =>
+    let (crk, _) ← record_effects.reject_send self.seal
+    ok (record_effects.SealAfterCommitment.Rejected crk)
+  | core.option.Option.Some commitment2 =>
+    ok (record_effects.SealAfterCommitment.WriteRequested
+      {
+        «seal» := self.seal,
+        ciphertext := self.ciphertext,
+        tag := self.tag,
+        commitment := commitment2
+      })
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::SealWrite<'_0, '_1>}::request]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 258:4-272:5
+    Visibility: public -/
+def record_effects.SealWrite.request
+  (self : record_effects.SealWrite) :
+  RustM record_effects.RecordWriteRequest
+  := do
+  let s ← core.array.Array.as_slice self.tag
+  let s1 ← core.array.Array.as_slice self.commitment
+  let sfc ← ratchet.concrete.SendSeal.impl.context self.seal
+  match sfc.encoding with
+  | record_effects.RecordEncoding.Raw =>
+    ok (record_effects.RecordWriteRequest.Raw
+      (Array.make 3#usize [ self.ciphertext, s, s1 ]))
+  | record_effects.RecordEncoding.Frame =>
+    let i ← ratchet.concrete.SendSeal.impl.sequence self.seal
+    ok (record_effects.RecordWriteRequest.Frame
+      (Array.make 3#usize [ self.ciphertext, s, s1 ]) i sfc.sender_kid)
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::SealWrite<'_0, '_1>}::finish]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 275:4-291:5
+    Visibility: public -/
+def record_effects.SealWrite.finish
+  {Output : Type} (self : record_effects.SealWrite)
+  (written : core.option.Option Output) :
+  RustM (ratchet.concrete.ConcreteRatchetKernel × (core.option.Option
+    (record_effects.SealedRecord Output)))
+  := do
+  match written with
+  | core.option.Option.None =>
+    ratchet.concrete.SendSeal.finish self.seal core.option.Option.None
+  | core.option.Option.Some ciphertext =>
+    let sfc ← ratchet.concrete.SendSeal.impl.context self.seal
+    let seq ← ratchet.concrete.SendSeal.impl.sequence self.seal
+    ratchet.concrete.SendSeal.finish self.seal (core.option.Option.Some
+      ({ ciphertext, key_id := sfc.target_kid, seq } :
+      record_effects.SealedRecord Output))
+
+/-- [beaconcrypt_core::record_effects::normalize_receive]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 328:0-341:1 -/
+def record_effects.normalize_receive
+  (effect : ratchet.concrete.ReceiveEffect record.OpenFrameContext) :
+  RustM record_effects.RecordReceiveEffect
+  := do
+  match effect with
+  | ratchet.concrete.ReceiveEffect.ReceiveRejected kernel _ =>
+    ok (record_effects.RecordReceiveEffect.Rejected kernel)
+  | ratchet.concrete.ReceiveEffect.ReceiveKdfRequested rk =>
+    ok (record_effects.RecordReceiveEffect.KdfRequested { pending := rk })
+  | ratchet.concrete.ReceiveEffect.ReceiveOpenRequested ro =>
+    let os ← record.begin_open ro
+    match os with
+    | record.OpenStart.OpenRejected kernel =>
+      ok (record_effects.RecordReceiveEffect.Rejected kernel)
+    | record.OpenStart.OpenCommitmentRequested oc =>
+      ok (record_effects.RecordReceiveEffect.CommitmentRequested
+        { pending := oc })
+
+/-- [beaconcrypt_core::record_effects::begin_record_receive]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 315:0-326:1
+    Visibility: public -/
+def record_effects.begin_record_receive
+  (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
+  (ciphertext : Slice Std.U8) (associated_data : Array Std.U8 281#usize)
+  (sender : Std.U64) :
+  RustM record_effects.RecordReceiveEffect
+  := do
+  let o ←
+    record.OpenFrameContext.from_frame ciphertext associated_data sender
+  match o with
+  | core.option.Option.None =>
+    ok (record_effects.RecordReceiveEffect.Rejected kernel)
+  | core.option.Option.Some ofc =>
+    let re ← ratchet.concrete.begin_receive kernel sequence ofc
+    record_effects.normalize_receive re
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::RecordReceiveKdf<'a>}::request]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 344:4-346:5
+    Visibility: public -/
+def record_effects.RecordReceiveKdf.request
+  (self : record_effects.RecordReceiveKdf) :
+  RustM ratchet.SymmetricRatchetKdfRequest
+  := do
+  ratchet.concrete.ReceiveKdf.impl.request self.pending
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::RecordReceiveKdf<'a>}::cancel]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 348:4-350:5
+    Visibility: public -/
+def record_effects.RecordReceiveKdf.cancel
+  (self : record_effects.RecordReceiveKdf) :
+  RustM ratchet.concrete.ConcreteRatchetKernel
+  := do
+  let (crk, _) ← ratchet.concrete.ReceiveKdf.cancel self.pending
+  ok crk
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::RecordReceiveKdf<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 352:4-354:5
+    Visibility: public -/
+def record_effects.RecordReceiveKdf.resume
+  (self : record_effects.RecordReceiveKdf)
+  (response : ratchet.RatchetKdfResponse) :
+  RustM record_effects.RecordReceiveEffect
+  := do
+  let re ← ratchet.concrete.ReceiveKdf.resume self.pending response
+  record_effects.normalize_receive re
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::RecordReceiveCommitment<'a>}::transcript]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 358:4-360:5
+    Visibility: public -/
+def record_effects.RecordReceiveCommitment.transcript
+  (self : record_effects.RecordReceiveCommitment) :
+  RustM commitment.CommitmentTranscript
+  := do
+  record.OpenCommitment.impl.transcript self.pending
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::RecordReceiveCommitment<'a>}::transcript_mut]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 362:4-364:5
+    Visibility: public -/
+def record_effects.RecordReceiveCommitment.transcript_mut
+  (self : record_effects.RecordReceiveCommitment) :
+  RustM (commitment.CommitmentTranscript × (commitment.CommitmentTranscript
+    → record_effects.RecordReceiveCommitment))
+  := do
+  let back :=
+    fun ct => ({ pending := { self.pending with transcript := ct } } :
+      record_effects.RecordReceiveCommitment)
+  ok (self.pending.transcript, back)
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::RecordReceiveCommitment<'a>}::supplied_commitment]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 366:4-368:5
+    Visibility: public -/
+def record_effects.RecordReceiveCommitment.supplied_commitment
+  (self : record_effects.RecordReceiveCommitment) :
+  RustM (Array Std.U8 64#usize)
+  := do
+  record.OpenCommitment.supplied_commitment self.pending
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::RecordReceiveCommitment<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 371:4-380:5
+    Visibility: public -/
+def record_effects.RecordReceiveCommitment.resume
+  (self : record_effects.RecordReceiveCommitment) (commitment_matches : Bool) :
+  RustM record_effects.RecordReceiveEffect
+  := do
+  let oac ← record.OpenCommitment.resume self.pending commitment_matches
+  match oac with
+  | record.OpenAfterCommitment.OpenCommitmentRejected kernel =>
+    ok (record_effects.RecordReceiveEffect.Rejected kernel)
+  | record.OpenAfterCommitment.OpenAeadRequested oa =>
+    ok (record_effects.RecordReceiveEffect.AeadRequested { pending := oa })
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::RecordReceiveAead<'_0>}::request]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 384:4-386:5
+    Visibility: public -/
+def record_effects.RecordReceiveAead.request
+  (self : record_effects.RecordReceiveAead) :
+  RustM (core.option.Option record.AeadRequest)
+  := do
+  record.OpenAead.request self.pending
+
+/-- [beaconcrypt_core::record_effects::{beaconcrypt_core::record_effects::RecordReceiveAead<'_0>}::finish]:
+    Source: 'beaconcrypt-core/src/record_effects.rs', lines 388:4-393:5
+    Visibility: public -/
+def record_effects.RecordReceiveAead.finish
+  {Plaintext : Type} (self : record_effects.RecordReceiveAead)
+  (plaintext : core.option.Option Plaintext) :
+  RustM (ratchet.concrete.ConcreteRatchetKernel × (core.option.Option
+    (record.OpenedRecord Plaintext)))
+  := do
+  record.OpenAead.finish self.pending plaintext
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitPacket<'a>}::from_slices]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 51:4-85:5
+    Visibility: public -/
+def registration.InitPacket.from_slices
+  (identity_key : Slice Std.U8) (pre_key : Slice Std.U8)
+  (one_time_key : Slice Std.U8) (pq_key : Slice Std.U8)
+  (mldsa_public_key : Slice Std.U8) (signature : Slice Std.U8) :
+  RustM (core.option.Option registration.InitPacket)
+  := do
+  let r ←
+    core.SharedAArray.Insts.CoreConvertTryFromSharedASliceTryFromSliceError.try_from
+      33#usize identity_key
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ←
+      core.SharedAArray.Insts.CoreConvertTryFromSharedASliceTryFromSliceError.try_from
+        98#usize pre_key
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let r2 ←
+        core.SharedAArray.Insts.CoreConvertTryFromSharedASliceTryFromSliceError.try_from
+          98#usize one_time_key
+      match r2 with
+      | core.result.Result.Ok value2 =>
+        let r3 ←
+          core.SharedAArray.Insts.CoreConvertTryFromSharedASliceTryFromSliceError.try_from
+            1249#usize pq_key
+        match r3 with
+        | core.result.Result.Ok value3 =>
+          let r4 ←
+            core.SharedAArray.Insts.CoreConvertTryFromSharedASliceTryFromSliceError.try_from
+              1952#usize mldsa_public_key
+          match r4 with
+          | core.result.Result.Ok value4 =>
+            let r5 ←
+              core.SharedAArray.Insts.CoreConvertTryFromSharedASliceTryFromSliceError.try_from
+                3309#usize signature
+            match r5 with
+            | core.result.Result.Ok value5 =>
+              ok (core.option.Option.Some
+                {
+                  identity_key := value,
+                  pre_key := value1,
+                  one_time_key := value2,
+                  pq_key := value3,
+                  mldsa_public_key := value4,
+                  signature := value5
+                })
+            | core.result.Result.Err _ => ok core.option.Option.None
+          | core.result.Result.Err _ => ok core.option.Option.None
+        | core.result.Result.Err _ => ok core.option.Option.None
+      | core.result.Result.Err _ => ok core.option.Option.None
+    | core.result.Result.Err _ => ok core.option.Option.None
+  | core.result.Result.Err _ => ok core.option.Option.None
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitPacket<'a>}::fields]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 87:4-95:5 -/
+def registration.InitPacket.fields
+  (self : registration.InitPacket) : RustM authentication.InitFields := do
+  ok
+    {
+      identity_key := self.identity_key,
+      pre_key := self.pre_key,
+      one_time_key := self.one_time_key,
+      pq_key := self.pq_key,
+      mldsa_public_key := self.mldsa_public_key
+    }
+
+/-- [beaconcrypt_core::registration::begin_server_pin]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 103:0-111:1
+    Visibility: public -/
+def registration.begin_server_pin
+  (binding : pqxdh.ServerBinding) (public_key : Array Std.U8 1952#usize) :
+  RustM registration.PinFingerprint
+  := do
+  ok { binding, public_key }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::PinFingerprint}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 114:4-116:5
+    Visibility: public -/
+def registration.PinFingerprint.request
+  (self : registration.PinFingerprint) : RustM registration.HashRequest := do
+  let s ← lift (Array.to_slice self.public_key)
+  ok (registration.HashRequest.Single s)
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::ServerAuthenticationPin}::new]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 24:4-34:5
+    Visibility: public -/
+def session.ServerAuthenticationPin.new
+  (binding : pqxdh.ServerBinding) (public_key : Array Std.U8 1952#usize)
+  (fingerprint : Array Std.U8 64#usize) :
+  RustM session.ServerAuthenticationPin
+  := do
+  ok { binding, public_key, fingerprint }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::PinFingerprint}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 118:4-130:5
+    Visibility: public -/
+def registration.PinFingerprint.resume
+  (self : registration.PinFingerprint)
+  (fingerprint : core.option.Option (Array Std.U8 64#usize)) :
+  RustM (core.option.Option session.ServerAuthenticationPin)
+  := do
+  match fingerprint with
+  | core.option.Option.None => ok core.option.Option.None
+  | core.option.Option.Some value =>
+    let sap ←
+      session.ServerAuthenticationPin.new self.binding self.public_key value
+    ok (core.option.Option.Some sap)
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::ServerAuthenticationPin}::public_key]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 40:4-42:5
+    Visibility: public -/
+def session.ServerAuthenticationPin.impl.public_key
+  (self : session.ServerAuthenticationPin) :
+  RustM (Array Std.U8 1952#usize)
+  := do
+  ok self.public_key
+
+/-- [beaconcrypt_core::registration::begin_init_authentication]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 155:0-171:1
+    Visibility: public -/
+def registration.begin_init_authentication
+  (server_pin : session.ServerAuthenticationPin)
+  (packet : registration.InitPacket) :
+  RustM registration.InitAuthentication
+  := do
+  let server ← session.ServerAuthenticationPin.impl.binding server_pin
+  let «if» ← registration.InitPacket.fields packet
+  let a ← session.ServerAuthenticationPin.impl.public_key server_pin
+  let input ←
+    authentication.build_init_transcript «if» server.identity_key_id
+      server.identity_public_key a
+  ok (registration.InitAuthentication.HashRequested
+    { packet, server_pin, input })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitHash<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 174:4-176:5
+    Visibility: public -/
+def registration.InitHash.request
+  (self : registration.InitHash) : RustM registration.HashRequest := do
+  let s ← lift (Array.to_slice self.input)
+  ok (registration.HashRequest.Single s)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitHash<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 178:4-190:5
+    Visibility: public -/
+def registration.InitHash.resume
+  (self : registration.InitHash)
+  (hash : core.option.Option (Array Std.U8 64#usize)) :
+  RustM registration.InitAuthentication
+  := do
+  match hash with
+  | core.option.Option.None => ok registration.InitAuthentication.Rejected
+  | core.option.Option.Some init_hash =>
+    let a ←
+      authentication.build_signature_input authentication.AuthRole.Beacon
+        init_hash
+    ok (registration.InitAuthentication.MldsaVerificationRequested
+      {
+        state :=
+          { packet := self.packet, server_pin := self.server_pin, init_hash },
+        input := a
+      })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitMldsaVerification<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 199:4-206:5
+    Visibility: public -/
+def registration.InitMldsaVerification.request
+  (self : registration.InitMldsaVerification) :
+  RustM registration.MldsaVerificationRequest
+  := do
+  ok
+    {
+      public_key := self.state.packet.mldsa_public_key,
+      input := self.input,
+      context := authentication.SIGNING_CONTEXT,
+      signature := self.state.packet.signature
+    }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitMldsaVerification<'a>}::resume::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::registration::{beaconcrypt_core::registration::InitMldsaVerification<'a>}::resume::closure<'a, '_1>}::call_mut]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 212:46-212:95 -/
+def
+  registration.InitMldsaVerification.resume.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+  (c : registration.InitMldsaVerification.resume.closure)
+  (tupled_args : Std.Usize) :
+  RustM (Std.U8 × registration.InitMldsaVerification.resume.closure)
+  := do
+  let i ← tupled_args + 1#usize
+  let i1 ← Array.index_usize c i
+  ok (i1, c)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitMldsaVerification<'a>}::resume::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::registration::{beaconcrypt_core::registration::InitMldsaVerification<'a>}::resume::closure<'a, '_1>}::call_once]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 212:46-212:95 -/
+def
+  registration.InitMldsaVerification.resume.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+  (c : registration.InitMldsaVerification.resume.closure) (i : Std.Usize) :
+  RustM Std.U8
+  := do
+  let (i1, _) ←
+    registration.InitMldsaVerification.resume.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+      c i
+  ok i1
+
+/-- Trait implementation: [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitMldsaVerification<'a>}::resume::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::registration::{beaconcrypt_core::registration::InitMldsaVerification<'a>}::resume::closure<'a, '_1>}]
+    Source: 'beaconcrypt-core/src/registration.rs', lines 212:46-212:95 -/
+@[reducible]
+def
+  registration.InitMldsaVerification.resume.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  : core.ops.function.FnOnce registration.InitMldsaVerification.resume.closure
+  Std.Usize Std.U8 := {
+  call_once :=
+    registration.InitMldsaVerification.resume.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+}
+
+/-- Trait implementation: [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitMldsaVerification<'a>}::resume::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::registration::{beaconcrypt_core::registration::InitMldsaVerification<'a>}::resume::closure<'a, '_1>}]
+    Source: 'beaconcrypt-core/src/registration.rs', lines 212:46-212:95 -/
+@[reducible]
+def
+  registration.InitMldsaVerification.resume.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+  : core.ops.function.FnMut registration.InitMldsaVerification.resume.closure
+  Std.Usize Std.U8 := {
+  FnOnceInst :=
+    registration.InitMldsaVerification.resume.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  call_mut :=
+    registration.InitMldsaVerification.resume.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+}
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitMldsaVerification<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 208:4-220:5
+    Visibility: public -/
+def registration.InitMldsaVerification.resume
+  (self : registration.InitMldsaVerification) (verified : Bool) :
+  RustM registration.InitAuthentication
+  := do
+  if verified
+  then
+    let i ← Array.index_usize self.state.packet.identity_key 0#usize
+    if i != pqxdh.SIGN_TYPE_ED25519
+    then ok registration.InitAuthentication.Rejected
+    else
+      let public_key ←
+        core.array.from_fn 32#usize
+          registration.InitMldsaVerification.resume.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+          self.state.packet.identity_key
+      let a := Array.repeat 34#usize 0#u8
+      let a1 := Array.repeat 1185#usize 0#u8
+      ok (registration.InitAuthentication.Ed25519VerificationRequested
+        {
+          state := self.state,
+          public_key,
+          stage := registration.SignedKeyStage.PqKey,
+          pre_key := a,
+          pq_key := a1
+        })
+  else ok registration.InitAuthentication.Rejected
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitEd25519Verification<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 238:4-248:5
+    Visibility: public -/
+def registration.InitEd25519Verification.request
+  (self : registration.InitEd25519Verification) :
+  RustM registration.Ed25519VerificationRequest
+  := do
+  match self.stage with
+  | registration.SignedKeyStage.PreKey =>
+    let signed ← lift (Array.to_slice self.state.packet.pre_key)
+    ok { public_key := self.public_key, signed }
+  | registration.SignedKeyStage.OneTimeKey =>
+    let signed ← lift (Array.to_slice self.state.packet.one_time_key)
+    ok { public_key := self.public_key, signed }
+  | registration.SignedKeyStage.PqKey =>
+    let signed ← lift (Array.to_slice self.state.packet.pq_key)
+    ok { public_key := self.public_key, signed }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitEd25519Verification<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 250:4-294:5
+    Visibility: public -/
+def registration.InitEd25519Verification.resume
+  (self : registration.InitEd25519Verification)
+  (opened : core.option.Option (Slice Std.U8)) :
+  RustM registration.InitAuthentication
+  := do
+  match opened with
+  | core.option.Option.None => ok registration.InitAuthentication.Rejected
+  | core.option.Option.Some opened1 =>
+    let evr ← registration.InitEd25519Verification.request self
+    let s ←
+      core.Slice.Insts.CoreOpsIndexIndex.index
+        (core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice
+        Std.U8) evr.signed { start := 64#usize }
+    let b ←
+      core.Shared1A.Insts.CoreCmpPartialEqShared0B.ne
+        (core.Slice.Insts.CoreCmpPartialEqSlice
+        core.U8.Insts.CoreCmpPartialEqU8) opened1 s
+    if b
+    then ok registration.InitAuthentication.Rejected
+    else
+      match self.stage with
+      | registration.SignedKeyStage.PreKey =>
+        let r ←
+          core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+            34#usize core.U8.Insts.CoreMarkerCopy opened1
+        match r with
+        | core.result.Result.Ok pre_key =>
+          ok (registration.InitAuthentication.Ed25519VerificationRequested
+            {
+              self
+                with
+                stage := registration.SignedKeyStage.OneTimeKey, pre_key
+            })
+        | core.result.Result.Err _ =>
+          ok registration.InitAuthentication.Rejected
+      | registration.SignedKeyStage.OneTimeKey =>
+        let r ←
+          core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+            34#usize core.U8.Insts.CoreMarkerCopy opened1
+        match r with
+        | core.result.Result.Ok one_time_key =>
+          let message ←
+            pqxdh.InitKex.from_encoded self.state.packet.identity_key
+              self.pre_key one_time_key self.pq_key
+          let r1 ← pqxdh.validate_init_kex message
+          match r1 with
+          | core.result.Result.Ok registration1 =>
+            ok (registration.InitAuthentication.ServerFingerprintRequested
+              { state := self.state, registration := registration1 })
+          | core.result.Result.Err _ =>
+            ok registration.InitAuthentication.Rejected
+        | core.result.Result.Err _ =>
+          ok registration.InitAuthentication.Rejected
+      | registration.SignedKeyStage.PqKey =>
+        let r ←
+          core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+            1185#usize core.U8.Insts.CoreMarkerCopy opened1
+        match r with
+        | core.result.Result.Ok pq_key =>
+          ok (registration.InitAuthentication.Ed25519VerificationRequested
+            { self with stage := registration.SignedKeyStage.PreKey, pq_key })
+        | core.result.Result.Err _ =>
+          ok registration.InitAuthentication.Rejected
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitServerFingerprint<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 303:4-305:5
+    Visibility: public -/
+def registration.InitServerFingerprint.request
+  (self : registration.InitServerFingerprint) :
+  RustM registration.HashRequest
+  := do
+  let a ←
+    session.ServerAuthenticationPin.impl.public_key self.state.server_pin
+  let s ← lift (Array.to_slice a)
+  ok (registration.HashRequest.Single s)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitServerFingerprint<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 307:4-320:5
+    Visibility: public -/
+def registration.InitServerFingerprint.resume
+  (self : registration.InitServerFingerprint)
+  (fingerprint : core.option.Option (Array Std.U8 64#usize)) :
+  RustM registration.InitAuthentication
+  := do
+  match fingerprint with
+  | core.option.Option.None => ok registration.InitAuthentication.Rejected
+  | core.option.Option.Some fingerprint1 =>
+    let sb ←
+      session.ServerAuthenticationPin.impl.binding self.state.server_pin
+    let a ←
+      session.ServerAuthenticationPin.impl.public_key self.state.server_pin
+    let sap ← session.ServerAuthenticationPin.new sb a fingerprint1
+    ok (registration.InitAuthentication.BeaconFingerprintRequested
+      {
+        state := self.state,
+        server_pin := sap,
+        registration := self.registration
+      })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitBeaconFingerprint<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 330:4-332:5
+    Visibility: public -/
+def registration.InitBeaconFingerprint.request
+  (self : registration.InitBeaconFingerprint) :
+  RustM registration.HashRequest
+  := do
+  let s ← lift (Array.to_slice self.state.packet.mldsa_public_key)
+  ok (registration.HashRequest.Single s)
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::new]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 63:4-84:5
+    Visibility: public -/
+def session.RegistrationBinding.new
+  (server_pin : session.ServerAuthenticationPin)
+  (init_hash : Array Std.U8 64#usize)
+  (beacon_identity_public_key : Array Std.U8 32#usize)
+  (beacon_fingerprint : Array Std.U8 64#usize) :
+  RustM session.RegistrationBinding
+  := do
+  let base ←
+    pqxdh.build_associated_data server_pin.binding.identity_public_key
+      beacon_identity_public_key
+  let a ←
+    authentication.bind_associated_data base server_pin.fingerprint
+      beacon_fingerprint
+  ok
+    {
+      server_pin,
+      init_hash,
+      beacon_identity_public_key,
+      beacon_fingerprint,
+      associated_data := a
+    }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::InitBeaconFingerprint<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 334:4-348:5
+    Visibility: public -/
+def registration.InitBeaconFingerprint.resume
+  (self : registration.InitBeaconFingerprint)
+  (fingerprint : core.option.Option (Array Std.U8 64#usize)) :
+  RustM registration.InitAuthentication
+  := do
+  match fingerprint with
+  | core.option.Option.None => ok registration.InitAuthentication.Rejected
+  | core.option.Option.Some fingerprint1 =>
+    let a ←
+      pqxdh.VerifiedInitKex.impl.beacon_identity_public_key self.registration
+    let binding ←
+      session.RegistrationBinding.new self.server_pin self.state.init_hash a
+        fingerprint1
+    ok (registration.InitAuthentication.Accepted
+      { registration := self.registration, binding })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ResponsePacket<'a>}::from_slices]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 374:4-404:5
+    Visibility: public -/
+def registration.ResponsePacket.from_slices
+  (identity_key : Slice Std.U8) (ephemeral_key : Slice Std.U8)
+  (kem_cipher_text : Slice Std.U8) (key_id : Std.U64)
+  (application : Slice Std.U8) (signature : Slice Std.U8) :
+  RustM (core.option.Option registration.ResponsePacket)
+  := do
+  let r ←
+    core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+      32#usize core.U8.Insts.CoreMarkerCopy identity_key
+  match r with
+  | core.result.Result.Ok value =>
+    let r1 ←
+      core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+        32#usize core.U8.Insts.CoreMarkerCopy ephemeral_key
+    match r1 with
+    | core.result.Result.Ok value1 =>
+      let r2 ←
+        core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+          1088#usize core.U8.Insts.CoreMarkerCopy kem_cipher_text
+      match r2 with
+      | core.result.Result.Ok value2 =>
+        let r3 ←
+          core.SharedAArray.Insts.CoreConvertTryFromSharedASliceTryFromSliceError.try_from
+            3309#usize signature
+        match r3 with
+        | core.result.Result.Ok value3 =>
+          ok (core.option.Option.Some
+            {
+              «public» :=
+                {
+                  identity_key := value,
+                  ephemeral_key := value1,
+                  kem_cipher_text := value2,
+                  key_id
+                },
+              application,
+              signature := value3
+            })
+        | core.result.Result.Err _ => ok core.option.Option.None
+      | core.result.Result.Err _ => ok core.option.Option.None
+    | core.result.Result.Err _ => ok core.option.Option.None
+  | core.result.Result.Err _ => ok core.option.Option.None
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconPending}::server_key_id]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 414:4-416:5
+    Visibility: public -/
+def registration.BeaconPending.server_key_id
+  (self : registration.BeaconPending) : RustM Std.U64 := do
+  pqxdh.BeaconInitSent.server_key_id self.control
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconPending}::aborted_state]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 417:4-419:5
+    Visibility: public -/
+def registration.BeaconPending.aborted_state
+  (self : registration.BeaconPending) : RustM pqxdh.BeaconAborted := do
+  pqxdh.beacon_abort_init self.control
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconPending}::abort]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 420:4-422:5
+    Visibility: public -/
+def registration.BeaconPending.abort
+  (self : registration.BeaconPending) : RustM pqxdh.BeaconAborted := do
+  pqxdh.beacon_abort_init self.control
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::init_hash]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 86:4-88:5
+    Visibility: public -/
+def session.RegistrationBinding.impl.init_hash
+  (self : session.RegistrationBinding) : RustM (Array Std.U8 64#usize) := do
+  ok self.init_hash
+
+/-- [beaconcrypt_core::registration::begin_response_authentication]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 432:0-458:1
+    Visibility: public -/
+def registration.begin_response_authentication
+  (pending : registration.BeaconPending)
+  (packet : core.option.Option registration.ResponsePacket) :
+  RustM (core.result.Result registration.ResponseHash pqxdh.BeaconAborted)
+  := do
+  match packet with
+  | core.option.Option.None =>
+    let ba ← registration.BeaconPending.abort pending
+    ok (core.result.Result.Err ba)
+  | core.option.Option.Some rp =>
+    let i ← core.slice.Slice.len rp.application
+    let r ← core.U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from i
+    match r with
+    | core.result.Result.Ok length =>
+      let a ← session.RegistrationBinding.impl.init_hash pending.binding
+      let «prefix» ←
+        authentication.build_response_prefix a rp.public.identity_key
+          rp.public.ephemeral_key rp.public.kem_cipher_text length
+      let assigned_id ← authentication.encode_u64_le rp.public.key_id
+      ok (core.result.Result.Ok
+        { pending, packet := rp, «prefix», assigned_id })
+    | core.result.Result.Err _ =>
+      let ba ← registration.BeaconPending.abort pending
+      ok (core.result.Result.Err ba)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ResponseHash<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 461:4-463:5
+    Visibility: public -/
+def registration.ResponseHash.request
+  (self : registration.ResponseHash) : RustM registration.HashRequest := do
+  let s ← lift (Array.to_slice self.prefix)
+  let s1 ← lift (Array.to_slice self.assigned_id)
+  ok (registration.HashRequest.Triple
+    (Array.make 3#usize [ s, self.packet.application, s1 ]))
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ResponseHash<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 465:4-478:5
+    Visibility: public -/
+def registration.ResponseHash.resume
+  (self : registration.ResponseHash)
+  (digest : core.option.Option (Array Std.U8 64#usize)) :
+  RustM (core.result.Result registration.ResponseMldsaVerification
+    pqxdh.BeaconAborted)
+  := do
+  match digest with
+  | core.option.Option.None =>
+    let ba ← registration.BeaconPending.abort self.pending
+    ok (core.result.Result.Err ba)
+  | core.option.Option.Some digest1 =>
+    let a ←
+      authentication.build_signature_input authentication.AuthRole.Server
+        digest1
+    ok (core.result.Result.Ok
+      { pending := self.pending, packet := self.packet, input := a })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ResponseMldsaVerification<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 488:4-495:5
+    Visibility: public -/
+def registration.ResponseMldsaVerification.request
+  (self : registration.ResponseMldsaVerification) :
+  RustM registration.MldsaVerificationRequest
+  := do
+  let sap ← session.RegistrationBinding.impl.server_pin self.pending.binding
+  let a ← session.ServerAuthenticationPin.impl.public_key sap
+  ok
+    {
+      public_key := a,
+      input := self.input,
+      context := authentication.SIGNING_CONTEXT,
+      signature := self.packet.signature
+    }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ResponseMldsaVerification<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 497:4-508:5
+    Visibility: public -/
+def registration.ResponseMldsaVerification.resume
+  (self : registration.ResponseMldsaVerification) (verified : Bool) :
+  RustM (core.result.Result registration.AuthenticatedResponse
+    pqxdh.BeaconAborted)
+  := do
+  if verified
+  then
+    ok (core.result.Result.Ok
+      { pending := self.pending, packet := self.packet })
+  else
+    let ba ← registration.BeaconPending.abort self.pending
+    ok (core.result.Result.Err ba)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconInitState}::fields]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 559:4-567:5 -/
+def registration.BeaconInitState.fields
+  (self : registration.BeaconInitState) : RustM authentication.InitFields := do
+  let a ← pqxdh.InitKex.impl.identity_key self.started.message
+  ok
+    {
+      identity_key := a,
+      pre_key := self.pre_key,
+      one_time_key := self.one_time_key,
+      pq_key := self.pq_key,
+      mldsa_public_key := self.beacon_mldsa
+    }
+
+/-- [beaconcrypt_core::registration::begin_beacon_init]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 579:0-608:1
+    Visibility: public -/
+def registration.begin_beacon_init
+  (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs)
+  (coins : pqxdh.BeaconCoins) (server_pin : session.ServerAuthenticationPin)
+  (beacon_mldsa : Array Std.U8 1952#usize) :
+  RustM registration.BeaconInitEffect
+  := do
+  let expected ← pqxdh.BeaconFresh.impl.expected_server_binding control
+  let actual ← session.ServerAuthenticationPin.impl.binding server_pin
+  if expected.identity_key_id != actual.identity_key_id
+  then ok (registration.BeaconInitEffect.Rejected control)
+  else
+    let b ←
+      core.Array.Insts.CoreCmpPartialEqArray.ne
+        core.U8.Insts.CoreCmpPartialEqU8 expected.identity_public_key
+        actual.identity_public_key
+    if b
+    then ok (registration.BeaconInitEffect.Rejected control)
+    else
+      let started ← pqxdh.beacon_start control inputs coins
+      let a := Array.repeat 98#usize 0#u8
+      let a1 := Array.repeat 98#usize 0#u8
+      let a2 := Array.repeat 1249#usize 0#u8
+      ok (registration.BeaconInitEffect.Ed25519SigningRequested
+        {
+          state :=
+            {
+              original_control := control,
+              started,
+              server_pin,
+              beacon_identity := inputs.identity_public_key,
+              beacon_mldsa,
+              pre_key := a,
+              one_time_key := a1,
+              pq_key := a2
+            },
+          stage := registration.SignedKeyStage.PreKey
+        })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconEd25519Signing}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 616:4-627:5
+    Visibility: public -/
+def registration.BeaconEd25519Signing.request
+  (self : registration.BeaconEd25519Signing) :
+  RustM registration.Ed25519SigningRequest
+  := do
+  match self.stage with
+  | registration.SignedKeyStage.PreKey =>
+    let a ← pqxdh.InitKex.impl.prekey self.state.started.message
+    let message ← lift (Array.to_slice a)
+    ok
+      {
+        public_key := self.state.beacon_identity,
+        role := authentication.AuthRole.Beacon,
+        message
+      }
+  | registration.SignedKeyStage.OneTimeKey =>
+    let a ← pqxdh.InitKex.impl.one_time_key self.state.started.message
+    let message ← lift (Array.to_slice a)
+    ok
+      {
+        public_key := self.state.beacon_identity,
+        role := authentication.AuthRole.Beacon,
+        message
+      }
+  | registration.SignedKeyStage.PqKey =>
+    let a ← pqxdh.InitKex.impl.pq_key self.state.started.message
+    let message ← lift (Array.to_slice a)
+    ok
+      {
+        public_key := self.state.beacon_identity,
+        role := authentication.AuthRole.Beacon,
+        message
+      }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconEd25519Signing}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 629:4-661:5
+    Visibility: public -/
+def registration.BeaconEd25519Signing.resume
+  (self : registration.BeaconEd25519Signing)
+  (signed : core.option.Option (Slice Std.U8)) :
+  RustM registration.BeaconInitEffect
+  := do
+  match signed with
+  | core.option.Option.None =>
+    ok (registration.BeaconInitEffect.Rejected self.state.original_control)
+  | core.option.Option.Some signed1 =>
+    let o ←
+      core.slice.Slice.get
+        (core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice
+        Std.U8) signed1 { start := 64#usize }
+    let esr ← registration.BeaconEd25519Signing.request self
+    let b ←
+      core.cmp.PartialEq.ne.default
+        (core.option.Option.Insts.CoreCmpPartialEqOption
+        (core.Shared1A.Insts.CoreCmpPartialEqShared0B
+        (core.Slice.Insts.CoreCmpPartialEqSlice
+        core.U8.Insts.CoreCmpPartialEqU8))) o (core.option.Option.Some
+        esr.message)
+    if b
+    then
+      ok (registration.BeaconInitEffect.Rejected self.state.original_control)
+    else
+      match self.stage with
+      | registration.SignedKeyStage.PreKey =>
+        let r ←
+          core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+            98#usize core.U8.Insts.CoreMarkerCopy signed1
+        match r with
+        | core.result.Result.Ok bytes =>
+          ok (registration.BeaconInitEffect.Ed25519SigningRequested
+            {
+              state := { self.state with pre_key := bytes },
+              stage := registration.SignedKeyStage.OneTimeKey
+            })
+        | core.result.Result.Err _ =>
+          ok (registration.BeaconInitEffect.Rejected
+            self.state.original_control)
+      | registration.SignedKeyStage.OneTimeKey =>
+        let r ←
+          core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+            98#usize core.U8.Insts.CoreMarkerCopy signed1
+        match r with
+        | core.result.Result.Ok bytes =>
+          ok (registration.BeaconInitEffect.Ed25519SigningRequested
+            {
+              state := { self.state with one_time_key := bytes },
+              stage := registration.SignedKeyStage.PqKey
+            })
+        | core.result.Result.Err _ =>
+          ok (registration.BeaconInitEffect.Rejected
+            self.state.original_control)
+      | registration.SignedKeyStage.PqKey =>
+        let r ←
+          core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+            1249#usize core.U8.Insts.CoreMarkerCopy signed1
+        match r with
+        | core.result.Result.Ok bytes =>
+          ok (registration.BeaconInitEffect.FingerprintRequested
+            { state := { self.state with pq_key := bytes } })
+        | core.result.Result.Err _ =>
+          ok (registration.BeaconInitEffect.Rejected
+            self.state.original_control)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconFingerprint}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 669:4-671:5
+    Visibility: public -/
+def registration.BeaconFingerprint.request
+  (self : registration.BeaconFingerprint) :
+  RustM registration.HashRequest
+  := do
+  let s ← lift (Array.to_slice self.state.beacon_mldsa)
+  ok (registration.HashRequest.Single s)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconFingerprint}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 673:4-689:5
+    Visibility: public -/
+def registration.BeaconFingerprint.resume
+  (self : registration.BeaconFingerprint)
+  (fingerprint : core.option.Option (Array Std.U8 64#usize)) :
+  RustM registration.BeaconInitEffect
+  := do
+  match fingerprint with
+  | core.option.Option.None =>
+    ok (registration.BeaconInitEffect.Rejected self.state.original_control)
+  | core.option.Option.Some fingerprint1 =>
+    let server ←
+      session.ServerAuthenticationPin.impl.binding self.state.server_pin
+    let «if» ← registration.BeaconInitState.fields self.state
+    let a ←
+      session.ServerAuthenticationPin.impl.public_key self.state.server_pin
+    let input ←
+      authentication.build_init_transcript «if» server.identity_key_id
+        server.identity_public_key a
+    ok (registration.BeaconInitEffect.HashRequested
+      { state := self.state, fingerprint := fingerprint1, input })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconInitHash}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 699:4-701:5
+    Visibility: public -/
+def registration.BeaconInitHash.request
+  (self : registration.BeaconInitHash) : RustM registration.HashRequest := do
+  let s ← lift (Array.to_slice self.input)
+  ok (registration.HashRequest.Single s)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconInitHash}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 703:4-713:5
+    Visibility: public -/
+def registration.BeaconInitHash.resume
+  (self : registration.BeaconInitHash)
+  (hash : core.option.Option (Array Std.U8 64#usize)) :
+  RustM registration.BeaconInitEffect
+  := do
+  match hash with
+  | core.option.Option.None =>
+    ok (registration.BeaconInitEffect.Rejected self.state.original_control)
+  | core.option.Option.Some init_hash =>
+    let a ←
+      authentication.build_signature_input authentication.AuthRole.Beacon
+        init_hash
+    ok (registration.BeaconInitEffect.MldsaSigningRequested
+      {
+        state := self.state,
+        fingerprint := self.fingerprint,
+        init_hash,
+        input := a
+      })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconMldsaSigning}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 724:4-731:5
+    Visibility: public -/
+def registration.BeaconMldsaSigning.request
+  (self : registration.BeaconMldsaSigning) :
+  RustM registration.MldsaSigningRequest
+  := do
+  ok
+    {
+      public_key := self.state.beacon_mldsa,
+      role := authentication.AuthRole.Beacon,
+      input := self.input,
+      context := authentication.SIGNING_CONTEXT
+    }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconMldsaSigning}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 733:4-751:5
+    Visibility: public -/
+def registration.BeaconMldsaSigning.resume
+  (self : registration.BeaconMldsaSigning)
+  (signature : core.option.Option (Slice Std.U8)) :
+  RustM registration.BeaconInitEffect
+  := do
+  match signature with
+  | core.option.Option.None =>
+    ok (registration.BeaconInitEffect.Rejected self.state.original_control)
+  | core.option.Option.Some signature1 =>
+    let r ←
+      core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+        3309#usize core.U8.Insts.CoreMarkerCopy signature1
+    match r with
+    | core.result.Result.Ok signature2 =>
+      let binding ←
+        session.RegistrationBinding.new self.state.server_pin self.init_hash
+          self.state.beacon_identity self.fingerprint
+      ok (registration.BeaconInitEffect.Ready
+        { state := self.state, binding, signature := signature2 })
+    | core.result.Result.Err _ =>
+      ok (registration.BeaconInitEffect.Rejected self.state.original_control)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconInitReady}::message]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 766:4-771:5
+    Visibility: public -/
+def registration.BeaconInitReady.message
+  (self : registration.BeaconInitReady) :
+  RustM registration.SignedInitView
+  := do
+  let «if» ← registration.BeaconInitState.fields self.state
+  ok { fields := «if», signature := self.signature }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconInitReady}::publish]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 773:4-788:5
+    Visibility: public -/
+def registration.BeaconInitReady.publish
+  {Encoded : Type} (self : registration.BeaconInitReady)
+  (encoded : core.option.Option Encoded) :
+  RustM (core.result.Result (registration.PublishedBeaconInit Encoded)
+    pqxdh.BeaconFresh)
+  := do
+  match encoded with
+  | core.option.Option.None =>
+    ok (core.result.Result.Err self.state.original_control)
+  | core.option.Option.Some encoded1 =>
+    ok (core.result.Result.Ok
+      {
+        pending :=
+          { control := self.state.started.state, binding := self.binding },
+        encoded := encoded1
+      })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::PublishedBeaconInit<Encoded>}::into_parts]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 797:4-799:5
+    Visibility: public -/
+def registration.PublishedBeaconInit.into_parts
+  {Encoded : Type} (self : registration.PublishedBeaconInit Encoded) :
+  RustM (registration.BeaconPending × Encoded)
+  := do
+  ok (self.pending, self.encoded)
+
+/-- [beaconcrypt_core::registration::begin_beacon_completion]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 807:0-815:1
+    Visibility: public -/
+def registration.begin_beacon_completion
+  (agreement1 : agreement.BeaconAgreement) :
+  RustM registration.BeaconInitialKdf
+  := do
+  let a ← ratchet.RatchetChain.as_bytes agreement1.root
+  let pending ←
+    pqxdh.concrete.start_beacon_candidate_ratchet_kdf agreement1.candidate a
+  ok { agreement := agreement1, pending }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconInitialKdf<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 818:4-820:5
+    Visibility: public -/
+def registration.BeaconInitialKdf.request
+  (self : registration.BeaconInitialKdf) :
+  RustM ratchet.SymmetricRatchetKdfRequest
+  := do
+  pqxdh.concrete.InitialRatchetKdfPending.impl.request self.pending
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::associated_data]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 94:4-96:5
+    Visibility: public -/
+def session.RegistrationBinding.impl.associated_data
+  (self : session.RegistrationBinding) : RustM (Array Std.U8 281#usize) := do
+  ok self.associated_data
+
+/-- [beaconcrypt_core::registration::normalize_beacon_open]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 869:0-893:1 -/
+def registration.normalize_beacon_open
+  (agreement1 : agreement.BeaconAgreement)
+  (effect : record_effects.RecordReceiveEffect) :
+  RustM (core.result.Result registration.BeaconInitialOpen pqxdh.BeaconAborted)
+  := do
+  match effect with
+  | record_effects.RecordReceiveEffect.Rejected _ =>
+    let ba ← pqxdh.beacon_abort_candidate agreement1.candidate
+    ok (core.result.Result.Err ba)
+  | record_effects.RecordReceiveEffect.KdfRequested rrk =>
+    ok (core.result.Result.Ok (registration.BeaconInitialOpen.KdfRequested
+      { agreement := agreement1, pending := rrk }))
+  | record_effects.RecordReceiveEffect.CommitmentRequested rrc =>
+    ok (core.result.Result.Ok
+      (registration.BeaconInitialOpen.CommitmentRequested
+      { agreement := agreement1, pending := rrc }))
+  | record_effects.RecordReceiveEffect.AeadRequested rra =>
+    ok (core.result.Result.Ok (registration.BeaconInitialOpen.AeadRequested
+      { agreement := agreement1, pending := rra }))
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconInitialKdf<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 822:4-843:5
+    Visibility: public -/
+def registration.BeaconInitialKdf.resume
+  (self : registration.BeaconInitialKdf)
+  (response : core.option.Option pqxdh.concrete.InitialRatchetKdfResponse) :
+  RustM (core.result.Result registration.BeaconInitialOpen pqxdh.BeaconAborted)
+  := do
+  match response with
+  | core.option.Option.None =>
+    let ba ← pqxdh.beacon_abort_candidate self.agreement.candidate
+    ok (core.result.Result.Err ba)
+  | core.option.Option.Some response1 =>
+    let kernel ←
+      pqxdh.concrete.resume_initial_ratchet_kdf self.pending response1
+    let a ←
+      session.RegistrationBinding.impl.associated_data self.agreement.binding
+    let i ←
+      pqxdh.BeaconRegistrationCandidate.server_key_id self.agreement.candidate
+    let effect ←
+      record_effects.begin_record_receive kernel 1#u64
+        self.agreement.application_ciphertext a i
+    registration.normalize_beacon_open self.agreement effect
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconRecordKdf<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 896:4-898:5
+    Visibility: public -/
+def registration.BeaconRecordKdf.request
+  (self : registration.BeaconRecordKdf) :
+  RustM ratchet.SymmetricRatchetKdfRequest
+  := do
+  record_effects.RecordReceiveKdf.request self.pending
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconRecordKdf<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 900:4-913:5
+    Visibility: public -/
+def registration.BeaconRecordKdf.resume
+  (self : registration.BeaconRecordKdf)
+  (response : core.option.Option ratchet.RatchetKdfResponse) :
+  RustM (core.result.Result registration.BeaconInitialOpen pqxdh.BeaconAborted)
+  := do
+  match response with
+  | core.option.Option.None =>
+    let ba ← pqxdh.beacon_abort_candidate self.agreement.candidate
+    ok (core.result.Result.Err ba)
+  | core.option.Option.Some response1 =>
+    let rre ← record_effects.RecordReceiveKdf.resume self.pending response1
+    registration.normalize_beacon_open self.agreement rre
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconRecordCommitment<'a>}::transcript]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 917:4-919:5
+    Visibility: public -/
+def registration.BeaconRecordCommitment.transcript
+  (self : registration.BeaconRecordCommitment) :
+  RustM commitment.CommitmentTranscript
+  := do
+  record_effects.RecordReceiveCommitment.transcript self.pending
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconRecordCommitment<'a>}::transcript_mut]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 921:4-923:5
+    Visibility: public -/
+def registration.BeaconRecordCommitment.transcript_mut
+  (self : registration.BeaconRecordCommitment) :
+  RustM (commitment.CommitmentTranscript × (commitment.CommitmentTranscript
+    → registration.BeaconRecordCommitment))
+  := do
+  let back :=
+    fun ct =>
+      {
+        self
+          with
+          pending :=
+            { pending := { self.pending.pending with transcript := ct } }
+      }
+  ok (self.pending.pending.transcript, back)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconRecordCommitment<'a>}::supplied_commitment]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 925:4-927:5
+    Visibility: public -/
+def registration.BeaconRecordCommitment.supplied_commitment
+  (self : registration.BeaconRecordCommitment) :
+  RustM (Array Std.U8 64#usize)
+  := do
+  record_effects.RecordReceiveCommitment.supplied_commitment self.pending
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconRecordCommitment<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 929:4-934:5
+    Visibility: public -/
+def registration.BeaconRecordCommitment.resume
+  (self : registration.BeaconRecordCommitment) (commitment_matches : Bool) :
+  RustM (core.result.Result registration.BeaconInitialOpen pqxdh.BeaconAborted)
+  := do
+  let rre ←
+    record_effects.RecordReceiveCommitment.resume self.pending
+      commitment_matches
+  registration.normalize_beacon_open self.agreement rre
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconRecordAead<'_0>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 938:4-940:5
+    Visibility: public -/
+def registration.BeaconRecordAead.request
+  (self : registration.BeaconRecordAead) :
+  RustM (core.option.Option record.AeadRequest)
+  := do
+  record_effects.RecordReceiveAead.request self.pending
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::RegistrationBinding}::finish]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 107:4-116:5
+    Visibility: public -/
+def session.RegistrationBinding.finish
+  (self : session.RegistrationBinding) (assigned_key_id : Std.U64) :
+  RustM session.SessionBinding
+  := do
+  ok
+    {
+      server_binding := self.server_pin.binding,
+      assigned_key_id,
+      beacon_identity_public_key := self.beacon_identity_public_key,
+      server_fingerprint := self.server_pin.fingerprint,
+      beacon_fingerprint := self.beacon_fingerprint,
+      associated_data := self.associated_data
+    }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::BeaconRecordAead<'_0>}::finish]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 943:4-981:5
+    Visibility: public -/
+def registration.BeaconRecordAead.finish
+  (self : registration.BeaconRecordAead)
+  (plaintext : core.option.Option (Slice Std.U8)) :
+  RustM (core.result.Result registration.CompletedBeacon pqxdh.BeaconAborted)
+  := do
+  let i ←
+    pqxdh.BeaconRegistrationCandidate.server_key_id self.agreement.candidate
+  let rejected ← pqxdh.BeaconAborted.new i
+  let (kernel, opened) ←
+    record_effects.RecordReceiveAead.finish self.pending plaintext
+  match opened with
+  | core.option.Option.None => ok (core.result.Result.Err rejected)
+  | core.option.Option.Some or =>
+    let i1 ← core.slice.Slice.len or.plaintext
+    if i1 <= pqxdh.REGISTRATION_KEY_ID_BINDING_SIZE
+    then ok (core.result.Result.Err rejected)
+    else
+      let («prefix», application) ←
+        core.slice.Slice.split_at or.plaintext
+          pqxdh.REGISTRATION_KEY_ID_BINDING_SIZE
+      let r ←
+        core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+          8#usize core.U8.Insts.CoreMarkerCopy «prefix»
+      match r with
+      | core.result.Result.Ok prefix1 =>
+        let r1 ←
+          pqxdh.authenticate_registration_key_id_binding
+            self.agreement.candidate or.key_id prefix1
+        match r1 with
+        | core.result.Result.Ok authenticated =>
+          let i2 ←
+            pqxdh.AuthenticatedBeaconRegistration.assigned_key_id authenticated
+          let binding ←
+            session.RegistrationBinding.finish self.agreement.binding i2
+          let be ← pqxdh.beacon_commit authenticated
+          ok (core.result.Result.Ok
+            { control := be, binding, kernel, application })
+        | core.result.Result.Err _ => ok (core.result.Result.Err rejected)
+      | core.result.Result.Err _ => ok (core.result.Result.Err rejected)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::CompletedBeacon<'a>}::into_parts]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 992:4-1001:5
+    Visibility: public -/
+def registration.CompletedBeacon.into_parts
+  (self : registration.CompletedBeacon) :
+  RustM (pqxdh.BeaconEstablished × session.SessionBinding ×
+    ratchet.concrete.ConcreteRatchetKernel × (Slice Std.U8))
+  := do
+  ok (self.control, self.binding, self.kernel, self.application)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerInitialKdf<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1048:4-1050:5
+    Visibility: public -/
+def registration.ServerInitialKdf.request
+  (self : registration.ServerInitialKdf) :
+  RustM ratchet.SymmetricRatchetKdfRequest
+  := do
+  pqxdh.concrete.InitialRatchetKdfPending.impl.request self.pending
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerInitialKdf<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1052:4-1080:5
+    Visibility: public -/
+def registration.ServerInitialKdf.resume
+  (self : registration.ServerInitialKdf)
+  (response : core.option.Option pqxdh.concrete.InitialRatchetKdfResponse) :
+  RustM (core.result.Result registration.ServerInitialSeal pqxdh.ServerState)
+  := do
+  let rejected ← pqxdh.server_abort_candidate self.candidate
+  match response with
+  | core.option.Option.None => ok (core.result.Result.Err rejected)
+  | core.option.Option.Some response1 =>
+    let kernel ←
+      pqxdh.concrete.resume_initial_ratchet_kdf self.pending response1
+    let i ← pqxdh.ServerRegistrationCandidate.impl.key_id self.candidate
+    let i1 ←
+      pqxdh.ServerRegistrationCandidate.impl.server_identity_key_id
+        self.candidate
+    let a ← session.RegistrationBinding.impl.associated_data self.binding
+    let context ←
+      record_effects.SealFrameContext.registration self.application i i1 a
+    let rss ← record_effects.begin_record_send kernel context
+    match rss with
+    | record_effects.RecordSendStart.Rejected _ =>
+      ok (core.result.Result.Err rejected)
+    | record_effects.RecordSendStart.KdfRequested rsk =>
+      ok (core.result.Result.Ok
+        {
+          state :=
+            {
+              candidate := self.candidate,
+              binding := self.binding,
+              application := self.application
+            },
+          pending := rsk
+        })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerInitialSeal<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1089:4-1091:5
+    Visibility: public -/
+def registration.ServerInitialSeal.request
+  (self : registration.ServerInitialSeal) :
+  RustM ratchet.SymmetricRatchetKdfRequest
+  := do
+  record_effects.RecordSendKdf.request self.pending
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerInitialSeal<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1093:4-1105:5
+    Visibility: public -/
+def registration.ServerInitialSeal.resume
+  (self : registration.ServerInitialSeal)
+  (response : core.option.Option ratchet.RatchetKdfResponse) :
+  RustM (core.result.Result registration.ServerRecordAead pqxdh.ServerState)
+  := do
+  match response with
+  | core.option.Option.None =>
+    let ss ← pqxdh.server_abort_candidate self.state.candidate
+    ok (core.result.Result.Err ss)
+  | core.option.Option.Some response1 =>
+    let sa ← record_effects.RecordSendKdf.resume self.pending response1
+    ok (core.result.Result.Ok { state := self.state, pending := sa })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerRecordAead<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1114:4-1116:5
+    Visibility: public -/
+def registration.ServerRecordAead.request
+  (self : registration.ServerRecordAead) :
+  RustM record_effects.AeadSealRequest
+  := do
+  record_effects.SealAead.request self.pending
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerRecordAead<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1118:4-1131:5
+    Visibility: public -/
+def registration.ServerRecordAead.resume
+  (self : registration.ServerRecordAead)
+  (detached : core.option.Option ((Slice Std.U8) × (Array Std.U8 16#usize))) :
+  RustM (core.result.Result registration.ServerRecordCommitment
+    pqxdh.ServerState)
+  := do
+  let saa ← record_effects.SealAead.resume self.pending detached
+  match saa with
+  | record_effects.SealAfterAead.Rejected _ =>
+    let ss ← pqxdh.server_abort_candidate self.state.candidate
+    ok (core.result.Result.Err ss)
+  | record_effects.SealAfterAead.CommitmentRequested sc =>
+    ok (core.result.Result.Ok { state := self.state, pending := sc })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerRecordCommitment<'a, 'ciphertext>}::transcript]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1140:4-1142:5
+    Visibility: public -/
+def registration.ServerRecordCommitment.transcript
+  (self : registration.ServerRecordCommitment) :
+  RustM commitment.CommitmentTranscript
+  := do
+  record_effects.SealCommitment.impl.transcript self.pending
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerRecordCommitment<'a, 'ciphertext>}::transcript_mut]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1144:4-1146:5
+    Visibility: public -/
+def registration.ServerRecordCommitment.transcript_mut
+  (self : registration.ServerRecordCommitment) :
+  RustM (commitment.CommitmentTranscript × (commitment.CommitmentTranscript
+    → registration.ServerRecordCommitment))
+  := do
+  let back :=
+    fun ct => { self with pending := { self.pending with transcript := ct } }
+  ok (self.pending.transcript, back)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerRecordCommitment<'a, 'ciphertext>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1148:4-1161:5
+    Visibility: public -/
+def registration.ServerRecordCommitment.resume
+  (self : registration.ServerRecordCommitment)
+  (commitment1 : core.option.Option (Array Std.U8 64#usize)) :
+  RustM (core.result.Result registration.ServerRecordWrite pqxdh.ServerState)
+  := do
+  let sac ← record_effects.SealCommitment.resume self.pending commitment1
+  match sac with
+  | record_effects.SealAfterCommitment.Rejected _ =>
+    let ss ← pqxdh.server_abort_candidate self.state.candidate
+    ok (core.result.Result.Err ss)
+  | record_effects.SealAfterCommitment.WriteRequested sw =>
+    ok (core.result.Result.Ok { state := self.state, pending := sw })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerRecordWrite<'_0, '_1>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1170:4-1172:5
+    Visibility: public -/
+def registration.ServerRecordWrite.request
+  (self : registration.ServerRecordWrite) :
+  RustM record_effects.RecordWriteRequest
+  := do
+  record_effects.SealWrite.request self.pending
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerRecordWrite<'_0, '_1>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1174:4-1214:5
+    Visibility: public -/
+def registration.ServerRecordWrite.resume
+  (self : registration.ServerRecordWrite)
+  (ciphertext : core.option.Option (Slice Std.U8)) :
+  RustM (core.result.Result registration.ServerResponseHash pqxdh.ServerState)
+  := do
+  let rejected ← pqxdh.server_abort_candidate self.state.candidate
+  let (kernel, sealed) ←
+    record_effects.SealWrite.finish self.pending ciphertext
+  match sealed with
+  | core.option.Option.None => ok (core.result.Result.Err rejected)
+  | core.option.Option.Some sr =>
+    let i ← core.slice.Slice.len self.state.application
+    let o ← core.num.Usize.checked_add 8#usize i
+    match o with
+    | core.option.Option.None => ok (core.result.Result.Err rejected)
+    | core.option.Option.Some length =>
+      let i1 ← record.MESSAGE_OVERHEAD
+      let o1 ← core.num.Usize.checked_add length i1
+      match o1 with
+      | core.option.Option.None => ok (core.result.Result.Err rejected)
+      | core.option.Option.Some length1 =>
+        let i2 ← core.slice.Slice.len sr.ciphertext
+        if i2 != length1
+        then ok (core.result.Result.Err rejected)
+        else
+          let a ←
+            session.RegistrationBinding.impl.init_hash self.state.binding
+          let a1 ←
+            pqxdh.ServerRegistrationCandidate.impl.server_identity_public_key
+              self.state.candidate
+          let a2 ←
+            pqxdh.ServerRegistrationCandidate.impl.ephemeral_public_key
+              self.state.candidate
+          let a3 ←
+            pqxdh.ServerRegistrationCandidate.impl.kem_ciphertext
+              self.state.candidate
+          let r ←
+            core.U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from i2
+          match r with
+          | core.result.Result.Ok length2 =>
+            let «prefix» ←
+              authentication.build_response_prefix a a1 a2 a3 length2
+            let i3 ←
+              pqxdh.ServerRegistrationCandidate.impl.key_id
+                self.state.candidate
+            let assigned_id ← authentication.encode_u64_le i3
+            ok (core.result.Result.Ok
+              {
+                candidate := self.state.candidate,
+                binding := self.state.binding,
+                kernel,
+                ciphertext := sr.ciphertext,
+                «prefix»,
+                assigned_id
+              })
+          | core.result.Result.Err _ => ok (core.result.Result.Err rejected)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerResponseHash<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1227:4-1229:5
+    Visibility: public -/
+def registration.ServerResponseHash.request
+  (self : registration.ServerResponseHash) :
+  RustM registration.HashRequest
+  := do
+  let s ← lift (Array.to_slice self.prefix)
+  let s1 ← lift (Array.to_slice self.assigned_id)
+  ok (registration.HashRequest.Triple
+    (Array.make 3#usize [ s, self.ciphertext, s1 ]))
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerResponseHash<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1231:4-1249:5
+    Visibility: public -/
+def registration.ServerResponseHash.resume
+  (self : registration.ServerResponseHash)
+  (digest : core.option.Option (Array Std.U8 64#usize)) :
+  RustM (core.result.Result registration.ServerResponseSigning
+    pqxdh.ServerState)
+  := do
+  let rejected ← pqxdh.server_abort_candidate self.candidate
+  match digest with
+  | core.option.Option.None => ok (core.result.Result.Err rejected)
+  | core.option.Option.Some digest1 =>
+    let a ←
+      authentication.build_signature_input authentication.AuthRole.Server
+        digest1
+    ok (core.result.Result.Ok
+      {
+        candidate := self.candidate,
+        binding := self.binding,
+        kernel := self.kernel,
+        ciphertext := self.ciphertext,
+        input := a
+      })
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerResponseSigning<'a>}::request]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1261:4-1268:5
+    Visibility: public -/
+def registration.ServerResponseSigning.request
+  (self : registration.ServerResponseSigning) :
+  RustM registration.MldsaSigningRequest
+  := do
+  let sap ← session.RegistrationBinding.impl.server_pin self.binding
+  let a ← session.ServerAuthenticationPin.impl.public_key sap
+  ok
+    {
+      public_key := a,
+      role := authentication.AuthRole.Server,
+      input := self.input,
+      context := authentication.SIGNING_CONTEXT
+    }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerResponseSigning<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1270:4-1288:5
+    Visibility: public -/
+def registration.ServerResponseSigning.resume
+  (self : registration.ServerResponseSigning)
+  (signature : core.option.Option (Slice Std.U8)) :
+  RustM (core.result.Result registration.ServerResponseReady pqxdh.ServerState)
+  := do
+  let rejected ← pqxdh.server_abort_candidate self.candidate
+  match signature with
+  | core.option.Option.None => ok (core.result.Result.Err rejected)
+  | core.option.Option.Some signature1 =>
+    let r ←
+      core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+        3309#usize core.U8.Insts.CoreMarkerCopy signature1
+    match r with
+    | core.result.Result.Ok signature2 =>
+      ok (core.result.Result.Ok
+        {
+          candidate := self.candidate,
+          binding := self.binding,
+          kernel := self.kernel,
+          ciphertext := self.ciphertext,
+          signature := signature2
+        })
+    | core.result.Result.Err _ => ok (core.result.Result.Err rejected)
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerResponseReady<'_0>}::message]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1309:4-1318:5
+    Visibility: public -/
+def registration.ServerResponseReady.message
+  (self : registration.ServerResponseReady) :
+  RustM registration.SignedResponseView
+  := do
+  let a ←
+    pqxdh.ServerRegistrationCandidate.impl.server_identity_public_key
+      self.candidate
+  let a1 ←
+    pqxdh.ServerRegistrationCandidate.impl.ephemeral_public_key self.candidate
+  let a2 ←
+    pqxdh.ServerRegistrationCandidate.impl.kem_ciphertext self.candidate
+  let i ← pqxdh.ServerRegistrationCandidate.impl.key_id self.candidate
+  ok
+    {
+      identity_key := a,
+      ephemeral_key := a1,
+      kem_cipher_text := a2,
+      key_id := i,
+      application_ciphertext := self.ciphertext,
+      signature := self.signature
+    }
+
+/-- [beaconcrypt_core::registration::{beaconcrypt_core::registration::ServerResponseReady<'_0>}::publish]:
+    Source: 'beaconcrypt-core/src/registration.rs', lines 1320:4-1337:5
+    Visibility: public -/
+def registration.ServerResponseReady.publish
+  {Encoded : Type} (self : registration.ServerResponseReady)
+  (encoded : core.option.Option Encoded) :
+  RustM (core.result.Result (registration.PublishedServerResponse Encoded)
+    pqxdh.ServerState)
+  := do
+  let rejected ← pqxdh.server_abort_candidate self.candidate
+  match encoded with
+  | core.option.Option.None => ok (core.result.Result.Err rejected)
+  | core.option.Option.Some encoded1 =>
+    let i ← pqxdh.ServerRegistrationCandidate.impl.key_id self.candidate
+    let binding ← session.RegistrationBinding.finish self.binding i
+    let (control, _) ← pqxdh.server_commit self.candidate
+    ok (core.result.Result.Ok
+      { control, binding, kernel := self.kernel, encoded := encoded1 })
+
+/-- [beaconcrypt_core::session::{impl core::clone::Clone for beaconcrypt_core::session::ServerAuthenticationPin}::clone]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 15:9-15:14
+    Visibility: public -/
+def session.ServerAuthenticationPin.Insts.CoreCloneClone.clone
+  (self : session.ServerAuthenticationPin) :
+  RustM session.ServerAuthenticationPin
+  := do
+  ok self
+
+/-- Trait implementation: [beaconcrypt_core::session::{impl core::clone::Clone for beaconcrypt_core::session::ServerAuthenticationPin}]
+    Source: 'beaconcrypt-core/src/session.rs', lines 15:9-15:14 -/
+@[reducible]
+impl_def session.ServerAuthenticationPin.Insts.CoreCloneClone :
+  core.clone.Clone session.ServerAuthenticationPin := {
+  clone := session.ServerAuthenticationPin.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    session.ServerAuthenticationPin.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [beaconcrypt_core::session::{impl core::marker::Copy for beaconcrypt_core::session::ServerAuthenticationPin}]
+    Source: 'beaconcrypt-core/src/session.rs', lines 15:16-15:20 -/
+@[reducible]
+def session.ServerAuthenticationPin.Insts.CoreMarkerCopy : core.marker.Copy
+  session.ServerAuthenticationPin := {
+  cloneCloneInst := session.ServerAuthenticationPin.Insts.CoreCloneClone
+}
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::ServerAuthenticationPin}::fingerprint]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 44:4-46:5
+    Visibility: public -/
+def session.ServerAuthenticationPin.impl.fingerprint
+  (self : session.ServerAuthenticationPin) :
+  RustM (Array Std.U8 64#usize)
+  := do
+  ok self.fingerprint
+
+/-- [beaconcrypt_core::session::{impl core::clone::Clone for beaconcrypt_core::session::SessionBinding}::clone]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 120:9-120:14
+    Visibility: public -/
+def session.SessionBinding.Insts.CoreCloneClone.clone
+  (self : session.SessionBinding) : RustM session.SessionBinding := do
+  ok self
+
+/-- Trait implementation: [beaconcrypt_core::session::{impl core::clone::Clone for beaconcrypt_core::session::SessionBinding}]
+    Source: 'beaconcrypt-core/src/session.rs', lines 120:9-120:14 -/
+@[reducible]
+impl_def session.SessionBinding.Insts.CoreCloneClone : core.clone.Clone
+  session.SessionBinding := {
+  clone := session.SessionBinding.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    session.SessionBinding.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [beaconcrypt_core::session::{impl core::marker::Copy for beaconcrypt_core::session::SessionBinding}]
+    Source: 'beaconcrypt-core/src/session.rs', lines 120:16-120:20 -/
+@[reducible]
+def session.SessionBinding.Insts.CoreMarkerCopy : core.marker.Copy
+  session.SessionBinding := {
+  cloneCloneInst := session.SessionBinding.Insts.CoreCloneClone
+}
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::from_trusted_metadata]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 135:4-154:5
+    Visibility: public -/
+def session.SessionBinding.from_trusted_metadata
+  (server_binding : pqxdh.ServerBinding) (assigned_key_id : Std.U64)
+  (beacon_identity_public_key : Array Std.U8 32#usize)
+  (server_fingerprint : Array Std.U8 64#usize)
+  (beacon_fingerprint : Array Std.U8 64#usize) :
+  RustM session.SessionBinding
+  := do
+  let base ←
+    pqxdh.build_associated_data server_binding.identity_public_key
+      beacon_identity_public_key
+  let a ←
+    authentication.bind_associated_data base server_fingerprint
+      beacon_fingerprint
+  ok
+    {
+      server_binding,
+      assigned_key_id,
+      beacon_identity_public_key,
+      server_fingerprint,
+      beacon_fingerprint,
+      associated_data := a
+    }
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::server_binding]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 156:4-158:5
+    Visibility: public -/
+def session.SessionBinding.impl.server_binding
+  (self : session.SessionBinding) : RustM pqxdh.ServerBinding := do
+  ok self.server_binding
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::beacon_identity_public_key]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 164:4-166:5
+    Visibility: public -/
+def session.SessionBinding.impl.beacon_identity_public_key
+  (self : session.SessionBinding) : RustM (Array Std.U8 32#usize) := do
+  ok self.beacon_identity_public_key
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::server_fingerprint]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 168:4-170:5
+    Visibility: public -/
+def session.SessionBinding.impl.server_fingerprint
+  (self : session.SessionBinding) : RustM (Array Std.U8 64#usize) := do
+  ok self.server_fingerprint
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::beacon_fingerprint]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 172:4-174:5
+    Visibility: public -/
+def session.SessionBinding.impl.beacon_fingerprint
+  (self : session.SessionBinding) : RustM (Array Std.U8 64#usize) := do
+  ok self.beacon_fingerprint
+
+/-- [beaconcrypt_core::session::{beaconcrypt_core::session::SessionBinding}::associated_data]:
+    Source: 'beaconcrypt-core/src/session.rs', lines 176:4-178:5
+    Visibility: public -/
+def session.SessionBinding.impl.associated_data
+  (self : session.SessionBinding) : RustM (Array Std.U8 281#usize) := do
+  ok self.associated_data
+
+/-- [beaconcrypt_core::transport::MAX_MESSAGE_SIZE]
+    Source: 'beaconcrypt-core/src/transport.rs', lines 14:0-14:47
+    Visibility: public -/
+@[global_simps, irreducible]
+def transport.MAX_MESSAGE_SIZE : Std.Usize := 33554432#usize
+
+/-- [beaconcrypt_core::transport::REGISTRATION_WITNESS]
+    Source: 'beaconcrypt-core/src/transport.rs', lines 17:0-17:49
+    Visibility: public -/
+@[global_simps, irreducible]
+def transport.REGISTRATION_WITNESS : Array Std.U8 1#usize :=
+  Array.make 1#usize [ 255#u8 ]
+
+/-- [beaconcrypt_core::transport::complete_message_size_admitted]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 20:0-22:1
+    Visibility: public -/
+def transport.complete_message_size_admitted
+  (length : Std.Usize) : RustM Bool := do
+  ok (length <= transport.MAX_MESSAGE_SIZE)
+
+/-- [beaconcrypt_core::transport::argument_len]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 25:0-37:1
+    Visibility: public -/
+def transport.argument_len (value : Std.U64) : RustM Std.Usize := do
+  if value <= 23#u64
+  then ok 1#usize
+  else
+    if value <= 255#u64
+    then ok 2#usize
+    else
+      if value <= 65535#u64
+      then ok 3#usize
+      else if value <= 4294967295#u64
+           then ok 5#usize
+           else ok 9#usize
+
+/-- [beaconcrypt_core::transport::{beaconcrypt_core::transport::CborLength}::new]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 44:4-47:5 -/
+def transport.CborLength.new : RustM transport.CborLength := do
+  ok { value := (core.option.Option.Some 3#usize) }
+
+/-- [beaconcrypt_core::transport::{beaconcrypt_core::transport::CborLength}::integer]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 49:4-56:5 -/
+def transport.CborLength.integer
+  (self : transport.CborLength) (value : Std.U64) :
+  RustM transport.CborLength
+  := do
+  match self.value with
+  | core.option.Option.None => ok { value := core.option.Option.None }
+  | core.option.Option.Some length =>
+    let i ← transport.argument_len value
+    let o ← core.num.Usize.checked_add length i
+    ok { value := o }
+
+/-- [beaconcrypt_core::transport::{beaconcrypt_core::transport::CborLength}::bytes]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 58:4-67:5 -/
+def transport.CborLength.bytes
+  (self : transport.CborLength) (byte_length : Std.Usize) :
+  RustM transport.CborLength
+  := do
+  let i ← lift (UScalar.cast .U64 byte_length)
+  let with_header ← transport.CborLength.integer self i
+  match with_header.value with
+  | core.option.Option.None => ok { value := core.option.Option.None }
+  | core.option.Option.Some length =>
+    let o ← core.num.Usize.checked_add length byte_length
+    ok { value := o }
+
+/-- [beaconcrypt_core::transport::{beaconcrypt_core::transport::CborLength}::finish]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 69:4-74:5 -/
+def transport.CborLength.finish
+  (self : transport.CborLength) : RustM (core.option.Option Std.Usize) := do
+  match self.value with
+  | core.option.Option.None => ok core.option.Option.None
+  | core.option.Option.Some length =>
+    let b ← transport.complete_message_size_admitted length
+    if b
+    then ok self.value
+    else ok core.option.Option.None
+
+/-- [beaconcrypt_core::transport::encoded_frame_len]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 78:0-84:1
+    Visibility: public -/
+def transport.encoded_frame_len
+  (sequence : Std.U64) (sender : Std.U64) (ciphertext_length : Std.Usize) :
+  RustM (core.option.Option Std.Usize)
+  := do
+  let cl ← transport.CborLength.new
+  let cl1 ← transport.CborLength.integer cl sequence
+  let cl2 ← transport.CborLength.integer cl1 sender
+  let cl3 ← transport.CborLength.bytes cl2 ciphertext_length
+  transport.CborLength.finish cl3
+
+/-- [beaconcrypt_core::transport::encoded_init_len]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 87:0-96:1
+    Visibility: public -/
+def transport.encoded_init_len
+  (lengths : Array Std.Usize 6#usize) :
+  RustM (core.option.Option Std.Usize)
+  := do
+  let cl ← transport.CborLength.new
+  let i ← Array.index_usize lengths 0#usize
+  let cl1 ← transport.CborLength.bytes cl i
+  let i1 ← Array.index_usize lengths 1#usize
+  let cl2 ← transport.CborLength.bytes cl1 i1
+  let i2 ← Array.index_usize lengths 2#usize
+  let cl3 ← transport.CborLength.bytes cl2 i2
+  let i3 ← Array.index_usize lengths 3#usize
+  let cl4 ← transport.CborLength.bytes cl3 i3
+  let i4 ← Array.index_usize lengths 4#usize
+  let cl5 ← transport.CborLength.bytes cl4 i4
+  let i5 ← Array.index_usize lengths 5#usize
+  let cl6 ← transport.CborLength.bytes cl5 i5
+  transport.CborLength.finish cl6
+
+/-- [beaconcrypt_core::transport::encoded_response_len]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 99:0-108:1
+    Visibility: public -/
+def transport.encoded_response_len
+  (lengths : Array Std.Usize 5#usize) (assigned_key_id : Std.U64) :
+  RustM (core.option.Option Std.Usize)
+  := do
+  let cl ← transport.CborLength.new
+  let i ← Array.index_usize lengths 0#usize
+  let cl1 ← transport.CborLength.bytes cl i
+  let i1 ← Array.index_usize lengths 1#usize
+  let cl2 ← transport.CborLength.bytes cl1 i1
+  let i2 ← Array.index_usize lengths 2#usize
+  let cl3 ← transport.CborLength.bytes cl2 i2
+  let i3 ← Array.index_usize lengths 3#usize
+  let cl4 ← transport.CborLength.bytes cl3 i3
+  let cl5 ← transport.CborLength.integer cl4 assigned_key_id
+  let i4 ← Array.index_usize lengths 4#usize
+  let cl6 ← transport.CborLength.bytes cl5 i4
+  transport.CborLength.finish cl6
+
+/-- [beaconcrypt_core::transport::protected_frame_len]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 111:0-117:1
+    Visibility: public -/
+def transport.protected_frame_len
+  (plaintext_length : Std.Usize) (sequence : Std.U64) (sender : Std.U64) :
+  RustM (core.option.Option Std.Usize)
+  := do
+  let i ← record.MESSAGE_OVERHEAD
+  let o ← core.num.Usize.checked_add plaintext_length i
+  match o with
+  | core.option.Option.None => ok core.option.Option.None
+  | core.option.Option.Some length =>
+    transport.encoded_frame_len sequence sender length
+
+/-- [beaconcrypt_core::transport::registration_response_len]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 120:0-139:1
+    Visibility: public -/
+def transport.registration_response_len
+  (application_length : Std.Usize) (assigned_key_id : Std.U64) :
+  RustM (core.option.Option Std.Usize)
+  := do
+  let o ← core.num.Usize.checked_add application_length 8#usize
+  match o with
+  | core.option.Option.None => ok core.option.Option.None
+  | core.option.Option.Some length =>
+    let i ← record.MESSAGE_OVERHEAD
+    let o1 ← core.num.Usize.checked_add length i
+    match o1 with
+    | core.option.Option.None => ok core.option.Option.None
+    | core.option.Option.Some length1 =>
+      transport.encoded_response_len
+        (Array.make 5#usize [
+          pqxdh.SIGN_PUBLIC_KEY_SIZE, pqxdh.X25519_PUBLIC_KEY_SIZE,
+          pqxdh.MLKEM768_CIPHERTEXT_SIZE, length1,
+          authentication.MLDSA_SIGNATURE_LEN
+          ]) assigned_key_id
+
+/-- [beaconcrypt_core::transport::admit_frame]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 149:0-163:1
+    Visibility: public -/
+def transport.admit_frame
+  (sequence : Std.U64) (sender : Std.U64) (ciphertext : Slice Std.U8)
+  (expected_sender : Std.U64) :
+  RustM (core.option.Option transport.FrameView)
+  := do
+  if sender != expected_sender
+  then ok core.option.Option.None
+  else ok (core.option.Option.Some { sequence, sender, ciphertext })
+
+/-- [beaconcrypt_core::transport::normalize_registration_application]:
+    Source: 'beaconcrypt-core/src/transport.rs', lines 171:0-178:1
+    Visibility: public -/
+def transport.normalize_registration_application
+  (application : core.option.Option (Slice Std.U8)) :
+  RustM transport.RegistrationApplication
+  := do
+  match application with
+  | core.option.Option.None =>
+    ok (transport.RegistrationApplication.Witness
+      transport.REGISTRATION_WITNESS)
+  | core.option.Option.Some bytes =>
+    ok (transport.RegistrationApplication.Provided bytes)
 
 end beaconcrypt_core

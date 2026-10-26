@@ -2,14 +2,18 @@
 
 #[cfg(feature = "server")]
 use crate::shared::SignaturePk;
+#[cfg(test)]
 use crate::shared::{DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret};
 use beaconcrypt_core::pqxdh as verified_pqxdh;
-use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
+use beaconcrypt_crypto::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
+#[cfg(test)]
 use zeroize::Zeroize;
 
+#[cfg(test)]
 pub const PQXDH_INFO: &[u8; 46] = verified_pqxdh::PQXDH_INFO;
 pub const AD_SIZE: usize = verified_pqxdh::ASSOCIATED_DATA_SIZE;
 
+#[cfg(test)]
 pub(crate) fn mldsa_associated_data(
 	base: &[u8; AD_SIZE],
 	server_hash: &[u8; 64],
@@ -30,6 +34,7 @@ const _: () =
 #[cfg(feature = "server")]
 impl SignaturePk for crypto_sign::PublicKey {}
 
+#[cfg(test)]
 pub(crate) fn shared_secrets(
 	dh1: DhSecret,
 	dh2: DhSecret,
@@ -46,6 +51,7 @@ pub(crate) fn shared_secrets(
 	})
 }
 
+#[cfg(test)]
 pub(crate) fn zeroize_shared_secrets(secrets: &mut verified_pqxdh::PqxdhSharedSecrets) {
 	secrets.dh1.zeroize();
 	secrets.dh2.zeroize();
@@ -54,6 +60,7 @@ pub(crate) fn zeroize_shared_secrets(secrets: &mut verified_pqxdh::PqxdhSharedSe
 	secrets.kem_shared_secret.zeroize();
 }
 
+#[cfg(test)]
 pub(crate) fn derive_root_key_input(
 	input: &mut verified_pqxdh::RootKeyInput,
 ) -> Option<KexDerivedSecret> {
@@ -69,7 +76,7 @@ pub(crate) fn derive_root_key_input(
 	derived
 }
 
-#[cfg(feature = "server")]
+#[cfg(all(test, feature = "server"))]
 pub fn build_associated_data(
 	server_id: crypto_sign::PublicKey,
 	beacon_id: crypto_sign::PublicKey,
@@ -77,10 +84,142 @@ pub fn build_associated_data(
 	verified_pqxdh::build_associated_data(*server_id.as_bytes(), *beacon_id.as_bytes())
 }
 
+// Backend key handles belong only to this synchronous registration interpreter.
+
+pub(crate) struct RegistrationKeys<'a> {
+	pub identity_secret: &'a beaconcrypt_crypto::crypto_sign::SecretKey,
+	pub beacon_prekey: Option<&'a beaconcrypt_crypto::crypto_kx::SecretKey>,
+	pub beacon_one_time: Option<&'a beaconcrypt_crypto::crypto_kx::SecretKey>,
+	pub beacon_kem: Option<&'a beaconcrypt_crypto::crypto_kem::mlkem768::SecretKey>,
+}
+
+pub(crate) fn execute_agreement<'a, R: beaconcrypt_crypto::TryCryptoRng + ?Sized>(
+	mut effect: beaconcrypt_core::agreement::AgreementEffect<'a>,
+	keys: RegistrationKeys<'_>,
+	rng: &mut R,
+) -> beaconcrypt_core::agreement::AgreementEffect<'a> {
+	use beaconcrypt_core::agreement::{AgreementEffect, DhSecretRole};
+	use beaconcrypt_crypto::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign};
+	use zeroize::Zeroizing;
+	let mut local_identity: Option<Zeroizing<[u8; 32]>> = None;
+	let mut server_ephemeral: Option<crypto_kx::KeyPair> = None;
+	loop {
+		effect = match effect {
+			AgreementEffect::Rejected(_)
+			| AgreementEffect::ServerComplete(_)
+			| AgreementEffect::BeaconComplete(_) => return effect,
+			AgreementEffect::ConvertPublic(pending) => {
+				let converted = crypto_sign::PublicKey::from_bytes(pending.public_key())
+					.ok()
+					.and_then(|key| crypto_sign::ed25519_pk_to_curve25519(&key).ok());
+				pending.resume(converted)
+			}
+			AgreementEffect::ConvertSecret(pending) => {
+				local_identity = crypto_sign::ed25519_sk_to_curve25519(keys.identity_secret)
+					.ok()
+					.map(Zeroizing::new);
+				pending.resume(local_identity.is_some())
+			}
+			AgreementEffect::GenerateEphemeral(pending) => {
+				server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok();
+				let public = server_ephemeral
+					.as_ref()
+					.map(|key| *key.public_key.as_bytes());
+				pending.resume(public)
+			}
+			AgreementEffect::Encapsulate(pending) => {
+				let result = (|| {
+					let key =
+						crypto_kem::mlkem768::PublicKey::from_bytes(pending.public_key()?).ok()?;
+					let (ciphertext, shared) =
+						crypto_kem::mlkem768::encapsulate_with_rng(&key, rng).ok()?;
+					Some((*ciphertext.as_bytes(), *shared.as_bytes()))
+				})();
+				pending.resume(result)
+			}
+			AgreementEffect::Decapsulate(pending) => {
+				let shared = (|| {
+					let ciphertext =
+						crypto_kem::mlkem768::Ciphertext::from_bytes(pending.ciphertext()?).ok()?;
+					let shared =
+						crypto_kem::mlkem768::decapsulate(&ciphertext, keys.beacon_kem?).ok()?;
+					Some(*shared.as_bytes())
+				})();
+				pending.resume(shared)
+			}
+			AgreementEffect::Dh(pending) => {
+				let request = pending.request();
+				let secret: Option<&[u8]> = match request.secret_role {
+					DhSecretRole::LocalIdentity => {
+						local_identity.as_ref().map(|key| key.as_slice())
+					}
+					DhSecretRole::ServerEphemeral => server_ephemeral
+						.as_ref()
+						.map(|key| key.secret_key.as_bytes().as_slice()),
+					DhSecretRole::BeaconPrekey => {
+						keys.beacon_prekey.map(|key| key.as_bytes().as_slice())
+					}
+					DhSecretRole::BeaconOneTime => {
+						keys.beacon_one_time.map(|key| key.as_bytes().as_slice())
+					}
+				};
+				let shared = secret.and_then(|secret| {
+					crypto_scalarmult::scalarmult(secret, request.public_key).ok()
+				});
+				pending.resume(shared)
+			}
+			AgreementEffect::RootKdf(pending) => {
+				let root = (|| {
+					let request = pending.request();
+					let prk = crypto_kdf::hkdf::sha512::extract(None, request.input).ok()?;
+					let expanded = Zeroizing::new(
+						crypto_kdf::hkdf::sha512::expand(32, Some(request.info), &prk).ok()?,
+					);
+					expanded.as_slice().try_into().ok()
+				})();
+				pending.resume(root)
+			}
+		};
+	}
+}
+
+// Beacon completion uses retained keys only. An unexpected entropy request fails
+// closed instead of obtaining randomness or synthesizing predictable key material.
+#[cfg(feature = "beacon")]
+pub(crate) fn execute_beacon_agreement<'a>(
+	effect: beaconcrypt_core::agreement::AgreementEffect<'a>,
+	keys: RegistrationKeys<'_>,
+) -> beaconcrypt_core::agreement::AgreementEffect<'a> {
+	execute_agreement(effect, keys, &mut NoEntropy)
+}
+
+#[cfg(feature = "beacon")]
+struct NoEntropy;
+
+#[cfg(feature = "beacon")]
+impl beaconcrypt_crypto::TryRng for NoEntropy {
+	type Error = beaconcrypt_crypto::CryptoError;
+
+	fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
+		Err(beaconcrypt_crypto::CryptoError)
+	}
+
+	fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+		Err(beaconcrypt_crypto::CryptoError)
+	}
+
+	fn try_fill_bytes(&mut self, _bytes: &mut [u8]) -> Result<(), Self::Error> {
+		Err(beaconcrypt_crypto::CryptoError)
+	}
+}
+
+#[cfg(feature = "beacon")]
+impl beaconcrypt_crypto::TryCryptoRng for NoEntropy {}
+
 #[cfg(all(test, feature = "beacon", feature = "server"))]
 mod tests {
+	use beaconcrypt_crypto::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 	use beaconcrypt_parse::{InitKex, decode_init};
-	use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 
 	use super::{
 		AD_SIZE, PQXDH_INFO, build_associated_data, derive_root_key_input, verified_pqxdh,
@@ -257,7 +396,10 @@ mod tests {
 		assert_eq!(signed[0], u8::from(KemType::X25519));
 		assert_eq!(signed[1], verified_pqxdh::KEY_ROLE_ONE_TIME);
 		assert_eq!(&signed[2..], expected);
-		assert_eq!(beacon.get_onetime_pk().unwrap().as_bytes(), expected);
+		assert_eq!(
+			beacon.get_onetime_pk().unwrap().as_bytes().as_slice(),
+			expected
+		);
 		assert!(beacon.get_onetime_sk().is_some());
 		assert!(beacon.get_registration_bundle().is_none());
 	}
@@ -356,7 +498,7 @@ mod tests {
 	}
 
 	#[test]
-	fn established_beacon_replaces_singular_associated_data() {
+	fn established_beacon_and_server_retain_the_same_session_associated_data() {
 		let mut server = Server::new(0, None, None);
 		let mut beacon = Beacon::new(
 			0,
@@ -364,9 +506,23 @@ mod tests {
 			&server.mldsa_public_key(),
 		);
 		register(&mut server, &mut beacon);
-		let replacement = [0xa5; AD_SIZE];
-		beacon.set_associated_data(replacement);
-		assert_eq!(beacon.associated_data(), Some(replacement));
+		let associated_data = beacon.associated_data().unwrap();
+		assert_eq!(
+			server.associated_data(beacon.identity_key_kid()),
+			Some(associated_data)
+		);
+		assert_eq!(
+			&associated_data[153..217],
+			crate::auth::public_key_hash(&server.mldsa_public_key())
+				.unwrap()
+				.as_slice()
+		);
+		assert_eq!(
+			&associated_data[217..281],
+			crate::auth::public_key_hash(&beacon.mldsa_public_key())
+				.unwrap()
+				.as_slice()
+		);
 	}
 
 	#[test]

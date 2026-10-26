@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: 0BSD
 
+use alloc::vec::Vec;
+
 use crate::shared::{Decrypted, Encrypted};
 #[cfg(test)]
 use crate::shared::{SecretArr, roles, systems};
+#[cfg(test)]
+use beaconcrypt_core::commitment::build_commitment_transcript;
 use beaconcrypt_core::commitment::{
 	AEAD_KEY_SIZE as CORE_AEAD_KEY_LEN, AEAD_NONCE_SIZE as CORE_AEAD_NONCE_LEN,
-	AEAD_TAG_SIZE as CORE_AEAD_TAG_LEN, build_commitment_transcript,
+	AEAD_TAG_SIZE as CORE_AEAD_TAG_LEN,
 };
 use beaconcrypt_core::pqxdh::{
 	ASSOCIATED_DATA_SIZE as AD_SIZE, INITIAL_RATCHET_KDF_OUTPUT_SIZE, RATCHET_CHAIN_SIZE,
@@ -13,11 +17,12 @@ use beaconcrypt_core::pqxdh::{
 #[cfg(test)]
 use beaconcrypt_core::pqxdh::{RatchetInitialization, start_initial_ratchet_kdf};
 use beaconcrypt_core::ratchet as verified_ratchet;
-use beaconcrypt_core::record::{self as verified_record, OpenFrameContext};
+use beaconcrypt_core::record as verified_record;
+use beaconcrypt_core::record_effects as records;
+use beaconcrypt_crypto::utils::memcmp;
+use beaconcrypt_crypto::{crypto_aead, crypto_generichash, crypto_kdf};
 use beaconcrypt_parse::{CryptoFrame, decode_frame};
-use libsodium_rs::utils::memcmp;
-use libsodium_rs::{crypto_aead, crypto_generichash, crypto_kdf};
-use std::ops::{Deref, DerefMut};
+use core::ops::{Deref, DerefMut};
 use zeroize::{Zeroize, Zeroizing};
 
 pub const KDF_STATE_SIZE: usize = 32usize;
@@ -106,6 +111,7 @@ pub(crate) fn initial_ratchet_hkdf(
 	symmetric_ratchet_hkdf(request)
 }
 
+#[cfg(test)]
 pub(crate) fn finish_initial_ratchet_kdf(
 	pending: beaconcrypt_core::pqxdh::InitialRatchetKdfPending,
 ) -> verified_ratchet::ConcreteRatchetKernel {
@@ -352,6 +358,7 @@ pub(crate) fn encrypted_frame_sender(data: &[u8]) -> Option<u64> {
 	Some(decode_crypto_frame(data)?.key_id)
 }
 
+#[cfg(test)]
 struct SealFrameContext<'a> {
 	bytes: &'a [u8],
 	target_kid: u64,
@@ -360,6 +367,7 @@ struct SealFrameContext<'a> {
 	frame_encoding: bool,
 }
 
+#[cfg(test)]
 fn seal_frame(
 	material: &verified_ratchet::RatchetMaterial,
 	key_seq: u64,
@@ -401,10 +409,10 @@ fn seal_frame(
 
 /// Encrypt one frame against a staged or committed peer ratchet.
 ///
-/// This is shared by the regular high-level provider path and the transactional
-/// server-registration path. The extracted kernel advances the send chain,
-/// lends the exact allocated sequence/material pair to `seal_frame`, and
-/// consumes that pair before returning.
+/// The extracted record controller advances the send chain and retains the
+/// allocated sequence, material and associated data through each primitive
+/// request. The native interpreter supplies actual AEAD, hash and writer
+/// replies before the controller consumes the selected send material.
 pub(crate) fn encrypt_message_with_ratchet(
 	bytes: &[u8],
 	target_kid: u64,
@@ -419,25 +427,6 @@ pub(crate) fn encrypt_message_with_ratchet(
 		associated_data,
 		ratchet,
 		true,
-	)
-}
-
-/// Seal the initial response payload directly; its outer record supplies framing.
-#[cfg(feature = "server")]
-pub(crate) fn encrypt_registration_message_with_ratchet(
-	bytes: &[u8],
-	target_kid: u64,
-	sender_kid: u64,
-	associated_data: &[u8; AD_SIZE],
-	ratchet: &mut RatchetManager,
-) -> Option<Encrypted> {
-	encrypt_with_ratchet(
-		bytes,
-		target_kid,
-		sender_kid,
-		associated_data,
-		ratchet,
-		false,
 	)
 }
 
@@ -456,74 +445,169 @@ fn encrypt_with_ratchet(
 		let sequence = ratchet.status().send_sequence().checked_add(1)?;
 		crate::wire::frame_len(bytes.len(), sequence, sender_kid)?;
 	}
-	let context = SealFrameContext {
-		bytes,
-		target_kid,
-		sender_kid,
-		associated_data,
-		frame_encoding,
+	let encoding = if frame_encoding {
+		records::RecordEncoding::Frame
+	} else {
+		records::RecordEncoding::Raw
 	};
-	let kernel = ratchet.refined.take();
-	let pending = match verified_ratchet::begin_send(kernel, context) {
-		verified_ratchet::SendStart::SendExhausted { kernel, .. } => {
-			ratchet.refined.put(kernel);
-			return None;
-		}
-		verified_ratchet::SendStart::SendKdfRequested(pending) => pending,
-	};
-	let response = ratchet_hkdf(pending.request());
-	let seal = pending.resume(response);
-	let sealed = seal_frame(seal.material(), seal.sequence(), seal.context());
-	let (kernel, sealed) = seal.finish(sealed);
+	let context =
+		records::SealFrameContext::new(bytes, target_kid, sender_kid, associated_data, encoding);
+	let (kernel, sealed) = execute_record_send(ratchet.refined.take(), context);
 	ratchet.refined.put(kernel);
 	sealed
 }
 
-/// The executor accepts the one-use core request itself. Callers cannot choose
-/// an independent sequence, material, or context, or substitute a claimed
-/// plaintext. Publication consumes this request only after the primitive result.
-fn execute_open(
-	open: verified_ratchet::ReceiveOpen<OpenFrameContext<'_>>,
-) -> (RatchetKernel, Option<Decrypted>) {
-	let mut pending = match verified_record::begin_open(open) {
-		verified_record::OpenStart::OpenRejected(kernel) => return (kernel, None),
-		verified_record::OpenStart::OpenCommitmentRequested(pending) => pending,
+/// Execute only the detached AEAD operands selected by the core record phase.
+pub(crate) fn execute_seal_request(
+	request: records::AeadSealRequest<'_>,
+) -> Option<(Vec<u8>, [u8; AEAD_TAG_LEN])> {
+	let key: AeadKey = (*request.key).into();
+	let nonce: AeadNonce = (*request.nonce).into();
+	let prefixed = match &request.plaintext {
+		records::SealPlaintextRequest::Single(_) => None,
+		records::SealPlaintextRequest::Prefixed {
+			prefix,
+			application,
+		} => Some(Zeroizing::new(join_record_parts([
+			prefix.as_slice(),
+			*application,
+		])?)),
 	};
+	let plaintext = match request.plaintext {
+		records::SealPlaintextRequest::Single(plaintext) => plaintext,
+		records::SealPlaintextRequest::Prefixed { .. } => prefixed.as_ref()?.as_slice(),
+	};
+	let (ciphertext, tag) = crypto_aead::chacha20poly1305_ietf::encrypt_detached(
+		plaintext,
+		Some(request.associated_data.as_slice()),
+		&nonce,
+		&key,
+	)
+	.ok()?;
+	Some((ciphertext, tag.as_slice().try_into().ok()?))
+}
+
+/// The copied transcript is erased after every hash attempt.
+pub(crate) fn execute_commitment_hash(
+	transcript: &mut beaconcrypt_core::commitment::CommitmentTranscript,
+) -> Option<[u8; COMMITMENT_SIZE]> {
 	let commitment =
-		crypto_generichash::generichash(pending.transcript().as_bytes(), None, COMMITMENT_SIZE)
-			.ok();
-	pending.transcript_mut().as_mut_bytes().zeroize();
-	let commitment_matches = match commitment {
-		Some(commitment) => memcmp(&commitment, pending.supplied_commitment()),
-		None => false,
-	};
-	let opening = match pending.resume(commitment_matches) {
-		verified_record::OpenAfterCommitment::OpenCommitmentRejected(kernel) => {
-			return (kernel, None);
+		crypto_generichash::generichash(transcript.as_bytes(), None, COMMITMENT_SIZE).ok();
+	transcript.as_mut_bytes().zeroize();
+	commitment?.as_slice().try_into().ok()
+}
+
+fn join_record_parts<const N: usize>(parts: [&[u8]; N]) -> Option<Vec<u8>> {
+	let length = parts
+		.iter()
+		.try_fold(0usize, |length, part| length.checked_add(part.len()))?;
+	let mut output = Vec::new();
+	output.try_reserve_exact(length).ok()?;
+	for part in parts {
+		output.extend_from_slice(part);
+	}
+	Some(output)
+}
+
+/// Format and metadata come from the core; this function only allocates and encodes.
+pub(crate) fn execute_write_request(request: records::RecordWriteRequest<'_>) -> Option<Vec<u8>> {
+	match request {
+		records::RecordWriteRequest::Raw { parts } => join_record_parts(parts),
+		records::RecordWriteRequest::Frame {
+			parts,
+			sequence,
+			sender,
+		} => {
+			let ciphertext = join_record_parts(parts)?;
+			crate::wire::encode_frame(CryptoFrame {
+				cipher_text: &ciphertext,
+				seq: sequence,
+				key_id: sender,
+			})
 		}
-		verified_record::OpenAfterCommitment::OpenAeadRequested(opening) => opening,
+	}
+}
+
+pub(crate) fn execute_open_request(
+	request: Option<verified_record::AeadRequest<'_>>,
+) -> Option<Vec<u8>> {
+	let request = request?;
+	let key: AeadKey = (*request.key).into();
+	let nonce: AeadNonce = (*request.nonce).into();
+	crypto_aead::chacha20poly1305_ietf::decrypt(
+		request.ciphertext,
+		Some(request.associated_data.as_slice()),
+		&nonce,
+		&key,
+	)
+	.ok()
+}
+
+fn execute_record_send(
+	kernel: RatchetKernel,
+	context: records::SealFrameContext<'_>,
+) -> (RatchetKernel, Option<Encrypted>) {
+	let pending = match records::begin_record_send(kernel, context) {
+		records::RecordSendStart::Rejected(kernel) => return (kernel, None),
+		records::RecordSendStart::KdfRequested(pending) => pending,
 	};
-	let plaintext = (|| {
-		let request = opening.request()?;
-		let key: AeadKey = (*request.key).into();
-		let nonce: AeadNonce = (*request.nonce).into();
-		crypto_aead::chacha20poly1305_ietf::decrypt(
-			request.ciphertext,
-			Some(request.associated_data.as_slice()),
-			&nonce,
-			&key,
-		)
-		.ok()
-	})();
-	let (kernel, opened) = opening.finish(plaintext);
+	let response = ratchet_hkdf(pending.request());
+	let aead = pending.resume(response);
+	let detached = execute_seal_request(aead.request());
+	let detached_view = detached.as_ref().map(|(body, tag)| (body.as_slice(), *tag));
+	let mut commitment = match aead.resume(detached_view) {
+		records::SealAfterAead::Rejected(kernel) => return (kernel, None),
+		records::SealAfterAead::CommitmentRequested(pending) => pending,
+	};
+	let digest = execute_commitment_hash(commitment.transcript_mut());
+	let writer = match commitment.resume(digest) {
+		records::SealAfterCommitment::Rejected(kernel) => return (kernel, None),
+		records::SealAfterCommitment::WriteRequested(writer) => writer,
+	};
+	let written = execute_write_request(writer.request());
+	let (kernel, output) = writer.finish(written);
 	(
 		kernel,
-		opened.map(|opened| Decrypted {
-			plaintext: opened.plaintext,
-			key_id: opened.key_id,
-			seq: opened.seq,
+		output.map(|sealed| Encrypted {
+			ciphertext: sealed.ciphertext,
+			key_id: sealed.key_id,
+			seq: sealed.seq,
 		}),
 	)
+}
+
+fn execute_record_receive(
+	mut effect: records::RecordReceiveEffect<'_>,
+) -> (RatchetKernel, Option<Decrypted>) {
+	loop {
+		effect = match effect {
+			records::RecordReceiveEffect::Rejected(kernel) => return (kernel, None),
+			records::RecordReceiveEffect::KdfRequested(pending) => {
+				let response = ratchet_hkdf(pending.request());
+				pending.resume(response)
+			}
+			records::RecordReceiveEffect::CommitmentRequested(mut pending) => {
+				let actual = execute_commitment_hash(pending.transcript_mut());
+				let matches = match actual {
+					Some(actual) => memcmp(&actual, pending.supplied_commitment()),
+					None => false,
+				};
+				pending.resume(matches)
+			}
+			records::RecordReceiveEffect::AeadRequested(pending) => {
+				let plaintext = execute_open_request(pending.request());
+				let (kernel, opened) = pending.finish(plaintext);
+				return (
+					kernel,
+					opened.map(|opened| Decrypted {
+						plaintext: opened.plaintext,
+						key_id: opened.key_id,
+						seq: opened.seq,
+					}),
+				);
+			}
+		};
+	}
 }
 
 /// Decrypt one frame against a staged or committed peer ratchet.
@@ -542,22 +626,19 @@ pub(crate) fn decrypt_message_with_ratchet(
 		return None;
 	}
 	let frame = decode_crypto_frame(data)?;
-	let kid = frame.key_id;
-	if kid != expected_sender_kid {
-		return None;
-	}
-	decrypt_payload_with_ratchet(frame.cipher_text, frame.seq, kid, associated_data, ratchet)
-}
-
-/// Registration implicitly uses sequence one and the already pinned server ID.
-#[cfg(feature = "beacon")]
-pub(crate) fn decrypt_registration_message_with_ratchet(
-	ciphertext: &[u8],
-	sender_kid: u64,
-	associated_data: &[u8; AD_SIZE],
-	ratchet: &mut RatchetManager,
-) -> Option<Decrypted> {
-	decrypt_payload_with_ratchet(ciphertext, 1, sender_kid, associated_data, ratchet)
+	let admitted = beaconcrypt_core::transport::admit_frame(
+		frame.seq,
+		frame.key_id,
+		frame.cipher_text,
+		expected_sender_kid,
+	)?;
+	decrypt_payload_with_ratchet(
+		admitted.ciphertext,
+		admitted.sequence,
+		admitted.sender,
+		associated_data,
+		ratchet,
+	)
 }
 
 fn decrypt_payload_with_ratchet(
@@ -567,26 +648,16 @@ fn decrypt_payload_with_ratchet(
 	associated_data: &[u8; AD_SIZE],
 	ratchet: &mut RatchetManager,
 ) -> Option<Decrypted> {
-	let context = OpenFrameContext::from_frame(ciphertext, associated_data, kid)?;
-	let kernel = ratchet.refined.take();
-	let mut effect = verified_ratchet::begin_receive(kernel, key_seq, context);
-	loop {
-		effect = match effect {
-			verified_ratchet::ReceiveEffect::ReceiveRejected { kernel, .. } => {
-				ratchet.refined.put(kernel);
-				return None;
-			}
-			verified_ratchet::ReceiveEffect::ReceiveKdfRequested(pending) => {
-				let response = ratchet_hkdf(pending.request());
-				pending.resume(response)
-			}
-			verified_ratchet::ReceiveEffect::ReceiveOpenRequested(open) => {
-				let (kernel, opened) = execute_open(open);
-				ratchet.refined.put(kernel);
-				return opened;
-			}
-		};
-	}
+	let effect = records::begin_record_receive(
+		ratchet.refined.take(),
+		key_seq,
+		ciphertext,
+		associated_data,
+		kid,
+	);
+	let (kernel, opened) = execute_record_receive(effect);
+	ratchet.refined.put(kernel);
+	opened
 }
 
 /// Implementation of the modified Chan and Rogaway `CTX` scheme: <https://eprint.iacr.org/2022/1260.pdf>
@@ -604,6 +675,7 @@ fn decrypt_payload_with_ratchet(
 /// * Associated data
 /// * key `seq`
 /// * sender key identifier `kid`
+#[cfg(test)]
 pub(crate) fn build_commitment(
 	material: &verified_ratchet::RatchetMaterial,
 	ad: &[u8],
@@ -717,7 +789,7 @@ mod initial_kdf_tests {
 
 	#[test]
 	fn initial_ratchet_hkdf_matches_known_answer_and_orders_complementary_chains() {
-		libsodium_rs::ensure_init().unwrap();
+		beaconcrypt_crypto::ensure_init().unwrap();
 		// Independently reproduced by both KAT generators' [ratchet] step 1: HKDF's
 		// 64-byte expansion is the prefix of that step's 76-byte expansion.
 		let expected_hex = concat!(
@@ -739,5 +811,66 @@ mod initial_kdf_tests {
 
 		let changed = start_beacon_ratchet_kdf(&[0x25; KDF_STATE_SIZE]);
 		assert_ne!(initial_ratchet_hkdf(changed.request()), expected);
+	}
+}
+
+#[cfg(test)]
+mod record_fixture_tests {
+	use super::*;
+
+	#[test]
+	fn fixture_sealing_matches_record_requests_and_wire_bytes() {
+		beaconcrypt_crypto::ensure_init().unwrap();
+		let material = verified_ratchet::RatchetMaterial::from_bytes([0x31; 32], [0x52; 12]);
+		let associated_data = [0x73; AD_SIZE];
+		let sender = 0x8877_6655_4433_2211;
+		let target = 0x1020_3040_5060_7080;
+		for plaintext in [&[][..], &b"wire compatibility"[..]] {
+			for sequence in [1, u64::MAX] {
+				for frame_encoding in [false, true] {
+					let legacy = seal_frame(
+						&material,
+						sequence,
+						&SealFrameContext {
+							bytes: plaintext,
+							target_kid: target,
+							sender_kid: sender,
+							associated_data: &associated_data,
+							frame_encoding,
+						},
+					)
+					.unwrap();
+					let (body, tag) = execute_seal_request(records::AeadSealRequest {
+						key: material.key().as_bytes(),
+						nonce: material.nonce().as_bytes(),
+						associated_data: &associated_data,
+						plaintext: records::SealPlaintextRequest::Single(plaintext),
+					})
+					.unwrap();
+					let mut transcript = build_commitment_transcript(
+						material.key().as_bytes(),
+						material.nonce().as_bytes(),
+						&associated_data,
+						&tag,
+						sequence,
+						sender,
+					);
+					let commitment = execute_commitment_hash(&mut transcript).unwrap();
+					let parts = [body.as_slice(), tag.as_slice(), commitment.as_slice()];
+					let request = if frame_encoding {
+						records::RecordWriteRequest::Frame {
+							parts,
+							sequence,
+							sender,
+						}
+					} else {
+						records::RecordWriteRequest::Raw { parts }
+					};
+					assert_eq!(legacy.ciphertext, execute_write_request(request).unwrap());
+					assert_eq!(legacy.key_id, target);
+					assert_eq!(legacy.seq, sequence);
+				}
+			}
+		}
 	}
 }

@@ -40,52 +40,188 @@ REACHABLE = "not " + PRIMARY[1].split(" ==> ")[0]
 def check_source_order():
     """Reviewed textual drift check only; this is not a Rust/applied-pi compiler."""
     ADMISSION.check_source_order()
-    source = (HERE.parents[2] / "beaconcrypt/src/server.rs").read_text()
-    start = source.index(
+    root = HERE.parents[2]
+    ADMISSION.source_order(
+        root,
+        "beaconcrypt/src/server.rs",
         "fn build_registration_response(",
-        source.index("impl ProviderServer for Server {"),
+        [
+            "let control = self.control;",
+            "let application = beaconcrypt_core::transport::normalize_registration_application(data);",
+            "let plaintext = registration_application_bytes(&application);",
+            "let RegistrationOutput { registration } = reg_out;",
+            "beaconcrypt_core::peer::begin_completion_lookup(control, self.authentication_pin()?, registration, plaintext,)",
+            "let next_key_id = lookup.request();",
+            "registration_response_len(plaintext.len(), next_key_id)?;",
+            "lookup.resume(self.known_ids.contains_key(&next_key_id))",
+            "self.known_ids.try_reserve(1)",
+            "crate::ratchet::initial_ratchet_hkdf(pending.request())",
+            "let pending = pending.resume(Some(response)).ok()?; let response = crate::ratchet::ratchet_hkdf(pending.request()); let pending = pending.resume(Some(response)).ok()?;",
+            "let detached = crate::ratchet::execute_seal_request(pending.request());",
+            "let detached_view = detached.as_ref().map(|(body, tag)| (body.as_slice(), *tag));",
+            "let mut pending = pending.resume(detached_view).ok()?;",
+            "let commitment = crate::ratchet::execute_commitment_hash(pending.transcript_mut());",
+            "let pending = pending.resume(commitment).ok()?;",
+            "let ciphertext = crate::ratchet::execute_write_request(pending.request());",
+            "let pending = pending.resume(ciphertext.as_deref()).ok()?;",
+            "auth::execute_hash(&pending.request())",
+            "pending.resume(hash).ok()?",
+            "self.mldsa_identity.sign_requested(&pending.request())",
+            "pending.resume(signature.as_deref()).ok()?",
+            "let message = ready.message();",
+            "crate::wire::encode_response(KexResponse { identity_key: message.identity_key, ephemeral_key: message.ephemeral_key, kem_cipher_text: message.kem_cipher_text, key_id: message.key_id, app_cipher_text: message.application_ciphertext, signature: message.signature, })",
+            "beaconcrypt_core::peer::begin_peer_insert(control, ready.publish(buffer).ok()?).ok()?;",
+            "let remote_kid = pending.request();",
+            "crypto_sign::PublicKey::from_bytes(peer.binding().beacon_identity_public_key())",
+            "self.known_ids.entry(remote_kid)",
+            "std::collections::hash_map::Entry::Vacant(entry)",
+            "entry.insert(EstablishedRemote::from_peer(public_key, peer));",
+            "std::collections::hash_map::Entry::Occupied(_) => false",
+            "finish.finish(inserted).ok()?.into_parts()",
+            "self.control = next_control;",
+            "Some(RegResponse { serialized: buffer, kid: remote_kid, })",
+        ],
+        "impl ProviderServer for Server {",
     )
-    body = source[start : source.index("\n\t}", start)]
-    tokens = [
-        "data.unwrap_or(REGISTRATION_WITNESS)",
-        "verified_pqxdh::server_next_key_id(control)",
-        "registration_response_len(plaintext.len(), next_key_id)?;",
-        "let RegistrationOutput {",
-        "if auth::public_key_hash(&self.mldsa_public_key())? != authentication.server_hash",
-        "self.known_ids.contains_key(&next_key_id)",
-        "verified_pqxdh::server_prepare_commit(",
-        "crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key())",
-        "self.known_ids.try_reserve(1)",
-        "start_server_candidate_ratchet_kdf(",
-        "RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
-        "if plaintext.is_empty()",
-        "REGISTRATION_KEY_ID_BINDING_SIZE.checked_add(plaintext.len())",
-        ".try_reserve_exact(authenticated_len)",
-        "candidate.key_id_binding().as_bytes()",
-        "authenticated_plaintext.extend_from_slice(plaintext)",
-        "encrypt_registration_message_with_ratchet(",
-        "authenticated_plaintext.zeroize()",
-        "let encrypted = encrypted?;",
-        "let response = KexResponse {",
-        "key_id: remote_kid",
-        "ephemeral_key: candidate.ephemeral_public_key()",
-        "identity_key: candidate.server_identity_public_key()",
-        "kem_cipher_text: candidate.kem_ciphertext()",
-        "app_cipher_text: &encrypted.ciphertext",
-        "auth::response_transcript_hash(&authentication.init_hash, &response)",
-        "self.mldsa_identity.sign(AuthRole::Server, &hash)",
-        "crate::wire::encode_response(KexResponse {",
-        "signature: &signature",
-        "..response",
-        "verified_pqxdh::server_commit(candidate)",
-        "let old = self.known_ids.insert(\n\t\t\tremote_kid,\n\t\t\t"
-        "EstablishedRemote::new(public_key, ratchet, authentication.beacon_hash),\n\t\t);",
-        "self.control = next_control",
-        "Some(RegResponse {",
-    ]
-    positions = [body.index(token) for token in tokens]
-    if positions != sorted(positions) or len(set(positions)) != len(positions):
-        raise ValueError("reviewed native response order changed")
+    ADMISSION.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn begin_server_completion",
+        [
+            "let rejected = control;",
+            "if application.is_empty() || !agreement.binding.matches_server(current_pin)",
+            "return Err(rejected);",
+            "crate::pqxdh::server_prepare_commit(control, agreement.pending, current_pin.binding(), availability,)",
+            "crate::pqxdh::start_server_candidate_ratchet_kdf(&candidate, agreement.root.as_bytes())",
+            "Ok(ServerInitialKdf",
+        ],
+    )
+    ADMISSION.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn resume(",
+        [
+            "None => return Err(rejected)",
+            "crate::pqxdh::resume_initial_ratchet_kdf(self.pending, response)",
+            "records::SealFrameContext::registration(self.application, self.candidate.key_id(), self.candidate.server_identity_key_id(), self.binding.associated_data(),)",
+            "records::begin_record_send(kernel, context)",
+            "records::RecordSendStart::Rejected(_) => return Err(rejected)",
+            "state: ServerRecordState { candidate: self.candidate, binding: self.binding, application: self.application, }, pending,",
+        ],
+        "impl<'a> ServerInitialKdf<'a>",
+    )
+    ADMISSION.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn resume(",
+        [
+            "None => return Err(crate::pqxdh::server_abort_candidate(&self.state.candidate))",
+            "state: self.state, pending: self.pending.resume(response)",
+        ],
+        "impl<'a> ServerInitialSeal<'a>",
+    )
+    for scope, reply, rejected, accepted in [
+        (
+            "impl<'a> ServerRecordAead<'a>",
+            "detached",
+            "SealAfterAead::Rejected",
+            "SealAfterAead::CommitmentRequested",
+        ),
+        (
+            "impl<'a, 'ciphertext> ServerRecordCommitment<'a, 'ciphertext>",
+            "commitment",
+            "SealAfterCommitment::Rejected",
+            "SealAfterCommitment::WriteRequested",
+        ),
+    ]:
+        ADMISSION.source_order(
+            root,
+            "beaconcrypt-core/src/registration.rs",
+            "pub fn resume",
+            [
+                f"self.pending.resume({reply})",
+                rejected,
+                "Err(crate::pqxdh::server_abort_candidate(&self.state.candidate))",
+                accepted,
+                "state: self.state, pending,",
+            ],
+            scope,
+        )
+    ADMISSION.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn resume<'output>(",
+        [
+            "let rejected = crate::pqxdh::server_abort_candidate(&self.state.candidate);",
+            "let (kernel, sealed) = self.pending.finish(ciphertext);",
+            "Some(sealed) => sealed.ciphertext, None => return Err(rejected)",
+            "8usize.checked_add(self.state.application.len())",
+            "bound_length.checked_add(crate::record::MESSAGE_OVERHEAD)",
+            "if ciphertext.len() != length { return Err(rejected); }",
+            "build_response_prefix(self.state.binding.init_hash(), self.state.candidate.server_identity_public_key(), self.state.candidate.ephemeral_public_key(), self.state.candidate.kem_ciphertext(),",
+            "let assigned_id = encode_u64_le(self.state.candidate.key_id());",
+            "Ok(ServerResponseHash { candidate: self.state.candidate, binding: self.state.binding, kernel, ciphertext, prefix, assigned_id, })",
+        ],
+        "impl ServerRecordWrite<'_, '_>",
+    )
+    ADMISSION.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn request(&self)",
+        [
+            "HashRequest::Triple([&self.prefix, self.ciphertext, &self.assigned_id])",
+        ],
+        "impl<'a> ServerResponseHash<'a>",
+    )
+    ADMISSION.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn resume(",
+        [
+            "let rejected = crate::pqxdh::server_abort_candidate(&self.candidate);",
+            "build_signature_input(AuthRole::Server,",
+            "Some(digest) => digest, None => return Err(rejected),",
+        ],
+        "impl<'a> ServerResponseHash<'a>",
+    )
+    ADMISSION.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn request(&self)",
+        [
+            "role: AuthRole::Server",
+            "public_key: self.binding.server_pin().public_key()",
+            "input: &self.input",
+            "context: SIGNING_CONTEXT",
+        ],
+        "impl<'a> ServerResponseSigning<'a>",
+    )
+    ADMISSION.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn message(&self)",
+        [
+            "identity_key: self.candidate.server_identity_public_key()",
+            "ephemeral_key: self.candidate.ephemeral_public_key()",
+            "kem_cipher_text: self.candidate.kem_ciphertext()",
+            "key_id: self.candidate.key_id()",
+            "application_ciphertext: self.ciphertext",
+            "signature: &self.signature",
+        ],
+        "impl ServerResponseReady<'_>",
+    )
+    ADMISSION.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn publish<Encoded>(",
+        [
+            "let encoded = match encoded { Some(encoded) => encoded, None => return Err(rejected), };",
+            "self.binding.finish(self.candidate.key_id())",
+            "crate::pqxdh::server_commit(self.candidate)",
+            "Ok(PublishedServerResponse",
+        ],
+        "impl ServerResponseReady<'_>",
+    )
     model = (HERE / "registration-set-response.pvl").read_text()
     controls = [
         "in(mutex, =registration_set_mutex());",

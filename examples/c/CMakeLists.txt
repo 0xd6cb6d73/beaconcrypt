@@ -13,7 +13,7 @@ find_program(CARGO_EXECUTABLE cargo REQUIRED)
 option(BEACONCRYPT_CARGO_RELEASE "Build beaconcrypt with Cargo's release profile" OFF)
 
 set(BEACONCRYPT_CARGO_PROFILE debug)
-set(BEACONCRYPT_CARGO_ARGS build -p beaconcrypt --features cbinds)
+set(BEACONCRYPT_CARGO_ARGS build -p beaconcrypt-ffi --features cbinds)
 if(BEACONCRYPT_CARGO_RELEASE)
 	set(BEACONCRYPT_CARGO_PROFILE release)
 	list(APPEND BEACONCRYPT_CARGO_ARGS --release)
