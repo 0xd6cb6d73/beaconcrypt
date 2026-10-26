@@ -668,9 +668,8 @@ fn postgres_fixture_lifetime_preserves_shared_owners_and_rejects_duplicate_owner
 		}
 	}
 
-	libsodium_rs::ensure_init().unwrap();
 	let mut lineage = [0; 32];
-	libsodium_rs::random::fill_bytes(&mut lineage);
+	beaconcrypt::crypto::random::fill_bytes(&mut lineage);
 	let dsn = std::env::var("BEACONCRYPT_BENCH_POSTGRES").expect("set live PostgreSQL DSN");
 	let fixture = PgFixture::create(&dsn, SnapshotLineage::from_bytes(lineage)).unwrap();
 	let mut observer = OwnedSchema {
@@ -732,9 +731,8 @@ fn postgres_validation_observes_commit_after_advisory_lock_wait() {
 		sync::mpsc,
 		time::{Duration, Instant},
 	};
-	libsodium_rs::ensure_init().unwrap();
 	let mut lineage = [0; 32];
-	libsodium_rs::random::fill_bytes(&mut lineage);
+	beaconcrypt::crypto::random::fill_bytes(&mut lineage);
 	let fixture = PgFixture::create(
 		&std::env::var("BEACONCRYPT_BENCH_POSTGRES").expect("set live PostgreSQL DSN"),
 		SnapshotLineage::from_bytes(lineage),
@@ -823,9 +821,8 @@ fn postgres_checkpoint_propagates_permission_error_for_an_owned_unprivileged_rol
 		}
 	}
 
-	libsodium_rs::ensure_init().unwrap();
 	let mut lineage = [0; 32];
-	libsodium_rs::random::fill_bytes(&mut lineage);
+	beaconcrypt::crypto::random::fill_bytes(&mut lineage);
 	let fixture = PgFixture::create(
 		&std::env::var("BEACONCRYPT_BENCH_POSTGRES").expect("set live PostgreSQL DSN"),
 		SnapshotLineage::from_bytes(lineage),

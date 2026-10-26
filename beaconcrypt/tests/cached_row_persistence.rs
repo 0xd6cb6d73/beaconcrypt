@@ -29,7 +29,7 @@ const SERVER_ID: u64 = 39;
 
 fn create(path: &Path) -> RowServer<OptimisticSqliteRowStore> {
 	let mut lineage = [0; 32];
-	libsodium_rs::random::fill_bytes(&mut lineage);
+	beaconcrypt::crypto::random::fill_bytes(&mut lineage);
 	RowServer::create(
 		SERVER_ID,
 		Some(&[41; 32]),

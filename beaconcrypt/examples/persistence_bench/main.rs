@@ -451,9 +451,8 @@ struct Fixture {
 impl Fixture {
 	fn new(arm: Arm, path: PathBuf, peers: usize, config: &Config) -> Result<Self> {
 		let start = Instant::now();
-		libsodium_rs::ensure_init()?;
 		let mut lineage_bytes = [0; 32];
-		libsodium_rs::random::fill_bytes(&mut lineage_bytes);
+		beaconcrypt::crypto::random::fill_bytes(&mut lineage_bytes);
 		let lineage = SnapshotLineage::from_bytes(lineage_bytes);
 		let counts = Rc::new(Counters::default());
 		let active = config.active_peers.unwrap_or(peers).min(peers);

@@ -66,9 +66,8 @@ impl Factory {
 fn fixture(pg: bool, operation: impl FnOnce(&Factory)) {
 	let directory = tempfile::tempdir().unwrap();
 	let owner = if pg {
-		libsodium_rs::ensure_init().unwrap();
 		let mut bytes = [0; 32];
-		libsodium_rs::random::fill_bytes(&mut bytes);
+		beaconcrypt::crypto::random::fill_bytes(&mut bytes);
 		Some(
 			PgFixture::create(
 				&std::env::var("BEACONCRYPT_BENCH_POSTGRES").expect("set live PostgreSQL DSN"),

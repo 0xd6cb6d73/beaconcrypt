@@ -7,9 +7,8 @@ use std::{
 };
 
 fn fixture() -> Rc<PgFixture> {
-	libsodium_rs::ensure_init().unwrap();
 	let mut lineage = [0; 32];
-	libsodium_rs::random::fill_bytes(&mut lineage);
+	beaconcrypt::crypto::random::fill_bytes(&mut lineage);
 	PgFixture::create_batched(
 		&std::env::var("BEACONCRYPT_BENCH_POSTGRES").expect("set live PostgreSQL DSN"),
 		SnapshotLineage::from_bytes(lineage),

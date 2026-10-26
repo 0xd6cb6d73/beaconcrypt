@@ -114,9 +114,8 @@ fn store(fixture: &Rc<PgFixture>) -> PgRowStore {
 }
 
 fn fixture() -> (Rc<PgFixture>, SnapshotLineage, Vec<Peer>) {
-	libsodium_rs::ensure_init().unwrap();
 	let mut bytes = [0; 32];
-	libsodium_rs::random::fill_bytes(&mut bytes);
+	beaconcrypt::crypto::random::fill_bytes(&mut bytes);
 	let lineage = SnapshotLineage::from_bytes(bytes);
 	let fixture = PgFixture::create_batched(
 		&std::env::var("BC_PERSISTENCE_PG_DSN").expect("set dedicated loopback PostgreSQL DSN"),

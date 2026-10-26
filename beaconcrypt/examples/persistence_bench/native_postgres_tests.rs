@@ -28,7 +28,7 @@ fn fixture() -> (Rc<PgFixture>, SnapshotLineage) {
 	let dsn = std::env::var("BC_PERSISTENCE_PG_DSN")
 		.expect("set BC_PERSISTENCE_PG_DSN to a dedicated loopback PostgreSQL test database");
 	let mut bytes = [0; 32];
-	libsodium_rs::random::fill_bytes(&mut bytes);
+	beaconcrypt::crypto::random::fill_bytes(&mut bytes);
 	let lineage = SnapshotLineage::from_bytes(bytes);
 	(PgFixture::create(&dsn, lineage).unwrap(), lineage)
 }
