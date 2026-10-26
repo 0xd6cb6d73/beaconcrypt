@@ -1,0 +1,1243 @@
+{
+  "parsed_events": 6067,
+  "unmatched_sync_exits": 0,
+  "unmatched_sync_enters": 0,
+  "windows": [
+    {
+      "trial": 1,
+      "arm": "row",
+      "window_ms": 240.273639,
+      "backend_pids": [
+        603407,
+        603408,
+        603409,
+        603410,
+        603411,
+        603412,
+        603413,
+        603414
+      ],
+      "polls": 103,
+      "poll_duration_ms": {
+        "count": 103,
+        "mean": 0.21043520388349515,
+        "median": 0.18801,
+        "p50": 0.18801,
+        "p95": 0.348198,
+        "max": 0.632737
+      },
+      "wait_observations": {
+        "active/LWLock/WALWrite": 430,
+        "active/IO/WALSync": 102,
+        "idle/Client/ClientRead": 234,
+        "active/CPU-or-runnable/none": 46,
+        "idle/CPU-or-runnable/none": 10,
+        "active/LWLock/WALInsert": 1,
+        "active/IO/WALWrite": 1
+      },
+      "active_wait_observations": {
+        "active/LWLock/WALWrite": 430,
+        "active/IO/WALSync": 102,
+        "active/CPU-or-runnable/none": 46,
+        "active/LWLock/WALInsert": 1,
+        "active/IO/WALWrite": 1
+      },
+      "benchmark_user_cpu_samples": {
+        "chacha20::backends::sse2::rounds": 194,
+        "<poly1305::backend::soft::State as universal_hash::UhfBackend>::proc_block": 79,
+        "beaconcrypt_parse::cbordetver::cbor_det_serialize_array": 58,
+        "__memmove_ssse3": 26,
+        "beaconcrypt_crypto::crypto_aead::chacha20poly1305_ietf::decrypt": 5,
+        "__memset_sse2_unaligned_erms": 4,
+        "beaconcrypt::ratchet::execute_seal_request": 2,
+        "cfree@GLIBC_2.2.5": 2,
+        "beaconcrypt::ratchet::encrypt_message_with_ratchet": 2,
+        "postgres_protocol::message::backend::Buffer::read_cstr": 1,
+        "_int_free_create_chunk": 1,
+        "_int_malloc": 1,
+        "tokio_postgres::query::start::{{closure}}": 1,
+        "bytes::bytes_mut::BytesMut::reserve_inner": 1,
+        "__memcmp_sse2": 1,
+        "tokio::util::wake::wake_arc_raw": 1,
+        "malloc": 1,
+        "postgres::connection::Connection::block_on": 1,
+        "tokio::util::rand::rt::RngSeedGenerator::next_seed": 1,
+        "persistence_bench::concurrency::Worker::run": 1,
+        "_int_free_chunk": 1,
+        "alloc::collections::btree::map::BTreeMap<K,V,A>::insert": 1,
+        "cipher::stream::StreamCipher::try_apply_keystream_inout": 1,
+        "<serde_json::de::SeqAccess<R> as serde_core::de::SeqAccess>::next_element_seed::has_next_element": 1,
+        "beaconcrypt_parse::cbordetver::cbor_det_parse": 1,
+        "sha2::sha512::compress512": 1,
+        "<core::marker::PhantomData<T> as serde_core::de::DeserializeSeed>::deserialize": 1,
+        "byteorder::io::ReadBytesExt::read_u16": 1,
+        "<tokio_postgres::query::RowStream as futures_core::stream::Stream>::poll_next": 1,
+        "tokio_postgres::connection::Connection<S,T>::poll_message": 1,
+        "beaconcrypt::row_persistence::decode_peer": 1,
+        "beaconcrypt_parse::decode_frame": 1
+      },
+      "backend_user_cpu_samples": {
+        "AllocSetContextCreateInternal": 3,
+        "AllocSetAlloc": 3,
+        "WaitEventSetWait": 2,
+        "CommitTransaction": 2,
+        "__memmove_ssse3": 2,
+        "hash_search_with_hash_value": 2,
+        "LWLockAcquire": 2,
+        "SPI_cursor_open_internal": 2,
+        "ExecInitIndexScan": 2,
+        "standard_ExecutorEnd": 2,
+        "heap_page_prune_opt": 1,
+        "ResourceArrayEnlarge": 1,
+        "array_iter_next": 1,
+        "tuplestore_end": 1,
+        "ReservePrivateRefCountEntry": 1,
+        "MemoryContextReset": 1,
+        "ExecReScanIndexScan": 1,
+        "__internal_syscall_cancel": 1,
+        "IncrBufferRefCount": 1,
+        "hash_bytes_extended": 1,
+        "pg_utf8_verifystr": 1,
+        "get_typlenbyvalalign": 1,
+        "_int_free_chunk": 1,
+        "LockReleaseAll": 1,
+        "ReleaseBuffer": 1,
+        "SearchCatCacheInternal": 1,
+        "standard_ExecutorRun": 1,
+        "RelationIdGetRelation": 1,
+        "fmgr_info_cxt_security": 1,
+        "GetNewTransactionId": 1,
+        "ExecReadyInterpretedExpr": 1,
+        "tts_buffer_heap_clear": 1,
+        "ExecInitExprRec": 1,
+        "__strncmp_sse42": 1,
+        "ExecIndexBuildScanKeys": 1,
+        "heap_deform_tuple": 1,
+        "exec_eval_expr": 1,
+        "FreeExecutorState": 1,
+        "_SPI_cursor_operation": 1,
+        "ExecStoreBufferHeapTuple": 1,
+        "ExecAllocTableSlot": 1,
+        "_bt_first": 1,
+        "assign_simple_var": 1,
+        "index_getattr.1120": 1,
+        "CreatePortal": 1,
+        "schedule_alarm": 1,
+        "HeapTupleSatisfiesVisibility": 1,
+        "hash_search": 1,
+        "ScanQueryForLocks": 1,
+        "PostgresMain": 1,
+        "HeapTupleSatisfiesVacuumHorizon": 1,
+        "ExecInitNode": 1,
+        "MemoryContextAllocZero": 1,
+        "epoll_wait": 1,
+        "MemoryContextAlloc": 1,
+        "FetchPreparedStatement": 1,
+        "SPI_execute_plan_with_paramlist": 1,
+        "int8eq": 1,
+        "__vdso_gettimeofday": 1,
+        "__memcmp_sse2": 1,
+        "_int_malloc": 1,
+        "__libc_recv": 1
+      },
+      "backend_sync_ms": {
+        "count": 139,
+        "mean": 1.6768920863309353,
+        "median": 1.287,
+        "p50": 1.287,
+        "p95": 3.194,
+        "max": 8.823
+      },
+      "backend_sync_total_ms": 233.088,
+      "backend_sync_union_ms": 233.088
+    },
+    {
+      "trial": 1,
+      "arm": "cached_row",
+      "window_ms": 229.89275,
+      "backend_pids": [
+        603434,
+        603435,
+        603436,
+        603437,
+        603438,
+        603439,
+        603440,
+        603441
+      ],
+      "polls": 100,
+      "poll_duration_ms": {
+        "count": 100,
+        "mean": 0.19701641,
+        "median": 0.184704,
+        "p50": 0.184514,
+        "p95": 0.270423,
+        "max": 0.637507
+      },
+      "wait_observations": {
+        "active/LWLock/WALWrite": 467,
+        "active/CPU-or-runnable/none": 38,
+        "active/IO/WALSync": 97,
+        "idle/Client/ClientRead": 196,
+        "idle/CPU-or-runnable/none": 2
+      },
+      "active_wait_observations": {
+        "active/LWLock/WALWrite": 467,
+        "active/CPU-or-runnable/none": 38,
+        "active/IO/WALSync": 97
+      },
+      "benchmark_user_cpu_samples": {
+        "chacha20::backends::sse2::rounds": 182,
+        "<poly1305::backend::soft::State as universal_hash::UhfBackend>::proc_block": 81,
+        "beaconcrypt_parse::cbordetver::cbor_det_serialize_array": 65,
+        "__memmove_ssse3": 21,
+        "__memset_sse2_unaligned_erms": 3,
+        "persistence_bench::concurrency::Worker::run": 2,
+        "cfree@GLIBC_2.2.5": 2,
+        "cipher::stream::StreamCipher::try_apply_keystream_inout": 2,
+        "realloc": 2,
+        "beaconcrypt::ratchet::execute_seal_request": 2,
+        "<tokio_postgres::socket::Socket as tokio::io::async_read::AsyncRead>::poll_read": 1,
+        "<tokio_util::codec::framed_impl::FramedImpl<T,U,R> as futures_core::stream::Stream>::poll_next": 1,
+        "tokio::runtime::time::<impl tokio::runtime::time::handle::Handle>::process_at_time": 1,
+        "<std::sys::sync::condvar::futex::Condvar>::wait_timeout": 1,
+        "<&mut serde_json::ser::Serializer<W,F> as serde_core::ser::Serializer>::serialize_bytes": 1,
+        "beaconcrypt_core::record_effects::RecordSendKdf::resume": 1,
+        "tokio::runtime::time::Driver::park_internal": 1,
+        "<persistence_bench::postgres::PgRowStore as beaconcrypt::row_persistence::RowStore>::transaction": 1,
+        "_int_malloc": 1,
+        "beaconcrypt_parse::cbordetveraux::read_header": 1,
+        "tokio::runtime::scheduler::current_thread::Context::park": 1,
+        "__syscall_cancel_arch_end": 1,
+        "futures_channel::mpsc::Receiver<T>::next_message": 1,
+        "beaconcrypt::ratchet::ratchet_hkdf": 1,
+        "tokio_postgres::query::extract_row_affected": 1,
+        "beaconcrypt::ratchet::encrypt_message_with_ratchet": 1
+      },
+      "backend_user_cpu_samples": {
+        "[unknown]": 60
+      },
+      "backend_sync_ms": {
+        "count": 134,
+        "mean": 1.6652164179104478,
+        "median": 1.322,
+        "p50": 1.322,
+        "p95": 2.537,
+        "max": 4.425
+      },
+      "backend_sync_total_ms": 223.139,
+      "backend_sync_union_ms": 223.139
+    },
+    {
+      "trial": 2,
+      "arm": "cached_row",
+      "window_ms": 298.620934,
+      "backend_pids": [
+        603476,
+        603477,
+        603478,
+        603479,
+        603480,
+        603481,
+        603482,
+        603483
+      ],
+      "polls": 127,
+      "poll_duration_ms": {
+        "count": 127,
+        "mean": 0.23024309448818897,
+        "median": 0.219088,
+        "p50": 0.219088,
+        "p95": 0.329523,
+        "max": 0.576974
+      },
+      "wait_observations": {
+        "idle/Client/ClientRead": 264,
+        "active/CPU-or-runnable/none": 17,
+        "idle/CPU-or-runnable/none": 5,
+        "active/LWLock/WALWrite": 607,
+        "active/IO/WALSync": 123
+      },
+      "active_wait_observations": {
+        "active/CPU-or-runnable/none": 17,
+        "active/LWLock/WALWrite": 607,
+        "active/IO/WALSync": 123
+      },
+      "benchmark_user_cpu_samples": {
+        "chacha20::backends::sse2::rounds": 175,
+        "<poly1305::backend::soft::State as universal_hash::UhfBackend>::proc_block": 97,
+        "beaconcrypt_parse::cbordetver::cbor_det_serialize_array": 45,
+        "__memmove_ssse3": 36,
+        "cipher::stream::StreamCipher::try_apply_keystream_inout": 5,
+        "__memset_sse2_unaligned_erms": 3,
+        "beaconcrypt::ratchet::execute_seal_request": 2,
+        "malloc": 2,
+        "beaconcrypt_crypto::crypto_aead::chacha20poly1305_ietf::decrypt": 2,
+        "beaconcrypt_parse::decode_frame": 2,
+        "clock_gettime@@GLIBC_2.17": 2,
+        "<persistence_bench::buffered::Buffered<F> as beaconcrypt::row_persistence::RowTransaction>::store": 1,
+        "postgres_protocol::message::backend::Message::parse": 1,
+        "unlink_chunk.isra.0": 1,
+        "persistence_bench::concurrency::Worker::run": 1,
+        "tokio::runtime::io::registration::Registration::poll_ready": 1,
+        "beaconcrypt_core::record_effects::RecordSendKdf::resume": 1,
+        "beaconcrypt::ratchet::encrypt_message_with_ratchet": 1,
+        "alloc::collections::btree::map::IntoIter<K,V,A>::dying_next": 1,
+        "core::ptr::drop_in_place<zeroize::Zeroizing<alloc::string::String>>": 1,
+        "tokio_postgres::client::Client::query_opt::{{closure}}": 1,
+        "blake2::Blake2bVarCore::compress": 1,
+        "tokio::runtime::time::<impl tokio::runtime::time::handle::Handle>::process_at_time": 1,
+        "<std::sys::sync::condvar::futex::Condvar>::wait_timeout": 1,
+        "hashbrown::raw::RawTableInner::fallible_with_capacity": 1,
+        "[unknown]": 1,
+        "_int_malloc": 1,
+        "_int_free_chunk": 1,
+        "<core::future::poll_fn::PollFn<F> as core::future::future::Future>::poll": 1,
+        "sha2::sha512::compress512": 1
+      },
+      "backend_user_cpu_samples": {
+        "[unknown]": 77
+      },
+      "backend_sync_ms": {
+        "count": 136,
+        "mean": 2.1279264705882355,
+        "median": 2.169,
+        "p50": 2.168,
+        "p95": 4.254,
+        "max": 5.975
+      },
+      "backend_sync_total_ms": 289.398,
+      "backend_sync_union_ms": 289.398
+    },
+    {
+      "trial": 2,
+      "arm": "row",
+      "window_ms": 263.794852,
+      "backend_pids": [
+        603503,
+        603504,
+        603505,
+        603506,
+        603507,
+        603508,
+        603509,
+        603510
+      ],
+      "polls": 113,
+      "poll_duration_ms": {
+        "count": 113,
+        "mean": 0.22469594690265488,
+        "median": 0.211624,
+        "p50": 0.211624,
+        "p95": 0.346505,
+        "max": 0.541498
+      },
+      "wait_observations": {
+        "idle/Client/ClientRead": 255,
+        "active/LWLock/WALWrite": 492,
+        "active/CPU-or-runnable/none": 37,
+        "active/IO/WALSync": 108,
+        "idle/CPU-or-runnable/none": 7,
+        "active/IO/WALWrite": 2,
+        "active/LWLock/XactSLRU": 1,
+        "active/IPC/XactGroupUpdate": 2
+      },
+      "active_wait_observations": {
+        "active/LWLock/WALWrite": 492,
+        "active/CPU-or-runnable/none": 37,
+        "active/IO/WALSync": 108,
+        "active/IO/WALWrite": 2,
+        "active/LWLock/XactSLRU": 1,
+        "active/IPC/XactGroupUpdate": 2
+      },
+      "benchmark_user_cpu_samples": {
+        "chacha20::backends::sse2::rounds": 195,
+        "<poly1305::backend::soft::State as universal_hash::UhfBackend>::proc_block": 82,
+        "beaconcrypt_parse::cbordetver::cbor_det_serialize_array": 44,
+        "__memmove_ssse3": 37,
+        "beaconcrypt::ratchet::execute_seal_request": 3,
+        "__memset_sse2_unaligned_erms": 3,
+        "cipher::stream::StreamCipher::try_apply_keystream_inout": 3,
+        "__internal_syscall_cancel": 3,
+        "tokio_postgres::query::start::{{closure}}": 2,
+        "<persistence_bench::postgres::PgRowStore as beaconcrypt::row_persistence::RowStore>::transaction": 2,
+        "beaconcrypt::ratchet::encrypt_message_with_ratchet": 2,
+        "tokio::runtime::io::driver::Driver::turn": 2,
+        "beaconcrypt_parse::cbordetveraux::read_header": 2,
+        "beaconcrypt_parse::decode_frame": 2,
+        "<std::sys::sync::condvar::futex::Condvar>::wait_timeout": 2,
+        "tokio_postgres::connection::Connection<S,T>::poll_message": 1,
+        "__libc_recv": 1,
+        "sha2::sha512::compress512": 1,
+        "tokio_postgres::query::encode": 1,
+        "_int_realloc": 1,
+        "realloc": 1,
+        "<&mut serde_json::ser::Serializer<W,F> as serde_core::ser::Serializer>::serialize_bytes": 1,
+        "_int_free_chunk": 1,
+        "tokio_postgres::query::query::{{closure}}": 1,
+        "<core::marker::PhantomData<T> as serde_core::de::DeserializeSeed>::deserialize": 1,
+        "tokio::util::wake::clone_arc_raw": 1,
+        "malloc": 1,
+        "<persistence_bench::buffered::Buffered<F> as beaconcrypt::row_persistence::RowTransaction>::load": 1,
+        "core::ptr::drop_in_place<zeroize::Zeroizing<alloc::string::String>>": 1,
+        "serde_core::de::SeqAccess::next_element": 1,
+        "serde_json::de::Deserializer<R>::parse_integer": 1,
+        "postgres::connection::Connection::block_on": 1,
+        "postgres_protocol::message::backend::Message::parse": 1,
+        "<tokio_postgres::codec::PostgresCodec as tokio_util::codec::decoder::Decoder>::decode": 1,
+        "<alloc::vec::Vec<T> as fallible_iterator::FromFallibleIterator<T>>::from_fallible_iter": 1,
+        "_int_free_maybe_consolidate.part.0": 1,
+        "<tokio_util::codec::framed_impl::FramedImpl<T,U,R> as futures_core::stream::Stream>::poll_next": 1,
+        "malloc_consolidate": 1,
+        "core::ptr::drop_in_place<tokio_postgres::client::Client::query_raw<alloc::string::String,&dyn postgres_types::ToSql,core::iter::adapters::map::Map<core::slice::iter::Iter<&dyn postgres_types::ToSql+core::marker::Sync>,tokio_postgres::slice_iter::{{closure}}>>::{{closure}}>": 1,
+        "beaconcrypt_crypto::crypto_aead::chacha20poly1305_ietf::decrypt": 1,
+        "__vdso_clock_gettime": 1,
+        "bytes::bytes_mut::BytesMut::split_to": 1,
+        "persistence_bench::concurrency::Worker::run": 1
+      },
+      "backend_user_cpu_samples": {
+        "[unknown]": 115
+      },
+      "backend_sync_ms": {
+        "count": 139,
+        "mean": 1.8332302158273381,
+        "median": 1.309,
+        "p50": 1.309,
+        "p95": 3.443,
+        "max": 8.294
+      },
+      "backend_sync_total_ms": 254.819,
+      "backend_sync_union_ms": 254.819
+    },
+    {
+      "trial": 3,
+      "arm": "row",
+      "window_ms": 223.01979,
+      "backend_pids": [
+        603558,
+        603561,
+        603562,
+        603563,
+        603564,
+        603565,
+        603566,
+        603567
+      ],
+      "polls": 96,
+      "poll_duration_ms": {
+        "count": 96,
+        "mean": 0.21443846875,
+        "median": 0.199857,
+        "p50": 0.199641,
+        "p95": 0.342117,
+        "max": 0.386419
+      },
+      "wait_observations": {
+        "idle/Client/ClientRead": 227,
+        "active/LWLock/WALWrite": 407,
+        "active/IO/WALSync": 93,
+        "idle/CPU-or-runnable/none": 11,
+        "active/CPU-or-runnable/none": 28,
+        "active/IO/WALWrite": 1,
+        "active/LWLock/LockManager": 1
+      },
+      "active_wait_observations": {
+        "active/LWLock/WALWrite": 407,
+        "active/IO/WALSync": 93,
+        "active/CPU-or-runnable/none": 28,
+        "active/IO/WALWrite": 1,
+        "active/LWLock/LockManager": 1
+      },
+      "benchmark_user_cpu_samples": {
+        "chacha20::backends::sse2::rounds": 180,
+        "<poly1305::backend::soft::State as universal_hash::UhfBackend>::proc_block": 93,
+        "beaconcrypt_parse::cbordetver::cbor_det_serialize_array": 42,
+        "__memmove_ssse3": 22,
+        "cipher::stream::StreamCipher::try_apply_keystream_inout": 5,
+        "beaconcrypt_crypto::crypto_aead::chacha20poly1305_ietf::decrypt": 4,
+        "_int_malloc": 3,
+        "beaconcrypt::ratchet::encrypt_message_with_ratchet": 2,
+        "__memset_sse2_unaligned_erms": 2,
+        "beaconcrypt::row_persistence::decode_peer": 2,
+        "blake2::Blake2bVarCore::compress": 2,
+        "malloc": 2,
+        "cfree@GLIBC_2.2.5": 2,
+        "_int_free_chunk": 1,
+        "beaconcrypt::row_persistence::transact::{{closure}}": 1,
+        "core::str::converts::from_utf8": 1,
+        "<alloc::vec::Vec<T> as postgres_types::ToSql>::to_sql_checked": 1,
+        "<serde_json::ser::Compound<W,F> as serde_core::ser::SerializeStruct>::serialize_field": 1,
+        "tokio_postgres::query::query::{{closure}}": 1,
+        "tokio::runtime::time::<impl tokio::runtime::time::handle::Handle>::process_at_time": 1,
+        "beaconcrypt::auth::execute_hash": 1,
+        "<serde_json::read::SliceRead as serde_json::read::Read>::parse_str": 1,
+        "__libc_malloc2": 1,
+        "postgres::connection::Connection::block_on": 1,
+        "__libc_calloc": 1,
+        "<tokio_postgres::socket::Socket as tokio::io::async_read::AsyncRead>::poll_read": 1,
+        "<persistence_bench::postgres::PgRowStore as beaconcrypt::row_persistence::RowStore>::transaction": 1,
+        "beaconcrypt_parse::cbordetveraux::cbor_read": 1,
+        "tokio_postgres::client::Client::query_opt::{{closure}}": 1,
+        "core::ptr::drop_in_place<beaconcrypt::shared::EstablishedRemote<beaconcrypt_crypto::crypto_sign::PublicKey>>": 1,
+        "beaconcrypt::ratchet::execute_seal_request": 1,
+        "serde_json::de::Deserializer<R>::parse_integer": 1,
+        "<serde_json::de::SeqAccess<R> as serde_core::de::SeqAccess>::next_element_seed::has_next_element": 1,
+        "beaconcrypt_parse::cbordetver::cbor_det_parse": 1,
+        "beaconcrypt_parse::cbordetveraux::read_header": 1
+      },
+      "backend_user_cpu_samples": {
+        "[unknown]": 72
+      },
+      "backend_sync_ms": {
+        "count": 139,
+        "mean": 1.5525755395683454,
+        "median": 1.284,
+        "p50": 1.284,
+        "p95": 2.357,
+        "max": 2.881
+      },
+      "backend_sync_total_ms": 215.808,
+      "backend_sync_union_ms": 215.808
+    },
+    {
+      "trial": 3,
+      "arm": "cached_row",
+      "window_ms": 226.660906,
+      "backend_pids": [
+        603587,
+        603588,
+        603589,
+        603590,
+        603591,
+        603592,
+        603593,
+        603594
+      ],
+      "polls": 98,
+      "poll_duration_ms": {
+        "count": 98,
+        "mean": 0.18964434693877552,
+        "median": 0.179945,
+        "p50": 0.179534,
+        "p95": 0.261326,
+        "max": 0.480063
+      },
+      "wait_observations": {
+        "active/LWLock/WALWrite": 460,
+        "active/IO/WALSync": 96,
+        "idle/Client/ClientRead": 188,
+        "active/CPU-or-runnable/none": 33,
+        "idle/CPU-or-runnable/none": 5,
+        "active/IO/WALWrite": 1,
+        "active/LWLock/BufferContent": 1
+      },
+      "active_wait_observations": {
+        "active/LWLock/WALWrite": 460,
+        "active/IO/WALSync": 96,
+        "active/CPU-or-runnable/none": 33,
+        "active/IO/WALWrite": 1,
+        "active/LWLock/BufferContent": 1
+      },
+      "benchmark_user_cpu_samples": {
+        "chacha20::backends::sse2::rounds": 183,
+        "<poly1305::backend::soft::State as universal_hash::UhfBackend>::proc_block": 88,
+        "beaconcrypt_parse::cbordetver::cbor_det_serialize_array": 37,
+        "__memmove_ssse3": 15,
+        "__memset_sse2_unaligned_erms": 5,
+        "cipher::stream::StreamCipher::try_apply_keystream_inout": 3,
+        "sha2::sha512::compress512": 3,
+        "tokio_postgres::query::query::{{closure}}": 2,
+        "<tokio_postgres::query::RowStream as futures_core::stream::Stream>::poll_next": 2,
+        "_int_malloc": 2,
+        "<postgres::connection::ConnectionStream<S,T> as futures_core::stream::Stream>::poll_next": 1,
+        "unlink_chunk.isra.0": 1,
+        "beaconcrypt_crypto::crypto_aead::chacha20poly1305_ietf::decrypt": 1,
+        "beaconcrypt::ratchet::encrypt_message_with_ratchet": 1,
+        "__vdso_clock_gettime": 1,
+        "bytes::bytes_mut::shared_v_drop": 1,
+        "<persistence_bench::postgres::PgRowStore as beaconcrypt::row_persistence::RowStore>::transaction": 1,
+        "beaconcrypt::ratchet::execute_seal_request": 1,
+        "malloc": 1,
+        "alloc::collections::btree::map::IntoIter<K,V,A>::dying_next": 1
+      },
+      "backend_user_cpu_samples": {
+        "[unknown]": 67
+      },
+      "backend_sync_ms": {
+        "count": 130,
+        "mean": 1.6945307692307692,
+        "median": 1.2945,
+        "p50": 1.294,
+        "p95": 2.412,
+        "max": 8.25
+      },
+      "backend_sync_total_ms": 220.289,
+      "backend_sync_union_ms": 220.289
+    },
+    {
+      "trial": 4,
+      "arm": "cached_row",
+      "window_ms": 223.614897,
+      "backend_pids": [
+        603632,
+        603633,
+        603634,
+        603635,
+        603636,
+        603637,
+        603638,
+        603639
+      ],
+      "polls": 97,
+      "poll_duration_ms": {
+        "count": 97,
+        "mean": 0.21173953608247423,
+        "median": 0.190344,
+        "p50": 0.190344,
+        "p95": 0.356985,
+        "max": 1.419983
+      },
+      "wait_observations": {
+        "idle/Client/ClientRead": 209,
+        "active/LWLock/WALWrite": 447,
+        "active/IO/WALSync": 94,
+        "active/CPU-or-runnable/none": 23,
+        "idle/CPU-or-runnable/none": 2,
+        "active/IO/WALWrite": 1
+      },
+      "active_wait_observations": {
+        "active/LWLock/WALWrite": 447,
+        "active/IO/WALSync": 94,
+        "active/CPU-or-runnable/none": 23,
+        "active/IO/WALWrite": 1
+      },
+      "benchmark_user_cpu_samples": {
+        "chacha20::backends::sse2::rounds": 163,
+        "<poly1305::backend::soft::State as universal_hash::UhfBackend>::proc_block": 107,
+        "beaconcrypt_parse::cbordetver::cbor_det_serialize_array": 44,
+        "__memmove_ssse3": 16,
+        "__memset_sse2_unaligned_erms": 4,
+        "cipher::stream::StreamCipher::try_apply_keystream_inout": 3,
+        "beaconcrypt_crypto::crypto_aead::chacha20poly1305_ietf::decrypt": 3,
+        "persistence_bench::concurrency::Worker::run": 2,
+        "__internal_syscall_cancel": 2,
+        "clock_gettime@@GLIBC_2.17": 2,
+        "malloc": 1,
+        "beaconcrypt_parse::decode_frame": 1,
+        "tokio_postgres::connection::Connection<S,T>::poll_message": 1,
+        "__libc_malloc2": 1,
+        "<tokio::runtime::scheduler::current_thread::Handle as tokio::util::wake::Wake>::wake_by_ref": 1,
+        "[unknown]": 1,
+        "blake2::Blake2bVarCore::compress": 1,
+        "<tokio_postgres::codec::PostgresCodec as tokio_util::codec::encoder::Encoder<tokio_postgres::codec::FrontendMessage>>::encode": 1,
+        "<std::sys::pal::unix::time::Timespec>::now": 1,
+        "beaconcrypt::ratchet::execute_seal_request": 1,
+        "alloc::raw_vec::RawVecInner<A>::finish_grow": 1,
+        "beaconcrypt_parse::cbordetver::cbor_det_parse": 1,
+        "cfree@GLIBC_2.2.5": 1,
+        "tokio::runtime::scheduler::current_thread::Context::park_internal": 1,
+        "<tokio_util::codec::framed_impl::FramedImpl<T,U,R> as futures_core::stream::Stream>::poll_next": 1
+      },
+      "backend_user_cpu_samples": {
+        "[unknown]": 66
+      },
+      "backend_sync_ms": {
+        "count": 137,
+        "mean": 1.5835182481751824,
+        "median": 1.272,
+        "p50": 1.272,
+        "p95": 2.327,
+        "max": 4.759
+      },
+      "backend_sync_total_ms": 216.942,
+      "backend_sync_union_ms": 216.942
+    },
+    {
+      "trial": 4,
+      "arm": "row",
+      "window_ms": 223.881283,
+      "backend_pids": [
+        603659,
+        603660,
+        603661,
+        603662,
+        603663,
+        603664,
+        603665,
+        603666
+      ],
+      "polls": 96,
+      "poll_duration_ms": {
+        "count": 96,
+        "mean": 0.21823890625,
+        "median": 0.195885,
+        "p50": 0.195434,
+        "p95": 0.330024,
+        "max": 0.853428
+      },
+      "wait_observations": {
+        "active/LWLock/WALWrite": 413,
+        "active/IO/WALSync": 94,
+        "idle/Client/ClientRead": 217,
+        "active/CPU-or-runnable/none": 34,
+        "idle/CPU-or-runnable/none": 10
+      },
+      "active_wait_observations": {
+        "active/LWLock/WALWrite": 413,
+        "active/IO/WALSync": 94,
+        "active/CPU-or-runnable/none": 34
+      },
+      "benchmark_user_cpu_samples": {
+        "chacha20::backends::sse2::rounds": 175,
+        "<poly1305::backend::soft::State as universal_hash::UhfBackend>::proc_block": 86,
+        "beaconcrypt_parse::cbordetver::cbor_det_serialize_array": 37,
+        "__memmove_ssse3": 29,
+        "__memset_sse2_unaligned_erms": 5,
+        "beaconcrypt_parse::decode_frame": 3,
+        "tokio_postgres::connection::Connection<S,T>::poll_message": 2,
+        "tokio::runtime::io::driver::Driver::turn": 2,
+        "_int_malloc": 2,
+        "std::sys::backtrace::__rust_begin_short_backtrace": 2,
+        "cipher::stream::StreamCipher::try_apply_keystream_inout": 2,
+        "malloc": 2,
+        "tokio::runtime::io::scheduled_io::ScheduledIo::wake": 1,
+        "__libc_malloc2": 1,
+        "<&mut serde_json::ser::Serializer<W,F> as serde_core::ser::Serializer>::serialize_bytes": 1,
+        "clock_gettime@@GLIBC_2.17": 1,
+        "serde_json::de::Deserializer<R>::end_map": 1,
+        "__vdso_clock_gettime": 1,
+        "<alloc::raw_vec::RawVecInner>::finish_grow": 1,
+        "blake2::Blake2bVarCore::compress": 1,
+        "<serde_json::de::SeqAccess<R> as serde_core::de::SeqAccess>::next_element_seed::has_next_element": 1,
+        "<std::sys::sync::condvar::futex::Condvar>::wait_timeout": 1,
+        "__send": 1,
+        "<core::future::poll_fn::PollFn<F> as core::future::future::Future>::poll": 1,
+        "<tokio_util::codec::framed_impl::FramedImpl<T,U,R> as futures_core::stream::Stream>::poll_next": 1,
+        "beaconcrypt_parse::cbordetveraux::jump_raw_data_item": 1,
+        "beaconcrypt::row_persistence::decode_peer": 1,
+        "__memcmp_sse2": 1,
+        "tokio_postgres::query::start::{{closure}}": 1,
+        "sha2::sha512::compress512": 1,
+        "<persistence_bench::postgres::PgRowStore as beaconcrypt::row_persistence::RowStore>::transaction": 1,
+        "unlink_chunk.isra.0": 1,
+        "beaconcrypt_crypto::crypto_aead::chacha20poly1305_ietf::decrypt": 1,
+        "<core::marker::PhantomData<T> as serde_core::de::DeserializeSeed>::deserialize": 1,
+        "realloc": 1
+      },
+      "backend_user_cpu_samples": {
+        "[unknown]": 76
+      },
+      "backend_sync_ms": {
+        "count": 142,
+        "mean": 1.5292323943661972,
+        "median": 1.2835,
+        "p50": 1.283,
+        "p95": 2.313,
+        "max": 3.166
+      },
+      "backend_sync_total_ms": 217.151,
+      "backend_sync_union_ms": 217.151
+    }
+  ],
+  "collections": {
+    "original": {
+      "row": {
+        "duration_ms": {
+          "count": 3,
+          "mean": 501.6811083333334,
+          "median": 470.175917,
+          "p50": 470.175917,
+          "p95": 647.165104,
+          "max": 647.165104
+        },
+        "mb_per_s": {
+          "count": 3,
+          "mean": 546.252418857056,
+          "median": 557.5445073253295,
+          "p50": 557.5445073253295,
+          "p95": 676.1476454883281,
+          "max": 676.1476454883281
+        },
+        "service_mean_ms": {
+          "count": 3,
+          "mean": 7.803428486328125,
+          "median": 7.274523716796875,
+          "p50": 7.274523716796875,
+          "p95": 10.092514025390624,
+          "max": 10.092514025390624
+        },
+        "load_mean_ms": {
+          "count": 3,
+          "mean": 0.12938104622395835,
+          "median": 0.1263235546875,
+          "p50": 0.1263235546875,
+          "p95": 0.142656833984375,
+          "max": 0.142656833984375
+        },
+        "commit_mean_ms": {
+          "count": 3,
+          "mean": 6.784038873046875,
+          "median": 6.30650451171875,
+          "p50": 6.30650451171875,
+          "p95": 9.02606041015625,
+          "max": 9.02606041015625
+        },
+        "non_db_mean_ms": {
+          "count": 3,
+          "mean": 0.8900085670572914,
+          "median": 0.8973724648437509,
+          "p50": 0.8973724648437509,
+          "p95": 0.9237967812499992,
+          "max": 0.9237967812499992
+        }
+      },
+      "cached_row": {
+        "duration_ms": {
+          "count": 3,
+          "mean": 673.010943,
+          "median": 586.938072,
+          "p50": 586.938072,
+          "p95": 1037.925549,
+          "max": 1037.925549
+        },
+        "mb_per_s": {
+          "count": 3,
+          "mean": 454.7498500100413,
+          "median": 446.62974256677626,
+          "p50": 446.62974256677626,
+          "p95": 665.0544859404645,
+          "max": 665.0544859404645
+        },
+        "service_mean_ms": {
+          "count": 3,
+          "mean": 10.464933944661459,
+          "median": 9.050676328125,
+          "p50": 9.050676328125,
+          "p95": 16.200616849609375,
+          "max": 16.200616849609375
+        },
+        "load_mean_ms": {
+          "count": 3,
+          "mean": 0.0,
+          "median": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "commit_mean_ms": {
+          "count": 3,
+          "mean": 9.606427422526043,
+          "median": 8.238947029296876,
+          "p50": 8.238947029296876,
+          "p95": 15.338916958984376,
+          "max": 15.338916958984376
+        },
+        "non_db_mean_ms": {
+          "count": 3,
+          "mean": 0.8585065221354163,
+          "median": 0.8616998906249993,
+          "p50": 0.8616998906249993,
+          "p95": 0.902090376953125,
+          "max": 0.902090376953125
+        }
+      },
+      "paired_row_over_cached_duration": {
+        "values": [
+          0.9835935840021274,
+          0.6235178473287587,
+          0.8010656309921569
+        ],
+        "median": 0.8010656309921569,
+        "min": 0.6235178473287587,
+        "max": 0.9835935840021274
+      }
+    },
+    "baseline": {
+      "row": {
+        "duration_ms": {
+          "count": 6,
+          "mean": 285.5248716666667,
+          "median": 281.037335,
+          "p50": 258.70522,
+          "p95": 341.447474,
+          "max": 341.447474
+        },
+        "mb_per_s": {
+          "count": 6,
+          "mean": 938.3064030203979,
+          "median": 938.700187292389,
+          "p50": 864.1081031725508,
+          "p95": 1122.8495081868696,
+          "max": 1122.8495081868696
+        },
+        "service_mean_ms": {
+          "count": 6,
+          "mean": 4.349580388020834,
+          "median": 4.306012073242187,
+          "p50": 3.936745693359375,
+          "p95": 5.115674546875,
+          "max": 5.115674546875
+        },
+        "load_mean_ms": {
+          "count": 6,
+          "mean": 0.11426817415364583,
+          "median": 0.113722859375,
+          "p50": 0.113163666015625,
+          "p95": 0.12026144921875,
+          "max": 0.12026144921875
+        },
+        "commit_mean_ms": {
+          "count": 6,
+          "mean": 3.3825055921223957,
+          "median": 3.3799826435546874,
+          "p50": 3.027465291015625,
+          "p95": 4.0961713984375,
+          "max": 4.0961713984375
+        },
+        "non_db_mean_ms": {
+          "count": 6,
+          "mean": 0.8528066217447917,
+          "median": 0.835592338867188,
+          "p50": 0.8296147910156253,
+          "p95": 0.929867304687499,
+          "max": 0.929867304687499
+        },
+        "owner_cpu_ms": {
+          "count": 6,
+          "mean": 462.14746916666667,
+          "median": 454.3650865,
+          "p50": 451.500982,
+          "p95": 497.952529,
+          "max": 497.952529
+        }
+      },
+      "cached_row": {
+        "duration_ms": {
+          "count": 6,
+          "mean": 285.6722893333333,
+          "median": 292.199002,
+          "p50": 290.733264,
+          "p95": 319.362584,
+          "max": 319.362584
+        },
+        "mb_per_s": {
+          "count": 6,
+          "mean": 926.0505235714571,
+          "median": 897.1645850672944,
+          "p50": 892.6641993179024,
+          "p95": 1118.8514775154981,
+          "max": 1118.8514775154981
+        },
+        "service_mean_ms": {
+          "count": 6,
+          "mean": 4.368911426757812,
+          "median": 4.4580510898437495,
+          "p50": 4.44594234765625,
+          "p95": 4.87550251171875,
+          "max": 4.87550251171875
+        },
+        "load_mean_ms": {
+          "count": 6,
+          "mean": 0.0,
+          "median": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "commit_mean_ms": {
+          "count": 6,
+          "mean": 3.5311182978515623,
+          "median": 3.5405107236328126,
+          "p50": 3.53590194921875,
+          "p95": 4.08888008203125,
+          "max": 4.08888008203125
+        },
+        "non_db_mean_ms": {
+          "count": 6,
+          "mean": 0.8377931289062499,
+          "median": 0.8018804443359375,
+          "p50": 0.7866224296875002,
+          "p95": 0.9443804687499999,
+          "max": 0.9443804687499999
+        },
+        "owner_cpu_ms": {
+          "count": 6,
+          "mean": 444.21735216666667,
+          "median": 426.577635,
+          "p50": 419.050386,
+          "p95": 498.014485,
+          "max": 498.014485
+        }
+      },
+      "paired_row_over_cached_duration": {
+        "values": [
+          0.8245575902291191,
+          1.1281854777662446,
+          1.223730454036208,
+          1.104174490501297,
+          0.9499217040403204,
+          0.8030149759540415
+        ],
+        "median": 1.0270480972708087,
+        "min": 0.8030149759540415,
+        "max": 1.223730454036208
+      }
+    },
+    "sampled": {
+      "row": {
+        "duration_ms": {
+          "count": 4,
+          "mean": 237.68228925,
+          "median": 232.017134,
+          "p50": 223.82066,
+          "p95": 263.740811,
+          "max": 263.740811
+        },
+        "mb_per_s": {
+          "count": 4,
+          "mean": 1108.0600223812244,
+          "median": 1131.2594012223258,
+          "p50": 1091.2953774042644,
+          "p95": 1175.775757732496,
+          "max": 1175.775757732496
+        },
+        "service_mean_ms": {
+          "count": 4,
+          "mean": 3.621003608886719,
+          "median": 3.5704792646484376,
+          "p50": 3.45374145703125,
+          "p95": 4.01098140234375,
+          "max": 4.01098140234375
+        },
+        "load_mean_ms": {
+          "count": 4,
+          "mean": 0.11421727099609374,
+          "median": 0.111630453125,
+          "p50": 0.1113760859375,
+          "p95": 0.12873844921875,
+          "max": 0.12873844921875
+        },
+        "commit_mean_ms": {
+          "count": 4,
+          "mean": 2.685612591796875,
+          "median": 2.6299208232421876,
+          "p50": 2.518571998046875,
+          "p95": 3.0389279921875,
+          "max": 3.0389279921875
+        },
+        "non_db_mean_ms": {
+          "count": 4,
+          "mean": 0.8211737460937499,
+          "median": 0.8321811669921875,
+          "p50": 0.83029973046875,
+          "p95": 0.8433149609374997,
+          "max": 0.8433149609374997
+        },
+        "owner_cpu_ms": {
+          "count": 4,
+          "mean": 442.284979,
+          "median": 447.7529155,
+          "p50": 446.721256,
+          "p95": 455.411209,
+          "max": 455.411209
+        }
+      },
+      "cached_row": {
+        "duration_ms": {
+          "count": 4,
+          "mean": 244.63512075,
+          "median": 228.22477099999998,
+          "p50": 226.60929,
+          "p95": 298.552807,
+          "max": 298.552807
+        },
+        "mb_per_s": {
+          "count": 4,
+          "mean": 1087.0279764958657,
+          "median": 1148.6795852454998,
+          "p50": 1140.548697275184,
+          "p95": 1172.7037141680712,
+          "max": 1172.7037141680712
+        },
+        "service_mean_ms": {
+          "count": 4,
+          "mean": 3.7334444702148435,
+          "median": 3.5133958154296874,
+          "p50": 3.504296673828125,
+          "p95": 4.497187794921875,
+          "max": 4.497187794921875
+        },
+        "load_mean_ms": {
+          "count": 4,
+          "mean": 0.0,
+          "median": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "commit_mean_ms": {
+          "count": 4,
+          "mean": 2.9430739765625,
+          "median": 2.7345497089843747,
+          "p50": 2.730474390625,
+          "p95": 3.6805746015625,
+          "max": 3.6805746015625
+        },
+        "non_db_mean_ms": {
+          "count": 4,
+          "mean": 0.7903704936523438,
+          "median": 0.7895985673828123,
+          "p50": 0.7871765683593748,
+          "p95": 0.8166131933593754,
+          "max": 0.8166131933593754
+        },
+        "owner_cpu_ms": {
+          "count": 4,
+          "mean": 416.01198124999996,
+          "median": 415.4192365,
+          "p50": 414.276325,
+          "p95": 430.513717,
+          "max": 430.513717
+        }
+      },
+      "paired_row_over_cached_duration": {
+        "values": [
+          1.045132895172774,
+          0.883397525718122,
+          0.9838699816763912,
+          1.0012638827878915
+        ],
+        "median": 0.9925669322321413,
+        "min": 0.883397525718122,
+        "max": 1.045132895172774
+      }
+    },
+    "history": {
+      "row": {
+        "duration_ms": {
+          "count": 2,
+          "mean": 263.0841345,
+          "median": 263.0841345,
+          "p50": 238.860479,
+          "p95": 287.30779,
+          "max": 287.30779
+        },
+        "mb_per_s": {
+          "count": 2,
+          "mean": 1004.9463564595051,
+          "median": 1004.9463564595051,
+          "p50": 912.4152185361908,
+          "p95": 1097.4774943828193,
+          "max": 1097.4774943828193
+        },
+        "service_mean_ms": {
+          "count": 2,
+          "mean": 4.0166449160156255,
+          "median": 4.0166449160156255,
+          "p50": 3.59238414453125,
+          "p95": 4.4409056875,
+          "max": 4.4409056875
+        },
+        "load_mean_ms": {
+          "count": 2,
+          "mean": 0.11164349511718749,
+          "median": 0.11164349511718749,
+          "p50": 0.110812505859375,
+          "p95": 0.112474484375,
+          "max": 0.112474484375
+        },
+        "commit_mean_ms": {
+          "count": 2,
+          "mean": 3.088796732421875,
+          "median": 3.088796732421875,
+          "p50": 2.6638722890625,
+          "p95": 3.51372117578125,
+          "max": 3.51372117578125
+        },
+        "non_db_mean_ms": {
+          "count": 2,
+          "mean": 0.8162046884765626,
+          "median": 0.8162046884765626,
+          "p50": 0.8160373710937501,
+          "p95": 0.8163720058593751,
+          "max": 0.8163720058593751
+        },
+        "owner_cpu_ms": {
+          "count": 2,
+          "mean": 440.4130225,
+          "median": 440.4130225,
+          "p50": 440.293836,
+          "p95": 440.532209,
+          "max": 440.532209
+        }
+      },
+      "cached_row": {
+        "duration_ms": {
+          "count": 2,
+          "mean": 227.6275945,
+          "median": 227.6275945,
+          "p50": 219.960967,
+          "p95": 235.294222,
+          "max": 235.294222
+        },
+        "mb_per_s": {
+          "count": 2,
+          "mean": 1152.9432951204722,
+          "median": 1152.9432951204722,
+          "p50": 1114.111505891547,
+          "p95": 1191.7750843493973,
+          "max": 1191.7750843493973
+        },
+        "service_mean_ms": {
+          "count": 2,
+          "mean": 3.4694218515625,
+          "median": 3.4694218515625,
+          "p50": 3.3247721640625,
+          "p95": 3.6140715390625,
+          "max": 3.6140715390625
+        },
+        "load_mean_ms": {
+          "count": 2,
+          "mean": 0.0,
+          "median": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "commit_mean_ms": {
+          "count": 2,
+          "mean": 2.6821182851562497,
+          "median": 2.6821182851562497,
+          "p50": 2.556394263671875,
+          "p95": 2.807842306640625,
+          "max": 2.807842306640625
+        },
+        "non_db_mean_ms": {
+          "count": 2,
+          "mean": 0.78730356640625,
+          "median": 0.78730356640625,
+          "p50": 0.7683779003906248,
+          "p95": 0.8062292324218752,
+          "max": 0.8062292324218752
+        },
+        "owner_cpu_ms": {
+          "count": 2,
+          "mean": 412.6551025,
+          "median": 412.6551025,
+          "p50": 403.892716,
+          "p95": 421.417489,
+          "max": 421.417489
+        }
+      },
+      "paired_row_over_cached_duration": {
+        "values": [
+          1.2210575659609695,
+          1.0859221172636506
+        ],
+        "median": 1.15348984161231,
+        "min": 1.0859221172636506,
+        "max": 1.2210575659609695
+      }
+    }
+  }
+}
