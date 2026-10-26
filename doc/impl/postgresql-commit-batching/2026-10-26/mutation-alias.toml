@@ -1,0 +1,5 @@
+# Scratch-only alias for cargo-mutants example discovery.
+[[bin]]
+name = "persistence_bench_mutation_discovery"
+path = "examples/persistence_bench/main.rs"
+required-features = ["std", "pqxdh", "beacon", "server"]
