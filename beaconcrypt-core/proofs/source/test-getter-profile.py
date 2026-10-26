@@ -6,6 +6,7 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 SPEC = importlib.util.spec_from_file_location(
     "getter_profile", Path(__file__).with_name("getter-profile.py")
@@ -50,11 +51,32 @@ class GetterProfileTests(unittest.TestCase):
 
     def test_identity_value_and_server_value(self):
         for role in ("beacon", "server"):
-            source = getattr(self, role).replace(
-                "&self.identity_key.secret_key", "&self.identity_key.public_key", 1
-            )
+            original = getattr(self, role)
+            member = "identity_key" if role == "beacon" else "identity.identity_key"
+            needle = f"&self.{member}.secret_key"
+            self.assertEqual(original.count(needle), 1)
+            source = original.replace(needle, f"&self.{member}.public_key", 1)
             with self.assertRaises(ValueError):
                 self.compare(**{role: source})
+
+    def test_private_collection_hasher_cannot_be_substituted(self):
+        relative = "beaconcrypt/src/collections.rs"
+        self.assertIn(relative, PROFILE.SOURCE_SHA256)
+        path = PROFILE.ROOT / relative
+        original = Path.read_bytes
+        source = original(path)
+        before = b"SipHasher13::new_with_key(&self.0)"
+        self.assertEqual(source.count(before), 1)
+        changed = source.replace(before, b"SipHasher13::new_with_key(&[0; 16])", 1)
+
+        def read_bytes(candidate):
+            return changed if candidate == path else original(candidate)
+
+        with (
+            mock.patch.object(Path, "read_bytes", read_bytes),
+            self.assertRaisesRegex(ValueError, relative),
+        ):
+            PROFILE.validate()
 
     def test_every_secret_getter_rejects_wrong_field(self):
         for field, (name, secret_type, member) in PROFILE.FIELDS.items():

@@ -86,14 +86,14 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 	(
 		"server",
 		"",
-		"get_shared_secret",
+		"get_shared_secret_with_rng",
 		"lookup.resume(consumed)",
 		"registration Server replay-status gate",
 	),
 	(
 		"server",
 		"",
-		"get_shared_secret",
+		"get_shared_secret_with_rng",
 		"self.consumed_registrations.try_reserve(1).ok()?;",
 		"registration Server consumed-set reservation",
 	),
@@ -339,14 +339,14 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 		"auth",
 		"",
 		"authenticate_init",
-		"libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key)",
+		"beaconcrypt_crypto::crypto_sign::PublicKey::from_bytes(request.public_key)",
 		"Phase-1 actual requested Ed25519 verifier identity",
 	),
 	(
 		"auth",
 		"",
 		"authenticate_init",
-		"libsodium_rs::crypto_sign::verify(request.signed,&public_key)",
+		"beaconcrypt_crypto::crypto_sign::verify(request.signed,&public_key)",
 		"Phase-1 actual requested Ed25519 signature verification",
 	),
 	(
@@ -388,7 +388,7 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 		"pqxdh",
 		"",
 		"execute_agreement",
-		"server_ephemeral=crypto_kx::KeyPair::generate().ok();",
+		"server_ephemeral=crypto_kx::KeyPair::generate_with_rng(rng).ok();",
 		"registration actual fresh ephemeral generation",
 	),
 	(
@@ -409,21 +409,21 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 		"pqxdh",
 		"",
 		"execute_agreement",
-		"DhSecretRole::ServerEphemeral=>server_ephemeral.as_ref().map(|key|key.secret_key.as_bytes()),",
+		"DhSecretRole::ServerEphemeral=>server_ephemeral.as_ref().map(|key|key.secret_key.as_bytes().as_slice()),",
 		"registration generated ephemeral secret-role interpretation",
 	),
 	(
 		"pqxdh",
 		"",
 		"execute_agreement",
-		"DhSecretRole::BeaconPrekey=>keys.beacon_prekey.map(|key|key.as_bytes()),",
+		"DhSecretRole::BeaconPrekey=>{keys.beacon_prekey.map(|key|key.as_bytes().as_slice())}",
 		"registration beacon prekey secret-role interpretation",
 	),
 	(
 		"pqxdh",
 		"",
 		"execute_agreement",
-		"DhSecretRole::BeaconOneTime=>keys.beacon_one_time.map(|key|key.as_bytes()),",
+		"DhSecretRole::BeaconOneTime=>{keys.beacon_one_time.map(|key|key.as_bytes().as_slice())}",
 		"registration beacon one-time secret-role interpretation",
 	),
 	(
@@ -436,14 +436,14 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 	(
 		"server",
 		"",
-		"get_shared_secret",
+		"get_shared_secret_with_rng",
 		"InitPacket::from_slices(registration.identity_key,registration.pre_key,registration.one_time_key,registration.pq_key,registration.mldsa_public_key,registration.signature,)",
 		"registration complete fixed-width init parser mapping",
 	),
 	(
 		"server",
 		"",
-		"get_shared_secret",
+		"get_shared_secret_with_rng",
 		"RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:None,beacon_one_time:None,beacon_kem:None,}",
 		"registration Server local secret handles",
 	),
@@ -820,77 +820,77 @@ const COMPLETION: &[(&str, &str, &str, &str)] = &[
 
 const BEACON_LIFECYCLE: &[(&str, &str, &str)] = &[
 	(
-		"try_new",
+		"try_new_with_rng",
 		"server_pin:auth::fingerprint_pin(server_binding,server_public_key).ok_or(crate::KeyGenError)?",
 		"MLDSA Beacon retains complete selected server pin",
 	),
 	(
-		"get_registration_bundle",
-		"letmutgenerated_onetime=ifmatches!(&self.state,BeaconState::Fresh{..}){Some(crypto_kx::KeyPair::generate().ok()?)}else{None};",
+		"get_registration_bundle_with_rng",
+		"letmutgenerated_onetime=ifmatches!(&self.state,BeaconState::Fresh{..}){Some(crypto_kx::KeyPair::generate_with_rng(rng).ok()?)}else{None};",
 		"registration Fresh one-time generation",
 	),
 	(
-		"get_registration_bundle",
-		"BeaconState::Fresh{control,prekey,pq_key,}=>(*control,prekey.public_key.as_bytes().try_into().ok()?,*pq_key.public_key.as_bytes(),generated_onetime.as_ref()?.public_key.as_bytes().try_into().ok()?,)",
+		"get_registration_bundle_with_rng",
+		"BeaconState::Fresh{control,prekey,pq_key,}=>(*control,*prekey.public_key.as_bytes(),*pq_key.public_key.as_bytes(),*generated_onetime.as_ref()?.public_key.as_bytes(),)",
 		"registration Fresh material selection",
 	),
 	(
-		"get_registration_bundle",
-		"BeaconState::FreshWithCoins{control,prekey,onetime_key,pq_key,}=>(*control,prekey.public_key.as_bytes().try_into().ok()?,*pq_key.public_key.as_bytes(),onetime_key.public_key.as_bytes().try_into().ok()?,)",
+		"get_registration_bundle_with_rng",
+		"BeaconState::FreshWithCoins{control,prekey,onetime_key,pq_key,}=>(*control,*prekey.public_key.as_bytes(),*pq_key.public_key.as_bytes(),*onetime_key.public_key.as_bytes(),)",
 		"registration FreshWithCoins material selection",
 	),
 	(
-		"get_registration_bundle",
+		"get_registration_bundle_with_rng",
 		"_=>returnNone,",
 		"registration ineligible-state rejection",
 	),
 	(
-		"get_registration_bundle",
+		"get_registration_bundle_with_rng",
 		"registration::begin_beacon_init(control,verified_pqxdh::BeaconStartInputs{identity_public_key:*self.identity_pk().as_bytes(),prekey_public_key:prekey_public,pq_public_key:pq_public,},verified_pqxdh::BeaconCoins{one_time_public_key:onetime_public,},self.authentication.server_pin,self.mldsa_public_key(),)",
 		"registration Beacon-start input mapping",
 	),
 	(
-		"get_registration_bundle",
+		"get_registration_bundle_with_rng",
 		"crypto_sign::sign(request.message,self.identity_sk()).ok()",
 		"Phase-1 Beacon actual requested signature",
 	),
 	(
-		"get_registration_bundle",
+		"get_registration_bundle_with_rng",
 		"ifself.identity_pk().as_bytes()==request.public_key",
 		"Phase-1 Beacon actual requested identity",
 	),
 	(
-		"get_registration_bundle",
+		"get_registration_bundle_with_rng",
 		"pending.resume(signed.as_deref())",
 		"Phase-1 Beacon actual signature continuation",
 	),
 	(
-		"get_registration_bundle",
+		"get_registration_bundle_with_rng",
 		"InitKex{identity_key:message.fields.identity_key,pre_key:message.fields.pre_key,one_time_key:message.fields.one_time_key,pq_key:message.fields.pq_key,mldsa_public_key:message.fields.mldsa_public_key,signature:message.signature,}",
 		"Phase-1 Beacon complete serializer mapping",
 	),
 	(
-		"get_registration_bundle",
+		"get_registration_bundle_with_rng",
 		"let(pending,buffer)=ready.publish(buffer).ok()?.into_parts();",
 		"registration completed InitKex serialization",
 	),
 	(
-		"get_registration_bundle",
+		"get_registration_bundle_with_rng",
 		"BeaconState::Fresh{prekey,pq_key,..}=>{letSome(onetime_key)=generated_onetime.take()else{self.state=BeaconState::Fresh{control,prekey,pq_key,};returnNone;};self.state=BeaconState::InitSent{pending,prekey,onetime_key,pq_key,};}",
 		"registration Fresh success transition and restoration",
 	),
 	(
-		"get_registration_bundle",
+		"get_registration_bundle_with_rng",
 		"BeaconState::FreshWithCoins{prekey,onetime_key,pq_key,..}=>{self.state=BeaconState::InitSent{pending,prekey,onetime_key,pq_key,};}",
 		"registration FreshWithCoins success transition",
 	),
 	(
-		"get_registration_bundle",
+		"get_registration_bundle_with_rng",
 		"Some(buffer)",
 		"registration serialized bundle return",
 	),
 	(
-		"new_onetime_keypair",
+		"new_onetime_keypair_with_rng",
 		"letcontrol=match&self.state{BeaconState::Fresh{control,..}=>*control,_=>returnNone,};",
 		"registration post-Init one-time regeneration rejection",
 	),
@@ -918,7 +918,7 @@ const BEACON_LIFECYCLE: &[(&str, &str, &str)] = &[
 
 const SERVER_LIFECYCLE: &[(&str, &str)] = &[
 	(
-		"pubstructRegistrationOutput{registration:beaconcrypt_core::peer::ConsumedRegistration,}",
+		"pubstructRegistrationOutput{registration:beaconcrypt_core::peer::ConsumedRegistration,registration_id:[u8;verified_pqxdh::REGISTRATION_ID_SIZE],}",
 		"initial ratchet RegistrationOutput storage",
 	),
 	(
@@ -938,6 +938,88 @@ const SERVER_LIFECYCLE: &[(&str, &str)] = &[
 		"registration consumed-ID set",
 	),
 ];
+
+// The std entrypoints delegate once, while portable registration preserves the caller's entropy.
+const ENTROPY_DELEGATES: &[(&str, &str, &str, &str)] = &[
+	(
+		"server",
+		"impl ProviderServer for Server",
+		"get_shared_secret",
+		"self.get_shared_secret_with_rng(buffer,&mutbeaconcrypt_crypto::OsRng)",
+	),
+	(
+		"beacon",
+		"impl ProviderBeacon for Beacon",
+		"get_registration_bundle",
+		"self.get_registration_bundle_with_rng(&mutbeaconcrypt_crypto::OsRng)",
+	),
+	(
+		"beacon",
+		"",
+		"new_onetime_keypair",
+		"self.new_onetime_keypair_with_rng(&mutbeaconcrypt_crypto::OsRng)",
+	),
+	(
+		"beacon",
+		"",
+		"try_new",
+		"Self::try_new_with_rng(server_kid,server_id_pk,server_mldsa_pk,&mutbeaconcrypt_crypto::OsRng,)",
+	),
+	(
+		"pqxdh",
+		"",
+		"execute_beacon_agreement",
+		"execute_agreement(effect,keys,&mutNoEntropy)",
+	),
+];
+
+const ENTROPY_REQUESTS: &[(&str, &str, &str, &str)] = &[
+	(
+		"server",
+		"",
+		"get_shared_secret_with_rng",
+		"crate::pqxdh::execute_agreement(effect,crate::pqxdh::RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:None,beacon_one_time:None,beacon_kem:None,},rng,)",
+	),
+	(
+		"pqxdh",
+		"",
+		"execute_agreement",
+		"crypto_kx::KeyPair::generate_with_rng(rng)",
+	),
+	(
+		"pqxdh",
+		"",
+		"execute_agreement",
+		"crypto_kem::mlkem768::encapsulate_with_rng(&key,rng)",
+	),
+	(
+		"beacon",
+		"",
+		"finish_registration",
+		"crate::pqxdh::execute_beacon_agreement(agreement::begin_beacon_agreement(authenticated),crate::pqxdh::RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:Some(&prekey.secret_key),beacon_one_time:Some(&onetime_key.secret_key),beacon_kem:Some(&pq_key.secret_key),},)",
+	),
+];
+
+fn entropy_handoffs(snapshot: &Snapshot) -> Result<(), String> {
+	for &(name, scope, function, expected) in ENTROPY_DELEGATES {
+		if body(snapshot, name, scope, function)? != expected {
+			return Err(format!(
+				"registration exact entropy delegate changed: {name}::{function}"
+			));
+		}
+	}
+	for &(name, scope, function, expected) in ENTROPY_REQUESTS {
+		check(
+			snapshot,
+			name,
+			scope,
+			function,
+			expected,
+			"registration exact entropy request",
+		)?;
+	}
+	Ok(())
+}
 
 pub(super) fn authentication(snapshot: &Snapshot) -> Result<(), String> {
 	for &(scope, function, wanted, label) in AUTHENTICATION {
@@ -989,7 +1071,7 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 	}
 	agreement(snapshot)?;
 	completion(snapshot)?;
-	let accept = body(snapshot, "server", "", "get_shared_secret")?;
+	let accept = body(snapshot, "server", "", "get_shared_secret_with_rng")?;
 	require_ordered_once(
 		&accept,
 		&[
@@ -1004,7 +1086,7 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 			"crate::pqxdh::execute_agreement(effect,",
 			"AgreementEffect::ServerComplete(agreement)=>agreement",
 			"self.consumed_registrations.insert(*pending.request().as_bytes())",
-			"Some(RegistrationOutput{registration})",
+			"Some(RegistrationOutput{registration,registration_id,})",
 		],
 		"registration Server validate-reserve-derive-consume order",
 	)?;
@@ -1012,7 +1094,7 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 	require_ordered_once(
 		&finish,
 		&[
-			"std::mem::replace(&mutself.state,BeaconState::Aborted{control:aborted})",
+			"core::mem::replace(&mutself.state,BeaconState::Aborted{control:aborted})",
 			"decode_response(bytes)",
 			"auth::authenticate_response(pending,packet)",
 			"agreement::begin_beacon_agreement(authenticated)",
@@ -1032,7 +1114,7 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 	require_ordered_once(
 		&publish,
 		&[
-			"letRegistrationOutput{registration}=reg_out;",
+			"letRegistrationOutput{registration,..}=reg_out;",
 			"beaconcrypt_core::peer::begin_completion_lookup(",
 			"letnext_key_id=lookup.request();",
 			"registration_response_len(plaintext.len(),next_key_id)?;",
@@ -1044,7 +1126,7 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 			"execute_write_request(pending.request())",
 			"pending.resume(ciphertext.as_deref())",
 			"auth::execute_hash(&pending.request())",
-			"self.mldsa_identity.sign_requested(&pending.request())",
+			"self.identity.mldsa_identity.sign_requested(&pending.request())",
 			"crate::wire::encode_response(KexResponse{",
 			"beaconcrypt_core::peer::begin_peer_insert(control,ready.publish(buffer).ok()?).ok()?;",
 			"self.known_ids.entry(remote_kid)",
@@ -1125,23 +1207,24 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 
 pub(super) fn lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 	runtime(snapshot)?;
+	entropy_handoffs(snapshot)?;
 	super::peer_effects::validate(snapshot)?;
 	for &(function, wanted, label) in BEACON_LIFECYCLE {
 		check(snapshot, "beacon", "", function, wanted, label)?;
 	}
-	let bundle = body(snapshot, "beacon", "", "get_registration_bundle")?;
+	let bundle = body(snapshot, "beacon", "", "get_registration_bundle_with_rng")?;
 	require_ordered_once(
 		&bundle,
 		&[
 			"crate::wire::encode_init(InitKex{",
 			"ready.publish(buffer).ok()?.into_parts()",
-			"letprevious=std::mem::replace(&mutself.state,fallback);",
+			"letprevious=core::mem::replace(&mutself.state,fallback);",
 			"Some(buffer)",
 		],
 		"registration serialization-to-InitSent order",
 	)?;
 	let (before, after) = bundle
-		.split_once("letprevious=std::mem::replace(&mutself.state,fallback);")
+		.split_once("letprevious=core::mem::replace(&mutself.state,fallback);")
 		.ok_or("registration missing state replacement")?;
 	if before.contains("self.state=BeaconState::") {
 		return Err("registration Beacon state changed before successful serialization".into());
@@ -1170,11 +1253,11 @@ pub(super) fn lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 		snapshot,
 		"server",
 		"",
-		"get_shared_secret",
+		"get_shared_secret_with_rng",
 		"letconsumed=self.consumed_registrations.contains(&registration_id);",
 		"registration Server replay-status polarity",
 	)?;
-	let accept = body(snapshot, "server", "", "get_shared_secret")?;
+	let accept = body(snapshot, "server", "", "get_shared_secret_with_rng")?;
 	let (_, after_insert) = accept
 		.split_once(
 			"letinserted=self.consumed_registrations.insert(*pending.request().as_bytes());",
@@ -1547,7 +1630,10 @@ fn extracted_registration_operand_and_continuation_mutations_are_rejected() {
 				"matches!(&self.state,BeaconState::Fresh{..})",
 				"matches!(&self.state,BeaconState::InitSent{..})",
 			),
-			("Some(crypto_kx::KeyPair::generate().ok()?)", "None"),
+			(
+				"Some(crypto_kx::KeyPair::generate_with_rng(rng).ok()?)",
+				"None",
+			),
 			("_=>returnNone", "_=>unreachable!()"),
 			(
 				"identity_public_key:*self.identity_pk().as_bytes()",
@@ -1613,7 +1699,7 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 		(
 			"server",
 			"",
-			"get_shared_secret",
+			"get_shared_secret_with_rng",
 			"letconsumed=self.consumed_registrations.contains(&registration_id)",
 			"letconsumed=self.known_ids.contains_key(&self.identity_key_kid)",
 		),
@@ -1627,35 +1713,35 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 		(
 			"server",
 			"",
-			"get_shared_secret",
+			"get_shared_secret_with_rng",
 			"lookup.resume(consumed)",
 			"lookup.resume(false)",
 		),
 		(
 			"server",
 			"",
-			"get_shared_secret",
+			"get_shared_secret_with_rng",
 			"self.consumed_registrations.try_reserve(1).ok()?;",
 			"let _ = self.consumed_registrations.capacity();",
 		),
 		(
 			"server",
 			"",
-			"get_shared_secret",
+			"get_shared_secret_with_rng",
 			"self.consumed_registrations.insert(*pending.request().as_bytes())",
 			"self.consumed_registrations.insert([0;64])",
 		),
 		(
 			"server",
 			"",
-			"get_shared_secret",
+			"get_shared_secret_with_rng",
 			"letregistration=pending.resume(inserted)?;",
 			"letregistration=pending.resume(inserted)?; let _late = Some(())?;",
 		),
 		(
 			"server",
 			"",
-			"get_shared_secret",
+			"get_shared_secret_with_rng",
 			"letregistration=pending.resume(inserted)?;",
 			"letregistration=pending.resume(inserted)?; if !inserted { return None; }",
 		),
@@ -1669,23 +1755,23 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 		(
 			"beacon",
 			"",
-			"get_registration_bundle",
+			"get_registration_bundle_with_rng",
 			"letbuffer=crate::wire::encode_init(InitKex{",
 			"self.state = BeaconState::Aborted { control: verified_pqxdh::beacon_abort_fresh(control) }; let buffer = crate::wire::encode_init(InitKex {",
 		),
 		(
 			"beacon",
 			"",
-			"get_registration_bundle",
-			"letprevious=std::mem::replace(&mutself.state,fallback);",
-			"let previous = std::mem::replace(&mut self.state,fallback); let _late = Some(())?;",
+			"get_registration_bundle_with_rng",
+			"letprevious=core::mem::replace(&mutself.state,fallback);",
+			"let previous = core::mem::replace(&mut self.state,fallback); let _late = Some(())?;",
 		),
 		(
 			"beacon",
 			"",
 			"finish_registration",
-			"std::mem::replace(&mutself.state,BeaconState::Aborted{control:aborted})",
-			"std::mem::replace(&mut self.state, replacement_state)",
+			"core::mem::replace(&mutself.state,BeaconState::Aborted{control:aborted})",
+			"core::mem::replace(&mut self.state, replacement_state)",
 		),
 		(
 			"pqxdh",
@@ -1885,7 +1971,7 @@ fn registration_wire_fields_and_attached_signature_roles_cannot_be_substituted()
 		(
 			"server",
 			"",
-			"get_shared_secret",
+			"get_shared_secret_with_rng",
 			&[
 				"registration.identity_key",
 				"registration.pre_key",
@@ -1896,7 +1982,7 @@ fn registration_wire_fields_and_attached_signature_roles_cannot_be_substituted()
 		(
 			"beacon",
 			"",
-			"get_registration_bundle",
+			"get_registration_bundle_with_rng",
 			&[
 				"message.fields.identity_key",
 				"message.fields.pre_key",
@@ -1953,4 +2039,42 @@ fn registration_wire_fields_and_attached_signature_roles_cannot_be_substituted()
 		}
 	}
 	assert_eq!(checked, 54);
+}
+
+#[test]
+fn registration_entropy_delegates_and_requests_cannot_be_substituted() {
+	let baseline = Snapshot::production();
+	lifecycle(&baseline).unwrap();
+	let mut checked = 0;
+	for &(name, scope, function, expected) in ENTROPY_DELEGATES.iter().chain(ENTROPY_REQUESTS) {
+		for replacement in [
+			"panic!(\"entropy handoff omitted\")".to_owned(),
+			format!("{expected}{expected}"),
+			expected
+				.replace("(rng)", "(replacement_rng)")
+				.replace(",rng)", ",replacement_rng)")
+				.replace(",rng,)", ",replacement_rng,)")
+				.replace("OsRng", "ReplacementRng")
+				.replace("NoEntropy", "ReplacementRng"),
+		] {
+			// The Beacon completion handoff has no RNG operand, so replace its retained keys.
+			let replacement = if replacement == expected {
+				expected.replace(
+					"identity_secret:self.identity_sk()",
+					"identity_secret:replacement_secret",
+				)
+			} else {
+				replacement
+			};
+			assert_ne!(replacement, expected);
+			let mut changed = baseline.clone();
+			replace_contract(&mut changed, name, scope, function, expected, &replacement);
+			assert!(
+				lifecycle(&changed).is_err(),
+				"entropy handoff survived {name}::{function}"
+			);
+			checked += 1;
+		}
+	}
+	assert_eq!(checked, 27);
 }

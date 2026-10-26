@@ -224,8 +224,8 @@ class InterpretedBeaconSourceGate(unittest.TestCase):
     def test_commitment_comparison_uses_the_supplied_record_bytes(self):
         self.mutate_source(
             "beaconcrypt/src/beacon.rs",
-            "memcmp(&commitment, pending.supplied_commitment())",
-            "memcmp(&commitment, &commitment)",
+            "&commitment,\n\t\t\t\t\t\t\tpending.supplied_commitment(),",
+            "&commitment,\n\t\t\t\t\t\t\t&commitment,",
         )
 
     def test_actual_aead_plaintext_is_the_only_completion_reply(self):

@@ -93,6 +93,80 @@ class InterpretedAdmissionSourceGate(unittest.TestCase):
         with patch.object(Path, "read_text", read_text), self.assertRaises(ValueError):
             CHECKER.check_source_order()
 
+    def test_hosted_wrapper_cannot_skip_the_portable_acceptance_path(self):
+        self.mutate_source(
+            "beaconcrypt/src/server.rs",
+            "self.get_shared_secret_with_rng(buffer, &mut beaconcrypt_crypto::OsRng)",
+            "None",
+        )
+
+    def test_hosted_wrapper_cannot_change_the_input(self):
+        self.mutate_source(
+            "beaconcrypt/src/server.rs",
+            "self.get_shared_secret_with_rng(buffer, &mut beaconcrypt_crypto::OsRng)",
+            "self.get_shared_secret_with_rng(&[], &mut beaconcrypt_crypto::OsRng)",
+        )
+
+    def test_acceptance_forwards_the_supplied_rng(self):
+        self.mutate_source(
+            "beaconcrypt/src/server.rs",
+            "beacon_kem: None,\n\t\t\t},\n\t\t\trng,",
+            "beacon_kem: None,\n\t\t\t},\n\t\t\t&mut beaconcrypt_crypto::OsRng,",
+        )
+
+    def test_ephemeral_generation_and_encapsulation_use_caller_entropy(self):
+        for old, new in (
+            (
+                "server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok();",
+                "server_ephemeral = crypto_kx::KeyPair::generate().ok();",
+            ),
+            (
+                "crypto_kem::mlkem768::encapsulate_with_rng(&key, rng)",
+                "crypto_kem::mlkem768::encapsulate(&key)",
+            ),
+        ):
+            with self.subTest(primitive=old):
+                self.mutate_source("beaconcrypt/src/pqxdh.rs", old, new)
+
+    def test_beacon_completion_cannot_replace_the_retained_keys(self):
+        self.mutate_source(
+            "beaconcrypt/src/pqxdh.rs",
+            "execute_agreement(effect, keys, &mut NoEntropy)",
+            "execute_agreement(effect, substitute_keys(), &mut NoEntropy)",
+        )
+
+    def test_beacon_completion_cannot_obtain_unrequested_entropy(self):
+        self.mutate_source(
+            "beaconcrypt/src/pqxdh.rs",
+            "execute_agreement(effect, keys, &mut NoEntropy)",
+            "execute_agreement(effect, keys, &mut beaconcrypt_crypto::OsRng)",
+        )
+
+    def test_beacon_entropy_sentinel_cannot_synthesize_success(self):
+        path = CHECKER.HERE.parents[2] / "beaconcrypt/src/pqxdh.rs"
+        source = path.read_text()
+        for method, reply in (
+            ("try_next_u32", "Ok(0)"),
+            ("try_next_u64", "Ok(0)"),
+            ("try_fill_bytes", "Ok(())"),
+        ):
+            start = source.index(f"fn {method}")
+            end = source.index("\n\t}", start)
+            old = source[start:end]
+            with self.subTest(method=method):
+                self.mutate_source(
+                    "beaconcrypt/src/pqxdh.rs",
+                    old,
+                    old.replace("Err(beaconcrypt_crypto::CryptoError)", reply),
+                )
+
+    def test_persisted_registration_id_is_the_core_consumed_identifier(self):
+        self.mutate_source(
+            "beaconcrypt/src/server.rs",
+            "let registration_id = *pending.request().as_bytes();",
+            "let registration_id = [0; verified_pqxdh::REGISTRATION_ID_SIZE];",
+        )
+
     def test_request_field_projection_cannot_swap_signed_roles(self):
         self.mutate_source(
             "beaconcrypt/src/server.rs",
@@ -103,8 +177,8 @@ class InterpretedAdmissionSourceGate(unittest.TestCase):
     def test_private_one_time_handle_is_selected_for_the_last_dh(self):
         self.mutate_source(
             "beaconcrypt/src/pqxdh.rs",
-            "DhSecretRole::BeaconOneTime => keys.beacon_one_time.map(|key| key.as_bytes())",
-            "DhSecretRole::BeaconOneTime => keys.beacon_prekey.map(|key| key.as_bytes())",
+            "keys.beacon_one_time.map(|key| key.as_bytes().as_slice())",
+            "keys.beacon_prekey.map(|key| key.as_bytes().as_slice())",
         )
 
     def test_root_kdf_uses_the_retained_domain(self):

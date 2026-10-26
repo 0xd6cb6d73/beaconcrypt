@@ -6,6 +6,7 @@ set -euo pipefail
 core_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 repo_dir="$(cd -- "$core_dir/.." && pwd)"
 adapter_dir="$repo_dir/beaconcrypt"
+crypto_dir="$repo_dir/beaconcrypt-crypto"
 parser_dir="$repo_dir/beaconcrypt-parse"
 cd "$core_dir"
 
@@ -28,7 +29,7 @@ while IFS=$'\t' read -r category expected path extra ||
 	[[ -n "${category:-}${expected:-}${path:-}${extra:-}" ]]; do
 	[[ -z "${category:-}" || "$category" == \#* ]] && continue
 	[[ -z "${extra:-}" ]] || fail "malformed manifest entry for $path"
-	[[ "$category" =~ ^(adapter-rust|adapter-schema|parser-rust|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|inventory|lean-control|lean-dependency-overlay|validation)$ ]] ||
+	[[ "$category" =~ ^(adapter-rust|adapter-schema|crypto-rust|parser-rust|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|inventory|lean-control|lean-dependency-overlay|validation)$ ]] ||
 		fail "unknown manifest category: $category"
 	[[ "$expected" =~ ^[0-9a-f]{64}$ ]] || fail "invalid SHA-256 for $path"
 	[[ -n "$path" && -f "$path" ]] || fail "missing reviewed file: $path"
@@ -43,11 +44,12 @@ while IFS=$'\t' read -r category expected path extra ||
 done < "$manifest"
 
 declare -A expected_category_counts=(
-	[adapter-rust]=14
+	[adapter-rust]=19
 	[adapter-schema]=1
+	[crypto-rust]=8
 	[parser-rust]=5
 	[core-rust]=17
-	[control]=17
+	[control]=19
 	[generated-lean]=13
 	[generated-proverif]=1
 	[handwritten-lean]=2063
@@ -78,7 +80,7 @@ compare_set() {
 	fi
 }
 
-symlink_path="$(find "$adapter_dir/src" "$core_dir/src" "$parser_dir" -type l -print -quit)"
+symlink_path="$(find "$adapter_dir/src" "$crypto_dir/src" "$core_dir/src" "$parser_dir" -type l -print -quit)"
 [[ -z "$symlink_path" ]] || fail "symlink in monitored tree: $symlink_path"
 tracked_proof_symlink="$(git -C "$repo_dir" ls-files -s -- beaconcrypt-core/proofs |
 	awk '$1 == "120000" { print $4; exit }')"
@@ -87,12 +89,14 @@ tracked_proof_symlink="$(git -C "$repo_dir" ls-files -s -- beaconcrypt-core/proo
 
 printf '%s\n' \
 	../.cargo/config.toml \
+	../.config/nextest.toml \
 	../.gitattributes \
 	../.github/workflows/formal-verification.yml \
 	../.gitignore \
 	../Cargo.lock \
 	../Cargo.toml \
 	../beaconcrypt/Cargo.toml \
+	../beaconcrypt-crypto/Cargo.toml \
 	../beaconcrypt-parse/Cargo.toml \
 	../beaconcrypt-parse/README.md \
 	../beaconcrypt-parse/generated/README.md \
@@ -213,6 +217,10 @@ fi
 find "$adapter_dir/src" -type f -name '*.rs' \
 	-printf '../beaconcrypt/src/%P\n' > "$tmp_dir/adapter-rust"
 compare_set adapter-rust "$tmp_dir/adapter-rust"
+
+find "$crypto_dir/src" -type f -name '*.rs' \
+	-printf '../beaconcrypt-crypto/src/%P\n' > "$tmp_dir/crypto-rust"
+compare_set crypto-rust "$tmp_dir/crypto-rust"
 
 find "$parser_dir/schema" -type f -name '*.cddl' \
 	-printf '../beaconcrypt-parse/schema/%P\n' > "$tmp_dir/adapter-schema"
@@ -1465,13 +1473,14 @@ require_line_count 1 '^#\[path = "fidelity/registration_effects\.rs"\]$' \
 	"$fidelity_test" "extracted registration fidelity module import"
 require_line_count 1 '^mod registration_effects;$' "$fidelity_test" \
 	"extracted registration fidelity module binding"
-require_line_count 4 '^#\[test\]$' "$fidelity_effects" \
+require_line_count 5 '^#\[test\]$' "$fidelity_effects" \
 	"extracted registration fidelity tests"
 for registration_fidelity_test in \
 	extracted_registration_operand_and_continuation_mutations_are_rejected \
 	registration_failure_bypass_and_publication_order_controls_are_rejected \
 	registration_capabilities_keep_private_provenance_and_native_erasure \
-	registration_wire_fields_and_attached_signature_roles_cannot_be_substituted; do
+	registration_wire_fields_and_attached_signature_roles_cannot_be_substituted \
+	registration_entropy_delegates_and_requests_cannot_be_substituted; do
 	require_line_count 1 "^fn ${registration_fidelity_test}\\(\\) \\{$" \
 		"$fidelity_effects" "extracted registration ${registration_fidelity_test} test"
 done
@@ -1515,7 +1524,9 @@ expected_counts = {'ADDITIONAL': 58,
  'BEACON_LIFECYCLE': 19,
  'SERVER_LIFECYCLE': 5,
  'DH_REQUESTS': 8,
- 'NATIVE_AGREEMENT': 7}
+ 'NATIVE_AGREEMENT': 7,
+ 'ENTROPY_DELEGATES': 5,
+ 'ENTROPY_REQUESTS': 4}
 tables = {}
 for name, count in expected_counts.items():
     found = re.search(r"^const " + name + r":.*?= &\[(.*?)^\];", source, re.M | re.S)
@@ -1721,6 +1732,42 @@ reviewed = {'AUTHENTICATION': [("impl<'a> InitPacket",
                       'crypto_kdf::hkdf::sha512::extract(None,request.input)',
                       'crypto_kdf::hkdf::sha512::expand(32,Some(request.info),&prk)',
                       'pending.resume(root)']}
+reviewed.update({'ENTROPY_DELEGATES': [('server',
+                        'impl ProviderServer for Server',
+                        'get_shared_secret',
+                        'self.get_shared_secret_with_rng(buffer,&mutbeaconcrypt_crypto::OsRng)'),
+                       ('beacon',
+                        'impl ProviderBeacon for Beacon',
+                        'get_registration_bundle',
+                        'self.get_registration_bundle_with_rng(&mutbeaconcrypt_crypto::OsRng)'),
+                       ('beacon',
+                        '',
+                        'new_onetime_keypair',
+                        'self.new_onetime_keypair_with_rng(&mutbeaconcrypt_crypto::OsRng)'),
+                       ('beacon',
+                        '',
+                        'try_new',
+                        'Self::try_new_with_rng(server_kid,server_id_pk,server_mldsa_pk,&mutbeaconcrypt_crypto::OsRng,)'),
+                       ('pqxdh',
+                        '',
+                        'execute_beacon_agreement',
+                        'execute_agreement(effect,keys,&mutNoEntropy)')],
+ 'ENTROPY_REQUESTS': [('server',
+                       '',
+                       'get_shared_secret_with_rng',
+                       'crate::pqxdh::execute_agreement(effect,crate::pqxdh::RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:None,beacon_one_time:None,beacon_kem:None,},rng,)'),
+                      ('pqxdh',
+                       '',
+                       'execute_agreement',
+                       'crypto_kx::KeyPair::generate_with_rng(rng)'),
+                      ('pqxdh',
+                       '',
+                       'execute_agreement',
+                       'crypto_kem::mlkem768::encapsulate_with_rng(&key,rng)'),
+                      ('beacon',
+                       '',
+                       'finish_registration',
+                       'crate::pqxdh::execute_beacon_agreement(agreement::begin_beacon_agreement(authenticated),crate::pqxdh::RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:Some(&prekey.secret_key),beacon_one_time:Some(&onetime_key.secret_key),beacon_kem:Some(&pq_key.secret_key),},)')]})
 for name, rows in reviewed.items():
     require(tables[name] == rows, f"reviewed {name} operands and order")
 selected_additional = [('core-pqxdh',
@@ -1730,12 +1777,12 @@ selected_additional = [('core-pqxdh',
   'registration consumed root transcript is cleared'),
  ('server',
   '',
-  'get_shared_secret',
+  'get_shared_secret_with_rng',
   'lookup.resume(consumed)',
   'registration Server replay-status gate'),
  ('server',
   '',
-  'get_shared_secret',
+  'get_shared_secret_with_rng',
   'self.consumed_registrations.try_reserve(1).ok()?;',
   'registration Server consumed-set reservation'),
  ('beacon',
@@ -1796,12 +1843,12 @@ selected_additional = [('core-pqxdh',
  ('auth',
   '',
   'authenticate_init',
-  'libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key)',
+  'beaconcrypt_crypto::crypto_sign::PublicKey::from_bytes(request.public_key)',
   'Phase-1 actual requested Ed25519 verifier identity'),
  ('auth',
   '',
   'authenticate_init',
-  'libsodium_rs::crypto_sign::verify(request.signed,&public_key)',
+  'beaconcrypt_crypto::crypto_sign::verify(request.signed,&public_key)',
   'Phase-1 actual requested Ed25519 signature verification'),
  ('auth',
   '',
@@ -1831,7 +1878,7 @@ selected_additional = [('core-pqxdh',
  ('pqxdh',
   '',
   'execute_agreement',
-  'server_ephemeral=crypto_kx::KeyPair::generate().ok();',
+  'server_ephemeral=crypto_kx::KeyPair::generate_with_rng(rng).ok();',
   'registration actual fresh ephemeral generation'),
  ('pqxdh',
   '',
@@ -1846,17 +1893,17 @@ selected_additional = [('core-pqxdh',
  ('pqxdh',
   '',
   'execute_agreement',
-  'DhSecretRole::ServerEphemeral=>server_ephemeral.as_ref().map(|key|key.secret_key.as_bytes()),',
+  'DhSecretRole::ServerEphemeral=>server_ephemeral.as_ref().map(|key|key.secret_key.as_bytes().as_slice()),',
   'registration generated ephemeral secret-role interpretation'),
  ('pqxdh',
   '',
   'execute_agreement',
-  'DhSecretRole::BeaconPrekey=>keys.beacon_prekey.map(|key|key.as_bytes()),',
+  'DhSecretRole::BeaconPrekey=>{keys.beacon_prekey.map(|key|key.as_bytes().as_slice())}',
   'registration beacon prekey secret-role interpretation'),
  ('pqxdh',
   '',
   'execute_agreement',
-  'DhSecretRole::BeaconOneTime=>keys.beacon_one_time.map(|key|key.as_bytes()),',
+  'DhSecretRole::BeaconOneTime=>{keys.beacon_one_time.map(|key|key.as_bytes().as_slice())}',
   'registration beacon one-time secret-role interpretation'),
  ('beacon',
   '',
@@ -1865,12 +1912,12 @@ selected_additional = [('core-pqxdh',
   'registration Beacon secret handles belong to pending request'),
  ('server',
   '',
-  'get_shared_secret',
+  'get_shared_secret_with_rng',
   'InitPacket::from_slices(registration.identity_key,registration.pre_key,registration.one_time_key,registration.pq_key,registration.mldsa_public_key,registration.signature,)',
   'registration complete fixed-width init parser mapping'),
  ('server',
   '',
-  'get_shared_secret',
+  'get_shared_secret_with_rng',
   'RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:None,beacon_one_time:None,beacon_kem:None,}',
   'registration Server local secret handles'),
  ('server',
@@ -1918,7 +1965,7 @@ for name, call in [
 
 for name, statements in {
     "runtime": ["authentication(snapshot)?;", "inADDITIONAL{check(snapshot,name,scope,function,wanted,label)?;}", "agreement(snapshot)?;", "completion(snapshot)?;"],
-    "lifecycle": ["runtime(snapshot)?;", "inBEACON_LIFECYCLE", "inSERVER_LIFECYCLE"],
+    "lifecycle": ["runtime(snapshot)?;", ";entropy_handoffs(snapshot)?;", "inBEACON_LIFECYCLE", "inSERVER_LIFECYCLE"],
     "authentication": ["inAUTHENTICATION", "inNATIVE_AUTHENTICATION"],
     "agreement": ["inAGREEMENT", "inDH_REQUESTS", "inNATIVE_AGREEMENT"],
     "completion": ["inCOMPLETION"],
@@ -1957,13 +2004,42 @@ capabilities = function(source, "registration_capabilities_keep_private_provenan
 for statement in ["pubstructAuthenticatedInit", "pubstructAuthenticatedResponse", "pubstructBeaconPending", "ZeroizeOnDrop"]:
     require(statement in capabilities, f"private capability and native erasure control: {statement}")
 require(capabilities.count(r"\npubstructRootKeyInput") == 2, "native erasure control mutates the actual RootKeyInput declaration")
-require(source.count("lifecycle(&baseline).unwrap();") == 4, "every new matrix checks its positive baseline")
-require(source.count("lifecycle(&changed).is_err()") == 6, "all six new negative-control dispatches reject their mutant")
+require(source.count("lifecycle(&baseline).unwrap();") == 5, "every new matrix checks its positive baseline")
+require(source.count("lifecycle(&changed).is_err()") == 7, "all seven new negative-control dispatches reject their mutant")
+
+# Portable entrypoints preserve the caller's RNG and retained keys; hosted wrappers delegate once.
+entropy = function(source, "entropy_handoffs")
+for statement in [
+    "inENTROPY_DELEGATES{",
+    'body(snapshot,name,scope,function)?!=expected',
+    "inENTROPY_REQUESTS{",
+    'check(snapshot,name,scope,function,expected,"registrationexactentropyrequest",)?;',
+]:
+    once(entropy, statement, f"actual entropy delegate/request guard: {statement}")
+entropy_matrix = function(source, "registration_entropy_delegates_and_requests_cannot_be_substituted")
+for statement in [
+    "lifecycle(&baseline).unwrap();",
+    "inENTROPY_DELEGATES.iter().chain(ENTROPY_REQUESTS){",
+    '"panic!(\\"entropyhandoffomitted\\")".to_owned()',
+    'format!("{expected}{expected}")',
+    '.replace("(rng)","(replacement_rng)")',
+    '.replace(",rng)",",replacement_rng)")',
+    '.replace(",rng,)",",replacement_rng,)")',
+    '.replace("OsRng","ReplacementRng")',
+    '.replace("NoEntropy","ReplacementRng")',
+    'expected.replace("identity_secret:self.identity_sk()","identity_secret:replacement_secret",)',
+    "assert_ne!(replacement,expected);",
+    "replace_contract(&mutchanged,name,scope,function,expected,&replacement);",
+    "lifecycle(&changed).is_err()",
+    "checked+=1;",
+    "assert_eq!(checked,27);",
+]:
+    once(entropy_matrix, statement, f"27 entropy omission/duplication/substitution controls: {statement}")
 
 # Actual core-owned record continuations supersede the complete-record callback seam.
 # Pin every reviewed body/field/mutation tuple, plus execution of all validators and controls.
 record_pins = {'BODIES': {'count': 58,
-            'sha256': '27ac54347b73b9856c5bc9957ee3814af7975d7e8a1da86e7d67646fac6cd0af'},
+            'sha256': '75c4f4b4291e130dc62b77cdf0c20da99512b326e7968b9a7daf5ab54d1f9fd9'},
  'DECLARATIONS': {'count': 11,
                   'sha256': 'd146e391f621db1b6c2ad9794486fd5da41470811b93474bcae8dbbedf0c81b2'},
  'MIGRATED': {'count': 87,
@@ -2006,9 +2082,9 @@ for name, count in [("BODY_MUTATION_COUNT", 116), ("DECLARATION_MUTATION_COUNT",
 # Core peer owners bind actual replay and vacant-insertion replies to one-use continuations.
 # The native collection implementation remains an explicit boundary; retain exact handoffs.
 peer_pins = {'BODIES': {'count': 30,
-            'sha256': 'c43a187993358b3d2be4ed90521cb973ff980d77e7735dced2daad19ff1eb0ce'},
+            'sha256': 'f0c954ed895ae3f9b745d1fd4412018920831608ac820e168a717f1686bf5462'},
  'DECLARATIONS': {'count': 10,
-                  'sha256': '498b374eb32ee0e41abccf9c656f4965058ee2766bffbe8483f2ee358eb7567a'}}
+                  'sha256': '71e963f60474583e8e15c930b5af95ba8098f8b59df559cb34a458dc0647e4bb'}}
 for name, pin in peer_pins.items():
     found = re.search(r"^const " + name + r":.*?= &\[(.*?)^\];", peers, re.M | re.S)
     require(found is not None, f"reviewed peer {name} table")
@@ -2068,7 +2144,7 @@ for statement in ["if!declaration{breakstart;}", "b';'ifparentheses==0&&brackets
     once(function(transport, "replace_body"), statement, f"transport source mutation skips trait declarations: {statement}")
 once(function(transport, "replace_body"), "source.replace_range(open+1..end-1,body);", "transport mutations replace the actual Rust body")
 
-print("Registration/record/peer/transport fidelity inventory: 56 synchronized inputs, 32+4+3+2+1 tests, 593 registration plus 214 record plus 104 peer plus 61 transport negative controls; 87 old names retained")
+print("Registration/record/peer/transport fidelity inventory: 56 synchronized inputs, 32+5+3+2+1 tests, 620 registration plus 214 record plus 104 peer plus 61 transport negative controls; 87 old names retained")
 PY_REGISTRATION_FIDELITY
 
 require_line_count 1 \

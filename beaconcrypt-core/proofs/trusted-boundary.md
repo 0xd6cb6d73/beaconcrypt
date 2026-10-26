@@ -59,7 +59,8 @@ a human performed a sound review.
 
 The reviewed baseline has:
 
-- fourteen `adapter-rust` whole-file review units: every `../beaconcrypt/src/*.rs` file, including authentication, persistence and CBOR allocation boundaries;
+- nineteen `adapter-rust` whole-file review units: every `../beaconcrypt/src/*.rs` file, including authentication, collection adapters, snapshot/row persistence, bindings and CBOR allocation boundaries;
+- eight `crypto-rust` whole-file review units: every Rust source under `../beaconcrypt-crypto/src/`, with its Cargo manifest and the active nextest configuration in the control inventory;
 - five `parser-rust` whole-file review units: the public parser wrapper, preflight tests and three generated CBOR modules; one `adapter-schema` review unit for `../beaconcrypt-parse/schema/transport.cddl`, with the package manifest and generator provenance in the control inventory;
 - seventeen `core-rust` review units: thirteen crate-root modules plus `src/ratchet/{control,refined,concrete}.rs` and `src/pqxdh/concrete.rs`, all inside the complete default Lean translation boundary;
 - no `hax_lib::opaque` or `hax_lib::opaque_type` annotation in the protocol
@@ -73,9 +74,7 @@ The reviewed baseline has:
   required positive results, reachability witnesses, and deliberate negative
   compromise results.
 
-The core owns deterministic protocol decisions. CBOR, serde,
-libsodium, ML-KEM, allocation, entropy, persistence mechanics, erasure, and
-language bindings remain outside extraction.
+The core owns deterministic protocol decisions. CBOR, serde, RustCrypto/Dalek primitives, ML-KEM, allocation, entropy, persistence mechanics, erasure and language bindings remain outside extraction. The [2026-10-26 source migration](../../doc/impl/pr17-proof-source-migration.md) retains exact source/negative-control gates for the current adapter and its hosted RNG delegates, while keeping those external primitive and compiler obligations explicit.
 
 ## Opaque Rust and adapter functions
 

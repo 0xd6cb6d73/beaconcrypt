@@ -284,11 +284,27 @@ def check_record_effect_source(root):
 def check_source_order():
     """Reviewed interpreter/core drift checks for the retained classical projection."""
     root = HERE.parents[2]
-    source_order(
+    wrapper = rust_body(
         root,
         "beaconcrypt/src/server.rs",
         "fn get_shared_secret(",
+        "impl ProviderServer for Server {",
+    )
+    if wrapper != "".join(
+        """fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput> {
+        self.get_shared_secret_with_rng(buffer, &mut beaconcrypt_crypto::OsRng)
+        }""".split()
+    ):
+        raise ValueError(
+            "hosted registration must delegate the exact buffer and OS entropy"
+        )
+    source_order(
+        root,
+        "beaconcrypt/src/server.rs",
+        "pub fn get_shared_secret_with_rng<",
         [
+            "R: TryCryptoRng + ?Sized",
+            "rng: &mut R",
             "let control = self.control;",
             "let registration = decode_init(buffer)?;",
             "InitPacket::from_slices(registration.identity_key, registration.pre_key, registration.one_time_key, registration.pq_key, registration.mldsa_public_key, registration.signature,)",
@@ -298,12 +314,14 @@ def check_source_order():
             "let effect = lookup.resume(consumed);",
             "if matches!(effect, AgreementEffect::Rejected(_)) { return None; }",
             "self.consumed_registrations.try_reserve(1)",
-            "crate::pqxdh::execute_agreement(effect, crate::pqxdh::RegistrationKeys { identity_secret: self.identity_sk(), beacon_prekey: None, beacon_one_time: None, beacon_kem: None, },)",
+            "crate::pqxdh::execute_agreement(effect, crate::pqxdh::RegistrationKeys { identity_secret: self.identity_sk(), beacon_prekey: None, beacon_one_time: None, beacon_kem: None, }, rng,)",
             "AgreementEffect::ServerComplete(agreement) => agreement,",
+            "let pending = beaconcrypt_core::peer::begin_registration_insert(agreement);",
+            "let registration_id = *pending.request().as_bytes();",
             "self.consumed_registrations.insert(*pending.request().as_bytes())",
-            "Some(RegistrationOutput { registration })",
+            "let registration = pending.resume(inserted)?;",
+            "Some(RegistrationOutput { registration, registration_id, })",
         ],
-        "impl ProviderServer for Server {",
     )
     source_order(
         root,
@@ -318,8 +336,8 @@ def check_source_order():
             "InitAuthentication::MldsaVerificationRequested(pending)",
             "let verified = verify_requested(&pending.request()); pending.resume(verified)",
             "InitAuthentication::Ed25519VerificationRequested(pending)",
-            "crypto_sign::PublicKey::from_bytes(request.public_key)",
-            "crypto_sign::verify(request.signed, &public_key)",
+            "beaconcrypt_crypto::crypto_sign::PublicKey::from_bytes(request.public_key)",
+            "beaconcrypt_crypto::crypto_sign::verify(request.signed, &public_key)",
             "pending.resume(opened.as_deref())",
             "InitAuthentication::ServerFingerprintRequested(pending)",
             "InitAuthentication::BeaconFingerprintRequested(pending)",
@@ -413,22 +431,25 @@ def check_source_order():
         "beaconcrypt/src/pqxdh.rs",
         "pub(crate) fn execute_agreement",
         [
+            "R: beaconcrypt_crypto::TryCryptoRng + ?Sized",
+            "rng: &mut R",
+            "use beaconcrypt_crypto::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign};",
             "AgreementEffect::ConvertPublic(pending)",
             "crypto_sign::PublicKey::from_bytes(pending.public_key())",
             "crypto_sign::ed25519_pk_to_curve25519(&key)",
             "AgreementEffect::ConvertSecret(pending)",
             "crypto_sign::ed25519_sk_to_curve25519(keys.identity_secret)",
             "AgreementEffect::GenerateEphemeral(pending)",
-            "server_ephemeral = crypto_kx::KeyPair::generate().ok();",
+            "server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok();",
             "AgreementEffect::Encapsulate(pending)",
-            "crypto_kem::mlkem768::encapsulate(&key)",
+            "crypto_kem::mlkem768::encapsulate_with_rng(&key, rng)",
             "AgreementEffect::Decapsulate(pending)",
             "crypto_kem::mlkem768::decapsulate(&ciphertext, keys.beacon_kem?)",
             "AgreementEffect::Dh(pending)",
             "DhSecretRole::LocalIdentity => { local_identity.as_ref().map(|key| key.as_slice()) }",
-            "DhSecretRole::ServerEphemeral => server_ephemeral.as_ref().map(|key| key.secret_key.as_bytes())",
-            "DhSecretRole::BeaconPrekey => keys.beacon_prekey.map(|key| key.as_bytes())",
-            "DhSecretRole::BeaconOneTime => keys.beacon_one_time.map(|key| key.as_bytes())",
+            "DhSecretRole::ServerEphemeral => server_ephemeral.as_ref().map(|key| key.secret_key.as_bytes().as_slice())",
+            "DhSecretRole::BeaconPrekey => { keys.beacon_prekey.map(|key| key.as_bytes().as_slice()) }",
+            "DhSecretRole::BeaconOneTime => { keys.beacon_one_time.map(|key| key.as_bytes().as_slice()) }",
             "crypto_scalarmult::scalarmult(secret, request.public_key)",
             "AgreementEffect::RootKdf(pending)",
             "crypto_kdf::hkdf::sha512::extract(None, request.input)",
@@ -437,6 +458,40 @@ def check_source_order():
             "pending.resume(root)",
         ],
     )
+    # Beacon completion has no fresh sampling step: any unexpected request
+    # must fail closed rather than silently introducing a second RNG source.
+    beacon = rust_body(
+        root, "beaconcrypt/src/pqxdh.rs", "pub(crate) fn execute_beacon_agreement<"
+    )
+    if beacon != "".join("""pub(crate) fn execute_beacon_agreement<'a>(
+        effect: beaconcrypt_core::agreement::AgreementEffect<'a>,
+        keys: RegistrationKeys<'_>,
+        ) -> beaconcrypt_core::agreement::AgreementEffect<'a> {
+        execute_agreement(effect, keys, &mut NoEntropy)
+        }""".split()):
+        raise ValueError(
+            "Beacon agreement must delegate the exact effect and retained keys"
+        )
+    no_entropy = rust_body(
+        root,
+        "beaconcrypt/src/pqxdh.rs",
+        "impl beaconcrypt_crypto::TryRng for NoEntropy",
+    )
+    if no_entropy != "".join("""impl beaconcrypt_crypto::TryRng for NoEntropy {
+        type Error = beaconcrypt_crypto::CryptoError;
+        fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
+        Err(beaconcrypt_crypto::CryptoError)
+        }
+        fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+        Err(beaconcrypt_crypto::CryptoError)
+        }
+        fn try_fill_bytes(&mut self, _bytes: &mut [u8]) -> Result<(), Self::Error> {
+        Err(beaconcrypt_crypto::CryptoError)
+        }
+        }""".split()):
+        raise ValueError(
+            "Beacon agreement must reject every unexpected entropy request"
+        )
     source_order(
         root,
         "beaconcrypt-core/src/agreement.rs",

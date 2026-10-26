@@ -138,7 +138,7 @@ class NameOrderChecks(unittest.TestCase):
             path = root / "beaconcrypt/src/pqxdh.rs"
             text = path.read_text()
             changed = text.replace(
-                "server_ephemeral = crypto_kx::KeyPair::generate().ok();",
+                "server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok();",
                 "server_ephemeral = changed_generator();",
                 1,
             )

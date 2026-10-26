@@ -9,12 +9,12 @@
    allocation of its sequence, as in the fresh form.  Exactly one of this
    file and fs-records-s2b-taskings.pvl is loaded; the authentication
    targets use this one, the secrecy targets cannot. *)
-(* @beaconcrypt-fs-fidelity key=taskings.encrypt src=beaconcrypt/src/server.rs:281-285 anchor=pub fn encrypt_message(&mut self, b: &[u8], k: u64) -> Option<crate::Encrypted> { *)
-(* @beaconcrypt-fs-fidelity key=taskings.seal src=beaconcrypt/src/ratchet.rs:544-577 anchor=fn execute_record_send( *)
+(* @beaconcrypt-fs-fidelity key=taskings.encrypt src=beaconcrypt/src/server.rs:371-375 anchor=pub fn encrypt_message(&mut self, b: &[u8], k: u64) -> Option<crate::Encrypted> { *)
+(* @beaconcrypt-fs-fidelity key=taskings.seal src=beaconcrypt/src/ratchet.rs:546-579 anchor=fn execute_record_send( *)
 (* @beaconcrypt-fs-fidelity key=taskings.allocate src=beaconcrypt-core/src/ratchet/concrete.rs:133-155 anchor=pub fn begin_send<Context>(kernel: ConcreteRatchetKernel, context: Context) -> SendStart<Context> { *)
 (* @beaconcrypt-fs-fidelity key=taskings.advance src=beaconcrypt-core/src/ratchet/concrete.rs:171-182 anchor=pub fn resume(mut self, response: RatchetKdfResponse) -> SendSeal<Context> { *)
 (* @beaconcrypt-fs-fidelity key=taskings.stays_advanced src=beaconcrypt-core/src/ratchet/concrete.rs:206-209 anchor=pub fn finish<Output>(self, sealed: Option<Output>) -> (ConcreteRatchetKernel, Option<Output>) { *)
-(* @beaconcrypt-fs-fidelity key=taskings.snapshot src=beaconcrypt/src/server.rs:509-519 anchor=fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<SendState> { *)
+(* @beaconcrypt-fs-fidelity key=taskings.snapshot src=beaconcrypt/src/server.rs:620-630 anchor=fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<SendState> { *)
 
 (* The application's choice of a whole adversary-chosen plaintext; any other
    mode input selects the fresh form.  A model-only control value, like

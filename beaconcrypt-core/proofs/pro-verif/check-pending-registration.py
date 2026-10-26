@@ -244,7 +244,7 @@ def check_source(directory=HERE):
     )
     if (
         output
-        != "pubstructRegistrationOutput{registration:beaconcrypt_core::peer::ConsumedRegistration,}"
+        != "pubstructRegistrationOutput{registration:beaconcrypt_core::peer::ConsumedRegistration,registration_id:[u8;verified_pqxdh::REGISTRATION_ID_SIZE],}"
     ):
         raise ValueError(
             "opaque authenticated agreement no longer owns the complete pending token"
@@ -257,7 +257,7 @@ def check_source(directory=HERE):
             "let control = self.control;",
             "let application = beaconcrypt_core::transport::normalize_registration_application(data);",
             "let plaintext = registration_application_bytes(&application);",
-            "let RegistrationOutput { registration } = reg_out;",
+            "let RegistrationOutput { registration, .. } = reg_out;",
             "beaconcrypt_core::peer::begin_completion_lookup(control, self.authentication_pin()?, registration, plaintext,)",
             "let next_key_id = lookup.request();",
             "registration_response_len(plaintext.len(), next_key_id)?;",

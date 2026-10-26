@@ -9,8 +9,8 @@
    names, not the process.  Exactly one of this file and
    fs-records-b2s-sends-chosen.pvl is loaded; the secrecy target S2, the
    record identity agreement UKSr and the witnesses use this one. *)
-(* @beaconcrypt-fs-fidelity key=sends.encrypt src=beaconcrypt/src/beacon.rs:175-192 anchor=pub fn encrypt_message(&mut self, b: &[u8]) -> Option<crate::Encrypted> { *)
-(* @beaconcrypt-fs-fidelity key=sends.seal src=beaconcrypt/src/ratchet.rs:544-577 anchor=fn execute_record_send( *)
+(* @beaconcrypt-fs-fidelity key=sends.encrypt src=beaconcrypt/src/beacon.rs:197-214 anchor=pub fn encrypt_message(&mut self, b: &[u8]) -> Option<crate::Encrypted> { *)
+(* @beaconcrypt-fs-fidelity key=sends.seal src=beaconcrypt/src/ratchet.rs:546-579 anchor=fn execute_record_send( *)
 (* @beaconcrypt-fs-fidelity key=sends.allocate src=beaconcrypt-core/src/ratchet/concrete.rs:133-155 anchor=pub fn begin_send<Context>(kernel: ConcreteRatchetKernel, context: Context) -> SendStart<Context> { *)
 (* @beaconcrypt-fs-fidelity key=sends.advance src=beaconcrypt-core/src/ratchet/concrete.rs:171-182 anchor=pub fn resume(mut self, response: RatchetKdfResponse) -> SendSeal<Context> { *)
 (* @beaconcrypt-fs-fidelity key=sends.stays_advanced src=beaconcrypt-core/src/ratchet/concrete.rs:206-209 anchor=pub fn finish<Output>(self, sealed: Option<Output>) -> (ConcreteRatchetKernel, Option<Output>) { *)

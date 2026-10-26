@@ -355,7 +355,7 @@ const EXPECTED_FACTS: &[&str] = &[
 	"cryptoframe.open.tag_slice=payload[len-80..len-64]",
 	"cryptoframe.open.ciphertext_slice=payload[..len-80]",
 	"cryptoframe.open.commitment.context=selected_material,associated_data,parsed_retained_aead_tag,selected_sequence,parsed_sender_kid",
-	"cryptoframe.open.commitment.compare=libsodium_memcmp_call",
+	"cryptoframe.open.commitment.compare=portable_constant_time_memcmp_call",
 	"cryptoframe.open.order=commitment_equality_before_aead_decrypt",
 	"cryptoframe.open.decrypt.input=ciphertext||retained_aead_tag",
 	"cryptoframe.open.decrypt.excludes=commitment",
@@ -2237,7 +2237,7 @@ fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), Str
 	)?;
 	require_once(
 		&server_send,
-		"letsender=self.identity_key_kid;",
+		"letsender=self.identity_key_kid();",
 		"endpoint Server send local sender",
 	)?;
 	require_one_call(
@@ -4328,14 +4328,14 @@ fn validate_registration_lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 
 	let beacon_source = compact(&uncommented_rust(&snapshot.adapter_beacon)?);
-	let beacon_new = rust_body(&snapshot.adapter_beacon, "try_new")?;
+	let beacon_new = rust_body(&snapshot.adapter_beacon, "try_new_with_rng")?;
 	for (wanted, label) in [
 		(
-			"identity_key:crypto_sign::KeyPair::generate().map_err(|_|crate::KeyGenError)?",
+			"identity_key:crypto_sign::KeyPair::generate_with_rng(rng).map_err(|_|crate::KeyGenError)?",
 			"registration Beacon identity generation",
 		),
 		(
-			"state:BeaconState::Fresh{control:verified_pqxdh::BeaconFresh::new(server_binding),prekey:crypto_kx::KeyPair::generate().map_err(|_|crate::KeyGenError)?,pq_key:crypto_kem::mlkem768::KeyPair::generate().map_err(|_|crate::KeyGenError)?,}",
+			"state:BeaconState::Fresh{control:verified_pqxdh::BeaconFresh::new(server_binding),prekey:crypto_kx::KeyPair::generate_with_rng(rng).map_err(|_|crate::KeyGenError)?,pq_key:crypto_kem::mlkem768::KeyPair::generate_with_rng(rng).map_err(|_|crate::KeyGenError)?,}",
 			"registration Beacon Fresh material co-location",
 		),
 	] {
@@ -12510,7 +12510,7 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"endpoint_server_send_sender_uses_peer_id",
-			"let sender = self.identity_key_kid;",
+			"let sender = self.identity_key_kid();",
 			"let sender = k;",
 			"endpoint Server send local sender",
 		),
@@ -15696,8 +15696,8 @@ fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"registration_beacon_identity_generation_changes",
-			"identity_key: crypto_sign::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
-			"identity_key: crypto_kx::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
+			"identity_key: crypto_sign::KeyPair::generate_with_rng(rng)\n\t\t\t\t.map_err(|_| crate::KeyGenError)?,",
+			"identity_key: crypto_kx::KeyPair::generate_with_rng(rng).map_err(|_| crate::KeyGenError)?,",
 			"registration Beacon identity generation",
 		),
 		(
@@ -15708,19 +15708,24 @@ fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"registration_beacon_prekey_generation_changes",
-			"prekey: crypto_kx::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
-			"prekey: crypto_kem::mlkem768::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
+			"prekey: crypto_kx::KeyPair::generate_with_rng(rng)\n\t\t\t\t\t.map_err(|_| crate::KeyGenError)?,",
+			"prekey: crypto_kem::mlkem768::KeyPair::generate_with_rng(rng).map_err(|_| crate::KeyGenError)?,",
 			"registration Beacon Fresh material co-location",
 		),
 		(
 			"registration_beacon_pq_generation_changes",
-			"pq_key: crypto_kem::mlkem768::KeyPair::generate()\n\t\t\t\t\t.map_err(|_| crate::KeyGenError)?,",
-			"pq_key: crypto_kx::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
+			"pq_key: crypto_kem::mlkem768::KeyPair::generate_with_rng(rng)\n\t\t\t\t\t.map_err(|_| crate::KeyGenError)?,",
+			"pq_key: crypto_kx::KeyPair::generate_with_rng(rng).map_err(|_| crate::KeyGenError)?,",
 			"registration Beacon Fresh material co-location",
 		),
 	] {
 		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(&mut snapshot.adapter_beacon, "pub fn try_new(", from, to);
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"pub fn try_new_with_rng<",
+				from,
+				to,
+			);
 		});
 		mutation_count += 1;
 	}
@@ -17881,12 +17886,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration-consumed.pvl",
 		"consumed.contains",
-		"beaconcrypt/src/server.rs:413-417",
+		"beaconcrypt/src/server.rs:509-513",
 	),
 	(
 		"fs-common.pvl",
 		"common.kid_counter_start",
-		"beaconcrypt/src/server.rs:185-185",
+		"beaconcrypt/src/server.rs:224-224",
 	),
 	(
 		"fs-common.pvl",
@@ -17906,7 +17911,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:397-401",
+		"beaconcrypt/src/server.rs:489-506",
 	),
 	(
 		"fs-registration.pvl",
@@ -17931,7 +17936,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:412-413",
+		"beaconcrypt/src/server.rs:508-509",
 	),
 	(
 		"fs-registration.pvl",
@@ -17946,7 +17951,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:413-417",
+		"beaconcrypt/src/server.rs:509-513",
 	),
 	(
 		"fs-registration.pvl",
@@ -17956,17 +17961,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.fresh_ephemeral",
-		"beaconcrypt/src/pqxdh.rs:123-128",
+		"beaconcrypt/src/pqxdh.rs:124-129",
 	),
 	(
 		"fs-registration.pvl",
 		"server.encapsulate",
-		"beaconcrypt/src/pqxdh.rs:133-136",
+		"beaconcrypt/src/pqxdh.rs:134-138",
 	),
 	(
 		"fs-registration.pvl",
 		"server.identity_conversion",
-		"beaconcrypt/src/pqxdh.rs:110-121",
+		"beaconcrypt/src/pqxdh.rs:111-122",
 	),
 	(
 		"fs-registration.pvl",
@@ -17986,17 +17991,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:433-437",
+		"beaconcrypt/src/server.rs:531-535",
 	),
 	(
 		"fs-registration.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:437-437",
+		"beaconcrypt/src/server.rs:535-538",
 	),
 	(
 		"fs-registration.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:440-444",
+		"beaconcrypt/src/server.rs:548-553",
 	),
 	(
 		"fs-registration.pvl",
@@ -18031,7 +18036,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:446-447",
+		"beaconcrypt/src/server.rs:554-555",
 	),
 	(
 		"fs-registration.pvl",
@@ -18041,7 +18046,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:468-475",
+		"beaconcrypt/src/server.rs:576-583",
 	),
 	(
 		"fs-registration.pvl",
@@ -18051,27 +18056,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:503-506",
+		"beaconcrypt/src/server.rs:614-617",
 	),
 	(
 		"fs-registration.pvl",
 		"server.token_consumed",
-		"beaconcrypt/src/server.rs:123-128",
+		"beaconcrypt/src/server.rs:140-145",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:82-112",
+		"beaconcrypt/src/beacon.rs:102-134",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:325-329",
+		"beaconcrypt/src/beacon.rs:360-364",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:360-373",
+		"beaconcrypt/src/beacon.rs:390-403",
 	),
 	(
 		"fs-registration.pvl",
@@ -18086,27 +18091,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.bundle_return",
-		"beaconcrypt/src/beacon.rs:452-452",
+		"beaconcrypt/src/beacon.rs:482-482",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:455-461",
+		"beaconcrypt/src/beacon.rs:492-498",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:473-483",
+		"beaconcrypt/src/beacon.rs:510-520",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.identity_conversion",
-		"beaconcrypt/src/pqxdh.rs:110-121",
+		"beaconcrypt/src/pqxdh.rs:111-122",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.decapsulate",
-		"beaconcrypt/src/pqxdh.rs:138-147",
+		"beaconcrypt/src/pqxdh.rs:140-149",
 	),
 	(
 		"fs-registration.pvl",
@@ -18146,7 +18151,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:520-542",
+		"beaconcrypt/src/beacon.rs:557-579",
 	),
 	(
 		"fs-registration.pvl",
@@ -18171,7 +18176,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:546-553",
+		"beaconcrypt/src/beacon.rs:584-591",
 	),
 	(
 		"fs-records-s2b-window.pvl",
@@ -18191,17 +18196,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-gate.pvl",
 		"gate.abort",
-		"beaconcrypt/src/beacon.rs:537-544",
+		"beaconcrypt/src/beacon.rs:575-582",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.encrypt",
-		"beaconcrypt/src/server.rs:281-285",
+		"beaconcrypt/src/server.rs:371-375",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.seal",
-		"beaconcrypt/src/ratchet.rs:544-577",
+		"beaconcrypt/src/ratchet.rs:546-579",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
@@ -18221,17 +18226,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:509-519",
+		"beaconcrypt/src/server.rs:620-630",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.encrypt",
-		"beaconcrypt/src/server.rs:281-285",
+		"beaconcrypt/src/server.rs:371-375",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.seal",
-		"beaconcrypt/src/ratchet.rs:544-577",
+		"beaconcrypt/src/ratchet.rs:546-579",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
@@ -18251,17 +18256,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:509-519",
+		"beaconcrypt/src/server.rs:620-630",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
 		"beacon.decrypt",
-		"beaconcrypt/src/beacon.rs:193-208",
+		"beaconcrypt/src/beacon.rs:215-230",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
 		"ratchet.decode_sender",
-		"beaconcrypt/src/ratchet.rs:623-640",
+		"beaconcrypt/src/ratchet.rs:625-642",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
@@ -18291,7 +18296,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-receive.pvl",
 		"ratchet.open",
-		"beaconcrypt/src/ratchet.rs:577-606",
+		"beaconcrypt/src/ratchet.rs:579-608",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
@@ -18331,17 +18336,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.fresh_ephemeral",
-		"beaconcrypt/src/pqxdh.rs:123-128",
+		"beaconcrypt/src/pqxdh.rs:124-129",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.encapsulate",
-		"beaconcrypt/src/pqxdh.rs:133-136",
+		"beaconcrypt/src/pqxdh.rs:134-138",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:397-401",
+		"beaconcrypt/src/server.rs:489-506",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18366,7 +18371,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:412-413",
+		"beaconcrypt/src/server.rs:508-509",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18376,12 +18381,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:413-417",
+		"beaconcrypt/src/server.rs:509-513",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.identity_conversion",
-		"beaconcrypt/src/pqxdh.rs:110-121",
+		"beaconcrypt/src/pqxdh.rs:111-122",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18406,17 +18411,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:433-437",
+		"beaconcrypt/src/server.rs:531-535",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:437-437",
+		"beaconcrypt/src/server.rs:535-538",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:440-444",
+		"beaconcrypt/src/server.rs:548-553",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18451,7 +18456,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:446-447",
+		"beaconcrypt/src/server.rs:554-555",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18461,7 +18466,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:468-475",
+		"beaconcrypt/src/server.rs:576-583",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18471,22 +18476,22 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:503-506",
+		"beaconcrypt/src/server.rs:614-617",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:82-112",
+		"beaconcrypt/src/beacon.rs:102-134",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:325-329",
+		"beaconcrypt/src/beacon.rs:360-364",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:360-373",
+		"beaconcrypt/src/beacon.rs:390-403",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18501,27 +18506,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.bundle_return",
-		"beaconcrypt/src/beacon.rs:452-452",
+		"beaconcrypt/src/beacon.rs:482-482",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:455-461",
+		"beaconcrypt/src/beacon.rs:492-498",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:473-483",
+		"beaconcrypt/src/beacon.rs:510-520",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.identity_conversion",
-		"beaconcrypt/src/pqxdh.rs:110-121",
+		"beaconcrypt/src/pqxdh.rs:111-122",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.decapsulate",
-		"beaconcrypt/src/pqxdh.rs:138-147",
+		"beaconcrypt/src/pqxdh.rs:140-149",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18561,12 +18566,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:520-542",
+		"beaconcrypt/src/beacon.rs:557-579",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"ratchet.decrypt",
-		"beaconcrypt/src/ratchet.rs:617-659",
+		"beaconcrypt/src/ratchet.rs:619-661",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18591,7 +18596,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:546-553",
+		"beaconcrypt/src/beacon.rs:584-591",
 	),
 	(
 		"fs-records-b2s-window.pvl",
@@ -18606,12 +18611,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-sends.pvl",
 		"sends.encrypt",
-		"beaconcrypt/src/beacon.rs:175-192",
+		"beaconcrypt/src/beacon.rs:197-214",
 	),
 	(
 		"fs-records-b2s-sends.pvl",
 		"sends.seal",
-		"beaconcrypt/src/ratchet.rs:544-577",
+		"beaconcrypt/src/ratchet.rs:546-579",
 	),
 	(
 		"fs-records-b2s-sends.pvl",
@@ -18631,12 +18636,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-sends-chosen.pvl",
 		"sends.encrypt",
-		"beaconcrypt/src/beacon.rs:175-192",
+		"beaconcrypt/src/beacon.rs:197-214",
 	),
 	(
 		"fs-records-b2s-sends-chosen.pvl",
 		"sends.seal",
-		"beaconcrypt/src/ratchet.rs:544-577",
+		"beaconcrypt/src/ratchet.rs:546-579",
 	),
 	(
 		"fs-records-b2s-sends-chosen.pvl",
@@ -18656,27 +18661,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.decrypt",
-		"beaconcrypt/src/server.rs:286-288",
+		"beaconcrypt/src/server.rs:376-378",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.route",
-		"beaconcrypt/src/server.rs:294-302",
+		"beaconcrypt/src/server.rs:384-392",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.frame_sender",
-		"beaconcrypt/src/ratchet.rs:355-357",
+		"beaconcrypt/src/ratchet.rs:357-359",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.peer_associated_data",
-		"beaconcrypt/src/server.rs:278-280",
+		"beaconcrypt/src/server.rs:368-370",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.decode_sender",
-		"beaconcrypt/src/ratchet.rs:623-640",
+		"beaconcrypt/src/ratchet.rs:625-642",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -18706,7 +18711,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.open",
-		"beaconcrypt/src/ratchet.rs:577-606",
+		"beaconcrypt/src/ratchet.rs:579-608",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -18731,7 +18736,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.accepted",
-		"beaconcrypt/src/server.rs:303-306",
+		"beaconcrypt/src/server.rs:393-396",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -18751,17 +18756,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.fresh_ephemeral",
-		"beaconcrypt/src/pqxdh.rs:123-128",
+		"beaconcrypt/src/pqxdh.rs:124-129",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.encapsulate",
-		"beaconcrypt/src/pqxdh.rs:133-136",
+		"beaconcrypt/src/pqxdh.rs:134-138",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:397-401",
+		"beaconcrypt/src/server.rs:489-506",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18786,7 +18791,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:412-413",
+		"beaconcrypt/src/server.rs:508-509",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18796,12 +18801,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:413-417",
+		"beaconcrypt/src/server.rs:509-513",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.identity_conversion",
-		"beaconcrypt/src/pqxdh.rs:110-121",
+		"beaconcrypt/src/pqxdh.rs:111-122",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18821,17 +18826,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:433-437",
+		"beaconcrypt/src/server.rs:531-535",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:437-437",
+		"beaconcrypt/src/server.rs:535-538",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:440-444",
+		"beaconcrypt/src/server.rs:548-553",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18866,7 +18871,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:446-447",
+		"beaconcrypt/src/server.rs:554-555",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18876,7 +18881,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:468-475",
+		"beaconcrypt/src/server.rs:576-583",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18886,7 +18891,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:503-506",
+		"beaconcrypt/src/server.rs:614-617",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18896,17 +18901,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:82-112",
+		"beaconcrypt/src/beacon.rs:102-134",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:325-329",
+		"beaconcrypt/src/beacon.rs:360-364",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:360-373",
+		"beaconcrypt/src/beacon.rs:390-403",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18921,27 +18926,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.bundle_return",
-		"beaconcrypt/src/beacon.rs:452-452",
+		"beaconcrypt/src/beacon.rs:482-482",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:455-461",
+		"beaconcrypt/src/beacon.rs:492-498",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:473-483",
+		"beaconcrypt/src/beacon.rs:510-520",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.identity_conversion",
-		"beaconcrypt/src/pqxdh.rs:110-121",
+		"beaconcrypt/src/pqxdh.rs:111-122",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.decapsulate",
-		"beaconcrypt/src/pqxdh.rs:138-147",
+		"beaconcrypt/src/pqxdh.rs:140-149",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18986,7 +18991,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:520-542",
+		"beaconcrypt/src/beacon.rs:557-579",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19011,7 +19016,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:546-553",
+		"beaconcrypt/src/beacon.rs:584-591",
 	),
 ];
 
@@ -21292,7 +21297,7 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 			Box::new(|files: &mut FsFiles| {
 				replace_once(
 					&mut files.registration,
-					"src=beaconcrypt/src/server.rs:433-437",
+					"src=beaconcrypt/src/server.rs:531-535",
 					"src=beaconcrypt/src/server.rs:1-1",
 				)
 			}) as Box<dyn Fn(&mut FsFiles)>,
@@ -21349,13 +21354,13 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 		);
 	}
 	assert_eq!(
-		check_fs_citation("beaconcrypt/src/server.rs:433-437", "let inserted"),
+		check_fs_citation("beaconcrypt/src/server.rs:531-535", "let inserted"),
 		Ok(())
 	);
 	assert!(check_fs_citation("beaconcrypt/src/server.rs:416-415", "let inserted").is_err());
 	assert!(check_fs_citation("beaconcrypt/src/server.rs:1-415", "let inserted").is_err());
 	assert!(check_fs_citation("beaconcrypt/src/other.rs:415-416", "let inserted").is_err());
-	assert!(check_fs_citation("beaconcrypt/src/server.rs:433-437", "let").is_err());
+	assert!(check_fs_citation("beaconcrypt/src/server.rs:531-535", "let").is_err());
 }
 
 #[test]
@@ -21396,8 +21401,8 @@ fn free_schedule_vocabulary_and_registration_model_are_pinned() {
 			Box::new(|files: &mut FsFiles| {
 				replace_once(
 					&mut files.registration,
-					"    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/pqxdh.rs:123-128 anchor=server_ephemeral = crypto_kx::KeyPair::generate().ok(); *)\n      new ephemeral_secret: bitstring;\n",
-					"    new ephemeral_secret: bitstring;\n    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/pqxdh.rs:123-128 anchor=server_ephemeral = crypto_kx::KeyPair::generate().ok(); *)\n",
+					"    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/pqxdh.rs:124-129 anchor=server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok(); *)\n      new ephemeral_secret: bitstring;\n",
+					"    new ephemeral_secret: bitstring;\n    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/pqxdh.rs:124-129 anchor=server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok(); *)\n",
 				)
 			}),
 			"fs-registration Rust-ordered process changed",

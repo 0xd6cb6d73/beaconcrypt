@@ -5,7 +5,7 @@
    follows.  Exactly one of this file and the negative control
    fs-control-nogate.pvl is loaded. *)
 (* @beaconcrypt-fs-fidelity key=gate.sequence_one src=beaconcrypt-core/src/registration.rs:835-841 anchor=let effect = records::begin_record_receive( *)
-(* @beaconcrypt-fs-fidelity key=gate.abort src=beaconcrypt/src/beacon.rs:537-544 anchor=let completed = match pending.finish(plaintext.as_deref()) { *)
+(* @beaconcrypt-fs-fidelity key=gate.abort src=beaconcrypt/src/beacon.rs:575-582 anchor=let completed = match pending.finish(plaintext.as_deref()) { *)
 let FsS2bFinishLater(
   server_identity: bitstring,
   beacon_identity: bitstring,

@@ -16,7 +16,7 @@
     "beaconcrypt-core/src/constants.rs": "748979a5b3b340b692bc10a687a27250ef5e6e2a67d43876a32585177226ef0a",
     "beaconcrypt-core/src/lib.rs": "f32716d2a108cdc1782274bd82cac40bbd70f36e50835e7d09cc31b94e167958",
     "beaconcrypt-core/Cargo.toml": "8e41a5e7c6f9715417628967f404745000e89d177902bde70d1969ef00af5f09",
-    "Cargo.lock": "d968f0a4ad72cf125fcddb86f4554b94d7d80dc1c227b6c2c4a15395025eb958",
+    "Cargo.lock": "fa0bcc041f43039e1f186aa7b596260a5c49180d8bf7010eb2e09d6d4be7d17d",
     "hax.toml": "5010245f379886dba312f63d3d56f0fa9d3378c927d488106dd096d1bc7206f1"
   },
   "generated_sha256": {

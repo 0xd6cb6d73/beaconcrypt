@@ -40,32 +40,9 @@ jobs:
         mv target/release/libbeaconcrypt.a target/release/libbeaconcrypt-gobinds-${{ matrix.os }}.a
         cargo +nightly rustc -p beaconcrypt-ffi --release -Z build-std=std,panic_abort --no-default-features --features std,beacon --crate-type=staticlib
         mv target/release/libbeaconcrypt.a target/release/libbeaconcrypt-beacon-${{ matrix.os }}.a
-    # Proof-source guards retain the old adapter until the separately deferred proof migration.
-    - name: Run runtime tests (proof-source migration deferred)
+    - name: Run workspace tests including proof-source guards
       run: >-
-        cargo test --verbose --workspace --locked --
-        --skip free_schedule_rust_fidelity_annotations_are_exact
-        --skip mldsa_transcript_source_and_model_mutations_are_rejected
-        --skip production_manifest_symbolic_model_and_adapters_are_exact
-        --skip proverif_verdict_classes_cover_every_checker_and_profile
-        --skip registration_lifecycle_mutation_matrix_is_complete_and_rejected
-        --skip cryptoframe_wire_mutation_matrix_is_complete_and_rejected
-        --skip endpoint_frame_context_mutation_matrix_is_complete_and_rejected
-        --skip initial_ratchet_mutation_matrix_is_complete_and_rejected
-        --skip initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous
-        --skip later_registration_mutation_matrix_is_complete_and_rejected
-        --skip later_registration_sequence_three_poststate_is_exact_and_nonvacuous
-        --skip peer_effects::peer_controller_and_interpreter_omission_duplication_and_bypass_are_rejected
-        --skip peer_effects::peer_tokens_and_stored_metadata_cannot_expose_mutable_public_fields
-        --skip ratchet_effect_driver_mutation_matrix_is_complete_and_rejected
-        --skip record_effects::every_moved_record_operand_failure_and_bypass_control_is_rejected
-        --skip record_effects::exact_record_controller_bodies_and_private_requests_are_required
-        --skip record_effects::record_request_privacy_and_part_types_cannot_be_weakened
-        --skip record_opening_source_mutations_are_rejected
-        --skip registration_effects::extracted_registration_operand_and_continuation_mutations_are_rejected
-        --skip registration_effects::registration_capabilities_keep_private_provenance_and_native_erasure
-        --skip registration_effects::registration_failure_bypass_and_publication_order_controls_are_rejected
-        --skip registration_effects::registration_wire_fields_and_attached_signature_roles_cannot_be_substituted
+        cargo test --verbose --workspace --locked
     - name: Upload release artifact
       uses: actions/upload-artifact@v7
       with:
@@ -95,32 +72,9 @@ jobs:
         cargo +nightly rustc -p beaconcrypt-ffi --release -Z build-std=std,panic_abort --no-default-features --features std,beacon --crate-type=staticlib
         mv target/release/beaconcrypt.lib target/release/beaconcrypt-beacon-${{ matrix.os }}.lib
         ls target/release
-    # Proof-source guards retain the old adapter until the separately deferred proof migration.
-    - name: Run runtime tests (proof-source migration deferred)
+    - name: Run workspace tests including proof-source guards
       run: >-
-        cargo test --verbose --workspace --locked --
-        --skip free_schedule_rust_fidelity_annotations_are_exact
-        --skip mldsa_transcript_source_and_model_mutations_are_rejected
-        --skip production_manifest_symbolic_model_and_adapters_are_exact
-        --skip proverif_verdict_classes_cover_every_checker_and_profile
-        --skip registration_lifecycle_mutation_matrix_is_complete_and_rejected
-        --skip cryptoframe_wire_mutation_matrix_is_complete_and_rejected
-        --skip endpoint_frame_context_mutation_matrix_is_complete_and_rejected
-        --skip initial_ratchet_mutation_matrix_is_complete_and_rejected
-        --skip initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous
-        --skip later_registration_mutation_matrix_is_complete_and_rejected
-        --skip later_registration_sequence_three_poststate_is_exact_and_nonvacuous
-        --skip peer_effects::peer_controller_and_interpreter_omission_duplication_and_bypass_are_rejected
-        --skip peer_effects::peer_tokens_and_stored_metadata_cannot_expose_mutable_public_fields
-        --skip ratchet_effect_driver_mutation_matrix_is_complete_and_rejected
-        --skip record_effects::every_moved_record_operand_failure_and_bypass_control_is_rejected
-        --skip record_effects::exact_record_controller_bodies_and_private_requests_are_required
-        --skip record_effects::record_request_privacy_and_part_types_cannot_be_weakened
-        --skip record_opening_source_mutations_are_rejected
-        --skip registration_effects::extracted_registration_operand_and_continuation_mutations_are_rejected
-        --skip registration_effects::registration_capabilities_keep_private_provenance_and_native_erasure
-        --skip registration_effects::registration_failure_bypass_and_publication_order_controls_are_rejected
-        --skip registration_effects::registration_wire_fields_and_attached_signature_roles_cannot_be_substituted
+        cargo test --verbose --workspace --locked
     - name: Upload release artifact
       uses: actions/upload-artifact@v7
       with:
@@ -158,34 +112,11 @@ jobs:
         cargo +nightly rustc -p beaconcrypt-ffi --release -Z build-std=std,panic_abort --target x86_64-pc-windows-gnu --no-default-features --features std,beacon --crate-type=staticlib
         mv target/x86_64-pc-windows-gnu/release/libbeaconcrypt.a target/x86_64-pc-windows-gnu/release/libbeaconcrypt-beacon-windows-mingw-x86_64.a
         ls target/x86_64-pc-windows-gnu/release
-    # Proof-source guards retain the old adapter until the separately deferred proof migration.
-    - name: Run runtime tests (proof-source migration deferred)
+    - name: Run workspace tests including proof-source guards
       env:
         CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: gcc
       run: >-
-        cargo test --verbose --workspace --target x86_64-pc-windows-gnu --locked --
-        --skip free_schedule_rust_fidelity_annotations_are_exact
-        --skip mldsa_transcript_source_and_model_mutations_are_rejected
-        --skip production_manifest_symbolic_model_and_adapters_are_exact
-        --skip proverif_verdict_classes_cover_every_checker_and_profile
-        --skip registration_lifecycle_mutation_matrix_is_complete_and_rejected
-        --skip cryptoframe_wire_mutation_matrix_is_complete_and_rejected
-        --skip endpoint_frame_context_mutation_matrix_is_complete_and_rejected
-        --skip initial_ratchet_mutation_matrix_is_complete_and_rejected
-        --skip initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous
-        --skip later_registration_mutation_matrix_is_complete_and_rejected
-        --skip later_registration_sequence_three_poststate_is_exact_and_nonvacuous
-        --skip peer_effects::peer_controller_and_interpreter_omission_duplication_and_bypass_are_rejected
-        --skip peer_effects::peer_tokens_and_stored_metadata_cannot_expose_mutable_public_fields
-        --skip ratchet_effect_driver_mutation_matrix_is_complete_and_rejected
-        --skip record_effects::every_moved_record_operand_failure_and_bypass_control_is_rejected
-        --skip record_effects::exact_record_controller_bodies_and_private_requests_are_required
-        --skip record_effects::record_request_privacy_and_part_types_cannot_be_weakened
-        --skip record_opening_source_mutations_are_rejected
-        --skip registration_effects::extracted_registration_operand_and_continuation_mutations_are_rejected
-        --skip registration_effects::registration_capabilities_keep_private_provenance_and_native_erasure
-        --skip registration_effects::registration_failure_bypass_and_publication_order_controls_are_rejected
-        --skip registration_effects::registration_wire_fields_and_attached_signature_roles_cannot_be_substituted
+        cargo test --verbose --workspace --target x86_64-pc-windows-gnu --locked
     - name: Upload release artifact
       uses: actions/upload-artifact@v7
       with:

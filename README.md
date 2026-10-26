@@ -75,36 +75,14 @@ For windows, I prefer building with stable-gnu for normal usage, and nightly-gnu
 Build and run runtime tests and bindings:
 
 ```bash
-cargo test --workspace --locked -- \
-  --skip free_schedule_rust_fidelity_annotations_are_exact \
-  --skip mldsa_transcript_source_and_model_mutations_are_rejected \
-  --skip production_manifest_symbolic_model_and_adapters_are_exact \
-  --skip proverif_verdict_classes_cover_every_checker_and_profile \
-  --skip registration_lifecycle_mutation_matrix_is_complete_and_rejected \
-  --skip cryptoframe_wire_mutation_matrix_is_complete_and_rejected \
-  --skip endpoint_frame_context_mutation_matrix_is_complete_and_rejected \
-  --skip initial_ratchet_mutation_matrix_is_complete_and_rejected \
-  --skip initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous \
-  --skip later_registration_mutation_matrix_is_complete_and_rejected \
-  --skip later_registration_sequence_three_poststate_is_exact_and_nonvacuous \
-  --skip peer_effects::peer_controller_and_interpreter_omission_duplication_and_bypass_are_rejected \
-  --skip peer_effects::peer_tokens_and_stored_metadata_cannot_expose_mutable_public_fields \
-  --skip ratchet_effect_driver_mutation_matrix_is_complete_and_rejected \
-  --skip record_effects::every_moved_record_operand_failure_and_bypass_control_is_rejected \
-  --skip record_effects::exact_record_controller_bodies_and_private_requests_are_required \
-  --skip record_effects::record_request_privacy_and_part_types_cannot_be_weakened \
-  --skip record_opening_source_mutations_are_rejected \
-  --skip registration_effects::extracted_registration_operand_and_continuation_mutations_are_rejected \
-  --skip registration_effects::registration_capabilities_keep_private_provenance_and_native_erasure \
-  --skip registration_effects::registration_failure_bypass_and_publication_order_controls_are_rejected \
-  --skip registration_effects::registration_wire_fields_and_attached_signature_roles_cannot_be_substituted
+cargo test --workspace --locked
 cargo build -p beaconcrypt-ffi --features gobinds --release --target x86_64-pc-windows-gnu
 go test -a -count=1 .
 uv run maturin develop --uv
 uv run pytest tests
 ```
 
-The 22 explicit skips are proof-source fidelity guards that still describe the former libsodium adapter, hosted controller bodies and source locations: five were already deferred by the backend migration, and 17 additional failures were observed after merging the lifecycle extraction. The [merge deferral receipt](doc/impl/no-std-core-lifecycle-deferred.json) records every observed diagnostic and exact test identity. Proof migration is deferred for this backend change; the proof assertions and artifacts remain unchanged. Ordinary `cargo test --workspace` continues to expose those deferred failures. Runtime cryptographic, protocol, vector, persistence and binding tests remain enabled. [Cross-backend tests](beaconcrypt/tests/backend_compat.rs) compare primitive behavior with pinned libsodium and exchange registration and records with independently composed legacy peers in both directions.
+Workspace tests include the proof-source fidelity guards for the RustCrypto adapter and core lifecycle. The [proof-source migration record](doc/impl/pr17-proof-source-migration.md) describes the reviewed source bindings, metadata refresh and focused validation. [Cross-backend tests](beaconcrypt/tests/backend_compat.rs) compare primitive behavior with pinned libsodium and exchange registration and records with independently composed legacy peers in both directions.
 
 The `-a` flag is required after rebuilding the Rust static library because Go's build cache does not detect changes to libraries linked through cgo. `-count=1` also prevents reuse of a cached successful test result.
 
@@ -118,12 +96,11 @@ Install `cargo-mutants` 27.1.0 and `cargo-nextest` 0.9.149, then run both native
 cargo install --locked cargo-mutants@27.1.0
 cargo install --locked cargo-nextest@0.9.149
 PROPTEST_RNG_SEED=104729 cargo mutants --workspace --test-tool nextest \
-  --cargo-arg=--config-file=doc/impl/no-std-core-lifecycle-nextest.toml \
   --cargo-arg=--profile=mutants --jobs 4
 bash scripts/test-wasm.sh --mutants --jobs 4 --output .build/wasm-mutations
 ```
 
-The [native mutation configuration](.cargo/mutants.toml) exercises the adapter, core, and parser through workspace tests and excludes imported generated parser sources, equivalent private-state mutations, and adapters covered by other targets. The native FFI package compiles the same adapter sources; its duplicate wrapper paths are excluded while the Rust package retains adapter mutation coverage. The [nextest profile](doc/impl/no-std-core-lifecycle-nextest.toml) visibly excludes only the 22 exact deferred proof-source guards listed above and retains the other 20 source-fidelity tests and all runtime tests. The [guest configuration](.cargo/mutants-wasm.toml) exercises the Wasm ABI and host callbacks on actual `wasm32-wasip1` with the production memory bound. The guest script requires Go and the Rust toolchain and target pinned in [wasm-toolchain.json](scripts/wasm-toolchain.json). After substantial code additions, every viable mutant must be caught; `missed.txt` and `timeout.txt` must be empty in both `mutants.out/` and `.build/wasm-mutations/mutants.out/`. Finish validation with complete runs without `--iterate`. See the [property-testing guide](doc/impl/property-based-testing.md) for generated cases, seed replay, and the additional CI campaigns. Mutation testing covers the Rust implementation and complements, but does not replace, `make -C beaconcrypt-core verify` or the Go and Python binding tests.
+The [native mutation configuration](.cargo/mutants.toml) exercises the adapter, core, and parser through workspace tests and excludes imported generated parser sources, equivalent private-state mutations, and adapters covered by other targets. The native FFI package compiles the same adapter sources; its duplicate wrapper paths are excluded while the Rust package retains adapter mutation coverage. The active [nextest profile](.config/nextest.toml) includes every proof-source fidelity guard and runtime test; historical deferral profiles remain in `doc/impl/` as records of earlier validation. The [guest configuration](.cargo/mutants-wasm.toml) exercises the Wasm ABI and host callbacks on actual `wasm32-wasip1` with the production memory bound. The guest script requires Go and the Rust toolchain and target pinned in [wasm-toolchain.json](scripts/wasm-toolchain.json). After substantial code additions, every viable mutant must be caught; `missed.txt` and `timeout.txt` must be empty in both `mutants.out/` and `.build/wasm-mutations/mutants.out/`. Finish validation with complete runs without `--iterate`. See the [property-testing guide](doc/impl/property-based-testing.md) for generated cases, seed replay, and the additional CI campaigns. Mutation testing covers the Rust implementation and complements, but does not replace, `make -C beaconcrypt-core verify` or the Go and Python binding tests.
 
 ### Reproducing known-answer test vectors
 

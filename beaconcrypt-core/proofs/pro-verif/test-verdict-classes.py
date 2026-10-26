@@ -35,6 +35,50 @@ class ClassificationTests(unittest.TestCase):
             2444,
         )
 
+    def test_legacy_source_gates_pin_collection_and_backend_wiring(self):
+        root = HERE.parents[2]
+        original = Path.read_bytes
+        for relative, before, after in (
+            (
+                "beaconcrypt/src/collections.rs",
+                b"SipHasher13::new_with_key(&self.0)",
+                b"SipHasher13::new_with_key(&[0; 16])",
+            ),
+            (
+                "beaconcrypt/src/lib.rs",
+                b"pub use beaconcrypt_crypto as crypto;",
+                b"pub use unreviewed_backend as crypto;",
+            ),
+            (
+                "beaconcrypt/Cargo.toml",
+                b'path = "../beaconcrypt-crypto"',
+                b'path = "../unreviewed-backend"',
+            ),
+        ):
+            path = root / relative
+            source = original(path)
+            self.assertEqual(source.count(before), 1)
+            changed = source.replace(before, after, 1)
+
+            def read_bytes(candidate):
+                return changed if candidate == path else original(candidate)
+
+            for name in CHECK.LEGACY_SOURCE_CHECKERS | {"symbolic-name-order"}:
+                driver = CHECK.INVENTORY.module(name)
+                self.assertIn(relative, driver.SOURCE_SHA256)
+                validate = (
+                    driver.validate
+                    if name == "symbolic-name-order"
+                    else driver.validate_targets
+                )
+                validate()
+                with (
+                    self.subTest(checker=name, path=relative),
+                    mock.patch.object(Path, "read_bytes", read_bytes),
+                    self.assertRaisesRegex(ValueError, relative),
+                ):
+                    validate()
+
     def test_awk_inventory_uses_short_commands_and_live_probe_file(self):
         run = CHECK.INVENTORY.subprocess.run
         probes = set()

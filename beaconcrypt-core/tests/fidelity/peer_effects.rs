@@ -179,21 +179,21 @@ const BODIES: &[(&str, &str, &str, &str)] = &[
 	),
 	(
 		"server",
-		"impl ProviderServer for Server",
-		"get_shared_secret",
+		"impl Server",
+		"get_shared_secret_with_rng",
 		"letlookup=beaconcrypt_core::peer::begin_registration_lookup(control,authenticated);letregistration_id=*lookup.request().as_bytes();letconsumed=self.consumed_registrations.contains(&registration_id);leteffect=lookup.resume(consumed);ifmatches!(effect,AgreementEffect::Rejected(_)){returnNone;}self.consumed_registrations.try_reserve(1).ok()?;",
 	),
 	(
 		"server",
-		"impl ProviderServer for Server",
-		"get_shared_secret",
-		"letpending=beaconcrypt_core::peer::begin_registration_insert(agreement);letinserted=self.consumed_registrations.insert(*pending.request().as_bytes());letregistration=pending.resume(inserted)?;Some(RegistrationOutput{registration})",
+		"impl Server",
+		"get_shared_secret_with_rng",
+		"letpending=beaconcrypt_core::peer::begin_registration_insert(agreement);letregistration_id=*pending.request().as_bytes();letinserted=self.consumed_registrations.insert(*pending.request().as_bytes());letregistration=pending.resume(inserted)?;Some(RegistrationOutput{registration,registration_id,})",
 	),
 	(
 		"server",
 		"impl ProviderServer for Server",
 		"build_registration_response",
-		"letpending=beaconcrypt_core::peer::begin_peer_insert(control,ready.publish(buffer).ok()?).ok()?;letremote_kid=pending.request();let(peer,finish)=pending.into_parts();letpublic_key=crypto_sign::PublicKey::from_bytes(peer.binding().beacon_identity_public_key()).ok()?;letinserted=matchself.known_ids.entry(remote_kid){std::collections::hash_map::Entry::Vacant(entry)=>{entry.insert(EstablishedRemote::from_peer(public_key,peer));true}std::collections::hash_map::Entry::Occupied(_)=>false,};let(next_control,remote_kid,buffer)=finish.finish(inserted).ok()?.into_parts();self.control=next_control;Some(RegResponse{serialized:buffer,kid:remote_kid,})",
+		"letpending=beaconcrypt_core::peer::begin_peer_insert(control,ready.publish(buffer).ok()?).ok()?;letremote_kid=pending.request();let(peer,finish)=pending.into_parts();letpublic_key=crypto_sign::PublicKey::from_bytes(peer.binding().beacon_identity_public_key()).ok()?;letinserted=matchself.known_ids.entry(remote_kid){hashbrown::hash_map::Entry::Vacant(entry)=>{entry.insert(EstablishedRemote::from_peer(public_key,peer));true}hashbrown::hash_map::Entry::Occupied(_)=>false,};let(next_control,remote_kid,buffer)=finish.finish(inserted).ok()?.into_parts();self.control=next_control;Some(RegResponse{serialized:buffer,kid:remote_kid,})",
 	),
 ];
 
@@ -283,7 +283,7 @@ const DECLARATIONS: &[(&str, &str)] = &[
 	),
 	(
 		"server",
-		"pubstructRegistrationOutput{registration:beaconcrypt_core::peer::ConsumedRegistration,}",
+		"pubstructRegistrationOutput{registration:beaconcrypt_core::peer::ConsumedRegistration,registration_id:[u8;verified_pqxdh::REGISTRATION_ID_SIZE],}",
 	),
 ];
 
