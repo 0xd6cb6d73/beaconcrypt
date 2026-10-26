@@ -394,6 +394,33 @@ class ConcurrentSummaryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "loads"):
             summarize(value)
 
+    def test_batched_commits_count_physical_queries_once(self):
+        value = report("postgres")
+        value["config"].update(pg_batch_size=8, pg_batch_wait_us=100)
+        for result in value["results"]:
+            if result["arm"] == "snapshot":
+                continue
+            for worker in result["workers"]:
+                db = worker["database"]
+                commits = (db["transactions"] + 1) // 2
+                db["transactions"] = commits
+                db["sql_calls"] = db["network_exchanges"] = commits + db["reads"]
+                for span in worker["db_spans"]:
+                    if span["kind"] == "row_commit":
+                        span["kind"] = "row_batch_commit"
+        summarize(value)
+        invalid = copy.deepcopy(value)
+        result = next(r for r in invalid["results"] if r["arm"] == "cached_row")
+        for worker in result["workers"]:
+            db = worker["database"]
+            db["transactions"] = db["sql_calls"] = db["network_exchanges"] = 0
+        with self.assertRaisesRegex(ValueError, "physical commit count"):
+            summarize(invalid)
+        result = next(r for r in value["results"] if r["arm"] == "row")
+        result["workers"][0]["database"]["network_exchanges"] += 1
+        with self.assertRaisesRegex(ValueError, "network_exchanges"):
+            summarize(value)
+
     def test_half_open_touching_intervals_never_invent_concurrency(self):
         self.assertEqual(
             concurrent_overlap([(0, 5), (5, 10), (4, 4)]),

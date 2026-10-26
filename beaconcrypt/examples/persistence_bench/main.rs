@@ -4,6 +4,8 @@
 
 #[cfg(test)]
 mod adapter_tests;
+#[cfg(test)]
+mod batched_postgres_tests;
 mod buffered;
 mod concurrency;
 mod concurrency_contracts;
@@ -14,6 +16,7 @@ mod main_tests;
 #[cfg(test)]
 mod native_postgres_tests;
 mod postgres;
+mod postgres_batch;
 
 use std::{
 	error::Error,
@@ -41,6 +44,8 @@ const SERVER_ID: u64 = 19;
 #[derive(Clone, Serialize)]
 struct Config {
 	backend: String,
+	pg_batch_size: usize,
+	pg_batch_wait_us: u64,
 	peer_counts: Vec<usize>,
 	trials: usize,
 	extra_registrations: usize,
@@ -60,6 +65,8 @@ impl Default for Config {
 	fn default() -> Self {
 		Self {
 			backend: "sqlite".into(),
+			pg_batch_size: 1,
+			pg_batch_wait_us: 100,
 			peer_counts: vec![1, 100, 1000],
 			trials: 3,
 			extra_registrations: 0,
@@ -113,6 +120,7 @@ fn options(mut args: impl Iterator<Item = String>) -> Result<Option<Options>> {
 This is a durable SQLite/PostgreSQL component benchmark, not a Mythic end-to-end benchmark.\n\
 Run only in an explicitly approved quiet window with no other active coordination leases.\n\
 Options: --backend sqlite|postgres (PostgreSQL DSN: BEACONCRYPT_BENCH_POSTGRES)\n\
+         --pg-batch-size 1 --pg-batch-wait-us 100 (opt-in shared durable row commits)\n\
          --peers 1,100,1000 --trials 3 --extra-registrations 0 --active-peers N\n\
          --small-bytes 1024 --small-messages 1024 --large-bytes 65536 --large-messages 128\n\
          --mixed-messages 1024 --large-every 16 --burst-chunk-bytes 512000\n\
@@ -152,6 +160,8 @@ Reports refuse to overwrite an existing file. Database fixtures are temporary, e
 			"--max-precomputed-bytes" => concurrency.max_precomputed_bytes = value.parse()?,
 			"--output" => output = value.into(),
 			"--backend" => config.backend = value,
+			"--pg-batch-size" => config.pg_batch_size = value.parse()?,
+			"--pg-batch-wait-us" => config.pg_batch_wait_us = value.parse()?,
 			"--database-directory" => database_directory = Some(value.into()),
 			"--peers" => config.peer_counts = parse_list(&value)?,
 			"--trials" => config.trials = value.parse()?,
@@ -176,6 +186,15 @@ Reports refuse to overwrite an existing file. Database fixtures are temporary, e
 	}
 	if !matches!(config.backend.as_str(), "sqlite" | "postgres") {
 		return Err("--backend must be sqlite or postgres".into());
+	}
+	if config.pg_batch_size == 0 || config.pg_batch_size > 64 {
+		return Err("--pg-batch-size must be between 1 and 64".into());
+	}
+	if config.pg_batch_size > 1 && config.backend != "postgres" {
+		return Err("commit batching requires --backend postgres".into());
+	}
+	if config.pg_batch_wait_us > 10_000 {
+		return Err("--pg-batch-wait-us must not exceed 10000".into());
 	}
 	if config.trials == 0
 		|| config.peer_counts.is_empty()
@@ -243,15 +262,29 @@ enum Location {
 	Postgres(Rc<PgFixture>),
 }
 impl Location {
-	fn new(backend: &str, path: PathBuf, lineage: SnapshotLineage) -> Result<Self> {
-		Ok(match backend {
+	fn new(config: &Config, arm: Arm, path: PathBuf, lineage: SnapshotLineage) -> Result<Self> {
+		Ok(match config.backend.as_str() {
 			"sqlite" => Self::Sqlite(path),
-			"postgres" => Self::Postgres(PgFixture::create(
-				&std::env::var("BEACONCRYPT_BENCH_POSTGRES").map_err(
+			"postgres" => {
+				let dsn = std::env::var("BEACONCRYPT_BENCH_POSTGRES").map_err(
 					|_| "set BEACONCRYPT_BENCH_POSTGRES to a dedicated loopback TCP database",
-				)?,
-				lineage,
-			)?),
+				)?;
+				let fixture = if config.pg_batch_size > 1 && !matches!(arm, Arm::Snapshot) {
+					PgFixture::create_batched(
+						&dsn,
+						lineage,
+						postgres_batch::BatchConfig {
+							max_requests: config.pg_batch_size,
+							queue_capacity: config.pg_batch_size,
+							max_delay: std::time::Duration::from_micros(config.pg_batch_wait_us),
+							..Default::default()
+						},
+					)?
+				} else {
+					PgFixture::create(&dsn, lineage)?
+				};
+				Self::Postgres(fixture)
+			}
 			_ => unreachable!(),
 		})
 	}
@@ -424,7 +457,7 @@ impl Fixture {
 		let lineage = SnapshotLineage::from_bytes(lineage_bytes);
 		let counts = Rc::new(Counters::default());
 		let active = config.active_peers.unwrap_or(peers).min(peers);
-		let location = Location::new(&config.backend, path, lineage)?;
+		let location = Location::new(config, arm, path, lineage)?;
 		let mut server = Backend::create(arm, &location, Rc::clone(&counts), lineage, active)?;
 		let mut beacons = Vec::with_capacity(peers);
 		let mut kids = Vec::with_capacity(peers);
