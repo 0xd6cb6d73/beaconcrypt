@@ -16,7 +16,7 @@ adapter-rust	8ecc9e9a1588f358c092e6a926216374a835c28c342986ca78f8de7605129dc4	..
 adapter-schema	393b2a8edeb526de71ecf6f0aeff9cf5233ade0762cd54fa0a631f7b5f8f1dad	../beaconcrypt-parse/schema/transport.cddl
 control	01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b	../.cargo/config.toml
 control	5b968505256d1fe5f68b46275fbf34a79d8e7ebd06136e4874eb04c8a9b7c27e	../.gitattributes
-control	0a6d494bf6bf954abd5b529df58c3c85c0f6aba11419c1a42d0994dbb4fec339	../.github/workflows/formal-verification.yml
+control	ce4903816a951d6571ee02fbc440024c1d6fb76b4deb44d2f330f34c0931a2a1	../.github/workflows/formal-verification.yml
 control	b52cccd1198013cb538c8b34f3b0d9a7020fb4d5b09627a1fb7237df79b4780a	../.gitignore
 control	fa0bcc041f43039e1f186aa7b596260a5c49180d8bf7010eb2e09d6d4be7d17d	../Cargo.lock
 control	755b24b6a434712ac0b941dcb1cf629321f128555a43b5e574c38dd5bf1b3b53	../Cargo.toml

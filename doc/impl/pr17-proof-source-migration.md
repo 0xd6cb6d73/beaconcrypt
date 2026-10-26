@@ -48,3 +48,9 @@ A dispatcher smoke check exercised all forty-five targets with successful and fa
 ## Workflow concurrency
 
 The formal-verification workflow uses one top-level concurrency group, `formal-verification`, with `cancel-in-progress: true`. The group is shared by every branch and trigger type, so a later run cancels the previous run instead of allowing simultaneous workflow instances. Matrix components retain their existing parallel execution within the surviving run. The reviewed workflow fingerprint is refreshed; proof targets and assertions are unchanged. This change accompanies the inventory runner fix.
+
+## CI follow-up: Lean job timeout
+
+In run `40393069878`, Lean job `121818841494` started at `20:19:01 UTC` and completed cleanup at `21:20:02 UTC` on 2026-10-26. GitHub annotated it with "The job has exceeded the maximum execution time of 1h0m0s". The final successful build line at `21:19:48 UTC` reported Mathlib progress `3039/3055`; the surrounding build log continued to make progress until cancellation. Other matrix jobs continued running, so this was the inherited sixty-minute job timeout rather than workflow concurrency cancellation.
+
+The Lean matrix entry now has a dedicated 240-minute timeout to allow cold dependency compilation and the repository proof build. Other timeouts, every proof command, the complete matrix, all assertions and workflow concurrency remain unchanged. The reviewed manifest refreshes only the workflow fingerprint. No full proof toolchain or remote retry was started to validate this configuration change.

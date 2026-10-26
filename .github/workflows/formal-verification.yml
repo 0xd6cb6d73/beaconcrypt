@@ -26,6 +26,7 @@ jobs:
         include:
           - name: Lean
             target: check-generated-lean
+            timeout: 240
           - name: ProVerif transcript fidelity
             target: check-proverif-transcript-fidelity
           - name: ProVerif CTX commitment
