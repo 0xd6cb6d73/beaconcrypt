@@ -1,0 +1,7 @@
+# Reviewed registration service client integration
+
+The [integration guide](../../../registration-service-client-integration.md) states the operational scope, full logical and evaluated query bills, unchanged assumptions and remaining composition work. The frozen integration manifest covers twelve source and documentation files based on `787319ade78ee9e0b599dc349fdc8b5cf6cbf7c0`. Four proof modules were copied byte for byte from `d93dfcfe875083ba84593ea99c434729ac2433f3`; the closure record checks all 813 retained source dependencies. Each direct module check and the complete root import check returned zero with empty logs. The focused inventory gate also passed in the unchanged minimal Nix proof environment.
+
+The independent integration review and two earlier semantic reviews inspect theorem statements, complete state/continuation equality, source order, ownership, all-reply query accounting and overclaims. Thirty exact standard-axiom guards remain enabled. The retained-artifact record identifies source hashes and the actual previously checked outputs used for unchanged dependencies. All paths in these receipts are historical evidence, not runtime dependencies.
+
+No production Rust or ProVerif operation changed. This is a focused reviewed integration, not a new aggregate repository verification or a completed computational/symbolic security proof. The final serial validation matrix remains required.

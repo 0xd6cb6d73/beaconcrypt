@@ -11,14 +11,14 @@ type Shape = (&'static [u8], &'static [u8], &'static [u8]);
 const SHAPES: &[Shape] = &[
 	(&[0x85, 1, 2], &[0, 0, 2], &[0x85, 1, 2, 0, 0, 0x40]),
 	(
-		&[0x86, 1, 0],
-		&[2, 2, 2, 2],
-		&[0x86, 1, 0, 0x40, 0x40, 0x40, 0x40],
+		&[0x88, 2, 0],
+		&[2, 2, 2, 2, 2, 2],
+		&[0x88, 2, 0, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40],
 	),
 	(
-		&[0x87, 1, 1],
-		&[2, 2, 2, 2, 0],
-		&[0x87, 1, 1, 0x40, 0x40, 0x40, 0x40, 0],
+		&[0x88, 2, 1],
+		&[2, 2, 2, 2, 0, 2],
+		&[0x88, 2, 1, 0x40, 0x40, 0x40, 0x40, 0, 0x40],
 	),
 ];
 
@@ -190,13 +190,10 @@ fn generated_validation_retains_responsibility_for_minimal_primitive_encodings()
 
 #[test]
 fn generated_validation_checks_fixed_registration_sizes_after_flat_shape_preflight() {
-	let init = [0x86, 1, 0, 0x40, 0x40, 0x40, 0x40];
-	assert_eq!(preflight(&init, &[0x86, 1, 0], &[2, 2, 2, 2]), Some(()));
-	assert!(super::decode_init(&init).is_none());
-	let response = [0x87, 1, 1, 0x40, 0x40, 0x40, 0x40, 0];
-	assert_eq!(
-		preflight(&response, &[0x87, 1, 1], &[2, 2, 2, 2, 0]),
-		Some(())
-	);
-	assert!(super::decode_response(&response).is_none());
+	let init = SHAPES[1].2;
+	assert_eq!(preflight(init, SHAPES[1].0, SHAPES[1].1), Some(()));
+	assert!(super::decode_init(init).is_none());
+	let response = SHAPES[2].2;
+	assert_eq!(preflight(response, SHAPES[2].0, SHAPES[2].1), Some(()));
+	assert!(super::decode_response(response).is_none());
 }

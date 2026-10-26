@@ -1,0 +1,21 @@
+{
+  "decision": "APPROVE",
+  "reviewer": "root independent reconciliation review",
+  "source_manifest_sha256": "d6f4e2e2d643ff595eea8073cadc1c1e3cd19353feef0e9b9491b1b680f3538b",
+  "archive_manifest_sha256": "3625963ea3cbefbd365148c2b8f2f55f9c7dee7c5a31af594e28ce008b135f41",
+  "parents": [
+    "01bc3b5a1460982aab49b6ae43ef5404dd793a02",
+    "7abf30ae48ccd7c84f4d72f1dae6c51574a5199d"
+  ],
+  "checks": [
+    "All7 source and7 archive hashes verified.",
+    "All1356Lean files exact central; all246PV-related files exact reviewed parent; CIworkflow unchanged.",
+    "Manually reviewed Make/FT/inventory/docs normal merge resolution: all old gates retained, A2 appended serially with an omission regression, exact three call sites guarded.",
+    "Every monitored inventory digest matches final file bytes.",
+    "28FT and inventory0 logs/hash bindings verified; serial dryrun archive exact.",
+    "A2/E21/CI scope paragraphs retained without altering query meaning; source-profile and auxiliary secrecy limitations remain explicit.",
+    "Budgets and per-target caps unchanged; no new proof search or Lean result claimed."
+  ],
+  "blocking_findings": [],
+  "tests_rerun": []
+}

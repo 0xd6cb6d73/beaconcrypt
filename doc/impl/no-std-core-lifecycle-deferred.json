@@ -1,0 +1,166 @@
+{
+  "scope": "Exact proof-source guard deferrals while merging the validated no_std backend into the validated core-lifecycle extraction; assertions and proof artifacts remain unchanged.",
+  "target_commit": "2b924febc49b9a5e6fb93990ff8d4b053b7ca4b2",
+  "incoming_commit": "30cbdc6a30a36867cc0ec4eddde96cdc5e0842c9",
+  "test_package": "beaconcrypt-core",
+  "test_binary": "proverif_transcript_fidelity",
+  "baseline_log": {
+    "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-fidelity.log",
+    "sha256": "4136531d106084b3d9598475fbc95d09badcc6d9e7e9254c1d82444decced6a9",
+    "run": 37,
+    "passed": 20,
+    "failed": 17,
+    "previously_deferred_filtered": 5
+  },
+  "prior_deferred": [
+    "free_schedule_rust_fidelity_annotations_are_exact",
+    "mldsa_transcript_source_and_model_mutations_are_rejected",
+    "production_manifest_symbolic_model_and_adapters_are_exact",
+    "proverif_verdict_classes_cover_every_checker_and_profile",
+    "registration_lifecycle_mutation_matrix_is_complete_and_rejected"
+  ],
+  "newly_observed_failures": [
+    {
+      "test_name": "peer_effects::peer_controller_and_interpreter_omission_duplication_and_bypass_are_rejected",
+      "source_location": "beaconcrypt-core/tests/fidelity/peer_effects.rs:312:25",
+      "classification": "Pinned hosted acceptance-controller body predates caller-RNG delegation",
+      "diagnostic": "called `Result::unwrap()` on an `Err` value: \"peer effects exact source binding changed: server::impl ProviderServer for Server::get_shared_secret\""
+    },
+    {
+      "test_name": "peer_effects::peer_tokens_and_stored_metadata_cannot_expose_mutable_public_fields",
+      "source_location": "beaconcrypt-core/tests/fidelity/peer_effects.rs:335:25",
+      "classification": "Pinned hosted acceptance-controller body predates caller-RNG delegation",
+      "diagnostic": "called `Result::unwrap()` on an `Err` value: \"peer effects exact source binding changed: server::impl ProviderServer for Server::get_shared_secret\""
+    },
+    {
+      "test_name": "later_registration_sequence_three_poststate_is_exact_and_nonvacuous",
+      "source_location": "beaconcrypt-core/tests/proverif_transcript_fidelity.rs:7608:67",
+      "classification": "Pinned native Ed25519 verifier source text still names libsodium",
+      "diagnostic": "called `Result::unwrap()` on an `Err` value: \"Phase-1 actual requested Ed25519 verifier identity changed: expected one exact occurrence of libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key), found 0\""
+    },
+    {
+      "test_name": "record_effects::exact_record_controller_bodies_and_private_requests_are_required",
+      "source_location": "beaconcrypt-core/tests/fidelity/record_effects.rs:620:25",
+      "classification": "Pinned native completion-controller body predates portable backend imports",
+      "diagnostic": "called `Result::unwrap()` on an `Err` value: \"record effects exact production binding changed: beacon::finish_registration\""
+    },
+    {
+      "test_name": "record_effects::record_request_privacy_and_part_types_cannot_be_weakened",
+      "source_location": "beaconcrypt-core/tests/fidelity/record_effects.rs:666:25",
+      "classification": "Pinned native completion-controller body predates portable backend imports",
+      "diagnostic": "called `Result::unwrap()` on an `Err` value: \"record effects exact production binding changed: beacon::finish_registration\""
+    },
+    {
+      "test_name": "initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous",
+      "source_location": "beaconcrypt-core/tests/proverif_transcript_fidelity.rs:7572:64",
+      "classification": "Pinned native Ed25519 verifier source text still names libsodium",
+      "diagnostic": "called `Result::unwrap()` on an `Err` value: \"Phase-1 actual requested Ed25519 verifier identity changed: expected one exact occurrence of libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key), found 0\""
+    },
+    {
+      "test_name": "cryptoframe_wire_mutation_matrix_is_complete_and_rejected",
+      "source_location": "beaconcrypt-core/tests/proverif_transcript_fidelity.rs:7029:5",
+      "classification": "Pinned native Ed25519 verifier source text still names libsodium",
+      "diagnostic": "mutation cbor_registration_raw_field_count produced wrong diagnostic: Phase-1 actual requested Ed25519 verifier identity changed: expected one exact occurrence of libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key), found 0"
+    },
+    {
+      "test_name": "registration_effects::extracted_registration_operand_and_continuation_mutations_are_rejected",
+      "source_location": "beaconcrypt-core/tests/fidelity/registration_effects.rs:1283:26",
+      "classification": "Pinned native Ed25519 verifier source text still names libsodium",
+      "diagnostic": "called `Result::unwrap()` on an `Err` value: \"Phase-1 actual requested Ed25519 verifier identity changed: expected one exact occurrence of libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key), found 0\""
+    },
+    {
+      "test_name": "record_effects::every_moved_record_operand_failure_and_bypass_control_is_rejected",
+      "source_location": "beaconcrypt-core/tests/fidelity/record_effects.rs:1492:32",
+      "classification": "Pinned native Ed25519 verifier source text still names libsodium",
+      "diagnostic": "called `Result::unwrap()` on an `Err` value: \"Phase-1 actual requested Ed25519 verifier identity changed: expected one exact occurrence of libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key), found 0\""
+    },
+    {
+      "test_name": "registration_effects::registration_capabilities_keep_private_provenance_and_native_erasure",
+      "source_location": "beaconcrypt-core/tests/fidelity/registration_effects.rs:1843:26",
+      "classification": "Pinned native Ed25519 verifier source text still names libsodium",
+      "diagnostic": "called `Result::unwrap()` on an `Err` value: \"Phase-1 actual requested Ed25519 verifier identity changed: expected one exact occurrence of libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key), found 0\""
+    },
+    {
+      "test_name": "registration_effects::registration_wire_fields_and_attached_signature_roles_cannot_be_substituted",
+      "source_location": "beaconcrypt-core/tests/fidelity/registration_effects.rs:1882:26",
+      "classification": "Pinned native Ed25519 verifier source text still names libsodium",
+      "diagnostic": "called `Result::unwrap()` on an `Err` value: \"Phase-1 actual requested Ed25519 verifier identity changed: expected one exact occurrence of libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key), found 0\""
+    },
+    {
+      "test_name": "registration_effects::registration_failure_bypass_and_publication_order_controls_are_rejected",
+      "source_location": "beaconcrypt-core/tests/fidelity/registration_effects.rs:1610:26",
+      "classification": "Pinned native Ed25519 verifier source text still names libsodium",
+      "diagnostic": "called `Result::unwrap()` on an `Err` value: \"Phase-1 actual requested Ed25519 verifier identity changed: expected one exact occurrence of libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key), found 0\""
+    },
+    {
+      "test_name": "record_opening_source_mutations_are_rejected",
+      "source_location": "beaconcrypt-core/tests/proverif_transcript_fidelity.rs:7029:5",
+      "classification": "Pinned native Ed25519 verifier source text still names libsodium",
+      "diagnostic": "mutation core_reader_inverts_remainder produced wrong diagnostic: Phase-1 actual requested Ed25519 verifier identity changed: expected one exact occurrence of libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key), found 0"
+    },
+    {
+      "test_name": "ratchet_effect_driver_mutation_matrix_is_complete_and_rejected",
+      "source_location": "beaconcrypt-core/tests/proverif_transcript_fidelity.rs:7046:5",
+      "classification": "Pinned native completion-controller body predates portable backend imports",
+      "diagnostic": "ratchet driver mutation ratchet_driver_core_send_finish_discards_interpreter_result produced wrong diagnostic: record effects exact production binding changed: beacon::finish_registration"
+    },
+    {
+      "test_name": "endpoint_frame_context_mutation_matrix_is_complete_and_rejected",
+      "source_location": "beaconcrypt-core/tests/proverif_transcript_fidelity.rs:7029:5",
+      "classification": "Pinned native Ed25519 verifier source text still names libsodium",
+      "diagnostic": "mutation endpoint_sender_parser_ignores_wire produced wrong diagnostic: Phase-1 actual requested Ed25519 verifier identity changed: expected one exact occurrence of libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key), found 0"
+    },
+    {
+      "test_name": "later_registration_mutation_matrix_is_complete_and_rejected",
+      "source_location": "beaconcrypt-core/tests/proverif_transcript_fidelity.rs:7121:5",
+      "classification": "Pinned native Ed25519 verifier source text still names libsodium",
+      "diagnostic": "later-registration mutation later_registration_adapter_sequence_substituted produced wrong diagnostic: Phase-1 actual requested Ed25519 verifier identity changed: expected one exact occurrence of libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key), found 0"
+    },
+    {
+      "test_name": "initial_ratchet_mutation_matrix_is_complete_and_rejected",
+      "source_location": "beaconcrypt-core/tests/proverif_transcript_fidelity.rs:7101:5",
+      "classification": "Pinned native Ed25519 verifier source text still names libsodium",
+      "diagnostic": "initial ratchet mutation initial_ratchet_chain_width_drifts produced wrong diagnostic: Phase-1 actual requested Ed25519 verifier identity changed: expected one exact occurrence of libsodium_rs::crypto_sign::PublicKey::from_bytes(request.public_key), found 0"
+    }
+  ],
+  "deferred_test_count": 22,
+  "exact_deferred_test_names": [
+    "free_schedule_rust_fidelity_annotations_are_exact",
+    "mldsa_transcript_source_and_model_mutations_are_rejected",
+    "production_manifest_symbolic_model_and_adapters_are_exact",
+    "proverif_verdict_classes_cover_every_checker_and_profile",
+    "registration_lifecycle_mutation_matrix_is_complete_and_rejected",
+    "cryptoframe_wire_mutation_matrix_is_complete_and_rejected",
+    "endpoint_frame_context_mutation_matrix_is_complete_and_rejected",
+    "initial_ratchet_mutation_matrix_is_complete_and_rejected",
+    "initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous",
+    "later_registration_mutation_matrix_is_complete_and_rejected",
+    "later_registration_sequence_three_poststate_is_exact_and_nonvacuous",
+    "peer_effects::peer_controller_and_interpreter_omission_duplication_and_bypass_are_rejected",
+    "peer_effects::peer_tokens_and_stored_metadata_cannot_expose_mutable_public_fields",
+    "ratchet_effect_driver_mutation_matrix_is_complete_and_rejected",
+    "record_effects::every_moved_record_operand_failure_and_bypass_control_is_rejected",
+    "record_effects::exact_record_controller_bodies_and_private_requests_are_required",
+    "record_effects::record_request_privacy_and_part_types_cannot_be_weakened",
+    "record_opening_source_mutations_are_rejected",
+    "registration_effects::extracted_registration_operand_and_continuation_mutations_are_rejected",
+    "registration_effects::registration_capabilities_keep_private_provenance_and_native_erasure",
+    "registration_effects::registration_failure_bypass_and_publication_order_controls_are_rejected",
+    "registration_effects::registration_wire_fields_and_attached_signature_roles_cannot_be_substituted"
+  ],
+  "nextest_profile": {
+    "path": "doc/impl/no-std-core-lifecycle-nextest.toml",
+    "sha256": "cf3760b0de007e140921968dee624c035dc746c57b6b3144e1f7e83991cc1a5a"
+  },
+  "historical_profile_unchanged": {
+    "path": "doc/impl/no-std-rustcrypto-nextest.toml",
+    "sha256": "ef5cbcb7374811c0e545678e32c9848fb0f8d35d90b6229535df0adc490d0a18"
+  },
+  "interpretation": [
+    "All 17 observed failures report missing pinned source text, changed exact native controller bodies, or negative controls receiving those source-binding diagnostics before their intended mutations. None of the observed failures is a cryptographic or protocol-runtime assertion failure.",
+    "The diagnostic log contains 17 failing test identities. Its final result line also contains FAILED; counting that line as another test would incorrectly produce 18.",
+    "The original five deferrals were filtered in this baseline; this receipt preserves their existing scope rather than claiming a new execution result for them.",
+    "Nextest restricts these exact names to the beaconcrypt-core package and proverif_transcript_fidelity binary; the complete binary remains enabled with its other 20 tests. Cargo CI uses the same full test names as explicit --skip arguments.",
+    "The inherited historical no-std-rustcrypto profile and validation receipts are preserved. Merged-source runtime and mutation results belong in separate merge receipts."
+  ]
+}

@@ -1,0 +1,183 @@
+{
+ "date": "2026-10-20",
+ "scope": "VCVio deprecation migration, stage S4, fixes of the two independent reviews at c8075ef8 (statement equivalence EQ-S4-1..EQ-S4-4, hygiene H1..H4). No Lean file of the build changed and no inventory row changed. Supplements vcvio-deprecations-s4.json (the record of c8075ef8) for the twins with the unused-variable header, the type changes of gate G4, the declarations without a twin (amendment A3), the list of certificate runs, the twin-text linter panics and the phase B exception list.",
+ "basis": "2ea8fd414f4f2dcc874b9189ce5ebdf42979bf57",
+ "previous_head": "c8075ef8458fc1d5a7bebef704cb704c5416958f",
+ "topic": {
+  "branch": "codex/vcvio-migration-S4",
+  "clone": "/home/user/bc-vmig-S4"
+ },
+ "commits": {
+  "fixes": "the commit that adds this receipt"
+ },
+ "reviews": {
+  "equivalence": {
+   "verdict": "APPROVE_WITH_NITS",
+   "commit": "c8075ef8458fc1d5a7bebef704cb704c5416958f",
+   "findings_sha256": "ae809f37bb4884744c07f77920dd0ce5719f6bdc6bc7bcb33987e582f2ff437b",
+   "fixed": [
+    "EQ-S4-1 (exception list carried; the acceptance part is A2 item 4)",
+    "EQ-S4-2",
+    "EQ-S4-3",
+    "EQ-S4-4 (informational; no change)"
+   ]
+  },
+  "hygiene": {
+   "verdict": "APPROVE_WITH_NITS",
+   "commit": "c8075ef8458fc1d5a7bebef704cb704c5416958f",
+   "findings_sha256": "5da02553f27442b3ec1d11aaa692a11cbefbf949b0a14680cc738ce3f978a6af",
+   "fixed": [
+    "H1",
+    "H2",
+    "H3",
+    "H4"
+   ]
+  },
+  "owner_level": [
+   "EQ-S4-1, the part that would let the D6 target and the plan's final acceptance check accept recorded exceptions: item 4 of amendment A2, pending the owner's decision, not in effect"
+  ]
+ },
+ "fixes": {
+  "H1, EQ-S4-3 (a)": "seven of the 16 twins carry the A1.1 unused-variable header (PqxdhDynamicIdentityPool.sampleSeeds_unused, PqxdhDynamicIdentityReports.reporting_advantage_le_identity_sum, PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum, PqxdhPhase1AcceptanceOracle.acceptance_advantage_le_sum, PqxdhDynamicKemJointSource.selected_source, PqxdhDynamicKemJointStopping.history_event, PqxdhDynamicKemJointStopping.pre_event); the S4 receipt (restated.twin_headers_with_unused_variables_switch), the S4 record entry and the analysis section named only sampleSeeds_unused and now name all seven; check-inventory.sh already pinned the correct per-module counts (PqxdhDynamicIdentityPool 1, PqxdhDynamicIdentityReports 1, PqxdhDynamicKemJointSource 1, PqxdhDynamicKemJointStopping 2, PqxdhJointPhase1Reports 1, PqxdhPhase1AcceptanceOracle 1)",
+  "EQ-S4-3 (b)": "the G4 sentences of the S4 record entry and the analysis section now include the type changes of PqxdhJointIdentity.advantage.eq_1 and PqxdhJointGapDh.advantage.eq_1 (equation lemmas of the two restated advantages, allowlisted by gate G4) and name the two simplification helpers among the five generated helpers (take_uniform._simp_1_1, universe parameters u, v at the base, u_1 at the stage; routed_bound._simp_1_5 of the patched S8 proof); S4 receipt gates.G4.note_type_changes",
+  "EQ-S4-2": "the no-twin handling of ctxPrefixBadProbability, PqxdhJointGapDh.advantage, PqxdhJointIdentity.advantage and privateSourcePrefix_borrowed_complete is recorded as amendment A3 in /tmp/bc-arc-scratch/vcvio-migration/AMENDMENTS.md (the four declarations, the 16 sites with their stages, the apply/revert tool, the later-stage obligations including the seven files without a deprecated site of their own, detection); the record, the analysis and the S4 receipt now say that the linter message concerns the CertTools-printed twin text and that a verbatim textual twin was not tried",
+  "H2": "the S4 record entry no longer says that all three restated definitions among the four have later proofs that depend on their earlier bodies: two of them (the identity and Gap-DH advantages) and two restated definitions that the plan does not count as cross-stage-consumed because their later users name them only in types (ctxSecretPrefixQueriedProbabilityInner, HonestKeyCompatibility) do; ctxPrefixBadProbability is used later only through equations with unchanged types and needs neither a twin nor a patch",
+  "H3": "S4 receipt logs entry: certificates-3, certificates-negative-3 and check-certificates-3 (third run, against the final build of check-lean-5, lease 00000845) and the note that run 2 used the build of check-lean-4 (lease 00000843); the S4 record entry says the same",
+  "H4": "S4 receipt findings.twintext_linter_panics and S4/NOTES.md: Lean's unused-variable linter panics (String.Slice.pos!, offset not at a UTF-8 character boundary) on some in-memory candidate twin texts during the out-of-build twin-text runs (B1 48, D1 6, D2 6), without effect on the chosen headers or the build",
+  "EQ-S4-1": "the stage's per-declaration phase B exception list (16 declarations, 124 facade-probe rows outside the bridge and the twins) is carried as /tmp/bc-arc-scratch/vcvio-migration/S4/review-fix/data/phaseB-exceptions.json (byte-identical to S4/stage/phaseB-exceptions.json, reproduced by the equivalence review) into the final residual report after S9; A2 item 4 stays on the owner's agenda before the S9 final sweep. The review probe's three evalDist_apply_univ hits are substring matches on evalDist_apply_univ_le_one in the review's own probe; the stage's facade probe matches whole names and has none, so no stage tool changes",
+  "EQ-S4-4": "informational, no change: PqxdhHypothesisWitness.toy_compatible (S8) keeps its type and now refers to HonestKeyCompatibility._proof_1; the generated helpers of the patched routed_bound changed; ctxSecretPrefixQueriedProbabilityInner.eq_1 is now generated in CtxNonceAeadIndDollar; S8 should expect toy_compatible's proof term to follow HonestKeyCompatibility's body"
+ },
+ "amendment_A3": {
+  "file": "/tmp/bc-arc-scratch/vcvio-migration/AMENDMENTS.md",
+  "sha256": "ecd977acd491177873e33542accb02b9757bf4ed7b8f24437f1192f1dcd425f2",
+  "declarations_without_twin": [
+   "CtxPrefixIsolation.ctxPrefixBadProbability (needs neither twin nor patch)",
+   "PqxdhJointGapDh.advantage",
+   "PqxdhJointIdentity.advantage",
+   "PqxdhStatefulPhase1Authentication.privateSourcePrefix_borrowed_complete"
+  ],
+  "consumer_sites_by_stage": {
+   "S5": [
+    "CtxNonceAeadIndDollar (bridge)",
+    "PqxdhCorrelatedRootSource (bridge, no deprecated site of its own)",
+    "PqxdhPrivateRootSource (bridge)",
+    "PqxdhPrivateAcceptedRoot (bridge, no deprecated site of its own)",
+    "PqxdhPrivatePhase1Prefix (forward lemma)",
+    "PqxdhGeneratedPhase1Prefix (forward lemma)"
+   ],
+   "S7": [
+    "PqxdhAuthenticatedRoot (bridge)",
+    "PqxdhAuthenticatedRootSource (bridge, no deprecated site of its own)",
+    "PqxdhInitialRootEventSource (bridge, no deprecated site of its own)"
+   ],
+   "S8": [
+    "PqxdhServerAuthJointIdentityEuf (bridge)",
+    "PqxdhServerAuthAssumptions (bridge)",
+    "PqxdhServerAuthIntermediate (forward lemma, no deprecated site of its own)",
+    "PqxdhServerAuthCommonAuthentication (forward lemma, no deprecated site of its own)"
+   ],
+   "S9": [
+    "PqxdhDeploymentServerAuthInjective (bridge)",
+    "PqxdhDeploymentServerAuthInjectiveGame (forward lemma)",
+    "PqxdhDeploymentHeadlineInjective (forward lemma, no deprecated site of its own)"
+   ]
+  },
+  "tool": "/tmp/bc-arc-scratch/vcvio-migration/S4/tools/wrapper_patch_s4.py (apply/revert)",
+  "tool_sha256": "7e43e4165f518d1b3f41de603dc93cbf1efbd1f256922402cd26d0163aaebfed"
+ },
+ "phase_b_exceptions": {
+  "file": "/tmp/bc-arc-scratch/vcvio-migration/S4/review-fix/data/phaseB-exceptions.json",
+  "sha256": "03db9c53c076dc5b06ba0667795fe57c810cce891bdc87901c1b94f7503b6853",
+  "equal_to_stage_list": true,
+  "rows": 124,
+  "declarations": 16,
+  "by_module": {
+   "CtxIndependentTags": 5,
+   "CtxPrefixIsolation": 4,
+   "PqxdhKemCorrectnessError": 2,
+   "PqxdhKemCorrectnessStopped": 3,
+   "PqxdhStatefulPhase1Authentication": 2
+  },
+  "names": [
+   "CtxIndependentTags.tvDist_ctxSplitBeforeVerifyGame_independentTagGame_le_secretPrefixQueried",
+   "CtxIndependentTags.tvDist_ctxSplitBeforeVerifyInner_independentTag_le_secretPrefixQueried",
+   "CtxIndependentTags.tvDist_ctxSplitRoutedBeforeVerifyInner_independentTag_le_secretPrefixQueried",
+   "CtxIndependentTags.tvDist_ctxSplitRouted_independentTag_le_prefixBad",
+   "CtxIndependentTags.tvDist_ctxSplitRouted_independentTag_le_prefixBad_of_main",
+   "CtxPrefixIsolation.tvDist_ctxBeforeVerifyGame_prefixIsolatedGame_le_secretPrefixQueried",
+   "CtxPrefixIsolation.tvDist_ctxBeforeVerifyInner_prefixIsolated_le_secretPrefixQueried",
+   "CtxPrefixIsolation.tvDist_ctxReal_prefixIsolated_le_prefixBad",
+   "CtxPrefixIsolation.tvDist_ctxReal_prefixIsolated_le_secretPrefixQueried",
+   "PqxdhKemCorrectnessError.continuation_bound",
+   "PqxdhKemCorrectnessError.routed_bound",
+   "PqxdhKemCorrectnessStopped.after_bound",
+   "PqxdhKemCorrectnessStopped.prepared_bound",
+   "PqxdhKemCorrectnessStopped.stopped_bound",
+   "PqxdhStatefulPhase1Authentication.continuationAdvantage_le_bad",
+   "PqxdhStatefulPhase1Authentication.privateContinuationAdvantage_le_eufCma"
+  ],
+  "amendment_A2": {
+   "items_in_effect": [
+    1,
+    2,
+    3
+   ],
+   "pending_owner_decision": [
+    4
+   ]
+  }
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "987e93df28f0d50ad616536108c41d2220bd985b4feafffc521899f48ee1660e",
+   "olean_sha256": "779be810e6d5773ba092f71c3ba3ef5de65e540e321971cd075728e637097b9f",
+   "olean_equal_to_shared_build": true,
+   "check_certificates_s2.py": "f330b2676633e4d1b2921abd285282107f0242e34c9b8948f0a80298cceca540"
+  },
+  "certificate_file_sha256": "954efee08771ef2dfa76a7817c3a55283f88316c7e7bf984d4aaa5ce5782cedb",
+  "certificate_file_equal_to_stage": true,
+  "negative_file_sha256": "bce5160bf1a20e6141a0fe3908149c8c2bf6a881c22e8f9ad961bee83afa91e5",
+  "negative_file_equal_to_stage": true,
+  "pre_stage_dump_sha256": "4e2b49f5fc633a01d96d5d35e9885c02a544fd0b11f05c18040820d5a3c509b7",
+  "pass_lines": 99,
+  "negative_error_lines": [
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20
+  ],
+  "checker": "RESULT PASS",
+  "lean_output_equal_to_stage_run_3": true,
+  "lean_output_equal_to_validation_run": true,
+  "negative_output_equal_to_stage_run_3": true,
+  "negative_output_equal_to_validation_run": true,
+  "log_sha256": "a7efb3496011404c75d9428f1669b1f3045d7f4f49d025261efe1d5f56e46147"
+ },
+ "repository_checks": {
+  "inv_recount": "handwritten-lean count unchanged (1987)",
+  "inv_rehash": "proofs/lean/BeaconcryptCore.lean: unchanged; proofs/trusted-boundary.md: unchanged; proofs/check-inventory.sh: unchanged",
+  "check_inventory_edited_tree": {
+   "lease": "00000851",
+   "rc": 0
+  },
+  "check_lean": {
+   "lease": "00000852",
+   "rc": 0,
+   "jobs": [
+    "5535"
+   ],
+   "modules_built": 0,
+   "modules_replayed": 219
+  },
+  "lean_scan": "LEAN-SCAN files 1994 hits 0"
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S4/review-fix/logs/"
+}

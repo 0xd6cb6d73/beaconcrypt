@@ -1,0 +1,6 @@
+refs/heads/codex/registration-r1-common-restriction ae279d74102240965d0ca39e70e97f3aecde0562
+refs/remotes/origin/codex/full-proof-composition e410d32ad25d6db40255beefd1e372827055d4db
+refs/remotes/origin/codex/registration-joint-service-composition 290ee8c2904f687b4dd5e12c19e53b512545ef6e
+refs/remotes/origin/codex/registration-symbolic-schedule ae279d74102240965d0ca39e70e97f3aecde0562
+
+No upstream is configured for this lane. These are local/cached refs; no network refresh was performed for this pause.

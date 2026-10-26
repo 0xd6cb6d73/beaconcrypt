@@ -1,0 +1,23 @@
+# Complete joint-source KEM reduction query ledger
+
+`PqxdhDynamicKemJointBounds` charges the executable combined identity, local-randomness and indexed KEM interface used by `PqxdhDynamicKemJointRouter`. The ten guarded statements count the actual interpreted oracle program, including all adaptive continuations, optional rejected replies, missing or future handles, other-key operations, and explicit stopping. The bounds do not follow merely from equality of final distributions.
+
+`IsIdentityCreate` selects the actual joint-identity creation request. `IsUniform` selects explicit uniform requests through either the joint-identity service or the local source interface. `IsDecapsulation` selects every indexed source decapsulation attempt. Write their respective source caps as `qCreate`, `qUniform` and `qD`. These caps describe all possible source replies, including a continuation after an ordinary optional rejection; stopping the reduction can shorten that work but cannot grant the remaining continuation a free query.
+
+The complete executable prechallenge and postchallenge suffixes have the following separate caps. Here `uDecap` and `bDecap` bound the ordinary uniform and selected base class, respectively, inside each actual local other-key `kem.decaps` call.
+
+| Resource | Complete prechallenge or postchallenge suffix cap |
+| --- | --- |
+| Selected logical CCA decapsulation requests | `qD` |
+| Uniform queries | `32 * qCreate + qUniform + uDecap * qD` |
+| A nonuniform base query class | `bDecap * qD` |
+
+`excluded_step` and `excluded_schedule` prove the general nonuniform class accounting. Native joint identity creation, signing, DH use and reveals execute the original concrete joint interpreter: its only ordinary oracle work is its separately counted uniform draws. An explicit local source coin also has no nonuniform effect. Indexed KEM decapsulation retains its full callback cost, including other-key work. `pre_decaps` and `post_decaps` specialize this accounting to the selected logical CCA oracle. Prechallenge selected requests may use the ordinary unrestricted oracle. Postchallenge the exact selected challenge ciphertext returns the supplied candidate to the internal source client and never reaches that oracle; every other selected request is charged. Neither result assumes the candidate is hidden from an arbitrary source client.
+
+`pre_base` and `post_base` preserve any specified base predicate that excludes the uniform and selected logical-decapsulation channels. Their only callback premise is an ordinary query bound for the opaque KEM decapsulation operation. The premise is not a protocol security assumption, and every actual local call is charged. These resource lemmas do not need recipient correctness, ciphertext validity, public-key uniqueness or a selected-honest-target hypothesis.
+
+`uniform_step` proves the precise sum of identity creation, explicit source coins and local KEM work for each request. Actual identity creation consumes the original 32 byte-valued draws, preserving the Ed25519/X25519 correlated seed use. `uniform_schedule` lifts that sum through the complete adaptive source program and both optional stopping branches. `pre_uniform` and `post_uniform` instantiate the actual CCA routers with the full local decapsulation allowance. Thus the full joint suffix no longer has an unspecified ambient coin budget.
+
+The table covers the suffix after its KEM reservation has been sampled. That reservation remains a separate real cost: `PqxdhLiveKemSelection.family_uniform` charges `qKeygen * count` for the locally generated unselected pairs, and `selected_uniform` charges `qKeygen + qKeygen * count` when also counting the selected challenger generation. All reserved slots are charged, including ones the adaptive source never activates. The existing complete-continuation source generator-order theorem justifies moving these samples. The one ordinary challenge encapsulation, the selected challenger decapsulation implementation work, and the branch-independent ghost uniform shared-secret draw remain the separate challenger costs in the ordinary one-key endpoint; they are not claimed to vanish from whole-experiment work.
+
+These are resource theorems for the existing executable source-to-CCA interpretation. They add no cryptographic advantage, guessing term or statistical error. They do not yet derive concrete global adversary caps, connect the native owner/reveal event to global freshness, prove candidate nonexposure at the public protocol boundary, or apply target/session selection losses. Those consuming obligations remain separate from this exact full joint ledger. Primitive implementations and snapshot, persistence and restoration behavior remain outside scope.

@@ -1,0 +1,31 @@
+{
+  "base": "c5f3fdd741aa487ebf8f07aef20a3809cf02ab5d",
+  "scope": "A2 exact T0 source-profile projected signature provenance; no native-byte, full-transcript or computational/global-security claim",
+  "files": {
+    "beaconcrypt-core/Makefile": "b6572696208a7dc69e38315870922f183c9890b9e767cb70ecd43c6136552841",
+    "beaconcrypt-core/proofs/check-inventory.sh": "4c17e35e36e5b6936540216750e328ad12560fbb961b85a4e9ab5484fb5833e8",
+    "beaconcrypt-core/proofs/pro-verif/check-registration-provenance.py": "060fc5574a5e7a008b44dce097a35dda8654410e859a91c7dd197cace9f30bdf",
+    "beaconcrypt-core/proofs/pro-verif/check-verdict-classes.py": "caa279a120978a6bec5af4100835e9d98c421b2c949ed7031ee1cfcbb4b2950a",
+    "beaconcrypt-core/proofs/pro-verif/declaration-allowlist.tsv": "c941c6c7b5030fef6823f231d6c76a607c86219e144c4ce533eb2c10a0e9bc3e",
+    "beaconcrypt-core/proofs/pro-verif/registration-provenance-a2.pv": "28ac360cf7230c38b85796b103bdd5dd381b61899e8296baa0f8ccdcefdbc755",
+    "beaconcrypt-core/proofs/pro-verif/registration-provenance-beacon-secret.pv": "4069c97086cc4ea1341f02f8ba6f78da658356b3419fe91fc2f8db17a3cfc67f",
+    "beaconcrypt-core/proofs/pro-verif/registration-provenance-control-purpose.pv": "1a64a187f98f0529c55714740da5d5cd045f878303e047a81f5c8245cc7cb886",
+    "beaconcrypt-core/proofs/pro-verif/registration-provenance-control-triple.pv": "37af30891095a574b09d9abd0b432341102f819a73926864182b6d06c846e15c",
+    "beaconcrypt-core/proofs/pro-verif/registration-provenance-reachable.pv": "3d03a111e29895b412fde1da08b40d495c42c32a8c9b07b5e607243af69a497e",
+    "beaconcrypt-core/proofs/pro-verif/registration-provenance-server-secret.pv": "74fe3650ff849c0303a849133334f3c5353c44efc2ed9cba068909408bd201fc",
+    "beaconcrypt-core/proofs/pro-verif/registration-provenance-theory.py": "85dcd65b8ab748da12dd616dea61066a000214567aa763cd6b231581623257d2",
+    "beaconcrypt-core/proofs/pro-verif/registration-provenance-wrong-purpose.pvl": "432a01a33110b78c69d9fbcb361b9f9d371de872bdb0cb83a61b3530d755e174",
+    "beaconcrypt-core/proofs/pro-verif/registration-provenance.pvl": "422edd04d7f8a7d7fcb0ac18d04fe4daeb9cbe2620d6b017037fee3b5ff792ba",
+    "beaconcrypt-core/proofs/pro-verif/test-registration-provenance-checker.py": "f31111ce8bc8de49834c9a665c51d386570126ce42546fcdfb15dab7f407def2",
+    "beaconcrypt-core/proofs/pro-verif/test-verdict-classes.py": "c79f5dff38a0004e7ad2a859ec40255875f7b917ee81389964b69dc2653bf905",
+    "beaconcrypt-core/proofs/pro-verif/verdict-classes.tsv": "f2ad5fc45229aed5a0c67795abe16b427342add83e4ec650fff0936b7701e108",
+    "beaconcrypt-core/proofs/pro-verif/verdict-inventory.py": "c8a808fbeaa04b968a56295de5c6e0bdba20c12701bf4ee23e2373c7623745ff",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "b9aa33266172a019c52709279ae821a16cb97e7352264d33ff0b429e1fc6c48b",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "579f773dc407e4c8199ad9c5214e6a367a818ef3e4fc895c494b765780dbcb5c",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "d0194fee3fc46f9282663e0aa35e8c225e27b03abfa0dbbccfad73da8caa5b57",
+    "doc/formal-verification-analysis.md": "377ce9d5946fb0879badb32032ca01acab8f7ecdb8480d4af4d586d5f03c4d18",
+    "doc/impl/proverif-fs-source-abstraction.md": "a8d111f6499e102bb1c80bf7c8c411b9583a6e861b359985b5183966526b376c",
+    "doc/impl/proverif-registration-provenance.md": "e8a4d4ab3abfb25864fc98792064f4995f10ce2dd3e728d52e8058ad48a77901",
+    "doc/impl/proverif-verdict-classification.md": "34dd4957d0cf100c268bee3b40c068fac70fe46129ad55548744cb5684f2ac1f"
+  }
+}

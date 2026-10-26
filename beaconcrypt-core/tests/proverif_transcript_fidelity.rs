@@ -1,0 +1,23463 @@
+// SPDX-License-Identifier: 0BSD
+
+use beaconcrypt_core::commitment::{
+	AEAD_KEY_SIZE, AEAD_NONCE_SIZE, AEAD_TAG_SIZE, COMMITMENT_TRANSCRIPT_SIZE,
+	build_commitment_transcript,
+};
+use beaconcrypt_core::pqxdh::{
+	self, BeaconCoins, BeaconFresh, BeaconStartInputs, InitialRatchetKdfResponse,
+	PqxdhSharedSecrets, ServerBinding,
+};
+use beaconcrypt_core::{
+	ConcreteRatchetKernel, RATCHET_KDF_OUTPUT_SIZE, RatchetChain, RatchetKdfResponse,
+	ReceiveEffect, SYM_RATCHET_INFO, SendStart, begin_receive, begin_send,
+	split_ratchet_kdf_output,
+};
+
+#[path = "fidelity/peer_effects.rs"]
+mod peer_effects;
+#[path = "fidelity/record_effects.rs"]
+mod record_effects;
+#[path = "fidelity/registration_effects.rs"]
+mod registration_effects;
+#[path = "fidelity/transport.rs"]
+mod transport;
+
+const INTERFACE: &str = include_str!("../proofs/pro-verif/production-transcript-interface.pvl");
+const CRYPTO_MODEL: &str = include_str!("../proofs/pro-verif/crypto.pvl");
+const MLDSA_AUTH_MODEL: &str = include_str!("../proofs/pro-verif/mldsa-auth.pvl");
+const MLDSA_REGISTRATION_MODEL: &str =
+	include_str!("../proofs/pro-verif/mldsa-registration-auth.pvl");
+const MLDSA_REGISTRATION_QUERIES: &str =
+	include_str!("../proofs/pro-verif/mldsa-registration-auth.pv");
+const CBOR_REGISTRATION_MODEL: &str = include_str!("../proofs/pro-verif/cbor-registration.pvl");
+const EXACT_REGISTRATION_ORIGIN_QUERIES: &str =
+	include_str!("../proofs/pro-verif/exact-registration-origin-queries.pvl");
+const X25519_ALIAS_RUNNER: &str = include_str!("../proofs/pro-verif/check-phase2-x25519-alias.py");
+const X25519_ALIAS_CONTROL: &str =
+	include_str!("../proofs/pro-verif/phase2-x25519-alias-control.pv");
+const GENERAL_REGISTRATION_RUNNER: &str =
+	include_str!("../proofs/pro-verif/check-general-registration.py");
+const GENERAL_REGISTRATION_GENERATOR: &str =
+	include_str!("../proofs/pro-verif/generate-general-registration.py");
+const GENERAL_REGISTRATION_CHECKER_TESTS: &str =
+	include_str!("../proofs/pro-verif/test-general-registration-checker.py");
+const GENERAL_REGISTRATION_ARTIFACTS: [(&str, &str); 6] = [
+	(
+		"general-registration-admission.pv",
+		include_str!("../proofs/pro-verif/general-registration-admission.pv"),
+	),
+	(
+		"general-registration-admission.pvl",
+		include_str!("../proofs/pro-verif/general-registration-admission.pvl"),
+	),
+	(
+		"general-registration-admission-queries.pvl",
+		include_str!("../proofs/pro-verif/general-registration-admission-queries.pvl"),
+	),
+	(
+		"general-registration-cache.pvl",
+		include_str!("../proofs/pro-verif/general-registration-cache.pvl"),
+	),
+	(
+		"general-registration-continuation.pvl",
+		include_str!("../proofs/pro-verif/general-registration-continuation.pvl"),
+	),
+	(
+		"general-registration-public-witness.pvl",
+		include_str!("../proofs/pro-verif/general-registration-public-witness.pvl"),
+	),
+];
+const ENVIRONMENT_MODEL: &str = include_str!("../proofs/pro-verif/environment.pvl");
+const ACTIVE_QUANTUM_WITNESS: &str = include_str!("../proofs/pro-verif/active-quantum-witness.pvl");
+const EXTRACTION_MODEL: &str = include_str!("../proofs/pro-verif/extraction/lib.pvl");
+const MLKEM_REENCAPSULATION_CONTROL: &str =
+	include_str!("../proofs/pro-verif/mlkem-reencapsulation-control.pvl");
+const CORE_MAKEFILE: &str = include_str!("../Makefile");
+const FORMAL_WORKFLOW: &str = include_str!("../../.github/workflows/formal-verification.yml");
+const ADAPTER_PQXDH: &str = include_str!("../../beaconcrypt/src/pqxdh.rs");
+const ADAPTER_AUTH: &str = include_str!("../../beaconcrypt/src/auth.rs");
+const ADAPTER_RATCHET: &str = include_str!("../../beaconcrypt/src/ratchet.rs");
+const ADAPTER_SHARED: &str = include_str!("../../beaconcrypt/src/shared.rs");
+const ADAPTER_SERVER: &str = include_str!("../../beaconcrypt/src/server.rs");
+const ADAPTER_BEACON: &str = include_str!("../../beaconcrypt/src/beacon.rs");
+const CORE_AUTHENTICATION: &str = include_str!("../src/authentication.rs");
+const CORE_SESSION: &str = include_str!("../src/session.rs");
+const CORE_REGISTRATION: &str = include_str!("../src/registration.rs");
+const CORE_AGREEMENT: &str = include_str!("../src/agreement.rs");
+const CORE_RECORD_EFFECTS: &str = include_str!("../src/record_effects.rs");
+const CORE_PEER: &str = include_str!("../src/peer.rs");
+const CORE_RECORD: &str = include_str!("../src/record.rs");
+const CORE_COMMITMENT: &str = include_str!("../src/commitment.rs");
+const CORE_PQXDH: &str = include_str!("../src/pqxdh.rs");
+const CORE_PQXDH_CONCRETE: &str = include_str!("../src/pqxdh/concrete.rs");
+const CORE_RATCHET: &str = include_str!("../src/ratchet.rs");
+const CORE_RATCHET_CONCRETE: &str = include_str!("../src/ratchet/concrete.rs");
+const CORE_RATCHET_CONTROL: &str = include_str!("../src/ratchet/control.rs");
+const CORE_RATCHET_REFINED: &str = include_str!("../src/ratchet/refined.rs");
+const LEAN_RATCHET_EFFECT: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetEffect.lean");
+const LEAN_RATCHET_EFFECT_REFINEMENT: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean");
+const LEAN_PQXDH_KDF: &str = include_str!("../proofs/lean/BeaconcryptCore/Model/Pqxdh/Kdf.lean");
+const LEAN_PQXDH_THEOREMS: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Model/Pqxdh/Theorems.lean");
+const TRANSPORT_SCHEMA: &str = include_str!("../../beaconcrypt-parse/schema/transport.cddl");
+const TRANSPORT_PARSER: &str = include_str!("../../beaconcrypt-parse/src/lib.rs");
+const TRANSPORT_SIZING: &str = include_str!("../src/transport.rs");
+const ADAPTER_WIRE: &str = include_str!("../../beaconcrypt/src/wire.rs");
+const CRYPTOFRAME_SCHEMA: &str = TRANSPORT_SCHEMA;
+const PHASE1_SCHEMA: &str = TRANSPORT_SCHEMA;
+const PHASE2_SCHEMA: &str = TRANSPORT_SCHEMA;
+const FAILED_RECEIVE_QUERIES: &str = include_str!("../proofs/pro-verif/failed-receive-queries.pvl");
+const FAILED_RECEIVE_REACHABILITY_QUERIES: &str =
+	include_str!("../proofs/pro-verif/failed-receive-reachability-queries.pvl");
+const LATER_REGISTRATION_CONTROL: &str =
+	include_str!("../proofs/pro-verif/later-sequence-registration-control.pvl");
+const LATER_REGISTRATION_QUERIES: &str =
+	include_str!("../proofs/pro-verif/later-sequence-registration-queries.pvl");
+const LATER_REGISTRATION_MAIN: &str =
+	include_str!("../proofs/pro-verif/later-sequence-registration.pv");
+const POST_REGISTRATION_CONTROL: &str =
+	include_str!("../proofs/pro-verif/post-registration-ratchet-control.pvl");
+const POST_REGISTRATION_QUERIES: &str =
+	include_str!("../proofs/pro-verif/post-registration-ratchet-queries.pvl");
+const POST_REGISTRATION_MAIN: &str =
+	include_str!("../proofs/pro-verif/post-registration-ratchet.pv");
+const PROVERIF_RESULT_CHECKER: &str = include_str!("../proofs/pro-verif/check-results.awk");
+const LEAN_RATCHET_CONTROL: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetControl.lean");
+const LEAN_RATCHET_REFINEMENT: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetRefinement.lean");
+const LEAN_RATCHET_RECEIVE_BEHAVIOR: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetReceiveBehavior.lean");
+const LEAN_PQXDH_SESSION_LIFECYCLE: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/PqxdhSessionLifecycle.lean");
+const LEAN_BYTE_TRACE_REFINEMENT: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/ByteTraceRefinement.lean");
+const LEAN_BOUNDARY_EXECUTION: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/BoundaryExecution.lean");
+const LEAN_PROTOCOL_HISTORY: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/ProtocolHistory.lean");
+const TRANSCRIPT_FIDELITY_TEST: &str = include_str!("proverif_transcript_fidelity.rs");
+
+const FACT_PREFIX: &str = "(* @beaconcrypt-fidelity-v1 ";
+const FACT_SUFFIX: &str = " *)";
+const LATER_REGISTRATION_QUERY_HASHES: [u64; 18] = [
+	17_193_186_413_467_823_408,
+	9_977_621_451_872_089_083,
+	1_859_662_740_831_841_734,
+	6_185_069_684_262_088_586,
+	1_202_361_603_546_247_583,
+	3_455_186_719_080_634_235,
+	676_668_089_077_458_887,
+	14_740_752_099_764_896_718,
+	3_761_750_926_410_306_009,
+	15_713_490_337_305_187_190,
+	346_165_226_435_181_147,
+	11_695_414_411_595_245_009,
+	8_633_529_055_395_976_217,
+	14_890_042_822_019_934_755,
+	16_368_760_463_437_037_108,
+	15_927_833_979_560_930_765,
+	7_422_622_837_596_238_938,
+	9_459_416_062_583_179_785,
+];
+const LATER_REGISTRATION_CHECKER_HASH: u64 = 13_744_418_603_477_632_925;
+const POST_REGISTRATION_QUERY_HASHES: [u64; 29] = [
+	13_732_113_423_386_418_035,
+	15_659_167_285_277_539_827,
+	911_672_438_838_539_665,
+	15_414_942_233_535_245_802,
+	3_382_390_634_288_590_345,
+	10_419_032_750_057_719_768,
+	2_662_333_429_768_925_921,
+	14_413_618_228_441_011_121,
+	18_312_738_672_001_042_933,
+	15_470_908_886_182_888_698,
+	173_383_255_443_887_514,
+	5_994_236_791_793_324_971,
+	15_269_535_120_974_471_958,
+	8_391_988_441_863_424_093,
+	9_861_910_612_467_458_182,
+	18_266_619_734_200_497_216,
+	8_809_092_985_519_307_107,
+	6_167_450_721_035_756_786,
+	6_159_604_066_175_398_263,
+	17_692_630_698_947_081_654,
+	4_988_454_840_997_839_352,
+	10_540_583_738_131_838_007,
+	17_713_933_936_207_445_299,
+	2_790_340_688_878_177_269,
+	16_409_484_950_328_146_878,
+	6_185_348_103_479_085_792,
+	7_787_840_347_632_236_485,
+	312_642_977_985_801_463,
+	18_304_722_595_062_215_684,
+];
+const POST_REGISTRATION_CHECKER_HASH: u64 = 329_879_472_483_210_497;
+const EXPECTED_FACTS: &[&str] = &[
+	"schema=1",
+	"legacy_profiles.scope=classical_projection:MLDSA_guards_not_globally_lifted",
+	"domain.scope=HKDF_domains_only:MLDSA_signing_and_transcript_domains_are_separate",
+	"phase1.init_kex.scope=classical_four_field_projection_inside_mandatory_MLDSA_v2_wire",
+	"phase2.response.scope=classical_five_field_projection_inside_mandatory_MLDSA_v2_wire",
+	"associated_data.core=281_bytes:classical_prefix_153_then_128_zero_placeholder_bytes",
+	"associated_data.adapter=overwrite_153..217_with_server_hash_and_217..281_with_beacon_hash",
+	"associated_data.symbolic_scope=legacy_constructor_is_classical_prefix:new_MLDSA_profile_models_both_hash_slots",
+	"mldsa.security=explicit_external_EUF_CMA_assumption:implementation_and_assumption_not_proved",
+	"mldsa.algorithm=ML_DSA_65:seed_32,public_key_1952,signature_3309",
+	"mldsa.wire.init=CBOR_v2_array_8:identity,prekey,one_time,pq,mldsa_public_key,signature",
+	"mldsa.wire.response=CBOR_v2_array_8:identity,ephemeral,kem,raw_app,assigned_id,signature",
+	"mldsa.signature.context=beaconcrypt_registration_auth_v1",
+	"mldsa.signature.input=64_spaces||role_label||00||blake2b512_transcript",
+	"mldsa.signature.roles=beaconcrypt_v1_beacon_registration,beaconcrypt_v1_server_registration",
+	"mldsa.hash=unkeyed_BLAKE2b512:64_bytes",
+	"mldsa.hash.variable_fields=LE64_length_then_exact_bytes",
+	"mldsa.init.hash=init_domain,LE64_server_kid,server_ed_pin,beacon_MLpk,server_MLpk,length_framed_identity_prekey_one_time_pq",
+	"mldsa.response.hash=response_domain,init_hash,length_framed_identity_ephemeral_kem_app,LE64_assigned_id",
+	"mldsa.hash.signature_field=excluded",
+	"mldsa.init.verify=decoded_request_MLkey_before_classical_signatures_replay_KEM_and_DH",
+	"mldsa.response.verify=pinned_server_MLkey_before_KEM_DH_and_CTX_open",
+	"mldsa.response.publish=signature_and_complete_CBOR_encoding_before_server_commit",
+	"mldsa.accepted_token=private_init_hash,server_MLkey_hash,beacon_MLkey_hash",
+	"mldsa.accepted_token.retarget=reject_current_server_MLkey_hash_mismatch_before_candidate_and_KDF",
+	"mldsa.authorization=attacker_owned_beacon_keys_and_registrations_allowed:no_enrollment_assumption",
+	"mldsa.proof_scope=focused_signature_provenance_and_source_synchronization:not_whole_protocol_refinement",
+	"mldsa.symbolic.files=mldsa-auth.pvl,mldsa-registration-auth.pvl,mldsa-registration-auth.pv",
+	"mldsa.symbolic.init_origin=only_exact_uncompromised_honest_MLkey:not_Ed_identity_authorization",
+	"mldsa.symbolic.response_origin=pinned_uncompromised_server_MLkey_and_retained_request_hash",
+	"mldsa.symbolic.controls=owned_key_admission,explicit_compromise,role_context_request_separation,AD_hash_slot_binding",
+	"mldsa.source_fidelity=reviewed_transcription_guards:not_Rust_to_ProVerif_semantic_compilation",
+	"mldsa.transcript.core=beaconcrypt-core/src/authentication.rs:pure_bytes_without_hashing_or_signing",
+	"mldsa.transcript.lengths=Init_5495,response_prefix_1293,assigned_id_8,signature_input_163",
+	"mldsa.transcript.fixed_fields=adapter_checked_slice_to_array_conversions_before_core_construction",
+	"mldsa.transcript.response=private_prefix,actual_borrowed_CTU,LE64_assigned_id:checked_actual_CTU_length",
+	"mldsa.transcript.hashing=adapter_unkeyed_BLAKE2b512_over_exact_core_Init_or_ordered_response_parts",
+	"mldsa.transcript.transport_limit=parser_codec_33554432:not_preimage_builder",
+	"transport.format=deterministic_CBOR:definite_arrays,canonical_primitive_encodings",
+	"transport.prefix.init=version:2,kind:0,array_length:8",
+	"transport.prefix.response=version:2,kind:1,array_length:8",
+	"transport.prefix.frame=version:1,kind:2,array_length:5",
+	"transport.message_limit=33554432:complete_encoded_message_bytes",
+	"transport.parser=bounded_primitive_preflight_then_generated_validator:empty_remainder_required",
+	"transport.send.size_gate=exact_checked_frame_length_with_80_byte_overhead:before_ratchet_take",
+	"transport.registration.payload=raw_ciphertext||retained_aead_tag||commitment:no_nested_frame",
+	"transport.registration.open=shared_payload_receive:sequence_1,pinned_server_id",
+	"transport.proof_scope=source_fidelity_and_logical_record_normalization:not_serialization_refinement_or_parser_proof",
+	"domain.count=2",
+	"domain.pqxdh.hex=426561636f6e637279707450717864685f435552564532353531395f5348412d3531325f4d4c2d4b454d2d373638",
+	"domain.pqxdh.length=46",
+	"domain.symmetric.hex=53796d526174636865745f484b44465f5348412d3531325f43484143484132305f504f4c5931333035",
+	"domain.symmetric.length=41",
+	"domain.distinct=true",
+	"labels.absent=aead,ctx,direction,sequence,session,phase",
+	"hkdf.hash=sha512",
+	"hkdf.salt=none",
+	"hkdf.output_length_domain=absent",
+	"hkdf.root.domain=pqxdh",
+	"hkdf.root.output=32",
+	"hkdf.initial.domain=symmetric",
+	"hkdf.initial.output=64",
+	"hkdf.initial.left=0..32",
+	"hkdf.initial.right=32..64",
+	"hkdf.initial.server=send:left,receive:right",
+	"hkdf.initial.beacon=send:right,receive:left",
+	"hkdf.step.domain=symmetric",
+	"hkdf.step.output=76",
+	"hkdf.step.key=0..32",
+	"hkdf.step.next_chain=32..64",
+	"hkdf.step.nonce=64..76",
+	"hkdf.symmetric.prefix=initial[0..64]=step[0..64]",
+	"root.padding.byte=ff",
+	"root.padding.length=32",
+	"root.fields=padding,dh1,dh2,dh3,dh4,kem_shared_secret",
+	"root.field_lengths=32,32,32,32,32,32",
+	"root.length=192",
+	"encoding.ed25519=01,pk",
+	"encoding.mlkem768=03,pk",
+	"encoding.x25519_prekey=04,80,pk",
+	"encoding.x25519_one_time=04,81,pk",
+	"associated_data.fields=tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain,symmetric_ratchet_domain,blake2b512(server_mldsa_public_key),blake2b512(beacon_mldsa_public_key)",
+	"associated_data.offsets=0..33,33..66,66..112,112..153,153..217,217..281",
+	"associated_data.length=281",
+	"associated_data.domains=hkdf_domain_values",
+	"aead.primitive=chacha20poly1305_ietf",
+	"aead.fields=key,nonce,associated_data,plaintext",
+	"aead.key_length=32",
+	"aead.nonce_length=12",
+	"aead.tag_length=16",
+	"aead.tag=detached",
+	"aead.sequence=absent",
+	"aead.sender_id=absent",
+	"aead.label=none",
+	"ctx.hash=blake2b512",
+	"ctx.fields=key,nonce,associated_data,retained_aead_tag,le64(sequence),le64(sender_id)",
+	"ctx.offsets=0..32,32..44,44..325,325..341,341..349,349..357",
+	"ctx.length=357",
+	"ctx.sequence_encoding=le64",
+	"ctx.sender_id_encoding=le64",
+	"ctx.label=none",
+	"phase1.init_kex.constructor=signed_init_kex",
+	"phase1.init_kex.field_count=4",
+	"phase1.init_kex.field.0=identity-key@2:encoded_ed25519_identity",
+	"phase1.init_kex.field.1=pre-key@3:signed_tagged_x25519_prekey",
+	"phase1.init_kex.field.2=one-time-key@4:signed_tagged_x25519_one_time",
+	"phase1.init_kex.field.3=pq-key@5:signed_tagged_mlkem768_public_key",
+	"phase1.signature.primitive=ed25519",
+	"phase1.signature.format=attached(signature||encoded_key)",
+	"phase1.init_kex.beacon_writes=identityKey:identity,preKey:signed_prekey,oneTimeKey:signed_one_time,pqKey:signed_pq",
+	"phase1.init_kex.beacon_signs=preKey:tag_x25519_prekey,oneTimeKey:tag_x25519_one_time,pqKey:tag_mlkem768",
+	"phase1.init_kex.server_reads=identityKey,pqKey,preKey,oneTimeKey",
+	"phase1.init_kex.server.verifies=pqKey:pq_verified,preKey:prekey_verified,oneTimeKey:onetime_verified;identity:remote_id",
+	"phase1.init_kex.server.from_encoded=encoded_identity,prekey_verified,onetime_verified,pq_verified",
+	"phase1.init_kex.server.validates=tag_ed25519,tag_x25519_prekey,tag_x25519_one_time,tag_mlkem768",
+	"phase1.init_kex.symbolic.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq",
+	"phase1.init_kex.symbolic.producers=honest,malicious,active_quantum",
+	"phase1.init_kex.symbolic.consumers=server,malicious_server,active_quantum",
+	"phase1.init_kex.symbolic.validation=identity,prekey,one_time,pq",
+	"phase2.response.constructor=kex_response",
+	"phase2.response.field_count=5",
+	"phase2.response.field.0=identity-key@2:server_identity",
+	"phase2.response.field.1=ephemeral-key@3:server_ephemeral",
+	"phase2.response.field.2=kem-cipher-text@4:kem_ciphertext",
+	"phase2.response.field.3=app-cipher-text@5:raw_ciphertext||retained_aead_tag||commitment",
+	"phase2.response.field.4=key-id@6:assigned_key_id",
+	"phase2.response.server_writes=candidate.server_identity_public_key,candidate.ephemeral_public_key,candidate.kem_ciphertext,raw_initial_payload,candidate.key_id",
+	"phase2.response.beacon_reads=response_server_identity,server_ephemeral,kem_ciphertext,raw_initial_payload,assigned_key_id",
+	"cryptoframe.schema.constructor=CryptoFrame",
+	"cryptoframe.schema.id=cbor_version_1_kind_2",
+	"cryptoframe.schema.field_count=3",
+	"cryptoframe.schema.field.0=seq@2:sequence",
+	"cryptoframe.schema.field.1=key-id@3:sender_id",
+	"cryptoframe.schema.field.2=cipher-text@4:ciphertext||retained_aead_tag||commitment",
+	"cryptoframe.wire.key_id=sender_kid",
+	"cryptoframe.local.encrypted.key_id=target_kid:not_serialized",
+	"cryptoframe.seal.inputs=key:32,nonce:12,associated_data:281,plaintext",
+	"cryptoframe.seal.detached_outputs=ciphertext,retained_aead_tag:16",
+	"cryptoframe.seal.commitment.output=blake2b512_unkeyed_unlabeled:64",
+	"cryptoframe.seal.commitment.input=existing_ctx_transcript",
+	"cryptoframe.seal.commitment.context=selected_material,associated_data,retained_aead_tag,selected_sequence,sender_kid",
+	"cryptoframe.seal.payload=ciphertext||retained_aead_tag||commitment",
+	"cryptoframe.seal.payload.overhead=80",
+	"cryptoframe.seal.setter_order=CryptoFrame{cipher_text,seq,key_id}:wire_order_from_CDDL",
+	"cryptoframe.seal.serialize=wire::encode_frame:deterministic_CBOR_v1_kind2",
+	"cryptoframe.seal.empty_plaintext=caller_rejects_before_ratchet",
+	"cryptoframe.seal.one_use=returned_material,returned_sequence,frame_context,finish",
+	"cryptoframe.open.empty_wire=rejected_before_parse",
+	"cryptoframe.open.parse=decode_crypto_frame:complete_deterministic_CBOR_array,reject_trailing_bytes_and_oversize",
+	"cryptoframe.open.getter_order=key_id,then_cipher_text_and_seq_handoff_to_shared_payload_receive",
+	"cryptoframe.open.sender_gate=parsed_sender_kid==expected_sender_kid:before_ratchet",
+	"cryptoframe.open.length_gate=payload_length>80:before_ratchet",
+	"cryptoframe.open.ratchet=begin_receive(parsed_sequence,frame_context)",
+	"cryptoframe.open.one_use=returned_material,returned_sequence,frame_context,finish",
+	"cryptoframe.open.commitment_slice=payload[last64..]",
+	"cryptoframe.open.tag_slice=payload[len-80..len-64]",
+	"cryptoframe.open.ciphertext_slice=payload[..len-80]",
+	"cryptoframe.open.commitment.context=selected_material,associated_data,parsed_retained_aead_tag,selected_sequence,parsed_sender_kid",
+	"cryptoframe.open.commitment.compare=portable_constant_time_memcmp_call",
+	"cryptoframe.open.order=commitment_equality_before_aead_decrypt",
+	"cryptoframe.open.decrypt.input=ciphertext||retained_aead_tag",
+	"cryptoframe.open.decrypt.excludes=commitment",
+	"cryptoframe.open.decrypt.context=selected_material_key,selected_material_nonce,same_associated_data",
+	"cryptoframe.open.result.metadata=parsed_sender_kid,parsed_sequence",
+	"cryptoframe.symbolic.constructor=crypto_frame",
+	"cryptoframe.symbolic.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id",
+	"cryptoframe.symbolic.seal=logical_frame_fields:CBOR_encoding_not_modeled",
+	"cryptoframe.symbolic.open=ideal_exact_constructor_rule",
+	"cryptoframe.symbolic.retained_tag=shared_by_aead_and_commitment",
+	"cryptoframe.symbolic.absent=frame_and_seal_arguments:target_id,direction,session,phase,aead_label,ctx_label",
+	"endpoint.server.send.target=peer_key_id",
+	"endpoint.server.send.sender=local_identity_key_id",
+	"endpoint.server.send.associated_data=server_identity,peer_identity",
+	"endpoint.server.send.ratchet=peer_key_id",
+	"endpoint.server.receive.sender_source=parsed_wire_key_id",
+	"endpoint.server.receive.lookup_id.trust=untrusted_before_open",
+	"endpoint.server.receive.peer_lookup=parsed_wire_key_id",
+	"endpoint.server.receive.associated_data=server_identity,selected_peer_identity",
+	"endpoint.server.receive.ratchet=parsed_wire_key_id",
+	"endpoint.server.receive.expected_sender=parsed_wire_key_id",
+	"endpoint.server.receive.acceptance_control=open_returns_some",
+	"endpoint.server.receive.order=parsed_sender,peer_associated_data,peer_ratchet,open,accept",
+	"endpoint.server.established.associated_data=recomputed_server_identity,stored_selected_peer_identity",
+	"endpoint.beacon.send.target=control.server_key_id",
+	"endpoint.beacon.send.sender=assigned_identity_key_id",
+	"endpoint.beacon.send.associated_data=stored_establishment",
+	"endpoint.beacon.send.ratchet=single_established",
+	"endpoint.beacon.receive.expected_sender=control.server_key_id",
+	"endpoint.beacon.receive.associated_data=stored_establishment",
+	"endpoint.beacon.receive.ratchet=single_established",
+	"endpoint.registration.server.initial.target=assigned_remote_key_id",
+	"endpoint.registration.server.initial.sender=candidate.server_identity_key_id",
+	"endpoint.registration.server.initial.associated_data=candidate.associated_data",
+	"endpoint.registration.server.initial.ratchet=candidate_initial",
+	"endpoint.registration.server.initial.returned_target_metadata=assigned_remote_key_id",
+	"endpoint.registration.server.commit.peer_map=assigned_remote_key_id,peer_identity,candidate_ratchet_after_initial_send",
+	"endpoint.registration.server.order=initial_seal,serialize_response,commit_candidate,insert_peer,publish_control,return",
+	"endpoint.registration.beacon.initial.expected_sender=candidate.server_key_id",
+	"endpoint.registration.beacon.initial.associated_data=candidate.associated_data",
+	"endpoint.registration.beacon.initial.ratchet=candidate_initial",
+	"endpoint.registration.beacon.commit.associated_data=same_candidate_value",
+	"endpoint.registration.beacon.commit.ratchet=candidate_ratchet_after_successful_initial_open",
+	"endpoint.registration.beacon.commit.local_sender=authenticated_assigned_key_id",
+	"endpoint.registration.beacon.order=initial_open,decrypted_sequence_1_gate,key_id_binding_authentication,pinned_server_id,pinned_server_identity,assign_local_id,store_established",
+	"endpoint.symbolic.main_honest.server_to_beacon.sender=SERVER_KEY_ID",
+	"endpoint.symbolic.main_honest.server_to_beacon.event_receiver=assigned_key_id",
+	"endpoint.symbolic.main_honest.beacon_to_server.sender=assigned_key_id",
+	"endpoint.symbolic.main_honest.beacon_to_server.event_receiver=SERVER_KEY_ID",
+	"endpoint.symbolic.main_honest.associated_data=server_identity,beacon_identity",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.server_open.count=4",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.server_open.calls=server_material_1,associated_data,first_sequence(),SERVER_KEY_ID,initial_frame;server_material_3,associated_data,next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,third_frame;server_material_2,associated_data,next_sequence(first_sequence()),SERVER_KEY_ID,second_frame;ratchet_material(ratchet_next(server_chain_3)),associated_data,next_sequence(next_sequence(next_sequence(first_sequence()))),SERVER_KEY_ID,fourth_frame",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.beacon_seal.count=1",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.beacon_seal.calls=beacon_material_1,associated_data,first_sequence(),assigned_key_id,beacon_record_secret",
+	"endpoint.symbolic.main_honest.fixture.server.server_seal.count=4",
+	"endpoint.symbolic.main_honest.fixture.server.server_seal.calls=server_material_1,associated_data,first_sequence(),SERVER_KEY_ID,registration_payload(binding,initial_secret);server_material_2,associated_data,next_sequence(first_sequence()),SERVER_KEY_ID,cached_secret;server_material_3,associated_data,next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,advance_secret;server_material_4,associated_data,next_sequence(next_sequence(next_sequence(first_sequence()))),SERVER_KEY_ID,future_secret",
+	"endpoint.symbolic.main_honest.fixture.server.beacon_open.count=1",
+	"endpoint.symbolic.main_honest.fixture.server.beacon_open.calls=beacon_material_1,associated_data,first_sequence(),assigned_key_id,beacon_frame",
+	"endpoint.symbolic.main_honest.fixture.events.fields=session,direction,sequence,sender,event_receiver,plaintext",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.received_events.calls=session,server_to_beacon(),first_sequence(),SERVER_KEY_ID,assigned_key_id,initial_plaintext;session,server_to_beacon(),next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,assigned_key_id,third_plaintext;session,server_to_beacon(),next_sequence(first_sequence()),SERVER_KEY_ID,assigned_key_id,second_plaintext;session,server_to_beacon(),next_sequence(next_sequence(next_sequence(first_sequence()))),SERVER_KEY_ID,assigned_key_id,fourth_plaintext",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.sent_events.calls=session,beacon_to_server(),first_sequence(),assigned_key_id,SERVER_KEY_ID,beacon_record_secret",
+	"endpoint.symbolic.main_honest.fixture.server.sent_events.calls=session,server_to_beacon(),first_sequence(),SERVER_KEY_ID,assigned_key_id,initial_secret;session,server_to_beacon(),next_sequence(first_sequence()),SERVER_KEY_ID,assigned_key_id,cached_secret;session,server_to_beacon(),next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,assigned_key_id,advance_secret;session,server_to_beacon(),next_sequence(next_sequence(next_sequence(first_sequence()))),SERVER_KEY_ID,assigned_key_id,future_secret",
+	"endpoint.symbolic.main_honest.fixture.server.received_events.calls=session,beacon_to_server(),first_sequence(),assigned_key_id,SERVER_KEY_ID,beacon_plaintext",
+	"endpoint.symbolic.malicious_registration.initial.sender=SERVER_KEY_ID",
+	"endpoint.symbolic.malicious_registration.associated_data=server_identity,beacon_identity",
+	"endpoint.symbolic.malicious_registration.fixture.initial_seal.count=1",
+	"endpoint.symbolic.malicious_registration.fixture.initial_seal.calls=server_material_1,associated_data,first_sequence(),SERVER_KEY_ID,registration_payload(binding,MALICIOUS_TASK_SECRET)",
+	"ratchet.driver.kind=synchronous_affine_interpreter",
+	"ratchet.driver.slot.take=Option::take:once_per_outer_helper_after_transport_prechecks",
+	"ratchet.driver.slot.put=assert_empty_then_store_returned_kernel",
+	"ratchet.driver.kdf.reply=ratchet_hkdf(SymmetricRatchetKdfRequest)->RatchetKdfResponse",
+	"ratchet.driver.send.precheck=empty_input_rejected_before_take",
+	"ratchet.driver.send.context=core_SealFrameContext::new(borrowed_bytes,target_kid,sender_kid,owned_AD,encoding)",
+	"ratchet.driver.send.take=ratchet.refined.take():once",
+	"ratchet.driver.send.begin=begin_record_send(kernel,same_owned_context):once",
+	"ratchet.driver.send.exhausted=RecordSendStart::Rejected(returned_kernel):outer_put_then_none",
+	"ratchet.driver.send.kdf.request=ratchet_hkdf(same_pending.request()):once",
+	"ratchet.driver.send.kdf.resume=same_pending.resume(same_response)",
+	"ratchet.driver.send.seal=SealAead.request(exact_key_nonce_AD_Single_or_Prefixed_plaintext);resume(actual_detached_body_tag)",
+	"ratchet.driver.send.finish=SealWrite.finish(actual_ordered_writer_reply)",
+	"ratchet.driver.send.put=finish_returned_kernel_before_returned_sealed",
+	"ratchet.driver.send.failure=AEAD_or_hash_or_writer_failure:allocated_send_key_consumed_then_outer_put",
+	"ratchet.driver.send.cancel=not_invoked_in_encrypt_helper",
+	"ratchet.driver.receive.prechecks=empty,complete_CBOR_parse,sender_match:before_take;core_payload_admission_rejects_with_entry_kernel",
+	"ratchet.driver.receive.context=core_OpenFrameContext::from_frame(ciphertext,owned_AD,parsed_sender):retained_body_tag_commitment_views",
+	"ratchet.driver.receive.take=ratchet.refined.take():once",
+	"ratchet.driver.receive.begin=begin_record_receive(same_kernel,parsed_sequence,ciphertext,exact_AD,parsed_sender):once",
+	"ratchet.driver.receive.loop=RecordReceiveEffect_match_without_fixed_iteration_count",
+	"ratchet.driver.receive.rejected=put(returned_kernel),return_none",
+	"ratchet.driver.receive.kdf.request=ratchet_hkdf(same_pending.request()):per_arm",
+	"ratchet.driver.receive.kdf.resume=same_pending.resume(same_response)",
+	"ratchet.driver.receive.kdf.slot_put=none_in_ReceiveKdfRequested_arm",
+	"ratchet.driver.receive.no_material=core_begin_open_rejects_with_entry_kernel;outer_put_before_none",
+	"ratchet.driver.receive.open=RecordReceiveCommitment_then_RecordReceiveAead:exact_selected_requests_and_actual_replies",
+	"ratchet.driver.receive.finish=same_RecordReceiveAead.finish(actual_optional_plaintext)",
+	"ratchet.driver.receive.put=executor_returned_kernel_before_returning_optional_Decrypted",
+	"ratchet.driver.receive.success=actual_AEAD_plaintext,request_context_sender,request_sequence",
+	"ratchet.driver.receive.failure=record_rejection_or_finish_None:entry_kernel_then_outer_put",
+	"ratchet.driver.receive.cancel=not_invoked_in_decrypt_helper",
+	"ratchet.driver.core.phase_api=RecordSendStart,RecordSendKdf,SealAead,SealCommitment,SealWrite,RecordReceiveEffect,RecordReceiveKdf,RecordReceiveCommitment,RecordReceiveAead:shared_affine_ratchet_phases",
+	"ratchet.driver.core.receive.publication=staged_until_ReceiveOpen.finish(Some)",
+	"ratchet.driver.lean.structural=begin_send_nonexhausted_exact,begin_send_exhausted_restores_entry,SendKdf.request_exact,SendKdf.resume_exact,SendSeal.finish_returns_interpreter_result,begin_receive_rejected_plan_restores_entry,begin_receive_cached_exact,begin_receive_future_request_exact,ReceiveKdf.request_exact,ReceiveOpen.reject_exact,ReceiveOpen.context_exact,ReceiveOpen.future_sequence_exact,ReceiveOpen.future_material_exact,ReceiveOpen.finish_failure_restores_entry,ReceiveOpen.finish_future_success_publishes_same_plaintext,ReceiveOpen.finish_cached_success_publishes_same_plaintext,ReceiveFailureTrace.result_eq_entry",
+	"ratchet.driver.lean.refinement_anchors=conditional:ResponseRefines,begin_send_refines,SendKdf.resume_refines,SendSeal.finish_refines_ideal_send,ReceiveOpen.failure_preserves_refinement,ReceiveFailureTrace.preserves_refinement,OpenReplyRefines,begin_receive_cached_refines,CachedOpenRefines.finish_success_matches_ideal,CachedOpenRefines.finish_success_refines_of_publication",
+	"ratchet.driver.proverif.abstraction=atomic_seal_frame,ideal_exact_open_frame",
+	"ratchet.driver.bridge=text_checker_only:not_semantic_Rust_to_Lean_or_ProVerif_refinement",
+	"ratchet.receive_fixture.scope=finite_StateNeutralFutureReceive_and_StateNeutralCapacityReceive",
+	"ratchet.receive_fixture.bridge=deterministic_text_synchronization:not_semantic_Rust_to_Lean_or_ProVerif_refinement",
+	"ratchet.receive_fixture.schedule=two_nonreplicated_fixed_server_to_beacon_legs:not_arbitrary_schedule",
+	"ratchet.receive_fixture.cache.representation=core_slots_oldest_first,proverif_nested_newest_first:membership_and_count_only",
+	"ratchet.receive_fixture.core.max_gap=50",
+	"ratchet.receive_fixture.core.cache_capacity=50:max_gap",
+	"ratchet.receive_fixture.core.plan.future.derivations=target-receive_sequence",
+	"ratchet.receive_fixture.core.plan.future.skipped=derivations-1",
+	"ratchet.receive_fixture.core.plan.future.admission=skipped<=50,cached<=50-skipped",
+	"ratchet.receive_fixture.core.plan.future.rejection=over_gap_or_capacity:none,zero_derivations",
+	"ratchet.receive_fixture.core.target_advance=increment_counter_without_cache_append",
+	"ratchet.receive_fixture.core.future.pending=skipped_in_staged_slots,target_material_separate",
+	"ratchet.receive_fixture.core.future.validity=target_not_in_committed_cache,committed_len=first_slot+skipped",
+	"ratchet.receive_fixture.core.future.failure=ReceiveOpen.finish(None):exact_entry",
+	"ratchet.receive_fixture.core.future.success=publish_staged_skipped,final_receive_chain,committed_control",
+	"ratchet.receive_fixture.core.cached.prepare=lookup_target,preflight_target_and_last,successful_removal_plan",
+	"ratchet.receive_fixture.core.cached.failure=ReceiveOpen.finish(None):exact_entry_no_swap",
+	"ratchet.receive_fixture.core.cached.success=swap_remove_whole_target_with_last,publish_committed_control",
+	"ratchet.receive_fixture.core.replay=old_or_equal_target_missing_from_cache:entry_rejected",
+	"ratchet.receive_fixture.proverif.state=receive_state(counter,chain,cache)",
+	"ratchet.receive_fixture.proverif.cache=receive_cache_entry(sequence,material,tail):newest_first",
+	"ratchet.receive_fixture.proverif.short.rejection=exact_candidate_equality_then_open_frame_destructor_failure",
+	"ratchet.receive_fixture.short.sequences=first:1,skipped:2,target:3",
+	"ratchet.receive_fixture.short.ready_state=receive_state(1,chain_2,empty_cache)",
+	"ratchet.receive_fixture.short.rejections=2:same_forged_target_frame,same_ready_state",
+	"ratchet.receive_fixture.short.success.cache=sequence_2_only:target_3_absent",
+	"ratchet.receive_fixture.short.success.state=receive_state(3,chain_4,cache_2)",
+	"ratchet.receive_fixture.short.replay=accepted_target_3_rejected_from_committed_state",
+	"ratchet.receive_fixture.short.cached_consume=sequence_2:last_slot_case,empty_cache_after",
+	"ratchet.receive_fixture.short.sent=sequence_1:past,sequence_2:skipped,sequence_3:target",
+	"ratchet.receive_fixture.short.received=sequence_1:first_plaintext,sequence_3:accepted_plaintext,sequence_2:delayed_plaintext",
+	"ratchet.receive_fixture.capacity.sequences=entry:1,boundary:52,cached_release:51,overflow:54,postrelease_skipped:53",
+	"ratchet.receive_fixture.capacity.ready_state=receive_state(1,chain_2,empty_cache)",
+	"ratchet.receive_fixture.capacity.boundary=target_52:51_derivations,50_skipped",
+	"ratchet.receive_fixture.capacity.boundary.cache=sequences_2_through_51:length_50,target_52_absent",
+	"ratchet.receive_fixture.capacity.boundary.state=receive_state(52,chain_53,cache_2_through_51)",
+	"ratchet.receive_fixture.capacity.overflow=target_54:one_skipped_plus_full_cache,reject_same_state",
+	"ratchet.receive_fixture.capacity.release=consume_cached_51:last_slot_case,length_49",
+	"ratchet.receive_fixture.capacity.released_state=receive_state(52,chain_53,cache_2_through_50)",
+	"ratchet.receive_fixture.capacity.after_release=target_54:2_derivations,cache_53,length_50,target_54_absent",
+	"ratchet.receive_fixture.capacity.after_release.state=receive_state(54,chain_55,cache_2_through_50_plus_53)",
+	"ratchet.receive_fixture.capacity.sent=sequence_1:first,sequence_52:maximum_gap,sequence_51:cached,sequence_54:after_release",
+	"ratchet.receive_fixture.capacity.received=sequence_1:first,sequence_52:maximum_gap,sequence_51:cached,sequence_54:after_release",
+	"ratchet.receive_fixture.queries.secrecy=6_application_canaries",
+	"ratchet.receive_fixture.queries.correspondence=11_state_and_origin_queries",
+	"ratchet.receive_fixture.queries.reachability=10_receive_state_events",
+	"registration.lifecycle.scope=deterministic_source_and_finite_symbolic_synchronization:not_semantic_Rust_to_ProVerif_refinement",
+	"registration.lifecycle.claim=at_most_one_Some_return_from_get_registration_bundle_per_live_honest_Beacon_object",
+	"registration.lifecycle.randomness=key_generation_and_public_key_uniqueness_not_proved",
+	"registration.lifecycle.beacon.object.new=Fresh",
+	"registration.lifecycle.beacon.object.materials=generated_identity,generated_prekey,generated_mlkem768_keypair",
+	"registration.lifecycle.beacon.bundle.eligible=Fresh,FreshWithCoins",
+	"registration.lifecycle.beacon.bundle.ineligible=InitSent,Established,Aborted:return_None",
+	"registration.lifecycle.beacon.bundle.fresh.one_time=generated_for_current_attempt",
+	"registration.lifecycle.beacon.bundle.fresh_with_coins.one_time=stored_current_key",
+	"registration.lifecycle.beacon.bundle.start=beacon_start(control,identity,prekey,pq,one_time)",
+	"registration.lifecycle.beacon.bundle.serialization=wire::encode_init:CBOR_version_2_kind_0_and_six_byte_fields",
+	"registration.lifecycle.beacon.bundle.transition_order=successful_encode_init_before_state_replace",
+	"registration.lifecycle.beacon.bundle.success.fresh=InitSent(started_state,same_prekey,generated_one_time,same_pq)",
+	"registration.lifecycle.beacon.bundle.success.fresh_with_coins=InitSent(started_state,same_prekey,same_one_time,same_pq)",
+	"registration.lifecycle.beacon.bundle.success.return=Some(serialized_buffer)",
+	"registration.lifecycle.beacon.bundle.post_success=InitSent_subsequent_call_returns_None",
+	"registration.lifecycle.beacon.post_init.finish=Established_or_Aborted:not_eligible",
+	"registration.lifecycle.beacon.post_init.delete_one_time=Aborted",
+	"registration.lifecycle.beacon.post_init.delete_pq=Aborted",
+	"registration.lifecycle.beacon.post_init.new_one_time=None",
+	"registration.lifecycle.beacon.bundle.pretransition_failure=eligible_state_unchanged,retry_possible,no_retry_byte_equality_claim",
+	"registration.lifecycle.beacon.bundle.fresh_retry=may_regenerate_one_time_key",
+	"registration.lifecycle.beacon.bundle.generated_take_failure=restore_Fresh_then_return_None",
+	"registration.lifecycle.core.beacon_start=BeaconFresh_input_to_BeaconInitSent_output",
+	"registration.lifecycle.core.beacon_start.scope=structural_typestate_not_runtime_affinity_or_uniqueness",
+	"registration.lifecycle.replay_id.size=64:32_byte_identity_plus_32_byte_one_time",
+	"registration.lifecycle.replay_id.layout=bytes_0_31_identity,bytes_32_63_one_time",
+	"registration.lifecycle.replay_id.fields=identity,one_time",
+	"registration.lifecycle.replay_id.excludes=prekey,pq",
+	"registration.lifecycle.replay_id.equality=exact_bytes:not_hash_or_collision_assumption",
+	"registration.lifecycle.replay_id.wrapper=registration_id_calls_VerifiedInitKex.registration_id",
+	"registration.lifecycle.replay_id.proverif=RegistrationId(registration_identifier(identity,one_time))",
+	"registration.lifecycle.server.storage=consumed_registrations:HashSet_of_64_byte_registration_ids",
+	"registration.lifecycle.server.id_source=validated_InitKex_registration_id",
+	"registration.lifecycle.server.status=contains_true:Consumed,contains_false:Fresh",
+	"registration.lifecycle.server.status_gate=validate_before_ephemeral_generation,MLKEM_encapsulation,and_DH_work",
+	"registration.lifecycle.server.reserve=consumed_set_try_reserve_before_ephemeral_generation,MLKEM_encapsulation,and_DH_work",
+	"registration.lifecycle.server.accept=server_accept_same_verified_registration_and_status",
+	"registration.lifecycle.server.order=post_validation_PQXDH_response_crypto,server_accept,derive_root,insert_consumed,return_output",
+	"registration.lifecycle.server.insert=exact_registration_id_after_root_derivation",
+	"registration.lifecycle.server.output=RegistrationOutput_after_successful_insert",
+	"registration.lifecycle.server.preinsert_failure=not_consumed_and_may_retry",
+	"registration.lifecycle.server.response=separate_later_build_registration_response_call",
+	"registration.lifecycle.server.response_failure=consumed_id_not_removed",
+	"registration.lifecycle.server.known_ids=assigned_numeric_peer_map:not_registration_identity_uniqueness",
+	"registration.lifecycle.proverif.honest_guard.scope=one_nonreplicated_owner_for_one_fresh_honest_identity",
+	"registration.lifecycle.proverif.honest_guard.first_input=public_parsed_identity,InitKex,registration_id",
+	"registration.lifecycle.proverif.honest_guard.first_transition=RegistrationConsumed_event_before_replay_fresh_reply",
+	"registration.lifecycle.proverif.honest_guard.replay=replicated_same_identity_inputs_reply_consumed",
+	"registration.lifecycle.proverif.server.order=root_derivation_before_guard_fresh_before_accept_or_abort",
+	"registration.lifecycle.proverif.server.accept=only_after_replay_fresh",
+	"registration.lifecycle.proverif.server.abort=consumption_precedes_ServerResponseAborted",
+	"registration.lifecycle.proverif.honest_beacon=bundle_and_guard_once_in_finite_role",
+	"registration.lifecycle.proverif.malicious_server=bypasses_honest_replay_guard",
+	"registration.lifecycle.proverif.malicious_scope=every_attacker_owned_request_fresh:deliberate_overapproximation",
+	"registration.lifecycle.proverif.scope=not_global_replay,persistence,multi_owner,rollback_or_crash",
+	"registration.lifecycle.hb49.bundles=same_identity,same_prekey,same_one_time,different_mlkem_keys",
+	"registration.lifecycle.hb49.replay_id=same_identity_and_one_time_imply_equal_source_id",
+	"registration.lifecycle.hb49.production=second_registration_consumed_after_first_successful_get_shared_secret",
+	"registration.lifecycle.hb49.scope=isolated_unsupported_control:not_production_rotation_or_attack",
+	"initial_ratchet.scope=deterministic_source_and_finite_symbolic_synchronization:not_semantic_Rust_to_Lean_or_ProVerif_refinement",
+	"initial_ratchet.claim=exact_root_handoff_to_typed_64_byte_response_and_role_ordered_initial_kernel",
+	"initial_ratchet.condition=complementarity_requires_equal_local_roots_and_equal_outputs_from_the_same_faithful_deterministic_response_function",
+	"initial_ratchet.source.server.output=RegistrationOutput(derived_secret,control)",
+	"initial_ratchet.source.server.root=derive_root_key_input(pending.root_key_input_mut())",
+	"initial_ratchet.source.server.cross_method=get_shared_secret_returns_by_value_and_build_registration_response_consumes_caller_supplied_value",
+	"initial_ratchet.source.server.provenance=RegistrationOutput_not_indexed_by_producer_or_Server_instance",
+	"initial_ratchet.source.derived_root.output_width=KEX_KDF_OUT_LEN:usize=32",
+	"initial_ratchet.source.derived_root.width_link=KEX_KDF_OUT_LEN==KDF_STATE_SIZE",
+	"initial_ratchet.source.derived_root.alias=SecretArr<KDF_STATE_SIZE,systems::Pqxdh,roles::DerivedSecret>",
+	"initial_ratchet.source.derived_root.accessor.signature=&[u8;S]",
+	"initial_ratchet.source.derived_root.accessor.body=&self.data",
+	"initial_ratchet.source.server.destructure=derived_secret,control:pending",
+	"initial_ratchet.source.server.start=start_server_candidate_ratchet_kdf(candidate,derived_secret.as_array())",
+	"initial_ratchet.source.server.finish=finish_initial_ratchet_kdf(same_pending)",
+	"initial_ratchet.source.server.wrap=RatchetManager::from_kernel(returned_kernel)",
+	"initial_ratchet.source.server.initial_use=wrapped_kernel_before_encrypt_message_with_ratchet",
+	"initial_ratchet.source.beacon.root=derive_root_key_input(candidate.root_key_input_mut())",
+	"initial_ratchet.source.beacon.start=start_beacon_candidate_ratchet_kdf(candidate,derived_secret.as_array())",
+	"initial_ratchet.source.beacon.finish=finish_initial_ratchet_kdf(same_pending)",
+	"initial_ratchet.source.beacon.wrap=RatchetManager::from_kernel(returned_kernel)",
+	"initial_ratchet.source.beacon.initial_use=wrapped_kernel_before_decrypt_message_with_ratchet",
+	"initial_ratchet.core.pending.fields=request,initialization",
+	"initial_ratchet.core.pending.affine=neither_Clone_nor_Copy",
+	"initial_ratchet.core.pending.request_accessor=&self.request",
+	"initial_ratchet.core.response.type=InitialRatchetKdfResponse",
+	"initial_ratchet.core.response.output=64",
+	"initial_ratchet.core.response.constructor=Self{bytes}",
+	"initial_ratchet.core.response.distinct=RatchetKdfResponse_is_76_bytes",
+	"initial_ratchet.core.response.provenance=not_tied_to_particular_pending_by_type",
+	"initial_ratchet.core.response.bytes_accessor=&self.bytes",
+	"initial_ratchet.core.request.input=exact_32_byte_root",
+	"initial_ratchet.core.request.label=SYM_RATCHET_INFO",
+	"initial_ratchet.core.request.fields=input:[u8;32],info:[u8;41]",
+	"initial_ratchet.core.request.accessors=input:&self.input,info:&self.info",
+	"initial_ratchet.core.start.signatures=root:&[u8;32],candidate:role_specific_reference,return:InitialRatchetKdfPending",
+	"initial_ratchet.core.start.server=candidate.ratchet_initialization()",
+	"initial_ratchet.core.start.beacon=candidate.ratchet_initialization()",
+	"initial_ratchet.core.initialization.server=send_offset:0,receive_offset:32",
+	"initial_ratchet.core.initialization.beacon=send_offset:32,receive_offset:0",
+	"initial_ratchet.core.split.left=output[0..32]",
+	"initial_ratchet.core.split.right=output[32..64]",
+	"initial_ratchet.core.resume=split_response_with_same_pending.initialization",
+	"initial_ratchet.core.kernel=ConcreteRatchetKernel::new(send_chain,receive_chain)",
+	"initial_ratchet.core.kernel.initialization=ConcreteRatchetKernel::from_counters(0,0,send_chain,receive_chain)",
+	"initial_ratchet.adapter.initial_hkdf.output=64",
+	"initial_ratchet.adapter.executor=input:request.input(),label:request.info(),output:OUTPUT_SIZE_bytes",
+	"initial_ratchet.adapter.finish.hkdf=initial_ratchet_hkdf(same_pending.request()):once",
+	"initial_ratchet.adapter.finish.response=InitialRatchetKdfResponse::from_bytes(exact_hkdf_bytes)",
+	"initial_ratchet.adapter.finish.resume=resume_initial_ratchet_kdf(same_pending,same_response):once",
+	"initial_ratchet.adapter.finish.provenance=checked_local_dataflow:not_response_type",
+	"initial_ratchet.lean.structural=start_initial_ratchet_kdf_exact,initial_request_accessor_exact,start_beacon_ratchet_kdf_exact,start_server_ratchet_kdf_exact,resume_initial_ratchet_kdf_is_core_partition",
+	"initial_ratchet.lean.ideal=Pqxdh.rootChains,Pqxdh.HonestRun.chain_agreement",
+	"initial_ratchet.lean.scope=checked_interpretation_anchors_and_ideal_model:text_link_only",
+	"initial_ratchet.proverif.definition.server_to_beacon=first32(HKDF(root,SYM))",
+	"initial_ratchet.proverif.definition.beacon_to_server=second32(HKDF(root,SYM))",
+	"initial_ratchet.proverif.honest_beacon.root=pqxdh_root(RootKeyInput_to_bitstring(root_input))",
+	"initial_ratchet.proverif.server.root=pqxdh_root(RootKeyInput_to_bitstring(root_input))",
+	"initial_ratchet.proverif.malicious_server.root=pqxdh_root(RootKeyInput_to_bitstring(root_input))",
+	"initial_ratchet.proverif.server.initial_seal=server_to_beacon_chain(root)",
+	"initial_ratchet.proverif.server.initial_open=beacon_to_server_chain(root)",
+	"initial_ratchet.proverif.honest_beacon.initial_open=server_to_beacon_chain(root)",
+	"initial_ratchet.proverif.honest_beacon.outgoing=beacon_to_server_chain(root)",
+	"initial_ratchet.proverif.malicious_server.initial_seal=server_to_beacon_chain(root)",
+	"initial_ratchet.proverif.honest_beacon.initial_material=ratchet_material(server_chain_1)",
+	"initial_ratchet.proverif.honest_beacon.outgoing_material=ratchet_material(beacon_send_chain_1)",
+	"initial_ratchet.proverif.server.initial_material=ratchet_material(server_chain_1)",
+	"initial_ratchet.proverif.scoped_occurrences=5",
+	"initial_ratchet.proverif.complementarity=conditional_on_equal_roots_and_equal_outputs_from_the_same_faithful_deterministic_response_function",
+	"initial_ratchet.bridge=source_Lean_and_ProVerif_text_synchronization_only",
+	"initial_ratchet.excludes=HKDF_security,totality,correctness,noncollision,root_agreement,RegistrationOutput_origin,same_Server_instance_provenance,response_type_provenance,array_term_equality,extraction,compiler,AEAD,CTX,nonce,arbitrary_schedules,persistence,multiuser,crash,erasure",
+	"later_registration.scope=historical_general_receive_counterfactual:source_and_finite_symbolic_synchronization_not_current_registration_decode",
+	"later_registration.claim=generic_receive_sequence_3_fixture_is_a_counterfactual;production_raw_registration_pins_sequence_1",
+	"later_registration.source.reference=production_source_is_ultimate_reference:raw_registration_uses_sequence_1_and_pinned_sender_before_open",
+	"later_registration.source.beacon.entry=finish_registration_requires_InitSent_control",
+	"later_registration.source.beacon.response=decode_response:whole_CBOR_KexResponse_with_identity,ephemeral,kem,raw_app_payload,assigned_id",
+	"later_registration.source.beacon.decrypt=decrypt_registration_message_with_ratchet(response.app_cipher_text,candidate.server_key_id,associated_data,same_candidate_ratchet)",
+	"later_registration.source.beacon.sender=authenticated_server_key_id_is_decrypted.key_id",
+	"later_registration.source.beacon.binding=authenticated_plaintext_prefix_is_authenticated_against_response_assigned_key_id",
+	"later_registration.source.beacon.staged=only_successful_sequence_1_receive_returns_the_advanced_ratchet_in_staged",
+	"later_registration.source.beacon.commit=Established_stores_the_same_staged_ratchet_after_server_binding_checks",
+	"later_registration.source.beacon.return=Some_returns_authenticated_plaintext_after_the_binding_prefix",
+	"later_registration.source.beacon.first_gate=core_begin_record_receive_fixes_sequence_1_and_pinned_sender;owned_BeaconRecordAead.finish_checks_nonempty_assigned_ID_prefix_before_binding",
+	"later_registration.adapter.sequence=ordinary_frames_use_frame.seq;raw_registration_uses_constant_1",
+	"later_registration.adapter.begin=begin_record_receive(same_taken_kernel,key_seq,ciphertext,exact_AD,parsed_sender)",
+	"later_registration.adapter.loop=each_RecordReceiveKdf_uses_ratchet_hkdf(same_pending.request)_then_same_pending.resume",
+	"later_registration.adapter.open=core_RecordReceiveCommitment_then_RecordReceiveAead:retained_material_sequence_context",
+	"later_registration.adapter.finish=same_record_AEAD_continuation.finish(actual_optional_plaintext)_then_outer_puts_actual_kernel_before_result",
+	"later_registration.adapter.result=Decrypted(actual_AEAD_plaintext,source_owned_sender,source_owned_sequence)",
+	"later_registration.adapter.no_first_gate=generic_receive_has_no_first_sequence_special_case",
+	"later_registration.core.max_gap=RATCHET_MAX_GAP:50",
+	"later_registration.core.plan=future_derivations=target-receive_sequence;skipped=derivations-1",
+	"later_registration.core.plan_bounds=reject_if_skipped_gt_50_or_cached_gt_50_minus_skipped",
+	"later_registration.core.skipped=advance_receive_increments_receive_sequence_and_appends_that_sequence_to_cache",
+	"later_registration.core.target=advance_receive_target_increments_receive_sequence_without_allocating_a_cache_slot",
+	"later_registration.core.begin=begin_receive_uses_plan_receive_until_and_preserves_the_entry_kernel_during_future_preparation",
+	"later_registration.core.remaining=remaining_is_exact_future_derivation_count;skipped_starts_0",
+	"later_registration.core.request=first_future_request_uses_entry_receive_chain",
+	"later_registration.core.nonfinal=remaining_gt_1_uses_advance_receive_for_one_skipped_sequence",
+	"later_registration.core.cache_pair=each_nonfinal_step_stages_exact_sequence_with_that_step_material",
+	"later_registration.core.next=nonfinal_step_decrements_remaining_and_requests_the_returned_next_chain",
+	"later_registration.core.final=remaining_eq_1_uses_advance_receive_target_and_the_final_step",
+	"later_registration.core.pending=PendingReceive_separates_final_receive_chain,target_sequence,target_material,and_skipped_slots",
+	"later_registration.core.validation=pending_requires_target_counter_exact_skipped_relation_and_target_lookup_absent",
+	"later_registration.core.open=ReceiveOpen_future_sequence_and_material_are_pending.target_sequence_and_pending.target_material",
+	"later_registration.core.finish=successful_future_open_calls_publish_future_receive_and_returns_same_plaintext",
+	"later_registration.refined.pending=target_material_is_separate_from_staged_skipped_slots",
+	"later_registration.refined.validation=committed_send_counter_unchanged;receive_counter_target;cache_length_first_slot_plus_skipped;target_absent",
+	"later_registration.refined.slots=staged_slots_pair_each_expected_skipped_sequence_with_material_and_require_live_destinations_empty",
+	"later_registration.refined.publish=move_exact_skipped_slots_then_publish_final_receive_chain_then_committed_control",
+	"later_registration.refined.target=target_material_remains_in_consumed_pending_and_is_not_inserted_into_live_cache",
+	"later_registration.lean.structural=begin_receive_future_request_exact,ReceiveOpen.future_sequence_exact,ReceiveOpen.future_material_exact,ReceiveOpen.finish_future_success_publishes_same_plaintext",
+	"later_registration.lean.control=max_gap_eq,plan_receive_until_accept,plan_receive_until_bound,advance_receive_ok,advance_receive_target_ok",
+	"later_registration.lean.refinement=receiveMessage_refines,receiveMessage_state_neutral",
+	"later_registration.lean.scope=existing_general_receive_anchors_only:no_sequence_3_specialization_or_cross_language_theorem",
+	"later_registration.proverif.scope=historical_generic_receive_sequence_3_counterfactual_and_omitted_gate_control:not_current_registration_decoder",
+	"later_registration.proverif.session=one_genuine_Server_and_fresh_Beacon_reconstruct_equal_root,associated_data,session,and_initial_role_chains",
+	"later_registration.proverif.original=sequence_1_response_contains_registration_payload(assigned_binding,SEQ1_PAYLOAD)",
+	"later_registration.proverif.order=original_response_event_and_output_precede_genuine_sequence_2_and_sequence_3_frame_events_and_outputs",
+	"later_registration.proverif.payloads=SEQ1,SEQ2,SEQ3_are_distinct_private_names;sequence_1_and_sequence_3_share_assigned_binding",
+	"later_registration.proverif.substitution=original_and_candidate_KexResponse_fields_equal_except_appCipherText:first_frame_to_third_frame",
+	"later_registration.proverif.candidate=one_attacker_candidate_equals_substituted_response_then_the_same_term_is_fanned_to_both_branches",
+	"later_registration.proverif.response=both_branches_parse_all_five_fields_from_their_same_candidate_response",
+	"later_registration.proverif.root_ad=both_branches_reconstruct_the_same_session_root_and_server_first_associated_data_from_the_candidate_fields",
+	"later_registration.proverif.sender=inner_crypto_frame_sender_must_equal_genuine_Server_key_id",
+	"later_registration.proverif.sequence=parsed_inner_sequence_is_passed_to_open_and_stored_in_poststate;exact_candidate_uses_material_3",
+	"later_registration.proverif.payload=generic_open_is_exact_binding_plus_SEQ3_PAYLOAD;only_omitted_gate_control_returns_SEQ3_PAYLOAD",
+	"later_registration.proverif.poststate_send=counter_0_and_initial_beacon_to_server_chain_unchanged",
+	"later_registration.proverif.poststate_receive=counter_sequence_3_and_live_server_chain_4",
+	"later_registration.proverif.poststate_cache=newest_first_sequence_2_material_2_then_sequence_1_material_1_then_empty",
+	"later_registration.proverif.poststate_target=sequence_3_material_3_is_used_for_open_and_is_not_inserted_into_the_exact_cache_constructor",
+	"later_registration.proverif.binding=phase2_assigned_id_binding_gate_precedes_commit",
+	"later_registration.proverif.faithful=successful_generic_open_reaches_sequence_1_gate_before_shared_commit;sequence_3_rejects",
+	"later_registration.proverif.counterfactual=omitted_sequence_gate_allows_the_same_successful_sequence_3_open_to_commit",
+	"later_registration.proverif.events=opened_full_payload,returned_remainder,exact_ratchet_poststate,target_absence,substitution,and_server_origin_are_separate",
+	"later_registration.proverif.queries=18:9_positive_witnesses_and_9_absence_or_origin_classifications;faithful_sequence_3_commit_absent",
+	"later_registration.proverif.origin=omitted_gate_commit_implies_selected_exact_substitution_and_same_session_root_genuine_sequence_3_Server_send_after_original_response",
+	"later_registration.proverif.constructor_condition=exact_cache_and_chain_equations_hold_in_the_ideal_free_constructor_model;HB54_collision_conditioning_is_separate",
+	"later_registration.excludes=arbitrary_schedules,semantic_refinement,parser_compiler_or_serialization_theorems,liveness,primitive_security_correctness_or_totality,HKDF_correctness,CTX_or_AEAD_security,full_BeaconState_or_PQXDH_control_poststate,persistence,multiuser,crash,erasure",
+	"post_registration.scope=one_finite_sequence_1_registration_then_ordinary_sequence_3_continuation:not_an_arbitrary_receive_schedule",
+	"post_registration.claim=cached_sequence_2_success_then_identical_replay_rejection_then_genuine_sequence_4_success",
+	"post_registration.source.reference=production_raw_sequence_1_registration_and_ordinary_CBOR_receive:logical_fixture_after_transport_normalization",
+	"post_registration.source.runtime=the_same_successfully_sequence_1_initialized_then_ordinary_sequence_3_opened_kernel_is_carried_through_cached_replay_and_future_receives",
+	"post_registration.source.cache_observation=public_counters,chains,receive_cache_len,and_all_50_receive_entry_at_results:not_raw_inactive_array_bytes",
+	"post_registration.source.cached=sequence_2_uses_cached_material_2_without_a_KDF_and_success_removes_only_that_entry",
+	"post_registration.source.replay=consumed_sequence_2_rejects_before_KDF_or_open_and_preserves_the_exact_public_snapshot",
+	"post_registration.source.future=sequence_4_requests_chain_4_once,opens_with_material_4,and_publishes_chain_5_counter_4",
+	"post_registration.source.payload=cached_success_returns_the_full_sequence_2_application_payload;future_success_returns_the_full_sequence_4_payload",
+	"post_registration.lean.receive=KernelRefines.receive_success_replay",
+	"post_registration.lean.cached=ConcreteSession.finish_cached_server_preserves,ConcreteSession.finish_cached_beacon_preserves",
+	"post_registration.lean.byte_trace=executeTrace_refines,executeTrace_observed,executeTrace_recvWf",
+	"post_registration.lean.boundary=runTrace_refines,runTrace_observed",
+	"post_registration.lean.history=completeHistory_refines,completeHistory_observed",
+	"post_registration.lean.scope=conditional_exact_semantic_anchors_under_supplied_record_and_KDF_interpreters:not_a_ProVerif_extraction_theorem",
+	"post_registration.proverif.hooks=later_registration_server_handoff_and_later_registration_committed_handoff_are_private",
+	"post_registration.proverif.hook_parallel=handoff_outputs_and_honest_initialization_are_parallel_to_the_later_candidate_continuation",
+	"post_registration.proverif.server_handoff=session,root,original_response,substituted_response,first_frame,second_frame,third_frame,server_chain_3,associated_data,server_key_id,assigned_key_id",
+	"post_registration.proverif.committed_handoff=initial_witness,session,root,original_response,assigned_key_id,authenticated_server_key_id,associated_data,initial_ratchet",
+	"post_registration.proverif.join=exact_session,root,original_response,assigned_id,server_id,and_associated_data_join_one_Server_trace_to_one_sequence_1_commit_then_actual_ordinary_sequence_3_open",
+	"post_registration.proverif.seq4_origin=chain_4_is_ratchet_next(server_chain_3);material_4_is_ratchet_material(chain_4);frame_4_is_genuine_Server_seal",
+	"post_registration.proverif.trace=cached_reply_precedes_replay_reply_and_only_replay_failure_continues_to_sequence_4",
+	"post_registration.proverif.delta=faithful_and_counterfactual_traces_differ_only_by_witness_and_post_registration_consume_v_retain_mode",
+	"post_registration.proverif.cached.entry=counter_3,chain_4,cache_sequence_2_material_2_then_empty",
+	"post_registration.proverif.cached.open=sequence_2_opens_with_material_2_and_never_emits_PostRegistrationKdfCalled",
+	"post_registration.proverif.cached.return=full_sequence_2_application_payload",
+	"post_registration.proverif.cached.cache=consume_returns_empty;retain_returns_the_exact_entry_cache",
+	"post_registration.proverif.replay=faithful_second_sequence_2_lookup_fails_after_consumption",
+	"post_registration.proverif.replay.order=rejection_precedes_reply_and_no_replay_KDF,open,return,or_accept_event_is_reachable",
+	"post_registration.proverif.replay.state=rejection_reports_the_same_consumed_entry_ratchet_as_input_and_output",
+	"post_registration.proverif.future=only_the_replay_failure_payload_is_carried_to_PostRegistrationReceiveFuture",
+	"post_registration.proverif.future.kdf=one_PostRegistrationKdfCalled_uses_the_carried_chain_4",
+	"post_registration.proverif.future.open=sequence_4_frame_opens_with_material_4_under_the_joined_associated_data_and_server_id",
+	"post_registration.proverif.future.state=send_counter_0_and_initial_send_chain_unchanged;receive_counter_4_and_chain_5",
+	"post_registration.proverif.future.cache=empty_cache_retained_and_sequence_4_material_is_not_inserted",
+	"post_registration.proverif.target=PostRegistrationTargetUnavailable_separately_certifies_sequence_4_material_absence_from_the_exact_cache",
+	"post_registration.proverif.negative=retain_consumed_changes_only_cache_finalization_then_reaccepts_the_identical_replay_and_discloses_the_private_canary",
+	"post_registration.proverif.main=LaterSequenceRegistrationControl_parallel_PostRegistrationControl",
+	"post_registration.proverif.queries=29:22_reachability_or_absence_classifications_and_7_origin_or_order_correspondences",
+	"post_registration.proverif.query_lock=all_29_compact_query_terms_and_all_29_result_terms_are_hash_and_polarity_locked",
+	"post_registration.proverif.origin=handoff_from_actual_sequence_1_commit_and_established_sequence_3_open,cached_frame_from_original_Server_send,sequence_4_from_same_Server_chain,and_replay_rejection_after_cached_success",
+	"post_registration.makefile.scenario=post-registration-ratchet_is_one_enumerated_parallel_checked_scenario",
+	"post_registration.makefile.libs=common,strong_assigned_id_theory,later_control,post_control,post_queries,post_main,post_result_checker",
+	"post_registration.checker=exact_29_result_strings_with_1_to_5,7_to_8,13_to_21,28_false;6,9_to_12,22_to_27,29_true",
+	"post_registration.constructor_condition=exact_chain,cache,payload,and_frame_equations_hold_in_the_ideal_free_constructor_model;HB54_collision_conditioning_is_separate",
+	"post_registration.primitive_contracts=HKDF-SHA-512,ChaCha20-Poly1305,and_BLAKE2b-512_properties_are_permanent_external_assumptions_not_proof_tasks",
+	"post_registration.excludes=arbitrary_schedules,ProVerif_extraction,primitive_correctness_or_security,raw_inactive_cache_bytes,physical_erasure,persistence,multiuser,crash,and_application_routing",
+	"agreement.constructor=establishment_transcript",
+	"agreement.field_count=18",
+	"agreement.fields=server_identity,beacon_identity,authenticated_init_kex,registration_id,prekey,one_time_x25519,selected_mlkem_public_key,server_ephemeral,kem_ciphertext,initial_frame,response,root_input,root,associated_data,assigned_beacon_key_id,pinned_server_key_id,session_id,registration_origin",
+];
+
+#[derive(Clone)]
+struct Snapshot {
+	interface: String,
+	crypto: String,
+	cbor_registration: String,
+	mldsa_auth: String,
+	mldsa_registration: String,
+	mldsa_queries: String,
+	environment: String,
+	active_quantum_witness: String,
+	extraction: String,
+	mlkem_reencapsulation_control: String,
+	makefile: String,
+	adapter_ratchet: String,
+	adapter_auth: String,
+	adapter_pqxdh: String,
+	adapter_shared: String,
+	core_authentication: String,
+	core_session: String,
+	core_registration: String,
+	core_agreement: String,
+	core_record_effects: String,
+	core_peer: String,
+	core_record: String,
+	core_commitment: String,
+	core_pqxdh: String,
+	core_pqxdh_concrete: String,
+	core_ratchet: String,
+	core_ratchet_concrete: String,
+	core_ratchet_control: String,
+	core_ratchet_refined: String,
+	lean_ratchet_effect: String,
+	lean_ratchet_effect_refinement: String,
+	lean_pqxdh_kdf: String,
+	lean_pqxdh_theorems: String,
+	cryptoframe_schema: String,
+	phase1_schema: String,
+	phase2_schema: String,
+	transport_parser: String,
+	transport_sizing: String,
+	adapter_wire: String,
+	adapter_server: String,
+	adapter_beacon: String,
+	failed_receive_queries: String,
+	failed_receive_reachability_queries: String,
+	later_registration_control: String,
+	later_registration_queries: String,
+	later_registration_main: String,
+	post_registration_control: String,
+	post_registration_queries: String,
+	post_registration_main: String,
+	proverif_result_checker: String,
+	lean_ratchet_control: String,
+	lean_ratchet_refinement: String,
+	lean_ratchet_receive_behavior: String,
+	lean_pqxdh_session_lifecycle: String,
+	lean_byte_trace_refinement: String,
+	lean_boundary_execution: String,
+	lean_protocol_history: String,
+	fidelity_test: String,
+}
+
+impl Snapshot {
+	fn production() -> Self {
+		Self {
+			interface: INTERFACE.to_owned(),
+			crypto: CRYPTO_MODEL.to_owned(),
+			cbor_registration: CBOR_REGISTRATION_MODEL.to_owned(),
+			mldsa_auth: MLDSA_AUTH_MODEL.to_owned(),
+			mldsa_registration: MLDSA_REGISTRATION_MODEL.to_owned(),
+			mldsa_queries: MLDSA_REGISTRATION_QUERIES.to_owned(),
+			environment: ENVIRONMENT_MODEL.to_owned(),
+			active_quantum_witness: ACTIVE_QUANTUM_WITNESS.to_owned(),
+			extraction: EXTRACTION_MODEL.to_owned(),
+			mlkem_reencapsulation_control: MLKEM_REENCAPSULATION_CONTROL.to_owned(),
+			makefile: CORE_MAKEFILE.to_owned(),
+			adapter_ratchet: ADAPTER_RATCHET.to_owned(),
+			adapter_auth: ADAPTER_AUTH.to_owned(),
+			adapter_pqxdh: ADAPTER_PQXDH.to_owned(),
+			adapter_shared: ADAPTER_SHARED.to_owned(),
+			core_authentication: CORE_AUTHENTICATION.to_owned(),
+			core_session: CORE_SESSION.to_owned(),
+			core_registration: CORE_REGISTRATION.to_owned(),
+			core_agreement: CORE_AGREEMENT.to_owned(),
+			core_record_effects: CORE_RECORD_EFFECTS.to_owned(),
+			core_peer: CORE_PEER.to_owned(),
+			core_record: CORE_RECORD.to_owned(),
+			core_commitment: CORE_COMMITMENT.to_owned(),
+			core_pqxdh: CORE_PQXDH.to_owned(),
+			core_pqxdh_concrete: CORE_PQXDH_CONCRETE.to_owned(),
+			core_ratchet: CORE_RATCHET.to_owned(),
+			core_ratchet_concrete: CORE_RATCHET_CONCRETE.to_owned(),
+			core_ratchet_control: CORE_RATCHET_CONTROL.to_owned(),
+			core_ratchet_refined: CORE_RATCHET_REFINED.to_owned(),
+			lean_ratchet_effect: LEAN_RATCHET_EFFECT.to_owned(),
+			lean_ratchet_effect_refinement: LEAN_RATCHET_EFFECT_REFINEMENT.to_owned(),
+			lean_pqxdh_kdf: LEAN_PQXDH_KDF.to_owned(),
+			lean_pqxdh_theorems: LEAN_PQXDH_THEOREMS.to_owned(),
+			cryptoframe_schema: CRYPTOFRAME_SCHEMA.to_owned(),
+			phase1_schema: PHASE1_SCHEMA.to_owned(),
+			phase2_schema: PHASE2_SCHEMA.to_owned(),
+			transport_parser: TRANSPORT_PARSER.to_owned(),
+			transport_sizing: TRANSPORT_SIZING.to_owned(),
+			adapter_wire: ADAPTER_WIRE.to_owned(),
+			adapter_server: ADAPTER_SERVER.to_owned(),
+			adapter_beacon: ADAPTER_BEACON.to_owned(),
+			failed_receive_queries: FAILED_RECEIVE_QUERIES.to_owned(),
+			failed_receive_reachability_queries: FAILED_RECEIVE_REACHABILITY_QUERIES.to_owned(),
+			later_registration_control: LATER_REGISTRATION_CONTROL.to_owned(),
+			later_registration_queries: LATER_REGISTRATION_QUERIES.to_owned(),
+			later_registration_main: LATER_REGISTRATION_MAIN.to_owned(),
+			post_registration_control: POST_REGISTRATION_CONTROL.to_owned(),
+			post_registration_queries: POST_REGISTRATION_QUERIES.to_owned(),
+			post_registration_main: POST_REGISTRATION_MAIN.to_owned(),
+			proverif_result_checker: PROVERIF_RESULT_CHECKER.to_owned(),
+			lean_ratchet_control: LEAN_RATCHET_CONTROL.to_owned(),
+			lean_ratchet_refinement: LEAN_RATCHET_REFINEMENT.to_owned(),
+			lean_ratchet_receive_behavior: LEAN_RATCHET_RECEIVE_BEHAVIOR.to_owned(),
+			lean_pqxdh_session_lifecycle: LEAN_PQXDH_SESSION_LIFECYCLE.to_owned(),
+			lean_byte_trace_refinement: LEAN_BYTE_TRACE_REFINEMENT.to_owned(),
+			lean_boundary_execution: LEAN_BOUNDARY_EXECUTION.to_owned(),
+			lean_protocol_history: LEAN_PROTOCOL_HISTORY.to_owned(),
+			fidelity_test: TRANSCRIPT_FIDELITY_TEST.to_owned(),
+		}
+	}
+}
+
+fn parse_facts(source: &str) -> Result<Vec<String>, String> {
+	let mut facts = Vec::new();
+	for (line_number, line) in source.lines().enumerate() {
+		if !line.contains("@beaconcrypt-fidelity-v1") {
+			continue;
+		}
+		let trimmed = line.trim();
+		let Some(payload) = trimmed
+			.strip_prefix(FACT_PREFIX)
+			.and_then(|line| line.strip_suffix(FACT_SUFFIX))
+		else {
+			return Err(format!(
+				"malformed fidelity fact on line {}",
+				line_number + 1
+			));
+		};
+		let Some((key, value)) = payload.split_once('=') else {
+			return Err(format!("fidelity fact lacks '=': {payload}"));
+		};
+		if key.is_empty() || value.is_empty() || key.contains(char::is_whitespace) {
+			return Err(format!("invalid fidelity fact: {payload}"));
+		}
+		if facts
+			.iter()
+			.any(|fact: &String| fact.split_once('=').is_some_and(|(seen, _)| seen == key))
+		{
+			return Err(format!("duplicate fidelity fact: {key}"));
+		}
+		facts.push(payload.to_owned());
+	}
+	Ok(facts)
+}
+
+fn validate_manifest(source: &str) -> Result<(), String> {
+	let facts = parse_facts(source)?;
+	if facts.len() != EXPECTED_FACTS.len() {
+		return Err(format!(
+			"expected {} fidelity facts, found {}",
+			EXPECTED_FACTS.len(),
+			facts.len()
+		));
+	}
+	for (index, (actual, expected)) in facts.iter().zip(EXPECTED_FACTS).enumerate() {
+		if actual != expected {
+			let key = expected.split_once('=').unwrap().0;
+			return Err(format!(
+				"fidelity fact {index} ({key}) changed: expected {expected}, found {actual}"
+			));
+		}
+	}
+	Ok(())
+}
+
+fn fact_value<'a>(facts: &'a [String], key: &str) -> &'a str {
+	facts
+		.iter()
+		.find_map(|fact| {
+			let (candidate, value) = fact.split_once('=').unwrap();
+			(candidate == key).then_some(value)
+		})
+		.unwrap_or_else(|| panic!("missing fidelity fact: {key}"))
+}
+
+fn decode_hex(value: &str) -> Vec<u8> {
+	assert_eq!(value.len() % 2, 0);
+	value
+		.as_bytes()
+		.chunks_exact(2)
+		.map(|pair| u8::from_str_radix(core::str::from_utf8(pair).unwrap(), 16).unwrap())
+		.collect()
+}
+
+fn remove_comments(source: &str, open: &str, close: &str) -> Result<String, String> {
+	let mut result = source.to_owned();
+	while let Some(start) = result.find(open) {
+		let Some(relative_end) = result[start + open.len()..].find(close) else {
+			return Err(format!("unterminated {open} comment"));
+		};
+		let end = start + open.len() + relative_end + close.len();
+		result.replace_range(start..end, "");
+	}
+	Ok(result)
+}
+
+fn uncommented_pv(source: &str) -> Result<String, String> {
+	remove_comments(source, "(*", "*)")
+}
+
+fn uncommented_rust(source: &str) -> Result<String, String> {
+	let source = remove_comments(source, "/*", "*/")?;
+	Ok(source
+		.lines()
+		.map(|line| line.split_once("//").map_or(line, |(code, _)| code))
+		.collect::<Vec<_>>()
+		.join("\n"))
+}
+
+fn uncommented_cddl(source: &str) -> String {
+	source
+		.lines()
+		.map(|line| line.split_once(';').map_or(line, |(code, _)| code))
+		.collect::<Vec<_>>()
+		.join("\n")
+}
+
+fn compact(source: &str) -> String {
+	source
+		.chars()
+		.filter(|character| !character.is_whitespace())
+		.collect()
+}
+
+fn stable_text_hash(source: &str) -> u64 {
+	source
+		.as_bytes()
+		.iter()
+		.fold(0xcbf2_9ce4_8422_2325, |hash, byte| {
+			(hash ^ u64::from(*byte)).wrapping_mul(0x0000_0100_0000_01b3)
+		})
+}
+
+fn require(source: &str, wanted: &str, label: &str) -> Result<(), String> {
+	if source.contains(wanted) {
+		Ok(())
+	} else {
+		Err(format!("missing exact {label}: {wanted}"))
+	}
+}
+
+fn forbid(source: &str, unwanted: &str, label: &str) -> Result<(), String> {
+	if source.contains(unwanted) {
+		Err(format!("unexpected {label}: {unwanted}"))
+	} else {
+		Ok(())
+	}
+}
+
+fn count(source: &str, needle: &str) -> usize {
+	source.match_indices(needle).count()
+}
+
+fn parse_call(source: &str, open: usize) -> Result<(Vec<String>, usize), String> {
+	if source.as_bytes().get(open) != Some(&b'(') {
+		return Err("call parser did not start at '('".to_owned());
+	}
+	let bytes = source.as_bytes();
+	let mut nesting = 1usize;
+	let mut start = open + 1;
+	let mut arguments = Vec::new();
+	let mut index = open + 1;
+	while index < bytes.len() {
+		match bytes[index] {
+			b'(' | b'[' | b'{' => nesting += 1,
+			b')' => {
+				nesting -= 1;
+				if nesting == 0 {
+					arguments.push(source[start..index].to_owned());
+					return Ok((arguments, index + 1));
+				}
+			}
+			b']' | b'}' => nesting -= 1,
+			b',' if nesting == 1 => {
+				arguments.push(source[start..index].to_owned());
+				start = index + 1;
+			}
+			_ => {}
+		}
+		index += 1;
+	}
+	Err("unterminated call".to_owned())
+}
+
+fn arguments_after(source: &str, marker: &str) -> Result<Vec<String>, String> {
+	let Some(start) = source.find(marker) else {
+		return Err(format!("missing call marker: {marker}"));
+	};
+	parse_call(source, start + marker.len() - 1).map(|(arguments, _)| arguments)
+}
+
+fn all_arguments(source: &str, function: &str) -> Result<Vec<Vec<String>>, String> {
+	let marker = format!("{function}(");
+	let mut calls = Vec::new();
+	let mut offset = 0;
+	while let Some(relative) = source[offset..].find(&marker) {
+		let start = offset + relative;
+		let (arguments, end) = parse_call(source, start + marker.len() - 1)?;
+		calls.push(arguments);
+		offset = end;
+	}
+	Ok(calls)
+}
+
+fn rust_body(source: &str, name: &str) -> Result<String, String> {
+	let source = uncommented_rust(source)?;
+	let marker = format!("fn {name}");
+	let mut search_start = 0;
+	let open = loop {
+		let Some(relative_start) = source[search_start..].find(&marker) else {
+			return Err(format!("missing Rust function body: {name}"));
+		};
+		let start = search_start + relative_start;
+		let tail = &source[start..];
+		let mut parentheses = 0usize;
+		let mut brackets = 0usize;
+		let mut relative_open = None;
+		let mut declaration = false;
+		for (offset, byte) in tail.bytes().enumerate() {
+			match byte {
+				b'(' => parentheses += 1,
+				b')' => parentheses = parentheses.saturating_sub(1),
+				b'[' => brackets += 1,
+				b']' => brackets = brackets.saturating_sub(1),
+				b'{' if parentheses == 0 && brackets == 0 => {
+					relative_open = Some(offset);
+					break;
+				}
+				b';' if parentheses == 0 && brackets == 0 => {
+					declaration = true;
+					break;
+				}
+				_ => {}
+			}
+		}
+		if let Some(relative_open) = relative_open {
+			break start + relative_open;
+		}
+		if declaration {
+			search_start = start + marker.len();
+			continue;
+		}
+		return Err(format!("missing body for Rust function: {name}"));
+	};
+	let bytes = source.as_bytes();
+	let mut nesting = 1usize;
+	let mut index = open + 1;
+	while index < bytes.len() {
+		match bytes[index] {
+			b'{' => nesting += 1,
+			b'}' => {
+				nesting -= 1;
+				if nesting == 0 {
+					return Ok(compact(&source[open + 1..index]));
+				}
+			}
+			_ => {}
+		}
+		index += 1;
+	}
+	Err(format!("unterminated Rust function: {name}"))
+}
+
+fn require_one_call(
+	source: &str,
+	function: &str,
+	expected: &[&str],
+	label: &str,
+) -> Result<(), String> {
+	let calls = all_arguments(source, function)?;
+	let expected = expected
+		.iter()
+		.map(|argument| (*argument).to_owned())
+		.collect::<Vec<_>>();
+	if calls == [expected.clone()] {
+		Ok(())
+	} else {
+		Err(format!(
+			"{label} changed: expected one {function} call with {expected:?}, found {calls:?}"
+		))
+	}
+}
+
+fn require_once(source: &str, wanted: &str, label: &str) -> Result<(), String> {
+	let occurrences = count(source, wanted);
+	if occurrences == 1 {
+		Ok(())
+	} else {
+		Err(format!(
+			"{label} changed: expected one exact occurrence of {wanted}, found {occurrences}"
+		))
+	}
+}
+
+fn require_ordered_once(source: &str, wanted: &[&str], label: &str) -> Result<(), String> {
+	let mut cursor = 0usize;
+	for item in wanted {
+		let occurrences = count(source, item);
+		if occurrences != 1 {
+			return Err(format!(
+				"{label} changed: expected one exact occurrence of {item}, found {occurrences}"
+			));
+		}
+		let relative = source[cursor..]
+			.find(item)
+			.ok_or_else(|| format!("{label} changed: {item} is out of order"))?;
+		cursor += relative + item.len();
+	}
+	Ok(())
+}
+
+fn require_ordered(source: &str, wanted: &[&str], label: &str) -> Result<(), String> {
+	let mut cursor = 0usize;
+	for item in wanted {
+		let relative = source[cursor..]
+			.find(item)
+			.ok_or_else(|| format!("{label} changed: {item} is missing or out of order"))?;
+		cursor += relative + item.len();
+	}
+	Ok(())
+}
+
+fn section_between<'a>(
+	source: &'a str,
+	start_marker: &str,
+	end_marker: &str,
+	label: &str,
+) -> Result<&'a str, String> {
+	let start = source
+		.find(start_marker)
+		.ok_or_else(|| format!("missing {label} start: {start_marker}"))?;
+	let relative_end = source[start + start_marker.len()..]
+		.find(end_marker)
+		.ok_or_else(|| format!("missing {label} end: {end_marker}"))?;
+	let end = start + start_marker.len() + relative_end;
+	Ok(&source[start..end])
+}
+
+fn require_exact_calls(
+	source: &str,
+	function: &str,
+	expected: &[Vec<String>],
+	label: &str,
+) -> Result<(), String> {
+	let calls = all_arguments(source, function)?;
+	if calls != expected {
+		return Err(format!("{label} changed: {calls:?}"));
+	}
+	Ok(())
+}
+
+fn validate_cbor_registration_model(snapshot: &Snapshot) -> Result<(), String> {
+	let model = compact(&uncommented_pv(&snapshot.cbor_registration)?);
+	for wanted in [
+		"funcbor_registration_payload(bitstring,bitstring,bitstring):bitstring[data].",
+		"cbor_registration_strip(crypto_frame(body,tag,commitment,seq,sender))=cbor_registration_payload(body,tag,commitment).",
+		"cbor_registration_restore(cbor_registration_payload(body,tag,commitment),pinned)=crypto_frame(body,tag,commitment,first_sequence(),pinned).",
+		"letgenuine=cbor_registration_strip(seal_frame(material,CBOR_REGISTRATION_AD,first_sequence(),cbor_pinned_sender(),CBOR_REGISTRATION_PLAINTEXT))in",
+		"letlater=cbor_registration_strip(seal_frame(material,CBOR_REGISTRATION_AD,next_sequence(next_sequence(first_sequence())),cbor_pinned_sender(),CBOR_REGISTRATION_PLAINTEXT))in",
+		"letother_sender=cbor_registration_strip(seal_frame(material,CBOR_REGISTRATION_AD,first_sequence(),cbor_other_sender(),CBOR_REGISTRATION_PLAINTEXT))in",
+		"letrestored=cbor_registration_restore(candidate,cbor_pinned_sender())in",
+		"letopened=open_frame(material,CBOR_REGISTRATION_AD,first_sequence(),cbor_pinned_sender(),restored)in",
+		"ifopened=CBOR_REGISTRATION_PLAINTEXTthen",
+	] {
+		require_once(
+			&model,
+			wanted,
+			"CBOR registration logical payload normalization",
+		)?;
+	}
+	for event in [
+		"GenuineOpened",
+		"LaterAttempted",
+		"LaterOpened",
+		"OtherSenderAttempted",
+		"OtherSenderOpened",
+	] {
+		require_once(
+			&model,
+			&format!("queryevent(CborRegistration{event}())."),
+			"CBOR registration nonvacuous query roster",
+		)?;
+	}
+	require_once(
+		&model,
+		"(ifcandidate=latertheneventCborRegistrationLaterAttempted())|",
+		"CBOR registration reachable later attempt",
+	)?;
+	require_once(
+		&model,
+		"(ifcandidate=other_sendertheneventCborRegistrationOtherSenderAttempted())|",
+		"CBOR registration reachable sender attempt",
+	)?;
+	let success_arms = [
+		"(ifcandidate=genuinetheneventCborRegistrationGenuineOpened())",
+		"(ifcandidate=latertheneventCborRegistrationLaterOpened())",
+		"(ifcandidate=other_sendertheneventCborRegistrationOtherSenderOpened())",
+	];
+	for arm in success_arms {
+		require_once(&model, arm, "CBOR registration success observation arm")?;
+	}
+	let successful_open = format!(
+		"ifopened=CBOR_REGISTRATION_PLAINTEXTthen({})",
+		success_arms.join("|")
+	);
+	require_ordered_once(
+		&model,
+		&[
+			"letopened=open_frame(material,CBOR_REGISTRATION_AD,first_sequence(),cbor_pinned_sender(),restored)in",
+			&successful_open,
+		],
+		"CBOR registration observations follow successful open",
+	)?;
+
+	Ok(())
+}
+
+fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
+	transport::validate(snapshot)?;
+	let parser = compact(&uncommented_rust(&snapshot.transport_parser)?);
+	for wanted in [
+		"pubusebeaconcrypt_core::transport::{MAX_MESSAGE_SIZE,encoded_frame_len,encoded_init_len,encoded_response_len,};",
+		"pubusetransport::{cryptoframeasCryptoFrame,initkexasInitKex,kexresponseasKexResponse};",
+		"preflight(input,&[0x85,1,2],&[0,0,2])?;matchvalidate_and_parse_cryptoframe(input){ParsedFrame::Some{v:(frame,[])}=>Some(frame),_=>None,}",
+		"preflight(input,&[0x88,2,0],&[2,2,2,2,2,2])?;matchvalidate_and_parse_initkex(input){ParsedInit::Some{v:(init,[])}=>Some(init),_=>None,}",
+		"preflight(input,&[0x88,2,1],&[2,2,2,2,0,2])?;matchvalidate_and_parse_kexresponse(input){ParsedResponse::Some{v:(response,[])}=>Some(response),_=>None,}",
+	] {
+		require_once(&parser, wanted, "CBOR exact complete-message parser")?;
+	}
+	let preflight = rust_body(&snapshot.transport_parser, "preflight")?;
+	for wanted in [
+		"if!beaconcrypt_core::transport::complete_message_size_admitted(input.len()){returnNone;}",
+		"letmutremaining=input.strip_prefix(prefix)?;",
+		"for&majorinfields{let(argument,rest)=primitive_argument(remaining,major)?;remaining=ifmajor==2{rest.get(usize::try_from(argument).ok()?..)?}else{rest};}",
+		"remaining.is_empty().then_some(())",
+	] {
+		require_once(&preflight, wanted, "CBOR bounded primitive preflight")?;
+	}
+	let primitive = rust_body(&snapshot.transport_parser, "primitive_argument")?;
+	for wanted in [
+		"ifheader>>5!=major{returnNone;}",
+		"letinformation=header&0x1f;",
+		"0..=23=>returnSome((u64::from(information),rest)),24=>1,25=>2,26=>4,27=>8,_=>returnNone,",
+		"rest.split_at_checked(width)?",
+		"Some((u64::from_be_bytes(word),rest))",
+	] {
+		require_once(&primitive, wanted, "CBOR primitive header gate")?;
+	}
+	let frame_len = rust_body(&snapshot.adapter_wire, "frame_len")?;
+	require_once(
+		&frame_len,
+		"beaconcrypt_core::transport::protected_frame_len(plaintext_len,sequence,sender)",
+		"CBOR pre-ratchet length includes authentication",
+	)?;
+	let encoding = rust_body(&snapshot.adapter_wire, "encode_record")?;
+	require_ordered_once(
+		&encoding,
+		&[
+			"output.try_reserve_exact(capacity).ok()?;",
+			"output.resize(capacity,0);",
+			"letwritten=serialize(&mutoutput);",
+			"ifwritten==0{returnNone;}",
+			"output.truncate(written);",
+			"Some(output)",
+		],
+		"CBOR fallible encoding publication",
+	)?;
+	let send = rust_body(&snapshot.adapter_ratchet, "encrypt_with_ratchet")?;
+	require_ordered_once(
+		&send,
+		&[
+			"ifframe_encoding{letsequence=ratchet.status().send_sequence().checked_add(1)?;crate::wire::frame_len(bytes.len(),sequence,sender_kid)?;}",
+			"execute_record_send(ratchet.refined.take(),context)",
+		],
+		"CBOR size precheck before ratchet",
+	)?;
+	{
+		let (name, mode) = ("encrypt_message_with_ratchet", "true");
+		let body = rust_body(&snapshot.adapter_ratchet, name)?;
+		require_one_call(
+			&body,
+			"encrypt_with_ratchet",
+			&[
+				"bytes",
+				"target_kid",
+				"sender_kid",
+				"associated_data",
+				"ratchet",
+				mode,
+				"",
+			],
+			"CBOR ordinary versus raw registration seal",
+		)?;
+	}
+	let response_len = rust_body(&snapshot.adapter_server, "registration_response_len")?;
+	require_once(
+		&response_len,
+		"beaconcrypt_core::transport::registration_response_len(application_len,assigned_key_id)",
+		"CBOR complete response length delegates to extracted policy",
+	)?;
+	let response = rust_body(&snapshot.adapter_server, "build_registration_response")?;
+	require_ordered_once(
+		&response,
+		&[
+			"registration_response_len(plaintext.len(),next_key_id)?;",
+			"lookup.resume(self.known_ids.contains_key(&next_key_id))",
+		],
+		"CBOR response size precheck before ratchet",
+	)?;
+
+	Ok(())
+}
+
+fn validate_phase1_source(snapshot: &Snapshot) -> Result<(), String> {
+	let schema = compact(&uncommented_cddl(&snapshot.phase1_schema));
+	let expected_schema = "init-kex=[2,0,identity-key:bstr.size33,pre-key:bstr.size98,one-time-key:bstr.size98,pq-key:bstr.size1249,mldsa-public-key:bstr.size1952,signature:bstr.size3309]";
+	require(&schema, expected_schema, "Phase-1 InitKex schema")?;
+
+	let core_start = rust_body(&snapshot.core_pqxdh, "beacon_start")?;
+	for (wanted, label) in [
+		(
+			"identity_key:tag_sign_key(inputs.identity_public_key)",
+			"Phase-1 core identity encoding",
+		),
+		(
+			"prekey:tag_x25519_key(KEY_ROLE_PREKEY,inputs.prekey_public_key)",
+			"Phase-1 core prekey encoding",
+		),
+		(
+			"one_time_key:tag_x25519_key(KEY_ROLE_ONE_TIME,coins.one_time_public_key)",
+			"Phase-1 core one-time encoding",
+		),
+		(
+			"pq_key:tag_mlkem768_key(inputs.pq_public_key)",
+			"Phase-1 core ML-KEM encoding",
+		),
+	] {
+		require_once(&core_start, wanted, label)?;
+	}
+	require_ordered_once(
+		&core_start,
+		&[
+			"identity_key:tag_sign_key(inputs.identity_public_key)",
+			"prekey:tag_x25519_key(KEY_ROLE_PREKEY,inputs.prekey_public_key)",
+			"one_time_key:tag_x25519_key(KEY_ROLE_ONE_TIME,coins.one_time_public_key)",
+			"pq_key:tag_mlkem768_key(inputs.pq_public_key)",
+		],
+		"Phase-1 core InitKex field order",
+	)?;
+
+	registration_effects::authentication(snapshot)?;
+	let core_validation = rust_body(&snapshot.core_pqxdh, "validate_init_kex")?;
+	for (wanted, label) in [
+		(
+			"untag_sign_key(message.identity_key)",
+			"Phase-1 core Ed25519 tag validation",
+		),
+		(
+			"untag_x25519_key(message.prekey,KEY_ROLE_PREKEY)",
+			"Phase-1 core X25519 prekey role validation",
+		),
+		(
+			"untag_x25519_key(message.one_time_key,KEY_ROLE_ONE_TIME)",
+			"Phase-1 core X25519 one-time role validation",
+		),
+		(
+			"untag_mlkem768_key(message.pq_key)",
+			"Phase-1 core ML-KEM tag validation",
+		),
+	] {
+		require_once(&core_validation, wanted, label)?;
+	}
+	require_ordered_once(
+		&core_validation,
+		&[
+			"untag_sign_key(message.identity_key)",
+			"untag_x25519_key(message.prekey,KEY_ROLE_PREKEY)",
+			"untag_x25519_key(message.one_time_key,KEY_ROLE_ONE_TIME)",
+			"untag_mlkem768_key(message.pq_key)",
+		],
+		"Phase-1 core tag-validation order",
+	)?;
+	Ok(())
+}
+
+// This checks the adapter's use of an assumed signature primitive. It does not
+// establish ML-DSA correctness, unforgeability, or a whole-protocol refinement.
+
+fn validate_mldsa_core(snapshot: &Snapshot) -> Result<(), String> {
+	let source = compact(&uncommented_rust(&snapshot.core_authentication)?);
+	for wanted in [
+		"pubconstMLDSA_PUBLIC_KEY_LEN:usize=1952;",
+		"pubconstMLDSA_SIGNATURE_LEN:usize=3309;",
+		"pubconstTRANSCRIPT_HASH_LEN:usize=64;",
+		"pubconstINIT_DOMAIN:[u8;41]=*b\"beaconcryptML-DSA-65inittranscriptv1\\0\";",
+		"pubconstRESPONSE_DOMAIN:[u8;45]=*b\"beaconcryptML-DSA-65responsetranscriptv1\\0\";",
+		"pubconstSIGNING_CONTEXT:[u8;32]=*b\"beaconcryptregistrationauthv1\";",
+		"pubconstINIT_TRANSCRIPT_LEN:usize=5495;",
+		"pubconstRESPONSE_PREFIX_LEN:usize=1293;",
+		"pubconstSIGNATURE_INPUT_LEN:usize=163;",
+	] {
+		require_once(&source, wanted, "MLDSA fixed primitive and domain boundary")?;
+	}
+	for wanted in [
+		"pubconstBEACON_LABEL:[u8;34]=*b\"beaconcryptv1beaconregistration\";",
+		"pubconstSERVER_LABEL:[u8;34]=*b\"beaconcryptv1serverregistration\";",
+	] {
+		require_once(&source, wanted, "MLDSA distinct role labels")?;
+	}
+	let le64 = rust_body(&snapshot.core_authentication, "encode_u64_le")?;
+	require_once(
+		&le64,
+		"[valueasu8,(value>>8)asu8,(value>>16)asu8,(value>>24)asu8,(value>>32)asu8,(value>>40)asu8,(value>>48)asu8,(value>>56)asu8,]",
+		"MLDSA variable-field length framing",
+	)?;
+	let init = rust_body(&snapshot.core_authentication, "build_init_transcript")?;
+	require_ordered_once(
+		&init,
+		&[
+			"letserver_id=encode_u64_le(server_id);",
+			"letidentity_len=encode_u64_le(33);",
+			"letsigned_key_len=encode_u64_le(98);",
+			"letpq_key_len=encode_u64_le(1249);",
+			"ifi<41{INIT_DOMAIN[i]}",
+			"elseifi<49{server_id[i-41]}",
+			"elseifi<81{server_ed[i-49]}",
+			"elseifi<2033{fields.mldsa_public_key[i-81]}",
+			"elseifi<3985{server_mldsa[i-2033]}",
+			"elseifi<3993{identity_len[i-3985]}",
+			"elseifi<4026{fields.identity_key[i-3993]}",
+			"elseifi<4034{signed_key_len[i-4026]}",
+			"elseifi<4132{fields.pre_key[i-4034]}",
+			"elseifi<4140{signed_key_len[i-4132]}",
+			"elseifi<4238{fields.one_time_key[i-4140]}",
+			"elseifi<4246{pq_key_len[i-4238]}",
+			"else{fields.pq_key[i-4246]}",
+		],
+		"MLDSA request transcript field order and pins",
+	)?;
+	let response = rust_body(&snapshot.core_authentication, "build_response_prefix")?;
+	require_ordered_once(
+		&response,
+		&[
+			"letpublic_key_len=encode_u64_le(32);",
+			"letkem_len=encode_u64_le(1088);",
+			"letapp_len=encode_u64_le(app_len);",
+			"ifi<45{RESPONSE_DOMAIN[i]}",
+			"elseifi<109{init_hash[i-45]}",
+			"elseifi<117{public_key_len[i-109]}",
+			"elseifi<149{identity[i-117]}",
+			"elseifi<157{public_key_len[i-149]}",
+			"elseifi<189{ephemeral[i-157]}",
+			"elseifi<197{kem_len[i-189]}",
+			"elseifi<1285{kem[i-197]}",
+			"else{app_len[i-1285]}",
+		],
+		"MLDSA complete response transcript",
+	)?;
+	require_once(
+		&source,
+		"pubstructResponseTranscript<'a>{prefix:[u8;RESPONSE_PREFIX_LEN],application:&'a[u8],assigned_id:[u8;8],}",
+		"MLDSA private response streaming capability",
+	)?;
+	let parts = rust_body(&snapshot.core_authentication, "parts")?;
+	require_once(
+		&parts,
+		"[&self.prefix,self.application,&self.assigned_id]",
+		"MLDSA ordered response streaming parts",
+	)?;
+	let response = rust_body(&snapshot.core_authentication, "build_response_transcript")?;
+	require_ordered_once(
+		&response,
+		&[
+			"letapp_len=matchu64::try_from(fields.app_cipher_text.len()){Ok(len)=>len,Err(_)=>returnNone,};",
+			"Some(ResponseTranscript{prefix:build_response_prefix(init_hash,fields.identity_key,fields.ephemeral_key,fields.kem_cipher_text,app_len,),application:fields.app_cipher_text,assigned_id:encode_u64_le(fields.key_id),})",
+		],
+		"MLDSA response binds streamed ciphertext length and assigned identifier",
+	)?;
+	let input = rust_body(&snapshot.core_authentication, "build_signature_input")?;
+	require_ordered_once(
+		&input,
+		&[
+			"letlabel=matchrole{AuthRole::Beacon=>BEACON_LABEL,AuthRole::Server=>SERVER_LABEL,};",
+			"ifi<64{b''}",
+			"elseifi<98{label[i-64]}",
+			"elseifi==98{0}",
+			"else{digest[i-99]}",
+		],
+		"MLDSA TLS-style signed input",
+	)?;
+	let ad = rust_body(&snapshot.core_authentication, "bind_associated_data")?;
+	require_ordered_once(
+		&ad,
+		&[
+			"ifi<153{base[i]}",
+			"elseifi<217{server_hash[i-153]}",
+			"else{beacon_hash[i-217]}",
+		],
+		"MLDSA associated-data hash-slot order",
+	)?;
+	Ok(())
+}
+
+fn validate_session_source(snapshot: &Snapshot) -> Result<(), String> {
+	let source = compact(&uncommented_rust(&snapshot.core_session)?);
+	for wanted in [
+		"pubstructServerAuthenticationPin{binding:ServerBinding,public_key:[u8;MLDSA_PUBLIC_KEY_LEN],fingerprint:[u8;TRANSCRIPT_HASH_LEN],}",
+		"pubstructRegistrationBinding{server_pin:ServerAuthenticationPin,init_hash:[u8;TRANSCRIPT_HASH_LEN],beacon_identity_public_key:[u8;SIGN_PUBLIC_KEY_SIZE],beacon_fingerprint:[u8;TRANSCRIPT_HASH_LEN],associated_data:[u8;ASSOCIATED_DATA_SIZE],}",
+		"pubstructSessionBinding{server_binding:ServerBinding,assigned_key_id:u64,beacon_identity_public_key:[u8;SIGN_PUBLIC_KEY_SIZE],server_fingerprint:[u8;TRANSCRIPT_HASH_LEN],beacon_fingerprint:[u8;TRANSCRIPT_HASH_LEN],associated_data:[u8;ASSOCIATED_DATA_SIZE],}",
+	] {
+		require_once(&source, wanted, "MLDSA private accepted-token context")?;
+	}
+	let pin = snapshot
+		.core_session
+		.split_once("impl ServerAuthenticationPin {")
+		.ok_or("missing core ServerAuthenticationPin implementation")?
+		.1;
+	if rust_body(pin, "new")? != "Self{binding,public_key,fingerprint,}" {
+		return Err("MLDSA server pin retains all supplied metadata".to_owned());
+	}
+	for (name, body) in [
+		("binding", "self.binding"),
+		("public_key", "&self.public_key"),
+		("fingerprint", "&self.fingerprint"),
+	] {
+		if rust_body(pin, name)? != body {
+			return Err(format!("MLDSA server pin getter changed: {name}"));
+		}
+	}
+	let registration = snapshot
+		.core_session
+		.split_once("impl RegistrationBinding {")
+		.ok_or("missing core RegistrationBinding implementation")?
+		.1;
+	let registration_new = rust_body(registration, "new")?;
+	require_once(
+		&registration_new,
+		"letbase=build_associated_data(server_pin.binding.identity_public_key,beacon_identity_public_key,);Self{associated_data:bind_associated_data(&base,&server_pin.fingerprint,&beacon_fingerprint,),server_pin,init_hash,beacon_identity_public_key,beacon_fingerprint,}",
+		"MLDSA registration binding retains exact pins, request and populated AD",
+	)?;
+	let matches = rust_body(registration, "matches_server")?;
+	require_once(
+		&matches,
+		"self.server_pin.binding.identity_key_id==current.binding.identity_key_id&&self.server_pin.binding.identity_public_key==current.binding.identity_public_key&&self.server_pin.public_key==current.public_key&&self.server_pin.fingerprint==current.fingerprint",
+		"MLDSA complete current-server pin comparison",
+	)?;
+	let finish = rust_body(registration, "finish")?;
+	require_once(
+		&finish,
+		"SessionBinding{server_binding:self.server_pin.binding,assigned_key_id,beacon_identity_public_key:self.beacon_identity_public_key,server_fingerprint:self.server_pin.fingerprint,beacon_fingerprint:self.beacon_fingerprint,associated_data:self.associated_data,}",
+		"MLDSA establishment preserves the exact registration binding",
+	)?;
+	for (name, body) in [
+		("init_hash", "&self.init_hash"),
+		("server_pin", "&self.server_pin"),
+		("associated_data", "&self.associated_data"),
+	] {
+		if rust_body(registration, name)? != body {
+			return Err(format!("MLDSA registration binding getter changed: {name}"));
+		}
+	}
+	let session = snapshot
+		.core_session
+		.split_once("impl SessionBinding {")
+		.ok_or("missing core SessionBinding implementation")?
+		.1;
+	let restore = rust_body(session, "from_trusted_metadata")?;
+	require_once(
+		&restore,
+		"letbase=build_associated_data(server_binding.identity_public_key,beacon_identity_public_key,);Self{server_binding,assigned_key_id,beacon_identity_public_key,server_fingerprint,beacon_fingerprint,associated_data:bind_associated_data(&base,&server_fingerprint,&beacon_fingerprint),}",
+		"MLDSA trusted restoration preserves ordered session metadata",
+	)?;
+	if rust_body(session, "associated_data")? != "&self.associated_data" {
+		return Err("MLDSA session associated-data getter changed".to_owned());
+	}
+	Ok(())
+}
+
+fn validate_mldsa_source(snapshot: &Snapshot) -> Result<(), String> {
+	validate_mldsa_core(snapshot)?;
+	validate_session_source(snapshot)?;
+	let source = compact(&uncommented_rust(&snapshot.adapter_auth)?);
+	for wanted in [
+		"usebeaconcrypt_core::authenticationastranscript;",
+		"pub(crate)usetranscript::AuthRole;",
+		"pubconstMLDSA_PUBLIC_KEY_LEN:usize=1952;",
+		"pubconstMLDSA_SIGNATURE_LEN:usize=3309;",
+		"const_:()=assert!(MLDSA_PUBLIC_KEY_LEN==transcript::MLDSA_PUBLIC_KEY_LEN);",
+		"const_:()=assert!(MLDSA_SIGNATURE_LEN==transcript::MLDSA_SIGNATURE_LEN);",
+		"pub(crate)constTRANSCRIPT_HASH_LEN:usize=transcript::TRANSCRIPT_HASH_LEN;",
+	] {
+		require_once(
+			&source,
+			wanted,
+			"MLDSA adapter uses core transcript definitions",
+		)?;
+	}
+	for unwanted in [
+		"fn hash_field(",
+		"fn signature_input(",
+		"enum AuthRole",
+		"const INIT_TRANSCRIPT_DOMAIN",
+		"const RESPONSE_TRANSCRIPT_DOMAIN",
+		"const SIGNING_CONTEXT",
+	] {
+		forbid(
+			&snapshot.adapter_auth,
+			unwanted,
+			"MLDSA duplicate adapter transcript construction",
+		)?;
+	}
+	let hash = rust_body(&snapshot.adapter_auth, "hash_state")?;
+	require_once(
+		&hash,
+		"crypto_generichash::State::new(None,TRANSCRIPT_HASH_LEN).ok()",
+		"MLDSA unkeyed BLAKE2b512 transcript hash",
+	)?;
+	registration_effects::runtime(snapshot)?;
+
+	Ok(())
+}
+
+// This pins the symbolic transcription of the assumed interface. The separate
+// focused checker verifies its exact queries and reconstructed bypass controls.
+fn validate_mldsa_model(snapshot: &Snapshot) -> Result<(), String> {
+	let model = compact(&uncommented_pv(&snapshot.mldsa_auth)?);
+	for (wanted, label) in [
+		(
+			"mldsa_verify(mldsa_sign(message,signing_secret,context),mldsa_public(signing_secret),context)=message.",
+			"MLDSA assumed matching secret, message and context",
+		),
+		(
+			"letfunmldsa_init_hash(server_id:key_id,server_ed:bitstring,agent_ml:bitstring,server_ml:bitstring,classical_init:bitstring)=letsigned_init_kex(identity,prekey,one_time,pq)=classical_initinblake2b512(mldsa_init_preimage(mldsa_init_domain(),sender_id_le64(server_id),server_ed,agent_ml,server_ml,mldsa_length_prefixed(identity),mldsa_length_prefixed(prekey),mldsa_length_prefixed(one_time),mldsa_length_prefixed(pq))).",
+			"MLDSA symbolic request transcript",
+		),
+		(
+			"funmldsa_response_fields(bitstring,bitstring,bitstring,bitstring,key_id):bitstring[data].",
+			"MLDSA raw response-field constructor",
+		),
+		(
+			"letfunmldsa_response_hash(init_hash:bitstring,response:bitstring)=letmldsa_response_fields(identity,ephemeral,kem,raw_ctu,assigned)=responseinblake2b512(mldsa_response_preimage(mldsa_response_domain(),init_hash,mldsa_length_prefixed(identity),mldsa_length_prefixed(ephemeral),mldsa_length_prefixed(kem),mldsa_length_prefixed(raw_ctu),sender_id_le64(assigned))).",
+			"MLDSA symbolic raw response transcript",
+		),
+		(
+			"letfunmldsa_beacon_input(hash:bitstring)=mldsa_signature_input(mldsa_spaces64(),mldsa_beacon_label(),mldsa_zero(),hash).",
+			"MLDSA symbolic beacon role input",
+		),
+		(
+			"letfunmldsa_server_input(hash:bitstring)=mldsa_signature_input(mldsa_spaces64(),mldsa_server_label(),mldsa_zero(),hash).",
+			"MLDSA symbolic server role input",
+		),
+		(
+			"funmldsa_signed_init_kex(bitstring,bitstring,bitstring):bitstring[data].",
+			"MLDSA mandatory symbolic request wrapper",
+		),
+		(
+			"funmldsa_signed_kex_response(bitstring,bitstring):bitstring[data].",
+			"MLDSA mandatory symbolic response wrapper",
+		),
+		(
+			"letfunmldsa_ad(base:bitstring,server_ml:bitstring,agent_ml:bitstring)=mldsa_associated_data(base,blake2b512(server_ml),blake2b512(agent_ml)).",
+			"MLDSA symbolic associated-data hash-slot order",
+		),
+		(
+			"mldsa_strip(crypto_frame(body,tag,commitment,seq,sender))=mldsa_raw_ctu(body,tag,commitment).",
+			"MLDSA symbolic raw ciphertext projection",
+		),
+		(
+			"mldsa_restore(mldsa_raw_ctu(body,tag,commitment),pinned)=crypto_frame(body,tag,commitment,first_sequence(),pinned).",
+			"MLDSA symbolic fixed sequence and pinned sender restoration",
+		),
+	] {
+		require_once(&model, wanted, label)?;
+	}
+	let profile = compact(&uncommented_pv(&snapshot.mldsa_registration)?);
+	for (wanted, label) in [
+		(
+			"out(mldsa_channel,(server_ed_secret,beacon_ed_secret,prekey_secret,one_time_secret,server_ml,beacon_ml,owned_ml_secret,mlkem_public(pq_secret)));",
+			"MLDSA public classical secrets and attacker-owned signing key",
+		),
+		(
+			"letverified_init_input=mldsa_verify(candidate_signature,candidate_ml,mldsa_signing_context())inifverified_init_input=mldsa_beacon_input(candidate_hash)thenletsigned_init_kex(encoded_identity,signed_prekey,signed_one_time,signed_pq)=candidate_initin",
+			"MLDSA symbolic self-presented request verification before classical projection",
+		),
+		(
+			"lettag_x25519_one_time(candidate_one_time)=verify_signature(signed_one_time,candidate_ed)in((ifcandidate_ml=beacon_mltheneventMldsaHonestInitAccepted(candidate_ml,server_ml,candidate_hash,candidate_init))|(ifcandidate_ml=owned_mlthenifcandidate_ed=beacon_edtheneventMldsaOwnedKeyAccepted())|(newephemeral_secret:bitstring;",
+			"MLDSA target events do not gate response admission",
+		),
+		(
+			"letresponse=mldsa_response_fields(server_ed,x25519_public(ephemeral_secret),mlkem_ciphertext(candidate_pq,kem_coins),mldsa_raw_ctu(body,tag,commitment),mldsa_assigned_id())in",
+			"MLDSA symbolic signed raw response fields",
+		),
+		(
+			"letresponse_hash=mldsa_response_hash(candidate_hash,response)inletresponse_signature=mldsa_sign(mldsa_server_input(response_hash),server_ml_secret,mldsa_signing_context())ineventMldsaResponseSigned(server_ml,candidate_hash,response);out(mldsa_channel,mldsa_signed_kex_response(response,response_signature))",
+			"MLDSA symbolic response signing and publication",
+		),
+		(
+			"letexpected_response_hash=mldsa_response_hash(honest_hash,candidate_response)inletverified_response_input=mldsa_verify(response_signature,server_ml,mldsa_signing_context())inifverified_response_input=mldsa_server_input(expected_response_hash)theneventMldsaResponseAccepted(server_ml,honest_hash,candidate_response);eventMldsaHonestResponseVerified()",
+			"MLDSA symbolic pinned server and retained request verification",
+		),
+	] {
+		require_once(&profile, wanted, label)?;
+	}
+	let queries = compact(&uncommented_pv(&snapshot.mldsa_queries)?);
+	let expected = compact("query agent_ml: bitstring, server_ml: bitstring, init_hash: bitstring, classical_init: bitstring; event(MldsaHonestInitAccepted(agent_ml, server_ml, init_hash, classical_init)) ==> event(MldsaInitSigned(agent_ml, server_ml, init_hash, classical_init)).
+query server_ml: bitstring, init_hash: bitstring, response: bitstring; event(MldsaResponseAccepted(server_ml, init_hash, response)) ==> event(MldsaResponseSigned(server_ml, init_hash, response)).
+query event(MldsaHonestResponseVerified()). query event(MldsaOwnedKeyAccepted()). query event(MldsaCompromisedAgentAccepted()). query event(MldsaCompromisedServerAccepted()). query event(MldsaAdOpened()). query event(MldsaWrongServerAdOpened()). query event(MldsaWrongAgentAdOpened()). query event(MldsaWrongRoleAccepted()). query event(MldsaWrongContextAccepted()). query event(MldsaWrongRequestAccepted()).
+process MldsaRegistrationProfile() | MldsaCompromiseControl() | MldsaSeparationControl() | MldsaAdControl()");
+	if queries != expected {
+		return Err("MLDSA exact focused query and control roster changed".to_owned());
+	}
+	Ok(())
+}
+
+fn validate_phase2_source(snapshot: &Snapshot) -> Result<(), String> {
+	let schema = compact(&uncommented_cddl(&snapshot.phase2_schema));
+	require(
+		&schema,
+		"kex-response=[2,1,identity-key:bstr.size32,ephemeral-key:bstr.size32,kem-cipher-text:bstr.size1088,app-cipher-text:bstr,key-id:uint,signature:bstr.size3309]",
+		"Phase-2 response schema",
+	)?;
+	registration_effects::runtime(snapshot)?;
+
+	Ok(())
+}
+
+// These are source fixtures for the production-used extracted wrapper and its native primitive interpreter.
+fn validate_record_opening_source(snapshot: &Snapshot) -> Result<(), String> {
+	let source = compact(&uncommented_rust(&snapshot.core_record)?);
+	let adapter = compact(&uncommented_rust(&snapshot.adapter_ratchet)?);
+	require_once(
+		&adapter,
+		"usebeaconcrypt_core::recordasverified_record;",
+		"CryptoFrame actual extracted wrapper import",
+	)?;
+	for wanted in [
+		"pubconstCOMMITMENT_SIZE:usize=64;",
+		"pubconstMESSAGE_OVERHEAD:usize=COMMITMENT_SIZE+AEAD_TAG_SIZE;",
+	] {
+		require_once(&source, wanted, "CryptoFrame core payload constants")?;
+	}
+	let context = rust_body(&snapshot.core_record, "from_frame")?;
+	for (wanted, label) in [
+		(
+			"ifciphertext.len()<=MESSAGE_OVERHEAD{returnNone;}",
+			"CryptoFrame open length gate",
+		),
+		(
+			"let(base_ciphertext,supplied_commitment)=ciphertext.split_at(ciphertext.len()-COMMITMENT_SIZE);",
+			"CryptoFrame split commitment boundary",
+		),
+		(
+			"lettag=&base_ciphertext[base_ciphertext.len()-AEAD_TAG_SIZE..];",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"lettag=matchtag.try_into(){Ok(tag)=>tag,Err(_)=>returnNone,};",
+			"CryptoFrame validated payload views",
+		),
+		(
+			"letcommitment=matchsupplied_commitment.try_into(){Ok(commitment)=>commitment,Err(_)=>returnNone,};",
+			"CryptoFrame validated payload views",
+		),
+		(
+			"Some(Self{base_ciphertext,tag,commitment,associated_data:*associated_data,sender_kid,})",
+			"CryptoFrame validated payload views",
+		),
+	] {
+		require_once(&context, wanted, label)?;
+	}
+	let complete = rust_body(&snapshot.core_record, "finish_frame_read")?;
+	if complete != "ifremaining.is_empty(){Some(message)}else{None}" {
+		return Err("CryptoFrame complete-input core gate changed".to_owned());
+	}
+	let begin = rust_body(&snapshot.core_record, "begin_open")?;
+	require_once(
+		&begin,
+		"letmaterial=matchopening.material(){Some(material)=>material,None=>returnOpenStart::OpenRejected(opening.reject().0),};",
+		"CryptoFrame selected receive material and sequence",
+	)?;
+	require_once(
+		&begin,
+		"letcontext=opening.context();",
+		"CryptoFrame selected receive material and sequence",
+	)?;
+	require_one_call(
+		&begin,
+		"build_commitment_transcript",
+		&[
+			"material.key().as_bytes()",
+			"material.nonce().as_bytes()",
+			"&context.associated_data",
+			"context.tag",
+			"opening.sequence()",
+			"context.sender_kid",
+			"",
+		],
+		"CryptoFrame open commitment mapping",
+	)?;
+	require_ordered_once(
+		&begin,
+		&[
+			"opening.material()",
+			"letcontext=opening.context();",
+			"lettranscript=build_commitment_transcript(",
+			"OpenStart::OpenCommitmentRequested(OpenCommitment{opening,transcript,})",
+		],
+		"CryptoFrame selected receive material and sequence",
+	)?;
+	let supplied = rust_body(&snapshot.core_record, "supplied_commitment")?;
+	if supplied != "self.opening.context().commitment" {
+		return Err("CryptoFrame same-opening supplied commitment changed".to_owned());
+	}
+	let transcript = rust_body(&snapshot.core_record, "transcript")?;
+	let transcript_mut = rust_body(&snapshot.core_record, "transcript_mut")?;
+	if transcript != "&self.transcript" || transcript_mut != "&mutself.transcript" {
+		return Err("CryptoFrame retained transcript borrow changed".to_owned());
+	}
+	let resume = rust_body(&snapshot.core_record, "resume")?;
+	if resume
+		!= "if!commitment_matches{returnOpenAfterCommitment::OpenCommitmentRejected(self.opening.reject().0);}OpenAfterCommitment::OpenAeadRequested(OpenAead{opening:self.opening,})"
+	{
+		return Err("CryptoFrame commitment gate and same-opening resume changed".to_owned());
+	}
+	let request = rust_body(&snapshot.core_record, "request")?;
+	require_once(
+		&request,
+		"letmaterial=matchself.opening.material(){Some(material)=>material,None=>returnNone,};",
+		"CryptoFrame AEAD selected material",
+	)?;
+	require_once(
+		&request,
+		"letcontext=self.opening.context();",
+		"CryptoFrame AEAD selected context",
+	)?;
+	require_once(
+		&request,
+		"Some(AeadRequest{key:material.key().as_bytes(),nonce:material.nonce().as_bytes(),ciphertext:context.base_ciphertext,associated_data:&context.associated_data,})",
+		"CryptoFrame AEAD request fields",
+	)?;
+	let (_, aead_surface) = snapshot
+		.core_record
+		.split_once("impl OpenAead<'_>")
+		.ok_or("missing core AEAD implementation")?;
+	let finish = rust_body(aead_surface, "finish")?;
+	require_once(
+		&finish,
+		"letplaintext=matchopened{Some(plaintext)=>plaintext,None=>returnself.opening.finish(None),};",
+		"CryptoFrame actual optional plaintext",
+	)?;
+	require_once(
+		&finish,
+		"letkey_id=self.opening.context().sender_kid;letseq=self.opening.sequence();letopened=OpenedRecord{plaintext,key_id,seq,};",
+		"CryptoFrame returned parsed metadata",
+	)?;
+	require_once(
+		&finish,
+		"self.opening.finish(Some(opened))",
+		"CryptoFrame one-use receive completion",
+	)?;
+	record_effects::validate(snapshot)?;
+	for (body, bindings) in [
+		(
+			&begin,
+			&["letmaterial=", "letcontext=", "lettranscript="][..],
+		),
+		(&request, &["letmaterial=", "letcontext="][..]),
+		(
+			&finish,
+			&["letplaintext=", "letkey_id=", "letseq=", "letopened="][..],
+		),
+	] {
+		for binding in bindings {
+			if count(body, binding) != 1 {
+				return Err(format!("CryptoFrame executor binding shadowed: {binding}"));
+			}
+		}
+	}
+	Ok(())
+}
+
+fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
+	let schema = compact(&uncommented_cddl(&snapshot.cryptoframe_schema));
+	require(
+		&schema,
+		"crypto-frame=[1,2,seq:uint,key-id:uint,cipher-text:bstr]",
+		"CryptoFrame schema changed",
+	)?;
+	validate_cbor_transport(snapshot)?;
+	validate_cbor_registration_model(snapshot)?;
+
+	let ratchet = compact(&uncommented_rust(&snapshot.adapter_ratchet)?);
+	for (wanted, label) in [
+		(
+			"pubconstAEAD_KEY_LEN:usize=32;",
+			"CryptoFrame AEAD key length",
+		),
+		(
+			"pubconstAEAD_NONCE_LEN:usize=12;",
+			"CryptoFrame AEAD nonce length",
+		),
+		(
+			"pubconstAEAD_TAG_LEN:usize=16;",
+			"CryptoFrame AEAD tag length",
+		),
+		(
+			"pubconstCOMMITMENT_SIZE:usize=64;",
+			"CryptoFrame commitment length",
+		),
+		(
+			"pubconstMESSAGE_OVERHEAD:usize=COMMITMENT_SIZE+AEAD_TAG_LEN;",
+			"CryptoFrame payload overhead",
+		),
+	] {
+		require_once(&ratchet, wanted, label)?;
+	}
+
+	record_effects::validate(snapshot)?;
+	let encrypt = rust_body(&snapshot.adapter_ratchet, "encrypt_with_ratchet")?;
+	require_once(
+		&encrypt,
+		"ifbytes.is_empty(){returnNone;}",
+		"CryptoFrame empty-plaintext rejection",
+	)?;
+	validate_record_opening_source(snapshot)?;
+	let decoder = rust_body(&snapshot.adapter_ratchet, "decode_crypto_frame")?;
+	require_once(
+		&decoder,
+		"decode_frame(data)",
+		"CryptoFrame complete CBOR parse",
+	)?;
+	let decrypt = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
+	require_ordered_once(
+		&decrypt,
+		&[
+			"ifdata.is_empty(){returnNone;}",
+			"letframe=decode_crypto_frame(data)?;",
+			"letadmitted=beaconcrypt_core::transport::admit_frame(frame.seq,frame.key_id,frame.cipher_text,expected_sender_kid,)?;",
+			"decrypt_payload_with_ratchet(admitted.ciphertext,admitted.sequence,admitted.sender,associated_data,ratchet,)",
+		],
+		"CryptoFrame parser and gate evaluation order",
+	)?;
+
+	let core_source = compact(&uncommented_rust(&snapshot.core_commitment)?);
+	for (wanted, label) in [
+		(
+			"pubconstAEAD_KEY_SIZE:usize=32;",
+			"CryptoFrame core key size",
+		),
+		(
+			"pubconstAEAD_NONCE_SIZE:usize=12;",
+			"CryptoFrame core nonce size",
+		),
+		(
+			"pubconstASSOCIATED_DATA_SIZE:usize=crate::constants::ASSOCIATED_DATA_SIZE;",
+			"CryptoFrame core associated-data size source",
+		),
+		(
+			"pubconstAEAD_TAG_SIZE:usize=16;",
+			"CryptoFrame core tag size",
+		),
+		(
+			"pubconstENCODED_U64_SIZE:usize=8;",
+			"CryptoFrame core integer size",
+		),
+		(
+			"pubconstCOMMITMENT_TRANSCRIPT_SIZE:usize=AEAD_KEY_SIZE+AEAD_NONCE_SIZE+ASSOCIATED_DATA_SIZE+AEAD_TAG_SIZE+(2*ENCODED_U64_SIZE);",
+			"CryptoFrame core transcript-size formula",
+		),
+		(
+			"const_:()=assert!(ASSOCIATED_DATA_SIZE==281);",
+			"CryptoFrame core associated-data length",
+		),
+		(
+			"const_:()=assert!(COMMITMENT_TRANSCRIPT_SIZE==357);",
+			"CryptoFrame core transcript length",
+		),
+		(
+			"pubstructCommitmentTranscript{bytes:[u8;COMMITMENT_TRANSCRIPT_SIZE],}",
+			"CryptoFrame core fixed-width result",
+		),
+		(
+			"pubfnbuild_commitment_transcript(key:&[u8;AEAD_KEY_SIZE],nonce:&[u8;AEAD_NONCE_SIZE],associated_data:&[u8;ASSOCIATED_DATA_SIZE],tag:&[u8;AEAD_TAG_SIZE],sequence:u64,sender_id:u64,)->CommitmentTranscript",
+			"CryptoFrame core transcript signature",
+		),
+	] {
+		require_once(&core_source, wanted, label)?;
+	}
+	let core_commitment = rust_body(&snapshot.core_commitment, "build_commitment_transcript")?;
+	let encode_u64 = rust_body(&snapshot.core_commitment, "encode_u64_le")?;
+	require_once(
+		&encode_u64,
+		"[valueasu8,(value>>8)asu8,(value>>16)asu8,(value>>24)asu8,(value>>32)asu8,(value>>40)asu8,(value>>48)asu8,(value>>56)asu8,]",
+		"CryptoFrame core LE64 encoding",
+	)?;
+	let encoded = all_arguments(&core_commitment, "encode_u64_le")?;
+	if encoded != [vec!["sequence".to_owned()], vec!["sender_id".to_owned()]] {
+		return Err(format!(
+			"CryptoFrame core integer mapping changed: {encoded:?}"
+		));
+	}
+	for (wanted, label) in [
+		("ifi<32{key[i]}", "CryptoFrame core key field"),
+		("elseifi<44{nonce[i-32]}", "CryptoFrame core nonce field"),
+		(
+			"elseifi<325{associated_data[i-44]}",
+			"CryptoFrame core associated-data field",
+		),
+		(
+			"elseifi<341{tag[i-325]}",
+			"CryptoFrame core retained-tag field",
+		),
+		(
+			"elseifi<349{sequence[i-341]}",
+			"CryptoFrame core sequence field",
+		),
+		("else{sender_id[i-349]}", "CryptoFrame core sender-ID field"),
+	] {
+		require_once(&core_commitment, wanted, label)?;
+	}
+	require_ordered_once(
+		&core_commitment,
+		&[
+			"ifi<32{key[i]}",
+			"elseifi<44{nonce[i-32]}",
+			"elseifi<325{associated_data[i-44]}",
+			"elseifi<341{tag[i-325]}",
+			"elseifi<349{sequence[i-341]}",
+			"else{sender_id[i-349]}",
+		],
+		"CryptoFrame core transcript field order",
+	)?;
+	require_once(
+		&core_commitment,
+		"letbytes=core::array::from_fn(|i|",
+		"CryptoFrame core fixed-width construction",
+	)?;
+	require_once(
+		&core_commitment,
+		"CommitmentTranscript{bytes}",
+		"CryptoFrame core transcript result",
+	)?;
+
+	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
+	require_once(
+		&snapshot.crypto,
+		"(* @beaconcrypt-cryptoframe-v1 crypto_frame.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id *)\nfun crypto_frame(",
+		"CryptoFrame symbolic semantic field order",
+	)?;
+	require_once(
+		&crypto,
+		"funcrypto_frame(bitstring,bitstring,bitstring,sequence,key_id):bitstring[data].",
+		"CryptoFrame symbolic constructor declaration",
+	)?;
+	let seal_start = crypto
+		.find("letfunseal_frame(")
+		.ok_or_else(|| "missing symbolic seal_frame".to_owned())?;
+	let symbolic_seal = &crypto[seal_start..];
+	let seal_arguments = arguments_after(symbolic_seal, "letfunseal_frame(")?;
+	let expected_seal_arguments = [
+		"material:bitstring",
+		"associated_data:bitstring",
+		"message_sequence:sequence",
+		"sender_id:key_id",
+		"plaintext:bitstring",
+	];
+	if seal_arguments != expected_seal_arguments {
+		return Err(format!(
+			"CryptoFrame symbolic seal arguments changed: {seal_arguments:?}"
+		));
+	}
+	let seal_fields = arguments_after(symbolic_seal, ")=crypto_frame(")?;
+	let expected_seal_fields = [
+		"aead_cipher(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"aead_tag(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"ctx_commitment(material_key(material),material_nonce(material),associated_data,aead_tag(material_key(material),material_nonce(material),associated_data,plaintext),message_sequence,sender_id)",
+		"message_sequence",
+		"sender_id",
+	];
+	if seal_fields != expected_seal_fields {
+		return Err(format!(
+			"CryptoFrame symbolic seal fields changed: {seal_fields:?}"
+		));
+	}
+	let open_start = crypto
+		.find("reducforallkey:bitstring,nonce:bitstring,associated_data:bitstring,message_sequence:sequence,sender_id:key_id,plaintext:bitstring;open_frame(")
+		.ok_or_else(|| "missing symbolic open_frame reduction".to_owned())?;
+	let symbolic_open = &crypto[open_start..];
+	let open_fields = arguments_after(symbolic_open, "crypto_frame(")?;
+	let expected_open_fields = [
+		"aead_cipher(key,nonce,associated_data,plaintext)",
+		"aead_tag(key,nonce,associated_data,plaintext)",
+		"blake2b512(ctx_preimage(key,nonce,associated_data,aead_tag(key,nonce,associated_data,plaintext),sequence_le64(message_sequence),sender_id_le64(sender_id)))",
+		"message_sequence",
+		"sender_id",
+	];
+	if open_fields != expected_open_fields {
+		return Err(format!(
+			"CryptoFrame symbolic open fields changed: {open_fields:?}"
+		));
+	}
+	let open_arguments = arguments_after(symbolic_open, "open_frame(")?;
+	let expected_open_arguments = vec![
+		"ratchet_key_nonce(key,nonce)".to_owned(),
+		"associated_data".to_owned(),
+		"message_sequence".to_owned(),
+		"sender_id".to_owned(),
+		format!("crypto_frame({})", expected_open_fields.join(",")),
+	];
+	if open_arguments != expected_open_arguments {
+		return Err(format!(
+			"CryptoFrame symbolic open acceptance changed: {open_arguments:?}"
+		));
+	}
+	if !symbolic_open.ends_with(")=plaintext.") {
+		return Err("CryptoFrame symbolic open result changed".to_owned());
+	}
+	let symbolic_boundary = &crypto[seal_start..];
+	for absent in [
+		"target_id",
+		"direction",
+		"session",
+		"phase",
+		"aead_label",
+		"ctx_label",
+	] {
+		forbid(
+			symbolic_boundary,
+			absent,
+			"invented CryptoFrame symbolic field",
+		)?;
+	}
+	Ok(())
+}
+
+fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), String> {
+	let decoder = rust_body(&snapshot.adapter_ratchet, "decode_crypto_frame")?;
+	require_once(
+		&decoder,
+		"decode_frame(data)",
+		"endpoint Server complete CBOR parse",
+	)?;
+	let parsed_sender = rust_body(&snapshot.adapter_ratchet, "encrypted_frame_sender")?;
+	require_once(
+		&parsed_sender,
+		"Some(decode_crypto_frame(data)?.key_id)",
+		"endpoint Server wire-sender keyId getter",
+	)?;
+
+	let server_associated_data = rust_body(&snapshot.adapter_server, "associated_data")?;
+	require_once(
+		&server_associated_data,
+		"Some(*self.known_ids.get(&k)?.binding().associated_data())",
+		"endpoint Server retained session associated-data mapping",
+	)?;
+
+	let server_send = rust_body(&snapshot.adapter_server, "encrypt_message")?;
+	require_once(
+		&server_send,
+		"letad=self.associated_data(k)?;",
+		"endpoint Server send peer-associated data",
+	)?;
+	require_once(
+		&server_send,
+		"letsender=self.identity_key_kid();",
+		"endpoint Server send local sender",
+	)?;
+	require_one_call(
+		&server_send,
+		"encrypt_message_with_ratchet",
+		&["b", "k", "sender", "&ad", "self.ratchet_manager_mut(k)?"],
+		"endpoint Server send target/sender/context/ratchet mapping",
+	)?;
+	let server_receive = rust_body(&snapshot.adapter_server, "decrypt_message_transition")?;
+	require_once(
+		&server_receive,
+		"letSome(k)=crate::ratchet::encrypted_frame_sender(b)else{returnReceiveTransition::Rejected;};",
+		"endpoint Server parsed sender selector",
+	)?;
+	require_once(
+		&server_receive,
+		"letSome(ad)=self.associated_data(k)else{returnReceiveTransition::Rejected;};",
+		"endpoint Server receive selected-peer associated data",
+	)?;
+	require_once(
+		&server_receive,
+		"letSome(ratchet)=self.ratchet_manager_mut(k)else{returnReceiveTransition::Rejected;};",
+		"endpoint Server receive selected-peer ratchet",
+	)?;
+	require_one_call(
+		&server_receive,
+		"decrypt_message_with_ratchet",
+		&["b", "k", "&ad", "ratchet"],
+		"endpoint Server receive expected-sender/context/ratchet mapping",
+	)?;
+	require_once(
+		&server_receive,
+		"Some(decrypted)=>ReceiveTransition::Accepted(decrypted),None=>ReceiveTransition::Rejected,",
+		"endpoint Server acceptance only after successful open",
+	)?;
+	require_ordered_once(
+		&server_receive,
+		&[
+			"crate::ratchet::encrypted_frame_sender(b)",
+			"self.associated_data(k)",
+			"self.ratchet_manager_mut(k)",
+			"decrypt_message_with_ratchet(b,k,&ad,ratchet)",
+			"Some(decrypted)=>ReceiveTransition::Accepted(decrypted)",
+		],
+		"endpoint Server receive source order",
+	)?;
+
+	let beacon_send = rust_body(&snapshot.adapter_beacon, "encrypt_message")?;
+	require_once(
+		&beacon_send,
+		"letsender=self.identity_key_kid;",
+		"endpoint Beacon assigned sender snapshot",
+	)?;
+	require_once(
+		&beacon_send,
+		"letBeaconState::Established{control,binding,ratchet,}=&mutself.stateelse{returnNone;};",
+		"endpoint Beacon send stored establishment state",
+	)?;
+	require_one_call(
+		&beacon_send,
+		"encrypt_message_with_ratchet",
+		&[
+			"b",
+			"control.server_key_id()",
+			"sender",
+			"binding.associated_data()",
+			"ratchet",
+			"",
+		],
+		"endpoint Beacon send target/sender/stored context mapping",
+	)?;
+	let beacon_receive = rust_body(&snapshot.adapter_beacon, "decrypt_message")?;
+	require_once(
+		&beacon_receive,
+		"letBeaconState::Established{control,binding,ratchet,}=&mutself.stateelse{returnNone;};",
+		"endpoint Beacon receive stored establishment state",
+	)?;
+	require_one_call(
+		&beacon_receive,
+		"decrypt_message_with_ratchet",
+		&[
+			"b",
+			"control.server_key_id()",
+			"binding.associated_data()",
+			"ratchet",
+			"",
+		],
+		"endpoint Beacon receive expected-sender/stored context mapping",
+	)?;
+
+	registration_effects::runtime(snapshot)?;
+
+	let environment = compact(&uncommented_pv(&snapshot.environment)?);
+	let honest_beacon = section_between(
+		&environment,
+		"letHonestBeacon(",
+		"letMaliciousBeacon(",
+		"symbolic HonestBeacon endpoint",
+	)?;
+	let server = section_between(
+		&environment,
+		"letServer(",
+		"letMaliciousServer(",
+		"symbolic Server endpoint",
+	)?;
+	let malicious_server = section_between(
+		&environment,
+		"letMaliciousServer(",
+		"letKeepBeaconStatePrivate(",
+		"symbolic MaliciousServer endpoint",
+	)?;
+
+	let honest_open_calls = all_arguments(honest_beacon, "open_frame")?;
+	let expected_honest_open_calls = [
+		[
+			"server_material_1",
+			"associated_data",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"initial_frame",
+		],
+		[
+			"server_material_3",
+			"associated_data",
+			"next_sequence(next_sequence(first_sequence()))",
+			"SERVER_KEY_ID",
+			"third_frame",
+		],
+		[
+			"server_material_2",
+			"associated_data",
+			"next_sequence(first_sequence())",
+			"SERVER_KEY_ID",
+			"second_frame",
+		],
+		[
+			"ratchet_material(ratchet_next(server_chain_3))",
+			"associated_data",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"SERVER_KEY_ID",
+			"fourth_frame",
+		],
+	]
+	.map(|call| call.map(str::to_owned).to_vec());
+	if honest_open_calls != expected_honest_open_calls {
+		return Err(format!(
+			"symbolic server-to-Beacon open wiring changed: {honest_open_calls:?}"
+		));
+	}
+	require_one_call(
+		honest_beacon,
+		"seal_frame",
+		&[
+			"beacon_material_1",
+			"associated_data",
+			"first_sequence()",
+			"assigned_key_id",
+			"beacon_record_secret",
+		],
+		"symbolic Beacon-to-Server seal wiring",
+	)?;
+
+	let server_seal_calls = all_arguments(server, "seal_frame")?;
+	let expected_server_seal_calls = [
+		[
+			"server_material_1",
+			"associated_data",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"registration_payload(binding,initial_secret)",
+		],
+		[
+			"server_material_2",
+			"associated_data",
+			"next_sequence(first_sequence())",
+			"SERVER_KEY_ID",
+			"cached_secret",
+		],
+		[
+			"server_material_3",
+			"associated_data",
+			"next_sequence(next_sequence(first_sequence()))",
+			"SERVER_KEY_ID",
+			"advance_secret",
+		],
+		[
+			"server_material_4",
+			"associated_data",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"SERVER_KEY_ID",
+			"future_secret",
+		],
+	]
+	.map(|call| call.map(str::to_owned).to_vec());
+	if server_seal_calls != expected_server_seal_calls {
+		return Err(format!(
+			"symbolic Server-to-Beacon seal wiring changed: {server_seal_calls:?}"
+		));
+	}
+	require_one_call(
+		server,
+		"open_frame",
+		&[
+			"beacon_material_1",
+			"associated_data",
+			"first_sequence()",
+			"assigned_key_id",
+			"beacon_frame",
+		],
+		"symbolic Server Beacon-frame open wiring",
+	)?;
+	require_one_call(
+		malicious_server,
+		"seal_frame",
+		&[
+			"server_material_1",
+			"associated_data",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"registration_payload(binding,MALICIOUS_TASK_SECRET)",
+		],
+		"symbolic malicious-registration initial-frame wiring",
+	)?;
+
+	let honest_received_events = [
+		[
+			"session",
+			"server_to_beacon()",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"initial_plaintext",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(next_sequence(first_sequence()))",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"third_plaintext",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(first_sequence())",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"second_plaintext",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"fourth_plaintext",
+		],
+	]
+	.map(|call| call.map(str::to_owned).to_vec());
+	require_exact_calls(
+		honest_beacon,
+		"MessageReceived",
+		&honest_received_events,
+		"symbolic HonestBeacon received-event fixture",
+	)?;
+	let honest_sent_events = [[
+		"session",
+		"beacon_to_server()",
+		"first_sequence()",
+		"assigned_key_id",
+		"SERVER_KEY_ID",
+		"beacon_record_secret",
+	]]
+	.map(|call| call.map(str::to_owned).to_vec());
+	require_exact_calls(
+		honest_beacon,
+		"MessageSent",
+		&honest_sent_events,
+		"symbolic HonestBeacon sent-event fixture",
+	)?;
+	let server_sent_events = [
+		[
+			"session",
+			"server_to_beacon()",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"initial_secret",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(first_sequence())",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"cached_secret",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(next_sequence(first_sequence()))",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"advance_secret",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"future_secret",
+		],
+	]
+	.map(|call| call.map(str::to_owned).to_vec());
+	require_exact_calls(
+		server,
+		"MessageSent",
+		&server_sent_events,
+		"symbolic Server sent-event fixture",
+	)?;
+	let server_received_events = [[
+		"session",
+		"beacon_to_server()",
+		"first_sequence()",
+		"assigned_key_id",
+		"SERVER_KEY_ID",
+		"beacon_plaintext",
+	]]
+	.map(|call| call.map(str::to_owned).to_vec());
+	require_exact_calls(
+		server,
+		"MessageReceived",
+		&server_received_events,
+		"symbolic Server received-event fixture",
+	)?;
+	Ok(())
+}
+
+fn validate_initial_sequence_gate(
+	opening: &str,
+	sequence: &str,
+	binding: &str,
+) -> Result<(), String> {
+	let code = compact(&uncommented_pv(opening)?);
+	let end = code
+		.find(binding)
+		.ok_or_else(|| "missing initial binding".to_owned())?
+		+ binding.len();
+	let code = &code[..end];
+	require_ordered_once(
+		code,
+		&[
+			"=open_frame(",
+			&format!("if{sequence}=first_sequence()then"),
+			binding,
+		],
+		"initial sequence-one gate after opening and before binding",
+	)
+}
+
+fn validate_main_sequence_gates(environment: &str) -> Result<(), String> {
+	let code = compact(&uncommented_pv(environment)?);
+	let first = section_between(
+		&code,
+		"letHonestBeacon(",
+		"letMaliciousBeacon(",
+		"first registration role",
+	)?;
+	validate_initial_sequence_gate(first, "initial_sequence", "letexpected_binding=")?;
+	let later = section_between(
+		&code,
+		"letMainLaterBeacon(",
+		"letMainLaterServer(",
+		"later registration role",
+	)?;
+	validate_initial_sequence_gate(later, "main_initial_sequence", "letmain_expected_binding=")
+}
+
+fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
+	validate_main_sequence_gates(&snapshot.environment)?;
+	let interface = compact(&uncommented_pv(&snapshot.interface)?);
+	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
+	let environment = compact(&uncommented_pv(&snapshot.environment)?);
+	let active_quantum_witness = compact(&uncommented_pv(&snapshot.active_quantum_witness)?);
+	require_once(
+		&snapshot.environment,
+		"(* @beaconcrypt-phase1-v1 signed_init_kex.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq *)\nfun signed_init_kex(",
+		"Phase-1 symbolic constructor semantic order",
+	)?;
+	require_once(
+		&environment,
+		"funsigned_init_kex(bitstring,bitstring,bitstring,bitstring):bitstring[data].",
+		"Phase-1 symbolic constructor declaration",
+	)?;
+	require_once(
+		&crypto,
+		"funsign(bitstring,bitstring):bitstring.",
+		"Phase-1 symbolic Ed25519 signature declaration",
+	)?;
+	require_once(
+		&crypto,
+		"reducforallmessage:bitstring,signing_key:bitstring;verify_signature(sign(message,signing_key),ed_public(signing_key))=message.",
+		"Phase-1 symbolic attached-signature verification",
+	)?;
+
+	let honest_producer = "signed_init_kex(tag_ed25519(beacon_identity),sign(tag_x25519_prekey(beacon_prekey),beacon_identity_secret),sign(tag_x25519_one_time(beacon_one_time),beacon_identity_secret),sign(tag_mlkem768(beacon_pq),beacon_identity_secret))";
+	if count(&environment, honest_producer) != 2 {
+		return Err(format!(
+			"Phase-1 symbolic honest/malicious producer order changed: expected two exact producers, found {}",
+			count(&environment, honest_producer)
+		));
+	}
+	let server_consumer = "letsigned_init_kex(encoded_identity,signed_prekey,signed_one_time,signed_pq)=incoming_initin";
+	if count(&environment, server_consumer) != 2 {
+		return Err(format!(
+			"Phase-1 symbolic Server consumer order changed: expected two exact consumers, found {}",
+			count(&environment, server_consumer)
+		));
+	}
+	require_once(
+		&active_quantum_witness,
+		server_consumer,
+		"Phase-1 active-quantum consumer order",
+	)?;
+	require_once(
+		&active_quantum_witness,
+		"signed_init_kex(tag_ed25519(beacon_identity),sign(tag_x25519_prekey(forged_prekey),beacon_identity_secret),sign(tag_x25519_one_time(forged_one_time),beacon_identity_secret),sign(tag_mlkem768(forged_pq),beacon_identity_secret))",
+		"Phase-1 active-quantum producer order",
+	)?;
+
+	for (wanted, expected_count, label) in [
+		(
+			"lettag_ed25519(beacon_identity:bitstring)=encoded_identityin",
+			2,
+			"Phase-1 symbolic identity validation",
+		),
+		(
+			"lettag_x25519_prekey(beacon_prekey:bitstring)=verify_signature(signed_prekey,beacon_identity)in",
+			2,
+			"Phase-1 symbolic prekey validation",
+		),
+		(
+			"lettag_x25519_one_time(beacon_one_time:bitstring)=verify_signature(signed_one_time,beacon_identity)in",
+			2,
+			"Phase-1 symbolic one-time validation",
+		),
+		(
+			"lettag_mlkem768(beacon_pq:bitstring)=verify_signature(signed_pq,beacon_identity)in",
+			2,
+			"Phase-1 symbolic ML-KEM validation",
+		),
+		(
+			"letcore_init=beaconcrypt_core__pqxdh__InitKex(encoded_identity,tag_x25519_prekey(beacon_prekey),tag_x25519_one_time(beacon_one_time),tag_mlkem768(beacon_pq))in",
+			2,
+			"Phase-1 symbolic Server core mapping",
+		),
+		(
+			"letcore_init=beaconcrypt_core__pqxdh__InitKex(tag_ed25519(beacon_identity),tag_x25519_prekey(beacon_prekey),tag_x25519_one_time(beacon_one_time),tag_mlkem768(beacon_pq))in",
+			1,
+			"Phase-1 symbolic honest core mapping",
+		),
+	] {
+		let actual = count(&environment, wanted);
+		if actual != expected_count {
+			return Err(format!(
+				"{label} changed: expected {expected_count} exact occurrence(s), found {actual}"
+			));
+		}
+	}
+	let symbolic_gate_order = "lettag_ed25519(beacon_identity:bitstring)=encoded_identityinlettag_x25519_prekey(beacon_prekey:bitstring)=verify_signature(signed_prekey,beacon_identity)inlettag_x25519_one_time(beacon_one_time:bitstring)=verify_signature(signed_one_time,beacon_identity)inlettag_mlkem768(beacon_pq:bitstring)=verify_signature(signed_pq,beacon_identity)inletcore_init=beaconcrypt_core__pqxdh__InitKex(encoded_identity,tag_x25519_prekey(beacon_prekey),tag_x25519_one_time(beacon_one_time),tag_mlkem768(beacon_pq))in";
+	if count(&environment, symbolic_gate_order) != 2 {
+		return Err(format!(
+			"Phase-1 symbolic pure-gate evaluation order changed: expected two exact blocks, found {}",
+			count(&environment, symbolic_gate_order)
+		));
+	}
+	for declaration in [
+		"typekey_id.",
+		"typesequence.",
+		"funsequence_le64(sequence):bitstring[data].",
+		"funsender_id_le64(key_id):bitstring[data].",
+		"funtag_ed25519(bitstring):bitstring[data].",
+		"funtag_x25519_prekey(bitstring):bitstring[data].",
+		"funtag_x25519_one_time(bitstring):bitstring[data].",
+		"funtag_mlkem768(bitstring):bitstring[data].",
+		"funpqxdh_ff32_padding():bitstring[data].",
+		"funhkdf_sha512_no_salt(bitstring,kdf_domain):hkdf_stream.",
+		"funbeaconcrypt_associated_data(bitstring,bitstring,kdf_domain,kdf_domain):bitstring[data].",
+		"funaead_cipher(bitstring,bitstring,bitstring,bitstring):bitstring.",
+		"funaead_tag(bitstring,bitstring,bitstring,bitstring):bitstring.",
+		"functx_preimage(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring):bitstring[data].",
+		"typeestablishment_transcript_t.",
+	] {
+		require(&interface, declaration, "interface declaration")?;
+		forbid(&crypto, declaration, "duplicate crypto declaration")?;
+	}
+	if count(&interface, "):kdf_domain[data].") != 2
+		|| count(&interface, "funpqxdh_domain():kdf_domain[data].") != 1
+		|| count(
+			&interface,
+			"funsymmetric_ratchet_domain():kdf_domain[data].",
+		) != 1
+	{
+		return Err("interface must declare exactly two production domains".to_owned());
+	}
+	forbid(&crypto, "kdf_domain", "extra crypto-domain declaration")?;
+	if count(&crypto, "hkdf_sha512_no_salt(") != 6 {
+		return Err("crypto model must contain exactly six production HKDF calls".to_owned());
+	}
+	require(
+		&crypto,
+		"letfunpqxdh_root(input:bitstring)=hkdf_first_32(hkdf_sha512_no_salt(input,pqxdh_domain())).",
+		"PQXDH root domain",
+	)?;
+	require(
+		&crypto,
+		"letfunserver_to_beacon_chain(root:bitstring)=hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+		"initial left projection",
+	)?;
+	require(
+		&crypto,
+		"letfunbeacon_to_server_chain(root:bitstring)=hkdf_second_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+		"initial right projection",
+	)?;
+	require(
+		&crypto,
+		"letfunratchet_next(chain:bitstring)=hkdf_second_32(hkdf_sha512_no_salt(chain,symmetric_ratchet_domain())).",
+		"step next-chain projection",
+	)?;
+	require(
+		&crypto,
+		"letfunratchet_material(chain:bitstring)=ratchet_key_nonce(hkdf_first_32(hkdf_sha512_no_salt(chain,symmetric_ratchet_domain())),hkdf_final_12(hkdf_sha512_no_salt(chain,symmetric_ratchet_domain()))).",
+		"step key/nonce projections",
+	)?;
+
+	let ctx = arguments_after(&interface, "blake2b512(ctx_preimage(")?;
+	let expected_ctx = [
+		"key",
+		"nonce",
+		"associated_data",
+		"retained_aead_tag",
+		"sequence_le64(message_sequence)",
+		"sender_id_le64(sender_id)",
+	];
+	if ctx != expected_ctx {
+		return Err(format!("CTX preimage field order changed: {ctx:?}"));
+	}
+	for label in [
+		"funaead_label",
+		"functx_label",
+		"fundirection_label",
+		"funsequence_label",
+		"funsession_label",
+		"funphase_label",
+		"funoutput_length_domain",
+	] {
+		forbid(&interface, label, "invented production label")?;
+		forbid(&crypto, label, "invented production label")?;
+	}
+	require(
+		&crypto,
+		"aead_cipher(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"seal AEAD input",
+	)?;
+	require(
+		&crypto,
+		"ctx_commitment(material_key(material),material_nonce(material),associated_data,aead_tag(material_key(material),material_nonce(material),associated_data,plaintext),message_sequence,sender_id)",
+		"seal CTX input",
+	)?;
+	require(
+		&crypto,
+		"ctx_preimage(key,nonce,associated_data,aead_tag(key,nonce,associated_data,plaintext),sequence_le64(message_sequence),sender_id_le64(sender_id))",
+		"open CTX input",
+	)?;
+	require(
+		&environment,
+		"funkex_response(bitstring,bitstring,bitstring,bitstring,key_id):bitstring[data].",
+		"Phase-2 response constructor",
+	)?;
+	require(
+		&environment,
+		"letkex_response(response_server_identity,server_ephemeral,kem_ciphertext,initial_frame,assigned_key_id)=responsein",
+		"Phase-2 response destructuring order",
+	)?;
+	let response_construction = "letresponse=kex_response(server_identity,server_ephemeral,kem_ciphertext,initial_frame,assigned_key_id)in";
+	if count(&environment, response_construction) != 2 {
+		return Err(format!(
+			"Phase-2 response construction order changed: expected two exact constructions, found {}",
+			count(&environment, response_construction)
+		));
+	}
+	require(
+		&active_quantum_witness,
+		"letkex_response(response_server_identity,server_ephemeral,kem_ciphertext,initial_frame,assigned_key_id)=responsein",
+		"active-quantum Phase-2 response destructuring order",
+	)?;
+
+	let constructor = "funestablishment_transcript(bitstring,bitstring,beaconcrypt_core__pqxdh__t_InitKex,beaconcrypt_core__pqxdh__t_RegistrationId,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,beaconcrypt_core__pqxdh__t_RootKeyInput,bitstring,bitstring,key_id,key_id,bitstring,bitstring):establishment_transcript_t[data].";
+	require(
+		&environment,
+		constructor,
+		"18-field establishment constructor",
+	)?;
+	let expected = [
+		"server_identity",
+		"beacon_identity",
+		"core_init",
+		"registration_id",
+		"beacon_prekey",
+		"beacon_one_time",
+		"beacon_pq",
+		"server_ephemeral",
+		"kem_ciphertext",
+		"initial_frame",
+		"response",
+		"root_input",
+		"root",
+		"associated_data",
+		"assigned_key_id",
+		"SERVER_KEY_ID",
+		"session",
+		"registration_session",
+	];
+	for (marker, label) in [
+		(
+			"letbeacon_establishment=establishment_transcript(",
+			"beacon establishment emitter",
+		),
+		(
+			"letserver_establishment=establishment_transcript(",
+			"server establishment emitter",
+		),
+		(
+			"letmalicious_establishment=establishment_transcript(",
+			"malicious establishment emitter",
+		),
+	] {
+		let arguments = arguments_after(&environment, marker)?;
+		if arguments != expected {
+			return Err(format!("{label} fields changed: {arguments:?}"));
+		}
+	}
+	let ad_calls = all_arguments(
+		&environment,
+		"beaconcrypt_core__pqxdh__build_associated_data",
+	)?;
+	if ad_calls
+		!= [
+			vec!["server_identity", "beacon_identity"],
+			vec!["server_identity", "beacon_identity"],
+			vec!["server_identity", "beacon_identity"],
+			vec!["main_server_identity", "main_beacon_identity"],
+			vec!["main_server_identity", "main_beacon_identity"],
+		] {
+		return Err(format!(
+			"associated-data identity order changed: {ad_calls:?}"
+		));
+	}
+
+	let extraction = compact(&uncommented_pv(&snapshot.extraction)?);
+	for reduction in [
+		"reducforallidentity:bitstring,prekey:bitstring,one_time:bitstring,pq:bitstring;beaconcrypt_core__pqxdh__registration_id(beaconcrypt_core__pqxdh__VerifiedInitKex(identity,prekey,one_time,pq))=beaconcrypt_core__pqxdh__RegistrationId(registration_identifier(identity,one_time)).",
+		"reducforalldh1:bitstring,dh2:bitstring,dh3:bitstring,dh4:bitstring,kem:bitstring;beaconcrypt_core__pqxdh__build_root_key_input(beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1,dh2,dh3,dh4,kem))=beaconcrypt_core__pqxdh__RootKeyInput(pqxdh_root_input(pqxdh_ff32_padding(),dh1,dh2,dh3,dh4,kem)).",
+		"reducforallserver_identity:bitstring,beacon_identity:bitstring;beaconcrypt_core__pqxdh__build_associated_data(server_identity,beacon_identity)=beaconcrypt_associated_data(tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain(),symmetric_ratchet_domain()).",
+	] {
+		require(&extraction, reduction, "checked extraction replacement")?;
+	}
+	Ok(())
+}
+
+fn scenario_names(makefile: &str) -> Result<Vec<String>, String> {
+	let start = makefile
+		.find("PROVERIF_SCENARIOS :=")
+		.ok_or_else(|| "missing PROVERIF_SCENARIOS".to_owned())?;
+	let tail = &makefile[start..];
+	let end = tail
+		.find("\nPROVERIF_CHECK_TARGETS :=")
+		.ok_or_else(|| "unterminated PROVERIF_SCENARIOS".to_owned())?;
+	Ok(tail[..end]
+		.lines()
+		.skip(1)
+		.map(|line| line.trim().trim_end_matches('\\').trim())
+		.filter(|line| !line.is_empty())
+		.map(str::to_owned)
+		.collect())
+}
+
+fn validate_x25519_alias_runner(
+	runner: &str,
+	control: &str,
+	baseline_queries: &str,
+) -> Result<(), String> {
+	let script = compact(runner);
+	for (wanted, label) in [
+		(
+			r#"source=without_comments((directory/"exact-registration-origin-queries.pvl").read_text())queries=re.findall(r"\bquery\b.*?\.",source,flags=re.S)selected=[queryforqueryinqueriesif"inj-event(BeaconCommitted("inqueryor"inj-event(BeaconRegistrationCompleted("inqueryor"inj-event(BeaconAnyCommitted("inquery]iflen(selected)!=len(HISTORICAL_DESTINATIONS):"#,
+			"X25519 alias unchanged baseline query selection",
+		),
+		(
+			r#"return"\n\n".join(selected)+"\n"defalias_crypto"#,
+			"X25519 alias unchanged selected query text",
+		),
+		(
+			r#"source=(directory/"crypto.pvl").read_text()start=source.index("(*X25519.")finish=source.index("(*ML-KEMencapsulation",start)ifcompact(source[start:finish])!=compact(EXPECTED_X25519):"#,
+			"X25519 alias checked canonical crypto boundary",
+		),
+		(
+			r#"replacement=(directory/"phase2-x25519-alias-theory.pvl").read_text()returnsource[:start]+replacement+source[finish:]"#,
+			"X25519 alias preserves crypto outside X25519",
+		),
+		(
+			r#"queries=work/"exact-registration-queries.pvl"queries.write_text(selected_queries(directory))projected_queries=work/"projected-registration-queries.pvl"projected_queries.write_text(selected_projected_queries(directory))alias=work/"crypto-with-x25519-aliases.pvl"alias.write_text(alias_crypto(directory))forlabel,crypto,query_source,expected,projectedin(("canonical",directory/"crypto.pvl",queries,"true",False),("alias",alias,queries,"false",False),("projected-canonical",directory/"crypto.pvl",projected_queries,"true",True,),("projected-alias",alias,projected_queries,"true",True),):"#,
+			"X25519 alias canonical and alias query runs",
+		),
+		(
+			r#"command=[args.proverif]forlibraryin(directory/"production-transcript-interface.pvl",crypto,directory/"extraction/lib.pvl",directory/"environment.pvl",query_source,):command.extend(("-lib",str(library)))command.append(str(directory/"phase2-x25519-alias-control.pv"))"#,
+			"X25519 alias exact ordered library and control loading",
+		),
+		(
+			r#"result=subprocess.run(command,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=args.timeout,check=True,)"#,
+			"X25519 alias checked subprocess execution",
+		),
+		(
+			"ifprojected:check_projected_run(result.stdout)else:check_run(result.stdout,expected)",
+			"X25519 alias checked correspondence results",
+		),
+		(
+			r#"if__name__=="__main__":main()"#,
+			"X25519 alias executable entry point",
+		),
+	] {
+		require_once(&script, wanted, label)?;
+	}
+	// Pin the independently reviewed runner as well as its readable wiring above.
+	// Extra code must not silently bypass a check or rewrite the selected queries.
+	if stable_text_hash(runner) != 12_041_226_837_296_030_277 {
+		return Err("X25519 alias reviewed runner changed; review the complete runner".to_owned());
+	}
+	let control = compact(&uncommented_pv(control)?);
+	if control
+		!= "processout(c,ed_public(SERVER_IDENTITY_SECRET));(HonestBeacon(BEACON_RECORD_SECRET)|Server(INITIAL_SECRET,CACHED_SECRET,ADVANCE_SECRET,FUTURE_SECRET)|KeepBeaconStatePrivate())"
+	{
+		return Err("X25519 alias unchanged honest role control changed".to_owned());
+	}
+	let queries = compact(&uncommented_pv(baseline_queries)?);
+	let selected = queries
+		.split("query")
+		.skip(1)
+		.filter(|query| {
+			query.contains("inj-event(BeaconCommitted(")
+				|| query.contains("inj-event(BeaconRegistrationCompleted(")
+				|| query.contains("inj-event(BeaconAnyCommitted(")
+		})
+		.map(|query| stable_text_hash(&format!("query{query}")))
+		.collect::<Vec<_>>();
+	if selected
+		!= [
+			5_922_842_905_554_828_522,
+			1_537_735_056_464_180_222,
+			9_278_209_781_568_601_116,
+			8_380_481_376_099_052_960,
+		] {
+		return Err("X25519 alias four exact baseline correspondences changed".to_owned());
+	}
+	Ok(())
+}
+
+fn validate_general_registration_runner(
+	runner: &str,
+	generator: &str,
+	checker_tests: &str,
+	artifacts: &[(&str, &str)],
+) -> Result<(), String> {
+	let script = compact(runner);
+	for (wanted, label) in [
+		(
+			r#"targets=args.targetifargs.targetisnotNoneelselist(range(53))query_indices=args.queryifargs.queryisnotNoneelselist(range(1,24))"#,
+			"general complete target and query inventory",
+		),
+		(
+			r#"if10inorder:if23notinorder:raiseValueError("cachedoriginrequiresitsseparatelycheckedcoverageguard")order.remove(23)order.insert(order.index(10),23)"#,
+			"general mandatory cached coverage before origin",
+		),
+		(
+			"ifindex==10and2<=target<=51:returnlist(range(1,target))",
+			"general every retained cached sequence",
+		),
+		(
+			"ifindexin{12,15}and2<=target<=51:",
+			"general concrete cached witness routing",
+		),
+		(
+			r#"subprocess.run(["python3",str(HERE/"generate-general-registration.py"),"--check"],check=True,)"#,
+			"general checked generator output",
+		),
+		(
+			r#"forlibin["production-transcript-interface.pvl","crypto.pvl","extraction/lib.pvl","environment.pvl","general-registration-cache.pvl",]:command.extend(["-lib",str(HERE/lib)])"#,
+			"general exact ordered cryptographic and cache libraries",
+		),
+		(
+			r#"command+["-lib",str(continuation_file),"-lib",str(role_file),"-lib",str(HERE/"general-registration-public-witness.pvl"),"-lib",str(query_file),str(query_case),],check=True,timeout=timeout,stdout=output,stderr=subprocess.STDOUT,"#,
+			"general exact role query process loading and subprocess failure",
+		),
+		(
+			r#"found=re.findall(r"^RESULT(.+)is(true|false)\.$",text,re.M)iflen(found)!=1:"#,
+			"general exactly one conclusive protocol result",
+		),
+		(
+			r#"iffinite_witnessand(found[0][1]!="false"ortext.count("Atracehasbeenfound.")!=1):"#,
+			"general concrete reconstructed witness trace",
+		),
+		(
+			"ifresults!=expected:raiseValueError",
+			"general exact result name and polarity comparison",
+		),
+		(
+			"ifindex==23and1<=target<=51:",
+			"general separate local range routing",
+		),
+		(
+			"ifnormalize(query)!=normalize(expected)ornot1<=target<=51:",
+			"general exact local component obligation",
+		),
+		(
+			r#"component,expected_component=local_cached_range(query,target)"#,
+			"general material-parametric local helper selection",
+		),
+		(
+			"ifindexin{11,20}:continuation=project_future_safety(continuation,index)",
+			"general future safety excludes witnesses",
+		),
+		(
+			"ifcached_targetisnotNone:continuation=project_cached_target(continuation,index,target,cached_target)",
+			"general actual decoded cached target guard",
+		),
+		(
+			"roles,continuation=inline_owned_handoff(roles,continuation,(HERE/\"environment.pvl\").read_text())",
+			"general complete owned handoff substitution",
+		),
+		(
+			"roles=project_initial_plan(roles,query_main,target)",
+			"general evaluated initial plan at the literal role argument",
+		),
+		(
+			"code.count(signature)!=1orcode.count(\"GeneralAdmissionBeacon(\")!=1orlen(re.findall(r\"\\bgeneral_expected_sequence\\b\",code))!=3",
+			"general initial parameter binding and shadow exclusion",
+		),
+		(
+			r#""ifwitnesselsef"out(c,({chain},{sequence(cutoff+1)},main_associated_data,main_assigned_key_id))""#,
+			"general safety actual next-chain disclosure",
+		),
+	] {
+		require(&script, wanted, label)?;
+	}
+	for (text, expected, label) in [
+		(runner, 13_194_149_787_668_207_466, "runner"),
+		(generator, 1_953_512_261_811_404_212, "generator"),
+		(checker_tests, 16_505_210_370_524_032_298, "checker tests"),
+	] {
+		if stable_text_hash(text) != expected {
+			return Err(format!(
+				"general reviewed {label} changed; review all transformations"
+			));
+		}
+	}
+	let expected = [
+		(
+			"general-registration-admission.pv",
+			17_214_740_764_917_819_192,
+		),
+		(
+			"general-registration-admission.pvl",
+			17_941_204_731_846_309_212,
+		),
+		(
+			"general-registration-admission-queries.pvl",
+			10_514_299_523_075_288_879,
+		),
+		("general-registration-cache.pvl", 11_111_788_908_665_374_809),
+		(
+			"general-registration-continuation.pvl",
+			16_393_726_630_133_289_574,
+		),
+		(
+			"general-registration-public-witness.pvl",
+			11_331_453_798_314_310_886,
+		),
+	];
+	if artifacts.len() != expected.len() {
+		return Err("general role and query inventory changed".to_owned());
+	}
+	for ((name, text), (expected_name, expected_hash)) in artifacts.iter().zip(expected) {
+		if *name != expected_name || stable_text_hash(text) != expected_hash {
+			return Err(format!("general reviewed artifact changed: {name}"));
+		}
+	}
+	Ok(())
+}
+
+fn validate_makefile(makefile: &str) -> Result<(), String> {
+	if count(makefile, "-lib $(PROVERIF_INTERFACE)") != 1
+		|| count(makefile, "-lib $(PROVERIF_DIR)/crypto.pvl") != 1
+	{
+		return Err("interface and crypto must each load once in PROVERIF_CRYPTO_LIBS".to_owned());
+	}
+	require(
+		makefile,
+		"$(PROVERIF_CHECK_TARGETS): check-proverif-transcript-fidelity",
+		"per-scenario fidelity prerequisite",
+	)?;
+	require(
+		makefile,
+		"check-proverif-passive-reachability check-proverif-quantum-capabilities: check-proverif-transcript-fidelity",
+		"auxiliary ProVerif fidelity prerequisite",
+	)?;
+	let scenarios = scenario_names(makefile)?;
+	if scenarios.len() != 36 {
+		return Err(format!(
+			"expected 36 ProVerif scenarios, found {}",
+			scenarios.len()
+		));
+	}
+	if scenarios
+		.iter()
+		.filter(|scenario| scenario.as_str() == "phase2-x25519-alias")
+		.count()
+		!= 1
+	{
+		return Err("X25519 alias must be enumerated exactly once".to_owned());
+	}
+	if scenarios
+		.iter()
+		.filter(|scenario| scenario.as_str() == "general-registration-admission")
+		.count()
+		!= 1
+	{
+		return Err("general registration must be enumerated exactly once".to_owned());
+	}
+	for scenario in scenarios {
+		let marker = format!("check-proverif-{scenario}:");
+		let start = makefile
+			.find(&marker)
+			.ok_or_else(|| format!("missing scenario target: {scenario}"))?;
+		let tail = &makefile[start..];
+		let block = &tail[..tail.find("\n\n").unwrap_or(tail.len())];
+		if scenario == "general-registration-admission" {
+			if compact(block)
+				!= "check-proverif-general-registration-admission:check-proverif-extractionpython3$(PROVERIF_DIR)/test-general-registration-checker.pypython3$(PROVERIF_DIR)/check-general-registration.py--proverif'$(PROVERIF)'--timeout'$(PROVERIF_TIMEOUT)'"
+			{
+				return Err("general exact Make runner and self-test wiring changed".to_owned());
+			}
+			validate_general_registration_runner(
+				GENERAL_REGISTRATION_RUNNER,
+				GENERAL_REGISTRATION_GENERATOR,
+				GENERAL_REGISTRATION_CHECKER_TESTS,
+				&GENERAL_REGISTRATION_ARTIFACTS,
+			)?;
+			continue;
+		}
+		if scenario == "phase2-x25519-alias" {
+			if compact(block)
+				!= "check-proverif-phase2-x25519-alias:check-proverif-extractionpython3$(PROVERIF_DIR)/check-phase2-x25519-alias.py--proverif'$(PROVERIF)'--timeout'$(PROVERIF_TIMEOUT)'"
+			{
+				return Err("X25519 alias exact Make runner wiring changed".to_owned());
+			}
+			validate_x25519_alias_runner(
+				X25519_ALIAS_RUNNER,
+				X25519_ALIAS_CONTROL,
+				EXACT_REGISTRATION_ORIGIN_QUERIES,
+			)?;
+			continue;
+		}
+		let registration_checker = match scenario.as_str() {
+			"registration-set-admission" => Some("registration-set"),
+			"registration-set-response" => Some("registration-response"),
+			"registration-beacon-admission" => Some("registration-beacon"),
+			_ => None,
+		};
+		if let Some(checker) = registration_checker {
+			let prefix = format!(
+				"check-proverif-{scenario}: check-proverif-extraction\npython3 $(PROVERIF_DIR)/test-{checker}-checker.py\n"
+			);
+			let runner = if checker == "registration-beacon" {
+				r#"@logdir=$$(mktemp -d); \
+					trap 'rm -rf "$$logdir"' EXIT; \
+					python3 $(PROVERIF_DIR)/check-registration-beacon.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)' --logdir "$$logdir""#.to_owned()
+			} else {
+				format!(
+					"python3 $(PROVERIF_DIR)/check-{checker}.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'"
+				)
+			};
+			if compact(block) != compact(&(prefix + &runner)) {
+				return Err(format!(
+					"{scenario} exact Make runner and self-test wiring changed"
+				));
+			}
+			continue;
+		}
+		let loaders = [
+			"$(PROVERIF_COMMON_LIBS)",
+			"$(PROVERIF_QUANTUM_LIBS)",
+			"$(PROVERIF_AEAD_CONTROL_LIBS)",
+			"$(PROVERIF_CRYPTO_LIBS)",
+		];
+		if loaders
+			.iter()
+			.filter(|loader| block.contains(**loader))
+			.count() != 1
+		{
+			return Err(format!(
+				"scenario {scenario} does not load the interface exactly once"
+			));
+		}
+	}
+	let later_registration = section_between(
+		makefile,
+		"check-proverif-later-sequence-registration:",
+		"check-proverif-post-registration-ratchet:",
+		"later-sequence registration Make target",
+	)?;
+	for (wanted, label) in [
+		(
+			"check-proverif-later-sequence-registration: check-proverif-extraction",
+			"later-sequence registration extraction prerequisite",
+		),
+		(
+			"-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl",
+			"later-sequence registration binding theory",
+		),
+		(
+			"-lib $(PROVERIF_DIR)/later-sequence-registration-control.pvl",
+			"later-sequence registration control loader",
+		),
+		(
+			"-lib $(PROVERIF_DIR)/later-sequence-registration-queries.pvl",
+			"later-sequence registration query loader",
+		),
+		(
+			"$(PROVERIF_DIR)/later-sequence-registration.pv",
+			"later-sequence registration main model",
+		),
+		(
+			"awk -v scenario=later-sequence-registration -f '$(PROVERIF_CHECKER)'",
+			"later-sequence registration result checker",
+		),
+	] {
+		require_once(later_registration, wanted, label)?;
+	}
+	let workflow = compact(FORMAL_WORKFLOW);
+	require(
+		&workflow,
+		"-name:ProVeriftranscriptfidelitytarget:check-proverif-transcript-fidelity",
+		"dedicated transcript-fidelity CI entry",
+	)?;
+	require_once(
+		&workflow,
+		"target:check-generated-proverif-phase2-x25519-alias",
+		"X25519 alias CI scenario",
+	)?;
+	require_once(
+		&workflow,
+		"target:check-generated-proverif-general-registration-admissiontimeout:240",
+		"general exhaustive-family CI budget",
+	)?;
+	require_once(
+		&workflow,
+		"timeout-minutes:${{matrix.timeout||60}}",
+		"unchanged default and explicit general CI time budgets",
+	)?;
+	let mut workflow_scenarios = FORMAL_WORKFLOW
+		.lines()
+		.filter_map(|line| {
+			line.trim()
+				.strip_prefix("target: check-generated-proverif-")
+		})
+		.map(str::to_owned)
+		.collect::<Vec<_>>();
+	let mut make_scenarios = scenario_names(makefile)?;
+	workflow_scenarios.sort_unstable();
+	make_scenarios.sort_unstable();
+	if workflow_scenarios != make_scenarios {
+		return Err("Make and CI must enumerate exactly the same ProVerif scenarios".to_owned());
+	}
+	Ok(())
+}
+
+fn validate_adapters() -> Result<(), String> {
+	let pqxdh = rust_body(ADAPTER_PQXDH, "derive_root_key_input")?;
+	require(
+		&pqxdh,
+		"crypto_kdf::hkdf::sha512::extract(None,input.as_bytes())",
+		"no-salt PQXDH extract",
+	)?;
+	require(
+		&pqxdh,
+		"crypto_kdf::hkdf::sha512::expand(KEX_KDF_OUT_LEN,Some(PQXDH_INFO),&prk)",
+		"PQXDH label/output request",
+	)?;
+	let shared = compact(&uncommented_rust(ADAPTER_SHARED)?);
+	require(
+		&shared,
+		"pubconstKEX_KDF_OUT_LEN:usize=32usize;",
+		"32-byte root output",
+	)?;
+	let symmetric = rust_body(ADAPTER_RATCHET, "symmetric_ratchet_hkdf")?;
+	require(
+		&symmetric,
+		"crypto_kdf::hkdf::sha512::extract(None,request.input())",
+		"no-salt symmetric extract",
+	)?;
+	require(
+		&symmetric,
+		"crypto_kdf::hkdf::sha512::expand(OUTPUT_SIZE,Some(request.info()),&prk)",
+		"symmetric label/output request",
+	)?;
+	let record_executor = rust_body(ADAPTER_RATCHET, "ratchet_hkdf")?;
+	require(
+		&record_executor,
+		"RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+		"record-step shared HKDF executor",
+	)?;
+	let initial_executor = rust_body(ADAPTER_RATCHET, "initial_ratchet_hkdf")?;
+	require(
+		&initial_executor,
+		"symmetric_ratchet_hkdf(request)",
+		"initial shared HKDF executor",
+	)?;
+	let ratchet = compact(&uncommented_rust(ADAPTER_RATCHET)?);
+	require(
+		&ratchet,
+		"pubconstCOMMITMENT_SIZE:usize=64;",
+		"64-byte production commitment output",
+	)?;
+	validate_record_opening_source(&Snapshot::production())?;
+	record_effects::validate(&Snapshot::production())?;
+	Ok(())
+}
+
+fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
+	let adapter_source = uncommented_rust(&snapshot.adapter_ratchet)?;
+	let adapter = compact(&adapter_source);
+	let slot = section_between(
+		&adapter_source,
+		"impl RatchetKernelSlot {",
+		"impl Deref for RatchetKernelSlot",
+		"ratchet kernel slot implementation",
+	)?;
+	let take = rust_body(slot, "take")?;
+	require_once(
+		&take,
+		"self.kernel.take()",
+		"ratchet driver affine slot take",
+	)?;
+	let put = rust_body(slot, "put")?;
+	require_ordered_once(
+		&put,
+		&["assert!(self.kernel.is_none()", "self.kernel=Some(kernel);"],
+		"ratchet driver returned-kernel slot put",
+	)?;
+	require_once(
+		&adapter,
+		"pub(crate)fnratchet_hkdf(request:&verified_ratchet::SymmetricRatchetKdfRequest,)->verified_ratchet::RatchetKdfResponse{verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))}",
+		"ratchet driver typed KDF reply",
+	)?;
+
+	record_effects::validate(snapshot)?;
+	validate_record_opening_source(snapshot)?;
+	let send = rust_body(&snapshot.adapter_ratchet, "encrypt_with_ratchet")?;
+	require_once(
+		&send,
+		"ifbytes.is_empty(){returnNone;}",
+		"ratchet send empty-input precheck",
+	)?;
+	let concrete = compact(&uncommented_rust(&snapshot.core_ratchet_concrete)?);
+	for phase in [
+		"pubenumSendStart<Context>{",
+		"pubstructSendKdf<Context>{",
+		"pubstructSendSeal<Context>{",
+		"pubenumReceiveEffect<Context>{",
+		"pubstructReceiveKdf<Context>{",
+		"pubstructReceiveOpen<Context>{",
+	] {
+		require_once(&concrete, phase, "ratchet core affine phase API")?;
+	}
+	let send_seal = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> SendSeal<Context>",
+		"/// One phase of an owned receive transaction.",
+		"ratchet core send seal phase",
+	)?;
+	let send_finish = rust_body(send_seal, "finish")?;
+	require_once(
+		&send_finish,
+		"let_=finish_send(self.logical);(self.advanced,sealed)",
+		"ratchet send finish preserves interpreter result on advanced kernel",
+	)?;
+
+	let receive_entry = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
+	require_ordered(
+		&receive_entry,
+		&[
+			"ifdata.is_empty(){returnNone;}",
+			"decode_crypto_frame(data)",
+			"letadmitted=beaconcrypt_core::transport::admit_frame(frame.seq,frame.key_id,frame.cipher_text,expected_sender_kid,)?;",
+			"decrypt_payload_with_ratchet(admitted.ciphertext,admitted.sequence,admitted.sender,associated_data,ratchet,)",
+		],
+		"ratchet receive prechecks and effect start order",
+	)?;
+	let receive_open = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveOpen<Context>",
+		"/// Checked restoration builder",
+		"ratchet core receive open phase",
+	)?;
+	let receive_finish = rust_body(receive_open, "finish")?;
+	require_once(
+		&receive_finish,
+		"None=>return(self.entry,None)",
+		"ratchet receive finish failure restores entry",
+	)?;
+	require_once(
+		&receive_finish,
+		"PreparedReceive::PreparedReceiveCachedCase(prepared)=>{publish_cached_receive(&mutentry.refined,prepared);}",
+		"ratchet core cached receive publication branch",
+	)?;
+	require_once(
+		&receive_finish,
+		"PreparedReceive::PreparedReceiveFutureCase(pending)=>{publish_future_receive(&mutentry.refined,pending);}",
+		"ratchet core future receive publication branch",
+	)?;
+	let begin_receive = rust_body(&snapshot.core_ratchet_concrete, "begin_receive")?;
+	for absent in [
+		"publish_cached_receive",
+		"publish_future_receive",
+		"kernel.refined.control=",
+		"kernel.refined.send_chain=",
+		"kernel.refined.receive_chain=",
+		"kernel.refined.receive_slots=",
+	] {
+		forbid(
+			&begin_receive,
+			absent,
+			"ratchet core begin_receive live publication",
+		)?;
+	}
+	let receive_kdf = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveKdf<Context>",
+		"impl<Context> ReceiveOpen<Context>",
+		"ratchet core receive KDF phase",
+	)?;
+	let receive_resume = rust_body(receive_kdf, "resume")?;
+	forbid(
+		&receive_resume,
+		"publish_cached_receive",
+		"ratchet core receive KDF cached publication",
+	)?;
+	forbid(
+		&receive_resume,
+		"publish_future_receive",
+		"ratchet core receive KDF future publication",
+	)?;
+	require_ordered(
+		&receive_finish,
+		&[
+			"letplaintext=matchopened{",
+			"None=>return(self.entry,None)",
+			"letmutentry=self.entry;",
+			"publish_cached_receive(&mutentry.refined,prepared)",
+			"publish_future_receive(&mutentry.refined,pending)",
+			"(entry,Some(plaintext))",
+		],
+		"ratchet core receive publication after successful open",
+	)?;
+
+	for theorem in [
+		"theorem ratchet.concrete.begin_send_nonexhausted_exact",
+		"theorem ratchet.concrete.begin_send_exhausted_restores_entry",
+		"theorem ratchet.concrete.SendKdf.request_exact",
+		"theorem ratchet.concrete.SendKdf.resume_exact",
+		"theorem ratchet.concrete.SendSeal.finish_returns_interpreter_result",
+		"theorem ratchet.concrete.begin_receive_rejected_plan_restores_entry",
+		"theorem ratchet.concrete.begin_receive_cached_exact",
+		"theorem ratchet.concrete.begin_receive_future_request_exact",
+		"theorem ratchet.concrete.ReceiveKdf.request_exact",
+		"theorem ratchet.concrete.ReceiveOpen.reject_exact",
+		"theorem ratchet.concrete.ReceiveOpen.context_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_sequence_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_material_exact",
+		"theorem ratchet.concrete.ReceiveOpen.finish_failure_restores_entry",
+		"theorem ratchet.concrete.ReceiveOpen.finish_future_success_publishes_same_plaintext",
+		"theorem ratchet.concrete.ReceiveOpen.finish_cached_success_publishes_same_plaintext",
+	] {
+		require_once(
+			&snapshot.lean_ratchet_effect,
+			theorem,
+			"ratchet checked structural Lean anchor",
+		)?;
+	}
+	require_once(
+		&snapshot.lean_ratchet_effect_refinement,
+		"theorem ReceiveFailureTrace.result_eq_entry",
+		"ratchet checked structural failure-trace anchor",
+	)?;
+	for theorem in [
+		"def ResponseRefines",
+		"theorem begin_send_refines",
+		"theorem SendKdf.resume_refines",
+		"theorem SendSeal.finish_refines_ideal_send",
+		"theorem ReceiveOpen.failure_preserves_refinement",
+		"theorem ReceiveFailureTrace.preserves_refinement",
+		"def OpenReplyRefines",
+		"theorem begin_receive_cached_refines",
+		"theorem CachedOpenRefines.finish_success_matches_ideal",
+		"theorem CachedOpenRefines.finish_success_refines_of_publication",
+	] {
+		require_once(
+			&snapshot.lean_ratchet_effect_refinement,
+			theorem,
+			"ratchet conditional Lean refinement anchor",
+		)?;
+	}
+
+	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
+	require_once(
+		&crypto,
+		"letfunseal_frame(",
+		"ratchet ProVerif atomic seal abstraction",
+	)?;
+	require_once(
+		&crypto,
+		";open_frame(",
+		"ratchet ProVerif ideal exact open abstraction",
+	)?;
+	let symbolic = format!(
+		"{}{}",
+		crypto,
+		compact(&uncommented_pv(&snapshot.environment)?)
+	);
+	for absent in [
+		"RatchetKernelSlot",
+		"begin_send",
+		"begin_receive",
+		"ratchet_hkdf",
+		"SendKdfRequested",
+		"ReceiveKdfRequested",
+	] {
+		forbid(
+			&symbolic,
+			absent,
+			"concrete ratchet driver step in atomic ProVerif model",
+		)?;
+	}
+	Ok(())
+}
+
+fn validate_finite_receive_state_fixture(snapshot: &Snapshot) -> Result<(), String> {
+	let control = compact(&uncommented_rust(&snapshot.core_ratchet_control)?);
+	require_once(
+		&control,
+		"pubconstRATCHET_MAX_GAP:u64=50;",
+		"finite receive core maximum gap",
+	)?;
+	require_once(
+		&control,
+		"pubconstRECEIVE_CACHE_CAPACITY:usize=RATCHET_MAX_GAPasusize;",
+		"finite receive core cache capacity",
+	)?;
+
+	let plan = rust_body(&snapshot.core_ratchet_control, "plan_receive_until")?;
+	require_ordered_once(
+		&plan,
+		&[
+			"iftarget<=state.receive_sequence{returnReceivePlan{sequence:Some(target),derivations:0,};}",
+			"letderivations=target-state.receive_sequence;",
+			"letskipped=derivations-1;",
+			"letcached=state.receive_cache.lenasu64;",
+			"ifskipped>RATCHET_MAX_GAP||cached>RATCHET_MAX_GAP-skipped",
+			"ReceivePlan{sequence:None,derivations:0,}",
+			"ReceivePlan{sequence:Some(target),derivations,}",
+		],
+		"finite receive core admission plan",
+	)?;
+
+	let advance_target = rust_body(&snapshot.core_ratchet_control, "advance_receive_target")?;
+	require_once(
+		&advance_target,
+		"letnext=state.receive_sequence+1;",
+		"finite receive target counter advance",
+	)?;
+	require_once(
+		&advance_target,
+		"state:RatchetState{receive_sequence:next,..state},sequence:Some(next)",
+		"finite receive target result",
+	)?;
+	forbid(
+		&advance_target,
+		".append(",
+		"finite receive target cache allocation",
+	)?;
+
+	let advance_skipped_source = section_between(
+		&snapshot.core_ratchet_control,
+		"pub(crate) fn advance_receive(",
+		"/// Outcome of authenticating a cached receive key.",
+		"finite receive skipped-key advance",
+	)?;
+	let advance_skipped = rust_body(advance_skipped_source, "advance_receive")?;
+	require_one_call(
+		&advance_skipped,
+		"state.receive_cache.append",
+		&["next"],
+		"finite receive skipped-key cache append",
+	)?;
+	require_once(
+		&advance_skipped,
+		"receive_sequence:next,receive_cache,..state",
+		"finite receive skipped-key control update",
+	)?;
+
+	let finish_control = rust_body(
+		&snapshot.core_ratchet_control,
+		"finish_receive_with_removal",
+	)?;
+	require_once(
+		&finish_control,
+		"if!authenticated{returnReceiveFinishWithRemoval{state,disposition:ReceiveDisposition::Retained,removal:None,};}",
+		"finite receive cached authentication failure neutrality",
+	)?;
+	require_ordered_once(
+		&finish_control,
+		&[
+			"letlast_slot=len-1;",
+			"entries[slot_index]=entries[last_slotasusize];",
+			"entries[last_slotasusize]=0;",
+			"len:last_slot",
+			"disposition:ReceiveDisposition::Consumed",
+			"target_slot:slot,last_slot",
+		],
+		"finite receive cached swap removal",
+	)?;
+
+	let begin_receive = rust_body(&snapshot.core_ratchet_concrete, "begin_receive")?;
+	require_once(
+		&begin_receive,
+		"ifplan.derivations==0{letprepared=matchprepare_cached_receive(&kernel.refined,sequence){Some(prepared)=>prepared,None=>returnreceive_rejected(kernel,context),};returnReceiveEffect::ReceiveOpenRequested(ReceiveOpen{entry:kernel,context,prepared:PreparedReceive::PreparedReceiveCachedCase(prepared),});}",
+		"finite receive replay and cached lookup branch",
+	)?;
+	require_once(
+		&begin_receive,
+		"letskipped=plan.derivations-1;",
+		"finite receive future skipped count",
+	)?;
+	require_once(
+		&begin_receive,
+		"staged_slots:empty_material_slots(),first_slot,skipped:0,remaining,request",
+		"finite receive private future staging start",
+	)?;
+
+	let receive_kdf = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveKdf<Context>",
+		"impl<Context> ReceiveOpen<Context>",
+		"finite receive KDF phase",
+	)?;
+	let resume_receive = rust_body(receive_kdf, "resume")?;
+	require_once(
+		&resume_receive,
+		"staged_slots:self.staged_slots,target_sequence:sequence,target_material:stepped.material,first_slot:self.first_slot,skipped:self.skipped",
+		"finite receive separate future target",
+	)?;
+	require_once(
+		&resume_receive,
+		"self.staged_slots[slot_index]=Some(CachedReceiveKey{sequence,material:stepped.material,});",
+		"finite receive staged skipped material",
+	)?;
+
+	let pending_valid = rust_body(&snapshot.core_ratchet_refined, "pending_receive_is_valid")?;
+	require_once(
+		&pending_valid,
+		"iflookup_receive_key(pending.committed_control,requested).is_some(){returnfalse;}",
+		"finite receive target absent from committed cache",
+	)?;
+	require_once(
+		&pending_valid,
+		"letcommitted_len=pending.first_slotasusize+pending.skippedasusize;",
+		"finite receive committed skipped-cache length",
+	)?;
+	require_once(
+		&pending_valid,
+		"if!(pending.committed_control.receive_cache_len()asusize==committed_len){returnfalse;}",
+		"finite receive committed cache length check",
+	)?;
+
+	let prepare_cached = rust_body(&snapshot.core_ratchet_refined, "prepare_cached_receive")?;
+	require_ordered_once(
+		&prepare_cached,
+		&[
+			"lettarget_slot=matchlookup_receive_key(state.control,sequence)",
+			"letlast_slot=len-1;",
+			"letfinished=finish_receive_with_removal(state.control,sequence,target_slot,true);",
+			"if!(removal.target_slot==target_slot){returnNone;}",
+			"if!(removal.last_slot==last_slot){returnNone;}",
+			"Some(PreparedCachedReceive{sequence,target_slot,last_slot,committed_control:finished.state,})",
+		],
+		"finite receive cached preflight",
+	)?;
+
+	let receive_open = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveOpen<Context>",
+		"/// Checked restoration builder",
+		"finite receive open phase",
+	)?;
+	let finish_open = rust_body(receive_open, "finish")?;
+	require_ordered_once(
+		&finish_open,
+		&[
+			"None=>return(self.entry,None)",
+			"letmutentry=self.entry;",
+			"publish_cached_receive(&mutentry.refined,prepared);",
+			"publish_future_receive(&mutentry.refined,pending);",
+			"(entry,Some(plaintext))",
+		],
+		"finite receive success-only publication",
+	)?;
+
+	let publish_cached = rust_body(&snapshot.core_ratchet_refined, "publish_cached_receive")?;
+	require_ordered_once(
+		&publish_cached,
+		&[
+			"iftarget_index==last_index{let_=state.receive_slots[last_index].take();}else{letmoved=state.receive_slots[last_index].take();state.receive_slots[target_index]=moved;}",
+			"state.control=prepared.committed_control;",
+		],
+		"finite receive cached whole-entry publication",
+	)?;
+
+	let publish_future_source = section_between(
+		&snapshot.core_ratchet_refined,
+		"pub(super) fn publish_future_receive<",
+		"/// Commit an already-preflighted suffix of receive steps.",
+		"finite receive future publisher",
+	)?;
+	let publish_future = rust_body(publish_future_source, "publish_future_receive")?;
+	require_ordered_once(
+		&publish_future,
+		&[
+			"publish_future_receive_slots(state,&mutpending.staged_slots,pending.first_slot,pending.skipped,);",
+			"state.receive_chain=pending.final_receive_chain;",
+			"state.control=pending.committed_control;",
+		],
+		"finite receive future publication",
+	)?;
+	forbid(
+		&publish_future,
+		"target_material",
+		"finite receive target publication",
+	)?;
+
+	let environment = compact(&uncommented_pv(&snapshot.environment)?);
+	require_once(
+		&environment,
+		"funreceive_cache_empty():receive_cache[data].",
+		"finite receive ProVerif empty cache constructor",
+	)?;
+	require_once(
+		&environment,
+		"funreceive_cache_entry(sequence,bitstring,receive_cache):receive_cache[data].",
+		"finite receive ProVerif cache-entry constructor",
+	)?;
+	require_once(
+		&environment,
+		"funreceive_state(sequence,bitstring,receive_cache):bitstring[data].",
+		"finite receive ProVerif state constructor",
+	)?;
+	let short = section_between(
+		&environment,
+		"letStateNeutralFutureReceive()=",
+		"letStateNeutralCapacityReceive()=",
+		"finite receive short fixture",
+	)?;
+	let capacity = section_between(
+		&environment,
+		"letStateNeutralCapacityReceive()=",
+		"letFailedReceiveScenario()=",
+		"finite receive capacity fixture",
+	)?;
+	require_once(
+		&environment,
+		"letFailedReceiveScenario()=(StateNeutralFutureReceive()|StateNeutralCapacityReceive()).",
+		"finite receive two-leg scenario composition",
+	)?;
+
+	require_once(
+		short,
+		"letfirst=first_sequence()inletskipped_sequence=next_sequence(first)inlettarget_sequence=next_sequence(skipped_sequence)in",
+		"finite receive short sequence prefix",
+	)?;
+	require_once(
+		short,
+		"letchain_1=server_to_beacon_chain(root)inletchain_2=ratchet_next(chain_1)inletchain_3=ratchet_next(chain_2)inletchain_4=ratchet_next(chain_3)in",
+		"finite receive short ratchet chain",
+	)?;
+	require_once(
+		short,
+		"letmaterial_1=ratchet_material(chain_1)inletskipped_material=ratchet_material(chain_2)inlettarget_material=ratchet_material(chain_3)in",
+		"finite receive short material chain",
+	)?;
+	for (frame, material, sequence, plaintext) in [
+		("first_frame", "material_1", "first", "RECEIVE_PAST_SECRET"),
+		(
+			"skipped_frame",
+			"skipped_material",
+			"skipped_sequence",
+			"RECEIVE_SKIPPED_SECRET",
+		),
+		(
+			"target_frame",
+			"target_material",
+			"target_sequence",
+			"RECEIVE_TARGET_SECRET",
+		),
+	] {
+		require_once(
+			short,
+			&format!(
+				"let{frame}=seal_frame({material},associated_data,{sequence},sender_id,{plaintext})in"
+			),
+			"finite receive short honest frame",
+		)?;
+	}
+	require_once(
+		short,
+		"letready_state=receive_state(first,chain_2,empty_cache)in",
+		"finite receive short entry state",
+	)?;
+	require_once(
+		short,
+		"letforged_target_frame=crypto_frame(forged_frame_component(),forged_frame_component(),forged_frame_component(),target_sequence,sender_id)in",
+		"finite receive short forged target frame",
+	)?;
+	for (sequence, plaintext) in [
+		("first", "RECEIVE_PAST_SECRET"),
+		("skipped_sequence", "RECEIVE_SKIPPED_SECRET"),
+		("target_sequence", "RECEIVE_TARGET_SECRET"),
+	] {
+		require_once(
+			short,
+			&format!(
+				"eventMessageSent(session,server_to_beacon(),{sequence},sender_id,receiver_id,{plaintext});"
+			),
+			"finite receive short sent message",
+		)?;
+	}
+	require_once(
+		short,
+		"eventMessageReceived(session,server_to_beacon(),first,sender_id,receiver_id,first_plaintext);",
+		"finite receive short first delivery",
+	)?;
+	require_once(
+		short,
+		"letfirst_plaintext=open_frame(material_1,associated_data,first,sender_id,first_candidate)in",
+		"finite receive short initial open",
+	)?;
+	require_once(
+		short,
+		"ifforged_candidate=forged_target_framethen(letforged_plaintext=open_frame(target_material,associated_data,target_sequence,sender_id,forged_candidate)ineventMessageReceived(session,server_to_beacon(),target_sequence,sender_id,receiver_id,forged_plaintext)else(eventReceiveRejectedNeutral(session,target_sequence,forged_target_frame,ready_state);",
+		"finite receive first exact-frame destructor rejection",
+	)?;
+	require_once(
+		short,
+		"ifrepeated_candidate=forged_target_framethen(letrepeated_plaintext=open_frame(target_material,associated_data,target_sequence,sender_id,repeated_candidate)ineventMessageReceived(session,server_to_beacon(),target_sequence,sender_id,receiver_id,repeated_plaintext)else(eventReceiveRejectionRetried(session,target_sequence,forged_target_frame,ready_state);",
+		"finite receive repeated exact-frame destructor rejection",
+	)?;
+	require_once(
+		short,
+		"out(receive_snapshots,(session,target_sequence,ready_state,ready_state,chain_2,empty_cache,compromise_ack))",
+		"finite receive unchanged rejection snapshot",
+	)?;
+	require_once(
+		short,
+		"letaccepted_plaintext=open_frame(target_material,associated_data,target_sequence,sender_id,accepted_candidate)in",
+		"finite receive short future open",
+	)?;
+	require_once(
+		short,
+		"letcommitted_cache=receive_cache_entry(skipped_sequence,skipped_material,empty_cache)inletcommitted_state=receive_state(target_sequence,chain_4,committed_cache)in",
+		"finite receive short successful skipped publication",
+	)?;
+	require_once(
+		short,
+		"eventMessageKeyCached(session,beacon_role(),server_to_beacon(),skipped_sequence,skipped_material);",
+		"finite receive short skipped-key cache event",
+	)?;
+	require_once(
+		short,
+		"eventMessageReceived(session,server_to_beacon(),target_sequence,sender_id,receiver_id,accepted_plaintext);",
+		"finite receive short future delivery",
+	)?;
+	require_once(
+		short,
+		"eventMessageKeyUnavailable(session,beacon_role(),server_to_beacon(),target_sequence,target_material);",
+		"finite receive short target consumption",
+	)?;
+	require_once(
+		short,
+		"eventReceiveFutureAccepted(session,target_sequence,sender_id,receiver_id,accepted_plaintext,accepted_candidate,target_material,forged_target_frame,ready_state,committed_state);",
+		"finite receive future acceptance",
+	)?;
+	require_once(
+		short,
+		"ifaccepted_candidate=target_framethen(eventReceiveHonestFutureDelivered(session,target_sequence,sender_id,receiver_id,accepted_plaintext,accepted_candidate,target_material,forged_target_frame,ready_state,committed_state);",
+		"finite receive honest future selection and delivery",
+	)?;
+	require_once(
+		short,
+		"ifreplay_candidate=accepted_candidatethen(eventReceiveReplayRejected(session,target_sequence,sender_id,receiver_id,accepted_plaintext,accepted_candidate,target_material,forged_target_frame,ready_state,committed_state);",
+		"finite receive exact accepted-frame replay",
+	)?;
+	require_once(
+		short,
+		"letdelayed_plaintext=open_frame(skipped_material,associated_data,skipped_sequence,sender_id,delayed_candidate)inletdelayed_state=receive_state(target_sequence,chain_4,empty_cache)in",
+		"finite receive delayed cached-key consumption",
+	)?;
+	require_once(
+		short,
+		"eventMessageKeyUnavailable(session,beacon_role(),server_to_beacon(),skipped_sequence,skipped_material);",
+		"finite receive delayed key unavailability",
+	)?;
+	require_once(
+		short,
+		"eventMessageReceived(session,server_to_beacon(),skipped_sequence,sender_id,receiver_id,delayed_plaintext);",
+		"finite receive delayed delivery",
+	)?;
+	require_once(
+		short,
+		"eventReceiveDelayedCachedAccepted(session,skipped_sequence,sender_id,receiver_id,delayed_plaintext,delayed_candidate,skipped_material,committed_state,delayed_state)",
+		"finite receive delayed cached acceptance",
+	)?;
+	forbid(
+		short,
+		"receive_cache_entry(target_sequence,",
+		"finite receive short target retained in cache",
+	)?;
+
+	for sequence in 2..=54 {
+		let previous = sequence - 1;
+		require_once(
+			capacity,
+			&format!(
+				"letcapacity_sequence_{sequence}=next_sequence(capacity_sequence_{previous})in"
+			),
+			"finite receive capacity sequence chain",
+		)?;
+	}
+	for chain in 2..=55 {
+		let previous = chain - 1;
+		require_once(
+			capacity,
+			&format!("letcapacity_chain_{chain}=ratchet_next(capacity_chain_{previous})in"),
+			"finite receive capacity ratchet chain",
+		)?;
+	}
+	for material in 1..=54 {
+		require_once(
+			capacity,
+			&format!(
+				"letcapacity_material_{material}=ratchet_material(capacity_chain_{material})in"
+			),
+			"finite receive capacity material chain",
+		)?;
+	}
+	for (frame, material, sequence, plaintext) in [
+		(
+			"capacity_first_frame",
+			"capacity_material_1",
+			"capacity_sequence_1",
+			"capacity_first_plaintext",
+		),
+		(
+			"maximum_gap_frame",
+			"capacity_material_52",
+			"capacity_sequence_52",
+			"RECEIVE_MAX_GAP_SECRET",
+		),
+		(
+			"cached_frame",
+			"capacity_material_51",
+			"capacity_sequence_51",
+			"RECEIVE_CACHED_SECRET",
+		),
+		(
+			"after_release_frame",
+			"capacity_material_54",
+			"capacity_sequence_54",
+			"RECEIVE_AFTER_RELEASE_SECRET",
+		),
+	] {
+		require_once(
+			capacity,
+			&format!(
+				"let{frame}=seal_frame({material},capacity_associated_data,{sequence},capacity_sender_id,{plaintext})in"
+			),
+			"finite receive capacity honest frame",
+		)?;
+	}
+	for (sequence, plaintext) in [
+		("capacity_sequence_1", "capacity_first_plaintext"),
+		("capacity_sequence_52", "RECEIVE_MAX_GAP_SECRET"),
+		("capacity_sequence_51", "RECEIVE_CACHED_SECRET"),
+		("capacity_sequence_54", "RECEIVE_AFTER_RELEASE_SECRET"),
+	] {
+		require_once(
+			capacity,
+			&format!(
+				"eventMessageSent(capacity_session,server_to_beacon(),{sequence},capacity_sender_id,capacity_receiver_id,{plaintext});"
+			),
+			"finite receive capacity sent message",
+		)?;
+	}
+	require_once(
+		capacity,
+		"letcapacity_rejected_frame=crypto_frame(forged_frame_component(),forged_frame_component(),forged_frame_component(),capacity_sequence_54,capacity_sender_id)in",
+		"finite receive capacity rejected frame",
+	)?;
+	require_once(
+		capacity,
+		"letcapacity_first_opened=open_frame(capacity_material_1,capacity_associated_data,capacity_sequence_1,capacity_sender_id,capacity_first_candidate)in",
+		"finite receive capacity initial open",
+	)?;
+	require_once(
+		capacity,
+		"letcapacity_ready_state=receive_state(capacity_sequence_1,capacity_chain_2,capacity_cache_empty)in",
+		"finite receive capacity entry state",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageReceived(capacity_session,server_to_beacon(),capacity_sequence_1,capacity_sender_id,capacity_receiver_id,capacity_first_opened);",
+		"finite receive capacity first delivery",
+	)?;
+	require_once(
+		capacity,
+		"letmaximum_gap_plaintext=open_frame(capacity_material_52,capacity_associated_data,capacity_sequence_52,capacity_sender_id,maximum_gap_candidate)in",
+		"finite receive maximum-gap open",
+	)?;
+	for skipped in 2..=51 {
+		let previous_cache = if skipped == 2 {
+			"capacity_cache_empty".to_owned()
+		} else {
+			format!("capacity_cache_{}", skipped - 1)
+		};
+		require_once(
+			capacity,
+			&format!(
+				"eventMessageKeyCached(capacity_session,beacon_role(),server_to_beacon(),capacity_sequence_{skipped},capacity_material_{skipped});"
+			),
+			"finite receive maximum-gap cached-key event",
+		)?;
+		require_once(
+			capacity,
+			&format!(
+				"letcapacity_cache_{skipped}=receive_cache_entry(capacity_sequence_{skipped},capacity_material_{skipped},{previous_cache})in"
+			),
+			"finite receive maximum-gap cache construction",
+		)?;
+	}
+	require_once(
+		capacity,
+		"letmaximum_gap_state=receive_state(capacity_sequence_52,capacity_chain_53,capacity_cache_51)in",
+		"finite receive maximum-gap state",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageKeyUnavailable(capacity_session,beacon_role(),server_to_beacon(),capacity_sequence_52,capacity_material_52);",
+		"finite receive maximum-gap target consumption",
+	)?;
+	require_once(
+		capacity,
+		"eventReceiveMaximumGapAccepted(capacity_session,capacity_sequence_52,capacity_sender_id,capacity_receiver_id,maximum_gap_plaintext,maximum_gap_candidate,capacity_material_52,capacity_ready_state,maximum_gap_state);",
+		"finite receive maximum-gap acceptance",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageReceived(capacity_session,server_to_beacon(),capacity_sequence_52,capacity_sender_id,capacity_receiver_id,maximum_gap_plaintext);",
+		"finite receive maximum-gap delivery",
+	)?;
+	require_once(
+		capacity,
+		"eventReceiveCapacityRejected(capacity_session,capacity_sequence_54,capacity_rejected_frame,maximum_gap_state);",
+		"finite receive full-cache rejection",
+	)?;
+	require_once(
+		capacity,
+		"ifcapacity_rejected_candidate=capacity_rejected_framethen(eventReceiveCapacityRejected",
+		"finite receive full-cache exact-frame gate",
+	)?;
+	require_once(
+		capacity,
+		"letcached_plaintext=open_frame(capacity_material_51,capacity_associated_data,capacity_sequence_51,capacity_sender_id,cached_candidate)in",
+		"finite receive cached release open",
+	)?;
+	require_once(
+		capacity,
+		"letreleased_state=receive_state(capacity_sequence_52,capacity_chain_53,capacity_cache_50)in",
+		"finite receive cached capacity release",
+	)?;
+	require_once(
+		capacity,
+		"eventReceiveCachedKeyConsumed(capacity_session,capacity_sequence_51,capacity_material_51,maximum_gap_state,released_state);",
+		"finite receive cached last-slot consumption event",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageKeyUnavailable(capacity_session,beacon_role(),server_to_beacon(),capacity_sequence_51,capacity_material_51);",
+		"finite receive cached key unavailability",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageReceived(capacity_session,server_to_beacon(),capacity_sequence_51,capacity_sender_id,capacity_receiver_id,cached_plaintext);",
+		"finite receive cached delivery",
+	)?;
+	require_once(
+		capacity,
+		"letafter_release_plaintext=open_frame(capacity_material_54,capacity_associated_data,capacity_sequence_54,capacity_sender_id,after_release_candidate)in",
+		"finite receive after-release open",
+	)?;
+	require_once(
+		capacity,
+		"letafter_release_cache=receive_cache_entry(capacity_sequence_53,capacity_material_53,capacity_cache_50)inletafter_release_state=receive_state(capacity_sequence_54,capacity_chain_55,after_release_cache)in",
+		"finite receive after-release state",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageKeyCached(capacity_session,beacon_role(),server_to_beacon(),capacity_sequence_53,capacity_material_53);",
+		"finite receive after-release skipped-key event",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageKeyUnavailable(capacity_session,beacon_role(),server_to_beacon(),capacity_sequence_54,capacity_material_54);",
+		"finite receive after-release target consumption",
+	)?;
+	require_once(
+		capacity,
+		"eventReceiveAfterCapacityReleaseAccepted(capacity_session,capacity_sequence_54,capacity_sender_id,capacity_receiver_id,after_release_plaintext,after_release_candidate,capacity_material_54,maximum_gap_state,released_state,after_release_state)",
+		"finite receive after-release acceptance",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageReceived(capacity_session,server_to_beacon(),capacity_sequence_54,capacity_sender_id,capacity_receiver_id,after_release_plaintext);",
+		"finite receive after-release delivery",
+	)?;
+	for forbidden_target in ["capacity_sequence_52", "capacity_sequence_54"] {
+		forbid(
+			capacity,
+			&format!("receive_cache_entry({forbidden_target},"),
+			"finite receive target retained in capacity cache",
+		)?;
+	}
+
+	let queries = compact(&uncommented_pv(&snapshot.failed_receive_queries)?);
+	if snapshot
+		.failed_receive_queries
+		.lines()
+		.filter(|line| line.trim_start().starts_with("query "))
+		.count()
+		!= 17
+	{
+		return Err("finite receive query count changed".to_owned());
+	}
+	for secret in [
+		"RECEIVE_PAST_SECRET",
+		"RECEIVE_SKIPPED_SECRET",
+		"RECEIVE_TARGET_SECRET",
+		"RECEIVE_MAX_GAP_SECRET",
+		"RECEIVE_CACHED_SECRET",
+		"RECEIVE_AFTER_RELEASE_SECRET",
+	] {
+		require_once(
+			&queries,
+			&format!("queryattacker({secret})."),
+			"finite receive secrecy query",
+		)?;
+	}
+	if count(&queries, "==>inj-event(") != 11 {
+		return Err("finite receive correspondence query count changed".to_owned());
+	}
+	for correspondence in [
+		"inj-event(ReceiveRejectionRetried(session,target_sequence,forged_frame,entry_state))==>inj-event(ReceiveRejectedNeutral(session,target_sequence,forged_frame,entry_state)).",
+		"inj-event(ReceiveFutureAccepted(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,forged_frame,entry_state,committed_state))==>inj-event(ReceiveRejectionRetried(session,target_sequence,forged_frame,entry_state)).",
+		"inj-event(ReceiveHonestFutureDelivered(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,forged_frame,entry_state,committed_state))==>inj-event(ReceiveFutureAccepted(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,forged_frame,entry_state,committed_state)).",
+		"inj-event(ReceiveFutureAccepted(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,forged_frame,entry_state,committed_state))==>inj-event(MessageKeyUnavailable(session,beacon_role(),server_to_beacon(),target_sequence,target_material)).",
+		"inj-event(ReceiveReplayRejected(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,forged_frame,entry_state,committed_state))==>inj-event(ReceiveFutureAccepted(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,forged_frame,entry_state,committed_state)).",
+		"inj-event(ReceiveDelayedCachedAccepted(session,delayed_sequence,sender,receiver,plaintext,delayed_frame,delayed_material,committed_state,final_state))==>inj-event(MessageKeyCached(session,beacon_role(),server_to_beacon(),delayed_sequence,delayed_material)).",
+		"inj-event(ReceiveDelayedCachedAccepted(session,delayed_sequence,sender,receiver,plaintext,delayed_frame,delayed_material,committed_state,final_state))==>inj-event(MessageKeyUnavailable(session,beacon_role(),server_to_beacon(),delayed_sequence,delayed_material)).",
+		"inj-event(ReceiveMaximumGapAccepted(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,entry_state,committed_state))==>inj-event(MessageKeyUnavailable(session,beacon_role(),server_to_beacon(),target_sequence,target_material)).",
+		"inj-event(ReceiveCachedKeyConsumed(session,cached_sequence,cached_material,full_state,released_state))==>inj-event(MessageKeyUnavailable(session,beacon_role(),server_to_beacon(),cached_sequence,cached_material)).",
+		"inj-event(ReceiveAfterCapacityReleaseAccepted(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,rejected_state,released_state,committed_state))==>inj-event(MessageKeyUnavailable(session,beacon_role(),server_to_beacon(),target_sequence,target_material)).",
+		"inj-event(MessageReceived(session,message_direction,message_sequence,sender,receiver,plaintext))==>inj-event(MessageSent(session,message_direction,message_sequence,sender,receiver,plaintext)).",
+	] {
+		require_once(
+			&queries,
+			correspondence,
+			"finite receive exact correspondence query",
+		)?;
+	}
+
+	let reachability = compact(&uncommented_pv(
+		&snapshot.failed_receive_reachability_queries,
+	)?);
+	if snapshot
+		.failed_receive_reachability_queries
+		.lines()
+		.filter(|line| line.trim_start().starts_with("query "))
+		.count()
+		!= 12
+	{
+		return Err("finite receive reachability query count changed".to_owned());
+	}
+	for event in [
+		"event(ReceiveRejectedNeutral(session,target_sequence,forged_frame,entry_state)).",
+		"event(ReceiveRejectionRetried(session,target_sequence,forged_frame,entry_state)).",
+		"event(ReceiveFutureAccepted(session,target_sequence,sender,receiver,RECEIVE_TARGET_SECRET,accepted_frame,target_material,forged_frame,entry_state,committed_state)).",
+		"event(ReceiveHonestFutureDelivered(session,target_sequence,sender,receiver,RECEIVE_TARGET_SECRET,accepted_frame,target_material,forged_frame,entry_state,committed_state)).",
+		"event(ReceiveReplayRejected(session,target_sequence,sender,receiver,RECEIVE_TARGET_SECRET,accepted_frame,target_material,forged_frame,entry_state,committed_state)).",
+		"event(ReceiveDelayedCachedAccepted(session,delayed_sequence,sender,receiver,RECEIVE_SKIPPED_SECRET,delayed_frame,delayed_material,committed_state,final_state)).",
+		"event(ReceiveMaximumGapAccepted(session,target_sequence,sender,receiver,RECEIVE_MAX_GAP_SECRET,accepted_frame,target_material,entry_state,committed_state)).",
+		"event(ReceiveCapacityRejected(session,target_sequence,rejected_frame,rejected_state)).",
+		"event(ReceiveCachedKeyConsumed(session,cached_sequence,cached_material,full_state,released_state)).",
+		"event(ReceiveAfterCapacityReleaseAccepted(session,target_sequence,sender,receiver,RECEIVE_AFTER_RELEASE_SECRET,accepted_frame,target_material,rejected_state,released_state,committed_state)).",
+	] {
+		require_once(
+			&reachability,
+			event,
+			"finite receive exact event reachability query",
+		)?;
+	}
+
+	Ok(())
+}
+
+fn validate_registration_lifecycle(snapshot: &Snapshot) -> Result<(), String> {
+	let core = compact(&uncommented_rust(&snapshot.core_pqxdh)?);
+	for (wanted, label) in [
+		(
+			"pubconstSIGN_PUBLIC_KEY_SIZE:usize=32;",
+			"registration replay identity width",
+		),
+		(
+			"pubconstX25519_PUBLIC_KEY_SIZE:usize=32;",
+			"registration replay one-time-key width",
+		),
+		(
+			"pubconstREGISTRATION_ID_SIZE:usize=SIGN_PUBLIC_KEY_SIZE+X25519_PUBLIC_KEY_SIZE;",
+			"registration replay identifier width expression",
+		),
+		(
+			"const_:()=assert!(REGISTRATION_ID_SIZE==64);",
+			"registration replay identifier 64-byte assertion",
+		),
+		(
+			"pubfnregistration_id(&self)->RegistrationId{letbytes:[u8;REGISTRATION_ID_SIZE]=core::array::from_fn(|i|{ifi<SIGN_PUBLIC_KEY_SIZE{self.beacon_identity_public_key[i]}else{self.beacon_one_time_public_key[i-SIGN_PUBLIC_KEY_SIZE]}});RegistrationId{bytes}}",
+			"registration replay identity-then-one-time layout",
+		),
+		(
+			"pubfnregistration_id(registration:&VerifiedInitKex)->RegistrationId{registration.registration_id()}",
+			"registration replay identifier wrapper",
+		),
+		(
+			"pubstructBeaconStart{pubstate:BeaconInitSent,pubmessage:InitKex,}",
+			"registration beacon-start result typestate",
+		),
+	] {
+		require_once(&core, wanted, label)?;
+	}
+	let core_start = rust_body(&snapshot.core_pqxdh, "beacon_start")?;
+	require_once(
+		&core_start,
+		"state:BeaconInitSent{expected_server_binding:state.expected_server_binding,beacon_identity_public_key:inputs.identity_public_key,}",
+		"registration beacon-start Fresh-to-InitSent mapping",
+	)?;
+
+	let extraction = compact(&uncommented_pv(&snapshot.extraction)?);
+	require_once(
+		&extraction,
+		"reducforallidentity:bitstring,prekey:bitstring,one_time:bitstring,pq:bitstring;beaconcrypt_core__pqxdh__registration_id(beaconcrypt_core__pqxdh__VerifiedInitKex(identity,prekey,one_time,pq))=beaconcrypt_core__pqxdh__RegistrationId(registration_identifier(identity,one_time)).",
+		"registration replay ProVerif identity/one-time projection",
+	)?;
+
+	let beacon_source = compact(&uncommented_rust(&snapshot.adapter_beacon)?);
+	let beacon_new = rust_body(&snapshot.adapter_beacon, "try_new_with_rng")?;
+	for (wanted, label) in [
+		(
+			"identity_key:crypto_sign::KeyPair::generate_with_rng(rng).map_err(|_|crate::KeyGenError)?",
+			"registration Beacon identity generation",
+		),
+		(
+			"state:BeaconState::Fresh{control:verified_pqxdh::BeaconFresh::new(server_binding),prekey:crypto_kx::KeyPair::generate_with_rng(rng).map_err(|_|crate::KeyGenError)?,pq_key:crypto_kem::mlkem768::KeyPair::generate_with_rng(rng).map_err(|_|crate::KeyGenError)?,}",
+			"registration Beacon Fresh material co-location",
+		),
+	] {
+		require_once(&beacon_new, wanted, label)?;
+	}
+	for variant in [
+		"Fresh",
+		"FreshWithCoins",
+		"InitSent",
+		"Established",
+		"Aborted",
+	] {
+		require(
+			&beacon_source,
+			&format!("{variant}{{"),
+			"registration Beacon state variant",
+		)?;
+	}
+
+	registration_effects::lifecycle(snapshot)?;
+
+	let environment = compact(&uncommented_pv(&snapshot.environment)?);
+	let guard = section_between(
+		&environment,
+		"letRegistrationReplayGuard(",
+		"letHonestBeacon(",
+		"registration replay guard",
+	)?;
+	for (wanted, label) in [
+		(
+			"in(replay_requests,(=beacon_identity,accepted_init:beaconcrypt_core__pqxdh__t_InitKex,accepted_registration_id:beaconcrypt_core__pqxdh__t_RegistrationId,first_reply:channel));",
+			"registration replay first public input",
+		),
+		(
+			"eventRegistrationConsumed(server_identity,beacon_identity,accepted_init,accepted_registration_id,origin);",
+			"registration replay consumed event",
+		),
+		(
+			"out(first_reply,replay_fresh());",
+			"registration replay first Fresh reply",
+		),
+		(
+			"!in(replay_requests,(=beacon_identity,replay_init:beaconcrypt_core__pqxdh__t_InitKex,replay_registration_id:beaconcrypt_core__pqxdh__t_RegistrationId,replay_reply:channel));",
+			"registration replay replicated later input",
+		),
+		(
+			"out(replay_reply,replay_consumed()).",
+			"registration replay later Consumed reply",
+		),
+	] {
+		require_once(guard, wanted, label)?;
+	}
+	forbid(
+		guard,
+		"!in(replay_requests,(=beacon_identity,accepted_init",
+		"registration replay first input replication",
+	)?;
+	require_ordered(
+		guard,
+		&[
+			"in(replay_requests,(",
+			"eventRegistrationConsumed(",
+			"out(first_reply,replay_fresh());",
+			"!in(replay_requests,(",
+			"out(replay_reply,replay_consumed()).",
+		],
+		"registration replay Fresh-to-Consumed owner order",
+	)?;
+
+	let honest = section_between(
+		&environment,
+		"letHonestBeacon(",
+		"letMaliciousBeacon(",
+		"registration honest Beacon role",
+	)?;
+	require_once(
+		honest,
+		"RegistrationReplayGuard(server_identity,beacon_identity,registration_session)",
+		"registration honest replay owner",
+	)?;
+	forbid(
+		honest,
+		"!RegistrationReplayGuard",
+		"registration replicated honest replay owner",
+	)?;
+	require_once(
+		honest,
+		"out(c,signed_init_kex(tag_ed25519(beacon_identity),sign(tag_x25519_prekey(beacon_prekey),beacon_identity_secret),sign(tag_x25519_one_time(beacon_one_time),beacon_identity_secret),sign(tag_mlkem768(beacon_pq),beacon_identity_secret)));",
+		"registration honest single signed bundle",
+	)?;
+	forbid(
+		honest,
+		"!out(c,signed_init_kex(",
+		"registration replicated honest signed bundle",
+	)?;
+	require_once(
+		honest,
+		"RegistrationReplayGuard(server_identity,beacon_identity,registration_session)|out(c,signed_init_kex(",
+		"registration honest parallel bundle-and-guard topology",
+	)?;
+	if count(honest, "RegistrationReplayGuard(") != 1 {
+		return Err("registration honest replay-owner family count changed".to_owned());
+	}
+	if count(honest, "out(c,signed_init_kex(") != 1 {
+		return Err("registration honest signed-bundle family count changed".to_owned());
+	}
+
+	let server_role = section_between(
+		&environment,
+		"letServer(",
+		"letMaliciousServer()",
+		"registration honest Server role",
+	)?;
+	require_once(
+		server_role,
+		"out(replay_requests,(beacon_identity,core_init,registration_id,replay_reply));",
+		"registration Server public replay request",
+	)?;
+	require_ordered_once(
+		server_role,
+		&[
+			"letroot=pqxdh_root(",
+			"out(replay_requests,(beacon_identity,core_init,registration_id,replay_reply));",
+			"in(replay_reply,replay_result:replay_status);",
+			"ifreplay_result=replay_fresh()then",
+			"eventServerAccepted(",
+			"in(c,registration_control:bitstring);",
+			"ifregistration_control=registration_abort(registration_id)then",
+			"eventServerResponseAborted(",
+		],
+		"registration symbolic derive-consume-accept-abort order",
+	)?;
+
+	let malicious_server = section_between(
+		&environment,
+		"letMaliciousServer()",
+		"letKeepBeaconStatePrivate()",
+		"registration malicious Server role",
+	)?;
+	for forbidden in [
+		"replay_requests",
+		"RegistrationReplayGuard",
+		"replay_fresh",
+		"replay_consumed",
+		"RegistrationConsumed",
+	] {
+		forbid(
+			malicious_server,
+			forbidden,
+			"registration malicious replay guard",
+		)?;
+	}
+	require_once(
+		malicious_server,
+		"letregistration_continue(=registration_id)=registration_controlin",
+		"registration malicious direct response path",
+	)?;
+
+	let hb49 = compact(&uncommented_pv(&snapshot.mlkem_reencapsulation_control)?);
+	let epoch_calls = [
+		(
+			"letbundle_old=kem_epoch_bundle(",
+			"pqpk_old",
+			"registration HB-49 old bundle",
+		),
+		(
+			"letbundle_new=kem_epoch_bundle(",
+			"pqpk_new",
+			"registration HB-49 new bundle",
+		),
+	];
+	for (marker, pq_key, label) in epoch_calls {
+		let arguments = arguments_after(&hb49, marker)?;
+		let expected = [
+			"tag_ed25519(beacon_identity)".to_owned(),
+			"sign(tag_x25519_prekey(beacon_prekey),beacon_identity_secret)".to_owned(),
+			"sign(tag_x25519_one_time(beacon_one_time),beacon_identity_secret)".to_owned(),
+			format!("sign(tag_mlkem768({pq_key}),beacon_identity_secret)"),
+		];
+		if arguments != expected {
+			return Err(format!("{label} changed: {arguments:?}"));
+		}
+	}
+	require_ordered_once(
+		&hb49,
+		&[
+			"newpqsk_old:bitstring;",
+			"newpqsk_new:bitstring;",
+			"letpqpk_old=mlkem_public(pqsk_old)in",
+			"letpqpk_new=mlkem_public(pqsk_new)in",
+			"letbundle_old=kem_epoch_bundle(",
+			"letbundle_new=kem_epoch_bundle(",
+			"out(kem_multi_epoch_channel,bundle_old);",
+			"out(kem_multi_epoch_channel,bundle_new);",
+		],
+		"registration HB-49 same-classical-material PQ-only rotation fixture",
+	)?;
+
+	Ok(())
+}
+
+fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> {
+	let shared_source = compact(&uncommented_rust(&snapshot.adapter_shared)?);
+	for (wanted, label) in [
+		(
+			"pubconstKEX_KDF_OUT_LEN:usize=32usize;",
+			"initial ratchet derived-root output width",
+		),
+		(
+			"const_:()=assert!(KEX_KDF_OUT_LEN==KDF_STATE_SIZE);",
+			"initial ratchet derived-root width link",
+		),
+		(
+			"pubtypeKexDerivedSecret=SecretArr<KDF_STATE_SIZE,systems::Pqxdh,roles::DerivedSecret>;",
+			"initial ratchet derived-root alias",
+		),
+		(
+			"pubfnas_array(&self)->&[u8;S]{",
+			"initial ratchet derived-root accessor signature",
+		),
+	] {
+		require_once(&shared_source, wanted, label)?;
+	}
+	let as_array = rust_body(&snapshot.adapter_shared, "as_array")?;
+	if as_array != "&self.data" {
+		return Err(format!(
+			"initial ratchet derived-root accessor body changed: {as_array}"
+		));
+	}
+
+	registration_effects::runtime(snapshot)?;
+
+	let core_pqxdh = compact(&uncommented_rust(&snapshot.core_pqxdh)?);
+	for (wanted, label) in [
+		(
+			"pubconstRATCHET_CHAIN_SIZE:usize=crate::ratchet::RATCHET_CHAIN_SIZE;",
+			"initial ratchet root and chain width",
+		),
+		(
+			"pubconstINITIAL_RATCHET_KDF_OUTPUT_SIZE:usize=RATCHET_CHAIN_SIZE*2;",
+			"initial ratchet output-width expression",
+		),
+		(
+			"const_:()=assert!(INITIAL_RATCHET_KDF_OUTPUT_SIZE==64);",
+			"initial ratchet output 64-byte assertion",
+		),
+		(
+			"constBEACON_RATCHETS:RatchetInitialization=RatchetInitialization{send_offset:RATCHET_CHAIN_SIZEasu8,receive_offset:0,};",
+			"initial ratchet Beacon role offsets",
+		),
+		(
+			"constSERVER_RATCHETS:RatchetInitialization=RatchetInitialization{send_offset:0,receive_offset:RATCHET_CHAIN_SIZEasu8,};",
+			"initial ratchet Server role offsets",
+		),
+	] {
+		require_once(&core_pqxdh, wanted, label)?;
+	}
+	let beacon_candidate = section_between(
+		&core_pqxdh,
+		"implBeaconRegistrationCandidate{",
+		"pubstructBeaconFinishInputs",
+		"initial ratchet Beacon candidate impl",
+	)?;
+	require_once(
+		beacon_candidate,
+		"pubconstfnratchet_initialization(&self)->RatchetInitialization{BEACON_RATCHETS}",
+		"initial ratchet Beacon candidate role",
+	)?;
+	let server_candidate = section_between(
+		&core_pqxdh,
+		"implServerRegistrationCandidate{",
+		"pubenumKeyIdAvailability",
+		"initial ratchet Server candidate impl",
+	)?;
+	require_once(
+		server_candidate,
+		"pubconstfnratchet_initialization(&self)->RatchetInitialization{SERVER_RATCHETS}",
+		"initial ratchet Server candidate role",
+	)?;
+	let split = rust_body(&snapshot.core_pqxdh, "split_initial_ratchet_kdf_output")?;
+	for (wanted, label) in [
+		(
+			"letleft=core::array::from_fn(|i|output[i]);",
+			"initial ratchet left 0..32 slice",
+		),
+		(
+			"letright=core::array::from_fn(|i|output[i+RATCHET_CHAIN_SIZE]);",
+			"initial ratchet right 32..64 slice",
+		),
+		(
+			"ifinitialization.send_offset==0{InitialRatchetChains{send_chain:crate::ratchet::RatchetChain::from_bytes(left),receive_chain:crate::ratchet::RatchetChain::from_bytes(right),}}else{InitialRatchetChains{send_chain:crate::ratchet::RatchetChain::from_bytes(right),receive_chain:crate::ratchet::RatchetChain::from_bytes(left),}}",
+			"initial ratchet role-ordered split",
+		),
+	] {
+		require_once(&split, wanted, label)?;
+	}
+
+	let core_ratchet = compact(&uncommented_rust(&snapshot.core_ratchet)?);
+	for (wanted, label) in [
+		(
+			"pubconstRATCHET_CHAIN_SIZE:usize=32;",
+			"initial ratchet request input width",
+		),
+		(
+			"pubconstSYM_RATCHET_INFO_SIZE:usize=41;",
+			"initial ratchet request label width",
+		),
+		(
+			"pubconstSYM_RATCHET_INFO:&[u8;SYM_RATCHET_INFO_SIZE]=b\"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305\";",
+			"initial ratchet request label",
+		),
+		(
+			"pubconstRATCHET_KDF_OUTPUT_SIZE:usize=crate::commitment::AEAD_KEY_SIZE+RATCHET_CHAIN_SIZE+crate::commitment::AEAD_NONCE_SIZE;",
+			"initial ratchet distinct step-response width expression",
+		),
+		(
+			"const_:()=assert!(RATCHET_KDF_OUTPUT_SIZE==76);",
+			"initial ratchet distinct 76-byte step response",
+		),
+		(
+			"pubstructSymmetricRatchetKdfRequest{input:[u8;RATCHET_CHAIN_SIZE],info:[u8;SYM_RATCHET_INFO_SIZE],}",
+			"initial ratchet request field types",
+		),
+		(
+			"pubstructRatchetKdfResponse{bytes:[u8;RATCHET_KDF_OUTPUT_SIZE],}",
+			"initial ratchet distinct step-response type",
+		),
+	] {
+		require_once(&core_ratchet, wanted, label)?;
+	}
+	let request_new = rust_body(&snapshot.core_ratchet, "new")?;
+	require_once(
+		&request_new,
+		"Self{input,info:*SYM_RATCHET_INFO,}",
+		"initial ratchet exact fixed-domain request construction",
+	)?;
+	let request_input = rust_body(&snapshot.core_ratchet, "input")?;
+	if request_input != "&self.input" {
+		return Err(format!(
+			"initial ratchet request input accessor changed: {request_input}"
+		));
+	}
+	let request_info = rust_body(&snapshot.core_ratchet, "info")?;
+	if request_info != "&self.info" {
+		return Err(format!(
+			"initial ratchet request info accessor changed: {request_info}"
+		));
+	}
+
+	let core_concrete = compact(&uncommented_rust(&snapshot.core_pqxdh_concrete)?);
+	let pending_declaration = section_between(
+		&core_concrete,
+		"#[must_use=\"theinitialratchetKDFrequestmustbeperformedorthephaseexplicitlydropped\"]",
+		"implInitialRatchetKdfPending",
+		"initial ratchet pending declaration",
+	)?;
+	require_once(
+		pending_declaration,
+		"pubstructInitialRatchetKdfPending{request:SymmetricRatchetKdfRequest,initialization:RatchetInitialization,}",
+		"initial ratchet pending fields",
+	)?;
+	for forbidden in [
+		"derive(Clone",
+		"derive(Copy",
+		"derive(Clone,Copy",
+		"derive(Copy,Clone",
+	] {
+		forbid(
+			pending_declaration,
+			forbidden,
+			"initial ratchet pending Clone/Copy derivation",
+		)?;
+	}
+	for forbidden in [
+		"implCloneforInitialRatchetKdfPending",
+		"implCopyforInitialRatchetKdfPending",
+	] {
+		forbid(
+			&core_concrete,
+			forbidden,
+			"initial ratchet pending Clone/Copy implementation",
+		)?;
+	}
+	let response_declaration = section_between(
+		&core_concrete,
+		"#[must_use=\"theinitialratchetKDFresponsemustresumeitspendingphase\"]",
+		"implInitialRatchetKdfResponse",
+		"initial ratchet response declaration",
+	)?;
+	for forbidden in ["pending:", "request:", "initialization:"] {
+		forbid(
+			response_declaration,
+			forbidden,
+			"initial ratchet response falsely gains type-level provenance",
+		)?;
+	}
+	require_once(
+		response_declaration,
+		"pubstructInitialRatchetKdfResponse{bytes:[u8;INITIAL_RATCHET_KDF_OUTPUT_SIZE],}",
+		"initial ratchet distinct 64-byte response type",
+	)?;
+	let pending_request = rust_body(&snapshot.core_pqxdh_concrete, "request")?;
+	if pending_request != "&self.request" {
+		return Err(format!(
+			"initial ratchet pending request accessor changed: {pending_request}"
+		));
+	}
+	let response_from_bytes = rust_body(&snapshot.core_pqxdh_concrete, "from_bytes")?;
+	if response_from_bytes != "Self{bytes}" {
+		return Err(format!(
+			"initial ratchet response byte constructor changed: {response_from_bytes}"
+		));
+	}
+	let response_bytes = rust_body(&snapshot.core_pqxdh_concrete, "as_bytes")?;
+	if response_bytes != "&self.bytes" {
+		return Err(format!(
+			"initial ratchet response bytes accessor changed: {response_bytes}"
+		));
+	}
+	let start_initial = rust_body(&snapshot.core_pqxdh_concrete, "start_initial_ratchet_kdf")?;
+	require_once(
+		&start_initial,
+		"InitialRatchetKdfPending{request:SymmetricRatchetKdfRequest::new(*root),initialization,}",
+		"initial ratchet exact root request and initialization",
+	)?;
+	for (wanted, label) in [
+		(
+			"pubfnstart_initial_ratchet_kdf(root:&[u8;RATCHET_CHAIN_SIZE],initialization:RatchetInitialization,)->InitialRatchetKdfPending{",
+			"initial ratchet typed base start signature",
+		),
+		(
+			"pubfnstart_beacon_candidate_ratchet_kdf(candidate:&BeaconRegistrationCandidate,root:&[u8;RATCHET_CHAIN_SIZE],)->InitialRatchetKdfPending{",
+			"initial ratchet typed Beacon candidate start signature",
+		),
+		(
+			"pubfnstart_server_candidate_ratchet_kdf(candidate:&ServerRegistrationCandidate,root:&[u8;RATCHET_CHAIN_SIZE],)->InitialRatchetKdfPending{",
+			"initial ratchet typed Server candidate start signature",
+		),
+	] {
+		require_once(&core_concrete, wanted, label)?;
+	}
+	let resume_initial = rust_body(&snapshot.core_pqxdh_concrete, "resume_initial_ratchet_kdf")?;
+	require_one_call(
+		&resume_initial,
+		"split_initial_ratchet_kdf_output",
+		&["response.as_bytes()", "pending.initialization"],
+		"initial ratchet response split with same pending plan",
+	)?;
+	require_one_call(
+		&resume_initial,
+		"ConcreteRatchetKernel::new",
+		&["send_chain", "receive_chain"],
+		"initial ratchet kernel chain order",
+	)?;
+	require_ordered_once(
+		&resume_initial,
+		&[
+			"letchains=split_initial_ratchet_kdf_output(response.as_bytes(),pending.initialization);",
+			"let(send_chain,receive_chain)=chains.into_parts();",
+			"ConcreteRatchetKernel::new(send_chain,receive_chain)",
+		],
+		"initial ratchet response-to-kernel flow",
+	)?;
+	for (function, expected, label) in [
+		(
+			"start_beacon_ratchet_kdf",
+			"start_initial_ratchet_kdf(root,BEACON_RATCHETS)",
+			"initial ratchet direct Beacon role start",
+		),
+		(
+			"start_server_ratchet_kdf",
+			"start_initial_ratchet_kdf(root,SERVER_RATCHETS)",
+			"initial ratchet direct Server role start",
+		),
+		(
+			"start_beacon_candidate_ratchet_kdf",
+			"start_initial_ratchet_kdf(root,candidate.ratchet_initialization())",
+			"initial ratchet Beacon candidate role start",
+		),
+		(
+			"start_server_candidate_ratchet_kdf",
+			"start_initial_ratchet_kdf(root,candidate.ratchet_initialization())",
+			"initial ratchet Server candidate role start",
+		),
+	] {
+		let body = rust_body(&snapshot.core_pqxdh_concrete, function)?;
+		require_once(&body, expected, label)?;
+	}
+
+	// This retained helper is test-only compatibility coverage; production handoffs are checked
+	// above against registration effects and the exact native initial_ratchet_hkdf interpreter.
+	let finish = rust_body(&snapshot.adapter_ratchet, "finish_initial_ratchet_kdf")?;
+	require_one_call(
+		&finish,
+		"initial_ratchet_hkdf",
+		&["pending.request()"],
+		"initial ratchet adapter exact pending request",
+	)?;
+	require_one_call(
+		&finish,
+		"InitialRatchetKdfResponse::from_bytes",
+		&["initial_ratchet_hkdf(pending.request())", ""],
+		"initial ratchet adapter exact response bytes",
+	)?;
+	require_one_call(
+		&finish,
+		"resume_initial_ratchet_kdf",
+		&["pending", "response"],
+		"initial ratchet adapter same pending response resume",
+	)?;
+	require_ordered_once(
+		&finish,
+		&[
+			"letresponse=beaconcrypt_core::pqxdh::InitialRatchetKdfResponse::from_bytes(initial_ratchet_hkdf(pending.request()),);",
+			"beaconcrypt_core::pqxdh::resume_initial_ratchet_kdf(pending,response)",
+		],
+		"initial ratchet adapter local response provenance",
+	)?;
+	if count(&finish, "letresponse=") != 1 {
+		return Err("initial ratchet adapter response binding count changed".to_owned());
+	}
+	if count(&finish, "letpending=") != 0 {
+		return Err("initial ratchet adapter pending parameter was shadowed".to_owned());
+	}
+	let adapter_ratchet = compact(&uncommented_rust(&snapshot.adapter_ratchet)?);
+	require_once(
+		&adapter_ratchet,
+		"pub(crate)fninitial_ratchet_hkdf(request:&verified_ratchet::SymmetricRatchetKdfRequest,)->[u8;INITIAL_RATCHET_KDF_OUTPUT_SIZE]{",
+		"initial ratchet adapter 64-byte HKDF signature",
+	)?;
+	let initial_hkdf = rust_body(&snapshot.adapter_ratchet, "initial_ratchet_hkdf")?;
+	require_once(
+		&initial_hkdf,
+		"symmetric_ratchet_hkdf(request)",
+		"initial ratchet adapter HKDF executor",
+	)?;
+	let symmetric_hkdf = rust_body(&snapshot.adapter_ratchet, "symmetric_ratchet_hkdf")?;
+	require_one_call(
+		&symmetric_hkdf,
+		"crypto_kdf::hkdf::sha512::extract",
+		&["None", "request.input()"],
+		"initial ratchet adapter executor input",
+	)?;
+	require_one_call(
+		&symmetric_hkdf,
+		"crypto_kdf::hkdf::sha512::expand",
+		&["OUTPUT_SIZE", "Some(request.info())", "&prk"],
+		"initial ratchet adapter executor label",
+	)?;
+	require_once(
+		&symmetric_hkdf,
+		"letmutoutput=[0u8;OUTPUT_SIZE];output.copy_from_slice(&expanded);output",
+		"initial ratchet adapter executor output",
+	)?;
+	let step_hkdf = rust_body(&snapshot.adapter_ratchet, "ratchet_hkdf")?;
+	require_once(
+		&step_hkdf,
+		"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+		"initial ratchet distinct 76-byte adapter response",
+	)?;
+	let kernel_new = rust_body(&snapshot.core_ratchet_concrete, "new")?;
+	require_once(
+		&kernel_new,
+		"Self::from_counters(0,0,send_chain,receive_chain)",
+		"initial ratchet zero-counter kernel initialization",
+	)?;
+
+	let lean_effect = compact(&snapshot.lean_ratchet_effect);
+	let lean_initial = section_between(
+		&lean_effect,
+		"theorempqxdh.concrete.start_initial_ratchet_kdf_exact",
+		"theorempqxdh.concrete.initial_request_accessor_exact",
+		"initial ratchet Lean exact start anchor",
+	)?;
+	require_once(
+		lean_initial,
+		"request:={input:=root,info:=ratchet.SYM_RATCHET_INFO},initialization:=initialization",
+		"initial ratchet Lean exact request interpretation",
+	)?;
+	let lean_accessor = section_between(
+		&lean_effect,
+		"theorempqxdh.concrete.initial_request_accessor_exact",
+		"theorempqxdh.concrete.start_beacon_ratchet_kdf_exact",
+		"initial ratchet Lean request accessor anchor",
+	)?;
+	require_once(
+		lean_accessor,
+		"pqxdh.concrete.InitialRatchetKdfPending.impl.requestpending=okpending.request",
+		"initial ratchet Lean exact request accessor",
+	)?;
+	let lean_beacon = section_between(
+		&lean_effect,
+		"theorempqxdh.concrete.start_beacon_ratchet_kdf_exact",
+		"theorempqxdh.concrete.start_server_ratchet_kdf_exact",
+		"initial ratchet Lean Beacon role anchor",
+	)?;
+	require_once(
+		lean_beacon,
+		"initialization:={send_offset:=32#u8,receive_offset:=0#u8}",
+		"initial ratchet Lean Beacon offsets",
+	)?;
+	let lean_server = section_between(
+		&lean_effect,
+		"theorempqxdh.concrete.start_server_ratchet_kdf_exact",
+		"theorempqxdh.concrete.resume_initial_ratchet_kdf_is_core_partition",
+		"initial ratchet Lean Server role anchor",
+	)?;
+	require_once(
+		lean_server,
+		"initialization:={send_offset:=0#u8,receive_offset:=32#u8}",
+		"initial ratchet Lean Server offsets",
+	)?;
+	let lean_resume = section_between(
+		&lean_effect,
+		"theorempqxdh.concrete.resume_initial_ratchet_kdf_is_core_partition",
+		"/-!##RatchetKDFresponseinterpretation-/",
+		"initial ratchet Lean resume anchor",
+	)?;
+	for (wanted, label) in [
+		(
+			"pqxdh.split_initial_ratchet_kdf_outputresponse.bytespending.initialization",
+			"initial ratchet Lean response partition",
+		),
+		(
+			"ratchet.concrete.ConcreteRatchetKernel.newchains.send_chainchains.receive_chain",
+			"initial ratchet Lean kernel chain order",
+		),
+	] {
+		require_once(lean_resume, wanted, label)?;
+	}
+	let lean_kdf = compact(&snapshot.lean_pqxdh_kdf);
+	require_once(
+		&lean_kdf,
+		"defrootChains(c:Crypto)(ds:Bytes):Bytes×Bytes:=((c.hkdfdsINFO_R64).take32,(c.hkdfdsINFO_R64).drop32)",
+		"initial ratchet Lean ideal root-chain split anchor",
+	)?;
+	let lean_theorems = compact(&snapshot.lean_pqxdh_theorems);
+	require_once(
+		&lean_theorems,
+		"theoremchain_agreement:",
+		"initial ratchet Lean ideal post-record complementarity anchor",
+	)?;
+
+	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
+	for (wanted, label) in [
+		(
+			"letfunserver_to_beacon_chain(root:bitstring)=hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+			"initial ratchet ProVerif server-to-beacon definition",
+		),
+		(
+			"letfunbeacon_to_server_chain(root:bitstring)=hkdf_second_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+			"initial ratchet ProVerif beacon-to-server definition",
+		),
+	] {
+		require_once(&crypto, wanted, label)?;
+	}
+	let environment = compact(&uncommented_pv(&snapshot.environment)?);
+	let honest_beacon = section_between(
+		&environment,
+		"letHonestBeacon(",
+		"letMaliciousBeacon(",
+		"initial ratchet ProVerif HonestBeacon role",
+	)?;
+	let server = section_between(
+		&environment,
+		"letServer(",
+		"letMaliciousServer()",
+		"initial ratchet ProVerif Server role",
+	)?;
+	let malicious_server = section_between(
+		&environment,
+		"letMaliciousServer()",
+		"letKeepBeaconStatePrivate()",
+		"initial ratchet ProVerif MaliciousServer role",
+	)?;
+	for (role, label) in [
+		(honest_beacon, "HonestBeacon"),
+		(server, "Server"),
+		(malicious_server, "MaliciousServer"),
+	] {
+		require_once(
+			role,
+			"letroot=pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input))in",
+			&format!("initial ratchet ProVerif {label} exact root derivation"),
+		)?;
+	}
+	for (role, server_calls, beacon_calls, label) in [
+		(honest_beacon, 1, 1, "HonestBeacon"),
+		(server, 1, 1, "Server"),
+		(malicious_server, 1, 0, "MaliciousServer"),
+	] {
+		if count(role, "server_to_beacon_chain(") != server_calls
+			|| count(role, "beacon_to_server_chain(") != beacon_calls
+		{
+			return Err(format!(
+				"initial ratchet ProVerif {label} scoped chain occurrence count changed"
+			));
+		}
+		if count(role, "letroot=") != 1 {
+			return Err(format!(
+				"initial ratchet ProVerif {label} root binding count changed"
+			));
+		}
+	}
+	for (source, wanted, label) in [
+		(
+			honest_beacon,
+			"letserver_chain_1=server_to_beacon_chain(root)in",
+			"initial ratchet ProVerif HonestBeacon initial-open chain",
+		),
+		(
+			honest_beacon,
+			"letbeacon_send_chain_1=beacon_to_server_chain(root)in",
+			"initial ratchet ProVerif HonestBeacon outgoing chain",
+		),
+		(
+			server,
+			"letserver_chain_1=server_to_beacon_chain(root)in",
+			"initial ratchet ProVerif Server initial-seal chain",
+		),
+		(
+			server,
+			"letbeacon_material_1=ratchet_material(beacon_to_server_chain(root))in",
+			"initial ratchet ProVerif Server incoming chain",
+		),
+		(
+			malicious_server,
+			"letserver_material_1=ratchet_material(server_to_beacon_chain(root))in",
+			"initial ratchet ProVerif MaliciousServer initial-seal chain",
+		),
+	] {
+		require_once(source, wanted, label)?;
+	}
+	for (source, bindings, label) in [
+		(
+			honest_beacon,
+			&[
+				("letserver_chain_1=", 1usize),
+				("letserver_material_1=", 1usize),
+				("letbeacon_send_chain_1=", 1usize),
+				("letbeacon_material_1=", 1usize),
+			][..],
+			"HonestBeacon",
+		),
+		(
+			server,
+			&[
+				("letserver_chain_1=", 1usize),
+				("letserver_material_1=", 1usize),
+				("letbeacon_material_1=", 1usize),
+			][..],
+			"Server",
+		),
+		(
+			malicious_server,
+			&[("letserver_material_1=", 1usize)][..],
+			"MaliciousServer",
+		),
+	] {
+		for (binding, expected) in bindings {
+			if count(source, binding) != *expected {
+				return Err(format!(
+					"initial ratchet ProVerif {label} binding count changed: {binding}"
+				));
+			}
+		}
+	}
+	for (source, wanted, label) in [
+		(
+			honest_beacon,
+			"letserver_material_1=ratchet_material(server_chain_1)inletopened_initial=open_frame(server_material_1,",
+			"initial ratchet ProVerif HonestBeacon chain-to-open material",
+		),
+		(
+			honest_beacon,
+			"letbeacon_material_1=ratchet_material(beacon_send_chain_1)inletbeacon_frame=seal_frame(beacon_material_1,",
+			"initial ratchet ProVerif HonestBeacon chain-to-seal material",
+		),
+		(
+			server,
+			"letserver_material_1=ratchet_material(server_chain_1)inletbinding=",
+			"initial ratchet ProVerif Server initial material",
+		),
+	] {
+		require_once(source, wanted, label)?;
+	}
+
+	Ok(())
+}
+
+fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), String> {
+	let facts = parse_facts(&snapshot.interface)?;
+	let later_fact_count = facts
+		.iter()
+		.filter(|fact| fact.starts_with("later_registration."))
+		.count();
+	if later_fact_count != 68 {
+		return Err(format!(
+			"expected 68 later-registration fidelity facts, found {later_fact_count}"
+		));
+	}
+
+	registration_effects::runtime(snapshot)?;
+
+	let ordinary = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
+	require_once(
+		&ordinary,
+		"decrypt_payload_with_ratchet(admitted.ciphertext,admitted.sequence,admitted.sender,associated_data,ratchet,)",
+		"later-registration adapter parsed sequence",
+	)?;
+
+	record_effects::validate(snapshot)?;
+	validate_record_opening_source(snapshot)?;
+	let adapter = rust_body(&snapshot.adapter_ratchet, "decrypt_payload_with_ratchet")?;
+	for forbidden in ["first_sequence", "key_seq==1", "key_seq!=1"] {
+		forbid(
+			&adapter,
+			forbidden,
+			"later-registration adapter first-sequence gate",
+		)?;
+	}
+
+	let control = compact(&uncommented_rust(&snapshot.core_ratchet_control)?);
+	require_once(
+		&control,
+		"pubconstRATCHET_MAX_GAP:u64=50;",
+		"later-registration core maximum gap",
+	)?;
+	let plan = rust_body(&snapshot.core_ratchet_control, "plan_receive_until")?;
+	require_ordered_once(
+		&plan,
+		&[
+			"letderivations=target-state.receive_sequence;",
+			"letskipped=derivations-1;",
+			"letcached=state.receive_cache.lenasu64;",
+			"ifskipped>RATCHET_MAX_GAP||cached>RATCHET_MAX_GAP-skipped",
+			"ReceivePlan{sequence:Some(target),derivations,}",
+		],
+		"later-registration core future receive plan",
+	)?;
+	let skipped_source = section_between(
+		&snapshot.core_ratchet_control,
+		"pub(crate) fn advance_receive(",
+		"/// Outcome of authenticating a cached receive key.",
+		"later-registration skipped-key advance",
+	)?;
+	let skipped = rust_body(skipped_source, "advance_receive")?;
+	require_ordered_once(
+		&skipped,
+		&[
+			"letnext=state.receive_sequence+1;",
+			"state.receive_cache.append(next)",
+			"receive_sequence:next,receive_cache",
+			"sequence:Some(next),slot:Some(slot)",
+		],
+		"later-registration core skipped-key advance",
+	)?;
+	let target = rust_body(&snapshot.core_ratchet_control, "advance_receive_target")?;
+	require_once(
+		&target,
+		"state:RatchetState{receive_sequence:next,..state},sequence:Some(next)",
+		"later-registration core target advance",
+	)?;
+	forbid(
+		&target,
+		"receive_cache.append",
+		"later-registration core target cache insertion",
+	)?;
+
+	let begin = rust_body(&snapshot.core_ratchet_concrete, "begin_receive")?;
+	for (wanted, label) in [
+		(
+			"letplan=plan_receive_until(kernel.refined.control,target);",
+			"later-registration core begin plan",
+		),
+		(
+			"letskipped=plan.derivations-1;",
+			"later-registration core skipped count",
+		),
+		(
+			"letremaining=plan.derivationsasu8;",
+			"later-registration core remaining derivations",
+		),
+		(
+			"letfirst_slot=kernel.refined.control.receive_cache_len();",
+			"later-registration core first live cache slot",
+		),
+		(
+			"if!refined_receive_slots_are_empty(&kernel.refined,first_slot,skippedasu8){returnreceive_rejected(kernel,context);}",
+			"later-registration core empty destination preflight",
+		),
+		(
+			"letrequest=SymmetricRatchetKdfRequest::new(*kernel.refined.receive_chain.as_bytes());",
+			"later-registration core initial receive-chain request",
+		),
+		(
+			"entry:kernel,context,target:sequence,working_control,staged_slots:empty_material_slots(),first_slot,skipped:0,remaining,request",
+			"later-registration core private receive staging",
+		),
+	] {
+		require_once(&begin, wanted, label)?;
+	}
+	let receive_kdf = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveKdf<Context>",
+		"impl<Context> ReceiveOpen<Context>",
+		"later-registration core receive KDF phase",
+	)?;
+	let resume = rust_body(receive_kdf, "resume")?;
+	for (wanted, label) in [
+		(
+			"ifself.remaining==1{letadvanced=advance_receive_target(self.working_control);",
+			"later-registration core final-target branch",
+		),
+		(
+			"if!(sequence==self.target){returnreceive_rejected(self.entry,self.context);}",
+			"later-registration core final target equality gate",
+		),
+		(
+			"final_receive_chain:stepped.chain,staged_slots:self.staged_slots,target_sequence:sequence,target_material:stepped.material,first_slot:self.first_slot,skipped:self.skipped",
+			"later-registration core pending target separation",
+		),
+		(
+			"if!pending_receive_is_valid(&self.entry.refined,&pending,self.target){returnreceive_rejected(self.entry,self.context);}",
+			"later-registration core final pending validation gate",
+		),
+		(
+			"letadvanced=advance_receive(self.working_control);",
+			"later-registration core nonfinal skipped step",
+		),
+		(
+			"self.staged_slots[slot_index]=Some(CachedReceiveKey{sequence,material:stepped.material,});",
+			"later-registration core skipped material pair",
+		),
+		(
+			"self.working_control=advanced.state;self.skipped+=1;self.remaining-=1;self.request=SymmetricRatchetKdfRequest::new(*stepped.chain.as_bytes());",
+			"later-registration core next receive request",
+		),
+	] {
+		require_once(&resume, wanted, label)?;
+	}
+	let refined_source = uncommented_rust(&snapshot.core_ratchet_refined)?;
+	let pending = compact(section_between(
+		&refined_source,
+		"pub(super) struct PendingReceive<",
+		"impl<SendChain, ReceiveChain, Material> RefinedRatchet",
+		"later-registration refined pending declaration",
+	)?);
+	require_once(
+		&pending,
+		"pub(super)committed_control:RatchetState,pub(super)final_receive_chain:ReceiveChain,pub(super)staged_slots:[Option<CachedReceiveKey<Material>>;RECEIVE_CACHE_CAPACITY],pub(super)target_sequence:u64,pub(super)target_material:Material,pub(super)first_slot:u8,pub(super)skipped:u8",
+		"later-registration refined pending fields",
+	)?;
+	let pending_valid = rust_body(&snapshot.core_ratchet_refined, "pending_receive_is_valid")?;
+	for (wanted, label) in [
+		(
+			"if!(pending.target_sequence==requested){returnfalse;}",
+			"later-registration exact pending target validation",
+		),
+		(
+			"if!(pending.first_slot==state.control.receive_cache_len()){returnfalse;}",
+			"later-registration first live slot validation",
+		),
+		(
+			"if!(pending.committed_control.send_sequence()==state.control.send_sequence()){returnfalse;}",
+			"later-registration unchanged send counter validation",
+		),
+		(
+			"if!(pending.committed_control.receive_sequence()==requested){returnfalse;}",
+			"later-registration target receive counter validation",
+		),
+		(
+			"if!(requested-entry_receive_sequence==pending.skippedasu64+1){returnfalse;}",
+			"later-registration skipped-prefix validation",
+		),
+		(
+			"iflookup_receive_key(pending.committed_control,requested).is_some(){returnfalse;}",
+			"later-registration target cache absence validation",
+		),
+		(
+			"if!(pending.committed_control.receive_cache_len()asusize==committed_len){returnfalse;}",
+			"later-registration exact cache-length validation",
+		),
+		(
+			"receive_control_prefix_matches(state.control,pending.committed_control,0,pending.first_slot,)",
+			"later-registration committed cache-prefix validation",
+		),
+		(
+			"pending_receive_slots_are_valid(state,pending,pending.first_slot,expected_first,pending.skipped,)",
+			"later-registration staged-slot prefix validation",
+		),
+	] {
+		require_once(&pending_valid, wanted, label)?;
+	}
+	let empty_slots = rust_body(
+		&snapshot.core_ratchet_refined,
+		"refined_receive_slots_are_empty",
+	)?;
+	require_ordered_once(
+		&empty_slots,
+		&[
+			"letmutslot=first_slot;",
+			"letmutleft=remaining;",
+			"letslot_index=slotasusize;",
+			"ifslot_index>=RECEIVE_CACHE_CAPACITY{returnfalse;}",
+			"ifstate.receive_slots[slot_index].is_some(){returnfalse;}",
+			"slot+=1;",
+			"left-=1;",
+			"true",
+		],
+		"later-registration empty destination scan",
+	)?;
+	let staged_slots = rust_body(
+		&snapshot.core_ratchet_refined,
+		"pending_receive_slots_are_valid",
+	)?;
+	require_ordered_once(
+		&staged_slots,
+		&[
+			"letmutcurrent_slot=slot;",
+			"letmutexpected=expected_sequence;",
+			"letmutleft=remaining;",
+			"letslot_index=current_slotasusize;",
+			"ifslot_index>=RECEIVE_CACHE_CAPACITY{returnfalse;}",
+			"ifstate.receive_slots[slot_index].is_some(){returnfalse;}",
+			"letstaged=matchpending.staged_slots[slot_index].as_ref(){Some(staged)=>staged,None=>returnfalse,};",
+			"if!(staged.sequence==expected){returnfalse;}",
+			"if!(pending.committed_control.receive_key_at(current_slot)==Some(expected)){returnfalse;}",
+			"left-=1;",
+			"current_slot+=1;",
+			"expected+=1;",
+			"true",
+		],
+		"later-registration staged slot pairing scan",
+	)?;
+	let open_phase = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveOpen<Context>",
+		"/// Checked restoration builder",
+		"later-registration core receive-open phase",
+	)?;
+	for (name, wanted, label) in [
+		(
+			"sequence",
+			"PreparedReceive::PreparedReceiveFutureCase(pending)=>pending.target_sequence",
+			"later-registration future open sequence",
+		),
+		(
+			"material",
+			"PreparedReceive::PreparedReceiveFutureCase(pending)=>Some(&pending.target_material)",
+			"later-registration future open material",
+		),
+	] {
+		require_once(&rust_body(open_phase, name)?, wanted, label)?;
+	}
+	let finish = rust_body(open_phase, "finish")?;
+	require_ordered_once(
+		&finish,
+		&[
+			"None=>return(self.entry,None)",
+			"publish_future_receive(&mutentry.refined,pending)",
+			"(entry,Some(plaintext))",
+		],
+		"later-registration success-only publication",
+	)?;
+	let publish_source = section_between(
+		&snapshot.core_ratchet_refined,
+		"pub(super) fn publish_future_receive<",
+		"/// Commit an already-preflighted suffix of receive steps.",
+		"later-registration future publisher",
+	)?;
+	let publish = rust_body(publish_source, "publish_future_receive")?;
+	require_ordered_once(
+		&publish,
+		&[
+			"letfirst_index=pending.first_slotasusize;",
+			"letskipped=pending.skippedasusize;",
+			"iffirst_index>RECEIVE_CACHE_CAPACITY{return;}",
+			"ifskipped>RECEIVE_CACHE_CAPACITY-first_index{return;}",
+			"publish_future_receive_slots(state,&mutpending.staged_slots,pending.first_slot,pending.skipped,)",
+			"state.receive_chain=pending.final_receive_chain;",
+			"state.control=pending.committed_control;",
+		],
+		"later-registration future publication order",
+	)?;
+	forbid(
+		&publish,
+		"target_material",
+		"later-registration target material publication",
+	)?;
+	let publish_slots = rust_body(
+		&snapshot.core_ratchet_refined,
+		"publish_future_receive_slots",
+	)?;
+	require_ordered_once(
+		&publish_slots,
+		&[
+			"letmutcurrent_slot=slot;",
+			"letmutleft=remaining;",
+			"letslot_index=current_slotasusize;",
+			"ifslot_index>=RECEIVE_CACHE_CAPACITY{return;}",
+			"letmoved=staged_slots[slot_index].take();",
+			"state.receive_slots[slot_index]=moved;",
+			"current_slot+=1;",
+			"left-=1;",
+		],
+		"later-registration exact skipped-slot movement",
+	)?;
+
+	for theorem in [
+		"theorem ratchet.concrete.begin_receive_future_request_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_sequence_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_material_exact",
+		"theorem ratchet.concrete.ReceiveOpen.finish_future_success_publishes_same_plaintext",
+	] {
+		require_once(
+			&snapshot.lean_ratchet_effect,
+			theorem,
+			"later-registration structural Lean anchor",
+		)?;
+	}
+	for theorem in [
+		"theorem max_gap_eq :",
+		"theorem plan_receive_until_accept (",
+		"theorem plan_receive_until_bound (",
+		"theorem advance_receive_ok (",
+		"theorem advance_receive_target_ok (",
+	] {
+		require_once(
+			&snapshot.lean_ratchet_control,
+			theorem,
+			"later-registration control Lean anchor",
+		)?;
+	}
+	for theorem in [
+		"theorem receiveMessage_refines",
+		"theorem receiveMessage_state_neutral",
+	] {
+		require_once(
+			&snapshot.lean_ratchet_refinement,
+			theorem,
+			"later-registration refinement Lean anchor",
+		)?;
+	}
+
+	let model = compact(&uncommented_pv(&snapshot.later_registration_control)?);
+	for (wanted, label) in [
+		(
+			"funzero_sequence():sequence[data].",
+			"later-registration zero sequence constructor",
+		),
+		(
+			"funlater_registration_ratchet_state(sequence,bitstring,bitstring):bitstring[data].",
+			"later-registration ratchet-state constructor",
+		),
+		(
+			"funlater_registration_return(bitstring,bitstring):bitstring[data].",
+			"later-registration return constructor",
+		),
+		(
+			"freeLATER_REGISTRATION_SEQ1_PAYLOAD:bitstring[private].",
+			"later-registration sequence-one payload",
+		),
+		(
+			"freeLATER_REGISTRATION_SEQ2_PAYLOAD:bitstring[private].",
+			"later-registration sequence-two payload",
+		),
+		(
+			"freeLATER_REGISTRATION_SEQ3_PAYLOAD:bitstring[private].",
+			"later-registration sequence-three payload",
+		),
+		(
+			"freeLATER_REGISTRATION_ORIGINAL_WITNESS:bitstring[private].",
+			"later-registration original-response witness",
+		),
+		(
+			"freeLATER_REGISTRATION_SUBSTITUTION_WITNESS:bitstring[private].",
+			"later-registration substitution witness",
+		),
+		(
+			"freeLATER_REGISTRATION_FAITHFUL_WITNESS:bitstring[private].",
+			"later-registration faithful witness",
+		),
+		(
+			"freeLATER_REGISTRATION_OMITTED_GATE_WITNESS:bitstring[private].",
+			"later-registration counterfactual witness",
+		),
+		(
+			"freeLATER_REGISTRATION_OMITTED_GATE_CANARY:bitstring[private].",
+			"later-registration counterfactual canary",
+		),
+		(
+			"eventLaterRegistrationOriginalResponseIssued(bitstring,bitstring,bitstring,bitstring,bitstring).",
+			"later-registration original-response event signature",
+		),
+		(
+			"eventLaterRegistrationServerFrameSent(bitstring,bitstring,bitstring,sequence,key_id,key_id,bitstring,bitstring,bitstring).",
+			"later-registration Server-send event signature",
+		),
+		(
+			"eventLaterRegistrationSubstitutionSelected(bitstring,bitstring,bitstring,bitstring,bitstring).",
+			"later-registration substitution event signature",
+		),
+		(
+			"eventLaterRegistrationFaithfulAttempted(bitstring,bitstring).",
+			"later-registration faithful-attempt event signature",
+		),
+		(
+			"eventLaterRegistrationOmittedGateAttempted(bitstring,bitstring).",
+			"later-registration counterfactual-attempt event signature",
+		),
+		(
+			"eventLaterRegistrationGeneralReceiveOpened(bitstring,bitstring,sequence,key_id,beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,bitstring,bitstring,bitstring).",
+			"later-registration opened event signature",
+		),
+		(
+			"eventLaterRegistrationOmittedGateReached(bitstring,sequence,bitstring).",
+			"later-registration gate-reached event signature",
+		),
+		(
+			"eventLaterRegistrationOmittedGateBypassed(bitstring,sequence,bitstring).",
+			"later-registration gate-passed event signature",
+		),
+		(
+			"eventLaterRegistrationPoststatePublished(bitstring,bitstring,bitstring,sequence,bitstring,sequence,bitstring,receive_cache,bitstring).",
+			"later-registration poststate event signature",
+		),
+		(
+			"eventLaterRegistrationCommitted(bitstring,bitstring,bitstring,bitstring,sequence,key_id,key_id,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).",
+			"later-registration committed event signature",
+		),
+		(
+			"eventLaterRegistrationTargetUnavailable(bitstring,bitstring,sequence,bitstring,receive_cache,bitstring).",
+			"later-registration target-absence event signature",
+		),
+		(
+			"eventLaterRegistrationReturned(bitstring,bitstring).",
+			"later-registration returned event signature",
+		),
+	] {
+		require_once(&model, wanted, label)?;
+	}
+
+	let open = section_between(
+		&model,
+		"letLaterSequenceRegistrationOpen(",
+		"letLaterSequenceRegistrationInitialOpen(",
+		"later-registration finite open process",
+	)?;
+	require_ordered_once(
+		open,
+		&[
+			"letresponse_server_kex=x25519_public_from_ed(response_server_identity)in",
+			"letbeacon_identity=ed_public(beacon_identity_secret)in",
+			"letdh1=x25519_beacon_dh(beacon_prekey_secret,response_server_kex)in",
+			"letdh2=x25519_beacon_dh(beacon_identity_secret,server_ephemeral)in",
+			"letdh3=x25519_beacon_dh(beacon_prekey_secret,server_ephemeral)in",
+			"letdh4=x25519_beacon_dh(beacon_one_time_secret,server_ephemeral)in",
+			"letkem_secret=mlkem_decapsulate(kem_ciphertext,beacon_pq_secret)in",
+			"letshared_secrets=beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1,dh2,dh3,dh4,kem_secret)in",
+			"ifresponse_server_identity=expected_server_identitythen",
+			"letroot_input=beaconcrypt_core__pqxdh__build_root_key_input(shared_secrets)in",
+			"letroot=pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input))in",
+		],
+		"later-registration Beacon root reconstruction",
+	)?;
+	for (wanted, label) in [
+		(
+			"letkex_response(response_server_identity,server_ephemeral,kem_ciphertext,app_ciphertext,assigned_key_id)=responsein",
+			"later-registration response field parse",
+		),
+		(
+			"ifresponse_server_identity=expected_server_identitythen",
+			"later-registration Beacon root reconstruction",
+		),
+		(
+			"letroot=pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input))in",
+			"later-registration reconstructed root",
+		),
+		(
+			"letassociated_data=beaconcrypt_core__pqxdh__build_associated_data(expected_server_identity,beacon_identity)in",
+			"later-registration reconstructed associated data",
+		),
+		(
+			"letsession=session_label(expected_server_identity,beacon_identity,assigned_key_id,root)in",
+			"later-registration reconstructed session",
+		),
+		(
+			"letserver_chain_1=server_to_beacon_chain(root)inletserver_chain_2=ratchet_next(server_chain_1)inletserver_chain_3=ratchet_next(server_chain_2)inletserver_chain_4=ratchet_next(server_chain_3)in",
+			"later-registration receive chain expansion",
+		),
+		(
+			"letserver_material_1=ratchet_material(server_chain_1)inletserver_material_2=ratchet_material(server_chain_2)inletserver_material_3=ratchet_material(server_chain_3)in",
+			"later-registration receive material expansion",
+		),
+		(
+			"letcrypto_frame(frame_ciphertext,frame_tag,frame_commitment,frame_sequence,authenticated_server_key_id)=app_ciphertextin",
+			"later-registration inner frame parse",
+		),
+		(
+			"ifauthenticated_server_key_id=expected_server_key_idthen",
+			"later-registration authenticated sender gate",
+		),
+		(
+			"letopened=open_frame(server_material_3,associated_data,frame_sequence,expected_server_key_id,app_ciphertext)in",
+			"later-registration generic sequence open",
+		),
+		(
+			"letregistration_payload(authenticated_binding,registration_plaintext)=openedin",
+			"later-registration opened payload parse",
+		),
+		(
+			"letcache_1=receive_cache_entry(first_sequence(),server_material_1,receive_cache_empty())inletcache_2=receive_cache_entry(next_sequence(first_sequence()),server_material_2,cache_1)in",
+			"later-registration exact newest-first cache",
+		),
+		(
+			"letreceive_poststate=receive_state(frame_sequence,server_chain_4,cache_2)in",
+			"later-registration receive poststate",
+		),
+		(
+			"letcommitted_ratchet=later_registration_ratchet_state(zero_sequence(),beacon_to_server_chain(root),receive_poststate)in",
+			"later-registration complete ratchet poststate",
+		),
+	] {
+		require_once(open, wanted, label)?;
+	}
+	let opened_events = all_arguments(open, "LaterRegistrationGeneralReceiveOpened")?;
+	if opened_events
+		!= [vec![
+			"witness".to_owned(),
+			"session".to_owned(),
+			"frame_sequence".to_owned(),
+			"authenticated_server_key_id".to_owned(),
+			"authenticated_binding".to_owned(),
+			"registration_plaintext".to_owned(),
+			"opened".to_owned(),
+			"app_ciphertext".to_owned(),
+		]] {
+		return Err(format!(
+			"later-registration opened event fields changed: {opened_events:?}"
+		));
+	}
+	let open_outputs = all_arguments(open, "out")?;
+	if open_outputs.len() != 1
+		|| open_outputs[0]
+			!= [
+				"reply",
+				"(session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened,app_ciphertext,server_chain_4,server_material_3,cache_2,receive_poststate,committed_ratchet,associated_data)",
+			]
+			.map(str::to_owned)
+	{
+		return Err(format!(
+			"later-registration open reply fields changed: {open_outputs:?}"
+		));
+	}
+
+	let commit = section_between(
+		&model,
+		"letLaterSequenceRegistrationCommit(",
+		"letLaterSequenceRegistrationFaithfulFinish(",
+		"later-registration shared commit process",
+	)?;
+	require_ordered_once(
+		commit,
+		&[
+			"letexpected_binding=beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(key_id_encoding(assigned_key_id))in",
+			"letadmitted_binding=phase2_assigned_id_binding_gate(authenticated_binding,expected_binding)in",
+			"eventLaterRegistrationPoststatePublished(",
+			"eventLaterRegistrationTargetUnavailable(",
+			"eventLaterRegistrationCommitted(",
+			"eventLaterRegistrationReturned(witness,registration_plaintext);",
+			"out(c,later_registration_return(witness,registration_plaintext));",
+		],
+		"later-registration binding-to-commit order",
+	)?;
+	require_once(
+		commit,
+		"ifwitness=LATER_REGISTRATION_OMITTED_GATE_WITNESSthenout(c,LATER_REGISTRATION_OMITTED_GATE_CANARY)",
+		"later-registration counterfactual canary confinement",
+	)?;
+	for (function, expected, label) in [
+		(
+			"LaterRegistrationPoststatePublished",
+			&[
+				"witness",
+				"session",
+				"root",
+				"zero_sequence()",
+				"beacon_to_server_chain(root)",
+				"frame_sequence",
+				"next_receive_chain",
+				"committed_cache",
+				"committed_ratchet",
+			][..],
+			"later-registration exact poststate event",
+		),
+		(
+			"LaterRegistrationTargetUnavailable",
+			&[
+				"witness",
+				"session",
+				"frame_sequence",
+				"target_material",
+				"committed_cache",
+				"committed_ratchet",
+			][..],
+			"later-registration target-absence event",
+		),
+		(
+			"LaterRegistrationCommitted",
+			&[
+				"witness",
+				"session",
+				"root",
+				"response",
+				"frame_sequence",
+				"authenticated_server_key_id",
+				"assigned_key_id",
+				"opened_payload",
+				"registration_plaintext",
+				"app_ciphertext",
+				"target_material",
+				"receive_poststate",
+				"committed_ratchet",
+			][..],
+			"later-registration commit event",
+		),
+	] {
+		require_one_call(commit, function, expected, label)?;
+	}
+
+	let faithful = section_between(
+		&model,
+		"letLaterSequenceRegistrationFaithfulFinish(",
+		"letLaterSequenceRegistrationInitialFinish(",
+		"later-registration faithful finish process",
+	)?;
+	require_once(
+		faithful,
+		"eventLaterRegistrationFaithfulAttempted(LATER_REGISTRATION_FAITHFUL_WITNESS,response);",
+		"later-registration faithful attempt",
+	)?;
+	require_once(
+		faithful,
+		"LaterSequenceRegistrationOpen(LATER_REGISTRATION_FAITHFUL_WITNESS,expected_server_identity,expected_server_key_id,beacon_identity_secret,beacon_prekey_secret,beacon_one_time_secret,beacon_pq_secret,response,reply)",
+		"later-registration faithful shared open",
+	)?;
+	require_once(
+		faithful,
+		"LaterSequenceRegistrationCommit(LATER_REGISTRATION_FAITHFUL_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,next_receive_chain,target_material,committed_cache,receive_poststate,committed_ratchet,associated_data)",
+		"later-registration faithful direct commit",
+	)?;
+	require_ordered_once(
+		faithful,
+		&[
+			"LaterSequenceRegistrationOpen(",
+			"in(reply,(session:bitstring,root:bitstring,assigned_key_id:key_id,frame_sequence:sequence",
+			"ifframe_sequence=first_sequence()then",
+			"LaterSequenceRegistrationCommit(",
+		],
+		"later-registration faithful sequence gate",
+	)?;
+
+	let omitted_gate = section_between(
+		&model,
+		"letLaterSequenceRegistrationOmittedGateFinish(",
+		"letLaterSequenceRegistrationControl()=",
+		"later-registration counterfactual finish process",
+	)?;
+	require_once(
+		omitted_gate,
+		"eventLaterRegistrationOmittedGateAttempted(LATER_REGISTRATION_OMITTED_GATE_WITNESS,response);",
+		"later-registration counterfactual attempt",
+	)?;
+	require_ordered_once(
+		omitted_gate,
+		&[
+			"LaterSequenceRegistrationOpen(LATER_REGISTRATION_OMITTED_GATE_WITNESS,expected_server_identity,expected_server_key_id,beacon_identity_secret,beacon_prekey_secret,beacon_one_time_secret,beacon_pq_secret,response,reply)",
+			"in(reply,(session:bitstring,root:bitstring,assigned_key_id:key_id,frame_sequence:sequence",
+			"eventLaterRegistrationOmittedGateReached(LATER_REGISTRATION_OMITTED_GATE_WITNESS,frame_sequence,response);",
+			"eventLaterRegistrationOmittedGateBypassed(LATER_REGISTRATION_OMITTED_GATE_WITNESS,frame_sequence,response);",
+			"LaterSequenceRegistrationCommit(LATER_REGISTRATION_OMITTED_GATE_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,next_receive_chain,target_material,committed_cache,receive_poststate,committed_ratchet,associated_data)",
+		],
+		"later-registration counterfactual post-open gate placement",
+	)?;
+	forbid(
+		omitted_gate,
+		"ifframe_sequence=first_sequence()then",
+		"later-registration omitted-gate negative control",
+	)?;
+	if count(&model, "ifframe_sequence=first_sequence()then") != 2 {
+		return Err("later-registration production first-sequence gate count changed".to_owned());
+	}
+
+	let initial = section_between(
+		&model,
+		"letLaterSequenceRegistrationInitialOpen(",
+		"letLaterSequenceRegistrationCommit(",
+		"later-registration initial opening",
+	)?;
+	if stable_text_hash(initial) != 9_228_980_847_782_159_909 {
+		return Err("later-registration reviewed initial opening changed".to_owned());
+	}
+	let initial = section_between(
+		&model,
+		"letLaterSequenceRegistrationInitialFinish(",
+		"letLaterSequenceRegistrationOmittedGateFinish(",
+		"later-registration initial finish",
+	)?;
+	if stable_text_hash(initial) != 11_106_921_876_796_861_623 {
+		return Err("later-registration reviewed initial finish changed".to_owned());
+	}
+
+	let coordinator_start = model
+		.find("letLaterSequenceRegistrationControl()=")
+		.ok_or_else(|| "missing later-registration coordinator".to_owned())?;
+	let coordinator = &model[coordinator_start..];
+	require_ordered_once(
+		coordinator,
+		&[
+			"newserver_identity_secret:bitstring;",
+			"newbeacon_identity_secret:bitstring;",
+			"newbeacon_prekey_secret:bitstring;",
+			"newbeacon_one_time_secret:bitstring;",
+			"newbeacon_pq_secret:bitstring;",
+			"newserver_ephemeral_secret:bitstring;",
+			"newkem_coins:bitstring;",
+			"letserver_identity=ed_public(server_identity_secret)in",
+			"letbeacon_identity=ed_public(beacon_identity_secret)in",
+			"letbeacon_prekey=x25519_public(beacon_prekey_secret)in",
+			"letbeacon_one_time=x25519_public(beacon_one_time_secret)in",
+			"letbeacon_pq=mlkem_public(beacon_pq_secret)in",
+			"letserver_ephemeral=x25519_public(server_ephemeral_secret)in",
+			"letkem_ciphertext=mlkem_ciphertext(beacon_pq,kem_coins)in",
+			"letkem_secret=mlkem_shared_secret(beacon_pq,kem_coins)in",
+			"letdh1=x25519_server_dh(server_identity_secret,beacon_prekey)in",
+			"letdh2=x25519_server_dh(server_ephemeral_secret,x25519_public_from_ed(beacon_identity))in",
+			"letdh3=x25519_server_dh(server_ephemeral_secret,beacon_prekey)in",
+			"letdh4=x25519_server_dh(server_ephemeral_secret,beacon_one_time)in",
+			"letshared_secrets=beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1,dh2,dh3,dh4,kem_secret)in",
+			"letroot_input=beaconcrypt_core__pqxdh__build_root_key_input(shared_secrets)in",
+			"letroot=pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input))in",
+		],
+		"later-registration Server root construction",
+	)?;
+	for (wanted, label) in [
+		(
+			"letroot=pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input))in",
+			"later-registration coordinator root",
+		),
+		(
+			"letassociated_data=beaconcrypt_core__pqxdh__build_associated_data(server_identity,beacon_identity)in",
+			"later-registration coordinator associated data",
+		),
+		(
+			"letsession=session_label(server_identity,beacon_identity,assigned_key_id,root)in",
+			"later-registration coordinator session",
+		),
+		(
+			"letassigned_binding=beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(key_id_encoding(assigned_key_id))in",
+			"later-registration coordinator binding",
+		),
+		(
+			"letfirst_frame=seal_frame(server_material_1,associated_data,first_sequence(),server_key_id,registration_payload(assigned_binding,LATER_REGISTRATION_SEQ1_PAYLOAD))in",
+			"later-registration genuine first frame",
+		),
+		(
+			"letsecond_frame=seal_frame(server_material_2,associated_data,next_sequence(first_sequence()),server_key_id,LATER_REGISTRATION_SEQ2_PAYLOAD)in",
+			"later-registration genuine second frame",
+		),
+		(
+			"letthird_frame=seal_frame(server_material_3,associated_data,next_sequence(next_sequence(first_sequence())),server_key_id,registration_payload(assigned_binding,LATER_REGISTRATION_SEQ3_PAYLOAD))in",
+			"later-registration genuine third frame",
+		),
+		(
+			"letoriginal_response=kex_response(server_identity,server_ephemeral,kem_ciphertext,first_frame,assigned_key_id)in",
+			"later-registration original response",
+		),
+		(
+			"letsubstituted_response=kex_response(server_identity,server_ephemeral,kem_ciphertext,third_frame,assigned_key_id)in",
+			"later-registration app-frame-only substitution",
+		),
+		(
+			"in(c,candidate:bitstring);ifcandidate=substituted_responsethen",
+			"later-registration single candidate selection",
+		),
+		(
+			"eventLaterRegistrationSubstitutionSelected(LATER_REGISTRATION_SUBSTITUTION_WITNESS,session,root,original_response,candidate);",
+			"later-registration exact substitution event",
+		),
+	] {
+		require_once(coordinator, wanted, label)?;
+	}
+	require_ordered_once(
+		coordinator,
+		&[
+			"eventLaterRegistrationServerFrameSent(session,root,original_response,first_sequence(),server_key_id,assigned_key_id,LATER_REGISTRATION_SEQ1_PAYLOAD,first_frame,server_material_1);",
+			"eventLaterRegistrationOriginalResponseIssued(LATER_REGISTRATION_ORIGINAL_WITNESS,session,root,first_frame,original_response);",
+			"out(c,original_response);",
+			"eventLaterRegistrationServerFrameSent(session,root,original_response,next_sequence(first_sequence()),server_key_id,assigned_key_id,LATER_REGISTRATION_SEQ2_PAYLOAD,second_frame,server_material_2);",
+			"out(c,second_frame);",
+			"eventLaterRegistrationServerFrameSent(session,root,original_response,next_sequence(next_sequence(first_sequence())),server_key_id,assigned_key_id,LATER_REGISTRATION_SEQ3_PAYLOAD,third_frame,server_material_3);",
+			"out(c,third_frame);",
+			"in(c,candidate:bitstring);",
+			"ifcandidate=substituted_responsethen",
+		],
+		"later-registration genuine response and later-frame order",
+	)?;
+	for (function, witness, label) in [
+		(
+			"LaterSequenceRegistrationFaithfulFinish",
+			"LATER_REGISTRATION_FAITHFUL_WITNESS",
+			"later-registration faithful fanout",
+		),
+		(
+			"LaterSequenceRegistrationOmittedGateFinish",
+			"LATER_REGISTRATION_OMITTED_GATE_WITNESS",
+			"later-registration counterfactual fanout",
+		),
+	] {
+		let calls = all_arguments(coordinator, function)?;
+		if calls.len() != 1 || calls[0].last().map(String::as_str) != Some("candidate") {
+			return Err(format!("{label} changed: {calls:?}"));
+		}
+		if !model.contains(witness) {
+			return Err(format!("missing {label} witness: {witness}"));
+		}
+	}
+
+	let queries = compact(&uncommented_pv(&snapshot.later_registration_queries)?);
+	if snapshot
+		.later_registration_queries
+		.lines()
+		.filter(|line| line.trim_start().starts_with("query "))
+		.count()
+		!= 18
+	{
+		return Err("later-registration query count changed".to_owned());
+	}
+	let sym = "symmetric_ratchet_domain()";
+	let chain1 = format!("hkdf_first_32(hkdf_sha512_no_salt(root,{sym}))");
+	let chain2 = format!("hkdf_second_32(hkdf_sha512_no_salt({chain1},{sym}))");
+	let chain3 = format!("hkdf_second_32(hkdf_sha512_no_salt({chain2},{sym}))");
+	let chain4 = format!("hkdf_second_32(hkdf_sha512_no_salt({chain3},{sym}))");
+	let material1 = format!(
+		"ratchet_key_nonce(hkdf_first_32(hkdf_sha512_no_salt({chain1},{sym})),hkdf_final_12(hkdf_sha512_no_salt({chain1},{sym})))"
+	);
+	let material2 = format!(
+		"ratchet_key_nonce(hkdf_first_32(hkdf_sha512_no_salt({chain2},{sym})),hkdf_final_12(hkdf_sha512_no_salt({chain2},{sym})))"
+	);
+	let material3 = format!(
+		"ratchet_key_nonce(hkdf_first_32(hkdf_sha512_no_salt({chain3},{sym})),hkdf_final_12(hkdf_sha512_no_salt({chain3},{sym})))"
+	);
+	let cache = format!(
+		"receive_cache_entry(next_sequence(first_sequence()),{material2},receive_cache_entry(first_sequence(),{material1},receive_cache_empty()))"
+	);
+	let receive_state =
+		format!("receive_state(next_sequence(next_sequence(first_sequence())),{chain4},{cache})");
+	let send_chain = format!("hkdf_second_32(hkdf_sha512_no_salt(root,{sym}))");
+	let ratchet =
+		format!("later_registration_ratchet_state(zero_sequence(),{send_chain},{receive_state})");
+	for (wanted, label) in [
+		(
+			format!(
+				"event(LaterRegistrationPoststatePublished(LATER_REGISTRATION_FAITHFUL_WITNESS,session,root,zero_sequence(),{send_chain},next_sequence(next_sequence(first_sequence())),{chain4},{cache},{ratchet}))."
+			),
+			"later-registration exact poststate query",
+		),
+		(
+			format!(
+				"event(LaterRegistrationTargetUnavailable(LATER_REGISTRATION_FAITHFUL_WITNESS,session,next_sequence(next_sequence(first_sequence())),{material3},{cache},{ratchet}))."
+			),
+			"later-registration exact target-absence query",
+		),
+	] {
+		require_once(&queries, &wanted, label)?;
+	}
+	for (wanted, label) in [
+		(
+			"event(LaterRegistrationGeneralReceiveOpened(LATER_REGISTRATION_FAITHFUL_WITNESS,session,next_sequence(next_sequence(first_sequence())),sender,beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(receiver)),LATER_REGISTRATION_SEQ3_PAYLOAD,registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(receiver)),LATER_REGISTRATION_SEQ3_PAYLOAD),frame)).",
+			"later-registration exact opened-payload query",
+		),
+		(
+			"event(LaterRegistrationReturned(LATER_REGISTRATION_FAITHFUL_WITNESS,LATER_REGISTRATION_SEQ3_PAYLOAD)).",
+			"later-registration exact return query",
+		),
+		(
+			"event(LaterRegistrationOmittedGateReached(LATER_REGISTRATION_OMITTED_GATE_WITNESS,next_sequence(next_sequence(first_sequence())),candidate)).",
+			"later-registration counterfactual gate reachability query",
+		),
+		(
+			"event(LaterRegistrationOmittedGateBypassed(LATER_REGISTRATION_OMITTED_GATE_WITNESS,next_sequence(next_sequence(first_sequence())),candidate)).",
+			"later-registration counterfactual gate-pass query",
+		),
+		(
+			"queryattacker(LATER_REGISTRATION_OMITTED_GATE_CANARY).",
+			"later-registration counterfactual canary query",
+		),
+	] {
+		require_once(&queries, wanted, label)?;
+	}
+	for event in [
+		"LaterRegistrationOriginalResponseIssued",
+		"LaterRegistrationSubstitutionSelected",
+		"LaterRegistrationFaithfulAttempted",
+		"LaterRegistrationCommitted",
+		"LaterRegistrationServerFrameSent",
+		"LaterRegistrationOmittedGateAttempted",
+	] {
+		if !queries.contains(&format!("inj-event({event}(")) {
+			return Err(format!(
+				"missing later-registration origin correspondence: {event}"
+			));
+		}
+	}
+	if count(&queries, "==>inj-event(") != 5 {
+		return Err("later-registration correspondence query count changed".to_owned());
+	}
+	let query_hashes = queries
+		.split("query")
+		.skip(1)
+		.map(stable_text_hash)
+		.collect::<Vec<_>>();
+	if let Some((index, (actual, expected))) = query_hashes
+		.iter()
+		.zip(LATER_REGISTRATION_QUERY_HASHES)
+		.enumerate()
+		.find(|(_, (actual, expected))| **actual != *expected)
+	{
+		return Err(format!(
+			"later-registration exact query {} changed: expected {expected}, found {actual}",
+			index + 1
+		));
+	}
+
+	let main = compact(&uncommented_pv(&snapshot.later_registration_main)?);
+	if main != "processLaterSequenceRegistrationControl()" {
+		return Err(format!("later-registration main process changed: {main}"));
+	}
+	let checker = section_between(
+		&snapshot.proverif_result_checker,
+		"} else if (scenario == \"later-sequence-registration\") {",
+		"} else if (scenario == \"post-registration-ratchet\") {",
+		"later-registration result-checker branch",
+	)?;
+	for (wanted, label) in [
+		(
+			"if (query_count != 18)",
+			"later-registration checker query count",
+		),
+		(
+			"for (later_index = 1; later_index <= 18; later_index++)",
+			"later-registration checker complete result loop",
+		),
+		(
+			"later_expected[11] = \"Query not event(LaterRegistrationOmittedGateBypassed",
+			"later-registration checker live omitted-gate bypass polarity",
+		),
+		(
+			"later_expected[12] = \"Query not event(LaterRegistrationCommitted(LATER_REGISTRATION_OMITTED_GATE_WITNESS[]",
+			"later-registration checker live omitted-gate commit",
+		),
+		(
+			"later_expected[13] = \"Query not attacker(LATER_REGISTRATION_OMITTED_GATE_CANARY[]) is false.\"",
+			"later-registration checker canary secrecy polarity",
+		),
+	] {
+		require_once(checker, wanted, label)?;
+	}
+	for index in 1..=18 {
+		require_once(
+			checker,
+			&format!("later_expected[{index}] ="),
+			"later-registration checker expected result",
+		)?;
+		let next = if index == 18 {
+			"for (later_index = 1; later_index <= 18; later_index++)".to_owned()
+		} else {
+			format!("later_expected[{}] =", index + 1)
+		};
+		let assignment = section_between(
+			checker,
+			&format!("later_expected[{index}] ="),
+			&next,
+			"later-registration checker assignment",
+		)?;
+		let polarity = if matches!(index, 5..=8 | 14..=18) {
+			"is true."
+		} else {
+			"is false."
+		};
+		require_once(
+			assignment,
+			polarity,
+			"later-registration checker exact polarity",
+		)?;
+	}
+	let checker_hash = stable_text_hash(&compact(checker));
+	if checker_hash != LATER_REGISTRATION_CHECKER_HASH {
+		return Err(format!(
+			"later-registration exact result-checker branch changed: expected {LATER_REGISTRATION_CHECKER_HASH}, found {checker_hash}"
+		));
+	}
+
+	Ok(())
+}
+
+fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String> {
+	let facts = parse_facts(&snapshot.interface)?;
+	let post_fact_count = facts
+		.iter()
+		.filter(|fact| fact.starts_with("post_registration."))
+		.count();
+	if post_fact_count != 47 {
+		return Err(format!(
+			"expected 47 post-registration fidelity facts, found {post_fact_count}"
+		));
+	}
+
+	let begin = rust_body(&snapshot.core_ratchet_concrete, "begin_receive")?;
+	require_ordered_once(
+		&begin,
+		&[
+			"letplan=plan_receive_until(kernel.refined.control,target);",
+			"ifplan.derivations==0{",
+			"letprepared=matchprepare_cached_receive(&kernel.refined,sequence){Some(prepared)=>prepared,None=>returnreceive_rejected(kernel,context),};",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared)",
+		],
+		"post-registration source cached admission",
+	)?;
+	let open_phase = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveOpen<Context>",
+		"/// Checked restoration builder",
+		"post-registration source receive-open phase",
+	)?;
+	for (name, wanted, label) in [
+		(
+			"sequence",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared)=>prepared.sequence,",
+			"post-registration source cached sequence",
+		),
+		(
+			"material",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared)=>{letslot_index=prepared.target_slotasusize;ifslot_index>=RECEIVE_CACHE_CAPACITY{returnNone;}letcached=matchself.entry.refined.receive_slots[slot_index].as_ref(){Some(cached)=>cached,None=>returnNone,};if!(cached.sequence==prepared.sequence){returnNone;}Some(&cached.material)}",
+			"post-registration source cached material",
+		),
+	] {
+		require_once(&rust_body(open_phase, name)?, wanted, label)?;
+	}
+	let finish = rust_body(open_phase, "finish")?;
+	require_ordered_once(
+		&finish,
+		&[
+			"None=>return(self.entry,None)",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared)=>{publish_cached_receive(&mutentry.refined,prepared);}",
+			"PreparedReceive::PreparedReceiveFutureCase(pending)=>{publish_future_receive(&mutentry.refined,pending);}",
+			"(entry,Some(plaintext))",
+		],
+		"post-registration source success-only publication",
+	)?;
+	let prepared = rust_body(&snapshot.core_ratchet_refined, "prepare_cached_receive")?;
+	require_ordered_once(
+		&prepared,
+		&[
+			"lookup_receive_key(state.control,sequence)",
+			"state.control.receive_key_at(target_slot)==Some(sequence)",
+			"target.sequence==sequence",
+			"letlast_slot=len-1;",
+			"finish_receive_with_removal(state.control,sequence,target_slot,true)",
+			"ReceiveDisposition::Consumed=>{}",
+			"PreparedCachedReceive{sequence,target_slot,last_slot,committed_control:finished.state,}",
+		],
+		"post-registration source cached removal preparation",
+	)?;
+	let publish = rust_body(&snapshot.core_ratchet_refined, "publish_cached_receive")?;
+	require_ordered_once(
+		&publish,
+		&[
+			"lettarget_index=prepared.target_slotasusize;",
+			"letlast_index=prepared.last_slotasusize;",
+			"iftarget_index==last_index{let_=state.receive_slots[last_index].take();}else{letmoved=state.receive_slots[last_index].take();state.receive_slots[target_index]=moved;}",
+			"state.control=prepared.committed_control;",
+		],
+		"post-registration source cached removal publication",
+	)?;
+
+	let runtime_name = [
+		"post_registration_cached_replay",
+		"_and_future_trace_is_exact_and_nonvacuous",
+	]
+	.concat();
+	let runtime = rust_body(&snapshot.fidelity_test, &runtime_name)?;
+	require_ordered(
+		&runtime,
+		&[
+			"letkernel=pqxdh::resume_initial_ratchet_kdf(",
+			"begin_receive(kernel,1,\"seq1registration\")",
+			"first.resume(response(0x11,0x42,0x91))",
+			"open.finish(Some(\"seq1registrationremainder\"))",
+			"begin_receive(kernel,3,\"seq3frame\")",
+			"second.resume(response(0x22,0x43,0x92))",
+			"third.resume(response(0x33,0x44,0x93))",
+			"open.finish(Some(\"seq3ordinarypayload\"))",
+			"begin_receive(kernel,2,&original_frame_context)",
+		],
+		"post-registration runtime carried sequence-three kernel",
+	)?;
+	if count(&runtime, "letkernel=") != 1 {
+		return Err("post-registration runtime kernel was reconstructed or substituted".to_owned());
+	}
+	if count(&runtime, "begin_receive(kernel,2,&original_frame_context)") != 2 {
+		return Err("post-registration runtime cached/replay kernel carry changed".to_owned());
+	}
+	for (wanted, label) in [
+		(
+			"typeSnapshot=(u64,u64,[u8;32],[u8;32],Vec<Option<(u64,[u8;32],[u8;12])>>,u8,);",
+			"post-registration runtime public snapshot shape",
+		),
+		(
+			"(0..50).map(|slot|{kernel.receive_entry_at(slot).map(|(sequence,material)|{(sequence,*material.key().as_bytes(),*material.nonce().as_bytes(),)})}).collect(),kernel.receive_cache_len(),",
+			"post-registration runtime complete public cache observation",
+		),
+		(
+			"let(kernel,returned)=open.finish(Some(full_cached_payload));assert_eq!(returned,Some(full_cached_payload));",
+			"post-registration runtime full cached payload",
+		),
+		(
+			"letbefore_replay=snapshot(&kernel);letReceiveEffect::ReceiveRejected{kernel,context}=begin_receive(kernel,2,&original_frame_context)else{panic!(\"consumedreplaymustrejectwithoutKDF,open,orplaintextreturn\");};assert_eq!(context,&original_frame_context);assert_eq!(snapshot(&kernel),before_replay);",
+			"post-registration runtime exact replay rejection",
+		),
+		(
+			"assert_eq!(pending.request().input(),&[0x44;32]);",
+			"post-registration runtime sequence-four KDF input",
+		),
+		(
+			"assert_eq!(kernel.receive_sequence(),4);assert_eq!(kernel.send_chain().as_bytes(),&[0x31;32]);assert_eq!(kernel.receive_chain().as_bytes(),&[0x45;32]);assert_eq!(kernel.receive_cache_len(),0);assert!(snapshot(&kernel).4.iter().all(Option::is_none));",
+			"post-registration runtime exact future poststate",
+		),
+	] {
+		require_once(&runtime, wanted, label)?;
+	}
+
+	for (source, theorems, label) in [
+		(
+			&snapshot.lean_ratchet_receive_behavior,
+			&["theorem KernelRefines.receive_success_replay"][..],
+			"post-registration Lean replay anchor",
+		),
+		(
+			&snapshot.lean_pqxdh_session_lifecycle,
+			&[
+				"theorem ConcreteSession.finish_cached_server_preserves",
+				"theorem ConcreteSession.finish_cached_beacon_preserves",
+			][..],
+			"post-registration Lean cached-session anchor",
+		),
+		(
+			&snapshot.lean_byte_trace_refinement,
+			&[
+				"theorem executeTrace_refines",
+				"theorem executeTrace_observed",
+				"theorem executeTrace_recvWf",
+			][..],
+			"post-registration Lean byte-trace anchor",
+		),
+		(
+			&snapshot.lean_boundary_execution,
+			&["theorem runTrace_refines", "theorem runTrace_observed"][..],
+			"post-registration Lean boundary-history anchor",
+		),
+		(
+			&snapshot.lean_protocol_history,
+			&[
+				"theorem completeHistory_refines",
+				"theorem completeHistory_observed",
+			][..],
+			"post-registration Lean protocol-history anchor",
+		),
+	] {
+		for theorem in theorems {
+			require_once(source, theorem, label)?;
+		}
+	}
+
+	let later = compact(&uncommented_pv(&snapshot.later_registration_control)?);
+	for (wanted, label) in [
+		(
+			"freelater_registration_committed_handoff:channel[private].",
+			"post-registration private committed hook",
+		),
+		(
+			"freelater_registration_server_handoff:channel[private].",
+			"post-registration private Server hook",
+		),
+		(
+			"eventLaterRegistrationReturned(witness,registration_plaintext);out(c,later_registration_return(witness,registration_plaintext));(out(later_registration_committed_handoff,(witness,session,root,response,assigned_key_id,authenticated_server_key_id,associated_data,committed_ratchet))|ifwitness=LATER_REGISTRATION_OMITTED_GATE_WITNESSthenout(c,LATER_REGISTRATION_OMITTED_GATE_CANARY))",
+			"post-registration committed hook parallel placement and tuple",
+		),
+		(
+			"letsubstituted_response=kex_response(server_identity,server_ephemeral,kem_ciphertext,third_frame,assigned_key_id)in(out(later_registration_server_handoff,(session,root,original_response,substituted_response,first_frame,second_frame,third_frame,server_chain_3,associated_data,server_key_id,assigned_key_id))|LaterSequenceRegistrationInitialFinish(server_identity,server_key_id,beacon_identity_secret,beacon_prekey_secret,beacon_one_time_secret,beacon_pq_secret,original_response)|in(c,candidate:bitstring);",
+			"post-registration Server hook parallel placement and tuple",
+		),
+	] {
+		require_once(&later, wanted, label)?;
+	}
+
+	let model = compact(&uncommented_pv(&snapshot.post_registration_control)?);
+	for (wanted, label) in [
+		(
+			"freePOST_REGISTRATION_FAITHFUL:bitstring[private].",
+			"post-registration faithful witness declaration",
+		),
+		(
+			"freePOST_REGISTRATION_RETAIN_CONSUMED:bitstring[private].",
+			"post-registration retained-entry witness declaration",
+		),
+		(
+			"freePOST_REGISTRATION_CACHED:bitstring[private].",
+			"post-registration cached request declaration",
+		),
+		(
+			"freePOST_REGISTRATION_REPLAY:bitstring[private].",
+			"post-registration replay request declaration",
+		),
+		(
+			"freePOST_REGISTRATION_FUTURE:bitstring[private].",
+			"post-registration future request declaration",
+		),
+		(
+			"freePOST_REGISTRATION_SEQ4_PAYLOAD:bitstring[private].",
+			"post-registration sequence-four payload declaration",
+		),
+		(
+			"freePOST_REGISTRATION_REPLAY_CANARY:bitstring[private].",
+			"post-registration replay canary declaration",
+		),
+		(
+			"funpost_registration_success(bitstring,bitstring):bitstring[data].",
+			"post-registration success constructor",
+		),
+		(
+			"funpost_registration_failure(bitstring):bitstring[data].",
+			"post-registration failure constructor",
+		),
+		(
+			"funpost_registration_return(bitstring,bitstring,bitstring):bitstring[data].",
+			"post-registration public return constructor",
+		),
+		(
+			"typepost_registration_consumption_mode.",
+			"post-registration consumption-mode type",
+		),
+		(
+			"funpost_registration_consume():post_registration_consumption_mode[data].",
+			"post-registration consume constructor",
+		),
+		(
+			"funpost_registration_retain():post_registration_consumption_mode[data].",
+			"post-registration retain constructor",
+		),
+		(
+			"eventPostRegistrationEstablishedAdvance(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).",
+			"post-registration established advance event shape",
+		),
+		(
+			"eventPostRegistrationHandoff(bitstring,bitstring,bitstring,bitstring,key_id,key_id,bitstring,bitstring).",
+			"post-registration handoff event shape",
+		),
+		(
+			"eventPostRegistrationBranchStarted(bitstring,bitstring,bitstring,bitstring,key_id,key_id,bitstring,bitstring).",
+			"post-registration branch event shape",
+		),
+		(
+			"eventPostRegistrationAttempted(bitstring,bitstring,bitstring,bitstring,bitstring).",
+			"post-registration attempted event shape",
+		),
+		(
+			"eventPostRegistrationKdfCalled(bitstring,bitstring,bitstring,bitstring).",
+			"post-registration KDF event shape",
+		),
+		(
+			"eventPostRegistrationOpenCalled(bitstring,bitstring,bitstring,bitstring,sequence,bitstring).",
+			"post-registration open event shape",
+		),
+		(
+			"eventPostRegistrationReturned(bitstring,bitstring,bitstring,key_id,key_id,bitstring,bitstring,sequence,bitstring,bitstring).",
+			"post-registration return event shape",
+		),
+		(
+			"eventPostRegistrationRejected(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).",
+			"post-registration rejection event shape",
+		),
+		(
+			"eventPostRegistrationReplayAccepted(bitstring,bitstring,bitstring,bitstring,bitstring).",
+			"post-registration replay-accept event shape",
+		),
+		(
+			"eventPostRegistrationFinalState(bitstring,bitstring,bitstring,sequence,bitstring,sequence,bitstring,receive_cache,bitstring).",
+			"post-registration final-state event shape",
+		),
+		(
+			"eventPostRegistrationTargetUnavailable(bitstring,bitstring,sequence,bitstring,receive_cache,bitstring).",
+			"post-registration target-absence event shape",
+		),
+		(
+			"eventPostRegistrationServerFrameSent(bitstring,bitstring,bitstring,sequence,key_id,key_id,bitstring,bitstring,bitstring).",
+			"post-registration Server-origin event shape",
+		),
+	] {
+		require_once(&model, wanted, label)?;
+	}
+	for (wanted, label) in [
+		(
+			"post_registration_finish_cache(post_registration_consume(),entry_cache,consumed_cache)=consumed_cache;",
+			"post-registration faithful cache consumption equation",
+		),
+		(
+			"post_registration_finish_cache(post_registration_retain(),entry_cache,consumed_cache)=entry_cache.",
+			"post-registration retained-cache counterfactual equation",
+		),
+	] {
+		require_once(&model, wanted, label)?;
+	}
+	if count(&model, "post_registration_finish_cache(") != 3 {
+		return Err("post-registration sole consume-v-retain delta changed".to_owned());
+	}
+
+	let cached = section_between(
+		&model,
+		"letPostRegistrationReceiveCached(",
+		"letPostRegistrationReceiveFuture(",
+		"post-registration cached receive",
+	)?;
+	require_ordered_once(
+		cached,
+		&[
+			"eventPostRegistrationAttempted(witness,request_kind,session,frame,entry_ratchet);",
+			"letcrypto_frame(ciphertext,tag,commitment,frame_sequence,sender_key_id)=framein",
+			"ifsender_key_id=expected_server_key_idthen",
+			"ifframe_sequence=next_sequence(first_sequence())then",
+			"letlater_registration_ratchet_state(send_sequence,send_chain,receive_entry)=entry_ratchetin",
+			"letreceive_state(receive_sequence,receive_chain,entry_cache)=receive_entryin",
+			"ifreceive_sequence=next_sequence(next_sequence(first_sequence()))then",
+			"letreceive_cache_entry(=next_sequence(first_sequence()),material_2,=receive_cache_empty())=entry_cachein",
+			"eventPostRegistrationOpenCalled(witness,request_kind,session,frame,frame_sequence,material_2);",
+			"letopened=open_frame(material_2,associated_data,frame_sequence,expected_server_key_id,frame)in",
+			"letconsumed_cache=receive_cache_empty()in",
+			"letoutput_cache=post_registration_finish_cache(mode,entry_cache,consumed_cache)in",
+			"letoutput_ratchet=later_registration_ratchet_state(send_sequence,send_chain,receive_state(receive_sequence,receive_chain,output_cache))in",
+			"eventPostRegistrationReturned(witness,request_kind,session,sender_key_id,assigned_key_id,associated_data,frame,frame_sequence,opened,output_ratchet);",
+			"out(c,post_registration_return(witness,request_kind,opened));",
+			"out(reply,post_registration_success(output_ratchet,opened))",
+			"eventPostRegistrationRejected(witness,request_kind,session,frame,entry_ratchet,entry_ratchet);",
+			"out(reply,post_registration_failure(entry_ratchet))",
+		],
+		"post-registration cached success and replay-rejection flow",
+	)?;
+	forbid(
+		cached,
+		"PostRegistrationKdfCalled",
+		"post-registration cached KDF call",
+	)?;
+
+	let future = section_between(
+		&model,
+		"letPostRegistrationReceiveFuture(",
+		"letPostRegistrationTrace(",
+		"post-registration future receive",
+	)?;
+	require_ordered_once(
+		future,
+		&[
+			"eventPostRegistrationAttempted(witness,POST_REGISTRATION_FUTURE,session,frame,entry_ratchet);",
+			"letcrypto_frame(ciphertext,tag,commitment,frame_sequence,sender_key_id)=framein",
+			"ifsender_key_id=expected_server_key_idthen",
+			"ifframe_sequence=next_sequence(next_sequence(next_sequence(first_sequence())))then",
+			"letlater_registration_ratchet_state(send_sequence,send_chain,receive_entry)=entry_ratchetin",
+			"letreceive_state(receive_sequence,receive_chain,entry_cache)=receive_entryin",
+			"ifreceive_sequence=next_sequence(next_sequence(first_sequence()))then",
+			"ifentry_cache=receive_cache_empty()then",
+			"eventPostRegistrationKdfCalled(witness,POST_REGISTRATION_FUTURE,session,receive_chain);",
+			"letmaterial_4=ratchet_material(receive_chain)in",
+			"letreceive_chain_5=ratchet_next(receive_chain)in",
+			"eventPostRegistrationOpenCalled(witness,POST_REGISTRATION_FUTURE,session,frame,frame_sequence,material_4);",
+			"letopened=open_frame(material_4,associated_data,frame_sequence,expected_server_key_id,frame)in",
+			"letoutput_ratchet=later_registration_ratchet_state(send_sequence,send_chain,receive_state(frame_sequence,receive_chain_5,entry_cache))in",
+			"eventPostRegistrationReturned(witness,POST_REGISTRATION_FUTURE,session,sender_key_id,assigned_key_id,associated_data,frame,frame_sequence,opened,output_ratchet);",
+			"eventPostRegistrationFinalState(witness,session,root,send_sequence,send_chain,frame_sequence,receive_chain_5,entry_cache,output_ratchet);",
+			"eventPostRegistrationTargetUnavailable(witness,session,frame_sequence,material_4,entry_cache,output_ratchet);",
+			"out(c,post_registration_return(witness,POST_REGISTRATION_FUTURE,opened)).",
+		],
+		"post-registration exact sequence-four flow",
+	)?;
+
+	let trace = section_between(
+		&model,
+		"letPostRegistrationTrace(",
+		"letPostRegistrationControl()=",
+		"post-registration trace",
+	)?;
+	require_ordered_once(
+		trace,
+		&[
+			"eventPostRegistrationBranchStarted(witness,session,root,response,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet);",
+			"PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_CACHED,session,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet,second_frame,cached_reply)",
+			"in(cached_reply,post_registration_success(cached_ratchet:bitstring,cached_plaintext:bitstring));",
+			"PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_REPLAY,session,expected_server_key_id,assigned_key_id,associated_data,cached_ratchet,second_frame,replay_reply)",
+			"in(replay_reply,replay_result:bitstring);",
+			"letpost_registration_failure(replay_ratchet)=replay_resultinPostRegistrationReceiveFuture(witness,session,root,expected_server_key_id,assigned_key_id,associated_data,replay_ratchet,fourth_frame)",
+			"letpost_registration_success(replayed_ratchet,replayed_plaintext)=replay_resultineventPostRegistrationReplayAccepted(witness,session,second_frame,replayed_plaintext,replayed_ratchet);ifwitness=POST_REGISTRATION_RETAIN_CONSUMEDthenout(c,POST_REGISTRATION_REPLAY_CANARY)",
+		],
+		"post-registration cached-replay-future order",
+	)?;
+	for (wanted, label) in [
+		(
+			"newcached_reply:channel;(PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_CACHED,session,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet,second_frame,cached_reply)|in(cached_reply,post_registration_success(cached_ratchet:bitstring,cached_plaintext:bitstring));newreplay_reply:channel;(",
+			"post-registration cached producer-consumer parallel placement",
+		),
+		(
+			"newreplay_reply:channel;(PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_REPLAY,session,expected_server_key_id,assigned_key_id,associated_data,cached_ratchet,second_frame,replay_reply)|in(replay_reply,replay_result:bitstring);",
+			"post-registration replay producer-consumer parallel placement",
+		),
+	] {
+		require_once(trace, wanted, label)?;
+	}
+
+	let coordinator = &model[model
+		.find("letPostRegistrationControl()=")
+		.ok_or_else(|| "missing post-registration coordinator".to_owned())?..];
+	require_ordered_once(
+		coordinator,
+		&[
+			"in(later_registration_server_handoff,(session:bitstring,root:bitstring,original_response:bitstring,substituted_response:bitstring,first_frame:bitstring,second_frame:bitstring,third_frame:bitstring,server_chain_3:bitstring,server_associated_data:bitstring,server_key_id:key_id,server_assigned_key_id:key_id));",
+			"letserver_chain_4=ratchet_next(server_chain_3)in",
+			"letserver_material_4=ratchet_material(server_chain_4)in",
+			"letfourth_sequence=next_sequence(next_sequence(next_sequence(first_sequence())))in",
+			"letfourth_frame=seal_frame(server_material_4,server_associated_data,fourth_sequence,server_key_id,POST_REGISTRATION_SEQ4_PAYLOAD)in",
+			"eventPostRegistrationServerFrameSent(session,root,original_response,fourth_sequence,server_key_id,server_assigned_key_id,POST_REGISTRATION_SEQ4_PAYLOAD,fourth_frame,server_material_4);",
+			"out(c,fourth_frame);",
+			"in(later_registration_committed_handoff,(=LATER_REGISTRATION_INITIAL_WITNESS,=session,=root,=original_response,assigned_key_id:key_id,expected_server_key_id:key_id,associated_data:bitstring,initial_ratchet:bitstring));",
+			"ifassigned_key_id=server_assigned_key_idthen",
+			"ifexpected_server_key_id=server_key_idthen",
+			"ifassociated_data=server_associated_datathen",
+			"letlater_registration_ratchet_state(send_sequence,send_chain,initial_receive)=initial_ratchetin",
+			"letreceive_state(=first_sequence(),receive_chain_2,=receive_cache_empty())=initial_receivein",
+			"letmaterial_2=ratchet_material(receive_chain_2)in",
+			"letreceive_chain_3=ratchet_next(receive_chain_2)in",
+			"letmaterial_3=ratchet_material(receive_chain_3)in",
+			"letthird_sequence=next_sequence(next_sequence(first_sequence()))in",
+			"letopened_third=open_frame(material_3,associated_data,third_sequence,expected_server_key_id,third_frame)in",
+			"letcommitted_ratchet=later_registration_ratchet_state(send_sequence,send_chain,receive_state(third_sequence,ratchet_next(receive_chain_3),receive_cache_entry(next_sequence(first_sequence()),material_2,receive_cache_empty())))in",
+			"eventPostRegistrationEstablishedAdvance(session,root,original_response,third_frame,initial_ratchet,committed_ratchet);",
+			"eventPostRegistrationHandoff(LATER_REGISTRATION_INITIAL_WITNESS,session,root,original_response,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet);",
+		],
+		"post-registration private tuple join and sequence-four origin",
+	)?;
+	let trace_calls = all_arguments(coordinator, "PostRegistrationTrace")?;
+	let common_tail = [
+		"session",
+		"root",
+		"original_response",
+		"expected_server_key_id",
+		"assigned_key_id",
+		"associated_data",
+		"committed_ratchet",
+		"second_frame",
+		"fourth_frame",
+	]
+	.map(str::to_owned);
+	if trace_calls.len() != 2
+		|| trace_calls[0][..2] != ["POST_REGISTRATION_FAITHFUL", "post_registration_consume()"]
+		|| trace_calls[1][..2]
+			!= [
+				"POST_REGISTRATION_RETAIN_CONSUMED",
+				"post_registration_retain()",
+			] || trace_calls[0][2..] != common_tail
+		|| trace_calls[1][2..] != common_tail
+	{
+		return Err(format!(
+			"post-registration faithful/counterfactual sole delta changed: {trace_calls:?}"
+		));
+	}
+
+	let queries = compact(&uncommented_pv(&snapshot.post_registration_queries)?);
+	if snapshot
+		.post_registration_queries
+		.lines()
+		.filter(|line| line.trim_start().starts_with("query "))
+		.count()
+		!= 29
+	{
+		return Err("post-registration query count changed".to_owned());
+	}
+	for (wanted, label) in [
+		(
+			"event(PostRegistrationReturned(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_CACHED,session,sender,receiver,beaconcrypt_associated_data(tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain(),symmetric_ratchet_domain()),crypto_frame(ciphertext,tag,commitment,next_sequence(first_sequence()),sender),next_sequence(first_sequence()),LATER_REGISTRATION_SEQ2_PAYLOAD,",
+			"post-registration full cached-payload query",
+		),
+		(
+			"event(PostRegistrationRejected(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_REPLAY,session,crypto_frame(ciphertext,tag,commitment,next_sequence(first_sequence()),sender),",
+			"post-registration exact replay-state query",
+		),
+		(
+			"event(PostRegistrationReturned(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_FUTURE,session,sender,receiver,beaconcrypt_associated_data(tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain(),symmetric_ratchet_domain()),crypto_frame(ciphertext,tag,commitment,next_sequence(next_sequence(next_sequence(first_sequence()))),sender),next_sequence(next_sequence(next_sequence(first_sequence()))),POST_REGISTRATION_SEQ4_PAYLOAD,",
+			"post-registration exact sequence-four query",
+		),
+	] {
+		require_once(&queries, wanted, label)?;
+	}
+	let query_hashes = queries
+		.split("query")
+		.skip(1)
+		.map(stable_text_hash)
+		.collect::<Vec<_>>();
+	if query_hashes.len() != POST_REGISTRATION_QUERY_HASHES.len() {
+		return Err(format!(
+			"expected {} post-registration query hashes, found {}",
+			POST_REGISTRATION_QUERY_HASHES.len(),
+			query_hashes.len()
+		));
+	}
+	if let Some((index, (actual, expected))) = query_hashes
+		.iter()
+		.zip(POST_REGISTRATION_QUERY_HASHES)
+		.enumerate()
+		.find(|(_, (actual, expected))| **actual != *expected)
+	{
+		return Err(format!(
+			"post-registration exact query {} changed: expected {expected}, found {actual}",
+			index + 1
+		));
+	}
+
+	let main = compact(&uncommented_pv(&snapshot.post_registration_main)?);
+	if main != "process(LaterSequenceRegistrationControl()|PostRegistrationControl())" {
+		return Err(format!("post-registration main process changed: {main}"));
+	}
+	let checker = section_between(
+		&snapshot.proverif_result_checker,
+		"} else if (scenario == \"post-registration-ratchet\") {",
+		"} else if (scenario == \"baseline\" ||",
+		"post-registration result-checker branch",
+	)?;
+	for (wanted, label) in [
+		(
+			"if (query_count != 29)",
+			"post-registration checker query count",
+		),
+		(
+			"for (post_registration_index = 1; post_registration_index <= 29; post_registration_index++)",
+			"post-registration checker complete result loop",
+		),
+	] {
+		require_once(checker, wanted, label)?;
+	}
+	for index in 1..=29 {
+		require_once(
+			checker,
+			&format!("post_registration_expected[{index}] ="),
+			"post-registration checker expected result",
+		)?;
+		let next = if index == 29 {
+			"for (post_registration_index = 1; post_registration_index <= 29; post_registration_index++)"
+				.to_owned()
+		} else {
+			format!("post_registration_expected[{}] =", index + 1)
+		};
+		let assignment = section_between(
+			checker,
+			&format!("post_registration_expected[{index}] ="),
+			&next,
+			"post-registration checker assignment",
+		)?;
+		let expected_true = matches!(index, 6 | 9..=12 | 22..=27 | 29);
+		let polarity = if expected_true {
+			"is true."
+		} else {
+			"is false."
+		};
+		require_once(
+			assignment,
+			polarity,
+			"post-registration checker exact polarity",
+		)?;
+	}
+	let checker_hash = stable_text_hash(&compact(checker));
+	if checker_hash != POST_REGISTRATION_CHECKER_HASH {
+		return Err(format!(
+			"post-registration exact result-checker branch changed: expected {POST_REGISTRATION_CHECKER_HASH}, found {checker_hash}"
+		));
+	}
+
+	let scenarios = scenario_names(&snapshot.makefile)?;
+	if scenarios
+		.iter()
+		.filter(|scenario| scenario.as_str() == "post-registration-ratchet")
+		.count()
+		!= 1
+	{
+		return Err("post-registration Make scenario enumeration changed".to_owned());
+	}
+	let make_target = section_between(
+		&snapshot.makefile,
+		"check-proverif-post-registration-ratchet:",
+		"check-proverif-main-registration-controls:",
+		"post-registration Make target",
+	)?;
+	require_ordered_once(
+		make_target,
+		&[
+			"check-proverif-post-registration-ratchet: check-proverif-extraction",
+			"$(PROVERIF_COMMON_LIBS)",
+			"-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl",
+			"-lib $(PROVERIF_DIR)/later-sequence-registration-control.pvl",
+			"-lib $(PROVERIF_DIR)/post-registration-ratchet-control.pvl",
+			"-lib $(PROVERIF_DIR)/post-registration-ratchet-queries.pvl",
+			"$(PROVERIF_DIR)/post-registration-ratchet.pv",
+			"awk -v scenario=post-registration-ratchet -f '$(PROVERIF_CHECKER)'",
+		],
+		"post-registration Make wiring",
+	)?;
+
+	Ok(())
+}
+
+fn validate(snapshot: &Snapshot) -> Result<(), String> {
+	validate_manifest(&snapshot.interface)?;
+	validate_pv(snapshot)?;
+	validate_phase1_source(snapshot)?;
+	validate_phase2_source(snapshot)?;
+	validate_cryptoframe_source(snapshot)?;
+	validate_endpoint_frame_context_wiring(snapshot)?;
+	validate_ratchet_effect_driver(snapshot)?;
+	validate_finite_receive_state_fixture(snapshot)?;
+	validate_registration_lifecycle(snapshot)?;
+	validate_initial_ratchet_fidelity(snapshot)?;
+	validate_later_registration_fidelity(snapshot)?;
+	validate_post_registration_fidelity(snapshot)?;
+	validate_mldsa_source(snapshot)?;
+	validate_mldsa_model(snapshot)?;
+	validate_makefile(&snapshot.makefile)
+}
+
+fn replace_once(source: &mut String, from: &str, to: &str) {
+	let start = source
+		.find(from)
+		.unwrap_or_else(|| panic!("mutation anchor missing: {from}"));
+	source.replace_range(start..start + from.len(), to);
+}
+
+// Receive validation and execution now span private helpers. A matrix mutation must still hit an exact source anchor in this surface, never an unrelated send call.
+fn replace_receive_surface(source: &mut String, from: &str, to: &str) {
+	let mut matches = Vec::new();
+	for name in [
+		"decode_crypto_frame",
+		"encrypted_frame_sender",
+		"execute_open_request",
+		"execute_commitment_hash",
+		"execute_record_receive",
+		"decrypt_message_with_ratchet",
+		"decrypt_payload_with_ratchet",
+	] {
+		let marker = format!("fn {name}(");
+		let start = source
+			.find(&marker)
+			.unwrap_or_else(|| panic!("receive mutation scope missing: {marker}"));
+		let end = start + source[start..].find("\n}").unwrap() + 2;
+		if let Some(relative) = source[start..end].find(from) {
+			matches.push(start + relative);
+		}
+	}
+	assert_eq!(
+		matches.len(),
+		1,
+		"receive mutation anchor must occur in one helper: {from}"
+	);
+	let start = matches[0];
+	source.replace_range(start..start + from.len(), to);
+}
+
+// Mutate the exact core opening source when it owns the field, otherwise the native receive helpers.
+fn replace_record_surface(snapshot: &mut Snapshot, from: &str, to: &str) {
+	let matches = snapshot.core_record.matches(from).count();
+	if matches != 0 {
+		assert_eq!(
+			matches, 1,
+			"record core mutation must have one anchor: {from}"
+		);
+		replace_once(&mut snapshot.core_record, from, to);
+	} else {
+		replace_receive_surface(&mut snapshot.adapter_ratchet, from, to);
+	}
+}
+
+fn replace_once_after(source: &mut String, marker: &str, from: &str, to: &str) {
+	if [
+		"decrypt_message_with_ratchet",
+		"encrypted_frame_sender",
+		"execute_open",
+		"from_frame",
+	]
+	.iter()
+	.any(|name| marker.contains(name))
+	{
+		replace_receive_surface(source, from, to);
+		return;
+	}
+	let marker_start = source
+		.find(marker)
+		.unwrap_or_else(|| panic!("mutation scope missing: {marker}"));
+	let relative = source[marker_start..]
+		.find(from)
+		.unwrap_or_else(|| panic!("mutation anchor missing after {marker}: {from}"));
+	let start = marker_start + relative;
+	source.replace_range(start..start + from.len(), to);
+}
+
+fn replace_nth_once(source: &mut String, from: &str, to: &str, occurrence: usize) {
+	let mut search_start = 0usize;
+	for current in 0..=occurrence {
+		let relative = source[search_start..]
+			.find(from)
+			.unwrap_or_else(|| panic!("mutation anchor missing: {from} occurrence {occurrence}"));
+		let start = search_start + relative;
+		if current == occurrence {
+			source.replace_range(start..start + from.len(), to);
+			return;
+		}
+		search_start = start + from.len();
+	}
+}
+
+fn replace_nth_call_argument_after(
+	source: &mut String,
+	scope_marker: &str,
+	function: &str,
+	call_index: usize,
+	argument_index: usize,
+	replacement: &str,
+) {
+	let scope_start = source
+		.find(scope_marker)
+		.unwrap_or_else(|| panic!("mutation scope missing: {scope_marker}"));
+	let call_marker = format!("{function}(");
+	let mut search_start = scope_start;
+	for current in 0..=call_index {
+		let relative = source[search_start..]
+			.find(&call_marker)
+			.unwrap_or_else(|| panic!("mutation call missing: {function} #{call_index}"));
+		let call_start = search_start + relative;
+		let open = call_start + call_marker.len() - 1;
+		let (mut arguments, end) = parse_call(source, open).unwrap();
+		if current == call_index {
+			assert!(
+				argument_index < arguments.len(),
+				"mutation argument missing: {function} #{call_index} argument #{argument_index}"
+			);
+			arguments[argument_index] = replacement.to_owned();
+			source.replace_range(open + 1..end - 1, &arguments.join(","));
+			return;
+		}
+		search_start = end;
+	}
+	unreachable!();
+}
+
+fn mutate_fact(source: &mut String, key: &str, value: &str) {
+	let marker = format!("{FACT_PREFIX}{key}=");
+	let start = source
+		.find(&marker)
+		.unwrap_or_else(|| panic!("mutation fact missing: {key}"));
+	let value_start = start + marker.len();
+	let value_end = value_start + source[value_start..].find(FACT_SUFFIX).unwrap();
+	source.replace_range(value_start..value_end, value);
+}
+
+fn replace_call(source: &mut String, function: &str, occurrence: usize, arguments: &[String]) {
+	let marker = format!("{function}(");
+	let mut offset = 0usize;
+	let mut found = None;
+	for index in 0..=occurrence {
+		let relative = source[offset..]
+			.find(&marker)
+			.unwrap_or_else(|| panic!("mutation call missing: {function} occurrence {occurrence}"));
+		let start = offset + relative;
+		if index == occurrence {
+			found = Some(start);
+			break;
+		}
+		let (_, end) = parse_call(source, start + marker.len() - 1).unwrap();
+		offset = end;
+	}
+	let start = found.unwrap();
+	let (_, end) = parse_call(source, start + marker.len() - 1).unwrap();
+	source.replace_range(start..end, &format!("{function}({})", arguments.join(",")));
+}
+
+fn phase1_permutations() -> Vec<[usize; 4]> {
+	let mut permutations = Vec::new();
+	for first in 0..4 {
+		for second in 0..4 {
+			for third in 0..4 {
+				for fourth in 0..4 {
+					let candidate = [first, second, third, fourth];
+					if candidate
+						.iter()
+						.enumerate()
+						.all(|(index, value)| !candidate[..index].contains(value))
+					{
+						permutations.push(candidate);
+					}
+				}
+			}
+		}
+	}
+	permutations
+}
+
+fn phase1_transpositions() -> Vec<[usize; 4]> {
+	let mut transpositions = Vec::new();
+	for left in 0..4 {
+		for right in left + 1..4 {
+			let mut permutation = [0, 1, 2, 3];
+			permutation.swap(left, right);
+			transpositions.push(permutation);
+		}
+	}
+	transpositions
+}
+
+fn cryptoframe_permutations() -> [[usize; 3]; 6] {
+	[
+		[0, 1, 2],
+		[0, 2, 1],
+		[1, 0, 2],
+		[1, 2, 0],
+		[2, 0, 1],
+		[2, 1, 0],
+	]
+}
+
+fn permute_cryptoframe(arguments: &[&str; 3], permutation: [usize; 3]) -> Vec<String> {
+	permutation
+		.into_iter()
+		.map(|index| arguments[index].to_owned())
+		.collect()
+}
+
+fn permute_phase1(arguments: &[&str; 4], permutation: [usize; 4]) -> Vec<String> {
+	permutation
+		.into_iter()
+		.map(|index| arguments[index].to_owned())
+		.collect()
+}
+
+fn replace_phase1_schema(snapshot: &mut Snapshot, fields: &[(&str, usize)]) {
+	let names = [
+		("identityKey", "identity-key: bstr .size 33"),
+		("preKey", "pre-key: bstr .size 98"),
+		("oneTimeKey", "one-time-key: bstr .size 98"),
+		("pqKey", "pq-key: bstr .size 1249"),
+	];
+	let fields = fields
+		.iter()
+		.map(|(name, _)| {
+			names
+				.iter()
+				.find(|(old, _)| old == name)
+				.map_or(*name, |(_, new)| *new)
+		})
+		.collect::<Vec<_>>();
+	let start = snapshot.phase1_schema.find("init-kex = ").unwrap();
+	let end = start + snapshot.phase1_schema[start..].find('\n').unwrap();
+	snapshot.phase1_schema.replace_range(
+		start..end,
+		&format!(
+			"init-kex = [2, 0, {}, mldsa-public-key: bstr .size 1952, signature: bstr .size 3309]",
+			fields.join(", ")
+		),
+	);
+}
+
+fn assert_rejected(name: &str, diagnostic: &str, mutate: impl FnOnce(&mut Snapshot)) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate(&snapshot) {
+		Ok(()) => panic!("mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
+fn assert_ratchet_driver_rejected(
+	name: &str,
+	diagnostic: &str,
+	mutate: impl FnOnce(&mut Snapshot),
+) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate_ratchet_effect_driver(&snapshot) {
+		Ok(()) => panic!("ratchet driver mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"ratchet driver mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
+fn assert_finite_receive_fixture_rejected(
+	name: &str,
+	diagnostic: &str,
+	mutate: impl FnOnce(&mut Snapshot),
+) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate_finite_receive_state_fixture(&snapshot) {
+		Ok(()) => panic!("finite receive-state fixture mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"finite receive-state fixture mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
+fn assert_registration_lifecycle_rejected(
+	name: &str,
+	diagnostic: &str,
+	mutate: impl FnOnce(&mut Snapshot),
+) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate_manifest(&snapshot.interface)
+		.and_then(|()| validate_registration_lifecycle(&snapshot))
+	{
+		Ok(()) => panic!("registration lifecycle mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"registration lifecycle mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
+fn assert_initial_ratchet_rejected(
+	name: &str,
+	diagnostic: &str,
+	mutate: impl FnOnce(&mut Snapshot),
+) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate_manifest(&snapshot.interface)
+		.and_then(|()| validate_initial_ratchet_fidelity(&snapshot))
+	{
+		Ok(()) => panic!("initial ratchet mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"initial ratchet mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
+fn assert_later_registration_rejected(
+	name: &str,
+	diagnostic: &str,
+	mutate: impl FnOnce(&mut Snapshot),
+) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate_manifest(&snapshot.interface)
+		.and_then(|()| validate_later_registration_fidelity(&snapshot))
+		.and_then(|()| validate_makefile(&snapshot.makefile))
+	{
+		Ok(()) => panic!("later-registration mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"later-registration mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
+fn assert_post_registration_rejected(
+	name: &str,
+	diagnostic: &str,
+	mutate: impl FnOnce(&mut Snapshot),
+) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate_manifest(&snapshot.interface)
+		.and_then(|()| validate_post_registration_fidelity(&snapshot))
+	{
+		Ok(()) => panic!("post-registration mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"post-registration mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
+fn mutate_post_registration_query(source: &mut String, index: usize) {
+	let starts = source
+		.match_indices("query ")
+		.map(|(start, _)| start)
+		.collect::<Vec<_>>();
+	assert_eq!(starts.len(), 29, "post-registration mutation query count");
+	let start = starts[index];
+	let end = starts.get(index + 1).copied().unwrap_or(source.len());
+	let segment = &source[start..end];
+	let relative = segment
+		.find("event(")
+		.or_else(|| segment.find("attacker("))
+		.expect("post-registration query mutation anchor");
+	let insert = start + relative;
+	source.insert_str(insert, "mutated_");
+}
+
+fn mutate_post_registration_checker_result(source: &mut String, index: usize) {
+	let marker = format!("post_registration_expected[{}] =", index + 1);
+	let start = source
+		.find(&marker)
+		.unwrap_or_else(|| panic!("missing post-registration checker mutation {marker}"));
+	let relative = source[start..]
+		.find("Query ")
+		.expect("post-registration checker result mutation anchor");
+	source.insert_str(start + relative, "mutated_");
+}
+
+fn flip_post_registration_checker_polarity(source: &mut String, index: usize) {
+	let marker = format!("post_registration_expected[{}] =", index + 1);
+	let start = source
+		.find(&marker)
+		.unwrap_or_else(|| panic!("missing post-registration checker polarity {marker}"));
+	let next = if index == 28 {
+		"for (post_registration_index = 1; post_registration_index <= 29; post_registration_index++)"
+			.to_owned()
+	} else {
+		format!("post_registration_expected[{}] =", index + 2)
+	};
+	let relative_end = source[start..]
+		.find(&next)
+		.unwrap_or_else(|| panic!("missing post-registration checker polarity end {next}"));
+	let end = start + relative_end;
+	let assignment = &source[start..end];
+	let (from, to) = if assignment.contains("is true.") {
+		("is true.", "is false.")
+	} else {
+		("is false.", "is true.")
+	};
+	let relative = assignment
+		.find(from)
+		.expect("post-registration checker polarity mutation anchor");
+	let polarity = start + relative;
+	source.replace_range(polarity..polarity + from.len(), to);
+}
+
+fn omit_ctx(snapshot: &mut Snapshot, field: &str) {
+	let anchor = "    ctx_preimage(\n";
+	let call = snapshot.interface.find(anchor).unwrap();
+	let with_comma = format!("      {field},\n");
+	let without_comma = format!("      {field}\n");
+	let (relative, length) = snapshot.interface[call..]
+		.find(&with_comma)
+		.map(|start| (start, with_comma.len()))
+		.or_else(|| {
+			snapshot.interface[call..]
+				.find(&without_comma)
+				.map(|start| (start, without_comma.len()))
+		})
+		.unwrap();
+	let start = call + relative;
+	snapshot.interface.replace_range(start..start + length, "");
+}
+
+fn check_x25519_alias_runner_mutations() {
+	// These runner controls are separate from the later and post-registration matrices.
+	for (from, to) in [
+		("production-transcript-interface.pvl", "other-interface.pvl"),
+		("extraction/lib.pvl", "other-extraction.pvl"),
+		("environment.pvl", "other-environment.pvl"),
+		("phase2-x25519-alias-control.pv", "other-control.pv"),
+		("phase2-x25519-alias-theory.pvl", "other-theory.pvl"),
+		(
+			"\"exact-registration-origin-queries.pvl\"",
+			"\"other-queries.pvl\"",
+		),
+		(
+			"\n        or \"inj-event(BeaconAnyCommitted(\" in query",
+			"",
+		),
+		(
+			"\"canonical\", directory / \"crypto.pvl\", queries, \"true\", False",
+			"\"canonical\", alias, queries, \"true\", False",
+		),
+		(
+			"\"alias\", alias, queries, \"false\", False",
+			"\"alias\", alias, queries, \"true\", False",
+		),
+		(
+			"queries.write_text(selected_queries(directory))",
+			"queries.write_text(\"query attacker(root).\")",
+		),
+		(
+			"source[:start] + replacement + source[finish:]",
+			"replacement",
+		),
+		(
+			"command.extend((\"-lib\", str(library)))",
+			"command.extend((\"-lib\", str(queries)))",
+		),
+		("check=True,", "check=False,"),
+		("check_run(result.stdout, expected)", "print(result.stdout)"),
+		("if __name__ == \"__main__\":", "if False:"),
+	] {
+		let mut mutated = X25519_ALIAS_RUNNER.to_owned();
+		replace_once(&mut mutated, from, to);
+		assert!(
+			validate_x25519_alias_runner(
+				&mutated,
+				X25519_ALIAS_CONTROL,
+				EXACT_REGISTRATION_ORIGIN_QUERIES
+			)
+			.is_err(),
+			"X25519 alias runner mutation survived: {from}"
+		);
+	}
+	let changed_control = X25519_ALIAS_CONTROL.replace("KeepBeaconStatePrivate()", "0");
+	assert!(
+		validate_x25519_alias_runner(
+			X25519_ALIAS_RUNNER,
+			&changed_control,
+			EXACT_REGISTRATION_ORIGIN_QUERIES
+		)
+		.is_err()
+	);
+	let changed_queries = EXACT_REGISTRATION_ORIGIN_QUERIES.replace(
+		"inj-event(ServerCommitted(transcript))",
+		"event(ServerCommitted(transcript))",
+	);
+	assert!(
+		validate_x25519_alias_runner(X25519_ALIAS_RUNNER, X25519_ALIAS_CONTROL, &changed_queries)
+			.is_err()
+	);
+}
+
+fn check_general_registration_runner_mutations() {
+	// These runner controls supplement the independent later and post-registration matrices.
+	for (from, to) in [
+		(
+			"roles = project_initial_plan(roles, query_main, target)",
+			"roles = roles",
+		),
+		("code.count(signature) != 1", "False"),
+		(
+			"general_prefix_{target}(server_to_beacon_chain(main_root))",
+			"general_prefix_1(server_to_beacon_chain(main_root))",
+		),
+		("list(range(53))", "list(range(52))"),
+		("list(range(1, 24))", "list(range(1, 23))"),
+		(
+			"return list(range(1, target))",
+			"return list(range(1, target - 1))",
+		),
+		("if 23 not in order:", "if False:"),
+		("order.insert(order.index(10), 23)", "order.append(23)"),
+		("production-transcript-interface.pvl", "other-interface.pvl"),
+		("extraction/lib.pvl", "other-extraction.pvl"),
+		("environment.pvl", "other-environment.pvl"),
+		("check=True,", "check=False,"),
+		("timeout=timeout,", "timeout=None,"),
+		("if results != expected:", "if False:"),
+		("text.count(\"A trace has been found.\") != 1", "False"),
+		("if index in {11, 20}:", "if index in {11, 13, 20}:"),
+		(
+			"if index == 23 and 1 <= target <= 51:",
+			"if index in {10, 23} and 1 <= target <= 51:",
+		),
+		("if normalize(query) != normalize(expected)", "if False"),
+		("if target = {sequence(cached_target)} then", "if true then"),
+		("records.add(cached_target)", "records.clear()"),
+		(
+			"cache: receive_cache, send_chain: bitstring",
+			"cache: receive_cache, send_chain: chain",
+		),
+		(
+			"if witness\n        else f\"      out(c,",
+			"if True\n        else f\"      out(c,",
+		),
+		(
+			"\"new main_registration_session: bitstring;\"",
+			"\"main_registration_session: bitstring;\"",
+		),
+	] {
+		let mut changed = GENERAL_REGISTRATION_RUNNER.to_owned();
+		replace_once(&mut changed, from, to);
+		assert!(
+			validate_general_registration_runner(
+				&changed,
+				GENERAL_REGISTRATION_GENERATOR,
+				GENERAL_REGISTRATION_CHECKER_TESTS,
+				&GENERAL_REGISTRATION_ARTIFACTS
+			)
+			.is_err(),
+			"general runner mutation survived: {from}"
+		);
+	}
+	let mutations = [
+		("!GeneralAdmissionBeacon(", "GeneralAdmissionBeacon("),
+		(
+			"if general_sequence = general_expected_sequence then",
+			"if true then",
+		),
+		(
+			"inj-event(GeneralAdmissionRecordOrigin(",
+			"event(GeneralAdmissionRecordOrigin(",
+		),
+		("receive_cache_entry(s0, m0, tail)", "tail"),
+		(
+			"in(general_admitted_states, (=agreement",
+			"in(general_admitted_states, (agreement",
+		),
+		("out(c, response)", "out(c, INITIAL_SECRET)"),
+	];
+	for (index, (from, to)) in mutations.into_iter().enumerate() {
+		let mut changed = GENERAL_REGISTRATION_ARTIFACTS[index].1.to_owned();
+		replace_once(&mut changed, from, to);
+		let mut artifacts = GENERAL_REGISTRATION_ARTIFACTS;
+		artifacts[index].1 = &changed;
+		assert!(
+			validate_general_registration_runner(
+				GENERAL_REGISTRATION_RUNNER,
+				GENERAL_REGISTRATION_GENERATOR,
+				GENERAL_REGISTRATION_CHECKER_TESTS,
+				&artifacts
+			)
+			.is_err()
+		);
+	}
+	let generator = GENERAL_REGISTRATION_GENERATOR.replace("range(50)", "range(49)");
+	assert_ne!(generator, GENERAL_REGISTRATION_GENERATOR);
+	assert!(
+		validate_general_registration_runner(
+			GENERAL_REGISTRATION_RUNNER,
+			&generator,
+			GENERAL_REGISTRATION_CHECKER_TESTS,
+			&GENERAL_REGISTRATION_ARTIFACTS
+		)
+		.is_err()
+	);
+	let checker_tests = GENERAL_REGISTRATION_CHECKER_TESTS.replace(
+		"self.assertEqual(classified, 2444)",
+		"self.assertEqual(classified, 2443)",
+	);
+	assert_ne!(checker_tests, GENERAL_REGISTRATION_CHECKER_TESTS);
+	assert!(
+		validate_general_registration_runner(
+			GENERAL_REGISTRATION_RUNNER,
+			GENERAL_REGISTRATION_GENERATOR,
+			&checker_tests,
+			&GENERAL_REGISTRATION_ARTIFACTS
+		)
+		.is_err()
+	);
+}
+
+#[test]
+fn production_manifest_symbolic_model_and_adapters_are_exact() {
+	validate(&Snapshot::production()).unwrap();
+	validate_adapters().unwrap();
+	check_x25519_alias_runner_mutations();
+	check_general_registration_runner_mutations();
+}
+
+#[test]
+fn compiled_core_matches_the_canonical_transcript() {
+	let facts = parse_facts(INTERFACE).unwrap();
+	assert_eq!(
+		pqxdh::PQXDH_INFO.as_slice(),
+		decode_hex(fact_value(&facts, "domain.pqxdh.hex"))
+	);
+	assert_eq!(
+		SYM_RATCHET_INFO.as_slice(),
+		decode_hex(fact_value(&facts, "domain.symmetric.hex"))
+	);
+	assert_ne!(pqxdh::PQXDH_INFO.as_slice(), SYM_RATCHET_INFO.as_slice());
+	assert_eq!(pqxdh::PQXDH_INFO.len(), 46);
+	assert_eq!(SYM_RATCHET_INFO.len(), 41);
+	assert_eq!(pqxdh::ROOT_KEY_INPUT_SIZE, 192);
+	assert_eq!(pqxdh::INITIAL_RATCHET_KDF_OUTPUT_SIZE, 64);
+	assert_eq!(RATCHET_KDF_OUTPUT_SIZE, 76);
+
+	let secrets = PqxdhSharedSecrets {
+		dh1: [0x11; 32],
+		dh2: [0x22; 32],
+		dh3: [0x33; 32],
+		dh4: [0x44; 32],
+		kem_shared_secret: [0x55; 32],
+	};
+	let root = pqxdh::build_root_key_input(&secrets).unwrap();
+	let root = root.as_bytes();
+	assert_eq!(&root[0..32], &[0xff; 32]);
+	assert_eq!(&root[32..64], &secrets.dh1);
+	assert_eq!(&root[64..96], &secrets.dh2);
+	assert_eq!(&root[96..128], &secrets.dh3);
+	assert_eq!(&root[128..160], &secrets.dh4);
+	assert_eq!(&root[160..192], &secrets.kem_shared_secret);
+
+	let server_identity = [0xa1; 32];
+	let beacon_identity = [0xb2; 32];
+	let ad = pqxdh::build_associated_data(server_identity, beacon_identity);
+	assert_eq!(ad.len(), 281);
+	assert_eq!(&ad[153..281], &[0; 128]);
+	assert_eq!(ad[0], 0x01);
+	assert_eq!(&ad[1..33], &server_identity);
+	assert_eq!(ad[33], 0x01);
+	assert_eq!(&ad[34..66], &beacon_identity);
+	assert_eq!(&ad[66..112], pqxdh::PQXDH_INFO);
+	assert_eq!(&ad[112..153], SYM_RATCHET_INFO);
+
+	let prekey = [0xc3; 32];
+	let one_time = [0xd4; 32];
+	let pq_key = [0xe5; pqxdh::MLKEM768_PUBLIC_KEY_SIZE];
+	let started = pqxdh::beacon_start(
+		BeaconFresh::new(ServerBinding {
+			identity_public_key: server_identity,
+			identity_key_id: 7,
+		}),
+		BeaconStartInputs {
+			identity_public_key: beacon_identity,
+			prekey_public_key: prekey,
+			pq_public_key: pq_key,
+		},
+		BeaconCoins {
+			one_time_public_key: one_time,
+		},
+	);
+	assert_eq!(started.message.identity_key()[0], 0x01);
+	assert_eq!(&started.message.identity_key()[1..], &beacon_identity);
+	assert_eq!(&started.message.prekey()[0..2], &[0x04, 0x80]);
+	assert_eq!(&started.message.prekey()[2..], &prekey);
+	assert_eq!(&started.message.one_time_key()[0..2], &[0x04, 0x81]);
+	assert_eq!(&started.message.one_time_key()[2..], &one_time);
+	assert_eq!(started.message.pq_key()[0], 0x03);
+	assert_eq!(&started.message.pq_key()[1..], &pq_key);
+	let verified = pqxdh::validate_init_kex(started.message).unwrap();
+	assert_eq!(verified.beacon_prekey_public_key(), &prekey);
+	assert_eq!(verified.beacon_one_time_public_key(), &one_time);
+	assert_eq!(verified.beacon_pq_public_key(), &pq_key);
+
+	let initial_output: [u8; 64] = core::array::from_fn(|index| index as u8);
+	let server_chains = pqxdh::split_initial_ratchet_kdf_output(
+		&initial_output,
+		pqxdh::server_ratchet_initialization(),
+	);
+	let beacon_chains = pqxdh::split_initial_ratchet_kdf_output(
+		&initial_output,
+		pqxdh::beacon_ratchet_initialization(),
+	);
+	assert_eq!(
+		server_chains.send_chain().as_bytes(),
+		&initial_output[0..32]
+	);
+	assert_eq!(
+		server_chains.receive_chain().as_bytes(),
+		&initial_output[32..64]
+	);
+	assert_eq!(
+		beacon_chains.send_chain().as_bytes(),
+		&initial_output[32..64]
+	);
+	assert_eq!(
+		beacon_chains.receive_chain().as_bytes(),
+		&initial_output[0..32]
+	);
+
+	let step_output: [u8; 76] = core::array::from_fn(|index| index as u8);
+	let step = split_ratchet_kdf_output(&step_output);
+	assert_eq!(step.key().as_bytes(), &step_output[0..32]);
+	assert_eq!(step.next_chain().as_bytes(), &step_output[32..64]);
+	assert_eq!(step.nonce().as_bytes(), &step_output[64..76]);
+	assert_eq!(server_chains.send_chain().as_bytes(), step.key().as_bytes());
+	assert_eq!(
+		server_chains.receive_chain().as_bytes(),
+		step.next_chain().as_bytes()
+	);
+
+	let root = [0x36; 32];
+	let pending = pqxdh::start_server_ratchet_kdf(&root);
+	assert_eq!(pending.request().input(), &root);
+	assert_eq!(pending.request().info(), SYM_RATCHET_INFO);
+	let kernel = pqxdh::resume_initial_ratchet_kdf(
+		pending,
+		InitialRatchetKdfResponse::from_bytes(initial_output),
+	);
+	match begin_send(kernel, ()) {
+		SendStart::SendKdfRequested(request) => {
+			assert_eq!(request.request().input(), &initial_output[0..32]);
+			assert_eq!(request.request().info(), SYM_RATCHET_INFO);
+		}
+		SendStart::SendExhausted { .. } => panic!("fresh ratchet unexpectedly exhausted"),
+	}
+
+	assert_eq!(AEAD_KEY_SIZE, 32);
+	assert_eq!(AEAD_NONCE_SIZE, 12);
+	assert_eq!(AEAD_TAG_SIZE, 16);
+	assert_eq!(COMMITMENT_TRANSCRIPT_SIZE, 357);
+	let key = core::array::from_fn(|index| index as u8);
+	let nonce = core::array::from_fn(|index| 0x20 + index as u8);
+	let associated_data = core::array::from_fn(|index| (index as u8).wrapping_add(0x40));
+	let tag = core::array::from_fn(|index| 0xe0 + index as u8);
+	let sequence = 0x0807_0605_0403_0201;
+	let sender_id = 0x1817_1615_1413_1211;
+	let transcript =
+		build_commitment_transcript(&key, &nonce, &associated_data, &tag, sequence, sender_id);
+	let bytes = transcript.as_bytes();
+	assert_eq!(&bytes[0..32], &key);
+	assert_eq!(&bytes[32..44], &nonce);
+	assert_eq!(&bytes[44..325], &associated_data);
+	assert_eq!(&bytes[325..341], &tag);
+	assert_eq!(&bytes[341..349], &sequence.to_le_bytes());
+	assert_eq!(&bytes[349..357], &sender_id.to_le_bytes());
+}
+
+#[test]
+fn initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous() {
+	validate_manifest(INTERFACE).unwrap();
+	validate_initial_ratchet_fidelity(&Snapshot::production()).unwrap();
+	let facts = parse_facts(INTERFACE).unwrap();
+	assert_eq!(
+		facts
+			.iter()
+			.filter(|fact| fact.starts_with("initial_ratchet."))
+			.count(),
+		71
+	);
+
+	let root = core::array::from_fn::<_, 32, _>(|index| index as u8);
+	let output = core::array::from_fn::<_, 64, _>(|index| (index as u8).wrapping_add(1));
+	let server = pqxdh::resume_initial_ratchet_kdf(
+		pqxdh::start_server_ratchet_kdf(&root),
+		InitialRatchetKdfResponse::from_bytes(output),
+	);
+	let beacon = pqxdh::resume_initial_ratchet_kdf(
+		pqxdh::start_beacon_ratchet_kdf(&root),
+		InitialRatchetKdfResponse::from_bytes(output),
+	);
+	assert_eq!(
+		server.send_chain().as_bytes(),
+		beacon.receive_chain().as_bytes()
+	);
+	assert_eq!(
+		server.receive_chain().as_bytes(),
+		beacon.send_chain().as_bytes()
+	);
+	assert_eq!(server.send_chain().as_bytes(), &output[0..32]);
+	assert_eq!(server.receive_chain().as_bytes(), &output[32..64]);
+}
+
+#[test]
+fn later_registration_sequence_three_poststate_is_exact_and_nonvacuous() {
+	// This checks generic core receive staging. The production registration wrapper rejects sequence three.
+	validate_manifest(INTERFACE).unwrap();
+	validate_later_registration_fidelity(&Snapshot::production()).unwrap();
+	let facts = parse_facts(INTERFACE).unwrap();
+	assert_eq!(
+		facts
+			.iter()
+			.filter(|fact| fact.starts_with("later_registration."))
+			.count(),
+		68
+	);
+
+	fn response(key: u8, next_chain: u8, nonce: u8) -> RatchetKdfResponse {
+		let mut bytes = [0u8; RATCHET_KDF_OUTPUT_SIZE];
+		bytes[..32].fill(key);
+		bytes[32..64].fill(next_chain);
+		bytes[64..].fill(nonce);
+		RatchetKdfResponse::from_bytes(bytes)
+	}
+
+	let send_chain = [0x31; 32];
+	let chain1 = [0x41; 32];
+	let chain2 = [0x42; 32];
+	let chain3 = [0x43; 32];
+	let chain4 = [0x44; 32];
+	let kernel = ConcreteRatchetKernel::new(
+		RatchetChain::from_bytes(send_chain),
+		RatchetChain::from_bytes(chain1),
+	);
+	let ReceiveEffect::ReceiveKdfRequested(first) = begin_receive(kernel, 3, "seq3 payload") else {
+		panic!("fresh sequence-three receive must request its first derivation");
+	};
+	assert_eq!(first.request().input(), &chain1);
+	let ReceiveEffect::ReceiveKdfRequested(second) = first.resume(response(0x11, 0x42, 0x91))
+	else {
+		panic!("sequence-three receive must stage sequence one");
+	};
+	assert_eq!(second.request().input(), &chain2);
+	let ReceiveEffect::ReceiveKdfRequested(third) = second.resume(response(0x22, 0x43, 0x92))
+	else {
+		panic!("sequence-three receive must stage sequence two");
+	};
+	assert_eq!(third.request().input(), &chain3);
+	let ReceiveEffect::ReceiveOpenRequested(open) = third.resume(response(0x33, 0x44, 0x93)) else {
+		panic!("sequence-three target must produce one open capability");
+	};
+	assert_eq!(open.sequence(), 3);
+	assert_eq!(open.context(), &"seq3 payload");
+	let target = open.material().expect("sequence-three target material");
+	assert_eq!(target.key().as_bytes(), &[0x33; 32]);
+	assert_eq!(target.nonce().as_bytes(), &[0x93; 12]);
+	let (kernel, returned) = open.finish(Some("seq3 remainder"));
+
+	assert_eq!(returned, Some("seq3 remainder"));
+	assert_eq!(kernel.send_sequence(), 0);
+	assert_eq!(kernel.send_chain().as_bytes(), &send_chain);
+	assert_eq!(kernel.receive_sequence(), 3);
+	assert_eq!(kernel.receive_chain().as_bytes(), &chain4);
+	assert_eq!(kernel.receive_cache_len(), 2);
+	let (sequence1, material1) = kernel.receive_entry_at(0).expect("cached sequence one");
+	assert_eq!(sequence1, 1);
+	assert_eq!(material1.key().as_bytes(), &[0x11; 32]);
+	assert_eq!(material1.nonce().as_bytes(), &[0x91; 12]);
+	let (sequence2, material2) = kernel.receive_entry_at(1).expect("cached sequence two");
+	assert_eq!(sequence2, 2);
+	assert_eq!(material2.key().as_bytes(), &[0x22; 32]);
+	assert_eq!(material2.nonce().as_bytes(), &[0x92; 12]);
+	assert!(kernel.receive_entry_at(2).is_none());
+	assert!(
+		(0..kernel.receive_cache_len())
+			.filter_map(|slot| kernel.receive_entry_at(slot))
+			.all(|(sequence, material)| sequence != 3 && material.key().as_bytes() != &[0x33; 32])
+	);
+}
+
+const LATER_REGISTRATION_MUTATION_COUNT: usize = 387;
+
+#[test]
+fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
+	fn response(key: u8, next_chain: u8, nonce: u8) -> RatchetKdfResponse {
+		let mut bytes = [0u8; RATCHET_KDF_OUTPUT_SIZE];
+		bytes[..32].fill(key);
+		bytes[32..64].fill(next_chain);
+		bytes[64..].fill(nonce);
+		RatchetKdfResponse::from_bytes(bytes)
+	}
+
+	type Snapshot = (
+		u64,
+		u64,
+		[u8; 32],
+		[u8; 32],
+		Vec<Option<(u64, [u8; 32], [u8; 12])>>,
+		u8,
+	);
+	fn snapshot(kernel: &ConcreteRatchetKernel) -> Snapshot {
+		(
+			kernel.send_sequence(),
+			kernel.receive_sequence(),
+			*kernel.send_chain().as_bytes(),
+			*kernel.receive_chain().as_bytes(),
+			(0..50)
+				.map(|slot| {
+					kernel.receive_entry_at(slot).map(|(sequence, material)| {
+						(
+							sequence,
+							*material.key().as_bytes(),
+							*material.nonce().as_bytes(),
+						)
+					})
+				})
+				.collect(),
+			kernel.receive_cache_len(),
+		)
+	}
+
+	// These are supplied opaque KDF replies, not executions or security claims about HKDF.
+	let root = [0x71; 32];
+	let mut initial_output = [0x41; 64];
+	initial_output[32..].fill(0x31);
+	let kernel = pqxdh::resume_initial_ratchet_kdf(
+		pqxdh::start_beacon_ratchet_kdf(&root),
+		InitialRatchetKdfResponse::from_bytes(initial_output),
+	);
+	let ReceiveEffect::ReceiveKdfRequested(first) = begin_receive(kernel, 1, "seq1 registration")
+	else {
+		panic!("sequence-one registration starts with one derivation");
+	};
+	assert_eq!(first.request().input(), &[0x41; 32]);
+	let ReceiveEffect::ReceiveOpenRequested(open) = first.resume(response(0x11, 0x42, 0x91)) else {
+		panic!("sequence-one registration must open after one derivation");
+	};
+	assert_eq!(open.sequence(), 1);
+	let (kernel, returned) = open.finish(Some("seq1 registration remainder"));
+	assert_eq!(returned, Some("seq1 registration remainder"));
+	assert_eq!(kernel.receive_sequence(), 1);
+	assert_eq!(kernel.receive_cache_len(), 0);
+
+	// Continue the same established kernel with an ordinary out-of-order sequence-three frame.
+	let ReceiveEffect::ReceiveKdfRequested(second) = begin_receive(kernel, 3, "seq3 frame") else {
+		panic!("ordinary sequence-three receive must stage sequence two");
+	};
+	assert_eq!(second.request().input(), &[0x42; 32]);
+	let ReceiveEffect::ReceiveKdfRequested(third) = second.resume(response(0x22, 0x43, 0x92))
+	else {
+		panic!("sequence-two material must be staged");
+	};
+	assert_eq!(third.request().input(), &[0x43; 32]);
+	let ReceiveEffect::ReceiveOpenRequested(open) = third.resume(response(0x33, 0x44, 0x93)) else {
+		panic!("ordinary sequence-three receive must open with its separate target");
+	};
+	assert_eq!(open.sequence(), 3);
+	assert_eq!(open.material().unwrap().key().as_bytes(), &[0x33; 32]);
+	assert_eq!(open.material().unwrap().nonce().as_bytes(), &[0x93; 12]);
+	let (kernel, returned) = open.finish(Some("seq3 ordinary payload"));
+	assert_eq!(returned, Some("seq3 ordinary payload"));
+	assert_eq!(kernel.send_sequence(), 0);
+	assert_eq!(kernel.receive_sequence(), 3);
+	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
+	assert_eq!(kernel.receive_chain().as_bytes(), &[0x44; 32]);
+	assert_eq!(kernel.receive_cache_len(), 1);
+	assert_eq!(snapshot(&kernel).4[0], Some((2, [0x22; 32], [0x92; 12])));
+	assert!(snapshot(&kernel).4[1..].iter().all(Option::is_none));
+
+	// Carry that very kernel into ordinary receive; do not reconstruct its post-registration state.
+	let original_frame_context = ("original seq2 frame", 7u64, [0x51; 281]);
+	let full_cached_payload = "seq2 application payload";
+	let ReceiveEffect::ReceiveOpenRequested(open) =
+		begin_receive(kernel, 2, &original_frame_context)
+	else {
+		panic!("cached sequence-two must reach open directly, without KDF");
+	};
+	assert_eq!(open.sequence(), 2);
+	assert_eq!(*open.context(), &original_frame_context);
+	assert_eq!(open.material().unwrap().key().as_bytes(), &[0x22; 32]);
+	assert_eq!(open.material().unwrap().nonce().as_bytes(), &[0x92; 12]);
+	let (kernel, returned) = open.finish(Some(full_cached_payload));
+	assert_eq!(returned, Some(full_cached_payload));
+	assert_eq!(kernel.send_sequence(), 0);
+	assert_eq!(kernel.receive_sequence(), 3);
+	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
+	assert_eq!(kernel.receive_chain().as_bytes(), &[0x44; 32]);
+	assert_eq!(kernel.receive_cache_len(), 0);
+	assert!(snapshot(&kernel).4.iter().all(Option::is_none));
+
+	let before_replay = snapshot(&kernel);
+	let ReceiveEffect::ReceiveRejected { kernel, context } =
+		begin_receive(kernel, 2, &original_frame_context)
+	else {
+		panic!("consumed replay must reject without KDF, open, or plaintext return");
+	};
+	assert_eq!(context, &original_frame_context);
+	assert_eq!(snapshot(&kernel), before_replay);
+
+	let fourth_frame_context = ("genuine seq4 frame", 7u64, [0x51; 281]);
+	let ReceiveEffect::ReceiveKdfRequested(pending) =
+		begin_receive(kernel, 4, &fourth_frame_context)
+	else {
+		panic!("sequence-four needs exactly the next carried receive-chain step");
+	};
+	assert_eq!(pending.request().input(), &[0x44; 32]);
+	let ReceiveEffect::ReceiveOpenRequested(open) = pending.resume(response(0x44, 0x45, 0x94))
+	else {
+		panic!("one sequence-four derivation must immediately produce the target open");
+	};
+	assert_eq!(open.sequence(), 4);
+	assert_eq!(*open.context(), &fourth_frame_context);
+	assert_eq!(open.material().unwrap().key().as_bytes(), &[0x44; 32]);
+	assert_eq!(open.material().unwrap().nonce().as_bytes(), &[0x94; 12]);
+	let (kernel, returned) = open.finish(Some("seq4 application payload"));
+	assert_eq!(returned, Some("seq4 application payload"));
+	assert_eq!(kernel.send_sequence(), 0);
+	assert_eq!(kernel.receive_sequence(), 4);
+	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
+	assert_eq!(kernel.receive_chain().as_bytes(), &[0x45; 32]);
+	assert_eq!(kernel.receive_cache_len(), 0);
+	assert!(snapshot(&kernel).4.iter().all(Option::is_none));
+}
+
+const POST_REGISTRATION_MUTATION_COUNT: usize = 316;
+
+#[test]
+fn post_registration_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+
+	for fact in EXPECTED_FACTS
+		.iter()
+		.filter(|fact| fact.starts_with("post_registration."))
+	{
+		let key = fact.split_once('=').unwrap().0;
+		assert_post_registration_rejected(
+			&format!("post_registration_fact_{key}"),
+			key,
+			|snapshot| mutate_fact(&mut snapshot.interface, key, "mutated"),
+		);
+		mutation_count += 1;
+	}
+
+	for (name, source, marker, from, to, diagnostic) in [
+		(
+			"post_registration_source_cached_plan_changed",
+			"concrete",
+			"pub fn begin_receive<Context>(",
+			"if plan.derivations == 0 {",
+			"if plan.derivations == 1 {",
+			"post-registration source cached admission",
+		),
+		(
+			"post_registration_source_cached_lookup_sequence_changed",
+			"concrete",
+			"pub fn begin_receive<Context>(",
+			"prepare_cached_receive(&kernel.refined, sequence)",
+			"prepare_cached_receive(&kernel.refined, sequence + 1)",
+			"post-registration source cached admission",
+		),
+		(
+			"post_registration_source_cached_case_changed",
+			"concrete",
+			"pub fn begin_receive<Context>(",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared)",
+			"PreparedReceive::PreparedReceiveFutureCase(prepared)",
+			"post-registration source cached admission",
+		),
+		(
+			"post_registration_source_cached_sequence_changed",
+			"concrete",
+			"impl<Context> ReceiveOpen<Context>",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared) => prepared.sequence",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared) => prepared.sequence + 1",
+			"post-registration source cached sequence",
+		),
+		(
+			"post_registration_source_cached_slot_changed",
+			"concrete",
+			"pub fn material(&self)",
+			"prepared.target_slot as usize",
+			"prepared.last_slot as usize",
+			"post-registration source cached material",
+		),
+		(
+			"post_registration_source_cached_pair_changed",
+			"concrete",
+			"pub fn material(&self)",
+			"cached.sequence == prepared.sequence",
+			"cached.sequence != prepared.sequence",
+			"post-registration source cached material",
+		),
+		(
+			"post_registration_source_cached_material_removed",
+			"concrete",
+			"pub fn material(&self)",
+			"Some(&cached.material)",
+			"None",
+			"post-registration source cached material",
+		),
+		(
+			"post_registration_source_cached_publish_removed",
+			"concrete",
+			"pub fn finish<Plaintext>(",
+			"publish_cached_receive(&mut entry.refined, prepared);",
+			"let _ = prepared;",
+			"post-registration source success-only publication",
+		),
+		(
+			"post_registration_source_prepare_lookup_changed",
+			"refined",
+			"pub(super) fn prepare_cached_receive<",
+			"lookup_receive_key(state.control, sequence)",
+			"lookup_receive_key(state.control, sequence + 1)",
+			"post-registration source cached removal preparation",
+		),
+		(
+			"post_registration_source_prepare_control_pair_changed",
+			"refined",
+			"pub(super) fn prepare_cached_receive<",
+			"state.control.receive_key_at(target_slot) == Some(sequence)",
+			"state.control.receive_key_at(target_slot) == Some(sequence + 1)",
+			"post-registration source cached removal preparation",
+		),
+		(
+			"post_registration_source_prepare_material_pair_changed",
+			"refined",
+			"pub(super) fn prepare_cached_receive<",
+			"target.sequence == sequence",
+			"target.sequence != sequence",
+			"post-registration source cached removal preparation",
+		),
+		(
+			"post_registration_source_prepare_consume_flag_changed",
+			"refined",
+			"pub(super) fn prepare_cached_receive<",
+			"finish_receive_with_removal(state.control, sequence, target_slot, true)",
+			"finish_receive_with_removal(state.control, sequence, target_slot, false)",
+			"post-registration source cached removal preparation",
+		),
+		(
+			"post_registration_source_prepare_disposition_changed",
+			"refined",
+			"pub(super) fn prepare_cached_receive<",
+			"ReceiveDisposition::Consumed => {}",
+			"ReceiveDisposition::Retained => {}",
+			"post-registration source cached removal preparation",
+		),
+		(
+			"post_registration_source_prepare_last_slot_changed",
+			"refined",
+			"Some(PreparedCachedReceive {",
+			"last_slot,",
+			"last_slot: target_slot,",
+			"post-registration source cached removal preparation",
+		),
+		(
+			"post_registration_source_publish_target_changed",
+			"refined",
+			"pub(super) fn publish_cached_receive<",
+			"prepared.target_slot as usize",
+			"prepared.last_slot as usize",
+			"post-registration source cached removal publication",
+		),
+		(
+			"post_registration_source_publish_single_take_changed",
+			"refined",
+			"pub(super) fn publish_cached_receive<",
+			"state.receive_slots[last_index].take()",
+			"state.receive_slots[target_index].take()",
+			"post-registration source cached removal publication",
+		),
+		(
+			"post_registration_source_publish_move_changed",
+			"refined",
+			"pub(super) fn publish_cached_receive<",
+			"state.receive_slots[target_index] = moved;",
+			"state.receive_slots[last_index] = moved;",
+			"post-registration source cached removal publication",
+		),
+		(
+			"post_registration_source_publish_control_changed",
+			"refined",
+			"pub(super) fn publish_cached_receive<",
+			"state.control = prepared.committed_control;",
+			"let _ = prepared.committed_control;",
+			"post-registration source cached removal publication",
+		),
+	] {
+		assert_post_registration_rejected(name, diagnostic, |snapshot| {
+			let selected = if source == "concrete" {
+				&mut snapshot.core_ratchet_concrete
+			} else {
+				&mut snapshot.core_ratchet_refined
+			};
+			replace_once_after(selected, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"post_registration_runtime_cache_scan_shortened",
+			"(0..50)",
+			"(0..49)",
+			"post-registration runtime complete public cache observation",
+		),
+		(
+			"post_registration_runtime_kernel_reconstructed",
+			"let (kernel, returned) = open.finish(Some(\"seq3 ordinary payload\"));",
+			"let (kernel, returned) = open.finish(Some(\"seq3 ordinary payload\"));\n\tlet kernel = replacement_kernel;",
+			"post-registration runtime kernel was reconstructed or substituted",
+		),
+		(
+			"post_registration_runtime_cache_len_hidden",
+			"kernel.receive_cache_len(),",
+			"0,",
+			"post-registration runtime complete public cache observation",
+		),
+		(
+			"post_registration_runtime_payload_stripped",
+			"open.finish(Some(full_cached_payload))",
+			"open.finish(Some(full_cached_payload.as_bytes()))",
+			"post-registration runtime full cached payload",
+		),
+		(
+			"post_registration_runtime_replay_snapshot_changed",
+			"let before_replay = snapshot(&kernel);",
+			"let before_replay = snapshot(&replacement_kernel);",
+			"post-registration runtime exact replay rejection",
+		),
+		(
+			"post_registration_runtime_seq4_request_changed",
+			"assert_eq!(pending.request().input(), &[0x44; 32]);",
+			"assert_eq!(pending.request().input(), &[0x43; 32]);",
+			"post-registration runtime sequence-four KDF input",
+		),
+		(
+			"post_registration_runtime_final_counter_changed",
+			"assert_eq!(kernel.receive_sequence(), 4);",
+			"assert_eq!(kernel.receive_sequence(), 5);",
+			"post-registration runtime exact future poststate",
+		),
+	] {
+		assert_post_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.fidelity_test,
+				"fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous()",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, source, theorem) in [
+		(
+			"post_registration_lean_replay_anchor_removed",
+			"receive",
+			"theorem KernelRefines.receive_success_replay",
+		),
+		(
+			"post_registration_lean_cached_server_anchor_removed",
+			"session",
+			"theorem ConcreteSession.finish_cached_server_preserves",
+		),
+		(
+			"post_registration_lean_cached_beacon_anchor_removed",
+			"session",
+			"theorem ConcreteSession.finish_cached_beacon_preserves",
+		),
+		(
+			"post_registration_lean_execute_refines_anchor_removed",
+			"byte",
+			"theorem executeTrace_refines",
+		),
+		(
+			"post_registration_lean_execute_observed_anchor_removed",
+			"byte",
+			"theorem executeTrace_observed",
+		),
+		(
+			"post_registration_lean_execute_wf_anchor_removed",
+			"byte",
+			"theorem executeTrace_recvWf",
+		),
+		(
+			"post_registration_lean_run_refines_anchor_removed",
+			"boundary",
+			"theorem runTrace_refines",
+		),
+		(
+			"post_registration_lean_run_observed_anchor_removed",
+			"boundary",
+			"theorem runTrace_observed",
+		),
+		(
+			"post_registration_lean_history_refines_anchor_removed",
+			"history",
+			"theorem completeHistory_refines",
+		),
+		(
+			"post_registration_lean_history_observed_anchor_removed",
+			"history",
+			"theorem completeHistory_observed",
+		),
+	] {
+		assert_post_registration_rejected(name, "post-registration Lean", |snapshot| {
+			let selected = match source {
+				"receive" => &mut snapshot.lean_ratchet_receive_behavior,
+				"session" => &mut snapshot.lean_pqxdh_session_lifecycle,
+				"byte" => &mut snapshot.lean_byte_trace_refinement,
+				"boundary" => &mut snapshot.lean_boundary_execution,
+				"history" => &mut snapshot.lean_protocol_history,
+				_ => unreachable!(),
+			};
+			replace_once(selected, theorem, "theorem mutated_anchor");
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"post_registration_committed_hook_not_private",
+			"free later_registration_committed_handoff",
+			"[private]",
+			"",
+			"post-registration private committed hook",
+		),
+		(
+			"post_registration_server_hook_not_private",
+			"free later_registration_server_handoff",
+			"[private]",
+			"",
+			"post-registration private Server hook",
+		),
+		(
+			"post_registration_committed_hook_made_blocking",
+			"out(\n    later_registration_committed_handoff,",
+			")\n  |\n  if witness = LATER_REGISTRATION_OMITTED_GATE_WITNESS",
+			");\n  if witness = LATER_REGISTRATION_OMITTED_GATE_WITNESS",
+			"post-registration committed hook parallel placement and tuple",
+		),
+		(
+			"post_registration_server_hook_made_blocking",
+			"out(\n    later_registration_server_handoff,",
+			")\n  |\n  LaterSequenceRegistrationInitialFinish(",
+			");\n  LaterSequenceRegistrationInitialFinish(",
+			"post-registration Server hook parallel placement and tuple",
+		),
+	] {
+		assert_post_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.later_registration_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (hook, marker, fields, diagnostic) in [
+		(
+			"committed",
+			"out(\n    later_registration_committed_handoff,",
+			&[
+				"witness",
+				"session",
+				"root",
+				"response",
+				"assigned_key_id",
+				"authenticated_server_key_id",
+				"associated_data",
+				"committed_ratchet",
+			][..],
+			"post-registration committed hook parallel placement and tuple",
+		),
+		(
+			"server",
+			"out(\n    later_registration_server_handoff,",
+			&[
+				"session",
+				"root",
+				"original_response",
+				"substituted_response",
+				"first_frame",
+				"second_frame",
+				"third_frame",
+				"server_chain_3",
+				"associated_data",
+				"server_key_id",
+				"assigned_key_id",
+			][..],
+			"post-registration Server hook parallel placement and tuple",
+		),
+	] {
+		for field in fields {
+			assert_post_registration_rejected(
+				&format!("post_registration_{hook}_hook_{field}_changed"),
+				diagnostic,
+				|snapshot| {
+					replace_once_after(
+						&mut snapshot.later_registration_control,
+						marker,
+						field,
+						&format!("mutated_{field}"),
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for name in [
+		"POST_REGISTRATION_FAITHFUL",
+		"POST_REGISTRATION_RETAIN_CONSUMED",
+		"POST_REGISTRATION_CACHED",
+		"POST_REGISTRATION_REPLAY",
+		"POST_REGISTRATION_FUTURE",
+		"POST_REGISTRATION_SEQ4_PAYLOAD",
+		"POST_REGISTRATION_REPLAY_CANARY",
+	] {
+		assert_post_registration_rejected(
+			&format!("post_registration_declaration_{name}_changed"),
+			"post-registration",
+			|snapshot| {
+				replace_once(
+					&mut snapshot.post_registration_control,
+					&format!("free {name}"),
+					&format!("free MUTATED_{name}"),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for name in [
+		"post_registration_success",
+		"post_registration_failure",
+		"post_registration_return",
+		"post_registration_consume",
+		"post_registration_retain",
+	] {
+		assert_post_registration_rejected(
+			&format!("post_registration_constructor_{name}_changed"),
+			"post-registration",
+			|snapshot| {
+				replace_once(
+					&mut snapshot.post_registration_control,
+					&format!("fun {name}"),
+					&format!("fun mutated_{name}"),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_post_registration_rejected(
+		"post_registration_consumption_type_changed",
+		"post-registration consumption-mode type",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.post_registration_control,
+				"type post_registration_consumption_mode",
+				"type mutated_post_registration_consumption_mode",
+			);
+		},
+	);
+	mutation_count += 1;
+	for name in [
+		"PostRegistrationEstablishedAdvance",
+		"PostRegistrationHandoff",
+		"PostRegistrationBranchStarted",
+		"PostRegistrationAttempted",
+		"PostRegistrationKdfCalled",
+		"PostRegistrationOpenCalled",
+		"PostRegistrationReturned",
+		"PostRegistrationRejected",
+		"PostRegistrationReplayAccepted",
+		"PostRegistrationFinalState",
+		"PostRegistrationTargetUnavailable",
+		"PostRegistrationServerFrameSent",
+	] {
+		assert_post_registration_rejected(
+			&format!("post_registration_event_{name}_shape_changed"),
+			"post-registration",
+			|snapshot| {
+				replace_once(
+					&mut snapshot.post_registration_control,
+					&format!("event {name}("),
+					&format!("event Mutated{name}("),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"post_registration_consume_equation_changed",
+			"post_registration_finish_cache(post_registration_consume(), entry_cache, consumed_cache) = consumed_cache",
+			"post_registration_finish_cache(post_registration_consume(), entry_cache, consumed_cache) = entry_cache",
+			"post-registration faithful cache consumption equation",
+		),
+		(
+			"post_registration_retain_equation_changed",
+			"post_registration_finish_cache(post_registration_retain(), entry_cache, consumed_cache) = entry_cache",
+			"post_registration_finish_cache(post_registration_retain(), entry_cache, consumed_cache) = consumed_cache",
+			"post-registration retained-cache counterfactual equation",
+		),
+	] {
+		assert_post_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.post_registration_control, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"post_registration_cached_sender_gate_changed",
+			"let PostRegistrationReceiveCached(",
+			"sender_key_id = expected_server_key_id",
+			"sender_key_id = assigned_key_id",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_sequence_gate_changed",
+			"let PostRegistrationReceiveCached(",
+			"frame_sequence = next_sequence(first_sequence())",
+			"frame_sequence = first_sequence()",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_counter_gate_changed",
+			"let PostRegistrationReceiveCached(",
+			"receive_sequence = next_sequence(next_sequence(first_sequence()))",
+			"receive_sequence = first_sequence()",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_head_sequence_changed",
+			"let PostRegistrationReceiveCached(",
+			"=next_sequence(first_sequence()), material_2, =receive_cache_empty()",
+			"=first_sequence(), material_2, =receive_cache_empty()",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_tail_sequence_changed",
+			"let PostRegistrationReceiveCached(",
+			"material_2, =receive_cache_empty()",
+			"material_2, =mutated_cache",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_open_material_changed",
+			"let PostRegistrationReceiveCached(",
+			"open_frame(material_2, associated_data, frame_sequence, expected_server_key_id, frame)",
+			"open_frame(material_1, associated_data, frame_sequence, expected_server_key_id, frame)",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_open_ad_changed",
+			"let PostRegistrationReceiveCached(",
+			"open_frame(material_2, associated_data, frame_sequence, expected_server_key_id, frame)",
+			"open_frame(material_2, mutated_ad, frame_sequence, expected_server_key_id, frame)",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_consumed_cache_changed",
+			"let PostRegistrationReceiveCached(",
+			"let consumed_cache = receive_cache_empty()",
+			"let consumed_cache = entry_cache",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_finish_mode_changed",
+			"let PostRegistrationReceiveCached(",
+			"post_registration_finish_cache(mode, entry_cache, consumed_cache)",
+			"post_registration_finish_cache(post_registration_retain(), entry_cache, consumed_cache)",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_output_counter_changed",
+			"let PostRegistrationReceiveCached(",
+			"receive_state(receive_sequence, receive_chain, output_cache)",
+			"receive_state(frame_sequence, receive_chain, output_cache)",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_full_payload_changed",
+			"let PostRegistrationReceiveCached(",
+			"post_registration_return(witness, request_kind, opened)",
+			"post_registration_return(witness, request_kind, mutated_plaintext)",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_reply_state_changed",
+			"let PostRegistrationReceiveCached(",
+			"post_registration_success(output_ratchet, opened)",
+			"post_registration_success(entry_ratchet, opened)",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_replay_rejection_input_changed",
+			"let PostRegistrationReceiveCached(",
+			"frame, entry_ratchet, entry_ratchet",
+			"frame, mutated_ratchet, entry_ratchet",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_replay_rejection_output_changed",
+			"let PostRegistrationReceiveCached(",
+			"frame, entry_ratchet, entry_ratchet",
+			"frame, entry_ratchet, mutated_ratchet",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_replay_failure_reply_changed",
+			"let PostRegistrationReceiveCached(",
+			"post_registration_failure(entry_ratchet)",
+			"post_registration_failure(mutated_ratchet)",
+			"post-registration cached success and replay-rejection flow",
+		),
+	] {
+		assert_post_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.post_registration_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_post_registration_rejected(
+		"post_registration_cached_emits_kdf",
+		"post-registration cached KDF call",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.post_registration_control,
+				"let PostRegistrationReceiveCached(",
+				"event PostRegistrationOpenCalled",
+				"event PostRegistrationKdfCalled(witness, request_kind, session, material_1);\n    event PostRegistrationOpenCalled",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to) in [
+		(
+			"post_registration_future_frame_destructuring_changed",
+			"let crypto_frame(ciphertext, tag, commitment, frame_sequence, sender_key_id) = frame",
+			"let crypto_frame(ciphertext, tag, commitment, frame_sequence, mutated_sender) = frame",
+		),
+		(
+			"post_registration_future_sender_gate_changed",
+			"sender_key_id = expected_server_key_id",
+			"sender_key_id = assigned_key_id",
+		),
+		(
+			"post_registration_future_ratchet_destructuring_changed",
+			"let later_registration_ratchet_state(send_sequence, send_chain, receive_entry) = entry_ratchet",
+			"let later_registration_ratchet_state(send_sequence, send_chain, receive_entry) = mutated_ratchet",
+		),
+		(
+			"post_registration_future_receive_destructuring_changed",
+			"let receive_state(receive_sequence, receive_chain, entry_cache) = receive_entry",
+			"let receive_state(receive_sequence, receive_chain, entry_cache) = mutated_receive_entry",
+		),
+		(
+			"post_registration_future_sequence_gate_changed",
+			"frame_sequence = next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"frame_sequence = next_sequence(next_sequence(first_sequence()))",
+		),
+		(
+			"post_registration_future_entry_counter_changed",
+			"receive_sequence = next_sequence(next_sequence(first_sequence()))",
+			"receive_sequence = first_sequence()",
+		),
+		(
+			"post_registration_future_cache_empty_gate_changed",
+			"if entry_cache = receive_cache_empty() then",
+			"if entry_cache = mutated_cache then",
+		),
+		(
+			"post_registration_future_kdf_chain_changed",
+			"POST_REGISTRATION_FUTURE, session, receive_chain",
+			"POST_REGISTRATION_FUTURE, session, send_chain",
+		),
+		(
+			"post_registration_future_material_changed",
+			"let material_4 = ratchet_material(receive_chain)",
+			"let material_4 = ratchet_material(send_chain)",
+		),
+		(
+			"post_registration_future_next_chain_changed",
+			"let receive_chain_5 = ratchet_next(receive_chain)",
+			"let receive_chain_5 = receive_chain",
+		),
+		(
+			"post_registration_future_open_material_changed",
+			"open_frame(material_4, associated_data, frame_sequence, expected_server_key_id, frame)",
+			"open_frame(material_2, associated_data, frame_sequence, expected_server_key_id, frame)",
+		),
+		(
+			"post_registration_future_open_sender_changed",
+			"open_frame(material_4, associated_data, frame_sequence, expected_server_key_id, frame)",
+			"open_frame(material_4, associated_data, frame_sequence, assigned_key_id, frame)",
+		),
+		(
+			"post_registration_future_output_counter_changed",
+			"receive_state(frame_sequence, receive_chain_5, entry_cache)",
+			"receive_state(receive_sequence, receive_chain_5, entry_cache)",
+		),
+		(
+			"post_registration_future_output_chain_changed",
+			"receive_state(frame_sequence, receive_chain_5, entry_cache)",
+			"receive_state(frame_sequence, receive_chain, entry_cache)",
+		),
+		(
+			"post_registration_future_return_payload_changed",
+			"post_registration_return(witness, POST_REGISTRATION_FUTURE, opened)",
+			"post_registration_return(witness, POST_REGISTRATION_FUTURE, mutated_plaintext)",
+		),
+	] {
+		assert_post_registration_rejected(
+			name,
+			"post-registration exact sequence-four flow",
+			|snapshot| {
+				replace_once_after(
+					&mut snapshot.post_registration_control,
+					"let PostRegistrationReceiveFuture(",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"post_registration_trace_cached_parallel_removed",
+			"  |\n    in(cached_reply",
+			"  ;\n    in(cached_reply",
+		),
+		(
+			"post_registration_trace_replay_parallel_removed",
+			"    |\n      in(replay_reply",
+			"    ;\n      in(replay_reply",
+		),
+		(
+			"post_registration_trace_cached_state_changed",
+			"committed_ratchet, second_frame, cached_reply",
+			"mutated_ratchet, second_frame, cached_reply",
+		),
+		(
+			"post_registration_trace_cached_frame_changed",
+			"committed_ratchet, second_frame, cached_reply",
+			"committed_ratchet, fourth_frame, cached_reply",
+		),
+		(
+			"post_registration_trace_replay_state_changed",
+			"cached_ratchet, second_frame, replay_reply",
+			"committed_ratchet, second_frame, replay_reply",
+		),
+		(
+			"post_registration_trace_replay_frame_changed",
+			"cached_ratchet, second_frame, replay_reply",
+			"cached_ratchet, fourth_frame, replay_reply",
+		),
+		(
+			"post_registration_trace_future_not_failure_only",
+			"let post_registration_failure(replay_ratchet) = replay_result in",
+			"let post_registration_success(replay_ratchet, replayed) = replay_result in",
+		),
+		(
+			"post_registration_trace_future_entry_changed",
+			"associated_data, replay_ratchet, fourth_frame",
+			"associated_data, cached_ratchet, fourth_frame",
+		),
+		(
+			"post_registration_trace_canary_witness_changed",
+			"witness = POST_REGISTRATION_RETAIN_CONSUMED",
+			"witness = POST_REGISTRATION_FAITHFUL",
+		),
+	] {
+		assert_post_registration_rejected(name, "post-registration", |snapshot| {
+			replace_once_after(
+				&mut snapshot.post_registration_control,
+				"let PostRegistrationTrace(",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"post_registration_join_server_chain_changed",
+			"ratchet_next(server_chain_3)",
+			"ratchet_next(mutated_chain)",
+		),
+		(
+			"post_registration_join_seq4_material_changed",
+			"ratchet_material(server_chain_4)",
+			"ratchet_material(server_chain_3)",
+		),
+		(
+			"post_registration_join_seq4_sequence_changed",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"next_sequence(next_sequence(first_sequence()))",
+		),
+		(
+			"post_registration_join_seq4_seal_material_changed",
+			"seal_frame(server_material_4, server_associated_data",
+			"seal_frame(server_chain_4, server_associated_data",
+		),
+		(
+			"post_registration_join_seq4_seal_ad_changed",
+			"seal_frame(server_material_4, server_associated_data",
+			"seal_frame(server_material_4, mutated_ad",
+		),
+		(
+			"post_registration_join_seq4_seal_sender_changed",
+			"fourth_sequence, server_key_id, POST_REGISTRATION_SEQ4_PAYLOAD",
+			"fourth_sequence, server_assigned_key_id, POST_REGISTRATION_SEQ4_PAYLOAD",
+		),
+		(
+			"post_registration_join_committed_witness_changed",
+			"=LATER_REGISTRATION_INITIAL_WITNESS,",
+			"=LATER_REGISTRATION_OMITTED_GATE_WITNESS,",
+		),
+		(
+			"post_registration_join_session_not_exact",
+			"=session,",
+			"session_2: bitstring,",
+		),
+		(
+			"post_registration_join_root_not_exact",
+			"=root,",
+			"root_2: bitstring,",
+		),
+		(
+			"post_registration_join_response_not_exact",
+			"=original_response,",
+			"response_2: bitstring,",
+		),
+		(
+			"post_registration_join_assigned_id_changed",
+			"assigned_key_id = server_assigned_key_id",
+			"assigned_key_id = server_key_id",
+		),
+		(
+			"post_registration_join_server_id_changed",
+			"expected_server_key_id = server_key_id",
+			"expected_server_key_id = server_assigned_key_id",
+		),
+		(
+			"post_registration_join_ad_changed",
+			"associated_data = server_associated_data",
+			"associated_data = mutated_ad",
+		),
+	] {
+		assert_post_registration_rejected(
+			name,
+			"post-registration private tuple join and sequence-four origin",
+			|snapshot| {
+				replace_once_after(
+					&mut snapshot.post_registration_control,
+					"let PostRegistrationControl() =",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (call, fields) in [
+		(
+			0usize,
+			&[
+				"POST_REGISTRATION_FAITHFUL",
+				"post_registration_consume()",
+				"session",
+				"root",
+				"original_response",
+				"expected_server_key_id",
+				"assigned_key_id",
+				"associated_data",
+				"committed_ratchet",
+				"second_frame",
+				"fourth_frame",
+			][..],
+		),
+		(
+			1,
+			&[
+				"POST_REGISTRATION_RETAIN_CONSUMED",
+				"post_registration_retain()",
+				"session",
+				"root",
+				"original_response",
+				"expected_server_key_id",
+				"assigned_key_id",
+				"associated_data",
+				"committed_ratchet",
+				"second_frame",
+				"fourth_frame",
+			][..],
+		),
+	] {
+		for (argument, field) in fields.iter().enumerate() {
+			assert_post_registration_rejected(
+				&format!("post_registration_trace_{call}_argument_{argument}_{field}_changed"),
+				"post-registration faithful/counterfactual sole delta",
+				|snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.post_registration_control,
+						"let PostRegistrationControl() =",
+						"PostRegistrationTrace",
+						call,
+						argument,
+						"mutated_argument",
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for index in 0..29 {
+		assert_post_registration_rejected(
+			&format!("post_registration_query_{}_changed", index + 1),
+			"post-registration exact query",
+			|snapshot| {
+				mutate_post_registration_query(&mut snapshot.post_registration_queries, index)
+			},
+		);
+		mutation_count += 1;
+		assert_post_registration_rejected(
+			&format!("post_registration_checker_result_{}_changed", index + 1),
+			"post-registration exact result-checker branch",
+			|snapshot| {
+				mutate_post_registration_checker_result(
+					&mut snapshot.proverif_result_checker,
+					index,
+				)
+			},
+		);
+		mutation_count += 1;
+		assert_post_registration_rejected(
+			&format!("post_registration_checker_polarity_{}_changed", index + 1),
+			"post-registration checker exact polarity",
+			|snapshot| {
+				flip_post_registration_checker_polarity(
+					&mut snapshot.proverif_result_checker,
+					index,
+				)
+			},
+		);
+		mutation_count += 1;
+	}
+	for (name, from, to, diagnostic) in [
+		(
+			"post_registration_checker_count_changed",
+			"if (query_count != 29)",
+			"if (query_count != 26)",
+			"post-registration checker query count",
+		),
+		(
+			"post_registration_checker_loop_changed",
+			"post_registration_index <= 29",
+			"post_registration_index <= 26",
+			"post-registration checker complete result loop",
+		),
+	] {
+		assert_post_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.proverif_result_checker,
+				"} else if (scenario == \"post-registration-ratchet\") {",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_post_registration_rejected(
+		"post_registration_main_join_changed",
+		"post-registration main process",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.post_registration_main,
+				"PostRegistrationControl()",
+				"MutatedPostRegistrationControl()",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_post_registration_rejected(
+		"post_registration_make_scenario_removed",
+		"post-registration Make scenario enumeration",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.makefile,
+				"\tpost-registration-ratchet \\\n",
+				"",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (name, from, to) in [
+		(
+			"post_registration_make_dependency_changed",
+			"check-proverif-post-registration-ratchet: check-proverif-extraction",
+			"check-proverif-post-registration-ratchet:",
+		),
+		(
+			"post_registration_make_common_libs_changed",
+			"$(PROVERIF_COMMON_LIBS)",
+			"$(PROVERIF_CRYPTO_LIBS)",
+		),
+		(
+			"post_registration_make_theory_changed",
+			"-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl",
+			"-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-theory.pvl",
+		),
+		(
+			"post_registration_make_later_control_changed",
+			"-lib $(PROVERIF_DIR)/later-sequence-registration-control.pvl",
+			"-lib $(PROVERIF_DIR)/mutated-later-control.pvl",
+		),
+		(
+			"post_registration_make_control_changed",
+			"-lib $(PROVERIF_DIR)/post-registration-ratchet-control.pvl",
+			"-lib $(PROVERIF_DIR)/mutated-post-control.pvl",
+		),
+		(
+			"post_registration_make_queries_changed",
+			"-lib $(PROVERIF_DIR)/post-registration-ratchet-queries.pvl",
+			"-lib $(PROVERIF_DIR)/mutated-post-queries.pvl",
+		),
+		(
+			"post_registration_make_main_changed",
+			"$(PROVERIF_DIR)/post-registration-ratchet.pv",
+			"$(PROVERIF_DIR)/mutated-post.pv",
+		),
+		(
+			"post_registration_make_checker_changed",
+			"awk -v scenario=post-registration-ratchet -f '$(PROVERIF_CHECKER)'",
+			"awk -v scenario=mutated-post -f '$(PROVERIF_CHECKER)'",
+		),
+	] {
+		assert_post_registration_rejected(name, "post-registration Make wiring", |snapshot| {
+			replace_once_after(
+				&mut snapshot.makefile,
+				"check-proverif-post-registration-ratchet:",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"post_registration_established_initial_counter",
+			"let receive_state(=first_sequence(), receive_chain_2, =receive_cache_empty())",
+			"let receive_state(=next_sequence(first_sequence()), receive_chain_2, =receive_cache_empty())",
+		),
+		(
+			"post_registration_established_initial_cache",
+			"receive_chain_2, =receive_cache_empty()) = initial_receive",
+			"receive_chain_2, initial_cache) = initial_receive",
+		),
+		(
+			"post_registration_established_material2",
+			"let material_2 = ratchet_material(receive_chain_2)",
+			"let material_2 = ratchet_material(send_chain)",
+		),
+		(
+			"post_registration_established_chain3",
+			"let receive_chain_3 = ratchet_next(receive_chain_2)",
+			"let receive_chain_3 = ratchet_next(send_chain)",
+		),
+		(
+			"post_registration_established_material3",
+			"let material_3 = ratchet_material(receive_chain_3)",
+			"let material_3 = ratchet_material(receive_chain_2)",
+		),
+		(
+			"post_registration_established_opening",
+			"open_frame(material_3, associated_data, third_sequence, expected_server_key_id, third_frame)",
+			"open_frame(material_2, associated_data, third_sequence, expected_server_key_id, third_frame)",
+		),
+		(
+			"post_registration_established_next_chain",
+			"receive_state(third_sequence, ratchet_next(receive_chain_3),",
+			"receive_state(third_sequence, receive_chain_3,",
+		),
+		(
+			"post_registration_established_cached_target",
+			"receive_cache_entry(next_sequence(first_sequence()), material_2, receive_cache_empty())",
+			"receive_cache_entry(first_sequence(), material_2, receive_cache_empty())",
+		),
+		(
+			"post_registration_established_advance_origin",
+			"event PostRegistrationEstablishedAdvance(session, root, original_response, third_frame, initial_ratchet, committed_ratchet);",
+			"event PostRegistrationEstablishedAdvance(session, root, original_response, third_frame, committed_ratchet, committed_ratchet);",
+		),
+		(
+			"post_registration_established_handoff_state",
+			"associated_data, committed_ratchet);",
+			"associated_data, initial_ratchet);",
+		),
+	] {
+		assert_post_registration_rejected(
+			name,
+			"post-registration private tuple join and sequence-four origin",
+			|snapshot| {
+				replace_once_after(
+					&mut snapshot.post_registration_control,
+					"let PostRegistrationControl() =",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, POST_REGISTRATION_MUTATION_COUNT);
+}
+
+#[test]
+fn later_registration_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+
+	for fact in EXPECTED_FACTS
+		.iter()
+		.filter(|fact| fact.starts_with("later_registration."))
+	{
+		let key = fact.split_once('=').unwrap().0;
+		assert_later_registration_rejected(
+			&format!("later_registration_fact_{key}"),
+			key,
+			|snapshot| mutate_fact(&mut snapshot.interface, key, "mutated"),
+		);
+		mutation_count += 1;
+	}
+
+	// Moved registration controls are exercised against core phases and native drivers below.
+	for (name, from, to, diagnostic) in [
+		(
+			"later_registration_adapter_sequence_substituted",
+			"admitted.ciphertext,\n\t\tadmitted.sequence,\n\t\tadmitted.sender,",
+			"admitted.ciphertext,\n\t\texpected_sender_kid,\n\t\tadmitted.sender,",
+			"later-registration adapter parsed sequence",
+		),
+		(
+			"later_registration_adapter_open_material_substituted",
+			"let material = match opening.material()",
+			"let material = match replacement_material",
+			"CryptoFrame selected receive material and sequence",
+		),
+		(
+			"later_registration_adapter_open_sequence_substituted",
+			"opening.sequence(),",
+			"replacement_sequence,",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"later_registration_adapter_open_context_substituted",
+			"let context = opening.context();",
+			"let context = replacement_context;",
+			"CryptoFrame selected receive material and sequence",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_record_surface(snapshot, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, argument, replacement) in [] {
+		assert_later_registration_rejected(
+			name,
+			"later-registration adapter general receive start",
+			|snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.adapter_ratchet,
+					"pub(crate) fn decrypt_message_with_ratchet(",
+					"verified_ratchet::begin_receive",
+					0,
+					argument,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_later_registration_rejected(
+		"later_registration_adapter_adds_first_sequence_gate",
+		"record effects",
+		|snapshot| {
+			registration_effects::replace_contract(
+				snapshot,
+				"ratchet",
+				"",
+				"decrypt_payload_with_ratchet",
+				"let effect = records::begin_record_receive(",
+				"if key_seq != 1 {return None;} let effect = records::begin_record_receive(",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, source, marker, from, to, diagnostic) in [
+		(
+			"later_registration_core_max_gap_changed",
+			"control",
+			"pub const RATCHET_MAX_GAP",
+			"50",
+			"49",
+			"later-registration core maximum gap",
+		),
+		(
+			"later_registration_core_plan_difference_changed",
+			"control",
+			"pub(crate) fn plan_receive_until(",
+			"target - state.receive_sequence",
+			"target.saturating_sub(state.receive_sequence)",
+			"later-registration core future receive plan",
+		),
+		(
+			"later_registration_core_plan_skipped_changed",
+			"control",
+			"pub(crate) fn plan_receive_until(",
+			"derivations - 1",
+			"derivations",
+			"later-registration core future receive plan",
+		),
+		(
+			"later_registration_core_plan_bound_removed",
+			"control",
+			"pub(crate) fn plan_receive_until(",
+			"skipped > RATCHET_MAX_GAP || cached > RATCHET_MAX_GAP - skipped",
+			"false",
+			"later-registration core future receive plan",
+		),
+		(
+			"later_registration_core_skipped_cache_bypassed",
+			"control",
+			"pub(crate) fn advance_receive(",
+			"state.receive_cache.append(next)",
+			"replacement_cache.append(next)",
+			"later-registration core skipped-key advance",
+		),
+		(
+			"later_registration_core_target_counter_substituted",
+			"control",
+			"pub(crate) fn advance_receive_target(",
+			"receive_sequence: next",
+			"receive_sequence: state.receive_sequence",
+			"later-registration core target advance",
+		),
+		(
+			"later_registration_core_begin_plan_substituted",
+			"concrete",
+			"pub fn begin_receive<Context>(",
+			"plan_receive_until(kernel.refined.control, target)",
+			"plan_receive_until(kernel.refined.control, target + 1)",
+			"later-registration core begin plan",
+		),
+		(
+			"later_registration_core_begin_first_slot_substituted",
+			"concrete",
+			"pub fn begin_receive<Context>(",
+			"kernel.refined.control.receive_cache_len()",
+			"0",
+			"later-registration core first live cache slot",
+		),
+		(
+			"later_registration_core_begin_remaining_substituted",
+			"concrete",
+			"pub fn begin_receive<Context>(",
+			"let remaining = plan.derivations as u8;",
+			"let remaining = skipped as u8;",
+			"later-registration core remaining derivations",
+		),
+		(
+			"later_registration_core_begin_empty_preflight_inverted",
+			"concrete",
+			"pub fn begin_receive<Context>(",
+			"!refined_receive_slots_are_empty",
+			"refined_receive_slots_are_empty",
+			"later-registration core empty destination preflight",
+		),
+		(
+			"later_registration_core_begin_request_uses_send_chain",
+			"concrete",
+			"pub fn begin_receive<Context>(",
+			"kernel.refined.receive_chain.as_bytes()",
+			"kernel.refined.send_chain.as_bytes()",
+			"later-registration core initial receive-chain request",
+		),
+		(
+			"later_registration_core_begin_entry_substituted",
+			"concrete",
+			"pub fn begin_receive<Context>(",
+			"ReceiveEffect::ReceiveKdfRequested(ReceiveKdf {\n\t\tentry: kernel,",
+			"ReceiveEffect::ReceiveKdfRequested(ReceiveKdf {\n\t\tentry: replacement_kernel,",
+			"later-registration core private receive staging",
+		),
+		(
+			"later_registration_core_begin_skipped_not_zero",
+			"concrete",
+			"ReceiveEffect::ReceiveKdfRequested(ReceiveKdf {",
+			"skipped: 0,",
+			"skipped: 1,",
+			"later-registration core private receive staging",
+		),
+		(
+			"later_registration_core_final_branch_shifted",
+			"concrete",
+			"impl<Context> ReceiveKdf<Context>",
+			"self.remaining == 1",
+			"self.remaining == 2",
+			"later-registration core final-target branch",
+		),
+		(
+			"later_registration_core_final_target_guard_removed",
+			"concrete",
+			"impl<Context> ReceiveKdf<Context>",
+			"if !(sequence == self.target) {",
+			"if false {",
+			"later-registration core final target equality gate",
+		),
+		(
+			"later_registration_core_pending_chain_substituted",
+			"concrete",
+			"impl<Context> ReceiveKdf<Context>",
+			"final_receive_chain: stepped.chain,",
+			"final_receive_chain: replacement_chain,",
+			"later-registration core pending target separation",
+		),
+		(
+			"later_registration_core_pending_material_substituted",
+			"concrete",
+			"impl<Context> ReceiveKdf<Context>",
+			"target_material: stepped.material,",
+			"target_material: replacement_material,",
+			"later-registration core pending target separation",
+		),
+		(
+			"later_registration_core_final_validation_bypassed",
+			"concrete",
+			"impl<Context> ReceiveKdf<Context>",
+			"if !pending_receive_is_valid(&self.entry.refined, &pending, self.target) {",
+			"if false {",
+			"later-registration core final pending validation gate",
+		),
+		(
+			"later_registration_core_nonfinal_uses_target_advance",
+			"concrete",
+			"impl<Context> ReceiveKdf<Context>",
+			"advance_receive(self.working_control)",
+			"advance_receive_target(self.working_control)",
+			"later-registration core nonfinal skipped step",
+		),
+		(
+			"later_registration_core_staged_sequence_substituted",
+			"concrete",
+			"impl<Context> ReceiveKdf<Context>",
+			"CachedReceiveKey {\n\t\t\tsequence,",
+			"CachedReceiveKey {\n\t\t\tsequence: self.target,",
+			"later-registration core skipped material pair",
+		),
+		(
+			"later_registration_core_staged_material_substituted",
+			"concrete",
+			"impl<Context> ReceiveKdf<Context>",
+			"self.staged_slots[slot_index] = Some(CachedReceiveKey {\n\t\t\tsequence,\n\t\t\tmaterial: stepped.material,",
+			"self.staged_slots[slot_index] = Some(CachedReceiveKey {\n\t\t\tsequence,\n\t\t\tmaterial: replacement_material,",
+			"later-registration core skipped material pair",
+		),
+		(
+			"later_registration_core_next_request_substituted",
+			"concrete",
+			"impl<Context> ReceiveKdf<Context>",
+			"SymmetricRatchetKdfRequest::new(*stepped.chain.as_bytes())",
+			"SymmetricRatchetKdfRequest::new(*self.entry.refined.receive_chain.as_bytes())",
+			"later-registration core next receive request",
+		),
+		(
+			"later_registration_core_skipped_counter_not_incremented",
+			"concrete",
+			"impl<Context> ReceiveKdf<Context>",
+			"self.skipped += 1;",
+			"self.skipped += 0;",
+			"later-registration core next receive request",
+		),
+		(
+			"later_registration_core_remaining_not_decremented",
+			"concrete",
+			"impl<Context> ReceiveKdf<Context>",
+			"self.remaining -= 1;",
+			"self.remaining -= 0;",
+			"later-registration core next receive request",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			let selected = if source == "control" {
+				&mut snapshot.core_ratchet_control
+			} else {
+				&mut snapshot.core_ratchet_concrete
+			};
+			replace_once_after(selected, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"later_registration_refined_pending_target_substituted",
+			"pub(super) fn pending_receive_is_valid<",
+			"pending.target_sequence == requested",
+			"pending.target_sequence == requested + 1",
+			"later-registration exact pending target validation",
+		),
+		(
+			"later_registration_refined_first_slot_substituted",
+			"pub(super) fn pending_receive_is_valid<",
+			"pending.first_slot == state.control.receive_cache_len()",
+			"pending.first_slot == 0",
+			"later-registration first live slot validation",
+		),
+		(
+			"later_registration_refined_send_counter_substituted",
+			"pub(super) fn pending_receive_is_valid<",
+			"pending.committed_control.send_sequence() == state.control.send_sequence()",
+			"pending.committed_control.send_sequence() == 0",
+			"later-registration unchanged send counter validation",
+		),
+		(
+			"later_registration_refined_receive_counter_substituted",
+			"pub(super) fn pending_receive_is_valid<",
+			"pending.committed_control.receive_sequence() == requested",
+			"pending.committed_control.receive_sequence() == requested + 1",
+			"later-registration target receive counter validation",
+		),
+		(
+			"later_registration_refined_skipped_relation_substituted",
+			"pub(super) fn pending_receive_is_valid<",
+			"requested - entry_receive_sequence == pending.skipped as u64 + 1",
+			"requested - entry_receive_sequence == pending.skipped as u64",
+			"later-registration skipped-prefix validation",
+		),
+		(
+			"later_registration_refined_target_absence_removed",
+			"pub(super) fn pending_receive_is_valid<",
+			"lookup_receive_key(pending.committed_control, requested).is_some()",
+			"false",
+			"later-registration target cache absence validation",
+		),
+		(
+			"later_registration_refined_cache_length_substituted",
+			"pub(super) fn pending_receive_is_valid<",
+			"pending.committed_control.receive_cache_len() as usize == committed_len",
+			"pending.committed_control.receive_cache_len() as usize <= committed_len",
+			"later-registration exact cache-length validation",
+		),
+		(
+			"later_registration_refined_cache_prefix_bypassed",
+			"pub(super) fn pending_receive_is_valid<",
+			"receive_control_prefix_matches(\n\t\tstate.control,",
+			"receive_control_prefix_matches(\n\t\tpending.committed_control,",
+			"later-registration committed cache-prefix validation",
+		),
+		(
+			"later_registration_refined_staged_validation_bypassed",
+			"pub(super) fn pending_receive_is_valid<",
+			"pending_receive_slots_are_valid(\n\t\tstate,",
+			"pending_receive_slots_are_valid(\n\t\tunsafe_state,",
+			"later-registration staged-slot prefix validation",
+		),
+		(
+			"later_registration_empty_scan_bounds_removed",
+			"pub(super) fn refined_receive_slots_are_empty<",
+			"if slot_index >= RECEIVE_CACHE_CAPACITY {",
+			"if false {",
+			"later-registration empty destination scan",
+		),
+		(
+			"later_registration_empty_scan_accepts_occupied",
+			"pub(super) fn refined_receive_slots_are_empty<",
+			"state.receive_slots[slot_index].is_some()",
+			"state.receive_slots[slot_index].is_none()",
+			"later-registration empty destination scan",
+		),
+		(
+			"later_registration_empty_scan_does_not_advance",
+			"pub(super) fn refined_receive_slots_are_empty<",
+			"slot += 1;",
+			"slot += 0;",
+			"later-registration empty destination scan",
+		),
+		(
+			"later_registration_empty_scan_does_not_terminate",
+			"pub(super) fn refined_receive_slots_are_empty<",
+			"left -= 1;",
+			"left -= 0;",
+			"later-registration empty destination scan",
+		),
+		(
+			"later_registration_staged_scan_accepts_live_slot",
+			"pub(super) fn pending_receive_slots_are_valid<",
+			"state.receive_slots[slot_index].is_some()",
+			"state.receive_slots[slot_index].is_none()",
+			"later-registration staged slot pairing scan",
+		),
+		(
+			"later_registration_staged_scan_uses_live_material",
+			"pub(super) fn pending_receive_slots_are_valid<",
+			"pending.staged_slots[slot_index].as_ref()",
+			"state.receive_slots[slot_index].as_ref()",
+			"later-registration staged slot pairing scan",
+		),
+		(
+			"later_registration_staged_scan_accepts_missing",
+			"pub(super) fn pending_receive_slots_are_valid<",
+			"None => return false,",
+			"None => continue,",
+			"later-registration staged slot pairing scan",
+		),
+		(
+			"later_registration_staged_scan_sequence_substituted",
+			"pub(super) fn pending_receive_slots_are_valid<",
+			"staged.sequence == expected",
+			"staged.sequence == expected + 1",
+			"later-registration staged slot pairing scan",
+		),
+		(
+			"later_registration_staged_scan_control_pairing_removed",
+			"pub(super) fn pending_receive_slots_are_valid<",
+			"pending.committed_control.receive_key_at(current_slot) == Some(expected)",
+			"pending.committed_control.receive_key_at(current_slot).is_some()",
+			"later-registration staged slot pairing scan",
+		),
+		(
+			"later_registration_staged_scan_does_not_advance_slot",
+			"pub(super) fn pending_receive_slots_are_valid<",
+			"current_slot += 1;",
+			"current_slot += 0;",
+			"later-registration staged slot pairing scan",
+		),
+		(
+			"later_registration_staged_scan_does_not_advance_sequence",
+			"pub(super) fn pending_receive_slots_are_valid<",
+			"expected += 1;",
+			"expected += 0;",
+			"later-registration staged slot pairing scan",
+		),
+		(
+			"later_registration_staged_scan_does_not_terminate",
+			"pub(super) fn pending_receive_slots_are_valid<",
+			"left -= 1;",
+			"left -= 0;",
+			"later-registration staged slot pairing scan",
+		),
+		(
+			"later_registration_publisher_first_bound_removed",
+			"pub(super) fn publish_future_receive<",
+			"if first_index > RECEIVE_CACHE_CAPACITY {",
+			"if false {",
+			"later-registration future publication order",
+		),
+		(
+			"later_registration_publisher_range_bound_removed",
+			"pub(super) fn publish_future_receive<",
+			"if skipped > RECEIVE_CACHE_CAPACITY - first_index {",
+			"if false {",
+			"later-registration future publication order",
+		),
+		(
+			"later_registration_publisher_slots_bypassed",
+			"pub(super) fn publish_future_receive<",
+			"publish_future_receive_slots(\n\t\tstate,",
+			"publish_future_receive_slots(\n\t\treplacement_state,",
+			"later-registration future publication order",
+		),
+		(
+			"later_registration_publisher_chain_substituted",
+			"pub(super) fn publish_future_receive<",
+			"state.receive_chain = pending.final_receive_chain;",
+			"state.receive_chain = replacement_chain;",
+			"later-registration future publication order",
+		),
+		(
+			"later_registration_publisher_control_substituted",
+			"pub(super) fn publish_future_receive<",
+			"state.control = pending.committed_control;",
+			"state.control = replacement_control;",
+			"later-registration future publication order",
+		),
+		(
+			"later_registration_publisher_inserts_target",
+			"pub(super) fn publish_future_receive<",
+			"let skipped = pending.skipped as usize;",
+			"let _target_material = &pending.target_material;\n\tlet skipped = pending.skipped as usize;",
+			"later-registration target material publication",
+		),
+		(
+			"later_registration_slot_mover_uses_reference",
+			"pub(super) fn publish_future_receive_slots<",
+			"staged_slots[slot_index].take()",
+			"staged_slots[slot_index].as_ref()",
+			"later-registration exact skipped-slot movement",
+		),
+		(
+			"later_registration_slot_mover_wrong_destination",
+			"pub(super) fn publish_future_receive_slots<",
+			"state.receive_slots[slot_index] = moved;",
+			"state.receive_slots[0] = moved;",
+			"later-registration exact skipped-slot movement",
+		),
+		(
+			"later_registration_slot_mover_does_not_advance",
+			"pub(super) fn publish_future_receive_slots<",
+			"current_slot += 1;",
+			"current_slot += 0;",
+			"later-registration exact skipped-slot movement",
+		),
+		(
+			"later_registration_slot_mover_does_not_terminate",
+			"pub(super) fn publish_future_receive_slots<",
+			"left -= 1;",
+			"left -= 0;",
+			"later-registration exact skipped-slot movement",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_refined, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, _function, from, to, diagnostic) in [
+		(
+			"later_registration_open_sequence_uses_cached_target",
+			"sequence",
+			"pending.target_sequence",
+			"pending.committed_control.receive_sequence()",
+			"later-registration future open sequence",
+		),
+		(
+			"later_registration_open_material_uses_staged_slot",
+			"material",
+			"Some(&pending.target_material)",
+			"pending.staged_slots[0].as_ref().map(|cached| &cached.material)",
+			"later-registration future open material",
+		),
+		(
+			"later_registration_open_finish_skips_publication",
+			"finish",
+			"publish_future_receive(&mut entry.refined, pending);",
+			"drop(pending);",
+			"later-registration success-only publication",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_ratchet_concrete,
+				"impl<Context> ReceiveOpen<Context>",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, source, from, diagnostic) in [
+		(
+			"later_registration_lean_begin_future_anchor_removed",
+			"effect",
+			"theorem ratchet.concrete.begin_receive_future_request_exact",
+			"later-registration structural Lean anchor",
+		),
+		(
+			"later_registration_lean_future_sequence_anchor_removed",
+			"effect",
+			"theorem ratchet.concrete.ReceiveOpen.future_sequence_exact",
+			"later-registration structural Lean anchor",
+		),
+		(
+			"later_registration_lean_future_material_anchor_removed",
+			"effect",
+			"theorem ratchet.concrete.ReceiveOpen.future_material_exact",
+			"later-registration structural Lean anchor",
+		),
+		(
+			"later_registration_lean_future_finish_anchor_removed",
+			"effect",
+			"theorem ratchet.concrete.ReceiveOpen.finish_future_success_publishes_same_plaintext",
+			"later-registration structural Lean anchor",
+		),
+		(
+			"later_registration_lean_max_gap_anchor_removed",
+			"control",
+			"theorem max_gap_eq :",
+			"later-registration control Lean anchor",
+		),
+		(
+			"later_registration_lean_plan_accept_anchor_removed",
+			"control",
+			"theorem plan_receive_until_accept (",
+			"later-registration control Lean anchor",
+		),
+		(
+			"later_registration_lean_plan_bound_anchor_removed",
+			"control",
+			"theorem plan_receive_until_bound (",
+			"later-registration control Lean anchor",
+		),
+		(
+			"later_registration_lean_advance_skipped_anchor_removed",
+			"control",
+			"theorem advance_receive_ok (",
+			"later-registration control Lean anchor",
+		),
+		(
+			"later_registration_lean_advance_target_anchor_removed",
+			"control",
+			"theorem advance_receive_target_ok (",
+			"later-registration control Lean anchor",
+		),
+		(
+			"later_registration_lean_receive_refinement_anchor_removed",
+			"refinement",
+			"theorem receiveMessage_refines",
+			"later-registration refinement Lean anchor",
+		),
+		(
+			"later_registration_lean_state_neutral_anchor_removed",
+			"refinement",
+			"theorem receiveMessage_state_neutral",
+			"later-registration refinement Lean anchor",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			let selected = match source {
+				"effect" => &mut snapshot.lean_ratchet_effect,
+				"control" => &mut snapshot.lean_ratchet_control,
+				_ => &mut snapshot.lean_ratchet_refinement,
+			};
+			replace_once(
+				selected,
+				from,
+				&from.replacen("theorem", "theorem mutated", 1),
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"later_registration_pv_zero_sequence_type_changed",
+			"fun zero_sequence()",
+			"fun zero_sequence(): sequence",
+			"fun zero_sequence(): bitstring",
+			"later-registration zero sequence constructor",
+		),
+		(
+			"later_registration_pv_ratchet_state_constructor_renamed",
+			"fun later_registration_ratchet_state(",
+			"later_registration_ratchet_state",
+			"later_registration_other_state",
+			"later-registration ratchet-state constructor",
+		),
+		(
+			"later_registration_pv_return_constructor_renamed",
+			"fun later_registration_return(",
+			"later_registration_return",
+			"later_registration_other_return",
+			"later-registration return constructor",
+		),
+		(
+			"later_registration_pv_seq1_payload_renamed",
+			"free LATER_REGISTRATION_SEQ1_PAYLOAD",
+			"LATER_REGISTRATION_SEQ1_PAYLOAD",
+			"LATER_REGISTRATION_OTHER_PAYLOAD",
+			"later-registration sequence-one payload",
+		),
+		(
+			"later_registration_pv_seq2_payload_renamed",
+			"free LATER_REGISTRATION_SEQ2_PAYLOAD",
+			"LATER_REGISTRATION_SEQ2_PAYLOAD",
+			"LATER_REGISTRATION_OTHER_PAYLOAD",
+			"later-registration sequence-two payload",
+		),
+		(
+			"later_registration_pv_seq3_payload_renamed",
+			"free LATER_REGISTRATION_SEQ3_PAYLOAD",
+			"LATER_REGISTRATION_SEQ3_PAYLOAD",
+			"LATER_REGISTRATION_OTHER_PAYLOAD",
+			"later-registration sequence-three payload",
+		),
+		(
+			"later_registration_pv_commit_event_renamed",
+			"event LaterRegistrationCommitted(",
+			"LaterRegistrationCommitted",
+			"LaterRegistrationOtherCommitted",
+			"later-registration committed event signature",
+		),
+		(
+			"later_registration_pv_target_event_renamed",
+			"event LaterRegistrationTargetUnavailable(",
+			"LaterRegistrationTargetUnavailable",
+			"LaterRegistrationTargetAvailable",
+			"later-registration target-absence event signature",
+		),
+		(
+			"later_registration_pv_response_fields_swapped",
+			"let LaterSequenceRegistrationOpen(",
+			"app_ciphertext,\n    assigned_key_id",
+			"assigned_key_id,\n    app_ciphertext",
+			"later-registration response field parse",
+		),
+		(
+			"later_registration_pv_outer_identity_gate_removed",
+			"let LaterSequenceRegistrationOpen(",
+			"if response_server_identity = expected_server_identity then",
+			"if response_server_identity = response_server_identity then",
+			"later-registration Beacon root reconstruction",
+		),
+		(
+			"later_registration_pv_root_input_substituted",
+			"let LaterSequenceRegistrationOpen(",
+			"beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)",
+			"replacement_root_input",
+			"later-registration Beacon root reconstruction",
+		),
+		(
+			"later_registration_pv_associated_data_identity_substituted",
+			"let LaterSequenceRegistrationOpen(",
+			"expected_server_identity,\n        beacon_identity",
+			"response_server_identity,\n        beacon_identity",
+			"later-registration reconstructed associated data",
+		),
+		(
+			"later_registration_pv_session_assigned_id_substituted",
+			"let LaterSequenceRegistrationOpen(",
+			"assigned_key_id,\n      root",
+			"expected_server_key_id,\n      root",
+			"later-registration reconstructed session",
+		),
+		(
+			"later_registration_pv_chain2_substituted",
+			"let LaterSequenceRegistrationOpen(",
+			"let server_chain_2 = ratchet_next(server_chain_1)",
+			"let server_chain_2 = ratchet_next(root)",
+			"later-registration receive chain expansion",
+		),
+		(
+			"later_registration_pv_chain4_substituted",
+			"let LaterSequenceRegistrationOpen(",
+			"let server_chain_4 = ratchet_next(server_chain_3)",
+			"let server_chain_4 = ratchet_next(server_chain_2)",
+			"later-registration receive chain expansion",
+		),
+		(
+			"later_registration_pv_material2_substituted",
+			"let LaterSequenceRegistrationOpen(",
+			"let server_material_2 = ratchet_material(server_chain_2)",
+			"let server_material_2 = ratchet_material(server_chain_1)",
+			"later-registration receive material expansion",
+		),
+		(
+			"later_registration_pv_frame_sequence_sender_swapped",
+			"let LaterSequenceRegistrationOpen(",
+			"frame_sequence,\n      authenticated_server_key_id",
+			"authenticated_server_key_id,\n      frame_sequence",
+			"later-registration inner frame parse",
+		),
+		(
+			"later_registration_pv_sender_gate_removed",
+			"let LaterSequenceRegistrationOpen(",
+			"if authenticated_server_key_id = expected_server_key_id then",
+			"if authenticated_server_key_id = authenticated_server_key_id then",
+			"later-registration authenticated sender gate",
+		),
+		(
+			"later_registration_pv_opened_payload_fields_swapped",
+			"let LaterSequenceRegistrationOpen(",
+			"authenticated_binding,\n        registration_plaintext",
+			"registration_plaintext,\n        authenticated_binding",
+			"later-registration opened payload parse",
+		),
+		(
+			"later_registration_pv_receive_state_sequence_substituted",
+			"let LaterSequenceRegistrationOpen(",
+			"frame_sequence,\n        server_chain_4,",
+			"first_sequence(),\n        server_chain_4,",
+			"later-registration receive poststate",
+		),
+		(
+			"later_registration_pv_ratchet_send_counter_substituted",
+			"let LaterSequenceRegistrationOpen(",
+			"zero_sequence(),\n        beacon_to_server_chain(root),",
+			"first_sequence(),\n        beacon_to_server_chain(root),",
+			"later-registration complete ratchet poststate",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.later_registration_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, argument, replacement, diagnostic) in [
+		(
+			"later_registration_pv_open_material_substituted",
+			0usize,
+			"server_material_2",
+			"later-registration generic sequence open",
+		),
+		(
+			"later_registration_pv_open_ad_substituted",
+			1,
+			"replacement_associated_data",
+			"later-registration generic sequence open",
+		),
+		(
+			"later_registration_pv_open_sequence_substituted",
+			2,
+			"first_sequence()",
+			"later-registration generic sequence open",
+		),
+		(
+			"later_registration_pv_open_sender_substituted",
+			3,
+			"authenticated_server_key_id",
+			"later-registration generic sequence open",
+		),
+		(
+			"later_registration_pv_open_frame_substituted",
+			4,
+			"replacement_frame",
+			"later-registration generic sequence open",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_nth_call_argument_after(
+				&mut snapshot.later_registration_control,
+				"let LaterSequenceRegistrationOpen(",
+				"open_frame",
+				0,
+				argument,
+				replacement,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, function, call, argument, replacement, diagnostic) in [
+		(
+			"later_registration_pv_cache1_sequence_substituted",
+			"receive_cache_entry",
+			0usize,
+			0usize,
+			"next_sequence(first_sequence())",
+			"later-registration exact newest-first cache",
+		),
+		(
+			"later_registration_pv_cache1_material_substituted",
+			"receive_cache_entry",
+			0,
+			1,
+			"server_material_2",
+			"later-registration exact newest-first cache",
+		),
+		(
+			"later_registration_pv_cache1_tail_substituted",
+			"receive_cache_entry",
+			0,
+			2,
+			"replacement_cache",
+			"later-registration exact newest-first cache",
+		),
+		(
+			"later_registration_pv_cache2_sequence_substituted",
+			"receive_cache_entry",
+			1,
+			0,
+			"first_sequence()",
+			"later-registration exact newest-first cache",
+		),
+		(
+			"later_registration_pv_cache2_material_substituted",
+			"receive_cache_entry",
+			1,
+			1,
+			"server_material_1",
+			"later-registration exact newest-first cache",
+		),
+		(
+			"later_registration_pv_cache2_tail_substituted",
+			"receive_cache_entry",
+			1,
+			2,
+			"receive_cache_empty()",
+			"later-registration exact newest-first cache",
+		),
+		(
+			"later_registration_pv_receive_state_sequence_substitution",
+			"receive_state",
+			0,
+			0,
+			"first_sequence()",
+			"later-registration receive poststate",
+		),
+		(
+			"later_registration_pv_receive_state_chain_substitution",
+			"receive_state",
+			0,
+			1,
+			"server_chain_3",
+			"later-registration receive poststate",
+		),
+		(
+			"later_registration_pv_receive_state_cache_substitution",
+			"receive_state",
+			0,
+			2,
+			"cache_1",
+			"later-registration receive poststate",
+		),
+		(
+			"later_registration_pv_ratchet_send_sequence_substitution",
+			"later_registration_ratchet_state",
+			0,
+			0,
+			"first_sequence()",
+			"later-registration complete ratchet poststate",
+		),
+		(
+			"later_registration_pv_ratchet_send_chain_substitution",
+			"later_registration_ratchet_state",
+			0,
+			1,
+			"server_to_beacon_chain(root)",
+			"later-registration complete ratchet poststate",
+		),
+		(
+			"later_registration_pv_ratchet_receive_state_substitution",
+			"later_registration_ratchet_state",
+			0,
+			2,
+			"replacement_receive_state",
+			"later-registration complete ratchet poststate",
+		),
+		(
+			"later_registration_pv_opened_event_sequence_substituted",
+			"LaterRegistrationGeneralReceiveOpened",
+			0,
+			2,
+			"first_sequence()",
+			"later-registration opened event fields",
+		),
+		(
+			"later_registration_pv_opened_event_payload_substituted",
+			"LaterRegistrationGeneralReceiveOpened",
+			0,
+			6,
+			"registration_plaintext",
+			"later-registration opened event fields",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_nth_call_argument_after(
+				&mut snapshot.later_registration_control,
+				"let LaterSequenceRegistrationOpen(",
+				function,
+				call,
+				argument,
+				replacement,
+			);
+		});
+		mutation_count += 1;
+	}
+	assert_later_registration_rejected(
+		"later_registration_pv_open_reply_target_material_omitted",
+		"later-registration open reply fields",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.later_registration_control,
+				"let LaterSequenceRegistrationOpen(",
+				"          server_material_3,\n          cache_2,",
+				"          cache_2,",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"later_registration_pv_expected_binding_substituted",
+			"let LaterSequenceRegistrationCommit(",
+			"key_id_encoding(assigned_key_id)",
+			"key_id_encoding(authenticated_server_key_id)",
+			"later-registration binding-to-commit order",
+		),
+		(
+			"later_registration_pv_binding_gate_bypassed",
+			"let LaterSequenceRegistrationCommit(",
+			"phase2_assigned_id_binding_gate(\n    authenticated_binding,\n    expected_binding\n  )",
+			"phase2_assigned_id_binding_gate(\n    expected_binding,\n    expected_binding\n  )",
+			"later-registration binding-to-commit order",
+		),
+		(
+			"later_registration_pv_return_payload_substituted",
+			"let LaterSequenceRegistrationCommit(",
+			"event LaterRegistrationReturned(witness, registration_plaintext);",
+			"event LaterRegistrationReturned(witness, opened_payload);",
+			"later-registration binding-to-commit order",
+		),
+		(
+			"later_registration_pv_return_term_substituted",
+			"let LaterSequenceRegistrationCommit(",
+			"later_registration_return(witness, registration_plaintext)",
+			"later_registration_return(witness, opened_payload)",
+			"later-registration binding-to-commit order",
+		),
+		(
+			"later_registration_pv_canary_witness_substituted",
+			"let LaterSequenceRegistrationCommit(",
+			"if witness = LATER_REGISTRATION_OMITTED_GATE_WITNESS then",
+			"if witness = LATER_REGISTRATION_FAITHFUL_WITNESS then",
+			"later-registration counterfactual canary confinement",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.later_registration_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, function, argument, replacement, diagnostic) in [
+		(
+			"later_registration_pv_poststate_send_counter_substituted",
+			"LaterRegistrationPoststatePublished",
+			3usize,
+			"frame_sequence",
+			"later-registration exact poststate event",
+		),
+		(
+			"later_registration_pv_poststate_send_chain_substituted",
+			"LaterRegistrationPoststatePublished",
+			4,
+			"server_chain_4",
+			"later-registration exact poststate event",
+		),
+		(
+			"later_registration_pv_poststate_receive_counter_substituted",
+			"LaterRegistrationPoststatePublished",
+			5,
+			"first_sequence()",
+			"later-registration exact poststate event",
+		),
+		(
+			"later_registration_pv_poststate_receive_chain_substituted",
+			"LaterRegistrationPoststatePublished",
+			6,
+			"server_chain_3",
+			"later-registration exact poststate event",
+		),
+		(
+			"later_registration_pv_poststate_cache_substituted",
+			"LaterRegistrationPoststatePublished",
+			7,
+			"cache_1",
+			"later-registration exact poststate event",
+		),
+		(
+			"later_registration_pv_poststate_ratchet_substituted",
+			"LaterRegistrationPoststatePublished",
+			8,
+			"replacement_ratchet",
+			"later-registration exact poststate event",
+		),
+		(
+			"later_registration_pv_target_sequence_substituted",
+			"LaterRegistrationTargetUnavailable",
+			2,
+			"first_sequence()",
+			"later-registration target-absence event",
+		),
+		(
+			"later_registration_pv_target_material_substituted",
+			"LaterRegistrationTargetUnavailable",
+			3,
+			"server_material_2",
+			"later-registration target-absence event",
+		),
+		(
+			"later_registration_pv_target_cache_substituted",
+			"LaterRegistrationTargetUnavailable",
+			4,
+			"cache_1",
+			"later-registration target-absence event",
+		),
+		(
+			"later_registration_pv_target_ratchet_substituted",
+			"LaterRegistrationTargetUnavailable",
+			5,
+			"replacement_ratchet",
+			"later-registration target-absence event",
+		),
+		(
+			"later_registration_pv_commit_response_substituted",
+			"LaterRegistrationCommitted",
+			3,
+			"replacement_response",
+			"later-registration commit event",
+		),
+		(
+			"later_registration_pv_commit_sender_substituted",
+			"LaterRegistrationCommitted",
+			5,
+			"assigned_key_id",
+			"later-registration commit event",
+		),
+		(
+			"later_registration_pv_commit_opened_payload_substituted",
+			"LaterRegistrationCommitted",
+			7,
+			"registration_plaintext",
+			"later-registration commit event",
+		),
+		(
+			"later_registration_pv_commit_frame_substituted",
+			"LaterRegistrationCommitted",
+			9,
+			"replacement_frame",
+			"later-registration commit event",
+		),
+		(
+			"later_registration_pv_commit_material_substituted",
+			"LaterRegistrationCommitted",
+			10,
+			"server_material_2",
+			"later-registration commit event",
+		),
+		(
+			"later_registration_pv_commit_state_substituted",
+			"LaterRegistrationCommitted",
+			11,
+			"replacement_state",
+			"later-registration commit event",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_nth_call_argument_after(
+				&mut snapshot.later_registration_control,
+				"let LaterSequenceRegistrationCommit(",
+				function,
+				0,
+				argument,
+				replacement,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"later_registration_pv_faithful_attempt_response_substituted",
+			"let LaterSequenceRegistrationFaithfulFinish(",
+			"LATER_REGISTRATION_FAITHFUL_WITNESS,\n    response",
+			"LATER_REGISTRATION_FAITHFUL_WITNESS,\n    replacement_response",
+			"later-registration faithful attempt",
+		),
+		(
+			"later_registration_pv_faithful_open_witness_substituted",
+			"let LaterSequenceRegistrationFaithfulFinish(",
+			"LaterSequenceRegistrationOpen(\n      LATER_REGISTRATION_FAITHFUL_WITNESS,",
+			"LaterSequenceRegistrationOpen(\n      LATER_REGISTRATION_OMITTED_GATE_WITNESS,",
+			"later-registration faithful shared open",
+		),
+		(
+			"later_registration_pv_faithful_open_response_substituted",
+			"let LaterSequenceRegistrationFaithfulFinish(",
+			"      response,\n      reply\n    )",
+			"      replacement_response,\n      reply\n    )",
+			"later-registration faithful shared open",
+		),
+		(
+			"later_registration_pv_faithful_commit_witness_substituted",
+			"let LaterSequenceRegistrationFaithfulFinish(",
+			"LaterSequenceRegistrationCommit(\n      LATER_REGISTRATION_FAITHFUL_WITNESS,",
+			"LaterSequenceRegistrationCommit(\n      LATER_REGISTRATION_OMITTED_GATE_WITNESS,",
+			"later-registration faithful direct commit",
+		),
+		(
+			"later_registration_pv_faithful_commit_response_substituted",
+			"let LaterSequenceRegistrationFaithfulFinish(",
+			"      LATER_REGISTRATION_FAITHFUL_WITNESS,\n      response,",
+			"      LATER_REGISTRATION_FAITHFUL_WITNESS,\n      replacement_response,",
+			"later-registration faithful direct commit",
+		),
+		(
+			"later_registration_pv_faithful_adds_sequence_gate",
+			"let LaterSequenceRegistrationFaithfulFinish(",
+			"    LaterSequenceRegistrationCommit(",
+			"    if frame_sequence = first_sequence() then\n      LaterSequenceRegistrationCommit(",
+			"later-registration faithful sequence gate",
+		),
+		(
+			"later_registration_pv_omitted_gate_attempt_response_substituted",
+			"let LaterSequenceRegistrationOmittedGateFinish(",
+			"LATER_REGISTRATION_OMITTED_GATE_WITNESS,\n    response",
+			"LATER_REGISTRATION_OMITTED_GATE_WITNESS,\n    replacement_response",
+			"later-registration counterfactual attempt",
+		),
+		(
+			"later_registration_pv_omitted_gate_open_witness_substituted",
+			"let LaterSequenceRegistrationOmittedGateFinish(",
+			"LaterSequenceRegistrationOpen(\n      LATER_REGISTRATION_OMITTED_GATE_WITNESS,",
+			"LaterSequenceRegistrationOpen(\n      LATER_REGISTRATION_FAITHFUL_WITNESS,",
+			"later-registration counterfactual post-open gate placement",
+		),
+		(
+			"later_registration_pv_omitted_gate_gate_reached_removed",
+			"let LaterSequenceRegistrationOmittedGateFinish(",
+			"event LaterRegistrationOmittedGateReached(",
+			"event LaterRegistrationOmittedGateSkipped(",
+			"later-registration counterfactual post-open gate placement",
+		),
+		(
+			"later_registration_pv_omitted_gate_reintroduced",
+			"let LaterSequenceRegistrationOmittedGateFinish(",
+			"event LaterRegistrationOmittedGateBypassed(",
+			"if frame_sequence = first_sequence() then event LaterRegistrationOmittedGateBypassed(",
+			"later-registration omitted-gate negative control",
+		),
+		(
+			"later_registration_pv_omitted_gate_gate_passed_removed",
+			"let LaterSequenceRegistrationOmittedGateFinish(",
+			"event LaterRegistrationOmittedGateBypassed(",
+			"event LaterRegistrationOmittedGateSkipped(",
+			"later-registration counterfactual post-open gate placement",
+		),
+		(
+			"later_registration_pv_omitted_gate_commit_witness_substituted",
+			"let LaterSequenceRegistrationOmittedGateFinish(",
+			"LaterSequenceRegistrationCommit(\n        LATER_REGISTRATION_OMITTED_GATE_WITNESS,",
+			"LaterSequenceRegistrationCommit(\n        LATER_REGISTRATION_FAITHFUL_WITNESS,",
+			"later-registration counterfactual post-open gate placement",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.later_registration_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_later_registration_rejected(
+		"later_registration_pv_omitted_gate_gate_moved_before_open_reply",
+		"later-registration counterfactual post-open gate placement",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.later_registration_control,
+				"let LaterSequenceRegistrationOmittedGateFinish(",
+				"    event LaterRegistrationOmittedGateReached(\n      LATER_REGISTRATION_OMITTED_GATE_WITNESS,\n      frame_sequence,\n      response\n    );\n",
+				"",
+			);
+			replace_once_after(
+				&mut snapshot.later_registration_control,
+				"let LaterSequenceRegistrationOmittedGateFinish(",
+				"    in(\n      reply,",
+				"    event LaterRegistrationOmittedGateReached(\n      LATER_REGISTRATION_OMITTED_GATE_WITNESS,\n      frame_sequence,\n      response\n    );\n    in(\n      reply,",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"later_registration_pv_coordinator_root_substituted",
+			"let LaterSequenceRegistrationControl() =",
+			"beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)",
+			"replacement_root_input",
+			"later-registration Server root construction",
+		),
+		(
+			"later_registration_pv_coordinator_ad_order_swapped",
+			"let LaterSequenceRegistrationControl() =",
+			"server_identity,\n      beacon_identity",
+			"beacon_identity,\n      server_identity",
+			"later-registration coordinator associated data",
+		),
+		(
+			"later_registration_pv_coordinator_session_root_substituted",
+			"let LaterSequenceRegistrationControl() =",
+			"assigned_key_id,\n    root",
+			"assigned_key_id,\n    replacement_root",
+			"later-registration coordinator session",
+		),
+		(
+			"later_registration_pv_coordinator_binding_substituted",
+			"let LaterSequenceRegistrationControl() =",
+			"key_id_encoding(assigned_key_id)",
+			"key_id_encoding(server_key_id)",
+			"later-registration coordinator binding",
+		),
+		(
+			"later_registration_pv_first_frame_material_substituted",
+			"let LaterSequenceRegistrationControl() =",
+			"let first_frame = seal_frame(\n    server_material_1,",
+			"let first_frame = seal_frame(\n    server_material_2,",
+			"later-registration genuine first frame",
+		),
+		(
+			"later_registration_pv_first_frame_payload_substituted",
+			"let LaterSequenceRegistrationControl() =",
+			"LATER_REGISTRATION_SEQ1_PAYLOAD\n    )",
+			"LATER_REGISTRATION_SEQ3_PAYLOAD\n    )",
+			"later-registration genuine first frame",
+		),
+		(
+			"later_registration_pv_second_frame_sequence_substituted",
+			"let LaterSequenceRegistrationControl() =",
+			"next_sequence(first_sequence()),\n    server_key_id,\n    LATER_REGISTRATION_SEQ2_PAYLOAD",
+			"first_sequence(),\n    server_key_id,\n    LATER_REGISTRATION_SEQ2_PAYLOAD",
+			"later-registration genuine second frame",
+		),
+		(
+			"later_registration_pv_third_frame_material_substituted",
+			"let LaterSequenceRegistrationControl() =",
+			"let third_frame = seal_frame(\n    server_material_3,",
+			"let third_frame = seal_frame(\n    server_material_2,",
+			"later-registration genuine third frame",
+		),
+		(
+			"later_registration_pv_third_frame_sender_substituted",
+			"let LaterSequenceRegistrationControl() =",
+			"next_sequence(next_sequence(first_sequence())),\n    server_key_id,",
+			"next_sequence(next_sequence(first_sequence())),\n    assigned_key_id,",
+			"later-registration genuine third frame",
+		),
+		(
+			"later_registration_pv_third_frame_binding_removed",
+			"let LaterSequenceRegistrationControl() =",
+			"registration_payload(\n      assigned_binding,\n      LATER_REGISTRATION_SEQ3_PAYLOAD\n    )",
+			"LATER_REGISTRATION_SEQ3_PAYLOAD",
+			"later-registration genuine third frame",
+		),
+		(
+			"later_registration_pv_original_response_frame_substituted",
+			"let LaterSequenceRegistrationControl() =",
+			"kem_ciphertext,\n    first_frame,\n    assigned_key_id",
+			"kem_ciphertext,\n    third_frame,\n    assigned_key_id",
+			"later-registration original response",
+		),
+		(
+			"later_registration_pv_substitution_outer_identity_changed",
+			"let substituted_response = kex_response(",
+			"server_identity,",
+			"beacon_identity,",
+			"later-registration app-frame-only substitution",
+		),
+		(
+			"later_registration_pv_substitution_ephemeral_changed",
+			"let substituted_response = kex_response(",
+			"server_ephemeral,",
+			"replacement_ephemeral,",
+			"later-registration app-frame-only substitution",
+		),
+		(
+			"later_registration_pv_substitution_kem_changed",
+			"let substituted_response = kex_response(",
+			"kem_ciphertext,",
+			"replacement_kem_ciphertext,",
+			"later-registration app-frame-only substitution",
+		),
+		(
+			"later_registration_pv_substitution_frame_changed",
+			"let substituted_response = kex_response(",
+			"third_frame,",
+			"second_frame,",
+			"later-registration app-frame-only substitution",
+		),
+		(
+			"later_registration_pv_substitution_assigned_id_changed",
+			"let substituted_response = kex_response(",
+			"assigned_key_id\n  )",
+			"server_key_id\n  )",
+			"later-registration app-frame-only substitution",
+		),
+		(
+			"later_registration_pv_candidate_gate_bypassed",
+			"let LaterSequenceRegistrationControl() =",
+			"if candidate = substituted_response then",
+			"if candidate = candidate then",
+			"later-registration single candidate selection",
+		),
+		(
+			"later_registration_pv_substitution_event_original_changed",
+			"event LaterRegistrationSubstitutionSelected(",
+			"original_response,\n      candidate",
+			"candidate,\n      candidate",
+			"later-registration exact substitution event",
+		),
+		(
+			"later_registration_pv_original_output_moved_before_event",
+			"let LaterSequenceRegistrationControl() =",
+			"event LaterRegistrationOriginalResponseIssued(\n    LATER_REGISTRATION_ORIGINAL_WITNESS,\n    session,\n    root,\n    first_frame,\n    original_response\n  );\n  out(c, original_response);",
+			"out(c, original_response);\n  event LaterRegistrationOriginalResponseIssued(\n    LATER_REGISTRATION_ORIGINAL_WITNESS,\n    session,\n    root,\n    first_frame,\n    original_response\n  );",
+			"later-registration genuine response and later-frame order",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.later_registration_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, function, replacement, diagnostic) in [
+		(
+			"later_registration_pv_faithful_fanout_candidate_substituted",
+			"LaterSequenceRegistrationFaithfulFinish",
+			"replacement_candidate",
+			"later-registration faithful fanout",
+		),
+		(
+			"later_registration_pv_omitted_gate_fanout_candidate_substituted",
+			"LaterSequenceRegistrationOmittedGateFinish",
+			"replacement_candidate",
+			"later-registration counterfactual fanout",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			let calls = all_arguments(
+				&compact(&uncommented_pv(&snapshot.later_registration_control).unwrap()),
+				function,
+			)
+			.unwrap();
+			let last = calls[1].len() - 1;
+			replace_nth_call_argument_after(
+				&mut snapshot.later_registration_control,
+				"let LaterSequenceRegistrationControl() =",
+				function,
+				0,
+				last,
+				replacement,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for query_index in 0..18 {
+		let diagnostic = if query_index == 12 {
+			"later-registration counterfactual canary query".to_owned()
+		} else {
+			format!("later-registration exact query {} changed", query_index + 1)
+		};
+		assert_later_registration_rejected(
+			&format!(
+				"later_registration_query_{}_formula_mutated",
+				query_index + 1
+			),
+			&diagnostic,
+			|snapshot| {
+				replace_nth_once(
+					&mut snapshot.later_registration_queries,
+					"query ",
+					"query not ",
+					query_index,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_later_registration_rejected(
+		"later_registration_query_count_reduced",
+		"later-registration query count changed",
+		|snapshot| {
+			replace_nth_once(
+				&mut snapshot.later_registration_queries,
+				"query ",
+				"let mutated_query = ",
+				0,
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, marker, function, argument, replacement, diagnostic) in [
+		(
+			"later_registration_poststate_query_send_counter_mutated",
+			"event(LaterRegistrationPoststatePublished(",
+			"LaterRegistrationPoststatePublished",
+			3usize,
+			"first_sequence()",
+			"later-registration exact poststate query",
+		),
+		(
+			"later_registration_poststate_query_send_chain_mutated",
+			"event(LaterRegistrationPoststatePublished(",
+			"LaterRegistrationPoststatePublished",
+			4,
+			"wrong_send_chain()",
+			"later-registration exact poststate query",
+		),
+		(
+			"later_registration_poststate_query_receive_counter_mutated",
+			"event(LaterRegistrationPoststatePublished(",
+			"LaterRegistrationPoststatePublished",
+			5,
+			"first_sequence()",
+			"later-registration exact poststate query",
+		),
+		(
+			"later_registration_poststate_query_live_chain_mutated",
+			"event(LaterRegistrationPoststatePublished(",
+			"LaterRegistrationPoststatePublished",
+			6,
+			"wrong_chain_4()",
+			"later-registration exact poststate query",
+		),
+		(
+			"later_registration_poststate_query_cache_order_mutated",
+			"event(LaterRegistrationPoststatePublished(",
+			"LaterRegistrationPoststatePublished",
+			7,
+			"receive_cache_entry(first_sequence(), wrong_material_1(), receive_cache_entry(next_sequence(first_sequence()), wrong_material_2(), receive_cache_empty()))",
+			"later-registration exact poststate query",
+		),
+		(
+			"later_registration_poststate_query_cache_seq2_mutated",
+			"event(LaterRegistrationPoststatePublished(",
+			"LaterRegistrationPoststatePublished",
+			7,
+			"receive_cache_entry(first_sequence(), wrong_material_2(), receive_cache_empty())",
+			"later-registration exact poststate query",
+		),
+		(
+			"later_registration_poststate_query_cache_material2_mutated",
+			"event(LaterRegistrationPoststatePublished(",
+			"LaterRegistrationPoststatePublished",
+			7,
+			"receive_cache_entry(next_sequence(first_sequence()), wrong_material_2(), receive_cache_empty())",
+			"later-registration exact poststate query",
+		),
+		(
+			"later_registration_poststate_query_cache_seq1_mutated",
+			"event(LaterRegistrationPoststatePublished(",
+			"LaterRegistrationPoststatePublished",
+			7,
+			"receive_cache_entry(next_sequence(first_sequence()), wrong_material_2(), receive_cache_entry(next_sequence(first_sequence()), wrong_material_1(), receive_cache_empty()))",
+			"later-registration exact poststate query",
+		),
+		(
+			"later_registration_poststate_query_cache_material1_mutated",
+			"event(LaterRegistrationPoststatePublished(",
+			"LaterRegistrationPoststatePublished",
+			7,
+			"receive_cache_entry(next_sequence(first_sequence()), wrong_material_2(), receive_cache_entry(first_sequence(), wrong_material_1(), receive_cache_empty()))",
+			"later-registration exact poststate query",
+		),
+		(
+			"later_registration_poststate_query_cache_tail_mutated",
+			"event(LaterRegistrationPoststatePublished(",
+			"LaterRegistrationPoststatePublished",
+			7,
+			"receive_cache_entry(next_sequence(first_sequence()), wrong_material_2(), receive_cache_entry(first_sequence(), wrong_material_1(), wrong_cache_tail()))",
+			"later-registration exact poststate query",
+		),
+		(
+			"later_registration_poststate_query_ratchet_mutated",
+			"event(LaterRegistrationPoststatePublished(",
+			"LaterRegistrationPoststatePublished",
+			8,
+			"wrong_ratchet_state()",
+			"later-registration exact poststate query",
+		),
+		(
+			"later_registration_target_query_sequence_mutated",
+			"event(LaterRegistrationTargetUnavailable(",
+			"LaterRegistrationTargetUnavailable",
+			2,
+			"first_sequence()",
+			"later-registration exact target-absence query",
+		),
+		(
+			"later_registration_target_query_material3_mutated",
+			"event(LaterRegistrationTargetUnavailable(",
+			"LaterRegistrationTargetUnavailable",
+			3,
+			"wrong_material_3()",
+			"later-registration exact target-absence query",
+		),
+		(
+			"later_registration_target_query_cache_mutated",
+			"event(LaterRegistrationTargetUnavailable(",
+			"LaterRegistrationTargetUnavailable",
+			4,
+			"wrong_cache()",
+			"later-registration exact target-absence query",
+		),
+		(
+			"later_registration_target_query_ratchet_mutated",
+			"event(LaterRegistrationTargetUnavailable(",
+			"LaterRegistrationTargetUnavailable",
+			5,
+			"wrong_ratchet_state()",
+			"later-registration exact target-absence query",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_nth_call_argument_after(
+				&mut snapshot.later_registration_queries,
+				marker,
+				function,
+				0,
+				argument,
+				replacement,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_later_registration_rejected(
+		"later_registration_main_process_mutated",
+		"later-registration main process changed",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.later_registration_main,
+				"LaterSequenceRegistrationControl()",
+				"OtherControl()",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for index in 1..=18 {
+		let diagnostic = match index {
+			11 => "later-registration checker live omitted-gate bypass polarity",
+			12 => "later-registration checker live omitted-gate commit",
+			13 => "later-registration checker canary secrecy polarity",
+			_ => "later-registration exact result-checker branch changed",
+		};
+		assert_later_registration_rejected(
+			&format!("later_registration_checker_result_{index}_term_mutated"),
+			diagnostic,
+			|snapshot| {
+				replace_once_after(
+					&mut snapshot.proverif_result_checker,
+					&format!("later_expected[{index}] ="),
+					"Query",
+					"MutatedQuery",
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for index in 1..=18 {
+		let polarity = if matches!(index, 5..=8 | 14..=18) {
+			"is true."
+		} else {
+			"is false."
+		};
+		let replacement = if polarity == "is true." {
+			"is false."
+		} else {
+			"is true."
+		};
+		let diagnostic = if index == 13 {
+			"later-registration checker canary secrecy polarity"
+		} else {
+			"later-registration checker exact polarity"
+		};
+		assert_later_registration_rejected(
+			&format!("later_registration_checker_result_{index}_polarity_mutated"),
+			diagnostic,
+			|snapshot| {
+				replace_once_after(
+					&mut snapshot.proverif_result_checker,
+					&format!("later_expected[{index}] ="),
+					polarity,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_later_registration_rejected(
+		"later_registration_checker_query_count_mutated",
+		"later-registration checker query count",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.proverif_result_checker,
+				"} else if (scenario == \"later-sequence-registration\") {",
+				"if (query_count != 18)",
+				"if (query_count != 17)",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_later_registration_rejected(
+		"later_registration_checker_loop_bound_mutated",
+		"later-registration checker complete result loop",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.proverif_result_checker,
+				"for (later_index = 1;",
+				"later_index <= 18",
+				"later_index <= 17",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"later_registration_make_scenario_removed",
+			"\tlater-sequence-registration \\\n",
+			"",
+			"expected 36 ProVerif scenarios",
+		),
+		(
+			"later_registration_make_extraction_prerequisite_removed",
+			"check-proverif-later-sequence-registration: check-proverif-extraction",
+			"check-proverif-later-sequence-registration:",
+			"later-sequence registration extraction prerequisite",
+		),
+		(
+			"later_registration_make_binding_theory_removed",
+			"-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl",
+			"-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-theory.pvl",
+			"later-sequence registration binding theory",
+		),
+		(
+			"later_registration_make_control_loader_removed",
+			"-lib $(PROVERIF_DIR)/later-sequence-registration-control.pvl",
+			"-lib $(PROVERIF_DIR)/other-control.pvl",
+			"later-sequence registration control loader",
+		),
+		(
+			"later_registration_make_query_loader_removed",
+			"-lib $(PROVERIF_DIR)/later-sequence-registration-queries.pvl",
+			"-lib $(PROVERIF_DIR)/other-queries.pvl",
+			"later-sequence registration query loader",
+		),
+		(
+			"later_registration_make_main_removed",
+			"$(PROVERIF_DIR)/later-sequence-registration.pv |",
+			"$(PROVERIF_DIR)/other.pv |",
+			"later-sequence registration main model",
+		),
+		(
+			"later_registration_make_checker_scenario_changed",
+			"awk -v scenario=later-sequence-registration -f '$(PROVERIF_CHECKER)'",
+			"awk -v scenario=other -f '$(PROVERIF_CHECKER)'",
+			"later-sequence registration result checker",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.makefile,
+				if name == "later_registration_make_scenario_removed" {
+					"PROVERIF_SCENARIOS :="
+				} else {
+					"check-proverif-later-sequence-registration:"
+				},
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, function, call, argument, replacement) in [
+		(
+			"later_registration_pv_beacon_server_kex_input_substituted",
+			"x25519_public_from_ed",
+			0usize,
+			0usize,
+			"expected_server_identity",
+		),
+		(
+			"later_registration_pv_beacon_identity_input_substituted",
+			"ed_public",
+			0,
+			0,
+			"beacon_prekey_secret",
+		),
+		(
+			"later_registration_pv_beacon_dh1_secret_substituted",
+			"x25519_beacon_dh",
+			0,
+			0,
+			"beacon_identity_secret",
+		),
+		(
+			"later_registration_pv_beacon_dh1_peer_substituted",
+			"x25519_beacon_dh",
+			0,
+			1,
+			"server_ephemeral",
+		),
+		(
+			"later_registration_pv_beacon_dh2_secret_substituted",
+			"x25519_beacon_dh",
+			1,
+			0,
+			"beacon_prekey_secret",
+		),
+		(
+			"later_registration_pv_beacon_dh2_peer_substituted",
+			"x25519_beacon_dh",
+			1,
+			1,
+			"response_server_kex",
+		),
+		(
+			"later_registration_pv_beacon_dh3_secret_substituted",
+			"x25519_beacon_dh",
+			2,
+			0,
+			"beacon_identity_secret",
+		),
+		(
+			"later_registration_pv_beacon_dh3_peer_substituted",
+			"x25519_beacon_dh",
+			2,
+			1,
+			"response_server_kex",
+		),
+		(
+			"later_registration_pv_beacon_dh4_secret_substituted",
+			"x25519_beacon_dh",
+			3,
+			0,
+			"beacon_prekey_secret",
+		),
+		(
+			"later_registration_pv_beacon_dh4_peer_substituted",
+			"x25519_beacon_dh",
+			3,
+			1,
+			"response_server_kex",
+		),
+		(
+			"later_registration_pv_beacon_kem_ciphertext_substituted",
+			"mlkem_decapsulate",
+			0,
+			0,
+			"replacement_ciphertext",
+		),
+		(
+			"later_registration_pv_beacon_kem_secret_key_substituted",
+			"mlkem_decapsulate",
+			0,
+			1,
+			"replacement_pq_secret",
+		),
+		(
+			"later_registration_pv_beacon_shared_dh_order_swapped",
+			"beaconcrypt_core__pqxdh__PqxdhSharedSecrets",
+			0,
+			0,
+			"dh2",
+		),
+		(
+			"later_registration_pv_beacon_shared_kem_substituted",
+			"beaconcrypt_core__pqxdh__PqxdhSharedSecrets",
+			0,
+			4,
+			"replacement_kem_secret",
+		),
+		(
+			"later_registration_pv_beacon_root_builder_substituted",
+			"beaconcrypt_core__pqxdh__build_root_key_input",
+			0,
+			0,
+			"replacement_shared_secrets",
+		),
+	] {
+		assert_later_registration_rejected(
+			name,
+			"later-registration Beacon root reconstruction",
+			|snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.later_registration_control,
+					"let LaterSequenceRegistrationOpen(",
+					function,
+					call,
+					argument,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, function, call, argument, replacement) in [
+		(
+			"later_registration_pv_server_identity_public_substituted",
+			"ed_public",
+			0usize,
+			0usize,
+			"beacon_identity_secret",
+		),
+		(
+			"later_registration_pv_server_beacon_identity_public_substituted",
+			"ed_public",
+			1,
+			0,
+			"server_identity_secret",
+		),
+		(
+			"later_registration_pv_server_prekey_public_substituted",
+			"x25519_public",
+			0,
+			0,
+			"beacon_one_time_secret",
+		),
+		(
+			"later_registration_pv_server_one_time_public_substituted",
+			"x25519_public",
+			1,
+			0,
+			"beacon_prekey_secret",
+		),
+		(
+			"later_registration_pv_server_pq_public_substituted",
+			"mlkem_public",
+			0,
+			0,
+			"replacement_pq_secret",
+		),
+		(
+			"later_registration_pv_server_ephemeral_public_substituted",
+			"x25519_public",
+			2,
+			0,
+			"beacon_prekey_secret",
+		),
+		(
+			"later_registration_pv_server_kem_ciphertext_key_substituted",
+			"mlkem_ciphertext",
+			0,
+			0,
+			"replacement_pq",
+		),
+		(
+			"later_registration_pv_server_kem_ciphertext_coins_substituted",
+			"mlkem_ciphertext",
+			0,
+			1,
+			"replacement_coins",
+		),
+		(
+			"later_registration_pv_server_kem_secret_key_substituted",
+			"mlkem_shared_secret",
+			0,
+			0,
+			"replacement_pq",
+		),
+		(
+			"later_registration_pv_server_kem_secret_coins_substituted",
+			"mlkem_shared_secret",
+			0,
+			1,
+			"replacement_coins",
+		),
+		(
+			"later_registration_pv_server_dh1_secret_substituted",
+			"x25519_server_dh",
+			0,
+			0,
+			"server_ephemeral_secret",
+		),
+		(
+			"later_registration_pv_server_dh1_peer_substituted",
+			"x25519_server_dh",
+			0,
+			1,
+			"beacon_one_time",
+		),
+		(
+			"later_registration_pv_server_dh2_secret_substituted",
+			"x25519_server_dh",
+			1,
+			0,
+			"server_identity_secret",
+		),
+		(
+			"later_registration_pv_server_dh2_peer_substituted",
+			"x25519_server_dh",
+			1,
+			1,
+			"beacon_prekey",
+		),
+		(
+			"later_registration_pv_server_dh3_secret_substituted",
+			"x25519_server_dh",
+			2,
+			0,
+			"server_identity_secret",
+		),
+		(
+			"later_registration_pv_server_dh3_peer_substituted",
+			"x25519_server_dh",
+			2,
+			1,
+			"beacon_one_time",
+		),
+		(
+			"later_registration_pv_server_dh4_secret_substituted",
+			"x25519_server_dh",
+			3,
+			0,
+			"server_identity_secret",
+		),
+		(
+			"later_registration_pv_server_dh4_peer_substituted",
+			"x25519_server_dh",
+			3,
+			1,
+			"beacon_prekey",
+		),
+		(
+			"later_registration_pv_server_shared_dh_order_swapped",
+			"beaconcrypt_core__pqxdh__PqxdhSharedSecrets",
+			0,
+			0,
+			"dh2",
+		),
+		(
+			"later_registration_pv_server_shared_kem_substituted",
+			"beaconcrypt_core__pqxdh__PqxdhSharedSecrets",
+			0,
+			4,
+			"replacement_kem_secret",
+		),
+		(
+			"later_registration_pv_server_root_builder_substituted",
+			"beaconcrypt_core__pqxdh__build_root_key_input",
+			0,
+			0,
+			"replacement_shared_secrets",
+		),
+	] {
+		assert_later_registration_rejected(
+			name,
+			"later-registration Server root construction",
+			|snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.later_registration_control,
+					"let LaterSequenceRegistrationControl() =",
+					function,
+					call,
+					argument,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"later_registration_original_witness_visibility_changed",
+			"free LATER_REGISTRATION_ORIGINAL_WITNESS: bitstring [private].",
+			"free LATER_REGISTRATION_ORIGINAL_WITNESS: bitstring.",
+			"later-registration original-response witness",
+		),
+		(
+			"later_registration_substitution_witness_visibility_changed",
+			"free LATER_REGISTRATION_SUBSTITUTION_WITNESS: bitstring [private].",
+			"free LATER_REGISTRATION_SUBSTITUTION_WITNESS: bitstring.",
+			"later-registration substitution witness",
+		),
+		(
+			"later_registration_faithful_witness_visibility_changed",
+			"free LATER_REGISTRATION_FAITHFUL_WITNESS: bitstring [private].",
+			"free LATER_REGISTRATION_FAITHFUL_WITNESS: bitstring.",
+			"later-registration faithful witness",
+		),
+		(
+			"later_registration_counterfactual_witness_visibility_changed",
+			"free LATER_REGISTRATION_OMITTED_GATE_WITNESS: bitstring [private].",
+			"free LATER_REGISTRATION_OMITTED_GATE_WITNESS: bitstring.",
+			"later-registration counterfactual witness",
+		),
+		(
+			"later_registration_canary_visibility_changed",
+			"free LATER_REGISTRATION_OMITTED_GATE_CANARY: bitstring [private].",
+			"free LATER_REGISTRATION_OMITTED_GATE_CANARY: bitstring.",
+			"later-registration counterfactual canary",
+		),
+		(
+			"later_registration_original_event_signature_changed",
+			"event LaterRegistrationOriginalResponseIssued(",
+			"event LaterRegistrationOtherResponseIssued(",
+			"later-registration original-response event signature",
+		),
+		(
+			"later_registration_server_send_event_signature_changed",
+			"event LaterRegistrationServerFrameSent(",
+			"event LaterRegistrationOtherFrameSent(",
+			"later-registration Server-send event signature",
+		),
+		(
+			"later_registration_substitution_event_signature_changed",
+			"event LaterRegistrationSubstitutionSelected(",
+			"event LaterRegistrationOtherSubstitutionSelected(",
+			"later-registration substitution event signature",
+		),
+		(
+			"later_registration_faithful_attempt_event_signature_changed",
+			"event LaterRegistrationFaithfulAttempted(",
+			"event LaterRegistrationOtherFaithfulAttempted(",
+			"later-registration faithful-attempt event signature",
+		),
+		(
+			"later_registration_counterfactual_attempt_event_signature_changed",
+			"event LaterRegistrationOmittedGateAttempted(",
+			"event LaterRegistrationOtherOmittedGateAttempted(",
+			"later-registration counterfactual-attempt event signature",
+		),
+		(
+			"later_registration_opened_event_signature_changed",
+			"event LaterRegistrationGeneralReceiveOpened(",
+			"event LaterRegistrationOtherReceiveOpened(",
+			"later-registration opened event signature",
+		),
+		(
+			"later_registration_gate_reached_event_signature_changed",
+			"event LaterRegistrationOmittedGateReached(",
+			"event LaterRegistrationOtherGateReached(",
+			"later-registration gate-reached event signature",
+		),
+		(
+			"later_registration_gate_passed_event_signature_changed",
+			"event LaterRegistrationOmittedGateBypassed(",
+			"event LaterRegistrationOtherGatePassed(",
+			"later-registration gate-passed event signature",
+		),
+		(
+			"later_registration_poststate_event_signature_changed",
+			"event LaterRegistrationPoststatePublished(",
+			"event LaterRegistrationOtherPoststatePublished(",
+			"later-registration poststate event signature",
+		),
+		(
+			"later_registration_returned_event_signature_changed",
+			"event LaterRegistrationReturned(",
+			"event LaterRegistrationOtherReturned(",
+			"later-registration returned event signature",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.later_registration_control, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, function, call, argument, replacement) in [
+		(
+			"later_registration_original_event_root_substituted",
+			"LaterRegistrationOriginalResponseIssued",
+			0usize,
+			2usize,
+			"replacement_root",
+		),
+		(
+			"later_registration_original_event_response_substituted",
+			"LaterRegistrationOriginalResponseIssued",
+			0,
+			4,
+			"third_frame",
+		),
+		(
+			"later_registration_seq3_origin_session_substituted",
+			"LaterRegistrationServerFrameSent",
+			2,
+			0,
+			"replacement_session",
+		),
+		(
+			"later_registration_seq3_origin_root_substituted",
+			"LaterRegistrationServerFrameSent",
+			2,
+			1,
+			"replacement_root",
+		),
+		(
+			"later_registration_seq3_origin_response_substituted",
+			"LaterRegistrationServerFrameSent",
+			2,
+			2,
+			"substituted_response",
+		),
+		(
+			"later_registration_seq3_origin_sequence_substituted",
+			"LaterRegistrationServerFrameSent",
+			2,
+			3,
+			"first_sequence()",
+		),
+		(
+			"later_registration_seq3_origin_sender_substituted",
+			"LaterRegistrationServerFrameSent",
+			2,
+			4,
+			"assigned_key_id",
+		),
+		(
+			"later_registration_seq3_origin_payload_substituted",
+			"LaterRegistrationServerFrameSent",
+			2,
+			6,
+			"LATER_REGISTRATION_SEQ2_PAYLOAD",
+		),
+		(
+			"later_registration_seq3_origin_frame_substituted",
+			"LaterRegistrationServerFrameSent",
+			2,
+			7,
+			"second_frame",
+		),
+		(
+			"later_registration_seq3_origin_material_substituted",
+			"LaterRegistrationServerFrameSent",
+			2,
+			8,
+			"server_material_2",
+		),
+	] {
+		assert_later_registration_rejected(
+			name,
+			"later-registration genuine response and later-frame order",
+			|snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.later_registration_control,
+					"let LaterSequenceRegistrationControl() =",
+					function,
+					call,
+					argument,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	// These probes cover the new genuine first-frame path and the production gate.
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"later_registration_initial_open_root",
+			"let LaterSequenceRegistrationInitialOpen(",
+			"let root = pqxdh_root(",
+			"let root = mutated_root(",
+			"later-registration reviewed initial opening",
+		),
+		(
+			"later_registration_initial_open_chain",
+			"let LaterSequenceRegistrationInitialOpen(",
+			"let server_chain_2 = ratchet_next(server_chain_1)",
+			"let server_chain_2 = server_chain_1",
+			"later-registration reviewed initial opening",
+		),
+		(
+			"later_registration_initial_open_material",
+			"let LaterSequenceRegistrationInitialOpen(",
+			"let server_material_1 = ratchet_material(server_chain_1)",
+			"let server_material_1 = ratchet_material(server_chain_2)",
+			"later-registration reviewed initial opening",
+		),
+		(
+			"later_registration_initial_open_cache",
+			"let LaterSequenceRegistrationInitialOpen(",
+			"let cache_2 = receive_cache_empty()",
+			"let cache_2 = receive_cache_entry(first_sequence(), server_material_1, receive_cache_empty())",
+			"later-registration reviewed initial opening",
+		),
+		(
+			"later_registration_initial_finish_gate_removed",
+			"let LaterSequenceRegistrationInitialFinish(",
+			"if frame_sequence = first_sequence() then",
+			"if true then",
+			"later-registration production first-sequence gate count",
+		),
+		(
+			"later_registration_initial_finish_wrong_sequence",
+			"let LaterSequenceRegistrationInitialFinish(",
+			"if frame_sequence = first_sequence() then",
+			"if frame_sequence = next_sequence(first_sequence()) then",
+			"later-registration production first-sequence gate count",
+		),
+		(
+			"later_registration_faithful_gate_removed",
+			"let LaterSequenceRegistrationFaithfulFinish(",
+			"if frame_sequence = first_sequence() then",
+			"if true then",
+			"later-registration faithful sequence gate",
+		),
+		(
+			"later_registration_faithful_wrong_sequence",
+			"let LaterSequenceRegistrationFaithfulFinish(",
+			"if frame_sequence = first_sequence() then",
+			"if frame_sequence = next_sequence(first_sequence()) then",
+			"later-registration faithful sequence gate",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.later_registration_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, LATER_REGISTRATION_MUTATION_COUNT);
+}
+
+const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 201;
+
+#[test]
+fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+
+	for (name, from, to) in [
+		(
+			"cbor_registration_raw_field_count",
+			"cbor_registration_payload(bitstring, bitstring, bitstring)",
+			"cbor_registration_payload(bitstring, bitstring)",
+		),
+		(
+			"cbor_registration_strip_tag",
+			"cbor_registration_payload(body, tag, commitment).",
+			"cbor_registration_payload(body, body, commitment).",
+		),
+		(
+			"cbor_registration_restore_sequence",
+			"crypto_frame(body, tag, commitment, first_sequence(), pinned)",
+			"crypto_frame(body, tag, commitment, next_sequence(first_sequence()), pinned)",
+		),
+		(
+			"cbor_registration_restore_sender",
+			"crypto_frame(body, tag, commitment, first_sequence(), pinned)",
+			"crypto_frame(body, tag, commitment, first_sequence(), cbor_other_sender())",
+		),
+		(
+			"cbor_registration_open_sequence",
+			"open_frame(material, CBOR_REGISTRATION_AD, first_sequence(),",
+			"open_frame(material, CBOR_REGISTRATION_AD, next_sequence(first_sequence()),",
+		),
+		(
+			"cbor_registration_open_sender",
+			"first_sequence(), cbor_pinned_sender(), restored)",
+			"first_sequence(), cbor_other_sender(), restored)",
+		),
+		(
+			"cbor_registration_missing_genuine_query",
+			"query event(CborRegistrationGenuineOpened()).",
+			"",
+		),
+		(
+			"cbor_registration_missing_later_attempt",
+			"if candidate = later then event CborRegistrationLaterAttempted()",
+			"if candidate = genuine then event CborRegistrationLaterAttempted()",
+		),
+		(
+			"cbor_registration_missing_sender_attempt",
+			"if candidate = other_sender then event CborRegistrationOtherSenderAttempted()",
+			"if candidate = genuine then event CborRegistrationOtherSenderAttempted()",
+		),
+	] {
+		assert_rejected(name, "CBOR registration", |snapshot| {
+			replace_once(&mut snapshot.cbor_registration, from, to)
+		});
+		mutation_count += 1;
+	}
+
+	for (name, arm) in [
+		(
+			"cbor_registration_missing_genuine_success",
+			"if candidate = genuine then event CborRegistrationGenuineOpened()",
+		),
+		(
+			"cbor_registration_missing_later_success",
+			"if candidate = later then event CborRegistrationLaterOpened()",
+		),
+		(
+			"cbor_registration_missing_sender_success",
+			"if candidate = other_sender then event CborRegistrationOtherSenderOpened()",
+		),
+	] {
+		assert_rejected(
+			name,
+			"CBOR registration success observation arm",
+			|snapshot| replace_once(&mut snapshot.cbor_registration, arm, "0"),
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"cbor_response_authentication_overhead",
+			"bound_length.checked_add(MESSAGE_OVERHEAD)",
+			"bound_length.checked_add(0)",
+		),
+		(
+			"cbor_response_checked_binding_length",
+			"application_length.checked_add(8)",
+			"Some(application_length.wrapping_add(8))",
+		),
+		(
+			"cbor_response_size_precheck",
+			"registration_response_len(plaintext.len(), next_key_id)?;",
+			"registration_response_len(0, next_key_id)?;",
+		),
+	] {
+		let diagnostic = if name == "cbor_response_size_precheck" {
+			"MLDSA token binding and signed publication precede commit"
+		} else {
+			"CBOR"
+		};
+		assert_rejected(name, diagnostic, |snapshot| {
+			if name == "cbor_response_size_precheck" {
+				replace_once(&mut snapshot.adapter_server, from, to)
+			} else {
+				replace_once(&mut snapshot.transport_sizing, from, to)
+			}
+		});
+		mutation_count += 1;
+	}
+
+	for fact in EXPECTED_FACTS
+		.iter()
+		.filter(|fact| fact.starts_with("cryptoframe.") || fact.starts_with("transport."))
+	{
+		let key = fact.split_once('=').unwrap().0;
+		assert_rejected(&format!("cryptoframe_fact_{key}"), key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated")
+		});
+		mutation_count += 1;
+	}
+	let schema_fields = ["seq: uint", "key-id: uint", "cipher-text: bstr"];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let fields = permutation.map(|field| schema_fields[field]);
+		assert_rejected(
+			&format!("cryptoframe_schema_declaration_permutation_{index}"),
+			"CryptoFrame schema changed",
+			|snapshot| {
+				replace_once(
+					&mut snapshot.cryptoframe_schema,
+					"seq: uint, key-id: uint, cipher-text: bstr",
+					&fields.join(", "),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for omitted in 0..3 {
+		let fields = schema_fields
+			.iter()
+			.enumerate()
+			.filter(|(index, _)| *index != omitted)
+			.map(|(_, field)| *field)
+			.collect::<Vec<_>>();
+		assert_rejected(
+			&format!("cryptoframe_schema_omits_field_{omitted}"),
+			"CryptoFrame schema changed",
+			|snapshot| {
+				replace_once(
+					&mut snapshot.cryptoframe_schema,
+					"seq: uint, key-id: uint, cipher-text: bstr",
+					&fields.join(", "),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (name, from, to) in [
+		(
+			"cryptoframe_schema_version_drift",
+			"crypto-frame = [1, 2",
+			"crypto-frame = [2, 2",
+		),
+		(
+			"cryptoframe_schema_kind_drift",
+			"crypto-frame = [1, 2",
+			"crypto-frame = [1, 1",
+		),
+		(
+			"cryptoframe_schema_seq_type_drift",
+			"seq: uint",
+			"seq: bstr",
+		),
+		(
+			"cryptoframe_schema_sender_type_drift",
+			"key-id: uint",
+			"key-id: bstr",
+		),
+		(
+			"cryptoframe_schema_payload_type_drift",
+			"cipher-text: bstr]",
+			"cipher-text: uint]",
+		),
+	] {
+		assert_rejected(name, "CryptoFrame schema changed", |snapshot| {
+			replace_once_after(&mut snapshot.cryptoframe_schema, "crypto-frame =", from, to)
+		});
+		mutation_count += 1;
+	}
+	for (name, from, to) in [
+		("cbor_frame_array_arity", "[0x85, 1, 2]", "[0x84, 1, 2]"),
+		("cbor_frame_version", "[0x85, 1, 2]", "[0x85, 2, 2]"),
+		("cbor_frame_kind", "[0x85, 1, 2]", "[0x85, 1, 1]"),
+		("cbor_frame_field_types", "&[0, 0, 2]", "&[2, 0, 0]"),
+		("cbor_init_array_arity", "[0x88, 2, 0]", "[0x87, 2, 0]"),
+		(
+			"cbor_init_field_types",
+			"&[2, 2, 2, 2, 2, 2]",
+			"&[0, 2, 2, 2, 2, 2]",
+		),
+		("cbor_response_array_arity", "[0x88, 2, 1]", "[0x87, 2, 1]"),
+		(
+			"cbor_response_field_types",
+			"&[2, 2, 2, 2, 0, 2]",
+			"&[2, 2, 2, 0, 2, 2]",
+		),
+		(
+			"cbor_frame_trailing_suffix",
+			"v: (frame, [])",
+			"v: (frame, _)",
+		),
+		("cbor_init_trailing_suffix", "v: (init, [])", "v: (init, _)"),
+		(
+			"cbor_response_trailing_suffix",
+			"v: (response, [])",
+			"v: (response, _)",
+		),
+		(
+			"cbor_preflight_size_gate",
+			"!beaconcrypt_core::transport::complete_message_size_admitted(input.len())",
+			"beaconcrypt_core::transport::complete_message_size_admitted(input.len())",
+		),
+		(
+			"cbor_preflight_trailing_bytes",
+			"remaining.is_empty().then_some(())",
+			"Some(())",
+		),
+		(
+			"cbor_preflight_major_type",
+			"header >> 5 != major",
+			"header >> 5 == major",
+		),
+		(
+			"cbor_preflight_indefinite_length",
+			"_ => return None,",
+			"_ => 0,",
+		),
+		(
+			"cbor_preflight_checked_slice",
+			"rest.split_at_checked(width)?",
+			"rest.split_at(width)",
+		),
+	] {
+		assert_rejected(name, "CBOR", |snapshot| {
+			replace_once(&mut snapshot.transport_parser, from, to)
+		});
+		mutation_count += 1;
+	}
+	for (name, from, to) in [
+		("cbor_message_size_limit", "33_554_432", "67_108_864"),
+		(
+			"cbor_length_header_overhead",
+			"Self { value: Some(3) }",
+			"Self { value: Some(2) }",
+		),
+		(
+			"cbor_length_integer_overflow",
+			"length.checked_add(argument_len(value))",
+			"Some(length)",
+		),
+		(
+			"cbor_length_payload_overflow",
+			"length.checked_add(byte_length)",
+			"Some(length)",
+		),
+		(
+			"cbor_length_limit_gate",
+			"length <= MAX_MESSAGE_SIZE",
+			"length < MAX_MESSAGE_SIZE",
+		),
+	] {
+		assert_rejected(name, "CBOR", |snapshot| {
+			replace_once(&mut snapshot.transport_sizing, from, to)
+		});
+		mutation_count += 1;
+	}
+	for (name, from, to) in [
+		(
+			"cbor_encode_reservation",
+			"output.try_reserve_exact(capacity).ok()?;",
+			"output.reserve_exact(capacity);",
+		),
+		(
+			"cbor_encode_partial_publish",
+			"if written == 0 {",
+			"if written == usize::MAX {",
+		),
+		(
+			"cbor_encode_truncate",
+			"output.truncate(written);",
+			"output.truncate(capacity);",
+		),
+		(
+			"cbor_frame_overhead_overflow",
+			"protected_frame_len(plaintext_len, sequence, sender)",
+			"protected_frame_len(0, sequence, sender)",
+		),
+	] {
+		assert_rejected(name, "CBOR", |snapshot| {
+			replace_once(&mut snapshot.adapter_wire, from, to)
+		});
+		mutation_count += 1;
+	}
+	for (name, from, to, diagnostic) in [
+		(
+			"cbor_send_size_gate",
+			"crate::wire::frame_len(bytes.len(), sequence, sender_kid)?;",
+			"crate::wire::frame_len(0, sequence, sender_kid)?;",
+			"CBOR size precheck before ratchet",
+		),
+		(
+			"cbor_receive_sender_gate",
+			"frame.cipher_text,\n\t\texpected_sender_kid,",
+			"frame.cipher_text,\n\t\tframe.key_id,",
+			"record effects",
+		),
+		(
+			"cbor_receive_sequence",
+			"admitted.ciphertext,\n\t\tadmitted.sequence,\n\t\tadmitted.sender,",
+			"admitted.ciphertext,\n\t\t1,\n\t\tadmitted.sender,",
+			"record effects",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_ratchet, from, to)
+		});
+		mutation_count += 1;
+	}
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let values = [
+			"parts",
+			"self.seal.sequence()",
+			"self.seal.context().sender_kid",
+		];
+		let permuted = permutation.map(|field| values[field]);
+		assert_rejected(
+			&format!("cryptoframe_builder_mapping_permutation_{index}"),
+			"record effects",
+			|snapshot| {
+				registration_effects::replace_contract(
+					snapshot,
+					"records",
+					"impl SealWrite",
+					"request",
+					"Frame{parts,sequence:self.seal.sequence(),sender:self.seal.context().sender_kid,}",
+					&format!(
+						"Frame{{parts:{},sequence:{},sender:{},}}",
+						permuted[0], permuted[1], permuted[2]
+					),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_open_tag_slice_starts_late",
+			"base_ciphertext.len() - AEAD_TAG_SIZE..",
+			"base_ciphertext.len() - AEAD_TAG_SIZE + 1..",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"cryptoframe_open_tag_slice_ends_late",
+			"base_ciphertext.len() - AEAD_TAG_SIZE..",
+			"base_ciphertext.len() - AEAD_TAG_SIZE..base_ciphertext.len() + 1",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"cryptoframe_open_tag_uses_commitment_suffix",
+			"context.tag,",
+			"context.commitment,",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"cryptoframe_open_commitment_swaps_sequence_sender",
+			"\t\topening.sequence(),\n\t\tcontext.sender_kid,",
+			"\t\tcontext.sender_kid,\n\t\topening.sequence(),",
+			"CryptoFrame open commitment mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_record_surface(snapshot, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"cryptoframe_open_decrypts_before_commitment_equality",
+		"record effects",
+		|snapshot| {
+			registration_effects::replace_contract(
+				snapshot,
+				"ratchet",
+				"",
+				"execute_record_receive",
+				"letactual=execute_commitment_hash(pending.transcript_mut());",
+				"letpremature=execute_open_request(replacement_aead_request);letactual=execute_commitment_hash(pending.transcript_mut());",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn build_commitment(",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_core_key_size_drift",
+			"pub const AEAD_KEY_SIZE: usize = 32;",
+			"pub const AEAD_KEY_SIZE: usize = 31;",
+			"CryptoFrame core key size",
+		),
+		(
+			"cryptoframe_core_nonce_size_drift",
+			"pub const AEAD_NONCE_SIZE: usize = 12;",
+			"pub const AEAD_NONCE_SIZE: usize = 11;",
+			"CryptoFrame core nonce size",
+		),
+		(
+			"cryptoframe_core_ad_size_source_drift",
+			"pub const ASSOCIATED_DATA_SIZE: usize = crate::constants::ASSOCIATED_DATA_SIZE;",
+			"pub const ASSOCIATED_DATA_SIZE: usize = 152;",
+			"CryptoFrame core associated-data size source",
+		),
+		(
+			"cryptoframe_core_tag_size_drift",
+			"pub const AEAD_TAG_SIZE: usize = 16;",
+			"pub const AEAD_TAG_SIZE: usize = 15;",
+			"CryptoFrame core tag size",
+		),
+		(
+			"cryptoframe_core_integer_size_drift",
+			"pub const ENCODED_U64_SIZE: usize = 8;",
+			"pub const ENCODED_U64_SIZE: usize = 7;",
+			"CryptoFrame core integer size",
+		),
+		(
+			"cryptoframe_core_transcript_formula_omits_sender",
+			"AEAD_TAG_SIZE + (2 * ENCODED_U64_SIZE)",
+			"AEAD_TAG_SIZE + ENCODED_U64_SIZE",
+			"CryptoFrame core transcript-size formula",
+		),
+		(
+			"cryptoframe_core_ad_length_assertion_drift",
+			"assert!(ASSOCIATED_DATA_SIZE == 281)",
+			"assert!(ASSOCIATED_DATA_SIZE == 280)",
+			"CryptoFrame core associated-data length",
+		),
+		(
+			"cryptoframe_core_transcript_length_assertion_drift",
+			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 357)",
+			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 356)",
+			"CryptoFrame core transcript length",
+		),
+		(
+			"cryptoframe_core_result_uses_literal_size",
+			"bytes: [u8; COMMITMENT_TRANSCRIPT_SIZE]",
+			"bytes: [u8; 357]",
+			"CryptoFrame core fixed-width result",
+		),
+		(
+			"cryptoframe_core_sequence_parameter_narrows",
+			"sequence: u64,\n\tsender_id: u64,",
+			"sequence: u32,\n\tsender_id: u64,",
+			"CryptoFrame core transcript signature",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_commitment, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"cryptoframe_core_le64_uses_big_endian_order",
+		"CryptoFrame core LE64 encoding",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"\t\tvalue as u8,\n\t\t(value >> 8) as u8,\n\t\t(value >> 16) as u8,\n\t\t(value >> 24) as u8,\n\t\t(value >> 32) as u8,\n\t\t(value >> 40) as u8,\n\t\t(value >> 48) as u8,\n\t\t(value >> 56) as u8,",
+				"\t\t(value >> 56) as u8,\n\t\t(value >> 48) as u8,\n\t\t(value >> 40) as u8,\n\t\t(value >> 32) as u8,\n\t\t(value >> 24) as u8,\n\t\t(value >> 16) as u8,\n\t\t(value >> 8) as u8,\n\t\tvalue as u8,",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_core_swaps_encoded_sequence_sender",
+		"CryptoFrame core integer mapping",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"\tlet sequence = encode_u64_le(sequence);\n\tlet sender_id = encode_u64_le(sender_id);",
+				"\tlet sequence = encode_u64_le(sender_id);\n\tlet sender_id = encode_u64_le(sequence);",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_core_key_bytes_reversed",
+			"key[i]",
+			"key[31 - i]",
+			"CryptoFrame core key field",
+		),
+		(
+			"cryptoframe_core_nonce_offset_drift",
+			"nonce[i - 32]",
+			"nonce[i - 31]",
+			"CryptoFrame core nonce field",
+		),
+		(
+			"cryptoframe_core_ad_offset_drift",
+			"associated_data[i - 44]",
+			"associated_data[i - 43]",
+			"CryptoFrame core associated-data field",
+		),
+		(
+			"cryptoframe_core_tag_offset_drift",
+			"tag[i - 325]",
+			"tag[i - 324]",
+			"CryptoFrame core retained-tag field",
+		),
+		(
+			"cryptoframe_core_sequence_offset_drift",
+			"sequence[i - 341]",
+			"sequence[i - 340]",
+			"CryptoFrame core sequence field",
+		),
+		(
+			"cryptoframe_core_sender_offset_drift",
+			"sender_id[i - 349]",
+			"sender_id[i - 348]",
+			"CryptoFrame core sender-ID field",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_commitment, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"cryptoframe_core_array_builder_spelling_drift",
+		"CryptoFrame core fixed-width construction",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"core::array::from_fn(|i|",
+				"core::array::from_fn::<_, COMMITMENT_TRANSCRIPT_SIZE, _>(|i|",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_core_result_clones_bytes",
+		"CryptoFrame core transcript result",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"CommitmentTranscript { bytes }",
+				"CommitmentTranscript { bytes: bytes.clone() }",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_core_reorders_tag_and_sequence_branches",
+		"CryptoFrame core transcript field order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"\t\t} else if i < 341 {\n\t\t\ttag[i - 325]\n\t\t} else if i < 349 {\n\t\t\tsequence[i - 341]",
+				"\t\t} else if i < 349 {\n\t\t\tsequence[i - 341]\n\t\t} else if i < 341 {\n\t\t\ttag[i - 325]",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	let symbolic_fields = ["ciphertext", "retained_aead_tag", "commitment"];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let fields = permutation.map(|field| symbolic_fields[field]);
+		let mutated = format!(
+			"crypto_frame.fields={},sequence,sender_id",
+			fields.join(",")
+		);
+		assert_rejected(
+			&format!("cryptoframe_symbolic_annotation_permutation_{index}"),
+			"CryptoFrame symbolic semantic field order",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.crypto,
+					"crypto_frame.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id",
+					&mutated,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"cryptoframe_symbolic_annotation_uses_target_id",
+		"CryptoFrame symbolic semantic field order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.crypto,
+				"commitment,sequence,sender_id *)",
+				"commitment,sequence,target_id *)",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (name, from, to) in [
+		(
+			"cryptoframe_symbolic_sequence_type_drift",
+			"  sequence,\n  key_id\n): bitstring [data].",
+			"  key_id,\n  key_id\n): bitstring [data].",
+		),
+		(
+			"cryptoframe_symbolic_sender_type_drift",
+			"  sequence,\n  key_id\n): bitstring [data].",
+			"  sequence,\n  bitstring\n): bitstring [data].",
+		),
+	] {
+		assert_rejected(
+			name,
+			"CryptoFrame symbolic constructor declaration",
+			|snapshot| {
+				replace_once(&mut snapshot.crypto, from, to);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	let seal_formals = [
+		"material: bitstring",
+		"associated_data: bitstring",
+		"message_sequence: sequence",
+		"sender_id: key_id",
+		"plaintext: bitstring",
+	];
+	let seal_bitstrings = [seal_formals[0], seal_formals[1], seal_formals[4]];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let permuted = permute_cryptoframe(&seal_bitstrings, permutation);
+		let mut arguments = seal_formals.map(str::to_owned).to_vec();
+		arguments[0] = permuted[0].clone();
+		arguments[1] = permuted[1].clone();
+		arguments[4] = permuted[2].clone();
+		assert_rejected(
+			&format!("cryptoframe_symbolic_seal_argument_permutation_{index}"),
+			"CryptoFrame symbolic seal arguments",
+			move |snapshot| replace_call(&mut snapshot.crypto, "seal_frame", 0, &arguments),
+		);
+		mutation_count += 1;
+	}
+
+	let seal_fields = [
+		"aead_cipher(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"aead_tag(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"ctx_commitment(material_key(material),material_nonce(material),associated_data,aead_tag(material_key(material),material_nonce(material),associated_data,plaintext),message_sequence,sender_id)",
+	];
+	let seal_tail = ["message_sequence", "sender_id"];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let mut arguments = permute_cryptoframe(&seal_fields, permutation);
+		arguments.extend(seal_tail.map(str::to_owned));
+		assert_rejected(
+			&format!("cryptoframe_symbolic_seal_field_permutation_{index}"),
+			"CryptoFrame symbolic seal fields",
+			move |snapshot| replace_call(&mut snapshot.crypto, "crypto_frame", 1, &arguments),
+		);
+		mutation_count += 1;
+	}
+	for (index, duplicated) in [
+		[seal_fields[0], seal_fields[0], seal_fields[2]],
+		[seal_fields[0], seal_fields[1], seal_fields[1]],
+		[seal_fields[2], seal_fields[1], seal_fields[2]],
+	]
+	.into_iter()
+	.enumerate()
+	{
+		let mut arguments = duplicated.map(str::to_owned).to_vec();
+		arguments.extend(seal_tail.map(str::to_owned));
+		let diagnostic = match index {
+			1 => "seal CTX input",
+			2 => "seal AEAD input",
+			_ => "CryptoFrame symbolic seal fields",
+		};
+		assert_rejected(
+			&format!("cryptoframe_symbolic_seal_field_duplicate_{index}"),
+			diagnostic,
+			move |snapshot| replace_call(&mut snapshot.crypto, "crypto_frame", 1, &arguments),
+		);
+		mutation_count += 1;
+	}
+
+	let open_fields = [
+		"aead_cipher(key,nonce,associated_data,plaintext)",
+		"aead_tag(key,nonce,associated_data,plaintext)",
+		"blake2b512(ctx_preimage(key,nonce,associated_data,aead_tag(key,nonce,associated_data,plaintext),sequence_le64(message_sequence),sender_id_le64(sender_id)))",
+	];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let mut arguments = permute_cryptoframe(&open_fields, permutation);
+		arguments.extend(seal_tail.map(str::to_owned));
+		assert_rejected(
+			&format!("cryptoframe_symbolic_open_field_permutation_{index}"),
+			"CryptoFrame symbolic open fields",
+			move |snapshot| replace_call(&mut snapshot.crypto, "crypto_frame", 2, &arguments),
+		);
+		mutation_count += 1;
+	}
+	for (index, duplicated) in [
+		[open_fields[0], open_fields[0], open_fields[2]],
+		[open_fields[0], open_fields[1], open_fields[1]],
+		[open_fields[2], open_fields[1], open_fields[2]],
+	]
+	.into_iter()
+	.enumerate()
+	{
+		let mut arguments = duplicated.map(str::to_owned).to_vec();
+		arguments.extend(seal_tail.map(str::to_owned));
+		let diagnostic = if index == 1 {
+			"open CTX input"
+		} else {
+			"CryptoFrame symbolic open fields"
+		};
+		assert_rejected(
+			&format!("cryptoframe_symbolic_open_field_duplicate_{index}"),
+			diagnostic,
+			move |snapshot| replace_call(&mut snapshot.crypto, "crypto_frame", 2, &arguments),
+		);
+		mutation_count += 1;
+	}
+
+	let open_frame_arguments = [
+		"ratchet_key_nonce(key,nonce)",
+		"associated_data",
+		"message_sequence",
+		"sender_id",
+		"crypto_frame(aead_cipher(key,nonce,associated_data,plaintext),aead_tag(key,nonce,associated_data,plaintext),blake2b512(ctx_preimage(key,nonce,associated_data,aead_tag(key,nonce,associated_data,plaintext),sequence_le64(message_sequence),sender_id_le64(sender_id))),message_sequence,sender_id)",
+	];
+	let open_bitstrings = [
+		open_frame_arguments[0],
+		open_frame_arguments[1],
+		open_frame_arguments[4],
+	];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let permuted = permute_cryptoframe(&open_bitstrings, permutation);
+		let mut arguments = open_frame_arguments.map(str::to_owned).to_vec();
+		arguments[0] = permuted[0].clone();
+		arguments[1] = permuted[1].clone();
+		arguments[4] = permuted[2].clone();
+		assert_rejected(
+			&format!("cryptoframe_symbolic_open_argument_permutation_{index}"),
+			"CryptoFrame symbolic open acceptance",
+			move |snapshot| replace_call(&mut snapshot.crypto, "open_frame", 0, &arguments),
+		);
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"cryptoframe_symbolic_open_returns_associated_data",
+		"CryptoFrame symbolic open result",
+		|snapshot| {
+			let end = snapshot.crypto.rfind(") = plaintext.").unwrap();
+			snapshot
+				.crypto
+				.replace_range(end..end + ") = plaintext.".len(), ") = associated_data.");
+		},
+	);
+	mutation_count += 1;
+
+	for (name, occurrence, seal_context, diagnostic) in [
+		(
+			"cryptoframe_symbolic_seal_commitment_uses_different_tag",
+			1,
+			true,
+			"seal CTX input",
+		),
+		(
+			"cryptoframe_symbolic_open_commitment_uses_different_tag",
+			3,
+			false,
+			"open CTX input",
+		),
+	] {
+		let arguments = if seal_context {
+			[
+				"material_key(material)",
+				"material_nonce(material)",
+				"associated_data",
+				"associated_data",
+			]
+			.map(str::to_owned)
+		} else {
+			["key", "nonce", "associated_data", "associated_data"].map(str::to_owned)
+		};
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_call(&mut snapshot.crypto, "aead_tag", occurrence, &arguments);
+		});
+		mutation_count += 1;
+	}
+
+	let ctx_fields = [
+		"key",
+		"nonce",
+		"associated_data",
+		"retained_aead_tag",
+		"sequence_le64(message_sequence)",
+		"sender_id_le64(sender_id)",
+	];
+	for left in 0..6 {
+		for right in left + 1..6 {
+			let mut arguments = ctx_fields.map(str::to_owned);
+			arguments.swap(left, right);
+			assert_rejected(
+				&format!("cryptoframe_ctx_pair_transposition_{left}_{right}"),
+				"CTX preimage field order",
+				move |snapshot| {
+					replace_call(&mut snapshot.interface, "ctx_preimage", 1, &arguments);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+	for omitted in 0..6 {
+		let mut arguments = ctx_fields.map(str::to_owned);
+		arguments[omitted] = ctx_fields[(omitted + 1) % 6].to_owned();
+		assert_rejected(
+			&format!("cryptoframe_ctx_omits_and_duplicates_field_{omitted}"),
+			"CTX preimage field order",
+			move |snapshot| {
+				replace_call(&mut snapshot.interface, "ctx_preimage", 1, &arguments);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_decoder_truncates_input",
+			"decode_frame(data)",
+			"decode_frame(&data[..data.len()-1])",
+			"CryptoFrame complete CBOR parse",
+		),
+		(
+			"cryptoframe_decoder_ignores_input",
+			"decode_frame(data)",
+			"decode_frame(&[])",
+			"CryptoFrame complete CBOR parse",
+		),
+		(
+			"cryptoframe_factory_split_boundary_drift",
+			"ciphertext.split_at(ciphertext.len() - COMMITMENT_SIZE)",
+			"ciphertext.split_at(ciphertext.len() - COMMITMENT_SIZE + 1)",
+			"CryptoFrame split commitment boundary",
+		),
+		(
+			"cryptoframe_factory_tag_views_commitment",
+			"let tag = match tag.try_into() {",
+			"let tag = match supplied_commitment[..AEAD_TAG_SIZE].try_into() {",
+			"CryptoFrame validated payload views",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_record_surface(snapshot, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, CRYPTOFRAME_WIRE_MUTATION_COUNT);
+}
+
+const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 117;
+
+#[test]
+fn phase1_registration_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	for key in [
+		"phase1.init_kex.constructor",
+		"phase1.init_kex.field_count",
+		"phase1.init_kex.field.0",
+		"phase1.init_kex.field.1",
+		"phase1.init_kex.field.2",
+		"phase1.init_kex.field.3",
+		"phase1.signature.primitive",
+		"phase1.signature.format",
+		"phase1.init_kex.beacon_writes",
+		"phase1.init_kex.beacon_signs",
+		"phase1.init_kex.server_reads",
+		"phase1.init_kex.server.verifies",
+		"phase1.init_kex.server.from_encoded",
+		"phase1.init_kex.server.validates",
+		"phase1.init_kex.symbolic.fields",
+		"phase1.init_kex.symbolic.producers",
+		"phase1.init_kex.symbolic.consumers",
+		"phase1.init_kex.symbolic.validation",
+	] {
+		let name = format!("changed_{key}");
+		assert_rejected(&name, key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated");
+		});
+		mutation_count += 1;
+	}
+
+	const SCHEMA_FIELDS: [(&str, usize); 4] = [
+		("identityKey", 0),
+		("preKey", 1),
+		("oneTimeKey", 2),
+		("pqKey", 3),
+	];
+	let permutations = phase1_permutations();
+	assert_eq!(permutations.len(), 24);
+	for (index, permutation) in permutations
+		.iter()
+		.copied()
+		.filter(|permutation| permutation != &[0, 1, 2, 3])
+		.enumerate()
+	{
+		let fields = permutation.map(|field| SCHEMA_FIELDS[field]);
+		let name = format!("phase1_schema_same_typed_permutation_{index}");
+		assert_rejected(&name, "Phase-1 InitKex schema", move |snapshot| {
+			replace_phase1_schema(snapshot, &fields);
+		});
+		mutation_count += 1;
+	}
+	for omitted in 0..4 {
+		let fields = SCHEMA_FIELDS
+			.iter()
+			.enumerate()
+			.filter(|(index, _)| *index != omitted)
+			.enumerate()
+			.map(|(ordinal, (_, (name, _)))| (*name, ordinal))
+			.collect::<Vec<_>>();
+		let name = format!("phase1_schema_omits_field_{omitted}");
+		assert_rejected(&name, "Phase-1 InitKex schema", move |snapshot| {
+			replace_phase1_schema(snapshot, &fields);
+		});
+		mutation_count += 1;
+	}
+	for (original, renamed) in [
+		("identity-key", "renamed-identity-key"),
+		("pre-key", "renamed-pre-key"),
+		("one-time-key", "renamed-one-time-key"),
+		("pq-key", "renamed-pq-key"),
+	] {
+		let name = format!("phase1_schema_renames_{original}");
+		assert_rejected(&name, "Phase-1 InitKex schema", |snapshot| {
+			replace_once(&mut snapshot.phase1_schema, original, renamed);
+		});
+		mutation_count += 1;
+	}
+	// Moved registration controls are exercised against core phases and native drivers below.
+	let declaration_arguments = [
+		"encoded_identity",
+		"signed_prekey",
+		"signed_one_time",
+		"signed_pq",
+	];
+	let producer_arguments = [
+		"tag_ed25519(beacon_identity)",
+		"sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret)",
+		"sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret)",
+		"sign(tag_mlkem768(beacon_pq), beacon_identity_secret)",
+	];
+	let forged_producer_arguments = [
+		"tag_ed25519(beacon_identity)",
+		"sign(tag_x25519_prekey(forged_prekey), beacon_identity_secret)",
+		"sign(tag_x25519_one_time(forged_one_time), beacon_identity_secret)",
+		"sign(tag_mlkem768(forged_pq), beacon_identity_secret)",
+	];
+	let server_core_arguments = [
+		"encoded_identity",
+		"tag_x25519_prekey(beacon_prekey)",
+		"tag_x25519_one_time(beacon_one_time)",
+		"tag_mlkem768(beacon_pq)",
+	];
+	let honest_core_arguments = [
+		"tag_ed25519(beacon_identity)",
+		"tag_x25519_prekey(beacon_prekey)",
+		"tag_x25519_one_time(beacon_one_time)",
+		"tag_mlkem768(beacon_pq)",
+	];
+	for (index, permutation) in phase1_transpositions().into_iter().enumerate() {
+		let declaration = permute_phase1(&declaration_arguments, permutation);
+		let declaration_value = declaration.join(",");
+		let annotation =
+			"signed_init_kex.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq";
+		let mutated_annotation = format!("signed_init_kex.fields={declaration_value}");
+		assert_rejected(
+			&format!("phase1_symbolic_declaration_transposition_{index}"),
+			"Phase-1 symbolic constructor semantic order",
+			|snapshot| {
+				replace_once(&mut snapshot.environment, annotation, &mutated_annotation);
+			},
+		);
+		mutation_count += 1;
+
+		for (name, occurrence, diagnostic) in [
+			(
+				"honest_producer",
+				1,
+				"Phase-1 symbolic honest/malicious producer order",
+			),
+			(
+				"malicious_producer",
+				2,
+				"Phase-1 symbolic honest/malicious producer order",
+			),
+		] {
+			let arguments = permute_phase1(&producer_arguments, permutation);
+			assert_rejected(
+				&format!("phase1_symbolic_{name}_transposition_{index}"),
+				diagnostic,
+				move |snapshot| {
+					replace_call(
+						&mut snapshot.environment,
+						"signed_init_kex",
+						occurrence,
+						&arguments,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+		let arguments = permute_phase1(&forged_producer_arguments, permutation);
+		assert_rejected(
+			&format!("phase1_symbolic_active_quantum_producer_transposition_{index}"),
+			"Phase-1 active-quantum producer order",
+			move |snapshot| {
+				replace_call(
+					&mut snapshot.active_quantum_witness,
+					"signed_init_kex",
+					1,
+					&arguments,
+				);
+			},
+		);
+		mutation_count += 1;
+
+		for (name, occurrence) in [("server_consumer", 3), ("malicious_server_consumer", 4)] {
+			let arguments = permute_phase1(&declaration_arguments, permutation);
+			assert_rejected(
+				&format!("phase1_symbolic_{name}_transposition_{index}"),
+				"Phase-1 symbolic Server consumer order",
+				move |snapshot| {
+					replace_call(
+						&mut snapshot.environment,
+						"signed_init_kex",
+						occurrence,
+						&arguments,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+		let arguments = permute_phase1(&declaration_arguments, permutation);
+		assert_rejected(
+			&format!("phase1_symbolic_active_quantum_consumer_transposition_{index}"),
+			"Phase-1 active-quantum consumer order",
+			move |snapshot| {
+				replace_call(
+					&mut snapshot.active_quantum_witness,
+					"signed_init_kex",
+					0,
+					&arguments,
+				);
+			},
+		);
+		mutation_count += 1;
+
+		let arguments = permute_phase1(&honest_core_arguments, permutation);
+		assert_rejected(
+			&format!("phase1_symbolic_honest_core_transposition_{index}"),
+			"Phase-1 symbolic honest core mapping",
+			move |snapshot| {
+				replace_call(
+					&mut snapshot.environment,
+					"beaconcrypt_core__pqxdh__InitKex",
+					0,
+					&arguments,
+				);
+			},
+		);
+		mutation_count += 1;
+		for (name, occurrence) in [("server_core", 1), ("malicious_server_core", 2)] {
+			let arguments = permute_phase1(&server_core_arguments, permutation);
+			assert_rejected(
+				&format!("phase1_symbolic_{name}_transposition_{index}"),
+				"Phase-1 symbolic Server core mapping",
+				move |snapshot| {
+					replace_call(
+						&mut snapshot.environment,
+						"beaconcrypt_core__pqxdh__InitKex",
+						occurrence,
+						&arguments,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"phase1_core_prekey_uses_one_time_role",
+			"prekey: tag_x25519_key(KEY_ROLE_PREKEY, inputs.prekey_public_key)",
+			"prekey: tag_x25519_key(KEY_ROLE_ONE_TIME, inputs.prekey_public_key)",
+			"Phase-1 core prekey encoding",
+		),
+		(
+			"phase1_core_one_time_uses_prekey_role",
+			"one_time_key: tag_x25519_key(KEY_ROLE_ONE_TIME, coins.one_time_public_key)",
+			"one_time_key: tag_x25519_key(KEY_ROLE_PREKEY, coins.one_time_public_key)",
+			"Phase-1 core one-time encoding",
+		),
+		(
+			"phase1_core_prekey_validates_one_time_role",
+			"untag_x25519_key(message.prekey, KEY_ROLE_PREKEY)",
+			"untag_x25519_key(message.prekey, KEY_ROLE_ONE_TIME)",
+			"Phase-1 core X25519 prekey role validation",
+		),
+		(
+			"phase1_core_one_time_validates_prekey_role",
+			"untag_x25519_key(message.one_time_key, KEY_ROLE_ONE_TIME)",
+			"untag_x25519_key(message.one_time_key, KEY_ROLE_PREKEY)",
+			"Phase-1 core X25519 one-time role validation",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_pqxdh, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"phase1_symbolic_signature_verifies_under_x25519_key",
+		"Phase-1 symbolic attached-signature verification",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.crypto,
+				"ed_public(signing_key)) = message",
+				"x25519_public(signing_key)) = message",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_symbolic_reorders_prekey_and_one_time_gates",
+		"Phase-1 symbolic pure-gate evaluation order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"  let tag_x25519_prekey(beacon_prekey: bitstring) =\n    verify_signature(signed_prekey, beacon_identity)\n  in\n  let tag_x25519_one_time(beacon_one_time: bitstring) =\n    verify_signature(signed_one_time, beacon_identity)\n  in",
+				"  let tag_x25519_one_time(beacon_one_time: bitstring) =\n    verify_signature(signed_one_time, beacon_identity)\n  in\n  let tag_x25519_prekey(beacon_prekey: bitstring) =\n    verify_signature(signed_prekey, beacon_identity)\n  in",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_core_reorders_prekey_and_one_time_fields",
+		"Phase-1 core InitKex field order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_pqxdh,
+				"\t\t\tprekey: tag_x25519_key(KEY_ROLE_PREKEY, inputs.prekey_public_key),\n\t\t\tone_time_key: tag_x25519_key(KEY_ROLE_ONE_TIME, coins.one_time_public_key),",
+				"\t\t\tone_time_key: tag_x25519_key(KEY_ROLE_ONE_TIME, coins.one_time_public_key),\n\t\t\tprekey: tag_x25519_key(KEY_ROLE_PREKEY, inputs.prekey_public_key),",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_core_reorders_prekey_and_one_time_validation",
+		"Phase-1 core tag-validation order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_pqxdh,
+				"\tlet Some(prekey) = untag_x25519_key(message.prekey, KEY_ROLE_PREKEY) else {\n\t\treturn Err(RegistrationError::InvalidKeyEncoding);\n\t};\n\tlet Some(one_time) = untag_x25519_key(message.one_time_key, KEY_ROLE_ONE_TIME) else {\n\t\treturn Err(RegistrationError::InvalidKeyEncoding);\n\t};",
+				"\tlet Some(one_time) = untag_x25519_key(message.one_time_key, KEY_ROLE_ONE_TIME) else {\n\t\treturn Err(RegistrationError::InvalidKeyEncoding);\n\t};\n\tlet Some(prekey) = untag_x25519_key(message.prekey, KEY_ROLE_PREKEY) else {\n\t\treturn Err(RegistrationError::InvalidKeyEncoding);\n\t};",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	assert_eq!(mutation_count, PHASE1_REGISTRATION_MUTATION_COUNT);
+}
+
+const ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT: usize = 214;
+
+#[test]
+fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	let endpoint_facts = parse_facts(INTERFACE)
+		.unwrap()
+		.into_iter()
+		.filter(|fact| fact.starts_with("endpoint."))
+		.collect::<Vec<_>>();
+	assert_eq!(endpoint_facts.len(), 56);
+	for fact in endpoint_facts {
+		let (key, _) = fact.split_once('=').unwrap();
+		assert_rejected(&format!("endpoint_fact_{key}"), key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated");
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_sender_parser_ignores_wire",
+			"decode_frame(data)",
+			"decode_frame(&[])",
+			"CryptoFrame complete CBOR parse",
+		),
+		(
+			"endpoint_sender_parser_uses_phase2_type",
+			"decode_frame(data)",
+			"beaconcrypt_parse::decode_response(data)",
+			"CryptoFrame complete CBOR parse",
+		),
+		(
+			"endpoint_sender_parser_returns_sequence",
+			"Some(decode_crypto_frame(data)?.key_id)",
+			"Some(decode_crypto_frame(data)?.seq)",
+			"endpoint Server wire-sender keyId getter",
+		),
+		(
+			"endpoint_sender_parser_returns_constant",
+			"Some(decode_crypto_frame(data)?.key_id)",
+			"Some(0)",
+			"endpoint Server wire-sender keyId getter",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn encrypted_frame_sender",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, target, marker, from, to, diagnostic) in [
+		(
+			"endpoint_server_ad_reverses_identities",
+			"core_session",
+			"impl RegistrationBinding",
+			"server_pin.binding.identity_public_key,\n\t\t\tbeacon_identity_public_key,",
+			"beacon_identity_public_key,\n\t\t\tserver_pin.binding.identity_public_key,",
+			"registration binding retains exact pins, request and populated AD",
+		),
+		(
+			"endpoint_server_ad_selects_local_id",
+			"adapter_server",
+			"fn associated_data",
+			"self.known_ids.get(&k)?",
+			"self.known_ids.get(&self.identity_key_kid)?",
+			"endpoint Server retained session associated-data mapping",
+		),
+		(
+			"endpoint_server_ad_uses_peer_twice",
+			"core_session",
+			"impl RegistrationBinding",
+			"server_pin.binding.identity_public_key,\n\t\t\tbeacon_identity_public_key,",
+			"beacon_identity_public_key,\n\t\t\tbeacon_identity_public_key,",
+			"registration binding retains exact pins, request and populated AD",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			let source = match target {
+				"core_session" => &mut snapshot.core_session,
+				"adapter_server" => &mut snapshot.adapter_server,
+				_ => unreachable!(),
+			};
+			replace_once_after(source, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_server_send_ad_uses_local_id",
+			"let ad = self.associated_data(k)?;",
+			"let ad = self.associated_data(self.identity_key_kid)?;",
+			"endpoint Server send peer-associated data",
+		),
+		(
+			"endpoint_server_send_sender_uses_peer_id",
+			"let sender = self.identity_key_kid();",
+			"let sender = k;",
+			"endpoint Server send local sender",
+		),
+		(
+			"endpoint_server_send_target_uses_local_sender",
+			"encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)",
+			"encrypt_message_with_ratchet(b, sender, sender, &ad, self.ratchet_manager_mut(k)?)",
+			"endpoint Server send target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_server_send_wire_sender_uses_peer",
+			"encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)",
+			"encrypt_message_with_ratchet(b, k, k, &ad, self.ratchet_manager_mut(k)?)",
+			"endpoint Server send target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_server_send_ratchet_uses_local_sender",
+			"encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)",
+			"encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(sender)?)",
+			"endpoint Server send target/sender/context/ratchet mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"pub fn encrypt_message(&mut self, b: &[u8], k: u64)",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_server_receive_ignores_parsed_sender",
+			"let Some(k) = crate::ratchet::encrypted_frame_sender(b) else {\n\t\t\treturn ReceiveTransition::Rejected;\n\t\t};",
+			"let Some(_k) = crate::ratchet::encrypted_frame_sender(b) else {\n\t\t\treturn ReceiveTransition::Rejected;\n\t\t};\n\t\tlet k = self.identity_key_kid;",
+			"endpoint Server parsed sender selector",
+		),
+		(
+			"endpoint_server_receive_ad_uses_local_id",
+			"self.associated_data(k)",
+			"self.associated_data(self.identity_key_kid)",
+			"endpoint Server receive selected-peer associated data",
+		),
+		(
+			"endpoint_server_receive_ratchet_uses_local_id",
+			"self.ratchet_manager_mut(k)",
+			"self.ratchet_manager_mut(self.identity_key_kid)",
+			"endpoint Server receive selected-peer ratchet",
+		),
+		(
+			"endpoint_server_receive_expected_sender_uses_local_id",
+			"decrypt_message_with_ratchet(b, k, &ad, ratchet)",
+			"decrypt_message_with_ratchet(b, self.identity_key_kid, &ad, ratchet)",
+			"endpoint Server receive expected-sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_server_receive_uses_zero_ad",
+			"decrypt_message_with_ratchet(b, k, &ad, ratchet)",
+			"decrypt_message_with_ratchet(b, k, &[0; AD_SIZE], ratchet)",
+			"endpoint Server receive expected-sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_server_receive_rejects_successful_open",
+			"Some(decrypted) => ReceiveTransition::Accepted(decrypted)",
+			"Some(_decrypted) => ReceiveTransition::Rejected",
+			"endpoint Server acceptance only after successful open",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn decrypt_message_transition",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"endpoint_beacon_send_sender_uses_server_id",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"let sender = self.identity_key_kid;",
+			"let sender = self.server_kid();",
+			"endpoint Beacon assigned sender snapshot",
+		),
+		(
+			"endpoint_beacon_send_target_uses_assigned_id",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"encrypt_message_with_ratchet(\n\t\t\tb,\n\t\t\tcontrol.server_key_id(),\n\t\t\tsender,\n\t\t\tbinding.associated_data(),\n\t\t\tratchet,\n\t\t)",
+			"encrypt_message_with_ratchet(\n\t\t\tb,\n\t\t\tsender,\n\t\t\tsender,\n\t\t\tbinding.associated_data(),\n\t\t\tratchet,\n\t\t)",
+			"endpoint Beacon send target/sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_send_wire_sender_uses_server_id",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"encrypt_message_with_ratchet(\n\t\t\tb,\n\t\t\tcontrol.server_key_id(),\n\t\t\tsender,\n\t\t\tbinding.associated_data(),\n\t\t\tratchet,\n\t\t)",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), control.server_key_id(), associated_data, ratchet)",
+			"endpoint Beacon send target/sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_send_replaces_stored_ad",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"encrypt_message_with_ratchet(\n\t\t\tb,\n\t\t\tcontrol.server_key_id(),\n\t\t\tsender,\n\t\t\tbinding.associated_data(),\n\t\t\tratchet,\n\t\t)",
+			"encrypt_message_with_ratchet(\n\t\t\tb,\n\t\t\tcontrol.server_key_id(),\n\t\t\tsender,\n\t\t\t&[0; AD_SIZE],\n\t\t\tratchet,\n\t\t)",
+			"endpoint Beacon send target/sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_receive_expected_sender_uses_assigned_id",
+			"pub fn decrypt_message(&mut self, b: &[u8])",
+			"decrypt_message_with_ratchet(\n\t\t\tb,\n\t\t\tcontrol.server_key_id(),\n\t\t\tbinding.associated_data(),\n\t\t\tratchet,\n\t\t)",
+			"decrypt_message_with_ratchet(\n\t\t\tb,\n\t\t\tself.identity_key_kid,\n\t\t\tbinding.associated_data(),\n\t\t\tratchet,\n\t\t)",
+			"endpoint Beacon receive expected-sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_receive_replaces_stored_ad",
+			"pub fn decrypt_message(&mut self, b: &[u8])",
+			"decrypt_message_with_ratchet(\n\t\t\tb,\n\t\t\tcontrol.server_key_id(),\n\t\t\tbinding.associated_data(),\n\t\t\tratchet,\n\t\t)",
+			"decrypt_message_with_ratchet(\n\t\t\tb,\n\t\t\tcontrol.server_key_id(),\n\t\t\t&[0; AD_SIZE],\n\t\t\tratchet,\n\t\t)",
+			"endpoint Beacon receive expected-sender/stored context mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.adapter_beacon, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	// Moved registration controls are exercised against core phases and native drivers below.
+	assert_rejected(
+		"endpoint_server_receive_fail_open",
+		"endpoint Server acceptance only after successful open",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn decrypt_message_transition",
+				"None => ReceiveTransition::Rejected",
+				"None => ReceiveTransition::Accepted(panic!())",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"endpoint_beacon_send_discards_stored_ratchet",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"encrypt_message_with_ratchet(\n\t\t\tb,\n\t\t\tcontrol.server_key_id(),\n\t\t\tsender,\n\t\t\tbinding.associated_data(),\n\t\t\tratchet,\n\t\t)",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, return None)",
+			"endpoint Beacon send target/sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_receive_discards_stored_ratchet",
+			"pub fn decrypt_message(&mut self, b: &[u8])",
+			"decrypt_message_with_ratchet(\n\t\t\tb,\n\t\t\tcontrol.server_key_id(),\n\t\t\tbinding.associated_data(),\n\t\t\tratchet,\n\t\t)",
+			"decrypt_message_with_ratchet(b, control.server_key_id(), associated_data, return None)",
+			"endpoint Beacon receive expected-sender/stored context mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.adapter_beacon, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	// Moved registration controls are exercised against core phases and native drivers below.
+	for (family, scope, function, calls, replacement, diagnostic) in [
+		(
+			"honest_beacon_server_open",
+			"let HonestBeacon(",
+			"open_frame",
+			4usize,
+			"assigned_key_id",
+			"symbolic server-to-Beacon open wiring changed",
+		),
+		(
+			"honest_beacon_send",
+			"let HonestBeacon(",
+			"seal_frame",
+			1usize,
+			"SERVER_KEY_ID",
+			"symbolic Beacon-to-Server seal wiring",
+		),
+		(
+			"server_send",
+			"let Server(",
+			"seal_frame",
+			4usize,
+			"assigned_key_id",
+			"symbolic Server-to-Beacon seal wiring changed",
+		),
+		(
+			"server_beacon_open",
+			"let Server(",
+			"open_frame",
+			1usize,
+			"SERVER_KEY_ID",
+			"symbolic Server Beacon-frame open wiring",
+		),
+		(
+			"malicious_registration_server_send",
+			"let MaliciousServer(",
+			"seal_frame",
+			1usize,
+			"assigned_key_id",
+			"symbolic malicious-registration initial-frame wiring",
+		),
+	] {
+		for call_index in 0..calls {
+			for (argument_index, field, wrong_value) in [
+				(0usize, "material", "server_identity"),
+				(1usize, "associated_data", "server_identity"),
+				(
+					2usize,
+					"sequence",
+					"next_sequence(next_sequence(next_sequence(next_sequence(first_sequence()))))",
+				),
+				(3usize, "sender", replacement),
+				(4usize, "payload", "server_identity"),
+			] {
+				assert_rejected(
+					&format!("endpoint_symbolic_{family}_{field}_{call_index}"),
+					diagnostic,
+					move |snapshot| {
+						replace_nth_call_argument_after(
+							&mut snapshot.environment,
+							scope,
+							function,
+							call_index,
+							argument_index,
+							wrong_value,
+						);
+					},
+				);
+				mutation_count += 1;
+			}
+		}
+	}
+
+	for (name, scope, marker, replacement, diagnostic) in [
+		(
+			"endpoint_symbolic_honest_server_open_count_increases",
+			"let HonestBeacon(",
+			"let opened_initial = open_frame(",
+			"let endpoint_extra_open = open_frame(server_material_1, associated_data, first_sequence(), SERVER_KEY_ID, initial_frame) in\n    let opened_initial = open_frame(",
+			"initial sequence-one gate after opening and before binding",
+		),
+		(
+			"endpoint_symbolic_honest_beacon_seal_count_increases",
+			"let HonestBeacon(",
+			"let beacon_frame = seal_frame(",
+			"let endpoint_extra_beacon_frame = seal_frame(beacon_material_1, associated_data, first_sequence(), assigned_key_id, beacon_record_secret) in\n    let beacon_frame = seal_frame(",
+			"symbolic Beacon-to-Server seal wiring",
+		),
+		(
+			"endpoint_symbolic_server_seal_count_increases",
+			"let Server(",
+			"let initial_frame = seal_frame(",
+			"let endpoint_extra_initial_frame = seal_frame(server_material_1, associated_data, first_sequence(), SERVER_KEY_ID, registration_payload(binding, initial_secret)) in\n      let initial_frame = seal_frame(",
+			"symbolic Server-to-Beacon seal wiring changed",
+		),
+		(
+			"endpoint_symbolic_server_open_count_increases",
+			"let Server(",
+			"let beacon_plaintext = open_frame(",
+			"let endpoint_extra_beacon_plaintext = open_frame(beacon_material_1, associated_data, first_sequence(), assigned_key_id, beacon_frame) in\n      let beacon_plaintext = open_frame(",
+			"symbolic Server Beacon-frame open wiring",
+		),
+		(
+			"endpoint_symbolic_malicious_initial_seal_count_increases",
+			"let MaliciousServer(",
+			"let initial_frame = seal_frame(",
+			"let endpoint_extra_malicious_frame = seal_frame(server_material_1, associated_data, first_sequence(), SERVER_KEY_ID, registration_payload(binding, MALICIOUS_TASK_SECRET)) in\n  let initial_frame = seal_frame(",
+			"symbolic malicious-registration initial-frame wiring",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, scope, marker, replacement);
+		});
+		mutation_count += 1;
+	}
+
+	for (family, scope, event, calls, direction, sender, receiver, diagnostic) in [
+		(
+			"honest_beacon_receive",
+			"let HonestBeacon(",
+			"MessageReceived",
+			4usize,
+			"server_to_beacon()",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"symbolic HonestBeacon received-event fixture",
+		),
+		(
+			"honest_beacon_send",
+			"let HonestBeacon(",
+			"MessageSent",
+			1usize,
+			"beacon_to_server()",
+			"assigned_key_id",
+			"SERVER_KEY_ID",
+			"symbolic HonestBeacon sent-event fixture",
+		),
+		(
+			"server_send",
+			"let Server(",
+			"MessageSent",
+			4usize,
+			"server_to_beacon()",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"symbolic Server sent-event fixture",
+		),
+		(
+			"server_receive",
+			"let Server(",
+			"MessageReceived",
+			1usize,
+			"beacon_to_server()",
+			"assigned_key_id",
+			"SERVER_KEY_ID",
+			"symbolic Server received-event fixture",
+		),
+	] {
+		for call_index in 0..calls {
+			let wrong_direction = if direction == "server_to_beacon()" {
+				"beacon_to_server()"
+			} else {
+				"server_to_beacon()"
+			};
+			let wrong_sender = if sender == "SERVER_KEY_ID" {
+				"assigned_key_id"
+			} else {
+				"SERVER_KEY_ID"
+			};
+			let wrong_receiver = if receiver == "SERVER_KEY_ID" {
+				"assigned_key_id"
+			} else {
+				"SERVER_KEY_ID"
+			};
+			for (argument_index, field, wrong_value) in [
+				(0usize, "session", "server_identity"),
+				(1usize, "direction", wrong_direction),
+				(
+					2usize,
+					"sequence",
+					"next_sequence(next_sequence(next_sequence(next_sequence(first_sequence()))))",
+				),
+				(3usize, "sender", wrong_sender),
+				(4usize, "receiver", wrong_receiver),
+				(5usize, "plaintext", "server_identity"),
+			] {
+				assert_rejected(
+					&format!("endpoint_symbolic_{family}_event_{field}_{call_index}"),
+					diagnostic,
+					move |snapshot| {
+						replace_nth_call_argument_after(
+							&mut snapshot.environment,
+							scope,
+							event,
+							call_index,
+							argument_index,
+							wrong_value,
+						);
+					},
+				);
+				mutation_count += 1;
+			}
+		}
+	}
+
+	for (name, scope, marker, replacement, diagnostic) in [
+		(
+			"endpoint_symbolic_honest_received_event_count_increases",
+			"let HonestBeacon(",
+			"event MessageReceived(",
+			"event MessageReceived(session, server_to_beacon(), first_sequence(), SERVER_KEY_ID, assigned_key_id, initial_plaintext);\n    event MessageReceived(",
+			"symbolic HonestBeacon received-event fixture",
+		),
+		(
+			"endpoint_symbolic_honest_sent_event_count_increases",
+			"let HonestBeacon(",
+			"event MessageSent(",
+			"event MessageSent(session, beacon_to_server(), first_sequence(), assigned_key_id, SERVER_KEY_ID, beacon_record_secret);\n    event MessageSent(",
+			"symbolic HonestBeacon sent-event fixture",
+		),
+		(
+			"endpoint_symbolic_server_sent_event_count_increases",
+			"let Server(",
+			"event MessageSent(",
+			"event MessageSent(session, server_to_beacon(), first_sequence(), SERVER_KEY_ID, assigned_key_id, initial_secret);\n      event MessageSent(",
+			"symbolic Server sent-event fixture",
+		),
+		(
+			"endpoint_symbolic_server_received_event_count_increases",
+			"let Server(",
+			"event MessageReceived(",
+			"event MessageReceived(session, beacon_to_server(), first_sequence(), assigned_key_id, SERVER_KEY_ID, beacon_plaintext);\n      event MessageReceived(",
+			"symbolic Server received-event fixture",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, scope, marker, replacement);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, scope, marker, replacement, diagnostic) in [
+		(
+			"endpoint_symbolic_honest_received_event_arity_increases",
+			"let HonestBeacon(",
+			"assigned_key_id,\n      initial_plaintext\n    );",
+			"assigned_key_id,\n      initial_plaintext,\n      server_identity\n    );",
+			"symbolic HonestBeacon received-event fixture",
+		),
+		(
+			"endpoint_symbolic_honest_sent_event_arity_increases",
+			"let HonestBeacon(",
+			"SERVER_KEY_ID,\n      beacon_record_secret\n    );",
+			"SERVER_KEY_ID,\n      beacon_record_secret,\n      server_identity\n    );",
+			"symbolic HonestBeacon sent-event fixture",
+		),
+		(
+			"endpoint_symbolic_server_sent_event_arity_increases",
+			"let Server(",
+			"assigned_key_id,\n        initial_secret\n      );",
+			"assigned_key_id,\n        initial_secret,\n        server_identity\n      );",
+			"symbolic Server sent-event fixture",
+		),
+		(
+			"endpoint_symbolic_server_received_event_arity_increases",
+			"let Server(",
+			"SERVER_KEY_ID,\n        beacon_plaintext\n      );",
+			"SERVER_KEY_ID,\n        beacon_plaintext,\n        server_identity\n      );",
+			"symbolic Server received-event fixture",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, scope, marker, replacement);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, scope) in [
+		(
+			"endpoint_symbolic_honest_ad_reverses_identities",
+			"let HonestBeacon(",
+		),
+		(
+			"endpoint_symbolic_server_ad_reverses_identities",
+			"let Server(",
+		),
+		(
+			"endpoint_symbolic_malicious_server_ad_reverses_identities",
+			"let MaliciousServer(",
+		),
+	] {
+		assert_rejected(
+			name,
+			"associated-data identity order changed",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					scope,
+					"beaconcrypt_core__pqxdh__build_associated_data",
+					0,
+					0,
+					"beacon_identity",
+				);
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					scope,
+					"beaconcrypt_core__pqxdh__build_associated_data",
+					0,
+					1,
+					"server_identity",
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT);
+}
+
+const RATCHET_EFFECT_DRIVER_MUTATION_COUNT: usize = 106;
+
+#[test]
+fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	let driver_facts = parse_facts(INTERFACE)
+		.unwrap()
+		.into_iter()
+		.filter(|fact| fact.starts_with("ratchet.driver."))
+		.collect::<Vec<_>>();
+	assert_eq!(driver_facts.len(), 38);
+	for fact in driver_facts {
+		let (key, _) = fact.split_once('=').unwrap();
+		assert_rejected(&format!("ratchet_driver_fact_{key}"), key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated");
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"ratchet_driver_slot_take_duplicates_take",
+			"fn take(&mut self)",
+			"self.kernel\n\t\t\t.take()",
+			"self.kernel.take();\n\t\tself.kernel\n\t\t\t.take()",
+			"ratchet driver affine slot take",
+		),
+		(
+			"ratchet_driver_slot_put_omits_empty_assertion",
+			"fn put(&mut self",
+			"assert!(\n\t\t\tself.kernel.is_none(),\n\t\t\t\"a completed ratchet effect must return to an empty kernel slot\"\n\t\t);",
+			"if self.kernel.is_some() {\n\t\t\tpanic!(\"a completed ratchet effect must return to an empty kernel slot\");\n\t\t}",
+			"ratchet driver returned-kernel slot put",
+		),
+		(
+			"ratchet_driver_slot_put_drops_returned_kernel",
+			"fn put(&mut self",
+			"self.kernel = Some(kernel);",
+			"drop(kernel);",
+			"ratchet driver returned-kernel slot put",
+		),
+		(
+			"ratchet_driver_kdf_uses_fixed_request",
+			"pub(crate) fn ratchet_hkdf",
+			"symmetric_ratchet_hkdf(request)",
+			"symmetric_ratchet_hkdf(&verified_ratchet::SymmetricRatchetKdfRequest::new([0; KDF_STATE_SIZE]))",
+			"ratchet driver typed KDF reply",
+		),
+		(
+			"ratchet_driver_kdf_returns_untyped_bytes",
+			"pub(crate) fn ratchet_hkdf",
+			"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+			"symmetric_ratchet_hkdf(request)",
+			"ratchet driver typed KDF reply",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.adapter_ratchet, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn encrypt_with_ratchet",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_send_moves_empty_gate_after_take",
+		"record effects",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn encrypt_with_ratchet",
+				"if bytes.is_empty() {\n\t\treturn None;\n\t}\n",
+				"",
+			);
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn encrypt_with_ratchet",
+				"let (kernel, sealed) = execute_record_send(ratchet.refined.take(), context);",
+				"let kernel = ratchet.refined.take();\n\tif bytes.is_empty() {\n\t\tratchet.refined.put(kernel);\n\t\treturn None;\n\t}\n\tlet (kernel, sealed) = execute_record_send(kernel, context);",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_send_invokes_cancel",
+		"record effects",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn execute_record_send",
+				"let response = ratchet_hkdf(pending.request());",
+				"pending.cancel();\n\tlet response = ratchet_hkdf(pending.request());",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to) in [
+		(
+			"ratchet_driver_core_send_finish_discards_interpreter_result",
+			"(self.advanced, sealed)",
+			"(self.advanced, None)",
+		),
+		(
+			"ratchet_driver_core_send_finish_discards_advanced_kernel",
+			"(self.advanced, sealed)",
+			"(panic!(), sealed)",
+		),
+	] {
+		assert_ratchet_driver_rejected(
+			name,
+			"ratchet send finish preserves interpreter result on advanced kernel",
+			move |snapshot| {
+				replace_once_after(
+					&mut snapshot.core_ratchet_concrete,
+					"impl<Context> SendSeal<Context>",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"ratchet_driver_receive_no_material_omits_material_gate",
+			"let material = match opening.material() {\n\t\tSome(material) => material,\n\t\tNone => return OpenStart::OpenRejected(opening.reject().0),\n\t};",
+			"let material = opening.material().unwrap();",
+			"CryptoFrame selected receive material and sequence",
+		),
+		(
+			"ratchet_driver_receive_no_material_omits_reject",
+			"None => return OpenStart::OpenRejected(opening.reject().0),",
+			"None => panic!(\"missing material\"),",
+			"CryptoFrame selected receive material and sequence",
+		),
+		(
+			"ratchet_driver_receive_opens_with_wrong_sequence",
+			"opening.sequence(),",
+			"opening.sequence().wrapping_add(1),",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"ratchet_driver_receive_opens_with_rebuilt_context",
+			"let context = opening.context();",
+			"let context = replacement_context;",
+			"CryptoFrame selected receive material and sequence",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_record_surface(snapshot, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_receive_invokes_cancel",
+		"record effects",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn execute_record_receive",
+				"let response = ratchet_hkdf(pending.request());",
+				"pending.cancel();\n\t\t\t\tlet response = ratchet_hkdf(pending.request());",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (name, gate) in [] {
+		assert_ratchet_driver_rejected(
+			name,
+			"ratchet receive prechecks and effect start order",
+			move |snapshot| {
+				replace_once_after(
+					&mut snapshot.adapter_ratchet,
+					"pub(crate) fn decrypt_message_with_ratchet",
+					gate,
+					"",
+				);
+				replace_once_after(
+					&mut snapshot.adapter_ratchet,
+					"pub(crate) fn decrypt_message_with_ratchet",
+					"let kernel = ratchet.refined.take();",
+					&format!("let kernel = ratchet.refined.take();\n\t{gate}"),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_receive_moves_empty_gate_after_take",
+		"record effects",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				"if data.is_empty() {\n\t\treturn None;\n\t}\n",
+				"",
+			);
+			registration_effects::replace_contract(
+				snapshot,
+				"ratchet",
+				"",
+				"decrypt_payload_with_ratchet",
+				"let(kernel,opened)=execute_record_receive(effect);",
+				"ifciphertext.is_empty(){returnNone;}let(kernel,opened)=execute_record_receive(effect);",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_receive_takes_kernel_before_typed_parse",
+		"record effects",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				"let frame = decode_crypto_frame(data)?;",
+				"let prematurely_taken = ratchet.refined.take();\n\tlet frame = decode_crypto_frame(data)?;",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"ratchet_driver_core_phase_renames_send_start",
+			"pub enum SendStart<Context>",
+			"pub enum SendStart<Context>",
+			"pub enum RenamedSendStart<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_send_kdf",
+			"pub struct SendKdf<Context>",
+			"pub struct SendKdf<Context>",
+			"pub struct RenamedSendKdf<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_send_seal",
+			"pub struct SendSeal<Context>",
+			"pub struct SendSeal<Context>",
+			"pub struct RenamedSendSeal<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_receive_effect",
+			"pub enum ReceiveEffect<Context>",
+			"pub enum ReceiveEffect<Context>",
+			"pub enum RenamedReceiveEffect<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_receive_kdf",
+			"pub struct ReceiveKdf<Context>",
+			"pub struct ReceiveKdf<Context>",
+			"pub struct RenamedReceiveKdf<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_receive_open",
+			"pub struct ReceiveOpen<Context>",
+			"pub struct ReceiveOpen<Context>",
+			"pub struct RenamedReceiveOpen<Context>",
+			"ratchet core affine phase API",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_concrete, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"ratchet_driver_core_finish_none_drops_entry",
+			"impl<Context> ReceiveOpen<Context>",
+			"None => return (self.entry, None)",
+			"None => return (panic!(\"entry dropped\"), None)",
+			"ratchet receive finish failure restores entry",
+		),
+		(
+			"ratchet_driver_core_finish_cached_publication_omitted",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_cached_receive(&mut entry.refined, prepared);",
+			"drop(prepared);",
+			"ratchet core cached receive publication branch",
+		),
+		(
+			"ratchet_driver_core_finish_future_publication_omitted",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_future_receive(&mut entry.refined, pending);",
+			"drop(pending);",
+			"ratchet core future receive publication branch",
+		),
+		(
+			"ratchet_driver_core_finish_cached_uses_future_publisher",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_cached_receive(&mut entry.refined, prepared);",
+			"publish_future_receive(&mut entry.refined, panic!(\"wrong prepared type\"));",
+			"ratchet core cached receive publication branch",
+		),
+		(
+			"ratchet_driver_core_finish_future_uses_cached_publisher",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_future_receive(&mut entry.refined, pending);",
+			"publish_cached_receive(&mut entry.refined, panic!(\"wrong prepared type\"));",
+			"ratchet core future receive publication branch",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_concrete, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, insertion, diagnostic) in [
+		(
+			"ratchet_driver_core_begin_receive_mutates_live_control",
+			"kernel.refined.control = kernel.refined.control;\n\t",
+			"ratchet core begin_receive live publication",
+		),
+		(
+			"ratchet_driver_core_begin_receive_mutates_live_send_chain",
+			"kernel.refined.send_chain = kernel.refined.send_chain;\n\t",
+			"ratchet core begin_receive live publication",
+		),
+		(
+			"ratchet_driver_core_begin_receive_mutates_live_receive_chain",
+			"kernel.refined.receive_chain = kernel.refined.receive_chain;\n\t",
+			"ratchet core begin_receive live publication",
+		),
+		(
+			"ratchet_driver_core_begin_receive_mutates_live_receive_slots",
+			"kernel.refined.receive_slots = kernel.refined.receive_slots;\n\t",
+			"ratchet core begin_receive live publication",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_ratchet_concrete,
+				"pub fn begin_receive<Context>",
+				"let plan = plan_receive_until",
+				&format!("{insertion}let plan = plan_receive_until"),
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, insertion, diagnostic) in [
+		(
+			"ratchet_driver_core_receive_kdf_publishes_cached_early",
+			"let _ = publish_cached_receive::<RatchetChain, RatchetChain, RatchetMaterial>;\n\t\t",
+			"ratchet core receive KDF cached publication",
+		),
+		(
+			"ratchet_driver_core_receive_kdf_publishes_future_early",
+			"let _ = publish_future_receive::<RatchetChain, RatchetChain, RatchetMaterial>;\n\t\t",
+			"ratchet core receive KDF future publication",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_ratchet_concrete,
+				"impl<Context> ReceiveKdf<Context>",
+				"if self.remaining == 0 {",
+				&format!("{insertion}if self.remaining == 0 {{"),
+			);
+		});
+		mutation_count += 1;
+	}
+
+	let structural_anchors = [
+		"theorem ratchet.concrete.begin_send_nonexhausted_exact",
+		"theorem ratchet.concrete.begin_send_exhausted_restores_entry",
+		"theorem ratchet.concrete.SendKdf.request_exact",
+		"theorem ratchet.concrete.SendKdf.resume_exact",
+		"theorem ratchet.concrete.SendSeal.finish_returns_interpreter_result",
+		"theorem ratchet.concrete.begin_receive_rejected_plan_restores_entry",
+		"theorem ratchet.concrete.begin_receive_cached_exact",
+		"theorem ratchet.concrete.begin_receive_future_request_exact",
+		"theorem ratchet.concrete.ReceiveKdf.request_exact",
+		"theorem ratchet.concrete.ReceiveOpen.reject_exact",
+		"theorem ratchet.concrete.ReceiveOpen.context_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_sequence_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_material_exact",
+		"theorem ratchet.concrete.ReceiveOpen.finish_failure_restores_entry",
+		"theorem ratchet.concrete.ReceiveOpen.finish_future_success_publishes_same_plaintext",
+		"theorem ratchet.concrete.ReceiveOpen.finish_cached_success_publishes_same_plaintext",
+	];
+	for (index, anchor) in structural_anchors.into_iter().enumerate() {
+		assert_ratchet_driver_rejected(
+			&format!("ratchet_driver_lean_structural_anchor_{index}_renamed"),
+			"ratchet checked structural Lean anchor",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.lean_ratchet_effect,
+					anchor,
+					&anchor.replace("theorem ", "theorem renamed_"),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_lean_failure_trace_anchor_renamed",
+		"ratchet checked structural failure-trace anchor",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.lean_ratchet_effect_refinement,
+				"theorem ReceiveFailureTrace.result_eq_entry",
+				"theorem ReceiveFailureTrace.renamed_result_eq_entry",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	let refinement_anchors = [
+		"def ResponseRefines",
+		"theorem begin_send_refines",
+		"theorem SendKdf.resume_refines",
+		"theorem SendSeal.finish_refines_ideal_send",
+		"theorem ReceiveOpen.failure_preserves_refinement",
+		"theorem ReceiveFailureTrace.preserves_refinement",
+		"def OpenReplyRefines",
+		"theorem begin_receive_cached_refines",
+		"theorem CachedOpenRefines.finish_success_matches_ideal",
+		"theorem CachedOpenRefines.finish_success_refines_of_publication",
+	];
+	for (index, anchor) in refinement_anchors.into_iter().enumerate() {
+		assert_ratchet_driver_rejected(
+			&format!("ratchet_driver_lean_conditional_anchor_{index}_renamed"),
+			"ratchet conditional Lean refinement anchor",
+			move |snapshot| {
+				let renamed = if anchor.starts_with("def ") {
+					anchor.replacen("def ", "def renamed_", 1)
+				} else {
+					anchor.replacen("theorem ", "theorem renamed_", 1)
+				};
+				replace_once(
+					&mut snapshot.lean_ratchet_effect_refinement,
+					anchor,
+					&renamed,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_proverif_renames_atomic_seal",
+		"ratchet ProVerif atomic seal abstraction",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.crypto,
+				"letfun seal_frame(",
+				"letfun renamed_seal_frame(",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_proverif_renames_ideal_open",
+		"ratchet ProVerif ideal exact open abstraction",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.crypto,
+				"reduc forall key: bitstring",
+				"  open_frame(",
+				"  renamed_open_frame(",
+			);
+		},
+	);
+	mutation_count += 1;
+	for concrete_step in [
+		"RatchetKernelSlot",
+		"begin_send",
+		"begin_receive",
+		"ratchet_hkdf",
+		"SendKdfRequested",
+		"ReceiveKdfRequested",
+	] {
+		assert_ratchet_driver_rejected(
+			&format!("ratchet_driver_proverif_exposes_{concrete_step}"),
+			"concrete ratchet driver step in atomic ProVerif model",
+			move |snapshot| {
+				snapshot
+					.crypto
+					.push_str(&format!("\nfun {concrete_step}(bitstring): bitstring.\n"));
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, RATCHET_EFFECT_DRIVER_MUTATION_COUNT);
+}
+
+const FINITE_RECEIVE_STATE_FIXTURE_MUTATION_COUNT: usize = 1_230;
+
+#[test]
+fn finite_receive_state_fixture_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	let fixture_facts = parse_facts(INTERFACE)
+		.unwrap()
+		.into_iter()
+		.filter(|fact| fact.starts_with("ratchet.receive_fixture."))
+		.collect::<Vec<_>>();
+	assert_eq!(fixture_facts.len(), 46);
+	for fact in fixture_facts {
+		let (key, _) = fact.split_once('=').unwrap();
+		assert_rejected(
+			&format!("finite_receive_fixture_fact_{key}"),
+			key,
+			|snapshot| {
+				mutate_fact(&mut snapshot.interface, key, "mutated");
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"finite_receive_core_changes_max_gap",
+			"pub const RATCHET_MAX_GAP",
+			"pub const RATCHET_MAX_GAP: u64 = 50;",
+			"pub const RATCHET_MAX_GAP: u64 = 49;",
+			"finite receive core maximum gap",
+		),
+		(
+			"finite_receive_core_decouples_cache_capacity",
+			"pub const RECEIVE_CACHE_CAPACITY",
+			"pub const RECEIVE_CACHE_CAPACITY: usize = RATCHET_MAX_GAP as usize;",
+			"pub const RECEIVE_CACHE_CAPACITY: usize = 49;",
+			"finite receive core cache capacity",
+		),
+		(
+			"finite_receive_core_plan_derives_from_zero",
+			"pub(crate) fn plan_receive_until",
+			"let derivations = target - state.receive_sequence;",
+			"let derivations = target;",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_caches_target_step",
+			"pub(crate) fn plan_receive_until",
+			"let skipped = derivations - 1;",
+			"let skipped = derivations;",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_ignores_existing_cache",
+			"pub(crate) fn plan_receive_until",
+			"let cached = state.receive_cache.len as u64;",
+			"let cached = 0u64;",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_rejects_boundary_gap",
+			"pub(crate) fn plan_receive_until",
+			"skipped > RATCHET_MAX_GAP",
+			"skipped >= RATCHET_MAX_GAP",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_rejects_full_exact_capacity",
+			"pub(crate) fn plan_receive_until",
+			"cached > RATCHET_MAX_GAP - skipped",
+			"cached >= RATCHET_MAX_GAP - skipped",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_rejection_returns_target",
+			"if skipped > RATCHET_MAX_GAP",
+			"sequence: None,",
+			"sequence: Some(target),",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_rejection_requests_work",
+			"if skipped > RATCHET_MAX_GAP",
+			"derivations: 0,",
+			"derivations: 1,",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_old_target_requests_work",
+			"if target <= state.receive_sequence",
+			"derivations: 0,",
+			"derivations: 1,",
+			"finite receive core admission plan",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"finite_receive_core_target_advances_two",
+			"pub(crate) fn advance_receive_target",
+			"let next = state.receive_sequence + 1;",
+			"let next = state.receive_sequence + 2;",
+			"finite receive target counter advance",
+		),
+		(
+			"finite_receive_core_target_returns_entry_state",
+			"pub(crate) fn advance_receive_target",
+			"receive_sequence: next,",
+			"receive_sequence: state.receive_sequence,",
+			"finite receive target result",
+		),
+		(
+			"finite_receive_core_target_allocates_cache_slot",
+			"pub(crate) fn advance_receive_target",
+			"let next = state.receive_sequence + 1;",
+			"let _ = state.receive_cache.append(1);\n\t\tlet next = state.receive_sequence + 1;",
+			"finite receive target cache allocation",
+		),
+		(
+			"finite_receive_core_skipped_appends_wrong_sequence",
+			"pub(crate) fn advance_receive(",
+			"state.receive_cache.append(next)",
+			"state.receive_cache.append(next + 1)",
+			"finite receive skipped-key cache append",
+		),
+		(
+			"finite_receive_core_skipped_drops_new_cache",
+			"pub(crate) fn advance_receive(",
+			"\t\t\t\treceive_cache,\n\t\t\t\t..state",
+			"\t\t\t\treceive_cache: state.receive_cache,\n\t\t\t\t..state",
+			"finite receive skipped-key control update",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"finite_receive_core_cached_failure_changes_state",
+			"state,\n\t\t\tdisposition: ReceiveDisposition::Retained,",
+			"state: RatchetState::default(),\n\t\t\tdisposition: ReceiveDisposition::Retained,",
+			"finite receive cached authentication failure neutrality",
+		),
+		(
+			"finite_receive_core_cached_removal_keeps_target",
+			"entries[slot_index] = entries[last_slot as usize];",
+			"entries[slot_index] = entries[slot_index];",
+			"finite receive cached swap removal",
+		),
+		(
+			"finite_receive_core_cached_removal_keeps_last_slot",
+			"entries[last_slot as usize] = 0;",
+			"entries[last_slot as usize] = entries[last_slot as usize];",
+			"finite receive cached swap removal",
+		),
+		(
+			"finite_receive_core_cached_removal_keeps_length",
+			"len: last_slot,",
+			"len,",
+			"finite receive cached swap removal",
+		),
+		(
+			"finite_receive_core_cached_removal_reports_wrong_target",
+			"target_slot: slot,",
+			"target_slot: last_slot,",
+			"finite receive cached swap removal",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_ratchet_control,
+				"pub(crate) fn finish_receive_with_removal",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"finite_receive_core_replay_looks_up_next_sequence",
+			"pub fn begin_receive<Context>",
+			"prepare_cached_receive(&kernel.refined, sequence)",
+			"prepare_cached_receive(&kernel.refined, sequence + 1)",
+			"finite receive replay and cached lookup branch",
+		),
+		(
+			"finite_receive_core_future_counts_target_as_skipped",
+			"pub fn begin_receive<Context>",
+			"let skipped = plan.derivations - 1;",
+			"let skipped = plan.derivations;",
+			"finite receive future skipped count",
+		),
+		(
+			"finite_receive_core_future_reuses_live_slots",
+			"pub fn begin_receive<Context>",
+			"staged_slots: empty_material_slots(),",
+			"staged_slots: kernel.refined.receive_slots,",
+			"finite receive private future staging start",
+		),
+		(
+			"finite_receive_core_future_pending_uses_wrong_target_material",
+			"impl<Context> ReceiveKdf<Context>",
+			"target_material: stepped.material,",
+			"target_material: panic!(\"wrong target material\"),",
+			"finite receive separate future target",
+		),
+		(
+			"finite_receive_core_future_stages_wrong_material",
+			"impl<Context> ReceiveKdf<Context>",
+			"self.staged_slots[slot_index] = Some(CachedReceiveKey {\n\t\t\tsequence,\n\t\t\tmaterial: stepped.material,",
+			"self.staged_slots[slot_index] = Some(CachedReceiveKey {\n\t\t\tsequence,\n\t\t\tmaterial: panic!(\"wrong skipped material\"),",
+			"finite receive staged skipped material",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_concrete, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"finite_receive_core_pending_allows_cached_target",
+			"pub(super) fn pending_receive_is_valid",
+			"if lookup_receive_key(pending.committed_control, requested).is_some() {\n\t\treturn false;\n\t}",
+			"if false {\n\t\treturn false;\n\t}",
+			"finite receive target absent from committed cache",
+		),
+		(
+			"finite_receive_core_pending_counts_target_in_cache",
+			"pub(super) fn pending_receive_is_valid",
+			"pending.first_slot as usize + pending.skipped as usize",
+			"pending.first_slot as usize + pending.skipped as usize + 1",
+			"finite receive committed skipped-cache length",
+		),
+		(
+			"finite_receive_core_pending_accepts_wrong_cache_length",
+			"pub(super) fn pending_receive_is_valid",
+			"pending.committed_control.receive_cache_len() as usize == committed_len",
+			"pending.committed_control.receive_cache_len() as usize + 1 == committed_len",
+			"finite receive committed cache length check",
+		),
+		(
+			"finite_receive_core_cached_preflight_looks_up_wrong_sequence",
+			"pub(super) fn prepare_cached_receive",
+			"lookup_receive_key(state.control, sequence)",
+			"lookup_receive_key(state.control, sequence + 1)",
+			"finite receive cached preflight",
+		),
+		(
+			"finite_receive_core_cached_preflight_uses_first_as_last",
+			"pub(super) fn prepare_cached_receive",
+			"let last_slot = len - 1;",
+			"let last_slot = 0;",
+			"finite receive cached preflight",
+		),
+		(
+			"finite_receive_core_cached_preflight_marks_failure",
+			"pub(super) fn prepare_cached_receive",
+			"finish_receive_with_removal(state.control, sequence, target_slot, true)",
+			"finish_receive_with_removal(state.control, sequence, target_slot, false)",
+			"finite receive cached preflight",
+		),
+		(
+			"finite_receive_core_cached_preflight_ignores_target_slot",
+			"pub(super) fn prepare_cached_receive",
+			"if !(removal.target_slot == target_slot) {\n\t\treturn None;\n\t}",
+			"if false {\n\t\treturn None;\n\t}",
+			"finite receive cached preflight",
+		),
+		(
+			"finite_receive_core_cached_preflight_ignores_last_slot",
+			"pub(super) fn prepare_cached_receive",
+			"if !(removal.last_slot == last_slot) {\n\t\treturn None;\n\t}",
+			"if false {\n\t\treturn None;\n\t}",
+			"finite receive cached preflight",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_refined, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, source, marker, from, to, diagnostic) in [
+		(
+			"finite_receive_core_finish_failure_drops_entry",
+			"concrete",
+			"impl<Context> ReceiveOpen<Context>",
+			"None => return (self.entry, None)",
+			"None => return (panic!(\"entry dropped\"), None)",
+			"finite receive success-only publication",
+		),
+		(
+			"finite_receive_core_finish_omits_cached_publication",
+			"concrete",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_cached_receive(&mut entry.refined, prepared);",
+			"drop(prepared);",
+			"finite receive success-only publication",
+		),
+		(
+			"finite_receive_core_finish_omits_future_publication",
+			"concrete",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_future_receive(&mut entry.refined, pending);",
+			"drop(pending);",
+			"finite receive success-only publication",
+		),
+		(
+			"finite_receive_core_cached_publication_keeps_last",
+			"refined",
+			"pub(super) fn publish_cached_receive",
+			"let _ = state.receive_slots[last_index].take();",
+			"let _ = state.receive_slots[last_index].as_ref();",
+			"finite receive cached whole-entry publication",
+		),
+		(
+			"finite_receive_core_cached_publication_copies_last",
+			"refined",
+			"pub(super) fn publish_cached_receive",
+			"let moved = state.receive_slots[last_index].take();",
+			"let moved = None;",
+			"finite receive cached whole-entry publication",
+		),
+		(
+			"finite_receive_core_cached_publication_omits_control",
+			"refined",
+			"pub(super) fn publish_cached_receive",
+			"state.control = prepared.committed_control;",
+			"drop(prepared.committed_control);",
+			"finite receive cached whole-entry publication",
+		),
+		(
+			"finite_receive_core_future_publication_omits_slots",
+			"refined",
+			"pub(super) fn publish_future_receive<",
+			"publish_future_receive_slots(\n\t\tstate,\n\t\t&mut pending.staged_slots,\n\t\tpending.first_slot,\n\t\tpending.skipped,\n\t);",
+			"drop(pending.staged_slots);",
+			"finite receive future publication",
+		),
+		(
+			"finite_receive_core_future_publication_omits_chain",
+			"refined",
+			"pub(super) fn publish_future_receive<",
+			"state.receive_chain = pending.final_receive_chain;",
+			"drop(pending.final_receive_chain);",
+			"finite receive future publication",
+		),
+		(
+			"finite_receive_core_future_publication_reorders_control",
+			"refined",
+			"pub(super) fn publish_future_receive<",
+			"state.receive_chain = pending.final_receive_chain;\n\tstate.control = pending.committed_control;",
+			"state.control = pending.committed_control;\n\tstate.receive_chain = pending.final_receive_chain;",
+			"finite receive future publication",
+		),
+		(
+			"finite_receive_core_future_publication_mentions_target",
+			"refined",
+			"pub(super) fn publish_future_receive<",
+			"let first_index = pending.first_slot as usize;",
+			"let _ = &pending.target_material;\n\tlet first_index = pending.first_slot as usize;",
+			"finite receive target publication",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			let target = if source == "concrete" {
+				&mut snapshot.core_ratchet_concrete
+			} else {
+				&mut snapshot.core_ratchet_refined
+			};
+			replace_once_after(target, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"finite_receive_proverif_renames_empty_cache",
+			"fun receive_cache_empty(): receive_cache [data].",
+			"fun renamed_receive_cache_empty(): receive_cache [data].",
+			"finite receive ProVerif empty cache constructor",
+		),
+		(
+			"finite_receive_proverif_renames_cache_entry",
+			"fun receive_cache_entry(",
+			"fun renamed_receive_cache_entry(",
+			"finite receive ProVerif cache-entry constructor",
+		),
+		(
+			"finite_receive_proverif_renames_state",
+			"fun receive_state(",
+			"fun renamed_receive_state(",
+			"finite receive ProVerif state constructor",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once(&mut snapshot.environment, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"finite_receive_proverif_omits_short_leg",
+			"StateNeutralFutureReceive()\n    | StateNeutralCapacityReceive()",
+			"StateNeutralCapacityReceive()",
+		),
+		(
+			"finite_receive_proverif_omits_capacity_leg",
+			"StateNeutralFutureReceive()\n    | StateNeutralCapacityReceive()",
+			"StateNeutralFutureReceive()",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(
+			name,
+			"finite receive two-leg scenario composition",
+			move |snapshot| replace_once(&mut snapshot.environment, from, to),
+		);
+		mutation_count += 1;
+	}
+
+	let short_scope = "let StateNeutralFutureReceive() =";
+	for (name, from, to, diagnostic) in [
+		(
+			"finite_receive_short_skipped_sequence_skips_a_step",
+			"let skipped_sequence = next_sequence(first) in",
+			"let skipped_sequence = next_sequence(next_sequence(first)) in",
+			"finite receive short sequence prefix",
+		),
+		(
+			"finite_receive_short_target_sequence_reuses_first",
+			"let target_sequence = next_sequence(skipped_sequence) in",
+			"let target_sequence = next_sequence(first) in",
+			"finite receive short sequence prefix",
+		),
+		(
+			"finite_receive_short_chain_2_skips_a_step",
+			"let chain_2 = ratchet_next(chain_1) in",
+			"let chain_2 = ratchet_next(ratchet_next(chain_1)) in",
+			"finite receive short ratchet chain",
+		),
+		(
+			"finite_receive_short_chain_3_reuses_chain_1",
+			"let chain_3 = ratchet_next(chain_2) in",
+			"let chain_3 = ratchet_next(chain_1) in",
+			"finite receive short ratchet chain",
+		),
+		(
+			"finite_receive_short_chain_4_reuses_chain_2",
+			"let chain_4 = ratchet_next(chain_3) in",
+			"let chain_4 = ratchet_next(chain_2) in",
+			"finite receive short ratchet chain",
+		),
+		(
+			"finite_receive_short_material_1_uses_chain_2",
+			"let material_1 = ratchet_material(chain_1) in",
+			"let material_1 = ratchet_material(chain_2) in",
+			"finite receive short material chain",
+		),
+		(
+			"finite_receive_short_skipped_material_uses_chain_3",
+			"let skipped_material = ratchet_material(chain_2) in",
+			"let skipped_material = ratchet_material(chain_3) in",
+			"finite receive short material chain",
+		),
+		(
+			"finite_receive_short_target_material_uses_chain_2",
+			"let target_material = ratchet_material(chain_3) in",
+			"let target_material = ratchet_material(chain_2) in",
+			"finite receive short material chain",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, short_scope, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	let short_seal_replacements = [
+		"root",
+		"root",
+		"next_sequence(target_sequence)",
+		"receiver_id",
+		"root",
+	];
+	for call_index in 0..3 {
+		for (argument_index, replacement) in short_seal_replacements.iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_short_seal_{call_index}_argument_{argument_index}"),
+				"finite receive short honest frame",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						short_scope,
+						"seal_frame",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (argument_index, replacement) in [
+		"root",
+		"target_frame",
+		"skipped_frame",
+		"skipped_sequence",
+		"receiver_id",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_forged_frame_argument_{argument_index}"),
+			"finite receive short forged target frame",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"crypto_frame",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	let short_message_sent_replacements = [
+		"root",
+		"beacon_to_server()",
+		"next_sequence(target_sequence)",
+		"receiver_id",
+		"sender_id",
+		"root",
+	];
+	for call_index in 0..3 {
+		for (argument_index, replacement) in short_message_sent_replacements.iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_short_sent_{call_index}_argument_{argument_index}"),
+				"finite receive short sent message",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						short_scope,
+						"MessageSent",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	let short_open_replacements = [
+		"root",
+		"root",
+		"next_sequence(target_sequence)",
+		"receiver_id",
+		"root",
+	];
+	for (call_index, diagnostic) in [
+		(0, "finite receive short initial open"),
+		(1, "finite receive first exact-frame destructor rejection"),
+		(
+			2,
+			"finite receive repeated exact-frame destructor rejection",
+		),
+		(3, "finite receive short future open"),
+		(4, "finite receive delayed cached-key consumption"),
+	] {
+		for (argument_index, replacement) in short_open_replacements.iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_short_open_{call_index}_argument_{argument_index}"),
+				diagnostic,
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						short_scope,
+						"open_frame",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (call_index, diagnostic) in [
+		(0, "finite receive short first delivery"),
+		(3, "finite receive short future delivery"),
+		(4, "finite receive delayed delivery"),
+	] {
+		for (argument_index, replacement) in [
+			"root",
+			"beacon_to_server()",
+			"next_sequence(target_sequence)",
+			"receiver_id",
+			"sender_id",
+			"root",
+		]
+		.into_iter()
+		.enumerate()
+		{
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_short_received_{call_index}_argument_{argument_index}"),
+				diagnostic,
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						short_scope,
+						"MessageReceived",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (argument_index, replacement) in ["target_sequence", "root", "receive_cache_empty()"]
+		.into_iter()
+		.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_ready_state_argument_{argument_index}"),
+			"finite receive short entry state",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"receive_state",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to) in [
+		(
+			"finite_receive_short_first_equality_uses_honest_target",
+			"in(c, forged_candidate: bitstring);",
+			"if forged_candidate = forged_target_frame then",
+			"if forged_candidate = target_frame then",
+		),
+		(
+			"finite_receive_short_retry_equality_uses_first_candidate",
+			"in(c, repeated_candidate: bitstring);",
+			"if repeated_candidate = forged_target_frame then",
+			"if repeated_candidate = forged_candidate then",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(
+			name,
+			if name.contains("retry") {
+				"finite receive repeated exact-frame destructor rejection"
+			} else {
+				"finite receive first exact-frame destructor rejection"
+			},
+			move |snapshot| replace_once_after(&mut snapshot.environment, marker, from, to),
+		);
+		mutation_count += 1;
+	}
+	for (name, marker, diagnostic) in [
+		(
+			"finite_receive_short_first_bypasses_destructor_failure",
+			"in(c, forged_candidate: bitstring);",
+			"finite receive first exact-frame destructor rejection",
+		),
+		(
+			"finite_receive_short_retry_bypasses_destructor_failure",
+			"in(c, repeated_candidate: bitstring);",
+			"finite receive repeated exact-frame destructor rejection",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				marker,
+				"open_frame(",
+				"seal_frame(",
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (event, diagnostic, replacements) in [
+		(
+			"ReceiveRejectedNeutral",
+			"finite receive first exact-frame destructor rejection",
+			["root", "first", "target_frame", "root"],
+		),
+		(
+			"ReceiveRejectionRetried",
+			"finite receive repeated exact-frame destructor rejection",
+			["root", "first", "target_frame", "root"],
+		),
+	] {
+		for (argument_index, replacement) in replacements.into_iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_short_{event}_argument_{argument_index}"),
+				diagnostic,
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						short_scope,
+						event,
+						0,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (index, (from, to)) in [
+		("session,\n              target_sequence,", "root,\n              target_sequence,"),
+		("target_sequence,\n              ready_state,", "first,\n              ready_state,"),
+		("ready_state,\n              ready_state,", "root,\n              ready_state,"),
+		("ready_state,\n              chain_2,", "root,\n              chain_2,"),
+		("chain_2,\n              empty_cache,", "root,\n              empty_cache,"),
+		(
+			"empty_cache,\n              compromise_ack",
+			"receive_cache_entry(skipped_sequence, skipped_material, empty_cache),\n              compromise_ack",
+		),
+		("compromise_ack\n            )", "c\n            )"),
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_rejection_snapshot_field_{index}"),
+			"finite receive unchanged rejection snapshot",
+			move |snapshot| {
+				replace_once_after(
+					&mut snapshot.environment,
+					"out(\n            receive_snapshots",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in ["first", "root", "receive_cache_empty()"]
+		.into_iter()
+		.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_committed_state_argument_{argument_index}"),
+			"finite receive short successful skipped publication",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"receive_state",
+					1,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"first",
+		"root",
+		"receive_cache_entry(first,material_1,empty_cache)",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_cache_entry_argument_{argument_index}"),
+			"finite receive short successful skipped publication",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"receive_cache_entry",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in [
+		"root",
+		"server_role()",
+		"beacon_to_server()",
+		"first",
+		"root",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_cached_event_argument_{argument_index}"),
+			"finite receive short skipped-key cache event",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"MessageKeyCached",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (event, diagnostic, replacements) in [
+		(
+			"ReceiveFutureAccepted",
+			"finite receive future acceptance",
+			[
+				"root",
+				"first",
+				"receiver_id",
+				"sender_id",
+				"root",
+				"target_frame",
+				"skipped_material",
+				"target_frame",
+				"committed_state",
+				"ready_state",
+			],
+		),
+		(
+			"ReceiveHonestFutureDelivered",
+			"finite receive honest future selection and delivery",
+			[
+				"root",
+				"first",
+				"receiver_id",
+				"sender_id",
+				"root",
+				"target_frame",
+				"skipped_material",
+				"target_frame",
+				"committed_state",
+				"ready_state",
+			],
+		),
+		(
+			"ReceiveReplayRejected",
+			"finite receive exact accepted-frame replay",
+			[
+				"root",
+				"first",
+				"receiver_id",
+				"sender_id",
+				"root",
+				"target_frame",
+				"skipped_material",
+				"target_frame",
+				"committed_state",
+				"ready_state",
+			],
+		),
+	] {
+		for (argument_index, replacement) in replacements.into_iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_short_{event}_argument_{argument_index}"),
+				diagnostic,
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						short_scope,
+						event,
+						0,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"finite_receive_short_honest_gate_uses_forgery",
+			"event ReceiveFutureAccepted(",
+			"if accepted_candidate = target_frame then",
+			"if accepted_candidate = forged_target_frame then",
+			"finite receive honest future selection and delivery",
+		),
+		(
+			"finite_receive_short_replay_gate_uses_honest_frame",
+			"in(c, replay_candidate: bitstring);",
+			"if replay_candidate = accepted_candidate then",
+			"if replay_candidate = target_frame then",
+			"finite receive exact accepted-frame replay",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in [
+		"root",
+		"server_role()",
+		"beacon_to_server()",
+		"first",
+		"root",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_target_unavailable_argument_{argument_index}"),
+			"finite receive short target consumption",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"MessageKeyUnavailable",
+					1,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in
+		["first", "root", "committed_cache"].into_iter().enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_delayed_state_argument_{argument_index}"),
+			"finite receive delayed cached-key consumption",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"receive_state",
+					2,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"root",
+		"server_role()",
+		"beacon_to_server()",
+		"first",
+		"root",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_delayed_unavailable_argument_{argument_index}"),
+			"finite receive delayed key unavailability",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"MessageKeyUnavailable",
+					2,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"root",
+		"first",
+		"receiver_id",
+		"sender_id",
+		"root",
+		"skipped_frame",
+		"target_material",
+		"delayed_state",
+		"committed_state",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_delayed_event_argument_{argument_index}"),
+			"finite receive delayed cached acceptance",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"ReceiveDelayedCachedAccepted",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_finite_receive_fixture_rejected(
+		"finite_receive_short_retains_target_in_cache",
+		"finite receive short target retained in cache",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				short_scope,
+				"let committed_cache = receive_cache_entry(",
+				"let forbidden_target_cache = receive_cache_entry(target_sequence, target_material, empty_cache) in\n          let committed_cache = receive_cache_entry(",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	let capacity_scope = "let StateNeutralCapacityReceive() =";
+	for sequence in 2..=54 {
+		let previous = sequence - 1;
+		let from = format!(
+			"let capacity_sequence_{sequence} = next_sequence(capacity_sequence_{previous}) in"
+		);
+		let to = format!(
+			"let capacity_sequence_{sequence} = next_sequence(next_sequence(capacity_sequence_{previous})) in"
+		);
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_sequence_{sequence}_drifts"),
+			"finite receive capacity sequence chain",
+			move |snapshot| {
+				replace_once_after(&mut snapshot.environment, capacity_scope, &from, &to);
+			},
+		);
+		mutation_count += 1;
+	}
+	for chain in 2..=55 {
+		let previous = chain - 1;
+		let from =
+			format!("let capacity_chain_{chain} = ratchet_next(capacity_chain_{previous}) in");
+		let to = format!(
+			"let capacity_chain_{chain} = ratchet_next(ratchet_next(capacity_chain_{previous})) in"
+		);
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_chain_{chain}_drifts"),
+			"finite receive capacity ratchet chain",
+			move |snapshot| {
+				replace_once_after(&mut snapshot.environment, capacity_scope, &from, &to);
+			},
+		);
+		mutation_count += 1;
+	}
+	for material in 1..=54 {
+		let from = format!(
+			"let capacity_material_{material} = ratchet_material(capacity_chain_{material}) in"
+		);
+		let to =
+			format!("let capacity_material_{material} = ratchet_material(capacity_chain_55) in");
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_material_{material}_drifts"),
+			"finite receive capacity material chain",
+			move |snapshot| {
+				replace_once_after(&mut snapshot.environment, capacity_scope, &from, &to);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	let capacity_frame_replacements = [
+		"capacity_root",
+		"capacity_root",
+		"next_sequence(capacity_sequence_54)",
+		"capacity_receiver_id",
+		"capacity_root",
+	];
+	for call_index in 0..4 {
+		for (argument_index, replacement) in capacity_frame_replacements.iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_capacity_seal_{call_index}_argument_{argument_index}"),
+				"finite receive capacity honest frame",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						capacity_scope,
+						"seal_frame",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+	for call_index in 0..4 {
+		for (argument_index, replacement) in [
+			"capacity_root",
+			"beacon_to_server()",
+			"next_sequence(capacity_sequence_54)",
+			"capacity_receiver_id",
+			"capacity_sender_id",
+			"capacity_root",
+		]
+		.into_iter()
+		.enumerate()
+		{
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_capacity_sent_{call_index}_argument_{argument_index}"),
+				"finite receive capacity sent message",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						capacity_scope,
+						"MessageSent",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"maximum_gap_frame",
+		"cached_frame",
+		"capacity_sequence_53",
+		"capacity_receiver_id",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_rejected_frame_argument_{argument_index}"),
+			"finite receive capacity rejected frame",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"crypto_frame",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for call_index in 0..4 {
+		for (argument_index, replacement) in capacity_frame_replacements.iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_capacity_open_{call_index}_argument_{argument_index}"),
+				match call_index {
+					0 => "finite receive capacity initial open",
+					1 => "finite receive maximum-gap open",
+					2 => "finite receive cached release open",
+					_ => "finite receive after-release open",
+				},
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						capacity_scope,
+						"open_frame",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+	for call_index in 0..4 {
+		for (argument_index, replacement) in [
+			"capacity_root",
+			"beacon_to_server()",
+			"next_sequence(capacity_sequence_54)",
+			"capacity_receiver_id",
+			"capacity_sender_id",
+			"capacity_root",
+		]
+		.into_iter()
+		.enumerate()
+		{
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_capacity_received_{call_index}_argument_{argument_index}"),
+				match call_index {
+					0 => "finite receive capacity first delivery",
+					1 => "finite receive maximum-gap delivery",
+					2 => "finite receive cached delivery",
+					_ => "finite receive after-release delivery",
+				},
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						capacity_scope,
+						"MessageReceived",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (argument_index, replacement) in [
+		"capacity_sequence_54",
+		"capacity_root",
+		"receive_cache_entry(capacity_sequence_1,capacity_material_1,capacity_cache_empty)",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_ready_state_argument_{argument_index}"),
+			"finite receive capacity entry state",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"receive_state",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for skipped in 2..=51 {
+		let event_index = skipped - 2;
+		for (argument_index, replacement) in [
+			"capacity_root",
+			"server_role()",
+			"beacon_to_server()",
+			"capacity_sequence_1",
+			"capacity_material_1",
+		]
+		.into_iter()
+		.enumerate()
+		{
+			assert_finite_receive_fixture_rejected(
+				&format!(
+					"finite_receive_capacity_cached_event_{event_index}_argument_{argument_index}"
+				),
+				"finite receive maximum-gap cached-key event",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						capacity_scope,
+						"MessageKeyCached",
+						event_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+		for (argument_index, replacement) in [
+			"capacity_sequence_1",
+			"capacity_material_1",
+			"receive_cache_entry(capacity_sequence_1,capacity_material_1,capacity_cache_empty)",
+		]
+		.into_iter()
+		.enumerate()
+		{
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_capacity_cache_{skipped}_argument_{argument_index}"),
+				"finite receive maximum-gap cache construction",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						capacity_scope,
+						"receive_cache_entry",
+						event_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (argument_index, replacement) in
+		["capacity_sequence_51", "capacity_root", "capacity_cache_50"]
+			.into_iter()
+			.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_max_state_argument_{argument_index}"),
+			"finite receive maximum-gap state",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"receive_state",
+					1,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"server_role()",
+		"beacon_to_server()",
+		"capacity_sequence_51",
+		"capacity_material_51",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_max_unavailable_argument_{argument_index}"),
+			"finite receive maximum-gap target consumption",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"MessageKeyUnavailable",
+					1,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"capacity_sequence_51",
+		"capacity_receiver_id",
+		"capacity_sender_id",
+		"capacity_root",
+		"maximum_gap_frame",
+		"capacity_material_51",
+		"maximum_gap_state",
+		"capacity_ready_state",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_max_event_argument_{argument_index}"),
+			"finite receive maximum-gap acceptance",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"ReceiveMaximumGapAccepted",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_finite_receive_fixture_rejected(
+		"finite_receive_capacity_gate_uses_honest_after_release_frame",
+		"finite receive full-cache exact-frame gate",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"in(c, capacity_rejected_candidate: bitstring);",
+				"if capacity_rejected_candidate = capacity_rejected_frame then",
+				"if capacity_rejected_candidate = after_release_frame then",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"capacity_sequence_53",
+		"after_release_frame",
+		"capacity_ready_state",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_rejected_event_argument_{argument_index}"),
+			"finite receive full-cache rejection",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"ReceiveCapacityRejected",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in
+		["capacity_sequence_51", "capacity_root", "capacity_cache_51"]
+			.into_iter()
+			.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_released_state_argument_{argument_index}"),
+			"finite receive cached capacity release",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"receive_state",
+					2,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"server_role()",
+		"beacon_to_server()",
+		"capacity_sequence_52",
+		"capacity_material_52",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_cached_unavailable_argument_{argument_index}"),
+			"finite receive cached key unavailability",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"MessageKeyUnavailable",
+					2,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"capacity_sequence_52",
+		"capacity_material_52",
+		"released_state",
+		"maximum_gap_state",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_cached_consumed_argument_{argument_index}"),
+			"finite receive cached last-slot consumption event",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"ReceiveCachedKeyConsumed",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in [
+		"capacity_sequence_52",
+		"capacity_material_52",
+		"capacity_cache_51",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_after_cache_argument_{argument_index}"),
+			"finite receive after-release state",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"receive_cache_entry",
+					50,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in
+		["capacity_sequence_52", "capacity_root", "capacity_cache_50"]
+			.into_iter()
+			.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_after_state_argument_{argument_index}"),
+			"finite receive after-release state",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"receive_state",
+					3,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"server_role()",
+		"beacon_to_server()",
+		"capacity_sequence_52",
+		"capacity_material_52",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_after_cached_event_argument_{argument_index}"),
+			"finite receive after-release skipped-key event",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"MessageKeyCached",
+					50,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"server_role()",
+		"beacon_to_server()",
+		"capacity_sequence_53",
+		"capacity_material_53",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_after_unavailable_argument_{argument_index}"),
+			"finite receive after-release target consumption",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"MessageKeyUnavailable",
+					3,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"capacity_sequence_53",
+		"capacity_receiver_id",
+		"capacity_sender_id",
+		"capacity_root",
+		"after_release_frame",
+		"capacity_material_53",
+		"released_state",
+		"maximum_gap_state",
+		"released_state",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_after_event_argument_{argument_index}"),
+			"finite receive after-release acceptance",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"ReceiveAfterCapacityReleaseAccepted",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (target, scope_anchor, insertion_anchor) in [
+		(
+			"capacity_sequence_52",
+			capacity_scope,
+			"let maximum_gap_state = receive_state(",
+		),
+		(
+			"capacity_sequence_54",
+			"let after_release_state = receive_state(",
+			"event MessageReceived(",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_retains_target_{target}"),
+			"finite receive target retained in capacity cache",
+			move |snapshot| {
+				replace_once_after(
+					&mut snapshot.environment,
+					scope_anchor,
+					insertion_anchor,
+					&format!(
+						"let forbidden_target_cache = receive_cache_entry({target}, capacity_material_54, capacity_cache_empty) in\n  {insertion_anchor}"
+					),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for secret in [
+		"RECEIVE_PAST_SECRET",
+		"RECEIVE_SKIPPED_SECRET",
+		"RECEIVE_TARGET_SECRET",
+		"RECEIVE_MAX_GAP_SECRET",
+		"RECEIVE_CACHED_SECRET",
+		"RECEIVE_AFTER_RELEASE_SECRET",
+	] {
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_secrecy_query_{secret}_drifts"),
+			"finite receive secrecy query",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.failed_receive_queries,
+					&format!("query attacker({secret})."),
+					"query attacker(forged_frame_component()).",
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	let correspondence_event_shapes: &[(&str, usize, &[&str])] = &[
+		(
+			"ReceiveRejectionRetried",
+			2,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveRejectedNeutral",
+			1,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveFutureAccepted",
+			4,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveHonestFutureDelivered",
+			1,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveReplayRejected",
+			1,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveDelayedCachedAccepted",
+			2,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveMaximumGapAccepted",
+			1,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveCachedKeyConsumed",
+			1,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveAfterCapacityReleaseAccepted",
+			1,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"MessageKeyCached",
+			1,
+			&[
+				"forged_frame_component()",
+				"server_role()",
+				"beacon_to_server()",
+				"first_sequence()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"MessageKeyUnavailable",
+			5,
+			&[
+				"forged_frame_component()",
+				"server_role()",
+				"beacon_to_server()",
+				"first_sequence()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"MessageReceived",
+			1,
+			&[
+				"forged_frame_component()",
+				"beacon_to_server()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"MessageSent",
+			1,
+			&[
+				"forged_frame_component()",
+				"beacon_to_server()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+			],
+		),
+	];
+	for &(event, occurrences, replacements) in correspondence_event_shapes {
+		for occurrence in 0..occurrences {
+			for (argument_index, replacement) in replacements.iter().enumerate() {
+				assert_finite_receive_fixture_rejected(
+					&format!(
+						"finite_receive_correspondence_{event}_{occurrence}_argument_{argument_index}"
+					),
+					"finite receive exact correspondence query",
+					move |snapshot| {
+						replace_nth_call_argument_after(
+							&mut snapshot.failed_receive_queries,
+							"query ",
+							event,
+							occurrence,
+							argument_index,
+							replacement,
+						);
+					},
+				);
+				mutation_count += 1;
+			}
+		}
+	}
+	assert_finite_receive_fixture_rejected(
+		"finite_receive_correspondence_count_drops",
+		"finite receive correspondence query count changed",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.failed_receive_queries,
+				")) ==>\n  inj-event(",
+				")) &&\n  inj-event(",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	let reachability_event_shapes: &[(&str, &[&str])] = &[
+		(
+			"ReceiveRejectedNeutral",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveRejectionRetried",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveFutureAccepted",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveHonestFutureDelivered",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveReplayRejected",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveDelayedCachedAccepted",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveMaximumGapAccepted",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveCapacityRejected",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveCachedKeyConsumed",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveAfterCapacityReleaseAccepted",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+	];
+	for &(event, replacements) in reachability_event_shapes {
+		for (argument_index, replacement) in replacements.iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_reachability_{event}_argument_{argument_index}"),
+				"finite receive exact event reachability query",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.failed_receive_reachability_queries,
+						"query ",
+						event,
+						0,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+	assert_finite_receive_fixture_rejected(
+		"finite_receive_reachability_query_count_drops",
+		"finite receive reachability query count changed",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.failed_receive_reachability_queries,
+				"query attacker(MALICIOUS_TASK_SECRET).",
+				"event(MaliciousRegistrationCommitted(transcript, plaintext)).",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	assert_eq!(mutation_count, FINITE_RECEIVE_STATE_FIXTURE_MUTATION_COUNT);
+}
+
+const REGISTRATION_LIFECYCLE_MUTATION_COUNT: usize = 116;
+
+#[test]
+fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	let lifecycle_facts = parse_facts(INTERFACE)
+		.unwrap()
+		.into_iter()
+		.filter(|fact| fact.starts_with("registration.lifecycle."))
+		.collect::<Vec<_>>();
+	assert_eq!(lifecycle_facts.len(), 60);
+	for fact in lifecycle_facts {
+		let (key, _) = fact.split_once('=').unwrap();
+		assert_registration_lifecycle_rejected(
+			&format!("registration_lifecycle_fact_{key}"),
+			key,
+			|snapshot| mutate_fact(&mut snapshot.interface, key, "mutated"),
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_identity_width_drifts",
+			"pub const SIGN_PUBLIC_KEY_SIZE: usize = 32;",
+			"pub const SIGN_PUBLIC_KEY_SIZE: usize = 31;",
+			"registration replay identity width",
+		),
+		(
+			"registration_one_time_width_drifts",
+			"pub const X25519_PUBLIC_KEY_SIZE: usize = 32;",
+			"pub const X25519_PUBLIC_KEY_SIZE: usize = 31;",
+			"registration replay one-time-key width",
+		),
+		(
+			"registration_identifier_width_uses_pq",
+			"pub const REGISTRATION_ID_SIZE: usize = SIGN_PUBLIC_KEY_SIZE + X25519_PUBLIC_KEY_SIZE;",
+			"pub const REGISTRATION_ID_SIZE: usize = SIGN_PUBLIC_KEY_SIZE + MLKEM768_PUBLIC_KEY_SIZE;",
+			"registration replay identifier width expression",
+		),
+		(
+			"registration_identifier_assertion_drifts",
+			"const _: () = assert!(REGISTRATION_ID_SIZE == 64);",
+			"const _: () = assert!(REGISTRATION_ID_SIZE == 63);",
+			"registration replay identifier 64-byte assertion",
+		),
+		(
+			"registration_identifier_first_half_uses_prekey",
+			"self.beacon_identity_public_key[i]",
+			"self.beacon_prekey_public_key[i]",
+			"registration replay identity-then-one-time layout",
+		),
+		(
+			"registration_identifier_second_half_uses_prekey",
+			"self.beacon_one_time_public_key[i - SIGN_PUBLIC_KEY_SIZE]",
+			"self.beacon_prekey_public_key[i - SIGN_PUBLIC_KEY_SIZE]",
+			"registration replay identity-then-one-time layout",
+		),
+		(
+			"registration_identifier_second_half_offset_drifts",
+			"i - SIGN_PUBLIC_KEY_SIZE",
+			"i - X25519_PUBLIC_KEY_SIZE",
+			"registration replay identity-then-one-time layout",
+		),
+		(
+			"registration_identifier_wrapper_bypasses_method",
+			"registration.registration_id()",
+			"RegistrationId { bytes: [0; REGISTRATION_ID_SIZE] }",
+			"registration replay identifier wrapper",
+		),
+		(
+			"registration_beacon_start_result_stays_fresh",
+			"pub state: BeaconInitSent,",
+			"pub state: BeaconFresh,",
+			"registration beacon-start result typestate",
+		),
+		(
+			"registration_beacon_start_maps_fresh_state",
+			"state: BeaconInitSent {",
+			"state: BeaconFresh {",
+			"registration beacon-start Fresh-to-InitSent mapping",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_pqxdh, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, replacement) in [
+		(
+			"registration_proverif_projection_swaps_halves",
+			"registration_identifier(one_time, identity)",
+		),
+		(
+			"registration_proverif_projection_uses_prekey",
+			"registration_identifier(identity, prekey)",
+		),
+		(
+			"registration_proverif_projection_uses_pq",
+			"registration_identifier(identity, pq)",
+		),
+	] {
+		assert_registration_lifecycle_rejected(
+			name,
+			"registration replay ProVerif identity/one-time projection",
+			|snapshot| {
+				replace_once(
+					&mut snapshot.extraction,
+					"registration_identifier(identity, one_time)",
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_beacon_identity_generation_changes",
+			"identity_key: crypto_sign::KeyPair::generate_with_rng(rng)\n\t\t\t\t.map_err(|_| crate::KeyGenError)?,",
+			"identity_key: crypto_kx::KeyPair::generate_with_rng(rng).map_err(|_| crate::KeyGenError)?,",
+			"registration Beacon identity generation",
+		),
+		(
+			"registration_beacon_new_state_changes",
+			"state: BeaconState::Fresh {",
+			"state: BeaconState::InitSent {",
+			"registration Beacon Fresh material co-location",
+		),
+		(
+			"registration_beacon_prekey_generation_changes",
+			"prekey: crypto_kx::KeyPair::generate_with_rng(rng)\n\t\t\t\t\t.map_err(|_| crate::KeyGenError)?,",
+			"prekey: crypto_kem::mlkem768::KeyPair::generate_with_rng(rng).map_err(|_| crate::KeyGenError)?,",
+			"registration Beacon Fresh material co-location",
+		),
+		(
+			"registration_beacon_pq_generation_changes",
+			"pq_key: crypto_kem::mlkem768::KeyPair::generate_with_rng(rng)\n\t\t\t\t\t.map_err(|_| crate::KeyGenError)?,",
+			"pq_key: crypto_kx::KeyPair::generate_with_rng(rng).map_err(|_| crate::KeyGenError)?,",
+			"registration Beacon Fresh material co-location",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"pub fn try_new_with_rng<",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	// Moved registration controls are exercised against core phases and native drivers below.
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_guard_first_identity_not_publicly_bound",
+			"=beacon_identity,\n      accepted_init:",
+			"accepted_identity: bitstring,\n      accepted_init:",
+			"registration replay first public input",
+		),
+		(
+			"registration_guard_first_init_type_changes",
+			"accepted_init: beaconcrypt_core__pqxdh__t_InitKex",
+			"accepted_init: bitstring",
+			"registration replay first public input",
+		),
+		(
+			"registration_guard_consumed_event_uses_replay_init",
+			"accepted_init,\n    accepted_registration_id,",
+			"replay_init,\n    accepted_registration_id,",
+			"registration replay consumed event",
+		),
+		(
+			"registration_guard_first_reply_is_consumed",
+			"out(first_reply, replay_fresh());",
+			"out(first_reply, replay_consumed());",
+			"registration replay first Fresh reply",
+		),
+		(
+			"registration_guard_later_identity_not_bound",
+			"=beacon_identity,\n      replay_init:",
+			"replay_identity: bitstring,\n      replay_init:",
+			"registration replay replicated later input",
+		),
+		(
+			"registration_guard_later_reply_is_fresh",
+			"out(replay_reply, replay_consumed()).",
+			"out(replay_reply, replay_fresh()).",
+			"registration replay later Consumed reply",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"let RegistrationReplayGuard(",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+	assert_registration_lifecycle_rejected(
+		"registration_guard_first_input_is_replicated",
+		"registration replay first input replication",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"let RegistrationReplayGuard(",
+				"  in(\n    replay_requests,",
+				"  !in(\n    replay_requests,",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_guard_later_input_loses_replication",
+		"registration replay replicated later input",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"out(first_reply, replay_fresh());",
+				"  !in(\n    replay_requests,",
+				"  in(\n    replay_requests,",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_guard_consumed_event_moves_after_fresh_reply",
+		"registration replay Fresh-to-Consumed owner order",
+		|snapshot| {
+			let event = "  event RegistrationConsumed(\n    server_identity,\n    beacon_identity,\n    accepted_init,\n    accepted_registration_id,\n    origin\n  );\n";
+			replace_once_after(
+				&mut snapshot.environment,
+				"let RegistrationReplayGuard(",
+				event,
+				"",
+			);
+			replace_once_after(
+				&mut snapshot.environment,
+				"out(first_reply, replay_fresh());",
+				"out(first_reply, replay_fresh());",
+				&format!("out(first_reply, replay_fresh());\n{event}"),
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_honest_guard_uses_wrong_identity",
+			"RegistrationReplayGuard(\n    server_identity,\n    beacon_identity,",
+			"RegistrationReplayGuard(\n    server_identity,\n    beacon_prekey,",
+			"registration honest replay owner",
+		),
+		(
+			"registration_honest_guard_is_replicated",
+			"  RegistrationReplayGuard(\n",
+			"  !RegistrationReplayGuard(\n",
+			"registration replicated honest replay owner",
+		),
+		(
+			"registration_honest_bundle_is_replicated",
+			"  out(\n    c,\n    signed_init_kex(",
+			"  !out(\n    c,\n    signed_init_kex(",
+			"registration replicated honest signed bundle",
+		),
+		(
+			"registration_honest_guard_and_bundle_are_sequential",
+			"  )\n  |\n  out(\n    c,\n    signed_init_kex(",
+			"  );\n  out(\n    c,\n    signed_init_kex(",
+			"registration honest parallel bundle-and-guard topology",
+		),
+		(
+			"registration_honest_bundle_identity_uses_prekey",
+			"tag_ed25519(beacon_identity),",
+			"tag_ed25519(beacon_prekey),",
+			"registration honest single signed bundle",
+		),
+		(
+			"registration_honest_bundle_prekey_uses_one_time",
+			"sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),",
+			"sign(tag_x25519_prekey(beacon_one_time), beacon_identity_secret),",
+			"registration honest single signed bundle",
+		),
+		(
+			"registration_honest_bundle_one_time_uses_prekey",
+			"sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),",
+			"sign(tag_x25519_one_time(beacon_prekey), beacon_identity_secret),",
+			"registration honest single signed bundle",
+		),
+		(
+			"registration_honest_bundle_pq_uses_one_time",
+			"sign(tag_mlkem768(beacon_pq), beacon_identity_secret)",
+			"sign(tag_mlkem768(beacon_one_time), beacon_identity_secret)",
+			"registration honest single signed bundle",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			let marker = if name.starts_with("registration_honest_bundle_") {
+				"  out(\n    c,\n    signed_init_kex("
+			} else {
+				"let HonestBeacon("
+			};
+			replace_once_after(&mut snapshot.environment, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_registration_lifecycle_rejected(
+		"registration_honest_bundle_is_duplicated",
+		"registration honest single signed bundle",
+		|snapshot| {
+			let output = "  out(\n    c,\n    signed_init_kex(\n      tag_ed25519(beacon_identity),\n      sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),\n      sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),\n      sign(tag_mlkem768(beacon_pq), beacon_identity_secret)\n    )\n  );";
+			replace_once_after(
+				&mut snapshot.environment,
+				"let HonestBeacon(",
+				output,
+				&format!("{output}\n{output}"),
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_honest_different_guard_is_duplicated",
+		"registration honest replay-owner family count changed",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"let HonestBeacon(",
+				"  RegistrationReplayGuard(\n    server_identity,",
+				"  RegistrationReplayGuard(server_identity, beacon_prekey, registration_session)\n  |\n  RegistrationReplayGuard(\n    server_identity,",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_honest_different_bundle_is_duplicated",
+		"registration honest signed-bundle family count changed",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"let HonestBeacon(",
+				"  out(\n    c,\n    signed_init_kex(",
+				"  out(c, signed_init_kex(tag_ed25519(beacon_prekey), signed_prekey, signed_one_time, signed_pq));\n  out(\n    c,\n    signed_init_kex(",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_server_role_replay_request_uses_prekey",
+			"(beacon_identity, core_init, registration_id, replay_reply)",
+			"(beacon_prekey, core_init, registration_id, replay_reply)",
+			"registration Server public replay request",
+		),
+		(
+			"registration_server_role_replay_request_uses_wire_init",
+			"(beacon_identity, core_init, registration_id, replay_reply)",
+			"(beacon_identity, incoming_init, registration_id, replay_reply)",
+			"registration Server public replay request",
+		),
+		(
+			"registration_server_role_replay_request_uses_root",
+			"(beacon_identity, core_init, registration_id, replay_reply)",
+			"(beacon_identity, core_init, root, replay_reply)",
+			"registration Server public replay request",
+		),
+		(
+			"registration_server_role_accepts_consumed",
+			"if replay_result = replay_fresh() then",
+			"if replay_result = replay_consumed() then",
+			"registration symbolic derive-consume-accept-abort order",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.environment, "let Server(", from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_registration_lifecycle_rejected(
+		"registration_server_role_root_moves_after_guard",
+		"registration symbolic derive-consume-accept-abort order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"let Server(",
+				"let root = pqxdh_root(",
+				"let root_before_guard = pqxdh_root(",
+			);
+			replace_once_after(
+				&mut snapshot.environment,
+				"if replay_result = replay_fresh() then",
+				"if replay_result = replay_fresh() then",
+				"if replay_result = replay_fresh() then\n  let root = pqxdh_root(root_input) in",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_server_role_abort_moves_before_guard",
+		"registration symbolic derive-consume-accept-abort order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"let Server(",
+				"event ServerResponseAborted(",
+				"event ServerResponseAbortedAfterGuard(",
+			);
+			replace_once_after(
+				&mut snapshot.environment,
+				"out(\n    replay_requests,",
+				"out(\n    replay_requests,",
+				"event ServerResponseAborted(\n    server_identity,\n    beacon_identity,\n    core_init,\n    registration_id,\n    root_input,\n    root,\n    registration_session\n  );\n  out(\n    replay_requests,",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_malicious_server_adds_replay_guard",
+			"  in(c, registration_control: bitstring);",
+			"  RegistrationReplayGuard(server_identity, beacon_identity, registration_session) |\n  in(c, registration_control: bitstring);",
+			"registration malicious replay guard",
+		),
+		(
+			"registration_malicious_server_requires_replay_fresh",
+			"  in(c, registration_control: bitstring);",
+			"  if replay_fresh() = replay_consumed() then\n  in(c, registration_control: bitstring);",
+			"registration malicious replay guard",
+		),
+		(
+			"registration_malicious_server_drops_direct_continue",
+			"let registration_continue(=registration_id) = registration_control in",
+			"let registration_continue(replayed_registration_id) = registration_control in",
+			"registration malicious direct response path",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.environment, "let MaliciousServer()", from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (call_index, label) in [(0usize, "old"), (1usize, "new")] {
+		for (argument_index, replacement) in [
+			(0usize, "tag_ed25519(MALICIOUS_TASK_SECRET)"),
+			(
+				1usize,
+				"sign(tag_x25519_prekey(MALICIOUS_TASK_SECRET), beacon_identity_secret)",
+			),
+			(
+				2usize,
+				"sign(tag_x25519_one_time(MALICIOUS_TASK_SECRET), beacon_identity_secret)",
+			),
+			(
+				3usize,
+				"sign(tag_mlkem768(MALICIOUS_TASK_SECRET), beacon_identity_secret)",
+			),
+		] {
+			assert_registration_lifecycle_rejected(
+				&format!("registration_hb49_{label}_bundle_argument_{argument_index}"),
+				&format!("registration HB-49 {label} bundle"),
+				|snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.mlkem_reencapsulation_control,
+						"let KemSameIdentityMultiEpoch()",
+						"kem_epoch_bundle",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+	for (name, from, to) in [
+		(
+			"registration_hb49_new_pq_reuses_old_key",
+			"let pqpk_new = mlkem_public(pqsk_new) in",
+			"let pqpk_new = mlkem_public(pqsk_old) in",
+		),
+		(
+			"registration_hb49_bundle_publication_order_reverses",
+			"out(kem_multi_epoch_channel, bundle_old);\n  out(kem_multi_epoch_channel, bundle_new);",
+			"out(kem_multi_epoch_channel, bundle_new);\n  out(kem_multi_epoch_channel, bundle_old);",
+		),
+	] {
+		assert_registration_lifecycle_rejected(
+			name,
+			"registration HB-49 same-classical-material PQ-only rotation fixture",
+			|snapshot| {
+				replace_once_after(
+					&mut snapshot.mlkem_reencapsulation_control,
+					"let KemSameIdentityMultiEpoch()",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, REGISTRATION_LIFECYCLE_MUTATION_COUNT);
+}
+const INITIAL_RATCHET_MUTATION_COUNT: usize = 192;
+
+#[test]
+fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	let facts = parse_facts(INTERFACE)
+		.unwrap()
+		.into_iter()
+		.filter(|fact| fact.starts_with("initial_ratchet."))
+		.collect::<Vec<_>>();
+	assert_eq!(facts.len(), 71);
+	for fact in facts {
+		let (key, _) = fact.split_once('=').unwrap();
+		assert_initial_ratchet_rejected(&format!("initial_ratchet_fact_{key}"), key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated")
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_derived_root_output_width_drifts",
+			"pub const KEX_KDF_OUT_LEN",
+			"pub const KEX_KDF_OUT_LEN: usize = 32usize;",
+			"pub const KEX_KDF_OUT_LEN: usize = 31usize;",
+			"derived-root output width",
+		),
+		(
+			"initial_ratchet_derived_root_width_link_drifts",
+			"const _: () = assert!(KEX_KDF_OUT_LEN",
+			"KEX_KDF_OUT_LEN == KDF_STATE_SIZE",
+			"KEX_KDF_OUT_LEN == KDF_STATE_SIZE + 1",
+			"derived-root width link",
+		),
+		(
+			"initial_ratchet_derived_root_alias_size_drifts",
+			"pub type KexDerivedSecret",
+			"SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>",
+			"SecretArr<31, systems::Pqxdh, roles::DerivedSecret>",
+			"derived-root alias",
+		),
+		(
+			"initial_ratchet_derived_root_alias_system_drifts",
+			"pub type KexDerivedSecret",
+			"SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>",
+			"SecretArr<KDF_STATE_SIZE, systems::X25519, roles::DerivedSecret>",
+			"derived-root alias",
+		),
+		(
+			"initial_ratchet_derived_root_alias_role_drifts",
+			"pub type KexDerivedSecret",
+			"SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>",
+			"SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::SendChain>",
+			"derived-root alias",
+		),
+		(
+			"initial_ratchet_derived_root_accessor_signature_drifts",
+			"pub fn as_array",
+			"pub fn as_array(&self) -> &[u8; S]",
+			"pub fn as_array(&self) -> &[u8]",
+			"derived-root accessor signature",
+		),
+		(
+			"initial_ratchet_derived_root_accessor_substitutes_data",
+			"pub fn as_array",
+			"&self.data",
+			"&replacement.data",
+			"derived-root accessor body",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.adapter_shared, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	// Moved registration controls are exercised against core phases and native drivers below.
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_chain_width_drifts",
+			"pub const RATCHET_CHAIN_SIZE: usize = crate::ratchet::RATCHET_CHAIN_SIZE;",
+			"pub const RATCHET_CHAIN_SIZE: usize = 31;",
+			"root and chain width",
+		),
+		(
+			"initial_ratchet_output_width_expression_drifts",
+			"pub const INITIAL_RATCHET_KDF_OUTPUT_SIZE: usize = RATCHET_CHAIN_SIZE * 2;",
+			"pub const INITIAL_RATCHET_KDF_OUTPUT_SIZE: usize = RATCHET_CHAIN_SIZE * 3;",
+			"output-width expression",
+		),
+		(
+			"initial_ratchet_output_width_assertion_drifts",
+			"const _: () = assert!(INITIAL_RATCHET_KDF_OUTPUT_SIZE == 64);",
+			"const _: () = assert!(INITIAL_RATCHET_KDF_OUTPUT_SIZE == 76);",
+			"output 64-byte assertion",
+		),
+		(
+			"initial_ratchet_beacon_send_offset_drifts",
+			"send_offset: RATCHET_CHAIN_SIZE as u8,\n\treceive_offset: 0,",
+			"send_offset: 0,\n\treceive_offset: 0,",
+			"Beacon role offsets",
+		),
+		(
+			"initial_ratchet_beacon_receive_offset_drifts",
+			"send_offset: RATCHET_CHAIN_SIZE as u8,\n\treceive_offset: 0,",
+			"send_offset: RATCHET_CHAIN_SIZE as u8,\n\treceive_offset: RATCHET_CHAIN_SIZE as u8,",
+			"Beacon role offsets",
+		),
+		(
+			"initial_ratchet_server_send_offset_drifts",
+			"send_offset: 0,\n\treceive_offset: RATCHET_CHAIN_SIZE as u8,",
+			"send_offset: RATCHET_CHAIN_SIZE as u8,\n\treceive_offset: RATCHET_CHAIN_SIZE as u8,",
+			"Server role offsets",
+		),
+		(
+			"initial_ratchet_server_receive_offset_drifts",
+			"send_offset: 0,\n\treceive_offset: RATCHET_CHAIN_SIZE as u8,",
+			"send_offset: 0,\n\treceive_offset: 0,",
+			"Server role offsets",
+		),
+		(
+			"initial_ratchet_beacon_candidate_role_swaps",
+			"pub const fn ratchet_initialization(&self) -> RatchetInitialization {\n\t\tBEACON_RATCHETS\n\t}",
+			"pub const fn ratchet_initialization(&self) -> RatchetInitialization {\n\t\tSERVER_RATCHETS\n\t}",
+			"Beacon candidate role",
+		),
+		(
+			"initial_ratchet_server_candidate_role_swaps",
+			"pub const fn ratchet_initialization(&self) -> RatchetInitialization {\n\t\tSERVER_RATCHETS\n\t}",
+			"pub const fn ratchet_initialization(&self) -> RatchetInitialization {\n\t\tBEACON_RATCHETS\n\t}",
+			"Server candidate role",
+		),
+		(
+			"initial_ratchet_left_slice_bound_drifts",
+			"let left = core::array::from_fn(|i| output[i]);",
+			"let left = core::array::from_fn(|i| output[i + 1]);",
+			"left 0..32 slice",
+		),
+		(
+			"initial_ratchet_right_slice_duplicates_left",
+			"let right = core::array::from_fn(|i| output[i + RATCHET_CHAIN_SIZE]);",
+			"let right = core::array::from_fn(|i| output[i]);",
+			"right 32..64 slice",
+		),
+		(
+			"initial_ratchet_right_slice_bound_drifts",
+			"let right = core::array::from_fn(|i| output[i + RATCHET_CHAIN_SIZE]);",
+			"let right = core::array::from_fn(|i| output[i + RATCHET_CHAIN_SIZE - 1]);",
+			"right 32..64 slice",
+		),
+		(
+			"initial_ratchet_server_branch_swaps_chain_arguments",
+			"send_chain: crate::ratchet::RatchetChain::from_bytes(left),\n\t\t\treceive_chain: crate::ratchet::RatchetChain::from_bytes(right),",
+			"send_chain: crate::ratchet::RatchetChain::from_bytes(right),\n\t\t\treceive_chain: crate::ratchet::RatchetChain::from_bytes(left),",
+			"role-ordered split",
+		),
+		(
+			"initial_ratchet_beacon_branch_duplicates_left",
+			"send_chain: crate::ratchet::RatchetChain::from_bytes(right),\n\t\t\treceive_chain: crate::ratchet::RatchetChain::from_bytes(left),",
+			"send_chain: crate::ratchet::RatchetChain::from_bytes(left),\n\t\t\treceive_chain: crate::ratchet::RatchetChain::from_bytes(left),",
+			"role-ordered split",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_pqxdh, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_candidate_role_methods_swap_together",
+		"Beacon candidate role",
+		|snapshot| {
+			let beacon = "pub const fn ratchet_initialization(&self) -> RatchetInitialization {\n\t\tBEACON_RATCHETS\n\t}";
+			let server = "pub const fn ratchet_initialization(&self) -> RatchetInitialization {\n\t\tSERVER_RATCHETS\n\t}";
+			replace_once(
+				&mut snapshot.core_pqxdh,
+				beacon,
+				"HB64_BEACON_ROLE_SENTINEL",
+			);
+			replace_once(&mut snapshot.core_pqxdh, server, beacon);
+			replace_once(
+				&mut snapshot.core_pqxdh,
+				"HB64_BEACON_ROLE_SENTINEL",
+				server,
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_left_and_right_slices_swap",
+		"left 0..32 slice",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_pqxdh,
+				"let left = core::array::from_fn(|i| output[i]);\n\tlet right = core::array::from_fn(|i| output[i + RATCHET_CHAIN_SIZE]);",
+				"let left = core::array::from_fn(|i| output[i + RATCHET_CHAIN_SIZE]);\n\tlet right = core::array::from_fn(|i| output[i]);",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_request_input_width_drifts",
+			"pub const RATCHET_CHAIN_SIZE: usize = 32;",
+			"pub const RATCHET_CHAIN_SIZE: usize = 31;",
+			"request input width",
+		),
+		(
+			"initial_ratchet_request_label_width_drifts",
+			"pub const SYM_RATCHET_INFO_SIZE: usize = 41;",
+			"pub const SYM_RATCHET_INFO_SIZE: usize = 40;",
+			"request label width",
+		),
+		(
+			"initial_ratchet_request_label_drifts",
+			"b\"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305\"",
+			"b\"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1304\"",
+			"request label",
+		),
+		(
+			"initial_ratchet_step_response_width_expression_drifts",
+			"crate::commitment::AEAD_KEY_SIZE + RATCHET_CHAIN_SIZE + crate::commitment::AEAD_NONCE_SIZE",
+			"crate::commitment::AEAD_KEY_SIZE + RATCHET_CHAIN_SIZE",
+			"step-response width expression",
+		),
+		(
+			"initial_ratchet_step_response_width_assertion_drifts",
+			"const _: () = assert!(RATCHET_KDF_OUTPUT_SIZE == 76);",
+			"const _: () = assert!(RATCHET_KDF_OUTPUT_SIZE == 64);",
+			"distinct 76-byte step response",
+		),
+		(
+			"initial_ratchet_step_response_type_uses_initial_width",
+			"bytes: [u8; RATCHET_KDF_OUTPUT_SIZE],",
+			"bytes: [u8; pqxdh::INITIAL_RATCHET_KDF_OUTPUT_SIZE],",
+			"distinct step-response type",
+		),
+		(
+			"initial_ratchet_request_uses_other_label",
+			"info: *SYM_RATCHET_INFO,",
+			"info: *PQXDH_INFO,",
+			"fixed-domain request construction",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_ratchet, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, from, to) in [
+		(
+			"initial_ratchet_request_input_field_type_drifts",
+			"input: [u8; RATCHET_CHAIN_SIZE]",
+			"input: [u8; 31]",
+		),
+		(
+			"initial_ratchet_request_info_field_type_drifts",
+			"info: [u8; SYM_RATCHET_INFO_SIZE]",
+			"info: [u8; 40]",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, "request field types", |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_ratchet,
+				"pub struct SymmetricRatchetKdfRequest",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_request_input_accessor_substituted",
+			"pub const fn input",
+			"&self.input",
+			"&replacement.input",
+			"request input accessor",
+		),
+		(
+			"initial_ratchet_request_info_accessor_substituted",
+			"pub const fn info",
+			"&self.info",
+			"&replacement.info",
+			"request info accessor",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pending_derives_clone",
+			"pub struct InitialRatchetKdfPending {",
+			"#[derive(Clone)]\npub struct InitialRatchetKdfPending {",
+			"pending Clone/Copy derivation",
+		),
+		(
+			"initial_ratchet_pending_derives_copy",
+			"pub struct InitialRatchetKdfPending {",
+			"#[derive(Copy)]\npub struct InitialRatchetKdfPending {",
+			"pending Clone/Copy derivation",
+		),
+		(
+			"initial_ratchet_pending_drops_request",
+			"\trequest: SymmetricRatchetKdfRequest,\n",
+			"",
+			"pending fields",
+		),
+		(
+			"initial_ratchet_pending_drops_initialization",
+			"\tinitialization: RatchetInitialization,\n",
+			"",
+			"pending fields",
+		),
+		(
+			"initial_ratchet_response_confuses_76_byte_step_type",
+			"bytes: [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE],",
+			"bytes: [u8; crate::ratchet::RATCHET_KDF_OUTPUT_SIZE],",
+			"distinct 64-byte response type",
+		),
+		(
+			"initial_ratchet_response_claims_pending_provenance",
+			"pub struct InitialRatchetKdfResponse {\n\tbytes:",
+			"pub struct InitialRatchetKdfResponse {\n\tpending: InitialRatchetKdfPending,\n\tbytes:",
+			"falsely gains type-level provenance",
+		),
+		(
+			"initial_ratchet_start_substitutes_root",
+			"request: SymmetricRatchetKdfRequest::new(*root),",
+			"request: SymmetricRatchetKdfRequest::new([0; RATCHET_CHAIN_SIZE]),",
+			"exact root request and initialization",
+		),
+		(
+			"initial_ratchet_start_substitutes_plan",
+			"\t\tinitialization,\n\t}",
+			"\t\tinitialization: SERVER_RATCHETS,\n\t}",
+			"exact root request and initialization",
+		),
+		(
+			"initial_ratchet_direct_beacon_start_swaps_role",
+			"start_initial_ratchet_kdf(root, BEACON_RATCHETS)",
+			"start_initial_ratchet_kdf(root, SERVER_RATCHETS)",
+			"direct Beacon role start",
+		),
+		(
+			"initial_ratchet_direct_server_start_swaps_role",
+			"start_initial_ratchet_kdf(root, SERVER_RATCHETS)",
+			"start_initial_ratchet_kdf(root, BEACON_RATCHETS)",
+			"direct Server role start",
+		),
+		(
+			"initial_ratchet_resume_substitutes_response_bytes",
+			"split_initial_ratchet_kdf_output(response.as_bytes(), pending.initialization)",
+			"split_initial_ratchet_kdf_output(replacement_response.as_bytes(), pending.initialization)",
+			"response split with same pending plan",
+		),
+		(
+			"initial_ratchet_resume_substitutes_pending_plan",
+			"split_initial_ratchet_kdf_output(response.as_bytes(), pending.initialization)",
+			"split_initial_ratchet_kdf_output(response.as_bytes(), replacement_pending.initialization)",
+			"response split with same pending plan",
+		),
+		(
+			"initial_ratchet_resume_is_duplicated",
+			"let chains = split_initial_ratchet_kdf_output(response.as_bytes(), pending.initialization);",
+			"let chains = split_initial_ratchet_kdf_output(response.as_bytes(), pending.initialization);\n\tlet duplicate = split_initial_ratchet_kdf_output(response.as_bytes(), pending.initialization);",
+			"response split with same pending plan",
+		),
+		(
+			"initial_ratchet_kernel_arguments_swap",
+			"ConcreteRatchetKernel::new(send_chain, receive_chain)",
+			"ConcreteRatchetKernel::new(receive_chain, send_chain)",
+			"kernel chain order",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_pqxdh_concrete, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pending_request_accessor_substituted",
+			"impl InitialRatchetKdfPending",
+			"&self.request",
+			"&replacement.request",
+			"pending request accessor",
+		),
+		(
+			"initial_ratchet_response_bytes_accessor_substituted",
+			"impl InitialRatchetKdfResponse",
+			"&self.bytes",
+			"&replacement.bytes",
+			"response bytes accessor",
+		),
+		(
+			"initial_ratchet_response_constructor_substitutes_bytes",
+			"impl InitialRatchetKdfResponse",
+			"Self { bytes }",
+			"Self { bytes: replacement }",
+			"response byte constructor",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.core_pqxdh_concrete, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, replacement, diagnostic) in [
+		(
+			"initial_ratchet_beacon_candidate_start_bypasses_candidate",
+			"pub fn start_beacon_candidate_ratchet_kdf",
+			"start_initial_ratchet_kdf(root, BEACON_RATCHETS)",
+			"Beacon candidate role start",
+		),
+		(
+			"initial_ratchet_server_candidate_start_bypasses_candidate",
+			"pub fn start_server_candidate_ratchet_kdf",
+			"start_initial_ratchet_kdf(root, SERVER_RATCHETS)",
+			"Server candidate role start",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_pqxdh_concrete,
+				marker,
+				"start_initial_ratchet_kdf(root, candidate.ratchet_initialization())",
+				replacement,
+			);
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_base_start_root_signature_drifts",
+			"pub fn start_initial_ratchet_kdf",
+			"root: &[u8; RATCHET_CHAIN_SIZE]",
+			"root: &[u8; 31]",
+			"typed base start signature",
+		),
+		(
+			"initial_ratchet_beacon_candidate_signature_swaps_type",
+			"pub fn start_beacon_candidate_ratchet_kdf",
+			"candidate: &BeaconRegistrationCandidate",
+			"candidate: &ServerRegistrationCandidate",
+			"typed Beacon candidate start signature",
+		),
+		(
+			"initial_ratchet_server_candidate_signature_swaps_type",
+			"pub fn start_server_candidate_ratchet_kdf",
+			"candidate: &ServerRegistrationCandidate",
+			"candidate: &BeaconRegistrationCandidate",
+			"typed Server candidate start signature",
+		),
+		(
+			"initial_ratchet_candidate_start_root_signature_drifts",
+			"pub fn start_beacon_candidate_ratchet_kdf",
+			"root: &[u8; RATCHET_CHAIN_SIZE]",
+			"root: &[u8; 31]",
+			"typed Beacon candidate start signature",
+		),
+		(
+			"initial_ratchet_server_candidate_start_root_signature_drifts",
+			"pub fn start_server_candidate_ratchet_kdf",
+			"root: &[u8; RATCHET_CHAIN_SIZE]",
+			"root: &[u8; 31]",
+			"typed Server candidate start signature",
+		),
+		(
+			"initial_ratchet_base_start_return_type_drifts",
+			"pub fn start_initial_ratchet_kdf",
+			") -> InitialRatchetKdfPending {",
+			") -> ReplacementPending {",
+			"typed base start signature",
+		),
+		(
+			"initial_ratchet_beacon_candidate_start_return_type_drifts",
+			"pub fn start_beacon_candidate_ratchet_kdf",
+			") -> InitialRatchetKdfPending {",
+			") -> ReplacementPending {",
+			"typed Beacon candidate start signature",
+		),
+		(
+			"initial_ratchet_server_candidate_start_return_type_drifts",
+			"pub fn start_server_candidate_ratchet_kdf",
+			") -> InitialRatchetKdfPending {",
+			") -> ReplacementPending {",
+			"typed Server candidate start signature",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.core_pqxdh_concrete, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, from, to) in [
+		(
+			"initial_ratchet_kernel_initial_sequence_is_nonzero",
+			"Self::from_counters(0, 0, send_chain, receive_chain)",
+			"Self::from_counters(1, 0, send_chain, receive_chain)",
+		),
+		(
+			"initial_ratchet_kernel_initial_chains_swap",
+			"Self::from_counters(0, 0, send_chain, receive_chain)",
+			"Self::from_counters(0, 0, receive_chain, send_chain)",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, "zero-counter kernel initialization", |snapshot| {
+			replace_once(&mut snapshot.core_ratchet_concrete, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_adapter_hkdf_uses_different_pending",
+			"initial_ratchet_hkdf(pending.request())",
+			"initial_ratchet_hkdf(replacement_pending.request())",
+			"adapter exact pending request",
+		),
+		(
+			"initial_ratchet_adapter_hkdf_is_duplicated",
+			"initial_ratchet_hkdf(pending.request())",
+			"initial_ratchet_hkdf(pending.request()); initial_ratchet_hkdf(pending.request())",
+			"adapter exact pending request",
+		),
+		(
+			"initial_ratchet_adapter_hkdf_is_bypassed",
+			"initial_ratchet_hkdf(pending.request())",
+			"[0; INITIAL_RATCHET_KDF_OUTPUT_SIZE]",
+			"adapter exact pending request",
+		),
+		(
+			"initial_ratchet_adapter_response_confuses_step_type",
+			"beaconcrypt_core::pqxdh::InitialRatchetKdfResponse::from_bytes",
+			"verified_ratchet::RatchetKdfResponse::from_bytes",
+			"adapter exact response bytes",
+		),
+		(
+			"initial_ratchet_adapter_response_bytes_substituted",
+			"initial_ratchet_hkdf(pending.request())",
+			"replacement_bytes",
+			"adapter exact pending request",
+		),
+		(
+			"initial_ratchet_adapter_resume_uses_different_pending",
+			"resume_initial_ratchet_kdf(pending, response)",
+			"resume_initial_ratchet_kdf(replacement_pending, response)",
+			"adapter same pending response resume",
+		),
+		(
+			"initial_ratchet_adapter_resume_uses_different_response",
+			"resume_initial_ratchet_kdf(pending, response)",
+			"resume_initial_ratchet_kdf(pending, replacement_response)",
+			"adapter same pending response resume",
+		),
+		(
+			"initial_ratchet_adapter_resume_is_duplicated",
+			"resume_initial_ratchet_kdf(pending, response)",
+			"resume_initial_ratchet_kdf(pending, response); resume_initial_ratchet_kdf(pending, response)",
+			"adapter same pending response resume",
+		),
+		(
+			"initial_ratchet_adapter_resume_is_bypassed",
+			"beaconcrypt_core::pqxdh::resume_initial_ratchet_kdf(pending, response)",
+			"replacement_kernel",
+			"adapter same pending response resume",
+		),
+		(
+			"initial_ratchet_adapter_step_response_uses_initial_type",
+			"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+			"beaconcrypt_core::pqxdh::InitialRatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+			"distinct 76-byte adapter response",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_ratchet, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_adapter_executor_substitutes_input",
+			"request.input()",
+			"replacement.input()",
+			"adapter executor input",
+		),
+		(
+			"initial_ratchet_adapter_executor_substitutes_label",
+			"request.info()",
+			"replacement.info()",
+			"adapter executor label",
+		),
+		(
+			"initial_ratchet_adapter_executor_substitutes_output_bytes",
+			"output.copy_from_slice(&expanded);",
+			"output.copy_from_slice(&replacement);",
+			"adapter executor output",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn symmetric_ratchet_hkdf",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_adapter_initial_executor_uses_step_wrapper",
+		"adapter HKDF executor",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn initial_ratchet_hkdf",
+				"symmetric_ratchet_hkdf(request)",
+				"ratchet_hkdf(request)",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_adapter_initial_hkdf_uses_76_byte_width",
+		"adapter 64-byte HKDF signature",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn initial_ratchet_hkdf",
+				"[u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE]",
+				"[u8; RATCHET_KDF_OUTPUT_SIZE]",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_adapter_response_is_shadowed",
+		"adapter response binding count",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn finish_initial_ratchet_kdf",
+				");\n\tbeaconcrypt_core::pqxdh::resume_initial_ratchet_kdf(pending, response)",
+				");\n\tlet response = replacement_response;\n\tbeaconcrypt_core::pqxdh::resume_initial_ratchet_kdf(pending, response)",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_adapter_pending_parameter_is_shadowed",
+		"adapter pending parameter was shadowed",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn finish_initial_ratchet_kdf",
+				") -> verified_ratchet::ConcreteRatchetKernel {",
+				") -> verified_ratchet::ConcreteRatchetKernel {\n\tlet pending = replacement_pending;",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_lean_start_root_substituted",
+			"request := { input := root, info := ratchet.SYM_RATCHET_INFO },",
+			"request := { input := replacement, info := ratchet.SYM_RATCHET_INFO },",
+			"Lean exact request interpretation",
+		),
+		(
+			"initial_ratchet_lean_request_accessor_substituted",
+			"ok pending.request := by",
+			"ok replacement.request := by",
+			"Lean exact request accessor",
+		),
+		(
+			"initial_ratchet_lean_beacon_offsets_swap",
+			"initialization := { send_offset := 32#u8, receive_offset := 0#u8 }",
+			"initialization := { send_offset := 0#u8, receive_offset := 32#u8 }",
+			"Lean Beacon offsets",
+		),
+		(
+			"initial_ratchet_lean_server_offsets_swap",
+			"initialization := { send_offset := 0#u8, receive_offset := 32#u8 }",
+			"initialization := { send_offset := 32#u8, receive_offset := 0#u8 }",
+			"Lean Server offsets",
+		),
+		(
+			"initial_ratchet_lean_resume_response_substituted",
+			"split_initial_ratchet_kdf_output response.bytes pending.initialization",
+			"split_initial_ratchet_kdf_output replacement.bytes pending.initialization",
+			"Lean response partition",
+		),
+		(
+			"initial_ratchet_lean_resume_plan_substituted",
+			"split_initial_ratchet_kdf_output response.bytes pending.initialization",
+			"split_initial_ratchet_kdf_output response.bytes replacement.initialization",
+			"Lean response partition",
+		),
+		(
+			"initial_ratchet_lean_kernel_arguments_swap",
+			"ConcreteRatchetKernel.new chains.send_chain chains.receive_chain",
+			"ConcreteRatchetKernel.new chains.receive_chain chains.send_chain",
+			"Lean kernel chain order",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.lean_ratchet_effect, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_lean_ideal_left_slice_drifts",
+		"Lean ideal root-chain split anchor",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.lean_pqxdh_kdf,
+				"(c.hkdf ds INFO_R 64).take 32",
+				"(c.hkdf ds INFO_R 64).take 31",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_lean_ideal_right_slice_drifts",
+		"Lean ideal root-chain split anchor",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.lean_pqxdh_kdf,
+				"(c.hkdf ds INFO_R 64).drop 32",
+				"(c.hkdf ds INFO_R 64).drop 31",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_lean_ideal_chain_agreement_anchor_renamed",
+		"Lean ideal post-record complementarity anchor",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.lean_pqxdh_theorems,
+				"theorem chain_agreement :",
+				"theorem chain_alignment :",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pv_server_definition_swaps_projection",
+			"letfun server_to_beacon_chain",
+			"hkdf_first_32(",
+			"hkdf_second_32(",
+			"ProVerif server-to-beacon definition",
+		),
+		(
+			"initial_ratchet_pv_server_definition_substitutes_root",
+			"letfun server_to_beacon_chain",
+			"hkdf_sha512_no_salt(root, symmetric_ratchet_domain())",
+			"hkdf_sha512_no_salt(replacement_root, symmetric_ratchet_domain())",
+			"ProVerif server-to-beacon definition",
+		),
+		(
+			"initial_ratchet_pv_server_definition_substitutes_label",
+			"letfun server_to_beacon_chain",
+			"symmetric_ratchet_domain()",
+			"pqxdh_domain()",
+			"ProVerif server-to-beacon definition",
+		),
+		(
+			"initial_ratchet_pv_beacon_definition_swaps_projection",
+			"letfun beacon_to_server_chain",
+			"hkdf_second_32(",
+			"hkdf_first_32(",
+			"ProVerif beacon-to-server definition",
+		),
+		(
+			"initial_ratchet_pv_beacon_definition_substitutes_root",
+			"letfun beacon_to_server_chain",
+			"hkdf_sha512_no_salt(root, symmetric_ratchet_domain())",
+			"hkdf_sha512_no_salt(replacement_root, symmetric_ratchet_domain())",
+			"ProVerif beacon-to-server definition",
+		),
+		(
+			"initial_ratchet_pv_beacon_definition_substitutes_label",
+			"letfun beacon_to_server_chain",
+			"symmetric_ratchet_domain()",
+			"pqxdh_domain()",
+			"ProVerif beacon-to-server definition",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.crypto, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pv_honest_beacon_root_constructor_drifts",
+			"let HonestBeacon(",
+			"let root = pqxdh_root(\n      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n    ) in",
+			"let root = replacement_root(\n      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n    ) in",
+			"HonestBeacon exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_root_input_drifts",
+			"let HonestBeacon(",
+			"let root = pqxdh_root(\n      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n    ) in",
+			"let root = pqxdh_root(\n      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(replacement_input)\n    ) in",
+			"HonestBeacon exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_server_root_constructor_drifts",
+			"let Server(",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"let root = replacement_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"Server exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_server_root_input_drifts",
+			"let Server(",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(replacement_input)\n  ) in",
+			"Server exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_malicious_server_root_constructor_drifts",
+			"let MaliciousServer()",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"let root = replacement_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"MaliciousServer exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_malicious_server_root_input_drifts",
+			"let MaliciousServer()",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(replacement_input)\n  ) in",
+			"MaliciousServer exact root derivation",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.environment, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pv_honest_beacon_initial_open_swaps_chain",
+			"let HonestBeacon(",
+			"let server_chain_1 = server_to_beacon_chain(root) in",
+			"let server_chain_1 = beacon_to_server_chain(root) in",
+			"HonestBeacon scoped chain occurrence count",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_initial_open_substitutes_root",
+			"let HonestBeacon(",
+			"let server_chain_1 = server_to_beacon_chain(root) in",
+			"let server_chain_1 = server_to_beacon_chain(replacement_root) in",
+			"HonestBeacon initial-open chain",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_outgoing_swaps_chain",
+			"let HonestBeacon(",
+			"let beacon_send_chain_1 = beacon_to_server_chain(root) in",
+			"let beacon_send_chain_1 = server_to_beacon_chain(root) in",
+			"HonestBeacon scoped chain occurrence count",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_outgoing_substitutes_root",
+			"let HonestBeacon(",
+			"let beacon_send_chain_1 = beacon_to_server_chain(root) in",
+			"let beacon_send_chain_1 = beacon_to_server_chain(replacement_root) in",
+			"HonestBeacon outgoing chain",
+		),
+		(
+			"initial_ratchet_pv_server_initial_seal_swaps_chain",
+			"let Server(",
+			"let server_chain_1 = server_to_beacon_chain(root) in",
+			"let server_chain_1 = beacon_to_server_chain(root) in",
+			"Server scoped chain occurrence count",
+		),
+		(
+			"initial_ratchet_pv_server_initial_seal_substitutes_root",
+			"let Server(",
+			"let server_chain_1 = server_to_beacon_chain(root) in",
+			"let server_chain_1 = server_to_beacon_chain(replacement_root) in",
+			"Server initial-seal chain",
+		),
+		(
+			"initial_ratchet_pv_server_initial_open_swaps_chain",
+			"let Server(",
+			"ratchet_material(beacon_to_server_chain(root))",
+			"ratchet_material(server_to_beacon_chain(root))",
+			"Server scoped chain occurrence count",
+		),
+		(
+			"initial_ratchet_pv_server_initial_open_substitutes_root",
+			"let Server(",
+			"ratchet_material(beacon_to_server_chain(root))",
+			"ratchet_material(beacon_to_server_chain(replacement_root))",
+			"Server incoming chain",
+		),
+		(
+			"initial_ratchet_pv_malicious_server_initial_seal_swaps_chain",
+			"let MaliciousServer()",
+			"ratchet_material(server_to_beacon_chain(root))",
+			"ratchet_material(beacon_to_server_chain(root))",
+			"MaliciousServer scoped chain occurrence count",
+		),
+		(
+			"initial_ratchet_pv_malicious_server_initial_seal_substitutes_root",
+			"let MaliciousServer()",
+			"ratchet_material(server_to_beacon_chain(root))",
+			"ratchet_material(server_to_beacon_chain(replacement_root))",
+			"MaliciousServer initial-seal chain",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.environment, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pv_honest_beacon_initial_material_uses_wrong_chain",
+			"let HonestBeacon(",
+			"let server_material_1 = ratchet_material(server_chain_1) in",
+			"let server_material_1 = ratchet_material(beacon_send_chain_1) in",
+			"HonestBeacon chain-to-open material",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_initial_material_is_shadowed",
+			"let HonestBeacon(",
+			"let server_material_1 = ratchet_material(server_chain_1) in",
+			"let server_material_1 = ratchet_material(server_chain_1) in\n    let server_material_1 = replacement_material in",
+			"HonestBeacon binding count",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_outgoing_material_uses_wrong_chain",
+			"let HonestBeacon(",
+			"let beacon_material_1 = ratchet_material(beacon_send_chain_1) in",
+			"let beacon_material_1 = ratchet_material(server_chain_1) in",
+			"HonestBeacon chain-to-seal material",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_outgoing_material_is_shadowed",
+			"let HonestBeacon(",
+			"let beacon_material_1 = ratchet_material(beacon_send_chain_1) in",
+			"let beacon_material_1 = ratchet_material(beacon_send_chain_1) in\n    let beacon_material_1 = replacement_material in",
+			"HonestBeacon binding count",
+		),
+		(
+			"initial_ratchet_pv_server_initial_material_uses_wrong_chain",
+			"let Server(",
+			"let server_material_1 = ratchet_material(server_chain_1) in",
+			"let server_material_1 = ratchet_material(replacement_chain) in",
+			"Server initial material",
+		),
+		(
+			"initial_ratchet_pv_server_initial_material_is_shadowed",
+			"let Server(",
+			"let server_material_1 = ratchet_material(server_chain_1) in",
+			"let server_material_1 = ratchet_material(server_chain_1) in\n      let server_material_1 = replacement_material in",
+			"Server binding count",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.environment, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, binding, diagnostic) in [
+		(
+			"initial_ratchet_pv_honest_beacon_root_is_shadowed",
+			"let HonestBeacon(",
+			"let server_chain_1 = server_to_beacon_chain(root) in",
+			"HonestBeacon root binding count",
+		),
+		(
+			"initial_ratchet_pv_server_root_is_shadowed",
+			"let Server(",
+			"let server_chain_1 = server_to_beacon_chain(root) in",
+			"Server root binding count",
+		),
+		(
+			"initial_ratchet_pv_malicious_server_root_is_shadowed",
+			"let MaliciousServer()",
+			"let server_material_1 = ratchet_material(server_to_beacon_chain(root)) in",
+			"MaliciousServer root binding count",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			let replacement = format!("let root = replacement_root in\n  {binding}");
+			replace_once_after(&mut snapshot.environment, marker, binding, &replacement);
+		});
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, INITIAL_RATCHET_MUTATION_COUNT);
+}
+
+#[test]
+fn requested_transcript_mutations_are_rejected() {
+	assert_rejected("pqxdh_label_byte", "domain.pqxdh.hex", |snapshot| {
+		mutate_fact(
+			&mut snapshot.interface,
+			"domain.pqxdh.hex",
+			"436561636f6e637279707450717864685f435552564532353531395f5348412d3531325f4d4c2d4b454d2d373638",
+		);
+	});
+	assert_rejected("symmetric_label_byte", "domain.symmetric.hex", |snapshot| {
+		mutate_fact(
+			&mut snapshot.interface,
+			"domain.symmetric.hex",
+			"52796d526174636865745f484b44465f5348412d3531325f43484143484132305f504f4c5931333035",
+		);
+	});
+	assert_rejected("aliased_domains", "PQXDH root domain", |snapshot| {
+		replace_once(
+			&mut snapshot.crypto,
+			"hkdf_sha512_no_salt(input, pqxdh_domain())",
+			"hkdf_sha512_no_salt(input, symmetric_ratchet_domain())",
+		);
+	});
+	assert_rejected(
+		"separate_initial_step_domain",
+		"step next-chain projection",
+		|snapshot| {
+			snapshot.crypto = snapshot.crypto.replace(
+				"hkdf_sha512_no_salt(chain, symmetric_ratchet_domain())",
+				"hkdf_sha512_no_salt(chain, step_ratchet_domain())",
+			);
+		},
+	);
+	assert_rejected(
+		"reversed_ad_identities",
+		"associated-data identity order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"        server_identity,\n        beacon_identity",
+				"        beacon_identity,\n        server_identity",
+			);
+		},
+	);
+	assert_rejected(
+		"swapped_x25519_roles",
+		"encoding.x25519_prekey",
+		|snapshot| {
+			mutate_fact(
+				&mut snapshot.interface,
+				"encoding.x25519_prekey",
+				"04,81,pk",
+			);
+			mutate_fact(
+				&mut snapshot.interface,
+				"encoding.x25519_one_time",
+				"04,80,pk",
+			);
+		},
+	);
+	assert_rejected(
+		"reordered_phase2_manifest_field",
+		"phase2.response.field.3",
+		|snapshot| {
+			mutate_fact(
+				&mut snapshot.interface,
+				"phase2.response.field.3",
+				"keyId@4:assigned_key_id",
+			);
+		},
+	);
+	for (name, key, value) in [
+		(
+			"changed_phase2_manifest_constructor",
+			"phase2.response.constructor",
+			"legacy_kex_response",
+		),
+		(
+			"changed_phase2_manifest_field_count",
+			"phase2.response.field_count",
+			"4",
+		),
+		(
+			"changed_phase2_manifest_field_0",
+			"phase2.response.field.0",
+			"ephemeralKey@1:server_ephemeral",
+		),
+		(
+			"changed_phase2_manifest_field_1",
+			"phase2.response.field.1",
+			"identityKey@0:server_identity",
+		),
+		(
+			"changed_phase2_manifest_field_2",
+			"phase2.response.field.2",
+			"appCipherText@3:initial_frame",
+		),
+		(
+			"changed_phase2_manifest_field_4",
+			"phase2.response.field.4",
+			"appCipherText@3:initial_frame",
+		),
+		(
+			"changed_phase2_manifest_server_writes",
+			"phase2.response.server_writes",
+			"candidate.ephemeral_public_key,candidate.server_identity_public_key,candidate.kem_ciphertext,initial_encrypted_frame,candidate.key_id",
+		),
+		(
+			"changed_phase2_manifest_beacon_reads",
+			"phase2.response.beacon_reads",
+			"server_ephemeral,response_server_identity,kem_ciphertext,initial_frame,assigned_key_id",
+		),
+	] {
+		assert_rejected(name, key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, value);
+		});
+	}
+	assert_rejected(
+		"legacy_phase2_symbolic_order",
+		"Phase-2 response constructor",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"fun kex_response(\n  bitstring,\n  bitstring,\n  bitstring,\n  bitstring,\n  key_id\n): bitstring [data].",
+				"fun kex_response(\n  bitstring,\n  bitstring,\n  bitstring,\n  key_id,\n  bitstring\n): bitstring [data].",
+			);
+		},
+	);
+	assert_rejected(
+		"permuted_phase2_beacon_destructure",
+		"Phase-2 response destructuring order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"    response_server_identity,\n    server_ephemeral,\n    kem_ciphertext,\n    initial_frame,\n    assigned_key_id",
+				"    server_ephemeral,\n    response_server_identity,\n    kem_ciphertext,\n    initial_frame,\n    assigned_key_id",
+			);
+		},
+	);
+	assert_rejected(
+		"permuted_phase2_response_construction",
+		"Phase-2 response construction order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"        server_identity,\n        server_ephemeral,\n        kem_ciphertext,\n        initial_frame,\n        assigned_key_id",
+				"        server_ephemeral,\n        server_identity,\n        kem_ciphertext,\n        initial_frame,\n        assigned_key_id",
+			);
+		},
+	);
+	assert_rejected(
+		"permuted_active_quantum_phase2_destructure",
+		"active-quantum Phase-2 response destructuring order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.active_quantum_witness,
+				"    response_server_identity,\n    server_ephemeral,\n    kem_ciphertext,\n    initial_frame,\n    assigned_key_id",
+				"    server_ephemeral,\n    response_server_identity,\n    kem_ciphertext,\n    initial_frame,\n    assigned_key_id",
+			);
+		},
+	);
+	assert_rejected(
+		"reordered_phase2_schema_fields",
+		"Phase-2 response schema",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.phase2_schema,
+				"app-cipher-text: bstr, key-id: uint",
+				"key-id: uint, app-cipher-text: bstr",
+			);
+		},
+	);
+	assert_rejected(
+		"omitted_phase2_schema_field",
+		"Phase-2 response schema",
+		|snapshot| {
+			replace_once(&mut snapshot.phase2_schema, "app-cipher-text: bstr, ", "");
+		},
+	);
+	assert_rejected(
+		"renamed_phase2_schema_field",
+		"Phase-2 response schema",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.phase2_schema,
+				"app-cipher-text:",
+				"initial-frame:",
+			);
+		},
+	);
+	// Phase-2 serializer and exact request-field substitutions now live in registration_effects.
+	assert_rejected(
+		"agreement_without_selected_pqpk",
+		"beacon establishment emitter",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"      beacon_pq,\n      server_ephemeral,",
+				"      server_ephemeral,",
+			);
+		},
+	);
+	assert_rejected(
+		"agreement_without_kem_ciphertext",
+		"beacon establishment emitter",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"      kem_ciphertext,\n      initial_frame,",
+				"      initial_frame,",
+			);
+		},
+	);
+	for (name, field) in [
+		("ctx_without_key", "key"),
+		("ctx_without_nonce", "nonce"),
+		("ctx_without_associated_data", "associated_data"),
+		("ctx_without_retained_aead_tag", "retained_aead_tag"),
+		("ctx_without_sequence", "sequence_le64(message_sequence)"),
+		("ctx_without_sender_id", "sender_id_le64(sender_id)"),
+	] {
+		assert_rejected(name, "CTX preimage field order", |snapshot| {
+			omit_ctx(snapshot, field);
+		});
+	}
+}
+
+#[test]
+fn main_registration_completion_schedules_preserve_the_checked_prefixes() {
+	validate_main_sequence_gates(ENVIRONMENT_MODEL).unwrap();
+	for (role, sequence) in [
+		("let HonestBeacon(", "initial_sequence"),
+		("let MainLaterBeacon(", "main_initial_sequence"),
+	] {
+		let gate = format!("if {sequence} = first_sequence() then");
+		for replacement in [
+			"if true then".to_owned(),
+			format!("if {sequence} = next_sequence(first_sequence()) then"),
+		] {
+			let mut changed = ENVIRONMENT_MODEL.to_owned();
+			replace_once_after(&mut changed, role, &gate, &replacement);
+			assert!(
+				validate_main_sequence_gates(&changed).is_err(),
+				"initial sequence-one gate mutation survived: {role}"
+			);
+		}
+	}
+	let phase2 = include_str!("../proofs/pro-verif/phase2-response-binding-control.pvl");
+	validate_initial_sequence_gate(phase2, "frame_sequence", "letregistration_payload(").unwrap();
+	for replacement in [
+		"if true then",
+		"if frame_sequence = next_sequence(first_sequence()) then",
+	] {
+		let changed = phase2.replacen("if frame_sequence = first_sequence() then", replacement, 1);
+		assert!(
+			validate_initial_sequence_gate(&changed, "frame_sequence", "letregistration_payload(")
+				.is_err(),
+			"Phase-2 sequence gate mutation survived"
+		);
+	}
+
+	let environment = compact(&uncommented_pv(ENVIRONMENT_MODEL).unwrap());
+	assert_eq!(
+		arguments_after(&environment, "funsession_label(").unwrap(),
+		["bitstring", "bitstring", "key_id", "bitstring"],
+		"traffic agreement must retain root bytes without claiming an inverse for Extract"
+	);
+	assert_eq!(
+		arguments_after(&environment, "))=authenticated_registration_session(").unwrap(),
+		[
+			"mr_server",
+			"mr_beacon",
+			"mr_init",
+			"mr_id",
+			"mr_prekey",
+			"mr_one_time",
+			"mr_pq",
+			"mr_root",
+			"mr_ad",
+			"mr_pinned",
+			"mr_origin",
+		],
+		"authentication projection preserves identities, signed bundle, actual root, AD and origin"
+	);
+	assert_eq!(
+		arguments_after(
+			&environment,
+			"establishment_authenticated_session(establishment_transcript("
+		)
+		.unwrap(),
+		[
+			"mr_server",
+			"mr_beacon",
+			"mr_init",
+			"mr_id",
+			"mr_prekey",
+			"mr_one_time",
+			"mr_pq",
+			"mr_ephemeral",
+			"mr_kem",
+			"mr_frame",
+			"mr_response",
+			"mr_root_input",
+			"mr_root",
+			"mr_ad",
+			"mr_assigned",
+			"mr_pinned",
+			"mr_session",
+			"mr_origin",
+		],
+		"projection destructures every original field in its existing order"
+	);
+	for (raw, projected, expected_count, omit_response) in [
+		(
+			"ServerRegistrationSessionCommitted",
+			"ServerAuthenticatedSessionCommitted",
+			2,
+			false,
+		),
+		(
+			"BeaconRegistrationCompleted",
+			"BeaconAuthenticatedRegistrationCompleted",
+			2,
+			true,
+		),
+		(
+			"RegistrationRecordSent",
+			"AuthenticatedRegistrationRecordSent",
+			3,
+			false,
+		),
+	] {
+		let raw_calls = all_arguments(&environment, raw)
+			.unwrap()
+			.into_iter()
+			.filter(|args| args[0].starts_with("establishment_session("))
+			.collect::<Vec<_>>();
+		let projected_calls = all_arguments(&environment, projected)
+			.unwrap()
+			.into_iter()
+			.filter(|args| args[0].starts_with("establishment_authenticated_session("))
+			.collect::<Vec<_>>();
+		assert_eq!(raw_calls.len(), expected_count);
+		assert_eq!(projected_calls.len(), expected_count);
+		for (raw_args, actual) in raw_calls.iter().zip(projected_calls) {
+			let mut expected = raw_args.clone();
+			expected[0] = expected[0].replace(
+				"establishment_session(",
+				"establishment_authenticated_session(",
+			);
+			if omit_response {
+				expected.remove(4);
+			}
+			assert_eq!(
+				actual, expected,
+				"projected {raw} changes an authenticated argument"
+			);
+			require_once(
+				&environment,
+				&format!(
+					"event{raw}({});event{projected}({});",
+					raw_args.join(","),
+					expected.join(",")
+				),
+				"projected event retains the exact source success condition and order",
+			)
+			.unwrap();
+		}
+	}
+	let baseline =
+		compact(&uncommented_pv(include_str!("../proofs/pro-verif/baseline.pv")).unwrap());
+	for role in [
+		"!HonestBeacon(BEACON_RECORD_SECRET)",
+		"!MainLaterBeacon(BEACON_RECORD_SECRET)",
+		"!MainLaterServer(INITIAL_SECRET,CACHED_SECRET,ADVANCE_SECRET,FUTURE_SECRET)",
+		"!Server(INITIAL_SECRET,CACHED_SECRET,ADVANCE_SECRET,FUTURE_SECRET)",
+	] {
+		require_once(&baseline, role, "live main registration role").unwrap();
+	}
+	let server = section_between(
+		&environment,
+		"letServer(",
+		"letMaliciousServer(",
+		"first server",
+	)
+	.unwrap();
+	let later_server = environment.split_once("letMainLaterServer(").unwrap().1;
+	let later_server = format!("letServer({later_server}").replace("main_", "");
+	assert_eq!(
+		server.split_once("letthird_frame=seal_frame(").unwrap().0,
+		later_server
+			.split_once("in(c,completion_kind:bitstring);")
+			.unwrap()
+			.0,
+		"later server must retain the entire checked authentication, replay, root, response and first-two-record prefix"
+	);
+	assert_eq!(
+		server.split_once("out(c,third_frame);").unwrap().1,
+		later_server.split_once("out(c,third_frame);").unwrap().1,
+		"later server must retain the checked suffix after its alternative third payload"
+	);
+	let beacon = section_between(
+		&environment,
+		"letHonestBeacon(",
+		"letMaliciousBeacon(",
+		"first beacon",
+	)
+	.unwrap();
+	let later_beacon = section_between(
+		&environment,
+		"letMainLaterBeacon(",
+		"letMainLaterServer(",
+		"later beacon",
+	)
+	.unwrap()
+	.replace("MainLaterBeacon", "HonestBeacon")
+	.replace("main_", "");
+	assert_eq!(
+		beacon.split_once("letserver_material_1=").unwrap().0,
+		later_beacon.split_once("letserver_chain_2=").unwrap().0,
+		"later beacon must retain the checked single-use lifecycle, response parsing, root and associated-data derivation prefix"
+	);
+	require_ordered(&later_beacon, &[
+		"letserver_chain_2=ratchet_next(server_chain_1)in",
+		"letserver_chain_3=ratchet_next(server_chain_2)in",
+		"letserver_material_3=ratchet_material(server_chain_3)in",
+		"letopened_initial=open_frame(server_material_3,associated_data,next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,initial_frame)in",
+		"letregistration_payload(=expected_binding,initial_plaintext)=opened_initialin",
+		"eventBeaconRegistrationCompleted(establishment_session(beacon_establishment),next_sequence(next_sequence(first_sequence())),opened_initial,initial_frame,response,assigned_key_id);",
+		"eventMessageKeyCached(session,beacon_role(),server_to_beacon(),first_sequence(),server_material_1);",
+		"eventMessageKeyCached(session,beacon_role(),server_to_beacon(),next_sequence(first_sequence()),server_material_2);",
+		"eventMessageKeyUnavailable(session,beacon_role(),server_to_beacon(),next_sequence(next_sequence(first_sequence())),server_material_3);",
+	], "later completion authentication and state ordering").unwrap();
+	assert_eq!(count(&later_beacon, "open_frame("), 1);
+	require_ordered(&later_beacon, &[
+		"letopened_initial=open_frame(",
+		"letcrypto_frame(initial_cipher,initial_tag,initial_commitment,initial_sequence,initial_sender)=initial_framein",
+		"eventMainRegistrationLaterOpened(initial_sequence,opened_initial,initial_frame);",
+		"ifinitial_sequence=first_sequence()then",
+		"letexpected_binding=",
+		"letregistration_payload(=expected_binding,initial_plaintext)=opened_initialin",
+	], "main later opening precedes sequence-one rejection before binding").unwrap();
+	require_ordered(beacon, &[
+		"letopened_initial=open_frame(",
+		"letcrypto_frame(initial_cipher,initial_tag,initial_commitment,initial_sequence,initial_sender)=initial_framein",
+		"ifinitial_sequence=first_sequence()then",
+		"letexpected_binding=",
+	], "main first opening enforces sequence one before binding").unwrap();
+
+	let queries =
+		compact(&uncommented_pv(include_str!("../proofs/pro-verif/queries.pvl")).unwrap());
+	assert_eq!(count(&queries, "query"), 14);
+	require_once(
+		&queries,
+		"inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,first_sequence(),main_payload,main_frame,main_claimed))==>inj-event(AuthenticatedRegistrationRecordSent(main_agreement,first_sequence(),main_payload,main_frame,main_claimed))",
+		"sequence-one exact record and assigned-ID agreement",
+	).unwrap();
+	let exact_queries = compact(
+		&uncommented_pv(include_str!(
+			"../proofs/pro-verif/exact-registration-origin-queries.pvl"
+		))
+		.unwrap(),
+	);
+	assert_eq!(
+		exact_queries
+			.split("query")
+			.skip(1)
+			.map(|query| stable_text_hash(&format!("query{query}")))
+			.collect::<Vec<_>>(),
+		[
+			5_922_842_905_554_828_522,
+			1_537_735_056_464_180_222,
+			9_278_209_781_568_601_116,
+			8_380_481_376_099_052_960
+		],
+		"all four historical exact-field query bodies remain unchanged controls"
+	);
+	for conclusion in [
+		"inj-event(ServerAuthenticatedSessionCommitted(main_agreement,main_server_assigned))",
+		"inj-event(AuthenticatedRegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned))",
+	] {
+		require_once(&queries, conclusion, "general completion origin").unwrap();
+	}
+	let controls = compact(
+		&uncommented_pv(include_str!(
+			"../proofs/pro-verif/main-registration-control-queries.pvl"
+		))
+		.unwrap(),
+	);
+	assert_eq!(count(&controls, "query"), 10);
+	for query in [
+		"event(BeaconRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_response,main_claimed))==>main_sequence=first_sequence().",
+		"event(MainRegistrationLaterOpened(next_sequence(next_sequence(first_sequence())),main_payload,main_frame)).",
+	] {
+		require_once(&controls, query, "additive initial sequence policy control").unwrap();
+	}
+
+	require_once(
+		&controls,
+		"inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_claimed))==>inj-event(AuthenticatedRegistrationRecordSent(main_agreement,first_sequence(),main_payload,main_frame,main_claimed))",
+		"projected sequence-one response correspondence",
+	)
+	.unwrap();
+	assert_eq!(
+		count(&controls, "inj-event(BeaconAnyCommitted("),
+		0,
+		"the alias-refuted exact transcript query stays among the historical controls"
+	);
+	require_once(
+		&exact_queries,
+		"inj-event(BeaconAnyCommitted(main_transcript))==>inj-event(ServerCommitted(main_transcript))",
+		"historical any-branch exact-transcript control",
+	)
+	.unwrap();
+	require_once(
+		&controls,
+		"event(MainRegistrationRelabelCompleted(main_agreement,main_payload,main_frame,main_response))",
+		"rejected later relabel control",
+	)
+	.unwrap();
+}
+
+// Additional controls for the extracted opening phases and their actual native optional replies.
+#[test]
+fn record_opening_source_mutations_are_rejected() {
+	let mut checked = 0;
+	for (name, core, from, to, diagnostic) in [
+		(
+			"core_reader_inverts_remainder",
+			true,
+			"if remaining.is_empty()",
+			"if !remaining.is_empty()",
+			"CryptoFrame complete-input core gate",
+		),
+		(
+			"core_reader_discards_message",
+			true,
+			"Some(message)",
+			"None",
+			"CryptoFrame complete-input core gate",
+		),
+		(
+			"core_payload_wrong_overhead",
+			true,
+			"COMMITMENT_SIZE + AEAD_TAG_SIZE",
+			"COMMITMENT_SIZE + AEAD_TAG_SIZE - 1",
+			"CryptoFrame core payload constants",
+		),
+		(
+			"native_wrapper_import_substituted",
+			false,
+			"beaconcrypt_core::record as verified_record",
+			"unchecked_record::{self as verified_record",
+			"CryptoFrame actual extracted wrapper import",
+		),
+		(
+			"core_begin_wrong_nonce",
+			true,
+			"\t\tmaterial.nonce().as_bytes(),",
+			"\t\t&[0; AEAD_NONCE_SIZE],",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"core_begin_wrong_ad",
+			true,
+			"\t\t&context.associated_data,",
+			"\t\t&[0; ASSOCIATED_DATA_SIZE],",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"core_begin_drops_original_opening",
+			true,
+			"OpenCommitment {\n\t\topening,",
+			"OpenCommitment {\n\t\topening: replacement,",
+			"CryptoFrame selected receive material and sequence",
+		),
+		(
+			"core_transcript_reads_substitute",
+			true,
+			"\t\t&self.transcript\n",
+			"\t\t&replacement\n",
+			"CryptoFrame retained transcript borrow",
+		),
+		(
+			"core_transcript_erases_substitute",
+			true,
+			"\t\t&mut self.transcript\n",
+			"\t\t&mut replacement\n",
+			"CryptoFrame retained transcript borrow",
+		),
+		(
+			"core_supplied_commitment_substituted",
+			true,
+			"self.opening.context().commitment",
+			"replacement_commitment",
+			"CryptoFrame same-opening supplied commitment",
+		),
+		(
+			"core_resume_inverts_comparison",
+			true,
+			"if !commitment_matches {",
+			"if commitment_matches {",
+			"CryptoFrame commitment gate and same-opening resume",
+		),
+		(
+			"core_resume_skips_rejection",
+			true,
+			"return OpenAfterCommitment::OpenCommitmentRejected(self.opening.reject().0);",
+			"return OpenAfterCommitment::OpenAeadRequested(OpenAead { opening: self.opening });",
+			"CryptoFrame commitment gate and same-opening resume",
+		),
+		(
+			"core_resume_replaces_capability",
+			true,
+			"opening: self.opening,",
+			"opening: replacement,",
+			"CryptoFrame commitment gate and same-opening resume",
+		),
+		(
+			"core_request_wrong_material",
+			true,
+			"let material = match self.opening.material()",
+			"let material = match replacement_material",
+			"CryptoFrame AEAD selected material",
+		),
+		(
+			"core_request_wrong_context",
+			true,
+			"let context = self.opening.context();",
+			"let context = replacement_context;",
+			"CryptoFrame AEAD selected context",
+		),
+		(
+			"core_request_wrong_ciphertext",
+			true,
+			"ciphertext: context.base_ciphertext,",
+			"ciphertext: context.commitment,",
+			"CryptoFrame AEAD request fields",
+		),
+		(
+			"core_request_wrong_key",
+			true,
+			"key: material.key().as_bytes(),",
+			"key: &[0; AEAD_KEY_SIZE],",
+			"CryptoFrame AEAD request fields",
+		),
+		(
+			"core_finish_none_becomes_plaintext",
+			true,
+			"None => return self.opening.finish(None),",
+			"None => return self.opening.finish(Some(replacement_plaintext)),",
+			"CryptoFrame actual optional plaintext",
+		),
+		(
+			"core_finish_wrong_sender",
+			true,
+			"let key_id = self.opening.context().sender_kid;",
+			"let key_id = 0;",
+			"CryptoFrame returned parsed metadata",
+		),
+		(
+			"core_finish_wrong_sequence",
+			true,
+			"let seq = self.opening.sequence();",
+			"let seq = 1;",
+			"CryptoFrame returned parsed metadata",
+		),
+		(
+			"core_finish_discards_actual_some",
+			true,
+			"self.opening.finish(Some(opened))",
+			"self.opening.finish(None)",
+			"CryptoFrame one-use receive completion",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			if core {
+				assert_eq!(
+					snapshot.core_record.matches(from).count(),
+					1,
+					"core record mutation anchor: {name}"
+				);
+				replace_once(&mut snapshot.core_record, from, to);
+			} else if name == "native_wrapper_import_substituted" {
+				replace_once(&mut snapshot.adapter_ratchet, from, to);
+			} else {
+				replace_once_after(&mut snapshot.adapter_ratchet, "fn execute_open(", from, to);
+			}
+		});
+		checked += 1;
+	}
+	assert_eq!(checked, 21);
+}
+
+#[test]
+fn registration_boundary_make_runners_are_checked() {
+	validate_makefile(CORE_MAKEFILE).unwrap();
+	for (scenario, checker) in [
+		("registration-set-admission", "registration-set"),
+		("registration-set-response", "registration-response"),
+		("registration-beacon-admission", "registration-beacon"),
+	] {
+		for (from, to) in [
+			(
+				format!("check-proverif-{scenario}: check-proverif-extraction"),
+				format!("check-proverif-{scenario}:"),
+			),
+			(
+				format!("python3 $(PROVERIF_DIR)/test-{checker}-checker.py"),
+				"true".to_owned(),
+			),
+			(
+				format!("python3 $(PROVERIF_DIR)/check-{checker}.py"),
+				"true".to_owned(),
+			),
+		] {
+			let mut changed = CORE_MAKEFILE.to_owned();
+			replace_once(&mut changed, &from, &to);
+			assert_eq!(
+				validate_makefile(&changed).unwrap_err(),
+				format!("{scenario} exact Make runner and self-test wiring changed")
+			);
+		}
+	}
+}
+
+// Free-schedule (fs) ProVerif family. The fs group is pinned separately from the 36-scenario
+// parallel roster: its own scenario list, serial Make target, per-target timeout and address-space
+// cap, the Python result checker's loader and target manifest, the vocabulary copied from
+// environment.pvl, the Rust file:line fidelity annotations and the repository-wide declaration
+// allowlist.
+
+const FS_COMMON: &str = include_str!("../proofs/pro-verif/fs-common.pvl");
+const FS_REGISTRATION: &str = include_str!("../proofs/pro-verif/fs-registration.pvl");
+const FS_REGISTRATION_CONSUMED: &str =
+	include_str!("../proofs/pro-verif/fs-registration-consumed.pvl");
+const FS_CONTROL_NOCHECK: &str = include_str!("../proofs/pro-verif/fs-control-nocheck.pvl");
+const FS_REGISTRATION_BINDING: &str =
+	include_str!("../proofs/pro-verif/fs-registration-binding.pvl");
+const FS_CONTROL_UKS: &str = include_str!("../proofs/pro-verif/fs-control-uks.pvl");
+const FS_RECORDS_S2B: &str = include_str!("../proofs/pro-verif/fs-records-s2b.pvl");
+const FS_RECORDS_S2B_RECEIVE: &str = include_str!("../proofs/pro-verif/fs-records-s2b-receive.pvl");
+const FS_RECORDS_S2B_BOUNDS: [&str; 3] = [
+	include_str!("../proofs/pro-verif/fs-records-s2b-kr1.pvl"),
+	include_str!("../proofs/pro-verif/fs-records-s2b-kr2.pvl"),
+	include_str!("../proofs/pro-verif/fs-records-s2b-kr3.pvl"),
+];
+const FS_RECORDS_S2B_WINDOW: &str = include_str!("../proofs/pro-verif/fs-records-s2b-window.pvl");
+const FS_CONTROL_RETAIN: &str = include_str!("../proofs/pro-verif/fs-control-retain.pvl");
+const FS_CONTROL_STALE: &str = include_str!("../proofs/pro-verif/fs-control-stale.pvl");
+const FS_CONTROL_FAILMUT: &str = include_str!("../proofs/pro-verif/fs-control-failmut.pvl");
+const FS_RECORDS_S2B_GATE: &str = include_str!("../proofs/pro-verif/fs-records-s2b-gate.pvl");
+const FS_CONTROL_NOGATE: &str = include_str!("../proofs/pro-verif/fs-control-nogate.pvl");
+const FS_RECORDS_S2B_TASKINGS: &str =
+	include_str!("../proofs/pro-verif/fs-records-s2b-taskings.pvl");
+const FS_RECORDS_S2B_TASKINGS_CHOSEN: &str =
+	include_str!("../proofs/pro-verif/fs-records-s2b-taskings-chosen.pvl");
+const FS_RECORDS_B2S: &str = include_str!("../proofs/pro-verif/fs-records-b2s.pvl");
+const FS_RECORDS_B2S_RECEIVE: &str = include_str!("../proofs/pro-verif/fs-records-b2s-receive.pvl");
+const FS_RECORDS_B2S_BOUNDS: [&str; 3] = [
+	include_str!("../proofs/pro-verif/fs-records-b2s-kr1.pvl"),
+	include_str!("../proofs/pro-verif/fs-records-b2s-kr2.pvl"),
+	include_str!("../proofs/pro-verif/fs-records-b2s-kr3.pvl"),
+];
+const FS_RECORDS_B2S_FAILSTOP: &str =
+	include_str!("../proofs/pro-verif/fs-records-b2s-kr3-failstop.pvl");
+const FS_RECORDS_B2S_WINDOW: &str = include_str!("../proofs/pro-verif/fs-records-b2s-window.pvl");
+const FS_CONTROL_B2S_RETAIN: &str = include_str!("../proofs/pro-verif/fs-control-b2s-retain.pvl");
+const FS_CONTROL_B2S_STALE: &str = include_str!("../proofs/pro-verif/fs-control-b2s-stale.pvl");
+const FS_RECORDS_B2S_SENDS: &str = include_str!("../proofs/pro-verif/fs-records-b2s-sends.pvl");
+const FS_RECORDS_B2S_SENDS_CHOSEN: &str =
+	include_str!("../proofs/pro-verif/fs-records-b2s-sends-chosen.pvl");
+const FS_REGISTRATION_BOUNDS: [&str; 3] = [
+	include_str!("../proofs/pro-verif/fs-registration-k1.pvl"),
+	include_str!("../proofs/pro-verif/fs-registration-k2.pvl"),
+	include_str!("../proofs/pro-verif/fs-registration-k3.pvl"),
+];
+const FS_CHECKER: &str = include_str!("../proofs/pro-verif/check-free-schedule.py");
+const FS_CHECKER_TESTS: &str = include_str!("../proofs/pro-verif/test-free-schedule-checker.py");
+const DECLARATION_ALLOWLIST: &str = include_str!("../proofs/pro-verif/declaration-allowlist.tsv");
+const FORMAL_ANALYSIS: &str = include_str!("../../doc/formal-verification-analysis.md");
+
+const FS_SCENARIOS: [&str; 3] = ["fs-registration", "fs-records-s2b", "fs-records-b2s"];
+const FS_FIDELITY_PREFIX: &str = "(* @beaconcrypt-fs-fidelity ";
+
+/// Every Rust fidelity annotation of the fs files: (file, key, cited range). Within one file the
+/// annotations must appear in this order.
+const FS_FIDELITY: &[(&str, &str, &str)] = &[
+	(
+		"fs-registration-consumed.pvl",
+		"consumed.contains",
+		"beaconcrypt/src/server.rs:509-513",
+	),
+	(
+		"fs-common.pvl",
+		"common.kid_counter_start",
+		"beaconcrypt/src/server.rs:224-224",
+	),
+	(
+		"fs-common.pvl",
+		"common.kid_next",
+		"beaconcrypt-core/src/pqxdh.rs:845-851",
+	),
+	(
+		"fs-registration-binding.pvl",
+		"binding.root_input",
+		"beaconcrypt-core/src/pqxdh.rs:398-412",
+	),
+	(
+		"fs-registration-binding.pvl",
+		"binding.associated_data",
+		"beaconcrypt-core/src/pqxdh.rs:938-959",
+	),
+	(
+		"fs-registration.pvl",
+		"server.accept",
+		"beaconcrypt/src/server.rs:489-506",
+	),
+	(
+		"fs-registration.pvl",
+		"server.identity_tag",
+		"beaconcrypt-core/src/registration.rs:209-213",
+	),
+	(
+		"fs-registration.pvl",
+		"server.signatures",
+		"beaconcrypt-core/src/registration.rs:238-249",
+	),
+	(
+		"fs-registration.pvl",
+		"server.validate_init_kex",
+		"beaconcrypt-core/src/registration.rs:271-280",
+	),
+	(
+		"fs-registration.pvl",
+		"core.validate_init_kex",
+		"beaconcrypt-core/src/pqxdh.rs:325-345",
+	),
+	(
+		"fs-registration.pvl",
+		"server.registration_id",
+		"beaconcrypt/src/server.rs:508-509",
+	),
+	(
+		"fs-registration.pvl",
+		"core.registration_id",
+		"beaconcrypt-core/src/pqxdh.rs:195-204",
+	),
+	(
+		"fs-registration.pvl",
+		"core.registration_id_replacement",
+		"beaconcrypt-core/src/pqxdh.rs:218-220",
+	),
+	(
+		"fs-registration.pvl",
+		"server.consumed_status",
+		"beaconcrypt/src/server.rs:509-513",
+	),
+	(
+		"fs-registration.pvl",
+		"core.replay_status",
+		"beaconcrypt-core/src/pqxdh.rs:245-251",
+	),
+	(
+		"fs-registration.pvl",
+		"server.fresh_ephemeral",
+		"beaconcrypt/src/pqxdh.rs:124-129",
+	),
+	(
+		"fs-registration.pvl",
+		"server.encapsulate",
+		"beaconcrypt/src/pqxdh.rs:134-138",
+	),
+	(
+		"fs-registration.pvl",
+		"server.identity_conversion",
+		"beaconcrypt/src/pqxdh.rs:111-122",
+	),
+	(
+		"fs-registration.pvl",
+		"server.dh",
+		"beaconcrypt-core/src/agreement.rs:280-299",
+	),
+	(
+		"fs-registration.pvl",
+		"server.accept_root_input",
+		"beaconcrypt-core/src/agreement.rs:364-395",
+	),
+	(
+		"fs-registration.pvl",
+		"server.root",
+		"beaconcrypt-core/src/agreement.rs:429-438",
+	),
+	(
+		"fs-registration.pvl",
+		"server.insert",
+		"beaconcrypt/src/server.rs:531-535",
+	),
+	(
+		"fs-registration.pvl",
+		"server.accept_return",
+		"beaconcrypt/src/server.rs:535-538",
+	),
+	(
+		"fs-registration.pvl",
+		"server.build",
+		"beaconcrypt/src/server.rs:548-553",
+	),
+	(
+		"fs-registration.pvl",
+		"server.next_key_id",
+		"beaconcrypt-core/src/peer.rs:129-133",
+	),
+	(
+		"fs-registration.pvl",
+		"server.prepare_commit",
+		"beaconcrypt-core/src/registration.rs:1022-1031",
+	),
+	(
+		"fs-registration.pvl",
+		"core.prepare_commit",
+		"beaconcrypt-core/src/pqxdh.rs:854-865",
+	),
+	(
+		"fs-registration.pvl",
+		"core.prepare_commit_ad",
+		"beaconcrypt-core/src/pqxdh.rs:884-887",
+	),
+	(
+		"fs-registration.pvl",
+		"server.ratchet_start",
+		"beaconcrypt-core/src/registration.rs:1031-1032",
+	),
+	(
+		"fs-registration.pvl",
+		"server.associated_data",
+		"beaconcrypt-core/src/registration.rs:1066-1066",
+	),
+	(
+		"fs-registration.pvl",
+		"server.payload",
+		"beaconcrypt/src/server.rs:554-555",
+	),
+	(
+		"fs-registration.pvl",
+		"server.binding",
+		"beaconcrypt-core/src/record_effects.rs:61-70",
+	),
+	(
+		"fs-registration.pvl",
+		"server.seal",
+		"beaconcrypt/src/server.rs:576-583",
+	),
+	(
+		"fs-registration.pvl",
+		"server.commit",
+		"beaconcrypt-core/src/registration.rs:1329-1338",
+	),
+	(
+		"fs-registration.pvl",
+		"server.build_return",
+		"beaconcrypt/src/server.rs:614-617",
+	),
+	(
+		"fs-registration.pvl",
+		"server.token_consumed",
+		"beaconcrypt/src/server.rs:140-145",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.new",
+		"beaconcrypt/src/beacon.rs:102-134",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.one_time",
+		"beaconcrypt/src/beacon.rs:360-364",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.start",
+		"beaconcrypt/src/beacon.rs:390-403",
+	),
+	(
+		"fs-registration.pvl",
+		"core.beacon_start",
+		"beaconcrypt-core/src/pqxdh.rs:304-321",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.sign",
+		"beaconcrypt-core/src/registration.rs:616-627",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.bundle_return",
+		"beaconcrypt/src/beacon.rs:482-482",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.finish",
+		"beaconcrypt/src/beacon.rs:492-498",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.decode",
+		"beaconcrypt/src/beacon.rs:510-520",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.identity_conversion",
+		"beaconcrypt/src/pqxdh.rs:111-122",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.decapsulate",
+		"beaconcrypt/src/pqxdh.rs:140-149",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.dh",
+		"beaconcrypt-core/src/agreement.rs:280-317",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.prepare",
+		"beaconcrypt-core/src/agreement.rs:400-407",
+	),
+	(
+		"fs-registration.pvl",
+		"core.pin_check",
+		"beaconcrypt-core/src/pqxdh.rs:552-554",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.root",
+		"beaconcrypt-core/src/agreement.rs:429-438",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.ratchet_start",
+		"beaconcrypt-core/src/registration.rs:810-813",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.associated_data",
+		"beaconcrypt-core/src/registration.rs:839-840",
+	),
+	(
+		"fs-registration.pvl",
+		"core.finish_ad",
+		"beaconcrypt-core/src/pqxdh.rs:559-562",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.receive",
+		"beaconcrypt/src/beacon.rs:557-579",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.sequence_one",
+		"beaconcrypt-core/src/registration.rs:835-841",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.binding",
+		"beaconcrypt-core/src/registration.rs:956-970",
+	),
+	(
+		"fs-registration.pvl",
+		"core.binding",
+		"beaconcrypt-core/src/pqxdh.rs:623-635",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.pin_checks",
+		"beaconcrypt-core/src/pqxdh.rs:552-556",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.commit",
+		"beaconcrypt/src/beacon.rs:584-591",
+	),
+	(
+		"fs-records-s2b-window.pvl",
+		"window.cached_removal",
+		"beaconcrypt-core/src/ratchet/refined.rs:700-721",
+	),
+	(
+		"fs-records-s2b-window.pvl",
+		"window.failure_keeps_entry",
+		"beaconcrypt-core/src/ratchet/concrete.rs:436-443",
+	),
+	(
+		"fs-records-s2b-gate.pvl",
+		"gate.sequence_one",
+		"beaconcrypt-core/src/registration.rs:835-841",
+	),
+	(
+		"fs-records-s2b-gate.pvl",
+		"gate.abort",
+		"beaconcrypt/src/beacon.rs:575-582",
+	),
+	(
+		"fs-records-s2b-taskings.pvl",
+		"taskings.encrypt",
+		"beaconcrypt/src/server.rs:371-375",
+	),
+	(
+		"fs-records-s2b-taskings.pvl",
+		"taskings.seal",
+		"beaconcrypt/src/ratchet.rs:546-579",
+	),
+	(
+		"fs-records-s2b-taskings.pvl",
+		"taskings.allocate",
+		"beaconcrypt-core/src/ratchet/concrete.rs:133-155",
+	),
+	(
+		"fs-records-s2b-taskings.pvl",
+		"taskings.advance",
+		"beaconcrypt-core/src/ratchet/concrete.rs:171-182",
+	),
+	(
+		"fs-records-s2b-taskings.pvl",
+		"taskings.stays_advanced",
+		"beaconcrypt-core/src/ratchet/concrete.rs:206-209",
+	),
+	(
+		"fs-records-s2b-taskings.pvl",
+		"taskings.snapshot",
+		"beaconcrypt/src/server.rs:620-630",
+	),
+	(
+		"fs-records-s2b-taskings-chosen.pvl",
+		"taskings.encrypt",
+		"beaconcrypt/src/server.rs:371-375",
+	),
+	(
+		"fs-records-s2b-taskings-chosen.pvl",
+		"taskings.seal",
+		"beaconcrypt/src/ratchet.rs:546-579",
+	),
+	(
+		"fs-records-s2b-taskings-chosen.pvl",
+		"taskings.allocate",
+		"beaconcrypt-core/src/ratchet/concrete.rs:133-155",
+	),
+	(
+		"fs-records-s2b-taskings-chosen.pvl",
+		"taskings.advance",
+		"beaconcrypt-core/src/ratchet/concrete.rs:171-182",
+	),
+	(
+		"fs-records-s2b-taskings-chosen.pvl",
+		"taskings.stays_advanced",
+		"beaconcrypt-core/src/ratchet/concrete.rs:206-209",
+	),
+	(
+		"fs-records-s2b-taskings-chosen.pvl",
+		"taskings.snapshot",
+		"beaconcrypt/src/server.rs:620-630",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"beacon.decrypt",
+		"beaconcrypt/src/beacon.rs:215-230",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"ratchet.decode_sender",
+		"beaconcrypt/src/ratchet.rs:625-642",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"record.frame_context",
+		"beaconcrypt-core/src/record.rs:35-61",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"core.begin_receive",
+		"beaconcrypt-core/src/ratchet/concrete.rs:259-268",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"core.plan_receive",
+		"beaconcrypt-core/src/ratchet/control.rs:223-245",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"core.cached_receive",
+		"beaconcrypt-core/src/ratchet/concrete.rs:270-280",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"refined.prepare_cached",
+		"beaconcrypt-core/src/ratchet/refined.rs:317-330",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"ratchet.open",
+		"beaconcrypt/src/ratchet.rs:579-608",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"record.commitment",
+		"beaconcrypt-core/src/record.rs:80-98",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"core.open_finish",
+		"beaconcrypt-core/src/ratchet/concrete.rs:436-454",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"control.cached_removal",
+		"beaconcrypt-core/src/ratchet/control.rs:435-461",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"refined.publish_cached",
+		"beaconcrypt-core/src/ratchet/refined.rs:700-721",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"core.open_reject",
+		"beaconcrypt-core/src/ratchet/concrete.rs:440-443",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"core.future_receive",
+		"beaconcrypt-core/src/ratchet/concrete.rs:282-300",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"refined.publish_future",
+		"beaconcrypt-core/src/ratchet/refined.rs:755-778",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.fresh_ephemeral",
+		"beaconcrypt/src/pqxdh.rs:124-129",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.encapsulate",
+		"beaconcrypt/src/pqxdh.rs:134-138",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.accept",
+		"beaconcrypt/src/server.rs:489-506",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.identity_tag",
+		"beaconcrypt-core/src/registration.rs:209-213",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.signatures",
+		"beaconcrypt-core/src/registration.rs:238-249",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.validate_init_kex",
+		"beaconcrypt-core/src/registration.rs:271-280",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.validate_init_kex",
+		"beaconcrypt-core/src/pqxdh.rs:325-345",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.registration_id",
+		"beaconcrypt/src/server.rs:508-509",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.registration_id",
+		"beaconcrypt-core/src/pqxdh.rs:195-204",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.consumed_status",
+		"beaconcrypt/src/server.rs:509-513",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.identity_conversion",
+		"beaconcrypt/src/pqxdh.rs:111-122",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.dh",
+		"beaconcrypt-core/src/agreement.rs:280-299",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.accept_root_input",
+		"beaconcrypt-core/src/agreement.rs:364-395",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.root_input",
+		"beaconcrypt-core/src/pqxdh.rs:398-412",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.root",
+		"beaconcrypt-core/src/agreement.rs:429-438",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.insert",
+		"beaconcrypt/src/server.rs:531-535",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.accept_return",
+		"beaconcrypt/src/server.rs:535-538",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.build",
+		"beaconcrypt/src/server.rs:548-553",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.next_key_id",
+		"beaconcrypt-core/src/peer.rs:129-133",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.prepare_commit",
+		"beaconcrypt-core/src/registration.rs:1022-1031",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.prepare_commit_ad",
+		"beaconcrypt-core/src/pqxdh.rs:884-887",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.ratchet_start",
+		"beaconcrypt-core/src/registration.rs:1031-1032",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.associated_data",
+		"beaconcrypt-core/src/registration.rs:1066-1066",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.associated_data",
+		"beaconcrypt-core/src/pqxdh.rs:938-959",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.payload",
+		"beaconcrypt/src/server.rs:554-555",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.binding",
+		"beaconcrypt-core/src/record_effects.rs:61-70",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.seal",
+		"beaconcrypt/src/server.rs:576-583",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.commit",
+		"beaconcrypt-core/src/registration.rs:1329-1338",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.build_return",
+		"beaconcrypt/src/server.rs:614-617",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.new",
+		"beaconcrypt/src/beacon.rs:102-134",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.one_time",
+		"beaconcrypt/src/beacon.rs:360-364",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.start",
+		"beaconcrypt/src/beacon.rs:390-403",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.beacon_start",
+		"beaconcrypt-core/src/pqxdh.rs:304-321",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.sign",
+		"beaconcrypt-core/src/registration.rs:616-627",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.bundle_return",
+		"beaconcrypt/src/beacon.rs:482-482",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.finish",
+		"beaconcrypt/src/beacon.rs:492-498",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.decode",
+		"beaconcrypt/src/beacon.rs:510-520",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.identity_conversion",
+		"beaconcrypt/src/pqxdh.rs:111-122",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.decapsulate",
+		"beaconcrypt/src/pqxdh.rs:140-149",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.dh",
+		"beaconcrypt-core/src/agreement.rs:280-317",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.prepare",
+		"beaconcrypt-core/src/agreement.rs:400-407",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.pin_check",
+		"beaconcrypt-core/src/pqxdh.rs:552-554",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.root",
+		"beaconcrypt-core/src/agreement.rs:429-438",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.ratchet_start",
+		"beaconcrypt-core/src/registration.rs:810-813",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.associated_data",
+		"beaconcrypt-core/src/registration.rs:839-840",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.finish_ad",
+		"beaconcrypt-core/src/pqxdh.rs:559-562",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.receive",
+		"beaconcrypt/src/beacon.rs:557-579",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"ratchet.decrypt",
+		"beaconcrypt/src/ratchet.rs:619-661",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.sequence_one",
+		"beaconcrypt-core/src/registration.rs:835-841",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.binding",
+		"beaconcrypt-core/src/registration.rs:956-970",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.binding",
+		"beaconcrypt-core/src/pqxdh.rs:623-635",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.pin_checks",
+		"beaconcrypt-core/src/pqxdh.rs:552-556",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.commit",
+		"beaconcrypt/src/beacon.rs:584-591",
+	),
+	(
+		"fs-records-b2s-window.pvl",
+		"window.cached_removal",
+		"beaconcrypt-core/src/ratchet/refined.rs:700-721",
+	),
+	(
+		"fs-records-b2s-window.pvl",
+		"window.failure_keeps_entry",
+		"beaconcrypt-core/src/ratchet/concrete.rs:436-443",
+	),
+	(
+		"fs-records-b2s-sends.pvl",
+		"sends.encrypt",
+		"beaconcrypt/src/beacon.rs:197-214",
+	),
+	(
+		"fs-records-b2s-sends.pvl",
+		"sends.seal",
+		"beaconcrypt/src/ratchet.rs:546-579",
+	),
+	(
+		"fs-records-b2s-sends.pvl",
+		"sends.allocate",
+		"beaconcrypt-core/src/ratchet/concrete.rs:133-155",
+	),
+	(
+		"fs-records-b2s-sends.pvl",
+		"sends.advance",
+		"beaconcrypt-core/src/ratchet/concrete.rs:171-182",
+	),
+	(
+		"fs-records-b2s-sends.pvl",
+		"sends.stays_advanced",
+		"beaconcrypt-core/src/ratchet/concrete.rs:206-209",
+	),
+	(
+		"fs-records-b2s-sends-chosen.pvl",
+		"sends.encrypt",
+		"beaconcrypt/src/beacon.rs:197-214",
+	),
+	(
+		"fs-records-b2s-sends-chosen.pvl",
+		"sends.seal",
+		"beaconcrypt/src/ratchet.rs:546-579",
+	),
+	(
+		"fs-records-b2s-sends-chosen.pvl",
+		"sends.allocate",
+		"beaconcrypt-core/src/ratchet/concrete.rs:133-155",
+	),
+	(
+		"fs-records-b2s-sends-chosen.pvl",
+		"sends.advance",
+		"beaconcrypt-core/src/ratchet/concrete.rs:171-182",
+	),
+	(
+		"fs-records-b2s-sends-chosen.pvl",
+		"sends.stays_advanced",
+		"beaconcrypt-core/src/ratchet/concrete.rs:206-209",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"server.decrypt",
+		"beaconcrypt/src/server.rs:376-378",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"server.route",
+		"beaconcrypt/src/server.rs:384-392",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"ratchet.frame_sender",
+		"beaconcrypt/src/ratchet.rs:357-359",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"server.peer_associated_data",
+		"beaconcrypt/src/server.rs:368-370",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"ratchet.decode_sender",
+		"beaconcrypt/src/ratchet.rs:625-642",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"record.frame_context",
+		"beaconcrypt-core/src/record.rs:35-61",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"core.begin_receive",
+		"beaconcrypt-core/src/ratchet/concrete.rs:259-268",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"core.plan_receive",
+		"beaconcrypt-core/src/ratchet/control.rs:223-245",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"core.cached_receive",
+		"beaconcrypt-core/src/ratchet/concrete.rs:270-280",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"refined.prepare_cached",
+		"beaconcrypt-core/src/ratchet/refined.rs:317-330",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"ratchet.open",
+		"beaconcrypt/src/ratchet.rs:579-608",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"record.commitment",
+		"beaconcrypt-core/src/record.rs:80-98",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"core.open_finish",
+		"beaconcrypt-core/src/ratchet/concrete.rs:436-454",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"control.cached_removal",
+		"beaconcrypt-core/src/ratchet/control.rs:435-461",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"refined.publish_cached",
+		"beaconcrypt-core/src/ratchet/refined.rs:700-721",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"server.accepted",
+		"beaconcrypt/src/server.rs:393-396",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"core.open_reject",
+		"beaconcrypt-core/src/ratchet/concrete.rs:440-443",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"core.future_receive",
+		"beaconcrypt-core/src/ratchet/concrete.rs:282-300",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"refined.publish_future",
+		"beaconcrypt-core/src/ratchet/refined.rs:755-778",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.fresh_ephemeral",
+		"beaconcrypt/src/pqxdh.rs:124-129",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.encapsulate",
+		"beaconcrypt/src/pqxdh.rs:134-138",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.accept",
+		"beaconcrypt/src/server.rs:489-506",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.identity_tag",
+		"beaconcrypt-core/src/registration.rs:209-213",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.signatures",
+		"beaconcrypt-core/src/registration.rs:238-249",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.validate_init_kex",
+		"beaconcrypt-core/src/registration.rs:271-280",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.validate_init_kex",
+		"beaconcrypt-core/src/pqxdh.rs:325-345",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.registration_id",
+		"beaconcrypt/src/server.rs:508-509",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.registration_id",
+		"beaconcrypt-core/src/pqxdh.rs:195-204",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.consumed_status",
+		"beaconcrypt/src/server.rs:509-513",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.identity_conversion",
+		"beaconcrypt/src/pqxdh.rs:111-122",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.dh",
+		"beaconcrypt-core/src/agreement.rs:280-299",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.accept_root_input",
+		"beaconcrypt-core/src/agreement.rs:364-395",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.root",
+		"beaconcrypt-core/src/agreement.rs:429-438",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.insert",
+		"beaconcrypt/src/server.rs:531-535",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.accept_return",
+		"beaconcrypt/src/server.rs:535-538",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.build",
+		"beaconcrypt/src/server.rs:548-553",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.next_key_id",
+		"beaconcrypt-core/src/peer.rs:129-133",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.prepare_commit",
+		"beaconcrypt-core/src/registration.rs:1022-1031",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.ratchet_start",
+		"beaconcrypt-core/src/registration.rs:1031-1032",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.server_ratchets",
+		"beaconcrypt-core/src/pqxdh.rs:439-442",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.associated_data",
+		"beaconcrypt-core/src/registration.rs:1066-1066",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.prepare_commit_ad",
+		"beaconcrypt-core/src/pqxdh.rs:884-887",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.payload",
+		"beaconcrypt/src/server.rs:554-555",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.binding",
+		"beaconcrypt-core/src/record_effects.rs:61-70",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.seal",
+		"beaconcrypt/src/server.rs:576-583",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.commit",
+		"beaconcrypt-core/src/registration.rs:1329-1338",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.build_return",
+		"beaconcrypt/src/server.rs:614-617",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.receive_counter_start",
+		"beaconcrypt-core/src/ratchet/concrete.rs:39-41",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.new",
+		"beaconcrypt/src/beacon.rs:102-134",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.one_time",
+		"beaconcrypt/src/beacon.rs:360-364",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.start",
+		"beaconcrypt/src/beacon.rs:390-403",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.beacon_start",
+		"beaconcrypt-core/src/pqxdh.rs:304-321",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.sign",
+		"beaconcrypt-core/src/registration.rs:616-627",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.bundle_return",
+		"beaconcrypt/src/beacon.rs:482-482",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.finish",
+		"beaconcrypt/src/beacon.rs:492-498",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.decode",
+		"beaconcrypt/src/beacon.rs:510-520",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.identity_conversion",
+		"beaconcrypt/src/pqxdh.rs:111-122",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.decapsulate",
+		"beaconcrypt/src/pqxdh.rs:140-149",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.dh",
+		"beaconcrypt-core/src/agreement.rs:280-317",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.prepare",
+		"beaconcrypt-core/src/agreement.rs:400-407",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.pin_check",
+		"beaconcrypt-core/src/pqxdh.rs:552-554",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.root",
+		"beaconcrypt-core/src/agreement.rs:429-438",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.ratchet_start",
+		"beaconcrypt-core/src/registration.rs:810-813",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.beacon_ratchets",
+		"beaconcrypt-core/src/pqxdh.rs:435-438",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.associated_data",
+		"beaconcrypt-core/src/registration.rs:839-840",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.finish_ad",
+		"beaconcrypt-core/src/pqxdh.rs:559-562",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.receive",
+		"beaconcrypt/src/beacon.rs:557-579",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.sequence_one",
+		"beaconcrypt-core/src/registration.rs:835-841",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.binding",
+		"beaconcrypt-core/src/registration.rs:956-970",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.binding",
+		"beaconcrypt-core/src/pqxdh.rs:623-635",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.pin_checks",
+		"beaconcrypt-core/src/pqxdh.rs:552-556",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.commit",
+		"beaconcrypt/src/beacon.rs:584-591",
+	),
+];
+
+/// The fs-registration result targets: (name, class, K_reg bound, query file, mutant library).
+const FS_REGISTRATION_TARGETS: [(&str, &str, &str, &str, &str); 15] = [
+	("A1", "security", "3", "fs-registration-a1.pv", ""),
+	("A2", "security", "3", "fs-registration-a2.pv", ""),
+	("R1", "security", "3", "fs-registration-r1.pv", ""),
+	("R1'", "security", "3", "fs-registration-r1prime.pv", ""),
+	(
+		"S3-server",
+		"security",
+		"3",
+		"fs-registration-s3-server.pv",
+		"",
+	),
+	(
+		"S3-beacon",
+		"security",
+		"3",
+		"fs-registration-s3-beacon.pv",
+		"",
+	),
+	("R2", "definitional", "2", "fs-registration-r2.pv", ""),
+	("R3", "witness", "2", "fs-registration-r3.pv", ""),
+	("R5", "witness", "2", "fs-registration-r5.pv", ""),
+	("W1", "witness", "1", "fs-registration-w1.pv", ""),
+	("W2", "witness", "2", "fs-registration-w2.pv", ""),
+	("W3", "witness", "1", "fs-registration-w3.pv", ""),
+	("R4", "limitation", "1", "fs-registration-r4.pv", ""),
+	(
+		"C-NOCHECK",
+		"control",
+		"2",
+		"fs-registration-r1.pv",
+		"consumed=NOCHECK",
+	),
+	(
+		"C-UKS",
+		"control",
+		"1",
+		"fs-registration-a1.pv",
+		"binding=UKS",
+	),
+];
+
+/// The fs-records-s2b result targets: (name, class, K_r bound, query file, hook and form keywords
+/// sorted).
+const FS_S2B_TARGETS: [(&str, &str, &str, &str, &str); 16] = [
+	(
+		"s2b-A1",
+		"security",
+		"3",
+		"fs-records-s2b-a1.pv",
+		"taskings=CHOSEN",
+	),
+	(
+		"s2b-A2",
+		"security",
+		"3",
+		"fs-records-s2b-a2.pv",
+		"taskings=CHOSEN",
+	),
+	(
+		"s2b-C1",
+		"security",
+		"3",
+		"fs-records-s2b-c1.pv",
+		"taskings=CHOSEN",
+	),
+	(
+		"s2b-C3",
+		"security",
+		"3",
+		"fs-records-s2b-c3.pv",
+		"taskings=CHOSEN",
+	),
+	(
+		"s2b-C4",
+		"security",
+		"3",
+		"fs-records-s2b-c4.pv",
+		"taskings=CHOSEN",
+	),
+	("s2b-S1", "security", "3", "fs-records-s2b-s1.pv", ""),
+	("s2b-A3", "witness", "1", "fs-records-s2b-a3.pv", ""),
+	("s2b-C5a", "witness", "2", "fs-records-s2b-c5a.pv", ""),
+	("s2b-C5b", "witness", "2", "fs-records-s2b-c5b.pv", ""),
+	("s2b-C5c", "witness", "1", "fs-records-s2b-c5c.pv", ""),
+	("s2b-S4", "witness", "1", "fs-records-s2b-s4.pv", ""),
+	(
+		"s2b-C-RETAIN-C1",
+		"control",
+		"3",
+		"fs-records-s2b-c1.pv",
+		"window=RETAIN",
+	),
+	(
+		"s2b-C-RETAIN-C3",
+		"control",
+		"3",
+		"fs-records-s2b-c3.pv",
+		"window=RETAIN",
+	),
+	(
+		"s2b-C-NOGATE",
+		"control",
+		"1",
+		"fs-records-s2b-a1.pv",
+		"gate=NOGATE",
+	),
+	(
+		"s2b-C-STALE",
+		"control",
+		"3",
+		"fs-records-s2b-c3.pv",
+		"window=STALE",
+	),
+	(
+		"s2b-C-FAILMUT",
+		"control",
+		"2",
+		"fs-records-s2b-c5b.pv",
+		"inverted=True,window=FAILMUT",
+	),
+];
+
+/// The fs-records-b2s result targets: (name, class, K_r bound, query file, hook and form keywords
+/// sorted).
+const FS_B2S_TARGETS: [(&str, &str, &str, &str, &str); 18] = [
+	(
+		"b2s-A1",
+		"security",
+		"3",
+		"fs-records-b2s-a1.pv",
+		"sends=SENDS_CHOSEN",
+	),
+	(
+		"b2s-A2",
+		"security",
+		"3",
+		"fs-records-b2s-a2.pv",
+		"sends=SENDS_CHOSEN",
+	),
+	("b2s-C2", "security", "3", "fs-records-b2s-c2.pv", ""),
+	(
+		"b2s-C2-chosen-fs",
+		"security",
+		"3",
+		"fs-records-b2s-c2.pv",
+		"failstop=True,sends=SENDS_CHOSEN",
+	),
+	(
+		"b2s-C3",
+		"security",
+		"3",
+		"fs-records-b2s-c3.pv",
+		"sends=SENDS_CHOSEN",
+	),
+	(
+		"b2s-C4",
+		"security",
+		"3",
+		"fs-records-b2s-c4.pv",
+		"failstop=True,sends=SENDS_CHOSEN",
+	),
+	("b2s-S2", "security", "3", "fs-records-b2s-s2.pv", ""),
+	("b2s-UKSr", "security", "3", "fs-records-b2s-uksr.pv", ""),
+	(
+		"b2s-C3-finish",
+		"definitional",
+		"1",
+		"fs-records-b2s-c3-finish.pv",
+		"sends=SENDS_CHOSEN",
+	),
+	("b2s-C5a", "witness", "2", "fs-records-b2s-c5a.pv", ""),
+	("b2s-C5b", "witness", "2", "fs-records-b2s-c5b.pv", ""),
+	("b2s-C5c", "witness", "2", "fs-records-b2s-c5c.pv", ""),
+	("b2s-S4", "witness", "1", "fs-records-b2s-s4.pv", ""),
+	("b2s-FAR", "witness", "1", "fs-records-b2s-far.pv", ""),
+	(
+		"b2s-PINREAD",
+		"witness",
+		"1",
+		"fs-records-b2s-pinread.pv",
+		"",
+	),
+	(
+		"b2s-C-UKS",
+		"control",
+		"1",
+		"fs-records-b2s-uksr.pv",
+		"binding=UKS",
+	),
+	(
+		"b2s-C-RETAIN",
+		"control",
+		"3",
+		"fs-records-b2s-c3.pv",
+		"window=B2S_RETAIN",
+	),
+	(
+		"b2s-C-STALE",
+		"control",
+		"3",
+		"fs-records-b2s-c3.pv",
+		"window=B2S_STALE",
+	),
+];
+
+/// The fs-records-b2s query files that run the pin-free process `FsRecordsB2sMainAnyPin`, in
+/// which the attacker chooses every Beacon's pin (E3); every other b2s query file runs
+/// `FsRecordsB2sMain`, in which every Beacon pins the honest Server key and ID.
+const FS_B2S_PIN_FREE_QUERIES: [&str; 7] = [
+	"fs-records-b2s-a1.pv",
+	"fs-records-b2s-a2.pv",
+	"fs-records-b2s-c3-finish.pv",
+	"fs-records-b2s-c4.pv",
+	"fs-records-b2s-pinread.pv",
+	"fs-records-b2s-s2.pv",
+	"fs-records-b2s-uksr.pv",
+];
+
+const FS_EVENTS: [&str; 12] = [
+	"event FsBeaconStarted(bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId).",
+	"event FsServerAccepted(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId, bitstring).",
+	"event FsServerReplayRejected(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).",
+	"event FsServerAcceptFailed(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).",
+	"event FsServerCommitted(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, key_id, bitstring, bitstring, bitstring).",
+	"event FsBeaconEstablished(bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, key_id, bitstring, bitstring, bitstring).",
+	"event FsBeaconFinishOpenedLater(bitstring, bitstring, nat).",
+	"event FsSent(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).",
+	"event FsReceived(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).",
+	"event FsReceivedFrame(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).",
+	"event FsFarAccepted(direction, bitstring, bitstring, key_id, bitstring, nat).",
+	"event FsReceiveRejected(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).",
+];
+
+/// Declarations copied verbatim from environment.pvl into the self-contained fs-common.pvl.
+const FS_COPIED_DECLARATIONS: [&str; 5] = [
+	"free SERVER_IDENTITY_SECRET:",
+	"free SERVER_KEY_ID:",
+	"fun signed_init_kex(",
+	"fun registration_payload(",
+	"fun kex_response(",
+];
+
+struct FsFiles {
+	common: String,
+	registration: String,
+	consumed: String,
+	nocheck: String,
+	binding: String,
+	uks: String,
+	bounds: [String; 3],
+	s2b: String,
+	receive: String,
+	s2b_bounds: [String; 3],
+	window: String,
+	retain: String,
+	stale: String,
+	failmut: String,
+	gate: String,
+	nogate: String,
+	taskings: String,
+	chosen: String,
+	b2s: String,
+	b2s_receive: String,
+	b2s_bounds: [String; 3],
+	b2s_failstop: String,
+	b2s_window: String,
+	b2s_retain: String,
+	b2s_stale: String,
+	sends: String,
+	sends_chosen: String,
+}
+
+impl FsFiles {
+	fn production() -> Self {
+		Self {
+			common: FS_COMMON.to_owned(),
+			registration: FS_REGISTRATION.to_owned(),
+			consumed: FS_REGISTRATION_CONSUMED.to_owned(),
+			nocheck: FS_CONTROL_NOCHECK.to_owned(),
+			binding: FS_REGISTRATION_BINDING.to_owned(),
+			uks: FS_CONTROL_UKS.to_owned(),
+			bounds: FS_REGISTRATION_BOUNDS.map(str::to_owned),
+			s2b: FS_RECORDS_S2B.to_owned(),
+			receive: FS_RECORDS_S2B_RECEIVE.to_owned(),
+			s2b_bounds: FS_RECORDS_S2B_BOUNDS.map(str::to_owned),
+			window: FS_RECORDS_S2B_WINDOW.to_owned(),
+			retain: FS_CONTROL_RETAIN.to_owned(),
+			stale: FS_CONTROL_STALE.to_owned(),
+			failmut: FS_CONTROL_FAILMUT.to_owned(),
+			gate: FS_RECORDS_S2B_GATE.to_owned(),
+			nogate: FS_CONTROL_NOGATE.to_owned(),
+			taskings: FS_RECORDS_S2B_TASKINGS.to_owned(),
+			chosen: FS_RECORDS_S2B_TASKINGS_CHOSEN.to_owned(),
+			b2s: FS_RECORDS_B2S.to_owned(),
+			b2s_receive: FS_RECORDS_B2S_RECEIVE.to_owned(),
+			b2s_bounds: FS_RECORDS_B2S_BOUNDS.map(str::to_owned),
+			b2s_failstop: FS_RECORDS_B2S_FAILSTOP.to_owned(),
+			b2s_window: FS_RECORDS_B2S_WINDOW.to_owned(),
+			b2s_retain: FS_CONTROL_B2S_RETAIN.to_owned(),
+			b2s_stale: FS_CONTROL_B2S_STALE.to_owned(),
+			sends: FS_RECORDS_B2S_SENDS.to_owned(),
+			sends_chosen: FS_RECORDS_B2S_SENDS_CHOSEN.to_owned(),
+		}
+	}
+
+	fn annotated(&self) -> [(&'static str, &str); 15] {
+		[
+			("fs-common.pvl", &self.common),
+			("fs-registration-consumed.pvl", &self.consumed),
+			("fs-registration-binding.pvl", &self.binding),
+			("fs-registration.pvl", &self.registration),
+			("fs-records-s2b-window.pvl", &self.window),
+			("fs-records-s2b-gate.pvl", &self.gate),
+			("fs-records-s2b-taskings.pvl", &self.taskings),
+			("fs-records-s2b-taskings-chosen.pvl", &self.chosen),
+			("fs-records-s2b-receive.pvl", &self.receive),
+			("fs-records-s2b.pvl", &self.s2b),
+			("fs-records-b2s-window.pvl", &self.b2s_window),
+			("fs-records-b2s-sends.pvl", &self.sends),
+			("fs-records-b2s-sends-chosen.pvl", &self.sends_chosen),
+			("fs-records-b2s-receive.pvl", &self.b2s_receive),
+			("fs-records-b2s.pvl", &self.b2s),
+		]
+	}
+
+	fn all(&self) -> Vec<(&'static str, &str)> {
+		let mut files = self.annotated().to_vec();
+		files.push(("fs-control-nocheck.pvl", &self.nocheck));
+		files.push(("fs-control-uks.pvl", &self.uks));
+		files.push(("fs-control-retain.pvl", &self.retain));
+		files.push(("fs-control-stale.pvl", &self.stale));
+		files.push(("fs-control-failmut.pvl", &self.failmut));
+		files.push(("fs-control-nogate.pvl", &self.nogate));
+		files.push(("fs-control-b2s-retain.pvl", &self.b2s_retain));
+		files.push(("fs-control-b2s-stale.pvl", &self.b2s_stale));
+		for (index, bound) in self.b2s_bounds.iter().enumerate() {
+			files.push((
+				[
+					"fs-records-b2s-kr1.pvl",
+					"fs-records-b2s-kr2.pvl",
+					"fs-records-b2s-kr3.pvl",
+				][index],
+				bound,
+			));
+		}
+		files.push(("fs-records-b2s-kr3-failstop.pvl", &self.b2s_failstop));
+		for (index, bound) in self.s2b_bounds.iter().enumerate() {
+			files.push((
+				[
+					"fs-records-s2b-kr1.pvl",
+					"fs-records-s2b-kr2.pvl",
+					"fs-records-s2b-kr3.pvl",
+				][index],
+				bound,
+			));
+		}
+		for (index, bound) in self.bounds.iter().enumerate() {
+			files.push((
+				[
+					"fs-registration-k1.pvl",
+					"fs-registration-k2.pvl",
+					"fs-registration-k3.pvl",
+				][index],
+				bound,
+			));
+		}
+		files
+	}
+}
+
+fn normalized(source: &str) -> String {
+	source.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+fn makefile_list(makefile: &str, start: &str, end: &str) -> Result<Vec<String>, String> {
+	let section = section_between(makefile, start, end, start)?;
+	Ok(section
+		.lines()
+		.skip(1)
+		.map(|line| line.trim().trim_end_matches('\\').trim())
+		.filter(|line| !line.is_empty())
+		.map(str::to_owned)
+		.collect())
+}
+
+fn make_recipe(makefile: &str, rule: &str) -> Result<Vec<String>, String> {
+	let lines = makefile.lines().collect::<Vec<_>>();
+	let positions = lines
+		.iter()
+		.enumerate()
+		.filter(|(_, line)| **line == rule)
+		.map(|(index, _)| index)
+		.collect::<Vec<_>>();
+	let &[position] = positions.as_slice() else {
+		return Err(format!("expected exactly one Make rule line: {rule}"));
+	};
+	Ok(lines[position + 1..]
+		.iter()
+		.take_while(|line| line.starts_with('\t'))
+		.map(|line| line.trim().to_owned())
+		.collect())
+}
+
+fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
+	require_once(
+		makefile,
+		"\nPROVERIF_FS_TIMEOUT ?= 1800\n",
+		"fs per-target timeout",
+	)?;
+	require_once(
+		makefile,
+		"\nPROVERIF_FS_ADDRESS_SPACE_KIB ?= 10485760\n",
+		"fs per-run address-space cap",
+	)?;
+	require_once(
+		makefile,
+		"\nPROVERIF_FS_LOG_DIR ?=\n",
+		"fs optional log directory",
+	)?;
+	let fs_scenarios = makefile_list(
+		makefile,
+		"PROVERIF_FS_SCENARIOS :=",
+		"\nPROVERIF_FS_CHECK_TARGETS :=",
+	)?;
+	if fs_scenarios != FS_SCENARIOS {
+		return Err(format!("fs scenario roster changed: {fs_scenarios:?}"));
+	}
+	require_once(
+		makefile,
+		"\nPROVERIF_FS_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_FS_SCENARIOS))\n",
+		"fs check-target list",
+	)?;
+	let roster = scenario_names(makefile)?;
+	if roster
+		.iter()
+		.any(|scenario| scenario.starts_with("fs-") || FS_SCENARIOS.contains(&scenario.as_str()))
+	{
+		return Err("an fs scenario joined the parallel PROVERIF_SCENARIOS roster".to_owned());
+	}
+	if make_recipe(
+		makefile,
+		"check-proverif-fs: check-proverif-transcript-fidelity",
+	)? != ["+$(MAKE) --no-print-directory -j1 $(PROVERIF_FS_CHECK_TARGETS)"]
+	{
+		return Err("serial fs group recipe changed".to_owned());
+	}
+	for scenario in FS_SCENARIOS {
+		let runner = make_recipe(
+			makefile,
+			&format!(
+				"check-proverif-{scenario}: check-proverif-extraction check-proverif-transcript-fidelity"
+			),
+		)?;
+		let name_order = if scenario == "fs-records-s2b" || scenario == "fs-records-b2s" {
+			"python3 $(PROVERIF_DIR)/test-symbolic-name-order.py\npython3 $(PROVERIF_DIR)/symbolic-name-order.py --check-only\n"
+		} else {
+			""
+		};
+		let pin_origin = if scenario == "fs-records-b2s" {
+			"python3 $(PROVERIF_DIR)/test-pin-origin-checker.py\npython3 $(PROVERIF_DIR)/pin-origin-theory.py --check-only\n"
+		} else {
+			""
+		};
+		if compact(&runner.join("\n"))
+			!= compact(&format!(
+				"{name_order}{pin_origin}python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
+				python3 $(PROVERIF_DIR)/check-free-schedule.py --scenario {scenario} \\
+				--proverif '$(PROVERIF)' \\
+				--timeout '$(PROVERIF_FS_TIMEOUT)' \\
+				--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \\
+				$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')"
+			)) {
+			return Err(format!(
+				"{scenario} exact Make runner and self-test wiring changed"
+			));
+		}
+	}
+	let invoked = |steps: &[&str]| {
+		steps
+			.iter()
+			.map(|step| format!("$(MAKE) {step}"))
+			.collect::<Vec<_>>()
+	};
+	if make_recipe(makefile, "verify-in-shell:")?
+		!= invoked(&[
+			"check-toolchain",
+			"check-generated-authentication-lean",
+			"extract-proverif",
+			"check-proverif",
+			"check-proverif-mldsa-auth",
+			"check-proverif-mldsa-joint",
+			"check-proverif-fs",
+			"check-proverif-primitive-fidelity",
+			"check-proverif-active-strong-secrecy",
+			"check-proverif-pending-registration",
+			"check-proverif-aead-differential",
+			"check-proverif-registration-provenance",
+			"check-proverif-delayed-response",
+			"check-proverif-exact-far",
+			"check-proverif-record-origin",
+			"check-proverif-tasking-origin",
+			"check-proverif-application-secrecy",
+			"check-proverif-exact-interface-strong",
+			"extract-lean",
+			"check-lean",
+			"check-inventory",
+		]) {
+		return Err("verify-in-shell must run check-proverif-fs after check-proverif".to_owned());
+	}
+	if make_recipe(makefile, "verify-proverif-in-shell:")?
+		!= invoked(&[
+			"check-toolchain",
+			"extract-proverif",
+			"check-proverif",
+			"check-proverif-fs",
+			"check-proverif-primitive-fidelity",
+			"check-proverif-active-strong-secrecy",
+			"check-proverif-pending-registration",
+			"check-proverif-aead-differential",
+			"check-proverif-registration-provenance",
+			"check-proverif-delayed-response",
+			"check-proverif-exact-far",
+			"check-proverif-record-origin",
+			"check-proverif-tasking-origin",
+			"check-proverif-application-secrecy",
+			"check-proverif-exact-interface-strong",
+		]) {
+		return Err(
+			"verify-proverif-in-shell must run check-proverif-fs after check-proverif".to_owned(),
+		);
+	}
+	if makefile
+		.lines()
+		.any(|line| line.starts_with("check-proverif:") && line.contains("fs"))
+	{
+		return Err("the fs group must never be a prerequisite of check-proverif".to_owned());
+	}
+	if count(makefile, "check-proverif-fs") != 5 + FS_SCENARIOS.len() {
+		return Err("unexpected reference to the fs group in the Makefile".to_owned());
+	}
+	require_once(
+		makefile,
+		"\textract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \\\n",
+		"fs phony targets",
+	)
+}
+
+fn fs_rust_source(path: &str) -> Option<&'static str> {
+	match path {
+		"beaconcrypt/src/server.rs" => Some(ADAPTER_SERVER),
+		"beaconcrypt/src/beacon.rs" => Some(ADAPTER_BEACON),
+		"beaconcrypt/src/ratchet.rs" => Some(ADAPTER_RATCHET),
+		"beaconcrypt-core/src/registration.rs" => Some(CORE_REGISTRATION),
+		"beaconcrypt-core/src/agreement.rs" => Some(CORE_AGREEMENT),
+		"beaconcrypt/src/pqxdh.rs" => Some(ADAPTER_PQXDH),
+		"beaconcrypt-core/src/pqxdh.rs" => Some(CORE_PQXDH),
+		"beaconcrypt-core/src/record.rs" => Some(CORE_RECORD),
+		"beaconcrypt-core/src/record_effects.rs" => Some(CORE_RECORD_EFFECTS),
+		"beaconcrypt-core/src/peer.rs" => Some(CORE_PEER),
+		"beaconcrypt-core/src/ratchet/concrete.rs" => Some(CORE_RATCHET_CONCRETE),
+		"beaconcrypt-core/src/ratchet/control.rs" => Some(CORE_RATCHET_CONTROL),
+		"beaconcrypt-core/src/ratchet/refined.rs" => Some(CORE_RATCHET_REFINED),
+		_ => None,
+	}
+}
+
+fn parse_fs_fidelity(source: &str) -> Result<Vec<(String, String, String)>, String> {
+	let mut annotations = Vec::new();
+	for line in source.lines() {
+		if !line.contains("@beaconcrypt-fs-fidelity") {
+			continue;
+		}
+		let payload = line
+			.trim()
+			.strip_prefix(FS_FIDELITY_PREFIX)
+			.and_then(|line| line.strip_suffix(" *)"))
+			.ok_or_else(|| format!("malformed fs fidelity annotation: {line}"))?;
+		let (key, rest) = payload
+			.strip_prefix("key=")
+			.and_then(|rest| rest.split_once(" src="))
+			.ok_or_else(|| format!("fs fidelity annotation lacks key or src: {payload}"))?;
+		let (src, anchor) = rest
+			.split_once(" anchor=")
+			.ok_or_else(|| format!("fs fidelity annotation lacks an anchor: {payload}"))?;
+		annotations.push((key.to_owned(), src.to_owned(), anchor.to_owned()));
+	}
+	Ok(annotations)
+}
+
+fn check_fs_citation(src: &str, anchor: &str) -> Result<(), String> {
+	let (path, range) = src
+		.split_once(':')
+		.ok_or_else(|| format!("fs citation lacks a line range: {src}"))?;
+	let source =
+		fs_rust_source(path).ok_or_else(|| format!("fs citation names an unknown file: {src}"))?;
+	let (start, end) = range
+		.split_once('-')
+		.and_then(|(start, end)| Some((start.parse::<usize>().ok()?, end.parse::<usize>().ok()?)))
+		.ok_or_else(|| format!("malformed fs citation range: {src}"))?;
+	let lines = source.lines().collect::<Vec<_>>();
+	if start == 0 || end < start || end > lines.len() || end - start > 96 {
+		return Err(format!("fs citation range is invalid: {src}"));
+	}
+	if anchor.len() < 8 || !lines[start - 1].trim_start().starts_with(anchor) {
+		return Err(format!(
+			"fs citation {src} no longer starts with {anchor:?}: found {:?}",
+			lines[start - 1].trim()
+		));
+	}
+	Ok(())
+}
+
+fn validate_fs_fidelity(files: &FsFiles) -> Result<(), String> {
+	for (file, source) in files.all() {
+		let parsed = parse_fs_fidelity(source)?;
+		let expected = FS_FIDELITY
+			.iter()
+			.filter(|(name, _, _)| *name == file)
+			.map(|(_, key, src)| ((*key).to_owned(), (*src).to_owned()))
+			.collect::<Vec<_>>();
+		let actual = parsed
+			.iter()
+			.map(|(key, src, _)| (key.clone(), src.clone()))
+			.collect::<Vec<_>>();
+		if actual != expected {
+			return Err(format!(
+				"fs fidelity annotations of {file} changed: expected {expected:?}, found {actual:?}"
+			));
+		}
+		for (_, src, anchor) in parsed {
+			check_fs_citation(&src, &anchor)?;
+		}
+	}
+	Ok(())
+}
+
+fn declaration_text<'a>(source: &'a str, marker: &str, label: &str) -> Result<&'a str, String> {
+	if count(source, marker) != 1 {
+		return Err(format!(
+			"{label}: expected one declaration starting {marker}"
+		));
+	}
+	let start = source.find(marker).unwrap();
+	let end = source[start..]
+		.find('.')
+		.ok_or_else(|| format!("{label}: unterminated declaration {marker}"))?;
+	Ok(&source[start..=start + end])
+}
+
+fn fs_words(source: &str) -> Vec<(usize, &str)> {
+	let mut words = Vec::new();
+	let mut start = None;
+	for (index, character) in source.char_indices() {
+		let word = character.is_ascii_alphanumeric() || character == '_' || character == '\'';
+		match (word, start) {
+			(true, None) => start = Some(index),
+			(false, Some(begin)) => {
+				words.push((begin, &source[begin..index]));
+				start = None;
+			}
+			_ => {}
+		}
+	}
+	if let Some(begin) = start {
+		words.push((begin, &source[begin..]));
+	}
+	words
+}
+
+fn validate_fs_model(files: &FsFiles) -> Result<(), String> {
+	let common = uncommented_pv(&files.common)?;
+	let environment = uncommented_pv(ENVIRONMENT_MODEL)?;
+	for marker in FS_COPIED_DECLARATIONS {
+		let copy = declaration_text(&common, marker, "fs-common copy")?;
+		let source = declaration_text(&environment, marker, "environment source")?;
+		if compact(copy) != compact(source) {
+			return Err(format!(
+				"fs-common copy of {marker} differs from environment.pvl"
+			));
+		}
+	}
+	for (wanted, label) in [
+		("fun fs_kid(nat): key_id [data].", "fs key-ID bridge"),
+		("fun fs_seq(nat): sequence [data].", "fs sequence bridge"),
+		(
+			"fun fs_no_rid(): beaconcrypt_core__pqxdh__t_RegistrationId [data].",
+			"fs empty consumed slot",
+		),
+		("fun fs_build(): bitstring [data].", "fs build control"),
+		(
+			"nounif y: bitstring; attacker(x25519_public(y)).",
+			"fs selection heuristic nx",
+		),
+	] {
+		require_once(&normalized(&common), wanted, label)?;
+	}
+	let events = normalized(&common)
+		.split(". ")
+		.filter(|declaration| declaration.starts_with("event "))
+		.map(|declaration| format!("{}.", declaration.trim_end_matches('.')))
+		.map(|declaration| declaration.replace("( ", "(").replace(" )", ")"))
+		.collect::<Vec<_>>();
+	if events != FS_EVENTS {
+		return Err(format!("fs event vocabulary changed: {events:?}"));
+	}
+	for (file, source) in files.all() {
+		if !source.starts_with("(* SPDX-License-Identifier: 0BSD *)\n") {
+			return Err(format!("{file} lacks its SPDX header"));
+		}
+		let text = proverif_text(source).map_err(|error| format!("{file}: {error}"))?;
+		for (_, word) in fs_words(&text) {
+			if [
+				"table",
+				"insert",
+				"get",
+				"honest_origin",
+				"malicious_origin",
+				"MaliciousServer",
+				"MaliciousBeacon",
+				"phase",
+				"sync",
+			]
+			.contains(&word)
+			{
+				return Err(format!(
+					"{file} uses {word}; honesty belongs only in queries"
+				));
+			}
+		}
+	}
+	let registration = normalized(&uncommented_pv(&files.registration)?);
+	require_ordered_once(
+		&registration,
+		&[
+			"in(c, bundle: bitstring) [precise];",
+			"let init = beaconcrypt_core__pqxdh__VerifiedInitKex( identity, prekey, one_time, pq ) in",
+			"if fs_reg_consumed(registration_id, slot_1, slot_2) then",
+			"event FsServerReplayRejected(obj, server_identity, identity, registration_id);",
+			"new ephemeral_secret: bitstring;",
+			"new kem_coins: bitstring;",
+			"x25519_server_dh(ephemeral_secret, x25519_public_from_ed(identity)),",
+			"fs_root_dh2(dh2, dh3), dh3, dh4, mlkem_shared_secret(pq, kem_coins)",
+			"let next_slot_1 = if slot_1 = fs_no_rid() then registration_id else slot_1 in",
+			"event FsServerAccepted( obj, server_identity, identity, init, registration_id, root );",
+			"in(c, control: bitstring) [precise];",
+			"let assigned_key_id = fs_kid(kid_next) in",
+			"let associated_data = fs_associated_data(server_identity, identity) in",
+			"new payload: bitstring;",
+			"fs_seq(1), SERVER_KEY_ID, registration_payload(binding, payload)",
+			"event FsServerCommitted( obj, server_identity, identity, init, assigned_key_id, root, associated_data, payload );",
+			"Next(obj, kid_next + 1, next_slot_1, next_slot_2)",
+			"Next(obj, kid_next, next_slot_1, next_slot_2)",
+			"event FsServerAcceptFailed(obj, server_identity, identity, registration_id);",
+			"let FsBeacon() =",
+			"let init = beaconcrypt_core__pqxdh__VerifiedInitKex( beacon_identity, beacon_prekey, beacon_one_time, beacon_pq ) in",
+			"event FsBeaconStarted(server_identity, beacon_identity, init, registration_id);",
+			"in(c, response: bitstring) [precise];",
+			"let kem_secret = mlkem_decapsulate(kem_ciphertext, beacon_pq_secret) in",
+			"if response_server_identity = server_identity then",
+			"fs_root_dh2(dh2, dh3), dh3, dh4, kem_secret",
+			"let associated_data = fs_associated_data(server_identity, beacon_identity) in",
+			"if frame_sender = SERVER_KEY_ID then",
+			"if frame_sequence = fs_seq(1) then",
+			"if binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding( key_id_encoding(assigned_key_id) ) then",
+			"event FsBeaconEstablished( server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload ).",
+		],
+		"fs-registration Rust-ordered process",
+	)?;
+	for (file, source, wanted) in [
+		(
+			"fs-registration-consumed.pvl",
+			&files.consumed,
+			"registration_id = slot_1 || registration_id = slot_2.",
+		),
+		("fs-control-nocheck.pvl", &files.nocheck, "false."),
+	] {
+		let text = normalized(&uncommented_pv(source)?);
+		let expected = format!(
+			"letfun fs_reg_consumed( registration_id: beaconcrypt_core__pqxdh__t_RegistrationId, slot_1: beaconcrypt_core__pqxdh__t_RegistrationId, slot_2: beaconcrypt_core__pqxdh__t_RegistrationId ) = {wanted}"
+		);
+		if text != expected {
+			return Err(format!("{file} consumed-set test changed: {text}"));
+		}
+	}
+	for (file, source, expected) in [
+		(
+			"fs-registration-binding.pvl",
+			&files.binding,
+			"letfun fs_root_dh2(dh2: bitstring, dh3: bitstring) = dh2. letfun fs_associated_data(server_identity: bitstring, beacon_identity: bitstring) = beaconcrypt_core__pqxdh__build_associated_data(server_identity, beacon_identity).",
+		),
+		(
+			"fs-control-uks.pvl",
+			&files.uks,
+			"fun fs_uks_ad(bitstring): bitstring. letfun fs_root_dh2(dh2: bitstring, dh3: bitstring) = dh3. letfun fs_associated_data(server_identity: bitstring, beacon_identity: bitstring) = fs_uks_ad(server_identity).",
+		),
+	] {
+		let text = normalized(&uncommented_pv(source)?);
+		if text != expected {
+			return Err(format!("{file} session binding changed: {text}"));
+		}
+	}
+	let main = "let FsRegistrationMain() = out(c, ed_public(SERVER_IDENTITY_SECRET)); ( (!(new obj: bitstring; FsServerReg1(obj, 1, fs_no_rid(), fs_no_rid()))) | (!FsBeacon()) ).";
+	for (index, source) in files.bounds.iter().enumerate() {
+		let bound = index + 1;
+		let mut expansions = vec![format!(
+			"expand FS_REG_STEP(FsServerReg{bound}, FsServerRegStop)."
+		)];
+		for step in (1..bound).rev() {
+			expansions.push(format!(
+				"expand FS_REG_STEP(FsServerReg{step}, FsServerReg{}).",
+				step + 1
+			));
+		}
+		let expected = format!("{} {main}", expansions.join(" "));
+		if normalized(&uncommented_pv(source)?) != expected {
+			return Err(format!("fs-registration bound K_reg = {bound} changed"));
+		}
+	}
+	validate_fs_records_s2b(files)?;
+	validate_fs_records_b2s(files)
+}
+
+/// The receive-window hooks of fs-records-s2b: the real library and the three negative controls.
+const FS_S2B_WINDOWS: [(&str, &str, &str, &str); 4] = [
+	("fs-records-s2b-window.pvl", "false", "r", "cached_2"),
+	("fs-control-retain.pvl", "cached_2", "r", "cached_2"),
+	("fs-control-stale.pvl", "false", "1", "false"),
+	(
+		"fs-control-failmut.pvl",
+		"false",
+		"if target <= r then r else target",
+		"if target = 2 then false else if r = 1 && target = 3 then true else cached_2",
+	),
+];
+
+const FS_S2B_FINISH_LATER: &str = "let FsS2bFinishLater( server_identity: bitstring, beacon_identity: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex, assigned_key_id: key_id, root: bitstring, associated_data: bitstring, expected_binding: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding, later_plaintext: bitstring ) =";
+
+fn fs_s2b_send(position: usize) -> String {
+	format!(
+		"in(c, app_prefix_{position}: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding) [precise]; new tasking_body_{position}: bitstring; let tasking_{position} = registration_payload(app_prefix_{position}, tasking_body_{position}) in event FsSent( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, {position}, tasking_{position} ); out( c, seal_frame( ratchet_material(send_chain_{position}), associated_data, fs_seq({position}), SERVER_KEY_ID, tasking_{position} ) )"
+	)
+}
+
+fn validate_fs_records_s2b(files: &FsFiles) -> Result<(), String> {
+	let receive = normalized(&uncommented_pv(&files.receive)?);
+	require_ordered_once(
+		&receive,
+		&[
+			"fun fs_far_chain(bitstring, nat): bitstring.",
+			"def FS_S2B_RECV_STEP(Cur, Next) {",
+			"in(c, frame: bitstring) [precise];",
+			"fs_seq(t: nat), =SERVER_KEY_ID ) = frame in",
+			"if t <= r then",
+			"if t = 2 && cached_2 then",
+			"fs_s2b_cached_after_success(cached_2) )",
+			"else if t = 2 then",
+			"else if t = 3 then",
+			"if r = 1 then Next( server_identity, beacon_identity, assigned_key_id, root, associated_data, receive_material_2, receive_material_3, far_anchor, 3, true )",
+			"open_frame( ratchet_material(fs_far_chain(far_anchor, t)), associated_data, fs_seq(t), SERVER_KEY_ID, frame ) in event FsFarAccepted( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, t ) else Next(",
+			"let FsS2bRecvStop( server_identity: bitstring, beacon_identity: bitstring, assigned_key_id: key_id, root: bitstring, associated_data: bitstring, receive_material_2: bitstring, receive_material_3: bitstring, far_anchor: bitstring, r: nat, cached_2: bool ) = 0.",
+		],
+		"fs-records-s2b receive step",
+	)?;
+	for (wanted, expected, label) in [
+		("event FsReceived(", 3, "accepted records"),
+		("event FsReceivedFrame(", 3, "accepted frames"),
+		(
+			"root, 2, plaintext ); event FsReceivedFrame( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 2, frame );",
+			2,
+			"accepted frames at position 2",
+		),
+		(
+			"root, 3, plaintext ); event FsReceivedFrame( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 3, frame );",
+			1,
+			"accepted frames at position 3",
+		),
+		("event FsReceiveRejected(", 4, "rejections at t <= T_max"),
+		(
+			"event FsReceiveRejected( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, t, frame );",
+			4,
+			"refused frames at t <= T_max",
+		),
+		("event FsFarAccepted(", 1, "far acceptance"),
+		(
+			"fs_s2b_failed_r(r, 2), fs_s2b_failed_cached_2(r, 2, cached_2) )",
+			2,
+			"failed opens at position 2",
+		),
+		(
+			"fs_s2b_failed_r(r, 3), fs_s2b_failed_cached_2(r, 3, cached_2) )",
+			1,
+			"failed opens at position 3",
+		),
+		("[precise]", 1, "attacker inputs"),
+	] {
+		if count(&receive, wanted) != expected {
+			return Err(format!("fs-records-s2b receive step {label} changed"));
+		}
+	}
+	for (index, source) in files.s2b_bounds.iter().enumerate() {
+		let bound = index + 1;
+		let mut expansions = vec![format!(
+			"expand FS_S2B_RECV_STEP(FsS2bRecv{bound}, FsS2bRecvStop)."
+		)];
+		for step in (1..bound).rev() {
+			expansions.push(format!(
+				"expand FS_S2B_RECV_STEP(FsS2bRecv{step}, FsS2bRecv{}).",
+				step + 1
+			));
+		}
+		if normalized(&uncommented_pv(source)?) != expansions.join(" ") {
+			return Err(format!("fs-records-s2b bound K_r = {bound} changed"));
+		}
+	}
+	let s2b = normalized(&uncommented_pv(&files.s2b)?);
+	require_ordered_once(
+		&s2b,
+		&[
+			"let FsS2bServer(obj: bitstring) = let server_identity = ed_public(SERVER_IDENTITY_SECRET) in new ephemeral_secret: bitstring; new kem_coins: bitstring; in(c, bundle: bitstring) [precise];",
+			"let init = beaconcrypt_core__pqxdh__VerifiedInitKex( identity, prekey, one_time, pq ) in",
+			"x25519_server_dh(ephemeral_secret, x25519_public_from_ed(identity)),",
+			"dh1, dh2, dh3, dh4, mlkem_shared_secret(pq, kem_coins)",
+			"event FsServerAccepted( obj, server_identity, identity, init, registration_id, root ); in(c, build_request: bitstring) [precise]; let assigned_key_id = fs_kid(1) in",
+			"let associated_data = beaconcrypt_core__pqxdh__build_associated_data( server_identity, identity ) in new payload: bitstring;",
+			"fs_seq(1), SERVER_KEY_ID, response_plaintext ) in event FsServerCommitted( obj, server_identity, identity, init, assigned_key_id, root, associated_data, payload ); event FsSent( server_to_beacon(), server_identity, identity, assigned_key_id, root, 1, response_plaintext );",
+			"FsS2bTaskings( server_identity, identity, assigned_key_id, root, associated_data, send_chain_2, send_chain_3 ).",
+			"let FsS2bBeacon() =",
+			"event FsBeaconStarted(server_identity, beacon_identity, init, registration_id);",
+			"in(c, response: bitstring) [precise];",
+			"if response_server_identity = server_identity then",
+			"let associated_data = beaconcrypt_core__pqxdh__build_associated_data( server_identity, beacon_identity ) in",
+			"fs_seq(frame_t: nat), =SERVER_KEY_ID ) = initial_frame in if frame_t = 1 then",
+			"let registration_payload( =expected_binding, application_payload: bitstring ) = finish_plaintext in event FsBeaconEstablished( server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload ); event FsReceived( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, finish_plaintext ); event FsReceivedFrame( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, initial_frame ); FsS2bRecv1( server_identity, beacon_identity, assigned_key_id, root, associated_data, ratchet_material(receive_chain_2), ratchet_material(receive_chain_3), receive_chain_4, 1, false )",
+			"else if frame_t = 2 then",
+			"event FsBeaconFinishOpenedLater(server_identity, beacon_identity, 2); FsS2bFinishLater(",
+			"else if frame_t = 3 then",
+			"event FsBeaconFinishOpenedLater(server_identity, beacon_identity, 3); FsS2bFinishLater(",
+			"let FsRecordsS2bMain() = out(c, ed_public(SERVER_IDENTITY_SECRET)); ( (!(new obj: bitstring; FsS2bServer(obj))) | (!FsS2bBeacon()) ).",
+		],
+		"fs-records-s2b process (Rust order except the v2 draw)",
+	)?;
+	for (wanted, expected, label) in [
+		("event FsReceived(", 1, "accepted records"),
+		("event FsReceivedFrame(", 1, "accepted frames"),
+		("event FsReceiveRejected(", 0, "rejections"),
+		("[precise]", 3, "attacker inputs"),
+	] {
+		if count(&s2b, wanted) != expected {
+			return Err(format!("fs-records-s2b {label} changed"));
+		}
+	}
+	for (file, success, failed_r, failed_cached) in FS_S2B_WINDOWS {
+		let source = match file {
+			"fs-records-s2b-window.pvl" => &files.window,
+			"fs-control-retain.pvl" => &files.retain,
+			"fs-control-stale.pvl" => &files.stale,
+			_ => &files.failmut,
+		};
+		let expected = format!(
+			"letfun fs_s2b_cached_after_success(cached_2: bool) = {success}. letfun fs_s2b_failed_r(r: nat, target: nat) = {failed_r}. letfun fs_s2b_failed_cached_2(r: nat, target: nat, cached_2: bool) = {failed_cached}."
+		);
+		if normalized(&uncommented_pv(source)?) != expected {
+			return Err(format!("{file} receive-window hooks changed"));
+		}
+	}
+	for (file, source, body) in [
+		("fs-records-s2b-gate.pvl", &files.gate, "0."),
+		(
+			"fs-control-nogate.pvl",
+			&files.nogate,
+			"let registration_payload( =expected_binding, application_payload: bitstring ) = later_plaintext in event FsBeaconEstablished( server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload ).",
+		),
+	] {
+		if normalized(&uncommented_pv(source)?) != format!("{FS_S2B_FINISH_LATER} {body}") {
+			return Err(format!("{file} finish gate changed"));
+		}
+	}
+	let header = "let FsS2bTaskings( server_identity: bitstring, beacon_identity: bitstring, assigned_key_id: key_id, root: bitstring, associated_data: bitstring, send_chain_2: bitstring, send_chain_3: bitstring ) =";
+	if normalized(&uncommented_pv(&files.taskings)?)
+		!= format!("{header} {}; {}.", fs_s2b_send(2), fs_s2b_send(3))
+	{
+		return Err("fs-records-s2b-taskings.pvl fresh taskings changed".to_owned());
+	}
+	let chosen = normalized(&uncommented_pv(&files.chosen)?);
+	require_ordered_once(
+		&chosen,
+		&[
+			"fun fs_chosen_tasking(): bitstring [data].",
+			"let FsS2bTasking3(",
+			"in(c, app_mode_3: bitstring) [precise]; if app_mode_3 = fs_chosen_tasking() then ( in(c, app_plaintext_3: bitstring) [precise]; event FsSent( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 3, app_plaintext_3 ); out( c, seal_frame( ratchet_material(send_chain_3), associated_data, fs_seq(3), SERVER_KEY_ID, app_plaintext_3 ) ) ) else (",
+			&fs_s2b_send(3),
+			header,
+			"in(c, app_mode_2: bitstring) [precise]; if app_mode_2 = fs_chosen_tasking() then ( in(c, app_plaintext_2: bitstring) [precise]; event FsSent( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 2, app_plaintext_2 ); out( c, seal_frame( ratchet_material(send_chain_2), associated_data, fs_seq(2), SERVER_KEY_ID, app_plaintext_2 ) ); FsS2bTasking3(",
+			&fs_s2b_send(2),
+		],
+		"fs-records-s2b-taskings-chosen.pvl taskings",
+	)?;
+	if count(&chosen, "[precise]") != 6 || count(&chosen, "event FsSent(") != 4 {
+		return Err("fs-records-s2b-taskings-chosen.pvl taskings changed".to_owned());
+	}
+	Ok(())
+}
+
+/// The receive-window hooks of fs-records-b2s: the real library and the two negative controls.
+const FS_B2S_WINDOWS: [(&str, &str, &str, &str); 3] = [
+	("fs-records-b2s-window.pvl", "false", "r", "cached_1"),
+	("fs-control-b2s-retain.pvl", "cached_1", "r", "cached_1"),
+	("fs-control-b2s-stale.pvl", "false", "0", "false"),
+];
+
+const FS_B2S_SENDS_HEADER: &str = "let FsB2sSends( server_identity: bitstring, beacon_identity: bitstring, assigned_key_id: key_id, root: bitstring, associated_data: bitstring, send_chain_1: bitstring, send_chain_2: bitstring ) =";
+
+const FS_B2S_RECV_STATE: &str = "server_identity, beacon_identity, assigned_key_id, root, associated_data, receive_material_1, receive_material_2, far_anchor";
+
+fn fs_b2s_record(position: usize, record: &str) -> String {
+	format!(
+		"event FsSent( beacon_to_server(), server_identity, beacon_identity, assigned_key_id, root, {position}, {record} ); out( c, seal_frame( ratchet_material(send_chain_{position}), associated_data, fs_seq({position}), assigned_key_id, {record} ) )"
+	)
+}
+
+fn fs_b2s_send(position: usize) -> String {
+	format!(
+		"in(c, send_request_{position}: bitstring) [precise]; new record_{position}[]: bitstring; {}",
+		fs_b2s_record(position, &format!("record_{position}"))
+	)
+}
+
+fn validate_fs_records_b2s(files: &FsFiles) -> Result<(), String> {
+	let receive = normalized(&uncommented_pv(&files.b2s_receive)?);
+	require_ordered_once(
+		&receive,
+		&[
+			"fun fs_far_chain(bitstring, nat): bitstring.",
+			"def FS_B2S_RECV_STEP(Cur, Next, Failed) {",
+			"in(c, frame: bitstring) [precise];",
+			"fs_seq(t: nat), =assigned_key_id ) = frame in",
+			"if t <= r then",
+			"if t = 1 && cached_1 then",
+			"fs_b2s_cached_after_success(cached_1) )",
+			"else if t = 1 then",
+			&format!("Next( {FS_B2S_RECV_STATE}, 1, cached_1 )"),
+			"else if t = 2 then",
+			&format!(
+				"if r = 0 then Next( {FS_B2S_RECV_STATE}, 2, true ) else Next( {FS_B2S_RECV_STATE}, 2, cached_1 )"
+			),
+			&format!(
+				"open_frame( ratchet_material(fs_far_chain(far_anchor, t)), associated_data, fs_seq(t), assigned_key_id, frame ) in event FsFarAccepted( beacon_to_server(), server_identity, beacon_identity, assigned_key_id, root, t ) else Failed( {FS_B2S_RECV_STATE}, r, cached_1 ) ) ) else Next( {FS_B2S_RECV_STATE}, r, cached_1 ). }}"
+			),
+			"let FsB2sRecvStop( server_identity: bitstring, beacon_identity: bitstring, assigned_key_id: key_id, root: bitstring, associated_data: bitstring, receive_material_1: bitstring, receive_material_2: bitstring, far_anchor: bitstring, r: nat, cached_1: bool ) = 0.",
+		],
+		"fs-records-b2s receive step",
+	)?;
+	for (wanted, expected, label) in [
+		("event FsReceived(", 3, "accepted records"),
+		("event FsReceivedFrame(", 3, "accepted frames"),
+		(
+			"root, 1, plaintext ); event FsReceivedFrame( beacon_to_server(), server_identity, beacon_identity, assigned_key_id, root, 1, frame );",
+			2,
+			"accepted frames at position 1",
+		),
+		(
+			"root, 2, plaintext ); event FsReceivedFrame( beacon_to_server(), server_identity, beacon_identity, assigned_key_id, root, 2, frame );",
+			1,
+			"accepted frames at position 2",
+		),
+		("event FsReceiveRejected(", 4, "rejections at t <= T_max"),
+		(
+			"event FsReceiveRejected( beacon_to_server(), server_identity, beacon_identity, assigned_key_id, root, t, frame );",
+			4,
+			"refused frames at t <= T_max",
+		),
+		("event FsFarAccepted(", 1, "far acceptance"),
+		("open_frame(", 4, "opens"),
+		(
+			"associated_data, fs_seq(1), assigned_key_id, frame ) in",
+			2,
+			"opens at position 1 with the routed sender",
+		),
+		(
+			"associated_data, fs_seq(2), assigned_key_id, frame ) in",
+			1,
+			"opens at position 2 with the routed sender",
+		),
+		(
+			"fs_b2s_failed_r(r, 1), fs_b2s_failed_cached_1(r, 1, cached_1) )",
+			2,
+			"failed opens at position 1",
+		),
+		(
+			"fs_b2s_failed_r(r, 2), fs_b2s_failed_cached_1(r, 2, cached_1) )",
+			1,
+			"failed opens at position 2",
+		),
+		("Failed(", 4, "continuations after a failed open"),
+		(
+			&format!("frame ); Failed( {FS_B2S_RECV_STATE}, fs_b2s_failed_r(r, "),
+			3,
+			"rejections followed by the failed-open continuation",
+		),
+		(
+			&format!("frame ); Next( {FS_B2S_RECV_STATE}, r, cached_1 )"),
+			1,
+			"rejected old targets, which open nothing",
+		),
+		("Next(", 6, "continuations with the next attempt"),
+		("[precise]", 1, "attacker inputs"),
+	] {
+		if count(&receive, wanted) != expected {
+			return Err(format!("fs-records-b2s receive step {label} changed"));
+		}
+	}
+	for (index, source) in files.b2s_bounds.iter().enumerate() {
+		let bound = index + 1;
+		let mut expansions = vec![format!(
+			"expand FS_B2S_RECV_STEP(FsB2sRecv{bound}, FsB2sRecvStop, FsB2sRecvStop)."
+		)];
+		for step in (1..bound).rev() {
+			expansions.push(format!(
+				"expand FS_B2S_RECV_STEP(FsB2sRecv{step}, FsB2sRecv{next}, FsB2sRecv{next}).",
+				next = step + 1
+			));
+		}
+		if normalized(&uncommented_pv(source)?) != expansions.join(" ") {
+			return Err(format!("fs-records-b2s bound K_r = {bound} changed"));
+		}
+	}
+	if normalized(&uncommented_pv(&files.b2s_failstop)?)
+		!= "expand FS_B2S_RECV_STEP(FsB2sRecv3, FsB2sRecvStop, FsB2sRecvStop). expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecv3, FsB2sRecvStop). expand FS_B2S_RECV_STEP(FsB2sRecv1, FsB2sRecv2, FsB2sRecvStop)."
+	{
+		return Err("fs-records-b2s fail-stop bound K_r = 3 changed".to_owned());
+	}
+	let b2s = normalized(&uncommented_pv(&files.b2s)?);
+	require_ordered_once(
+		&b2s,
+		&[
+			"let FsB2sServer(obj: bitstring) = let server_identity = ed_public(SERVER_IDENTITY_SECRET) in new ephemeral_secret: bitstring; new kem_coins: bitstring; in(c, bundle: bitstring) [precise];",
+			"let init = beaconcrypt_core__pqxdh__VerifiedInitKex( identity, prekey, one_time, pq ) in",
+			"x25519_server_dh(ephemeral_secret, x25519_public_from_ed(identity)),",
+			"dh1, fs_root_dh2(dh2, dh3), dh3, dh4, mlkem_shared_secret(pq, kem_coins)",
+			"event FsServerAccepted( obj, server_identity, identity, init, registration_id, root ); in(c, build_request: bitstring) [precise]; let assigned_key_id = fs_kid(1) in",
+			"let send_chain_1 = server_to_beacon_chain(root) in let receive_chain_1 = beacon_to_server_chain(root) in let receive_chain_2 = ratchet_next(receive_chain_1) in let receive_chain_3 = ratchet_next(receive_chain_2) in let associated_data = fs_associated_data(server_identity, identity) in new payload: bitstring;",
+			"fs_seq(1), SERVER_KEY_ID, response_plaintext ) in event FsServerCommitted( obj, server_identity, identity, init, assigned_key_id, root, associated_data, payload ); event FsSent( server_to_beacon(), server_identity, identity, assigned_key_id, root, 1, response_plaintext );",
+			"FsB2sRecv1( server_identity, identity, assigned_key_id, root, associated_data, ratchet_material(receive_chain_1), ratchet_material(receive_chain_2), receive_chain_3, 0, false ).",
+			"let FsB2sBeacon(server_identity: bitstring, server_key_id: key_id) =",
+			"event FsBeaconStarted(server_identity, beacon_identity, init, registration_id);",
+			"in(c, response: bitstring) [precise];",
+			"if response_server_identity = server_identity then",
+			"dh1, fs_root_dh2(dh2, dh3), dh3, dh4, kem_secret",
+			"let receive_chain_1 = server_to_beacon_chain(root) in let send_chain_1 = beacon_to_server_chain(root) in let send_chain_2 = ratchet_next(send_chain_1) in let associated_data = fs_associated_data(server_identity, beacon_identity) in",
+			"fs_seq(frame_t: nat), =server_key_id ) = initial_frame in if frame_t = 1 then let finish_plaintext = open_frame( ratchet_material(receive_chain_1), associated_data, fs_seq(1), server_key_id, initial_frame ) in",
+			"let registration_payload( =expected_binding, application_payload: bitstring ) = finish_plaintext in event FsBeaconEstablished( server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload ); event FsReceived( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, finish_plaintext ); event FsReceivedFrame( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, initial_frame ); FsB2sSends( server_identity, beacon_identity, assigned_key_id, root, associated_data, send_chain_1, send_chain_2 ).",
+			"let FsRecordsB2sMain() = out(c, ed_public(SERVER_IDENTITY_SECRET)); ( (!(new obj: bitstring; FsB2sServer(obj))) | (!FsB2sBeacon(ed_public(SERVER_IDENTITY_SECRET), SERVER_KEY_ID)) ).",
+			"let FsRecordsB2sMainAnyPin() = out(c, ed_public(SERVER_IDENTITY_SECRET)); ( (!(new obj: bitstring; FsB2sServer(obj))) | (!( in(c, pinned_identity: bitstring) [precise]; in(c, pinned_key_id: key_id) [precise]; FsB2sBeacon(pinned_identity, pinned_key_id) )) ).",
+		],
+		"fs-records-b2s process (Rust order except the v2 draw)",
+	)?;
+	for (wanted, expected, label) in [
+		("event FsReceived(", 1, "accepted records"),
+		("event FsReceivedFrame(", 1, "accepted frames"),
+		("event FsReceiveRejected(", 0, "rejections"),
+		("SERVER_KEY_ID", 2, "uses of the Server's own ID"),
+		("[precise]", 5, "attacker inputs"),
+	] {
+		if count(&b2s, wanted) != expected {
+			return Err(format!("fs-records-b2s {label} changed"));
+		}
+	}
+	for (file, success, failed_r, failed_cached) in FS_B2S_WINDOWS {
+		let source = match file {
+			"fs-records-b2s-window.pvl" => &files.b2s_window,
+			"fs-control-b2s-retain.pvl" => &files.b2s_retain,
+			_ => &files.b2s_stale,
+		};
+		let expected = format!(
+			"letfun fs_b2s_cached_after_success(cached_1: bool) = {success}. letfun fs_b2s_failed_r(r: nat, target: nat) = {failed_r}. letfun fs_b2s_failed_cached_1(r: nat, target: nat, cached_1: bool) = {failed_cached}."
+		);
+		if normalized(&uncommented_pv(source)?) != expected {
+			return Err(format!("{file} receive-window hooks changed"));
+		}
+	}
+	if normalized(&uncommented_pv(&files.sends)?)
+		!= format!(
+			"{FS_B2S_SENDS_HEADER} {}; {}.",
+			fs_b2s_send(1),
+			fs_b2s_send(2)
+		) {
+		return Err("fs-records-b2s-sends.pvl fresh records changed".to_owned());
+	}
+	let chosen = normalized(&uncommented_pv(&files.sends_chosen)?);
+	let chosen_send = |position: usize| {
+		format!(
+			"in(c, record_mode_{position}: bitstring) [precise]; if record_mode_{position} = fs_chosen_record() then ( in(c, chosen_record_{position}: bitstring) [precise]; {}",
+			fs_b2s_record(position, &format!("chosen_record_{position}"))
+		)
+	};
+	let fresh_send = |position: usize| {
+		format!(
+			"else ( new record_{position}[]: bitstring; {}",
+			fs_b2s_record(position, &format!("record_{position}"))
+		)
+	};
+	let second = "FsB2sSend2( server_identity, beacon_identity, assigned_key_id, root, associated_data, send_chain_2 )";
+	require_ordered(
+		&chosen,
+		&[
+			"fun fs_chosen_record(): bitstring [data].",
+			"let FsB2sSend2(",
+			&chosen_send(2),
+			&fresh_send(2),
+			FS_B2S_SENDS_HEADER,
+			&chosen_send(1),
+			second,
+			&fresh_send(1),
+			second,
+		],
+		"fs-records-b2s-sends-chosen.pvl records",
+	)?;
+	if count(&chosen, "[precise]") != 4
+		|| count(&chosen, "event FsSent(") != 4
+		|| count(&chosen, "new record_") != 2
+		|| count(&chosen, second) != 2
+		|| count(&chosen, "let FsB2sSend2(") != 1
+	{
+		return Err("fs-records-b2s-sends-chosen.pvl records changed".to_owned());
+	}
+	Ok(())
+}
+
+fn validate_fs_checker(checker: &str, tests: &str) -> Result<(), String> {
+	for (wanted, label) in [
+		(
+			"COMMON_LOADER = (\"production-transcript-interface.pvl\",\"crypto.pvl\",\"extraction/lib.pvl\",\"fs-common.pvl\",)",
+			"fs common loader",
+		),
+		(
+			"CLASSES = (\"security\", \"definitional\", \"witness\", \"control\", \"limitation\")",
+			"fs result classes",
+		),
+		(
+			"TRUE_CLASSES = (\"security\", \"definitional\")",
+			"fs TRUE classes",
+		),
+		(
+			"REGISTRATION_SECURITY_BOUND = 3",
+			"fs-registration security bound",
+		),
+		("\"cannot be proved\",", "inconclusive-result rejection"),
+		("\"I could not confirm\",", "unconfirmed-trace rejection"),
+		(
+			"REGISTRATION_PROCESS = \"fs-registration.pvl\"",
+			"fs-registration process library",
+		),
+		(
+			"f\"fs-registration-k{self.bound}.pvl\",",
+			"fs-registration bound library",
+		),
+		(
+			"if len(mutants) != (1 if target.cls == \"control\" else 0):",
+			"fs mutant-count rule",
+		),
+		(
+			"TERMINATION_WARNING = \"Termination warning: \"",
+			"fs accepted termination warnings",
+		),
+		(
+			"if \"warning\" in line.lower() and not line.startswith(TERMINATION_WARNING):",
+			"fs rejection of every other warning",
+		),
+	] {
+		// The loader tuple is compared without whitespace; the other lines are exact.
+		if label == "fs common loader" {
+			require_once(&compact(checker), &compact(wanted), label)?;
+		} else {
+			require_once(checker, wanted, label)?;
+		}
+	}
+	forbid(checker, "environment.pvl", "fs loader of environment.pvl")?;
+	let section = section_between(checker, "TARGETS = (", "\nFORBIDDEN = (", "fs targets")?;
+	let mut targets = Vec::new();
+	let mut cursor = 0;
+	while let Some(relative) = section[cursor..].find("registration(") {
+		let open = cursor + relative + "registration".len();
+		let (arguments, end) = parse_call(section, open)?;
+		let arguments = arguments
+			.iter()
+			.map(|argument| argument.trim().to_owned())
+			.collect::<Vec<_>>();
+		if arguments.len() < 5 {
+			return Err(format!("malformed fs target: {arguments:?}"));
+		}
+		let mutant = arguments[5..]
+			.iter()
+			.filter(|argument| !argument.is_empty())
+			.cloned()
+			.collect::<Vec<_>>()
+			.join(",");
+		targets.push((
+			arguments[0].trim_matches('"').to_owned(),
+			arguments[1].trim_matches('"').to_owned(),
+			arguments[2].clone(),
+			arguments[3].trim_matches('"').to_owned(),
+			mutant,
+		));
+		cursor = end;
+	}
+	let expected = FS_REGISTRATION_TARGETS
+		.iter()
+		.map(|(name, class, bound, query, mutant)| {
+			(
+				(*name).to_owned(),
+				(*class).to_owned(),
+				(*bound).to_owned(),
+				(*query).to_owned(),
+				(*mutant).to_owned(),
+			)
+		})
+		.collect::<Vec<_>>();
+	if targets != expected {
+		return Err(format!(
+			"fs-registration target manifest changed: {targets:?}"
+		));
+	}
+	require(
+		&compact(tests),
+		&compact(
+			"{\"security\": 6, \"definitional\": 1, \"witness\": 5, \"control\": 2, \"limitation\": 1,}",
+		),
+		"fs checker class-count regression",
+	)?;
+	validate_fs_s2b_checker(checker, tests, section)?;
+	validate_fs_b2s_checker(checker, tests, section)
+}
+
+fn validate_fs_s2b_checker(checker: &str, tests: &str, section: &str) -> Result<(), String> {
+	for wanted in [
+		"REGISTRATION = \"fs-registration\"",
+		"RECORDS_S2B = \"fs-records-s2b\"",
+		"SCENARIOS = (REGISTRATION, RECORDS_S2B, RECORDS_B2S)",
+		"WINDOW = \"fs-records-s2b-window.pvl\"",
+		"RETAIN = \"fs-control-retain.pvl\"",
+		"STALE = \"fs-control-stale.pvl\"",
+		"FAILMUT = \"fs-control-failmut.pvl\"",
+		"GATE = \"fs-records-s2b-gate.pvl\"",
+		"NOGATE = \"fs-control-nogate.pvl\"",
+		"TASKINGS = \"fs-records-s2b-taskings.pvl\"",
+		"CHOSEN = \"fs-records-s2b-taskings-chosen.pvl\"",
+		"S2B_RECEIVE = \"fs-records-s2b-receive.pvl\"",
+		"S2B_PROCESS = \"fs-records-s2b.pvl\"",
+		"S2B_SECURITY_BOUND = 3",
+		"f\"fs-records-s2b-kr{self.bound}.pvl\",",
+		"S2B_FRESH_ONLY = (\"fs-records-s2b-s1.pv\", \"fs-records-s2b-s4.pv\")",
+		"raise ValueError(f\"{target.name}: security results run at K_r = 3\")",
+		"if target.cls == \"security\" and target.bound != S2B_SECURITY_BOUND:",
+		"if target.inverted and target.cls != \"control\":",
+		"verdict = \" is true.\" if target.expected_true() else \" is false.\"",
+	] {
+		require_once(checker, wanted, "fs-records-s2b checker rule")?;
+	}
+	require_once(
+		&compact(checker),
+		&compact(
+			"HOOKS = {
+			REGISTRATION: ((CONSUMED, NOCHECK), (BINDING, UKS)),
+			RECORDS_S2B: ((WINDOW, RETAIN, STALE, FAILMUT), (GATE, NOGATE), (TASKINGS, CHOSEN)),
+			RECORDS_B2S: (
+				(B2S_WINDOW, B2S_RETAIN, B2S_STALE),
+				(BINDING, UKS),
+				(SENDS, SENDS_CHOSEN),
+			),
+			}",
+		),
+		"fs scenario hook libraries",
+	)?;
+	require_once(
+		&compact(checker),
+		&compact(
+			"def records_s2b( name, cls, bound, query, results, window=WINDOW, gate=GATE, taskings=TASKINGS, inverted=False, ):",
+		),
+		"fs-records-s2b default libraries",
+	)?;
+	let mut targets = Vec::new();
+	let mut cursor = 0;
+	while let Some(relative) = section[cursor..].find("records_s2b(") {
+		let open = cursor + relative + "records_s2b".len();
+		let (arguments, end) = parse_call(section, open)?;
+		let arguments = arguments
+			.iter()
+			.map(|argument| argument.trim().to_owned())
+			.filter(|argument| !argument.is_empty())
+			.collect::<Vec<_>>();
+		if arguments.len() < 5 {
+			return Err(format!("malformed fs-records-s2b target: {arguments:?}"));
+		}
+		let mut keywords = arguments[5..].to_vec();
+		keywords.sort();
+		targets.push((
+			arguments[0].trim_matches('"').to_owned(),
+			arguments[1].trim_matches('"').to_owned(),
+			arguments[2].clone(),
+			arguments[3].trim_matches('"').to_owned(),
+			keywords.join(","),
+		));
+		cursor = end;
+	}
+	let expected = FS_S2B_TARGETS
+		.iter()
+		.map(|(name, class, bound, query, keywords)| {
+			(
+				(*name).to_owned(),
+				(*class).to_owned(),
+				(*bound).to_owned(),
+				(*query).to_owned(),
+				(*keywords).to_owned(),
+			)
+		})
+		.collect::<Vec<_>>();
+	if targets != expected {
+		return Err(format!(
+			"fs-records-s2b target manifest changed: {targets:?}"
+		));
+	}
+	require(
+		&compact(tests),
+		&compact("{\"security\": 6, \"witness\": 5, \"control\": 5,}"),
+		"fs-records-s2b checker class-count regression",
+	)
+}
+
+fn validate_fs_b2s_checker(checker: &str, tests: &str, section: &str) -> Result<(), String> {
+	for wanted in [
+		"RECORDS_B2S = \"fs-records-b2s\"",
+		"B2S_WINDOW = \"fs-records-b2s-window.pvl\"",
+		"B2S_RETAIN = \"fs-control-b2s-retain.pvl\"",
+		"B2S_STALE = \"fs-control-b2s-stale.pvl\"",
+		"SENDS = \"fs-records-b2s-sends.pvl\"",
+		"SENDS_CHOSEN = \"fs-records-b2s-sends-chosen.pvl\"",
+		"B2S_RECEIVE = \"fs-records-b2s-receive.pvl\"",
+		"B2S_PROCESS = \"fs-records-b2s.pvl\"",
+		"B2S_SECURITY_BOUND = 3",
+		"raise ValueError(f\"{target.name}: b2s security results run at K_r = 3\")",
+		"f\"fs-records-b2s-kr{self.bound}{form}.pvl\",",
+		"form = \"-failstop\" if self.failstop else \"\"",
+		"failstop: bool = False",
+		"if target.failstop and target.scenario != RECORDS_B2S:",
+		"or target.query not in B2S_FAILSTOP_QUERIES",
+		"if target.cls == \"security\" and target.bound != B2S_SECURITY_BOUND:",
+		"if target.query in B2S_FRESH_ONLY and target.hooks[2] != SENDS:",
+		"B2S_RETAIN: B2S_WINDOW,",
+		"B2S_STALE: B2S_WINDOW,",
+		"B2S_ANY_PIN = \"process FsRecordsB2sMainAnyPin()\"",
+		"B2S_HONEST_PIN = \"process FsRecordsB2sMain()\"",
+	] {
+		require_once(checker, wanted, "fs-records-b2s checker rule")?;
+	}
+	for (wanted, label) in [
+		(
+			"B2S_FRESH_ONLY = (\"fs-records-b2s-s2.pv\", \"fs-records-b2s-uksr.pv\", \"fs-records-b2s-pinread.pv\",)",
+			"fs-records-b2s fresh-only queries",
+		),
+		(
+			"B2S_FAILSTOP_QUERIES = (\"fs-records-b2s-c2.pv\", \"fs-records-b2s-c4.pv\")",
+			"fs-records-b2s fail-stop queries",
+		),
+		(
+			"if ( target.failstop and \"FsReceiveRejected\" in (directory / target.query).read_text() ): raise ValueError(",
+			"fs-records-b2s fail-stop queries without rejections",
+		),
+		(
+			"if target.failstop and ( target.cls != \"security\" or target.bound != B2S_SECURITY_BOUND or target.hooks[2] != SENDS_CHOSEN or target.query not in B2S_FAILSTOP_QUERIES ):",
+			"fs-records-b2s fail-stop rule",
+		),
+		(
+			"def records_b2s( name, cls, bound, query, results, window=B2S_WINDOW, binding=BINDING, sends=SENDS, failstop=False, ):",
+			"fs-records-b2s default libraries",
+		),
+		(
+			"if target.scenario == RECORDS_B2S: try: b2s_pins((directory / target.query).read_text()) except ValueError as error: raise ValueError(f\"{target.name}: {error}\") from error",
+			"fs-records-b2s main-process check",
+		),
+		(
+			"body = \" \" + uncommented(text) if body.count(\" process \") == 1: if body.endswith(\" \" + B2S_ANY_PIN): return \"any\" if body.endswith(\" \" + B2S_HONEST_PIN): return \"honest\" raise ValueError(",
+			"fs-records-b2s main-process rule",
+		),
+	] {
+		require_once(&compact(checker), &compact(wanted), label)?;
+	}
+	let mut targets = Vec::new();
+	let mut cursor = 0;
+	while let Some(relative) = section[cursor..].find("records_b2s(") {
+		let open = cursor + relative + "records_b2s".len();
+		let (arguments, end) = parse_call(section, open)?;
+		let arguments = arguments
+			.iter()
+			.map(|argument| argument.trim().to_owned())
+			.filter(|argument| !argument.is_empty())
+			.collect::<Vec<_>>();
+		if arguments.len() < 5 {
+			return Err(format!("malformed fs-records-b2s target: {arguments:?}"));
+		}
+		let mut keywords = arguments[5..].to_vec();
+		keywords.sort();
+		targets.push((
+			arguments[0].trim_matches('"').to_owned(),
+			arguments[1].trim_matches('"').to_owned(),
+			arguments[2].clone(),
+			arguments[3].trim_matches('"').to_owned(),
+			keywords.join(","),
+		));
+		cursor = end;
+	}
+	let expected = FS_B2S_TARGETS
+		.iter()
+		.map(|(name, class, bound, query, keywords)| {
+			(
+				(*name).to_owned(),
+				(*class).to_owned(),
+				(*bound).to_owned(),
+				(*query).to_owned(),
+				(*keywords).to_owned(),
+			)
+		})
+		.collect::<Vec<_>>();
+	if targets != expected {
+		return Err(format!(
+			"fs-records-b2s target manifest changed: {targets:?}"
+		));
+	}
+	require(
+		&compact(tests),
+		&compact("{\"security\": 8, \"definitional\": 1, \"witness\": 6, \"control\": 3,}"),
+		"fs-records-b2s checker class-count regression",
+	)
+}
+
+/// Each fs-records-b2s query file must end with the main process that `FS_B2S_PIN_FREE_QUERIES`
+/// gives it, and run no other process.
+fn validate_fs_b2s_pins(files: &[(String, String)]) -> Result<(), String> {
+	for (name, source) in files {
+		let text = format!(" {}", normalized(&uncommented_pv(source)?));
+		let wanted = if FS_B2S_PIN_FREE_QUERIES.contains(&name.as_str()) {
+			" process FsRecordsB2sMainAnyPin()"
+		} else {
+			" process FsRecordsB2sMain()"
+		};
+		if text.matches(" process ").count() != 1 || !text.ends_with(wanted) {
+			return Err(format!("{name}: fs-records-b2s main process changed"));
+		}
+	}
+	Ok(())
+}
+
+fn fs_b2s_query_sources() -> Vec<(String, String)> {
+	let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("proofs/pro-verif");
+	fs_query_files_on_disk()
+		.into_iter()
+		.filter(|name| name.starts_with("fs-records-b2s-"))
+		.map(|name| {
+			let source = std::fs::read_to_string(directory.join(&name)).unwrap();
+			(name, source)
+		})
+		.collect()
+}
+
+fn fs_query_files_on_disk() -> Vec<String> {
+	let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("proofs/pro-verif");
+	let mut files = std::fs::read_dir(directory)
+		.unwrap()
+		.map(|entry| entry.unwrap().file_name().into_string().unwrap())
+		.filter(|name| name.starts_with("fs-") && name.ends_with(".pv"))
+		.collect::<Vec<_>>();
+	files.sort();
+	files
+}
+
+/// Every file whose text can reach ProVerif: the .pv and .pvl files under proofs/pro-verif,
+/// including the generated extraction library, and the Python checkers, generators and tests there,
+/// which write ProVerif text at run time.
+fn declaration_source_files() -> Vec<(String, String)> {
+	let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+	let mut pending = vec![base.join("proofs/pro-verif")];
+	let mut files = Vec::new();
+	while let Some(directory) = pending.pop() {
+		for entry in std::fs::read_dir(&directory).unwrap() {
+			let path = entry.unwrap().path();
+			if path.is_dir() {
+				pending.push(path);
+				continue;
+			}
+			if !matches!(
+				path.extension().and_then(|extension| extension.to_str()),
+				Some("pv" | "pvl" | "py")
+			) {
+				continue;
+			}
+			let relative = path
+				.strip_prefix(base)
+				.unwrap()
+				.to_str()
+				.unwrap()
+				.replace('\\', "/");
+			files.push((relative, std::fs::read_to_string(&path).unwrap()));
+		}
+	}
+	files.sort();
+	files
+}
+
+fn markdown_slugs(markdown: &str) -> std::collections::BTreeSet<String> {
+	markdown
+		.lines()
+		.filter(|line| line.starts_with('#'))
+		.map(|line| {
+			line.trim_start_matches('#')
+				.trim()
+				.to_lowercase()
+				.chars()
+				.filter_map(|character| match character {
+					' ' => Some('-'),
+					'-' | '_' => Some(character),
+					_ if character.is_alphanumeric() => Some(character),
+					_ => None,
+				})
+				.collect()
+		})
+		.collect()
+}
+
+const FORBIDDEN_DECLARATIONS: [&str; 4] = ["axiom", "restriction", "elimtrue", "clauses"];
+const ALLOWLISTED_DECLARATIONS: [&str; 7] = [
+	"set", "param", "nounif", "select", "noselect", "lemma", "not",
+];
+
+type DeclarationCounts = std::collections::BTreeMap<(String, String, String), usize>;
+
+/// ProVerif text with its comments removed as ProVerif 2.05 removes them: comments nest, and each
+/// comment separates the tokens on either side, so it becomes one space.
+fn proverif_text(source: &str) -> Result<String, String> {
+	let mut text = String::with_capacity(source.len());
+	let mut depth = 0usize;
+	let mut rest = source;
+	while !rest.is_empty() {
+		if rest.starts_with("(*") {
+			if depth == 0 {
+				text.push(' ');
+			}
+			depth += 1;
+			rest = &rest[2..];
+		} else if depth > 0 && rest.starts_with("*)") {
+			depth -= 1;
+			rest = &rest[2..];
+		} else {
+			let character = rest.chars().next().unwrap();
+			if depth == 0 {
+				text.push(character);
+			}
+			rest = &rest[character.len_utf8()..];
+		}
+	}
+	if depth != 0 {
+		return Err("unterminated (* comment".to_owned());
+	}
+	Ok(text)
+}
+
+fn proverif_declaration_end(path: &str, word: &str, rest: &str) -> Result<usize, String> {
+	rest.char_indices()
+		.find(|(index, character)| {
+			*character == '.'
+				&& rest[index + 1..]
+					.chars()
+					.next()
+					.is_none_or(char::is_whitespace)
+		})
+		.map(|(index, _)| index)
+		.ok_or_else(|| format!("{path}: unterminated {word} declaration"))
+}
+
+fn scan_declarations(
+	path: &str,
+	source: &str,
+	found: &mut DeclarationCounts,
+) -> Result<(), String> {
+	if path.ends_with(".py") {
+		return scan_python_declarations(path, source, found);
+	}
+	let text = proverif_text(source).map_err(|error| format!("{path}: {error}"))?;
+	for (start, word) in fs_words(&text) {
+		if FORBIDDEN_DECLARATIONS.contains(&word) {
+			return Err(format!(
+				"{path} contains the forbidden ProVerif declaration {word}"
+			));
+		}
+		if !ALLOWLISTED_DECLARATIONS.contains(&word) {
+			continue;
+		}
+		let before = text[..start].trim_end();
+		if !(before.is_empty() || before.ends_with(['.', '{', '}'])) {
+			continue;
+		}
+		let rest = &text[start..];
+		let end = proverif_declaration_end(path, word, rest)?;
+		*found
+			.entry((path.to_owned(), word.to_owned(), normalized(&rest[..=end])))
+			.or_default() += 1;
+	}
+	count_precise(path, &text, found);
+	Ok(())
+}
+
+fn count_precise(path: &str, text: &str, found: &mut DeclarationCounts) {
+	let precise = compact(text).matches("[precise]").count();
+	if precise != 0 {
+		*found
+			.entry((
+				path.to_owned(),
+				"precise".to_owned(),
+				"[precise]".to_owned(),
+			))
+			.or_default() += precise;
+	}
+}
+
+/// Python files under proofs/pro-verif write ProVerif text at run time from their string
+/// literals and from the scanned .pv and .pvl files. Every string literal, docstrings included,
+/// is scanned like ProVerif text, after the second decoding stage of a `re` replacement template
+/// (`python_template_text`). A declaration keyword counts when it starts the literal or follows
+/// a format placeholder, a group reference, a `.`, `{`, `}` or the end `*)` of a ProVerif
+/// comment, because run-time text may be joined there. Forbidden declarations fail; every other
+/// declaration and every `[precise]` needs an allowlist entry under the Python file's path.
+/// Secrecy assumptions (`not`) are not scanned here: literals quote expected `RESULT not ...`
+/// lines, and ProVerif verifies every secrecy assumption itself, stopping with an error when it
+/// cannot.
+fn scan_python_declarations(
+	path: &str,
+	source: &str,
+	found: &mut DeclarationCounts,
+) -> Result<(), String> {
+	let literals = python_literals(source).map_err(|error| format!("{path}: {error}"))?;
+	for literal in &literals {
+		let literal = &python_template_text(literal);
+		for (start, word) in fs_words(literal) {
+			let kind_allowlisted = ALLOWLISTED_DECLARATIONS.contains(&word) && word != "not";
+			if !(FORBIDDEN_DECLARATIONS.contains(&word) || kind_allowlisted) {
+				continue;
+			}
+			let before = literal[..start].trim_end();
+			if !(before.is_empty() || before.ends_with(['.', '{', '}']) || before.ends_with("*)")) {
+				continue;
+			}
+			if FORBIDDEN_DECLARATIONS.contains(&word) {
+				return Err(format!(
+					"{path} contains the forbidden ProVerif declaration {word} in a string literal"
+				));
+			}
+			let rest = &literal[start..];
+			let end = proverif_declaration_end(path, word, rest).map_or(rest.len(), |end| end + 1);
+			*found
+				.entry((path.to_owned(), word.to_owned(), normalized(&rest[..end])))
+				.or_default() += 1;
+		}
+		count_precise(path, literal, found);
+	}
+	Ok(())
+}
+
+/// The decoded text of every Python string literal in source order. Escape sequences are
+/// decoded, and every format placeholder (an f-string replacement field or a `%` conversion)
+/// becomes `{}`. Literals nested in replacement fields are returned on their own. Anything the
+/// lexer does not understand is an error, so that no literal is silently skipped.
+fn python_literals(source: &str) -> Result<Vec<String>, String> {
+	let characters = source.chars().collect::<Vec<_>>();
+	let mut literals = Vec::new();
+	let mut index = 0;
+	python_code(&characters, &mut index, false, &mut literals)?;
+	Ok(literals
+		.into_iter()
+		.map(|literal| python_percent_placeholders(&literal))
+		.collect())
+}
+
+fn python_code(
+	characters: &[char],
+	index: &mut usize,
+	field: bool,
+	literals: &mut Vec<String>,
+) -> Result<(), String> {
+	let mut depth = 0usize;
+	while let Some(&character) = characters.get(*index) {
+		match character {
+			'#' if !field => {
+				while characters
+					.get(*index)
+					.is_some_and(|character| *character != '\n')
+				{
+					*index += 1;
+				}
+			}
+			'(' | '[' | '{' => {
+				depth += 1;
+				*index += 1;
+			}
+			')' | ']' | '}' => {
+				*index += 1;
+				if depth == 0 {
+					if field && character == '}' {
+						return Ok(());
+					}
+					return Err(format!("unbalanced {character} in Python code"));
+				}
+				depth -= 1;
+			}
+			'\'' | '"' => python_string(characters, index, "", literals)?,
+			_ if character.is_alphanumeric() || character == '_' => {
+				let start = *index;
+				while characters
+					.get(*index)
+					.is_some_and(|character| character.is_alphanumeric() || *character == '_')
+				{
+					*index += 1;
+				}
+				let word = characters[start..*index]
+					.iter()
+					.collect::<String>()
+					.to_ascii_lowercase();
+				if characters
+					.get(*index)
+					.is_some_and(|character| matches!(character, '\'' | '"'))
+				{
+					if !["r", "u", "b", "f", "t", "br", "rb", "fr", "rf", "tr", "rt"]
+						.contains(&word.as_str())
+					{
+						return Err(format!("unknown Python string prefix {word}"));
+					}
+					python_string(characters, index, &word, literals)?;
+				}
+			}
+			_ => *index += 1,
+		}
+	}
+	if field {
+		return Err("unterminated f-string replacement field".to_owned());
+	}
+	if depth != 0 {
+		return Err("unbalanced brackets in Python code".to_owned());
+	}
+	Ok(())
+}
+
+fn python_string(
+	characters: &[char],
+	index: &mut usize,
+	prefix: &str,
+	literals: &mut Vec<String>,
+) -> Result<(), String> {
+	let raw = prefix.contains('r');
+	let formatted = prefix.contains('f') || prefix.contains('t');
+	let bytes = prefix.contains('b');
+	let quote = characters[*index];
+	let triple =
+		characters.get(*index + 1) == Some(&quote) && characters.get(*index + 2) == Some(&quote);
+	*index += if triple { 3 } else { 1 };
+	let mut text = String::new();
+	loop {
+		let Some(&character) = characters.get(*index) else {
+			return Err("unterminated Python string literal".to_owned());
+		};
+		if character == quote
+			&& (!triple
+				|| (characters.get(*index + 1) == Some(&quote)
+					&& characters.get(*index + 2) == Some(&quote)))
+		{
+			*index += if triple { 3 } else { 1 };
+			break;
+		}
+		if character == '\n' && !triple {
+			return Err("unterminated Python string literal".to_owned());
+		}
+		if character == '\\' {
+			let Some(&next) = characters.get(*index + 1) else {
+				return Err("unterminated Python string literal".to_owned());
+			};
+			*index += 2;
+			if raw {
+				text.push('\\');
+				text.push(next);
+				continue;
+			}
+			let digits = |index: &mut usize, radix: u32, most: usize| {
+				let start = *index;
+				while *index - start < most
+					&& characters
+						.get(*index)
+						.is_some_and(|digit| digit.is_digit(radix))
+				{
+					*index += 1;
+				}
+				u32::from_str_radix(&characters[start..*index].iter().collect::<String>(), radix)
+					.ok()
+					.and_then(char::from_u32)
+			};
+			let decoded = match next {
+				'\n' => continue,
+				'n' => '\n',
+				't' => '\t',
+				'r' => '\r',
+				'f' => '\u{c}',
+				'v' => '\u{b}',
+				'a' => '\u{7}',
+				'b' => '\u{8}',
+				'\\' | '\'' | '"' => next,
+				'x' => digits(index, 16, 2).ok_or("invalid \\x escape")?,
+				'0'..='7' => {
+					*index -= 1;
+					digits(index, 8, 3).ok_or("invalid octal escape")?
+				}
+				'u' if !bytes => digits(index, 16, 4).ok_or("invalid \\u escape")?,
+				'U' if !bytes => digits(index, 16, 8).ok_or("invalid \\U escape")?,
+				'N' if !bytes => return Err("named Unicode escapes are not supported".to_owned()),
+				_ => {
+					text.push('\\');
+					next
+				}
+			};
+			text.push(decoded);
+			continue;
+		}
+		if formatted && character == '{' {
+			*index += 1;
+			if characters.get(*index) == Some(&'{') {
+				*index += 1;
+				text.push('{');
+			} else {
+				python_code(characters, index, true, literals)?;
+				text.push_str("{}");
+			}
+			continue;
+		}
+		if formatted && character == '}' {
+			if characters.get(*index + 1) != Some(&'}') {
+				return Err("single } in an f-string".to_owned());
+			}
+			*index += 2;
+			text.push('}');
+			continue;
+		}
+		text.push(character);
+		*index += 1;
+	}
+	literals.push(text);
+	Ok(())
+}
+
+/// Replace every `%` conversion of a literal by `{}`, since `%` formatting substitutes text there.
+fn python_percent_placeholders(literal: &str) -> String {
+	let characters = literal.chars().collect::<Vec<_>>();
+	let mut text = String::with_capacity(literal.len());
+	let mut index = 0;
+	while let Some(&character) = characters.get(index) {
+		index += 1;
+		if character != '%' {
+			text.push(character);
+			continue;
+		}
+		if characters.get(index) == Some(&'%') {
+			index += 1;
+			text.push('%');
+			continue;
+		}
+		let mut end = index;
+		if characters.get(end) == Some(&'(') {
+			while characters
+				.get(end)
+				.is_some_and(|character| *character != ')')
+			{
+				end += 1;
+			}
+			end += 1;
+		}
+		while characters
+			.get(end)
+			.is_some_and(|character| "-+ #0123456789*.hlL".contains(*character))
+		{
+			end += 1;
+		}
+		if characters
+			.get(end)
+			.is_some_and(|character| "diouxXeEfFgGcrsab".contains(*character))
+		{
+			index = end + 1;
+			text.push_str("{}");
+		} else {
+			text.push('%');
+		}
+	}
+	text
+}
+
+/// A literal as Python's `re` module reads it when it is used as a replacement template, a second
+/// decoding stage after the literal's own. A group reference (`\` followed by digits, or
+/// `\g<...>`) becomes the placeholder `{}`, and `\` followed by an ASCII letter becomes a space,
+/// since the template decodes it to a control character such as a newline or rejects it. An
+/// escaped backslash stays. Each change can only add places where a keyword counts, so the text
+/// is scanned for every literal, whether or not it is used as a template.
+fn python_template_text(literal: &str) -> String {
+	let characters = literal.chars().collect::<Vec<_>>();
+	let mut text = String::with_capacity(literal.len());
+	let mut index = 0;
+	while let Some(&character) = characters.get(index) {
+		index += 1;
+		if character != '\\' {
+			text.push(character);
+			continue;
+		}
+		match characters.get(index) {
+			Some('\\') => {
+				index += 1;
+				text.push_str("\\\\");
+			}
+			Some(next) if next.is_ascii_digit() => {
+				while characters.get(index).is_some_and(char::is_ascii_digit) {
+					index += 1;
+				}
+				text.push_str("{}");
+			}
+			Some('g') if characters.get(index + 1) == Some(&'<') => {
+				match characters[index..].iter().position(|next| *next == '>') {
+					Some(end) => {
+						index += end + 1;
+						text.push_str("{}");
+					}
+					None => {
+						index += 1;
+						text.push(' ');
+					}
+				}
+			}
+			Some(next) if next.is_ascii_alphabetic() => {
+				index += 1;
+				text.push(' ');
+			}
+			_ => text.push('\\'),
+		}
+	}
+	text
+}
+
+fn validate_declarations(
+	files: &[(String, String)],
+	allowlist: &str,
+	documentation: &str,
+) -> Result<(), String> {
+	let mut found = DeclarationCounts::new();
+	for (path, source) in files {
+		scan_declarations(path, source, &mut found)?;
+	}
+	let slugs = markdown_slugs(documentation);
+	let mut allowed = DeclarationCounts::new();
+	for line in allowlist.lines() {
+		if line.is_empty() || line.starts_with('#') {
+			continue;
+		}
+		let fields = line.split('\t').collect::<Vec<_>>();
+		let &[path, kind, occurrences, declaration, anchor] = fields.as_slice() else {
+			return Err(format!("malformed declaration allowlist line: {line}"));
+		};
+		let occurrences = occurrences
+			.parse::<usize>()
+			.ok()
+			.filter(|occurrences| *occurrences > 0)
+			.ok_or_else(|| format!("invalid allowlist count: {line}"))?;
+		if !(ALLOWLISTED_DECLARATIONS.contains(&kind) || kind == "precise") {
+			return Err(format!("unknown allowlist kind: {line}"));
+		}
+		let slug = anchor
+			.strip_prefix("doc/formal-verification-analysis.md#")
+			.ok_or_else(|| format!("allowlist entry lacks a documentation anchor: {line}"))?;
+		if !slugs.contains(slug) {
+			return Err(format!(
+				"allowlist documentation anchor does not exist: {anchor}"
+			));
+		}
+		if allowed
+			.insert(
+				(path.to_owned(), kind.to_owned(), declaration.to_owned()),
+				occurrences,
+			)
+			.is_some()
+		{
+			return Err(format!("duplicate allowlist entry: {line}"));
+		}
+	}
+	for (key, occurrences) in &found {
+		match allowed.get(key) {
+			Some(expected) if expected == occurrences => {}
+			Some(expected) => {
+				return Err(format!(
+					"declaration {key:?} occurs {occurrences} times but is allowlisted {expected} times"
+				));
+			}
+			None => {
+				return Err(format!(
+					"declaration is not on the reviewed allowlist: {key:?}"
+				));
+			}
+		}
+	}
+	if let Some(stale) = allowed.keys().find(|key| !found.contains_key(*key)) {
+		return Err(format!("stale declaration allowlist entry: {stale:?}"));
+	}
+	Ok(())
+}
+
+#[test]
+fn symbolic_name_order_gates_cannot_be_omitted() {
+	for line in [
+		"\tpython3 $(PROVERIF_DIR)/test-symbolic-name-order.py\n",
+		"\tpython3 $(PROVERIF_DIR)/symbolic-name-order.py --check-only\n",
+	] {
+		assert_eq!(CORE_MAKEFILE.matches(line).count(), 2);
+		for (index, matched) in CORE_MAKEFILE.match_indices(line) {
+			let mut changed = CORE_MAKEFILE.to_owned();
+			changed.replace_range(index..index + matched.len(), "");
+			let error = validate_free_schedule_makefile(&changed).unwrap_err();
+			assert!(error.contains("exact Make runner and self-test wiring changed"));
+		}
+	}
+}
+
+#[test]
+fn pin_origin_syntax_gate_cannot_be_omitted() {
+	for line in [
+		"\tpython3 $(PROVERIF_DIR)/test-pin-origin-checker.py\n",
+		"\tpython3 $(PROVERIF_DIR)/pin-origin-theory.py --check-only\n",
+	] {
+		assert_eq!(CORE_MAKEFILE.matches(line).count(), 1);
+		let changed = CORE_MAKEFILE.replacen(line, "", 1);
+		let error = validate_free_schedule_makefile(&changed).unwrap_err();
+		assert!(error.contains("fs-records-b2s exact Make runner and self-test wiring changed"));
+	}
+}
+
+#[test]
+fn free_schedule_roster_and_serial_wiring_are_pinned() {
+	validate_free_schedule_makefile(CORE_MAKEFILE).unwrap();
+	// The 36-scenario parallel roster is checked on its own and is unaffected by the fs group.
+	validate_makefile(CORE_MAKEFILE).unwrap();
+	let mut checked = 0;
+	for (name, from, to, diagnostic) in [
+		(
+			"fs scenario added to the parallel roster",
+			"\tfailed-receive-compromise-reachability\n",
+			"\tfailed-receive-compromise-reachability \\\n\tfs-registration\n",
+			"joined the parallel PROVERIF_SCENARIOS roster",
+		),
+		(
+			"fs group made a prerequisite of check-proverif",
+			"check-proverif: check-proverif-live-material\n",
+			"check-proverif: check-proverif-live-material check-proverif-fs\n",
+			"never be a prerequisite of check-proverif",
+		),
+		(
+			"fs group run in parallel",
+			"-j1 $(PROVERIF_FS_CHECK_TARGETS)",
+			"-j$(words $(PROVERIF_FS_SCENARIOS)) $(PROVERIF_FS_CHECK_TARGETS)",
+			"serial fs group recipe changed",
+		),
+		(
+			"authentication extraction freshness dropped from verify-in-shell",
+			"\t$(MAKE) check-toolchain\n\t$(MAKE) check-generated-authentication-lean\n\t$(MAKE) extract-proverif\n",
+			"\t$(MAKE) check-toolchain\n\t$(MAKE) extract-proverif\n",
+			"verify-in-shell must run check-proverif-fs",
+		),
+		(
+			"joint ML-DSA profile dropped from verify-in-shell",
+			"\t$(MAKE) check-proverif-mldsa-joint\n",
+			"",
+			"verify-in-shell must run check-proverif-fs",
+		),
+		(
+			"fs group dropped from verify-in-shell",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) check-proverif-exact-interface-strong\n\t$(MAKE) extract-lean\n",
+			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) check-proverif-exact-interface-strong\n\t$(MAKE) extract-lean\n",
+			"verify-in-shell must run check-proverif-fs",
+		),
+		(
+			"fs group dropped from verify-proverif-in-shell",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) check-proverif-exact-interface-strong\n\nverify-proverif-live-material:",
+			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) check-proverif-exact-interface-strong\n\nverify-proverif-live-material:",
+			"verify-proverif-in-shell must run check-proverif-fs",
+		),
+		(
+			"fs timeout lowered to the roster timeout",
+			"PROVERIF_FS_TIMEOUT ?= 1800",
+			"PROVERIF_FS_TIMEOUT ?= 240",
+			"fs per-target timeout",
+		),
+		(
+			"fs address-space cap removed",
+			"PROVERIF_FS_ADDRESS_SPACE_KIB ?= 10485760",
+			"PROVERIF_FS_ADDRESS_SPACE_KIB ?= 0",
+			"fs per-run address-space cap",
+		),
+		(
+			"fs scenario removed",
+			"PROVERIF_FS_SCENARIOS := \\\n\tfs-registration \\\n\tfs-records-s2b \\\n\tfs-records-b2s\n",
+			"PROVERIF_FS_SCENARIOS := \\\n\tfs-registration \\\n\tfs-records-s2b\n",
+			"fs scenario roster changed",
+		),
+		(
+			"b2s record runner checks the s2b targets",
+			"--scenario fs-records-b2s",
+			"--scenario fs-records-s2b",
+			"fs-records-b2s exact Make runner",
+		),
+		(
+			"fs record runner without its scenario selection",
+			"--scenario fs-records-s2b \\\n",
+			"\\\n",
+			"fs-records-s2b exact Make runner",
+		),
+		(
+			"fs record runner checks the registration targets",
+			"--scenario fs-records-s2b",
+			"--scenario fs-registration",
+			"fs-records-s2b exact Make runner",
+		),
+		(
+			"fs checker self-test skipped",
+			"\tpython3 $(PROVERIF_DIR)/test-free-schedule-checker.py\n",
+			"",
+			"fs-registration exact Make runner",
+		),
+		(
+			"fs checker uses the roster timeout",
+			"--timeout '$(PROVERIF_FS_TIMEOUT)'",
+			"--timeout '$(PROVERIF_TIMEOUT)'",
+			"fs-registration exact Make runner",
+		),
+		(
+			"fs log directory forced to a temporary directory",
+			"PROVERIF_FS_LOG_DIR ?=\n",
+			"PROVERIF_FS_LOG_DIR ?= $(shell mktemp -d)\n",
+			"fs optional log directory",
+		),
+		(
+			"fs log directory dropped from the runner",
+			" \\\n\t\t$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')\n",
+			"\n",
+			"fs-registration exact Make runner",
+		),
+	] {
+		let mut changed = CORE_MAKEFILE.to_owned();
+		replace_once(&mut changed, from, to);
+		let error = validate_free_schedule_makefile(&changed)
+			.expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+		checked += 1;
+	}
+	assert_eq!(checked, 17);
+}
+
+#[test]
+fn free_schedule_rust_fidelity_annotations_are_exact() {
+	let files = FsFiles::production();
+	validate_fs_fidelity(&files).unwrap();
+	assert_eq!(FS_FIDELITY.len(), 227);
+	for (name, mutate, diagnostic) in [
+		(
+			"cited line moved",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.registration,
+					"src=beaconcrypt/src/server.rs:531-535",
+					"src=beaconcrypt/src/server.rs:1-1",
+				)
+			}) as Box<dyn Fn(&mut FsFiles)>,
+			"fs fidelity annotations of fs-registration.pvl changed",
+		),
+		(
+			"anchor no longer on the cited line",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.registration,
+					"anchor=let inserted = self",
+					"anchor=let removed = self",
+				)
+			}),
+			"no longer starts with",
+		),
+		(
+			"annotation removed",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.registration,
+					"(* @beaconcrypt-fs-fidelity key=beacon.sequence_one",
+					"(* beacon.sequence_one",
+				)
+			}),
+			"fs fidelity annotations of fs-registration.pvl changed",
+		),
+		(
+			"annotation added to a control",
+			Box::new(|files: &mut FsFiles| {
+				files.nocheck.push_str("(* @beaconcrypt-fs-fidelity key=x src=beaconcrypt/src/server.rs:451-456 anchor=let registration_status *)\n");
+			}),
+			"fs fidelity annotations of fs-control-nocheck.pvl changed",
+		),
+		(
+			"malformed annotation",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.common,
+					"key=common.kid_next src=",
+					"key=common.kid_next source=",
+				)
+			}),
+			"lacks key or src",
+		),
+	] {
+		let mut changed = FsFiles::production();
+		mutate(&mut changed);
+		let error =
+			validate_fs_fidelity(&changed).expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+	}
+	assert_eq!(
+		check_fs_citation("beaconcrypt/src/server.rs:531-535", "let inserted"),
+		Ok(())
+	);
+	assert!(check_fs_citation("beaconcrypt/src/server.rs:416-415", "let inserted").is_err());
+	assert!(check_fs_citation("beaconcrypt/src/server.rs:1-415", "let inserted").is_err());
+	assert!(check_fs_citation("beaconcrypt/src/other.rs:415-416", "let inserted").is_err());
+	assert!(check_fs_citation("beaconcrypt/src/server.rs:531-535", "let").is_err());
+}
+
+#[test]
+fn free_schedule_vocabulary_and_registration_model_are_pinned() {
+	validate_fs_model(&FsFiles::production()).unwrap();
+	for (name, mutate, diagnostic) in [
+		(
+			"copied declaration drifts from environment.pvl",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.common,
+					"free SERVER_KEY_ID: key_id.",
+					"free SERVER_KEY_ID: key_id [private].",
+				)
+			}) as Box<dyn Fn(&mut FsFiles)>,
+			"differs from environment.pvl",
+		),
+		(
+			"event signature changed",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.common,
+					"event FsBeaconFinishOpenedLater(bitstring, bitstring, nat).",
+					"event FsBeaconFinishOpenedLater(bitstring, nat).",
+				)
+			}),
+			"fs event vocabulary changed",
+		),
+		(
+			"origin table added",
+			Box::new(|files: &mut FsFiles| {
+				files.common.push_str("table honest_origin(bitstring).\n")
+			}),
+			"honesty belongs only in queries",
+		),
+		(
+			"consumed check moved after the ephemeral",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.registration,
+					"    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/pqxdh.rs:124-129 anchor=server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok(); *)\n      new ephemeral_secret: bitstring;\n",
+					"    new ephemeral_secret: bitstring;\n    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/pqxdh.rs:124-129 anchor=server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok(); *)\n",
+				)
+			}),
+			"fs-registration Rust-ordered process changed",
+		),
+		(
+			"init built from raw signed blobs",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.registration,
+					"      identity,\n      prekey,\n      one_time,\n      pq\n    ) in",
+					"      identity,\n      signed_prekey,\n      signed_one_time,\n      signed_pq\n    ) in",
+				)
+			}),
+			"fs-registration Rust-ordered process changed",
+		),
+		(
+			"sequence-one gate removed",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.registration,
+					"  if frame_sequence = fs_seq(1) then\n",
+					"",
+				)
+			}),
+			"fs-registration Rust-ordered process changed",
+		),
+		(
+			"real consumed test weakened",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.consumed,
+					"registration_id = slot_1 || registration_id = slot_2.",
+					"registration_id = slot_1.",
+				)
+			}),
+			"fs-registration-consumed.pvl consumed-set test changed",
+		),
+		(
+			"real binding drops the Beacon identity",
+			Box::new(|files: &mut FsFiles| replace_once(&mut files.binding, "= dh2.", "= dh3.")),
+			"fs-registration-binding.pvl session binding changed",
+		),
+		(
+			"bound file loses a step",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.bounds[2],
+					"expand FS_REG_STEP(FsServerReg3, FsServerRegStop).\nexpand FS_REG_STEP(FsServerReg2, FsServerReg3).\n",
+					"expand FS_REG_STEP(FsServerReg2, FsServerRegStop).\n",
+				)
+			}),
+			"fs-registration bound K_reg = 3 changed",
+		),
+	] {
+		let mut changed = FsFiles::production();
+		mutate(&mut changed);
+		let error = validate_fs_model(&changed).expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+	}
+}
+
+#[test]
+fn free_schedule_records_s2b_model_is_pinned() {
+	validate_fs_records_s2b(&FsFiles::production()).unwrap();
+	for (name, mutate, diagnostic) in [
+		(
+			"early coins drawn after the bundle input",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(&mut files.s2b, "  new kem_coins: bitstring;\n", "");
+				replace_once(
+					&mut files.s2b,
+					"  in(c, bundle: bitstring) [precise];\n",
+					"  in(c, bundle: bitstring) [precise];\n  new kem_coins: bitstring;\n",
+				);
+			}) as Box<dyn Fn(&mut FsFiles)>,
+			"fs-records-s2b process (Rust order except the v2 draw) changed",
+		),
+		(
+			"sequence-one gate removed from the real gate library",
+			Box::new(|files: &mut FsFiles| files.gate = files.nogate.clone()),
+			"fs-records-s2b-gate.pvl finish gate changed",
+		),
+		(
+			"cached key retained by the real window",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.window,
+					"fs_s2b_cached_after_success(cached_2: bool) = false.",
+					"fs_s2b_cached_after_success(cached_2: bool) = cached_2.",
+				)
+			}),
+			"fs-records-s2b-window.pvl receive-window hooks changed",
+		),
+		(
+			"failed open consumes the target in the real window",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.window,
+					"fs_s2b_failed_r(r: nat, target: nat) = r.",
+					"fs_s2b_failed_r(r: nat, target: nat) = target.",
+				)
+			}),
+			"fs-records-s2b-window.pvl receive-window hooks changed",
+		),
+		(
+			"stale control restores nothing",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.stale,
+					"fs_s2b_failed_r(r: nat, target: nat) = 1.",
+					"fs_s2b_failed_r(r: nat, target: nat) = r.",
+				)
+			}),
+			"fs-control-stale.pvl receive-window hooks changed",
+		),
+		(
+			"rejection event dropped from one branch",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.receive,
+					"event FsReceiveRejected(\n",
+					"event FsReceiveRejectedElsewhere(\n",
+				)
+			}),
+			"fs-records-s2b receive step rejections at t <= T_max changed",
+		),
+		(
+			"refused frame dropped from a rejection",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.receive,
+					"            t,\n            frame\n",
+					"            t,\n            associated_data\n",
+				)
+			}),
+			"fs-records-s2b receive step refused frames at t <= T_max changed",
+		),
+		(
+			"accepted frame replaced by the plaintext",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.receive,
+					"            2,\n            frame\n",
+					"            2,\n            plaintext\n",
+				)
+			}),
+			"fs-records-s2b receive step accepted frames at position 2 changed",
+		),
+		(
+			"accepted frame of the finish dropped",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.s2b,
+					"    event FsReceivedFrame(\n",
+					"    event FsReceivedFrameElsewhere(\n",
+				)
+			}),
+			"fs-records-s2b process (Rust order except the v2 draw) changed",
+		),
+		(
+			"far acceptance counted as a record",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.receive,
+					"event FsFarAccepted(\n",
+					"event FsReceived(\n",
+				)
+			}),
+			"fs-records-s2b receive step",
+		),
+		(
+			"receive attempt removed",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.s2b_bounds[2],
+					"expand FS_S2B_RECV_STEP(FsS2bRecv3, FsS2bRecvStop).\nexpand FS_S2B_RECV_STEP(FsS2bRecv2, FsS2bRecv3).\n",
+					"expand FS_S2B_RECV_STEP(FsS2bRecv2, FsS2bRecvStop).\n",
+				)
+			}),
+			"fs-records-s2b bound K_r = 3 changed",
+		),
+		(
+			"far anchor lowered to a materialised chain",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.s2b,
+					"      receive_chain_4,\n      1,\n      false\n",
+					"      receive_chain_3,\n      1,\n      false\n",
+				)
+			}),
+			"fs-records-s2b process (Rust order except the v2 draw) changed",
+		),
+		(
+			"fresh tasking made adversary-known",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.taskings,
+					"registration_payload(app_prefix_2, tasking_body_2)",
+					"registration_payload(app_prefix_2, app_prefix_2)",
+				)
+			}),
+			"fs-records-s2b-taskings.pvl fresh taskings changed",
+		),
+		(
+			"chosen form loses its fresh branch",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.chosen,
+					"registration_payload(app_prefix_2, tasking_body_2)",
+					"app_prefix_2",
+				)
+			}),
+			"fs-records-s2b-taskings-chosen.pvl taskings changed",
+		),
+	] {
+		let mut changed = FsFiles::production();
+		mutate(&mut changed);
+		let error =
+			validate_fs_records_s2b(&changed).expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+	}
+}
+
+#[test]
+fn free_schedule_records_b2s_model_is_pinned() {
+	validate_fs_records_b2s(&FsFiles::production()).unwrap();
+	let mut checked = 0;
+	for (name, mutate, diagnostic) in [
+		(
+			"early coins drawn after the bundle input",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(&mut files.b2s, "  new kem_coins: bitstring;\n", "");
+				replace_once(
+					&mut files.b2s,
+					"  in(c, bundle: bitstring) [precise];\n",
+					"  in(c, bundle: bitstring) [precise];\n  new kem_coins: bitstring;\n",
+				);
+			}) as Box<dyn Fn(&mut FsFiles)>,
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"Server root bypasses the binding hook",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"      fs_root_dh2(dh2, dh3),\n      dh3,\n      dh4,\n      mlkem_shared_secret(pq, kem_coins)\n",
+					"      dh2,\n      dh3,\n      dh4,\n      mlkem_shared_secret(pq, kem_coins)\n",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"Beacon associated data bypasses the binding hook",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"let associated_data = fs_associated_data(server_identity, beacon_identity) in",
+					"let associated_data = fs_uks_ad(server_identity) in",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"Server receive starts after sequence one",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"    receive_chain_3,\n    0,\n    false\n",
+					"    receive_chain_3,\n    1,\n    false\n",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"far anchor lowered to a materialised chain",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"    receive_chain_3,\n    0,\n    false\n",
+					"    receive_chain_2,\n    0,\n    false\n",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"Beacon sends on its receive chain",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"let send_chain_1 = beacon_to_server_chain(root) in",
+					"let send_chain_1 = server_to_beacon_chain(root) in",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"honest main pins another Server ID",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"FsB2sBeacon(ed_public(SERVER_IDENTITY_SECRET), SERVER_KEY_ID)",
+					"FsB2sBeacon(ed_public(SERVER_IDENTITY_SECRET), fs_kid(1))",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"routing check removed",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"    fs_seq(t: nat),\n    =assigned_key_id\n  ) = frame in",
+					"    fs_seq(t: nat),\n    claimed_sender: key_id\n  ) = frame in",
+				)
+			}),
+			"fs-records-b2s receive step changed",
+		),
+		(
+			"open under the Server's own ID",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"          fs_seq(1),\n          assigned_key_id,\n          frame\n",
+					"          fs_seq(1),\n          SERVER_KEY_ID,\n          frame\n",
+				)
+			}),
+			"fs-records-b2s receive step opens at position 1 with the routed sender changed",
+		),
+		(
+			"skipped key not cached",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"            far_anchor,\n            2,\n            true\n",
+					"            far_anchor,\n            2,\n            false\n",
+				)
+			}),
+			"fs-records-b2s receive step changed",
+		),
+		(
+			"cached key retained by the real window",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_window,
+					"fs_b2s_cached_after_success(cached_1: bool) = false.",
+					"fs_b2s_cached_after_success(cached_1: bool) = cached_1.",
+				)
+			}),
+			"fs-records-b2s-window.pvl receive-window hooks changed",
+		),
+		(
+			"failed open consumes the target in the real window",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_window,
+					"fs_b2s_failed_r(r: nat, target: nat) = r.",
+					"fs_b2s_failed_r(r: nat, target: nat) = target.",
+				)
+			}),
+			"fs-records-b2s-window.pvl receive-window hooks changed",
+		),
+		(
+			"stale control restores nothing",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_stale,
+					"fs_b2s_failed_r(r: nat, target: nat) = 0.",
+					"fs_b2s_failed_r(r: nat, target: nat) = r.",
+				)
+			}),
+			"fs-control-b2s-stale.pvl receive-window hooks changed",
+		),
+		(
+			"rejection event dropped from one branch",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"event FsReceiveRejected(\n",
+					"event FsReceiveRejectedElsewhere(\n",
+				)
+			}),
+			"fs-records-b2s receive step rejections at t <= T_max changed",
+		),
+		(
+			"refused frame dropped from a rejection",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"            t,\n            frame\n",
+					"            t,\n            associated_data\n",
+				)
+			}),
+			"fs-records-b2s receive step refused frames at t <= T_max changed",
+		),
+		(
+			"accepted frame replaced by the plaintext",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"          2,\n          frame\n",
+					"          2,\n          plaintext\n",
+				)
+			}),
+			"fs-records-b2s receive step accepted frames at position 2 changed",
+		),
+		(
+			"far acceptance counted as a record",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"event FsFarAccepted(\n",
+					"event FsReceived(\n",
+				)
+			}),
+			"fs-records-b2s receive step",
+		),
+		(
+			"receive attempt removed",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_bounds[2],
+					"expand FS_B2S_RECV_STEP(FsB2sRecv3, FsB2sRecvStop, FsB2sRecvStop).\nexpand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecv3, FsB2sRecv3).\n",
+					"expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecvStop, FsB2sRecvStop).\n",
+				)
+			}),
+			"fs-records-b2s bound K_r = 3 changed",
+		),
+		(
+			"real bound stops after a failed open",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_bounds[2],
+					"expand FS_B2S_RECV_STEP(FsB2sRecv1, FsB2sRecv2, FsB2sRecv2).",
+					"expand FS_B2S_RECV_STEP(FsB2sRecv1, FsB2sRecv2, FsB2sRecvStop).",
+				)
+			}),
+			"fs-records-b2s bound K_r = 3 changed",
+		),
+		(
+			"fail-stop bound continues after a failed open",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_failstop,
+					"expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecv3, FsB2sRecvStop).",
+					"expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecv3, FsB2sRecv3).",
+				)
+			}),
+			"fs-records-b2s fail-stop bound K_r = 3 changed",
+		),
+		(
+			"failed far open bypasses the failed-open continuation",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"      else\n        Failed(\n",
+					"      else\n        Next(\n",
+				)
+			}),
+			"fs-records-b2s receive step",
+		),
+		(
+			"pin-free main fixes the pinned Server ID",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"FsB2sBeacon(pinned_identity, pinned_key_id)",
+					"FsB2sBeacon(pinned_identity, SERVER_KEY_ID)",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"fresh record made adversary-known",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.sends,
+					"    1,\n    record_1\n  );",
+					"    1,\n    send_request_1\n  );",
+				)
+			}),
+			"fs-records-b2s-sends.pvl fresh records changed",
+		),
+		(
+			"record sealed under the Server's own ID",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.sends,
+					"      fs_seq(2),\n      assigned_key_id,\n",
+					"      fs_seq(2),\n      SERVER_KEY_ID,\n",
+				)
+			}),
+			"fs-records-b2s-sends.pvl fresh records changed",
+		),
+		(
+			"chosen form loses its fresh branch",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.sends_chosen,
+					"    new record_1[]: bitstring;\n",
+					"",
+				);
+				replace_once(
+					&mut files.sends_chosen,
+					"      1,\n      record_1\n    );",
+					"      1,\n      record_mode_1\n    );",
+				);
+			}),
+			"fs-records-b2s-sends-chosen.pvl records changed",
+		),
+	] {
+		let mut changed = FsFiles::production();
+		mutate(&mut changed);
+		let error =
+			validate_fs_records_b2s(&changed).expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+		checked += 1;
+	}
+	assert_eq!(checked, 25);
+}
+
+#[test]
+fn free_schedule_checker_loader_and_targets_are_pinned() {
+	validate_fs_checker(FS_CHECKER, FS_CHECKER_TESTS).unwrap();
+	let mut queries = FS_REGISTRATION_TARGETS
+		.iter()
+		.map(|(_, _, _, query, _)| (*query).to_owned())
+		.chain(
+			FS_S2B_TARGETS
+				.iter()
+				.map(|(_, _, _, query, _)| (*query).to_owned()),
+		)
+		.chain(
+			FS_B2S_TARGETS
+				.iter()
+				.map(|(_, _, _, query, _)| (*query).to_owned()),
+		)
+		.chain([
+			"fs-encoding-zero-retry.pv".to_owned(),
+			"fs-strong-b2s.pv".to_owned(),
+			"fs-strong-s2b.pv".to_owned(),
+			"fs-strong-control-b2s.pv".to_owned(),
+			"fs-strong-control-s2b.pv".to_owned(),
+			"fs-aead-differential-ctx.pv".to_owned(),
+			"fs-aead-differential-no-ctx.pv".to_owned(),
+			"fs-pending-cross-object.pv".to_owned(),
+			"fs-pending-reverse-builds.pv".to_owned(),
+			"fs-pending-single-use.pv".to_owned(),
+		])
+		.collect::<Vec<_>>();
+	queries.sort();
+	queries.dedup();
+	assert_eq!(fs_query_files_on_disk(), queries);
+	let b2s_queries = fs_b2s_query_sources();
+	assert_eq!(b2s_queries.len(), 14);
+	validate_fs_b2s_pins(&b2s_queries).unwrap();
+	for (name, from, to) in [
+		(
+			"pin-free UKSr moved back to honest pins",
+			"process FsRecordsB2sMainAnyPin()",
+			"process FsRecordsB2sMain()",
+		),
+		(
+			"honest-pin C3 moved to the pin-free process",
+			"process FsRecordsB2sMain()",
+			"process FsRecordsB2sMainAnyPin()",
+		),
+		(
+			"second process appended",
+			"process FsRecordsB2sMainAnyPin()",
+			"process FsRecordsB2sMainAnyPin()\nprocess FsRecordsB2sMain()",
+		),
+	] {
+		let target = if name.starts_with("honest-pin C3") {
+			"fs-records-b2s-c3.pv"
+		} else {
+			"fs-records-b2s-uksr.pv"
+		};
+		let changed = b2s_queries
+			.iter()
+			.map(|(file, source)| {
+				let mut source = source.clone();
+				if file == target {
+					replace_once(&mut source, from, to);
+				}
+				(file.clone(), source)
+			})
+			.collect::<Vec<_>>();
+		assert!(
+			validate_fs_b2s_pins(&changed).is_err(),
+			"mutation survived: {name}"
+		);
+	}
+	for (name, from, to) in [
+		(
+			"security bound lowered",
+			"REGISTRATION_SECURITY_BOUND = 3",
+			"REGISTRATION_SECURITY_BOUND = 2",
+		),
+		("inconclusive accepted", "    \"cannot be proved\",\n", ""),
+		(
+			"security target weakened to K_reg = 2",
+			"registration(\"A1\", \"security\", 3,",
+			"registration(\"A1\", \"security\", 2,",
+		),
+		(
+			"security reclassified as witness",
+			"\"R1'\", \"security\",",
+			"\"R1'\", \"witness\",",
+		),
+		(
+			"control without its mutant",
+			"consumed=NOCHECK",
+			"consumed=CONSUMED",
+		),
+		(
+			"environment.pvl loaded",
+			"    \"fs-common.pvl\",\n)",
+			"    \"fs-common.pvl\",\n    \"environment.pvl\",\n)",
+		),
+		(
+			"record security result moved to the fresh taskings",
+			"        \"fs-records-s2b-c1.pv\",\n        [S2B_C1 + \" is true.\"],\n        taskings=CHOSEN,\n",
+			"        \"fs-records-s2b-c1.pv\",\n        [S2B_C1 + \" is true.\"],\n",
+		),
+		(
+			"record control without its mutant",
+			"        window=STALE,\n",
+			"",
+		),
+		(
+			"inverted control made an ordinary control",
+			"        inverted=True,\n",
+			"",
+		),
+		(
+			"record secrecy rule dropped",
+			"S2B_FRESH_ONLY = (\"fs-records-s2b-s1.pv\", \"fs-records-s2b-s4.pv\")",
+			"S2B_FRESH_ONLY = (\"fs-records-s2b-s4.pv\",)",
+		),
+		(
+			"record default taskings switched",
+			"    taskings=TASKINGS,\n    inverted=False,\n):",
+			"    taskings=CHOSEN,\n    inverted=False,\n):",
+		),
+		(
+			"two mutants accepted on a security or witness target",
+			"if len(mutants) != (1 if target.cls == \"control\" else 0):",
+			"if (target.cls == \"control\") != (len(mutants) == 1):",
+		),
+		(
+			"every warning accepted",
+			"if \"warning\" in line.lower() and not line.startswith(TERMINATION_WARNING):",
+			"if False:",
+		),
+		(
+			"termination-warning prefix widened",
+			"TERMINATION_WARNING = \"Termination warning: \"",
+			"TERMINATION_WARNING = \"\"",
+		),
+		(
+			"replay witness moved back to K_r = 2",
+			"\"s2b-C5c\", \"witness\", 1,",
+			"\"s2b-C5c\", \"witness\", 2,",
+		),
+		(
+			"b2s security bound lowered",
+			"B2S_SECURITY_BOUND = 3",
+			"B2S_SECURITY_BOUND = 2",
+		),
+		(
+			"b2s chosen record agreement moved to the fresh sends",
+			"        \"fs-records-b2s-c2.pv\",\n        [B2S_C2 + \" is true.\"],\n        sends=SENDS_CHOSEN,\n",
+			"        \"fs-records-b2s-c2.pv\",\n        [B2S_C2 + \" is true.\"],\n",
+		),
+		(
+			"b2s identity control without its mutant",
+			"        binding=UKS,\n    ),\n    records_b2s(",
+			"    ),\n    records_b2s(",
+		),
+		(
+			"b2s secrecy rule dropped",
+			"    \"fs-records-b2s-s2.pv\",\n    \"fs-records-b2s-uksr.pv\",\n    \"fs-records-b2s-pinread.pv\",\n)",
+			"    \"fs-records-b2s-s2.pv\",\n)",
+		),
+		(
+			"b2s default sends switched",
+			"    sends=SENDS,\n    failstop=False,\n):",
+			"    sends=SENDS_CHOSEN,\n    failstop=False,\n):",
+		),
+		(
+			"b2s default form switched to fail-stop",
+			"    failstop=False,\n):",
+			"    failstop=True,\n):",
+		),
+		(
+			"b2s fail-stop queries widened",
+			"B2S_FAILSTOP_QUERIES = (\"fs-records-b2s-c2.pv\", \"fs-records-b2s-c4.pv\")",
+			"B2S_FAILSTOP_QUERIES = (\"fs-records-b2s-c2.pv\", \"fs-records-b2s-c3.pv\", \"fs-records-b2s-c4.pv\")",
+		),
+		(
+			"b2s fail-stop target moved to the failure-interleaving bound",
+			"        \"fs-records-b2s-c4.pv\",\n        [B2S_C4 + \" is true.\"],\n        sends=SENDS_CHOSEN,\n        failstop=True,\n",
+			"        \"fs-records-b2s-c4.pv\",\n        [B2S_C4 + \" is true.\"],\n        sends=SENDS_CHOSEN,\n",
+		),
+		(
+			"b2s fail-stop bound file ignored",
+			"form = \"-failstop\" if self.failstop else \"\"",
+			"form = \"\"",
+		),
+		(
+			"b2s control dropped",
+			"    records_b2s(\n        \"b2s-C-STALE\",",
+			"    records_s2b(\n        \"b2s-C-STALE\",",
+		),
+		(
+			"b2s definitional finish check counted as a security result",
+			"        \"b2s-C3-finish\",\n        \"definitional\",",
+			"        \"b2s-C3-finish\",\n        \"security\",",
+		),
+		(
+			"b2s main-process check dropped",
+			"        if target.scenario == RECORDS_B2S:\n            try:\n",
+			"        if False:\n            try:\n",
+		),
+		(
+			"b2s honest-pin process accepted as pin-free",
+			"            return \"honest\"\n",
+			"            return \"any\"\n",
+		),
+	] {
+		let mut changed = FS_CHECKER.to_owned();
+		replace_once(&mut changed, from, to);
+		assert!(
+			validate_fs_checker(&changed, FS_CHECKER_TESTS).is_err(),
+			"mutation survived: {name}"
+		);
+	}
+}
+
+#[test]
+fn proverif_declarations_are_allowlisted() {
+	let files = declaration_source_files();
+	assert!(
+		files
+			.iter()
+			.any(|(path, _)| path == "proofs/pro-verif/extraction/lib.pvl")
+	);
+	assert!(
+		files
+			.iter()
+			.any(|(path, _)| path == "proofs/pro-verif/fs-common.pvl")
+	);
+	validate_declarations(&files, DECLARATION_ALLOWLIST, FORMAL_ANALYSIS).unwrap();
+	let with = |path: &str, extra: &str| {
+		files
+			.iter()
+			.map(|(name, source)| {
+				if name == path {
+					(name.clone(), format!("{source}\n{extra}\n"))
+				} else {
+					(name.clone(), source.clone())
+				}
+			})
+			.collect::<Vec<_>>()
+	};
+	for (name, path, extra, diagnostic) in [
+		(
+			"axiom",
+			"proofs/pro-verif/fs-common.pvl",
+			"axiom x: bitstring; attacker(x).",
+			"forbidden ProVerif declaration axiom",
+		),
+		(
+			"restriction",
+			"proofs/pro-verif/crypto.pvl",
+			"restriction x: bitstring; event(E(x)).",
+			"forbidden ProVerif declaration restriction",
+		),
+		(
+			"elimtrue",
+			"proofs/pro-verif/queries.pvl",
+			"elimtrue x: bitstring; attacker(x).",
+			"forbidden ProVerif declaration elimtrue",
+		),
+		(
+			"axiom in generated file",
+			"proofs/pro-verif/extraction/lib.pvl",
+			"axiom x: bitstring; attacker(x).",
+			"forbidden ProVerif declaration axiom",
+		),
+		(
+			"new nounif",
+			"proofs/pro-verif/fs-registration.pvl",
+			"nounif x: bitstring; attacker(x).",
+			"not on the reviewed allowlist",
+		),
+		(
+			"lemma",
+			"proofs/pro-verif/fs-registration.pvl",
+			"lemma x: bitstring; event(FsBuild(x)) ==> attacker(x).",
+			"not on the reviewed allowlist",
+		),
+		(
+			"select",
+			"proofs/pro-verif/fs-common.pvl",
+			"select x: bitstring; attacker(x).",
+			"not on the reviewed allowlist",
+		),
+		(
+			"secrecy assumption",
+			"proofs/pro-verif/fs-common.pvl",
+			"not attacker(SERVER_IDENTITY_SECRET).",
+			"not on the reviewed allowlist",
+		),
+		(
+			"precision setting",
+			"proofs/pro-verif/fs-common.pvl",
+			"set preciseActions = true.",
+			"not on the reviewed allowlist",
+		),
+		(
+			"extra precise input",
+			"proofs/pro-verif/fs-registration.pvl",
+			"let P() = in(c, x: bitstring) [precise]; 0.",
+			"allowlisted 3 times",
+		),
+		(
+			"axiom glued to a comment",
+			"proofs/pro-verif/fs-registration.pvl",
+			"axiom(* c *)x: bitstring; attacker(x) ==> false.",
+			"forbidden ProVerif declaration axiom",
+		),
+		(
+			"restriction glued to a comment",
+			"proofs/pro-verif/queries.pvl",
+			"restriction(* hidden *)x: bitstring; event(E(x)).",
+			"forbidden ProVerif declaration restriction",
+		),
+		(
+			"nounif glued to a comment",
+			"proofs/pro-verif/fs-common.pvl",
+			"nounif(* r *)x: bitstring; attacker(x).",
+			"not on the reviewed allowlist",
+		),
+		(
+			"setting glued to a comment",
+			"proofs/pro-verif/fs-common.pvl",
+			"set(* r *)preciseActions = true.",
+			"not on the reviewed allowlist",
+		),
+		(
+			"declaration after a nested comment",
+			"proofs/pro-verif/fs-common.pvl",
+			"(* outer (* inner *) still outer *)axiom x: bitstring; attacker(x).",
+			"forbidden ProVerif declaration axiom",
+		),
+		(
+			"unterminated nested comment",
+			"proofs/pro-verif/fs-common.pvl",
+			"(* outer (* inner *) still open",
+			"unterminated (* comment",
+		),
+		(
+			"axiom in a Python literal",
+			"proofs/pro-verif/check-registration-set.py",
+			"EXTRA = \"axiom x: bitstring; attacker(x) ==> false.\"",
+			"forbidden ProVerif declaration axiom in a string literal",
+		),
+		(
+			"restriction after an escaped newline",
+			"proofs/pro-verif/check-registration-response.py",
+			"EXTRA = \"query x: bitstring; attacker(x).\\nrestriction event(E) ==> false.\"",
+			"forbidden ProVerif declaration restriction in a string literal",
+		),
+		(
+			"axiom after an f-string placeholder",
+			"proofs/pro-verif/check-free-schedule.py",
+			"EXTRA = f\"{HERE}axiom x: bitstring; attacker(x).\"",
+			"forbidden ProVerif declaration axiom in a string literal",
+		),
+		(
+			"axiom after a percent placeholder",
+			"proofs/pro-verif/check-general-registration.py",
+			"EXTRA = \"%saxiom x: bitstring; attacker(x).\" % HERE",
+			"forbidden ProVerif declaration axiom in a string literal",
+		),
+		(
+			"axiom after a comment end",
+			"proofs/pro-verif/generate-general-registration.py",
+			"EXTRA = '(* c *)axiom x: bitstring; attacker(x).'",
+			"forbidden ProVerif declaration axiom in a string literal",
+		),
+		(
+			"axiom after a template group reference",
+			"proofs/pro-verif/check-registration-set.py",
+			"EXTRA = re.sub(r\"(process)\", r\"\\1 axiom x: bitstring; attacker(x) ==> false.\", \"process\")",
+			"forbidden ProVerif declaration axiom in a string literal",
+		),
+		(
+			"axiom after a template newline",
+			"proofs/pro-verif/check-registration-set.py",
+			"EXTRA = re.sub(r\"\\Z\", r\"\\naxiom x: bitstring; attacker(x) ==> false.\\n\", \"free c: channel.\")",
+			"forbidden ProVerif declaration axiom in a string literal",
+		),
+		(
+			"nounif after a named template group in a plain literal",
+			"proofs/pro-verif/check-registration-response.py",
+			"EXTRA = re.sub(\"(?P<p>\\\\Z)\", \"\\\\g<p>nounif x: bitstring; attacker(x).\", \"free c: channel.\")",
+			"not on the reviewed allowlist",
+		),
+		(
+			"elimtrue in a bytes literal",
+			"proofs/pro-verif/test-free-schedule-checker.py",
+			"EXTRA = b'elimtrue x: bitstring; attacker(x).'",
+			"forbidden ProVerif declaration elimtrue in a string literal",
+		),
+		(
+			"new setting in a checker",
+			"proofs/pro-verif/check-registration-set.py",
+			"EXTRA = \"set maxHyp = 3.\"",
+			"not on the reviewed allowlist",
+		),
+		(
+			"nounif in a generator",
+			"proofs/pro-verif/generate-kem-controller-auth.py",
+			"EXTRA = \"\"\"\nnounif y: bitstring; attacker(y).\n\"\"\"",
+			"not on the reviewed allowlist",
+		),
+		(
+			"precise input in a checker",
+			"proofs/pro-verif/check-free-schedule.py",
+			"EXTRA = \"in(c, x: bitstring) [precise];\"",
+			"not on the reviewed allowlist",
+		),
+		(
+			"unterminated Python literal",
+			"proofs/pro-verif/check-free-schedule.py",
+			"EXTRA = \"open",
+			"unterminated Python string literal",
+		),
+	] {
+		let error =
+			validate_declarations(&with(path, extra), DECLARATION_ALLOWLIST, FORMAL_ANALYSIS)
+				.expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+	}
+	for (path, extra) in [
+		(
+			"proofs/pro-verif/fs-common.pvl",
+			"(* axiom restriction nounif in a comment *)",
+		),
+		(
+			"proofs/pro-verif/fs-common.pvl",
+			"(* outer (* inner *) axiom x: bitstring; attacker(x) ==> false. *)",
+		),
+		(
+			"proofs/pro-verif/check-free-schedule.py",
+			"# axiom x: bitstring; attacker(x) ==> false.",
+		),
+		(
+			"proofs/pro-verif/check-free-schedule.py",
+			"\"\"\"Prose about a schedule restriction, an axiom and a lemma.\"\"\"",
+		),
+	] {
+		validate_declarations(&with(path, extra), DECLARATION_ALLOWLIST, FORMAL_ANALYSIS)
+			.unwrap_or_else(|error| panic!("{extra}: {error}"));
+	}
+	let generated = "proofs/pro-verif/check-registration-response.py";
+	let changed = files
+		.iter()
+		.map(|(name, source)| {
+			let mut source = source.clone();
+			if name == generated {
+				replace_once(&mut source, "set maxHyp=2.", "set maxHyp=none.");
+			}
+			(name.clone(), source)
+		})
+		.collect::<Vec<_>>();
+	let error = validate_declarations(&changed, DECLARATION_ALLOWLIST, FORMAL_ANALYSIS)
+		.expect_err("mutation survived: generated setting changed");
+	assert!(
+		error.contains("not on the reviewed allowlist"),
+		"generated setting changed: wrong diagnostic {error}"
+	);
+	assert_eq!(
+		python_literals(
+			"x = 'a\\'b' + \"c\\n\" + r'\\d' + f\"{d['k']!r:>{w}}z{{\" + '''t\nu''' # 'no'\ny = b'\\x41%s%%'"
+		)
+		.unwrap(),
+		["a'b", "c\n", "\\d", "k", "{}z{", "t\nu", "A{}%"]
+	);
+	assert_eq!(
+		python_template_text("\\1a\\12b\\g<x>c\\nd\\\\e\\.f\\g<g"),
+		"{}a{}b{}c d\\\\e\\.f <g"
+	);
+	let nx = "proofs/pro-verif/fs-common.pvl\tnounif\t1\tnounif y: bitstring; attacker(x25519_public(y)).\tdoc/formal-verification-analysis.md#the-fs-selection-heuristic-nx\n";
+	assert_eq!(count(DECLARATION_ALLOWLIST, nx), 1);
+	for (name, allowlist, diagnostic) in [
+		(
+			"entry removed",
+			DECLARATION_ALLOWLIST.replace(nx, ""),
+			"not on the reviewed allowlist",
+		),
+		(
+			"stale entry",
+			format!(
+				"{DECLARATION_ALLOWLIST}{}",
+				nx.replace("fs-common", "fs-other")
+			),
+			"stale declaration allowlist entry",
+		),
+		(
+			"missing anchor",
+			DECLARATION_ALLOWLIST.replace("#the-fs-selection-heuristic-nx", "#no-such-paragraph"),
+			"anchor does not exist",
+		),
+		(
+			"duplicate entry",
+			format!("{DECLARATION_ALLOWLIST}{nx}"),
+			"duplicate allowlist entry",
+		),
+		(
+			"count changed",
+			DECLARATION_ALLOWLIST.replace("\tnounif\t1\t", "\tnounif\t2\t"),
+			"allowlisted 2 times",
+		),
+	] {
+		let error = validate_declarations(&files, &allowlist, FORMAL_ANALYSIS)
+			.expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+	}
+}
+
+#[test]
+fn proverif_verdict_classes_cover_every_checker_and_profile() {
+	let checker = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+		.join("proofs/pro-verif/check-verdict-classes.py");
+	let output = std::process::Command::new("python3")
+		.arg(checker)
+		.output()
+		.expect("Python is required for the ProVerif expectation inventory");
+	assert!(
+		output.status.success(),
+		"verdict classification failed:\n{}\n{}",
+		String::from_utf8_lossy(&output.stdout),
+		String::from_utf8_lossy(&output.stderr)
+	);
+}
+
+fn validate_hkdf_prefix_source_fidelity(crypto: &str, native: &str) -> Result<(), String> {
+	let crypto = compact(&uncommented_pv(crypto)?);
+	for definition in [
+		"letfun server_to_beacon_chain(root:bitstring) = hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+		"letfun beacon_to_server_chain(root:bitstring) = hkdf_second_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+		"letfun ratchet_next(chain:bitstring) = hkdf_second_32(hkdf_sha512_no_salt(chain,symmetric_ratchet_domain())).",
+		"letfun ratchet_material(chain:bitstring) = ratchet_key_nonce(hkdf_first_32(hkdf_sha512_no_salt(chain,symmetric_ratchet_domain())),hkdf_final_12(hkdf_sha512_no_salt(chain,symmetric_ratchet_domain()))).",
+	] {
+		require_once(
+			&crypto,
+			&compact(definition),
+			"shared initial/step HKDF projection",
+		)?;
+	}
+	let native = compact(native);
+	let actual = section_between(
+		&native,
+		"fnratchet_step_from_response(",
+		"///Firstphaseofanownedsendtransaction.",
+		"native complete step response projection",
+	)?;
+	let expected = compact(
+		r#"fn ratchet_step_from_response(
+			response: RatchetKdfResponse,
+		) -> RatchetStep<RatchetChain, RatchetMaterial> {
+			let output = split_ratchet_kdf_output(response.as_bytes());
+			RatchetStep {
+				chain: output.next_chain,
+				material: RatchetMaterial { key: output.key, nonce: output.nonce, },
+			}
+		}"#,
+	);
+	if actual != expected {
+		return Err(
+			"native full response no longer uses the same next-chain/key/nonce projections".into(),
+		);
+	}
+	Ok(())
+}
+
+#[test]
+fn hkdf_prefix_smoke_has_an_exact_source_projection_check() {
+	validate_hkdf_prefix_source_fidelity(CRYPTO_MODEL, CORE_RATCHET_CONCRETE).unwrap();
+	for (model, native) in [
+		(
+			CRYPTO_MODEL.replace(
+				"letfun ratchet_next(chain: bitstring) =\n  hkdf_second_32(",
+				"letfun ratchet_next(chain: bitstring) =\n  hkdf_first_32(",
+			),
+			CORE_RATCHET_CONCRETE.to_owned(),
+		),
+		(
+			CRYPTO_MODEL.replace("hkdf_final_12(", "hkdf_second_32("),
+			CORE_RATCHET_CONCRETE.to_owned(),
+		),
+		(
+			CRYPTO_MODEL.to_owned(),
+			CORE_RATCHET_CONCRETE.replace("chain: output.next_chain", "chain: output.key"),
+		),
+		(
+			CRYPTO_MODEL.to_owned(),
+			CORE_RATCHET_CONCRETE.replace("key: output.key", "key: replacement_key"),
+		),
+		(
+			CRYPTO_MODEL.to_owned(),
+			CORE_RATCHET_CONCRETE.replace("nonce: output.nonce", "nonce: replacement_nonce"),
+		),
+	] {
+		assert!(validate_hkdf_prefix_source_fidelity(&model, &native).is_err());
+	}
+}
+
+fn validate_serial_proverif_ci(makefile: &str, workflow: &str) -> Result<(), String> {
+	let wrapper = make_recipe(
+		makefile,
+		"verify-proverif-fs verify-proverif-extensions: verify-proverif-%:",
+	)?;
+	let expected_wrapper = "$(NIX) --extra-experimental-features 'nix-command flakes' \\
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \\
+		$(MAKE) verify-proverif-$*-in-shell";
+	if compact(&wrapper.join("\n")) != compact(expected_wrapper) {
+		return Err("serial proof CI must use the locked proof environment".to_owned());
+	}
+	for (group, checks) in [
+		("fs", vec!["check-proverif-fs"]),
+		(
+			"extensions",
+			vec![
+				"check-proverif-primitive-fidelity",
+				"check-proverif-active-strong-secrecy",
+				"check-proverif-pending-registration",
+				"check-proverif-aead-differential",
+				"check-proverif-registration-provenance",
+				"check-proverif-delayed-response",
+				"check-proverif-exact-far",
+				"check-proverif-record-origin",
+				"check-proverif-tasking-origin",
+				"check-proverif-application-secrecy",
+				"check-proverif-exact-interface-strong",
+			],
+		),
+	] {
+		let expected = ["check-toolchain", "extract-proverif"]
+			.into_iter()
+			.chain(checks.iter().copied())
+			.chain(["check-proverif-generated-drift"])
+			.map(|target| format!("$(MAKE) {target}"))
+			.collect::<Vec<_>>();
+		if make_recipe(makefile, &format!("verify-proverif-{group}-in-shell:"))? != expected {
+			return Err(format!(
+				"{group} serial CI sequence, checks or drift gate changed"
+			));
+		}
+		for target in checks {
+			if !makefile
+				.lines()
+				.any(|line| line.starts_with(&format!("{target}:")))
+			{
+				return Err(format!("serial CI references missing target {target}"));
+			}
+		}
+	}
+	let delayed = make_recipe(
+		makefile,
+		"check-proverif-delayed-response: check-proverif-extraction check-proverif-transcript-fidelity",
+	)?;
+	let expected_delayed = "python3 $(PROVERIF_DIR)/test-delayed-response-checker.py
+		python3 $(PROVERIF_DIR)/check-delayed-response.py \\
+		--proverif '$(PROVERIF)' \\
+		--timeout '$(PROVERIF_DELAYED_TIMEOUT)' \\
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \\
+		$(if $(PROVERIF_DELAYED_LOG_DIR),--log-dir '$(PROVERIF_DELAYED_LOG_DIR)')";
+	if compact(&delayed.join("\n")) != compact(expected_delayed) {
+		return Err("delayed-response exact runner and checker gates changed".to_owned());
+	}
+	let exact_far = make_recipe(
+		makefile,
+		"check-proverif-exact-far: check-proverif-extraction check-proverif-transcript-fidelity",
+	)?;
+	let expected_exact_far = "python3 $(PROVERIF_DIR)/test-exact-far-checker.py
+		python3 $(PROVERIF_DIR)/check-exact-far.py \\
+		--proverif '$(PROVERIF)' \\
+		--timeout '$(PROVERIF_EXACT_FAR_TIMEOUT)' \\
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \\
+		$(if $(PROVERIF_EXACT_FAR_LOG_DIR),--log-dir '$(PROVERIF_EXACT_FAR_LOG_DIR)')";
+	if compact(&exact_far.join("\n")) != compact(expected_exact_far) {
+		return Err("exact-far exact runner and checker gates changed".to_owned());
+	}
+	let record_origin = make_recipe(
+		makefile,
+		"check-proverif-record-origin: check-proverif-extraction check-proverif-transcript-fidelity",
+	)?;
+	let expected_record_origin = "python3 $(PROVERIF_DIR)/test-record-origin-checker.py
+		python3 $(PROVERIF_DIR)/check-record-origin.py \\
+		--proverif '$(PROVERIF)' \\
+		--timeout '$(PROVERIF_RECORD_ORIGIN_TIMEOUT)' \\
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \\
+		$(if $(PROVERIF_RECORD_ORIGIN_LOG_DIR),--log-dir '$(PROVERIF_RECORD_ORIGIN_LOG_DIR)')";
+	if compact(&record_origin.join("\n")) != compact(expected_record_origin) {
+		return Err("record-origin exact runner and checker gates changed".to_owned());
+	}
+	let tasking_origin = make_recipe(
+		makefile,
+		"check-proverif-tasking-origin: check-proverif-extraction check-proverif-transcript-fidelity",
+	)?;
+	let expected_tasking_origin = "python3 $(PROVERIF_DIR)/test-tasking-origin-checker.py
+		python3 $(PROVERIF_DIR)/check-tasking-origin.py \\
+		--proverif '$(PROVERIF)' \\
+		--timeout '$(PROVERIF_TASKING_ORIGIN_TIMEOUT)' \\
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \\
+		$(if $(PROVERIF_TASKING_ORIGIN_LOG_DIR),--log-dir '$(PROVERIF_TASKING_ORIGIN_LOG_DIR)')";
+	if compact(&tasking_origin.join("\n")) != compact(expected_tasking_origin) {
+		return Err("tasking-origin exact runner and checker gates changed".to_owned());
+	}
+	let application_secrecy = make_recipe(
+		makefile,
+		"check-proverif-application-secrecy: check-proverif-extraction check-proverif-transcript-fidelity",
+	)?;
+	let expected_application_secrecy = "python3 $(PROVERIF_DIR)/test-application-secrecy-checker.py
+		python3 $(PROVERIF_DIR)/check-application-secrecy.py \\
+		--proverif '$(PROVERIF)' \\
+		--timeout '$(PROVERIF_APPLICATION_SECRECY_TIMEOUT)' \\
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \\
+		$(if $(PROVERIF_APPLICATION_SECRECY_LOG_DIR),--log-dir '$(PROVERIF_APPLICATION_SECRECY_LOG_DIR)')";
+	if compact(&application_secrecy.join("\n")) != compact(expected_application_secrecy) {
+		return Err("application-secrecy exact runner and checker gates changed".to_owned());
+	}
+	let exact_interface_strong = make_recipe(
+		makefile,
+		"check-proverif-exact-interface-strong: check-proverif-extraction check-proverif-transcript-fidelity",
+	)?;
+	let expected_exact_interface_strong = "python3 $(PROVERIF_DIR)/test-exact-interface-strong-checker.py
+		python3 $(PROVERIF_DIR)/check-exact-interface-strong.py \\
+		--proverif '$(PROVERIF)' \\
+		--timeout '$(PROVERIF_EXACT_INTERFACE_STRONG_TIMEOUT)' \\
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \\
+		$(if $(PROVERIF_EXACT_INTERFACE_STRONG_LOG_DIR),--log-dir '$(PROVERIF_EXACT_INTERFACE_STRONG_LOG_DIR)')";
+	if compact(&exact_interface_strong.join("\n")) != compact(expected_exact_interface_strong) {
+		return Err("exact-interface-strong exact runner and checker gates changed".to_owned());
+	}
+	let drift = make_recipe(makefile, "check-proverif-generated-drift:")?;
+	let expected_drift = "git diff --exit-code -- proofs/pro-verif/extraction
+		@untracked=\"$$(git ls-files --others --exclude-standard -- \\
+		proofs/pro-verif/extraction)\"; \\
+		if [[ -n \"$$untracked\" ]]; then \\
+		echo 'untracked generated ProVerif proof artifacts:' >&2; \\
+		printf '%s\\n' \"$$untracked\" >&2; \\
+		exit 1; \\
+		fi";
+	if compact(&drift.join("\n")) != compact(expected_drift) {
+		return Err("serial CI must reject tracked and untracked extraction drift".to_owned());
+	}
+	for scenario in scenario_names(makefile)? {
+		if [
+			"fs",
+			"extensions",
+			"primitive-fidelity",
+			"active-strong-secrecy",
+			"pending-registration",
+			"aead-differential",
+			"registration-provenance",
+			"delayed-response",
+			"exact-far",
+			"record-origin",
+			"tasking-origin",
+			"application-secrecy",
+			"exact-interface-strong",
+		]
+		.contains(&scenario.as_str())
+		{
+			return Err("serial CI groups must stay outside the parallel roster".to_owned());
+		}
+	}
+	let workflow = compact(workflow);
+	for (group, timeout) in [("fs", 210), ("extensions", 180)] {
+		require_once(
+			&workflow,
+			&format!("target:verify-proverif-{group}timeout:{timeout}"),
+			"serial ProVerif CI entry and overall job allowance",
+		)?;
+	}
+	Ok(())
+}
+
+#[test]
+fn serial_proverif_ci_preserves_every_gate_and_separate_group() {
+	validate_serial_proverif_ci(CORE_MAKEFILE, FORMAL_WORKFLOW).unwrap();
+	for (label, changed) in [
+		(
+			"omit exact-interface strong secrecy",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-exact-interface-strong\n", ""),
+		),
+		(
+			"omit exact-interface strong checker regressions",
+			CORE_MAKEFILE.replace(
+				"\tpython3 $(PROVERIF_DIR)/test-exact-interface-strong-checker.py\n",
+				"",
+			),
+		),
+		(
+			"omit trusted application secrecy",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-application-secrecy\n", ""),
+		),
+		(
+			"omit trusted application checker regressions",
+			CORE_MAKEFILE.replace(
+				"\tpython3 $(PROVERIF_DIR)/test-application-secrecy-checker.py\n",
+				"",
+			),
+		),
+		(
+			"omit selected tasking origin",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-tasking-origin\n", ""),
+		),
+		(
+			"omit selected tasking checker regressions",
+			CORE_MAKEFILE.replace(
+				"\tpython3 $(PROVERIF_DIR)/test-tasking-origin-checker.py\n",
+				"",
+			),
+		),
+		(
+			"omit selected record origin",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-record-origin\n", ""),
+		),
+		(
+			"omit selected record checker regressions",
+			CORE_MAKEFILE.replace(
+				"\tpython3 $(PROVERIF_DIR)/test-record-origin-checker.py\n",
+				"",
+			),
+		),
+		(
+			"omit exact far material",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-exact-far\n", ""),
+		),
+		(
+			"omit exact far checker regressions",
+			CORE_MAKEFILE.replace("\tpython3 $(PROVERIF_DIR)/test-exact-far-checker.py\n", ""),
+		),
+		(
+			"omit delayed response origin",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-delayed-response\n", ""),
+		),
+		(
+			"omit delayed response checker regressions",
+			CORE_MAKEFILE.replace(
+				"\tpython3 $(PROVERIF_DIR)/test-delayed-response-checker.py\n",
+				"",
+			),
+		),
+		(
+			"omit registration provenance",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-registration-provenance\n", ""),
+		),
+		(
+			"omit strong secrecy",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-active-strong-secrecy\n", ""),
+		),
+		(
+			"fork extension checks",
+			CORE_MAKEFILE.replace(
+				"$(MAKE) check-proverif-primitive-fidelity",
+				"$(MAKE) -j4 check-proverif-primitive-fidelity",
+			),
+		),
+		(
+			"bypass generated drift",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-generated-drift\n", ""),
+		),
+		(
+			"ignore tracked drift",
+			CORE_MAKEFILE.replace(
+				"git diff --exit-code -- proofs/pro-verif/extraction",
+				"git diff -- proofs/pro-verif/extraction",
+			),
+		),
+		(
+			"drop untracked drift",
+			CORE_MAKEFILE.replace(
+				"git ls-files --others --exclude-standard",
+				"git ls-files --exclude-standard",
+			),
+		),
+	] {
+		assert!(
+			validate_serial_proverif_ci(&changed, FORMAL_WORKFLOW).is_err(),
+			"{label}"
+		);
+	}
+	for group in ["fs", "extensions"] {
+		let changed = FORMAL_WORKFLOW.replace(&format!("target: verify-proverif-{group}\n"), "");
+		assert!(
+			validate_serial_proverif_ci(CORE_MAKEFILE, &changed).is_err(),
+			"missing {group} CI job"
+		);
+	}
+}
+
+const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 60;
+
+#[test]
+fn session_binding_source_mutations_are_rejected() {
+	let baseline = Snapshot::production();
+	validate_session_source(&baseline).unwrap();
+	let mut checked = 0;
+	for (name, scope, from, to, diagnostic) in [
+		(
+			"pin_public_key_substitution",
+			"impl ServerAuthenticationPin",
+			"\n\t\t\tpublic_key,",
+			"\n\t\t\tpublic_key: [0; MLDSA_PUBLIC_KEY_LEN],",
+			"server pin retains all supplied metadata",
+		),
+		(
+			"pin_fingerprint_substitution",
+			"impl ServerAuthenticationPin",
+			"\n\t\t\tfingerprint,",
+			"\n\t\t\tfingerprint: [0; TRANSCRIPT_HASH_LEN],",
+			"server pin retains all supplied metadata",
+		),
+		(
+			"registration_ad_hashes_reversed",
+			"impl RegistrationBinding",
+			"&server_pin.fingerprint,\n\t\t\t\t&beacon_fingerprint,",
+			"&beacon_fingerprint,\n\t\t\t\t&server_pin.fingerprint,",
+			"registration binding retains exact pins, request and populated AD",
+		),
+		(
+			"registration_request_hash_substituted",
+			"impl RegistrationBinding",
+			"\n\t\t\tinit_hash,",
+			"\n\t\t\tinit_hash: [0; TRANSCRIPT_HASH_LEN],",
+			"registration binding retains exact pins, request and populated AD",
+		),
+		(
+			"retarget_server_identifier_unchecked",
+			"fn matches_server",
+			"self.server_pin.binding.identity_key_id == current.binding.identity_key_id",
+			"true",
+			"complete current-server pin comparison",
+		),
+		(
+			"retarget_classical_identity_unchecked",
+			"fn matches_server",
+			"self.server_pin.binding.identity_public_key == current.binding.identity_public_key",
+			"true",
+			"complete current-server pin comparison",
+		),
+		(
+			"retarget_mldsa_key_unchecked",
+			"fn matches_server",
+			"self.server_pin.public_key == current.public_key",
+			"true",
+			"complete current-server pin comparison",
+		),
+		(
+			"retarget_fingerprint_unchecked",
+			"fn matches_server",
+			"self.server_pin.fingerprint == current.fingerprint",
+			"true",
+			"complete current-server pin comparison",
+		),
+		(
+			"established_assignment_substituted",
+			"pub const fn finish",
+			"\n\t\t\tassigned_key_id,",
+			"\n\t\t\tassigned_key_id: 0,",
+			"establishment preserves the exact registration binding",
+		),
+		(
+			"established_ad_substituted",
+			"pub const fn finish",
+			"associated_data: self.associated_data,",
+			"associated_data: [0; ASSOCIATED_DATA_SIZE],",
+			"establishment preserves the exact registration binding",
+		),
+		(
+			"restored_ad_hashes_reversed",
+			"fn from_trusted_metadata",
+			"bind_associated_data(&base, &server_fingerprint, &beacon_fingerprint)",
+			"bind_associated_data(&base, &beacon_fingerprint, &server_fingerprint)",
+			"trusted restoration preserves ordered session metadata",
+		),
+		(
+			"record_ad_getter_substituted",
+			"impl SessionBinding",
+			"&self.associated_data",
+			"&[0; ASSOCIATED_DATA_SIZE]",
+			"session associated-data getter changed",
+		),
+	] {
+		let mut changed = baseline.clone();
+		replace_once_after(&mut changed.core_session, scope, from, to);
+		let error = validate_session_source(&changed)
+			.expect_err(&format!("session source mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"session source mutation {name} produced wrong diagnostic: {error}"
+		);
+		checked += 1;
+	}
+	assert_eq!(checked, 12);
+}
+
+#[test]
+fn mldsa_transcript_source_and_model_mutations_are_rejected() {
+	let baseline = Snapshot::production();
+	validate_mldsa_source(&baseline).unwrap();
+	validate_mldsa_model(&baseline).unwrap();
+	let mut checked = 0;
+	for (name, target, scope, from, to, diagnostic) in [
+		(
+			"mldsa_public_key_length",
+			"adapter_auth",
+			"",
+			"MLDSA_PUBLIC_KEY_LEN: usize = 1952",
+			"MLDSA_PUBLIC_KEY_LEN: usize = 1951",
+			"adapter uses core transcript definitions",
+		),
+		(
+			"mldsa_signature_length",
+			"adapter_auth",
+			"",
+			"MLDSA_SIGNATURE_LEN: usize = 3309",
+			"MLDSA_SIGNATURE_LEN: usize = 3308",
+			"adapter uses core transcript definitions",
+		),
+		(
+			"mldsa_signing_context",
+			"core_authentication",
+			"",
+			"b\"beaconcrypt registration auth v1\"",
+			"b\"beaconcrypt registration auth v2\"",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_init_domain",
+			"core_authentication",
+			"",
+			"beaconcrypt ML-DSA-65 init transcript v1",
+			"beaconcrypt ML-DSA-65 init transcript v2",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_response_domain",
+			"core_authentication",
+			"",
+			"beaconcrypt ML-DSA-65 response transcript v1",
+			"beaconcrypt ML-DSA-65 response transcript v2",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_beacon_role_label",
+			"core_authentication",
+			"",
+			"BEACON_LABEL: [u8; 34] = *b\"beaconcrypt v1 beacon registration\"",
+			"BEACON_LABEL: [u8; 34] = *b\"beaconcrypt v1 server registration\"",
+			"distinct role labels",
+		),
+		(
+			"mldsa_server_role_label",
+			"core_authentication",
+			"",
+			"SERVER_LABEL: [u8; 34] = *b\"beaconcrypt v1 server registration\"",
+			"SERVER_LABEL: [u8; 34] = *b\"beaconcrypt v1 beacon registration\"",
+			"distinct role labels",
+		),
+		(
+			"mldsa_signed_spaces",
+			"core_authentication",
+			"fn build_signature_input",
+			"b' '",
+			"b'!'",
+			"TLS-style signed input",
+		),
+		(
+			"mldsa_signed_separator",
+			"core_authentication",
+			"fn build_signature_input",
+			"else if i == 98",
+			"else if i == 99",
+			"TLS-style signed input",
+		),
+		(
+			"mldsa_signed_hash",
+			"core_authentication",
+			"fn build_signature_input",
+			"digest[i - 99]",
+			"0",
+			"TLS-style signed input",
+		),
+		(
+			"mldsa_keyed_transcript_hash",
+			"adapter_auth",
+			"fn hash_state",
+			"State::new(None, TRANSCRIPT_HASH_LEN)",
+			"State::new(Some(&[0; 32]), TRANSCRIPT_HASH_LEN)",
+			"unkeyed BLAKE2b512 transcript hash",
+		),
+		(
+			"mldsa_transcript_hash_output_size",
+			"core_authentication",
+			"",
+			"TRANSCRIPT_HASH_LEN: usize = 64",
+			"TRANSCRIPT_HASH_LEN: usize = 32",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_variable_length_big_endian",
+			"core_authentication",
+			"fn encode_u64_le",
+			"(value >> 8) as u8",
+			"(value >> 56) as u8",
+			"variable-field length framing",
+		),
+		(
+			"mldsa_variable_field_bytes_substitution",
+			"core_authentication",
+			"fn build_init_transcript",
+			"fields.identity_key[i - 3993]",
+			"0",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_request_server_id_big_endian",
+			"core_authentication",
+			"fn build_init_transcript",
+			"let server_id = encode_u64_le(server_id);",
+			"let server_id = server_id.to_be_bytes();",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_request_ed_pin_omitted",
+			"core_authentication",
+			"fn build_init_transcript",
+			"server_ed[i - 49]",
+			"0",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_request_beacon_ml_key_omitted",
+			"core_authentication",
+			"fn build_init_transcript",
+			"fields.mldsa_public_key[i - 81]",
+			"0",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_request_server_ml_key_omitted",
+			"core_authentication",
+			"fn build_init_transcript",
+			"server_mldsa[i - 2033]",
+			"0",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_request_classical_field_order",
+			"core_authentication",
+			"fn build_init_transcript",
+			"fields.pre_key[i - 4034]",
+			"fields.one_time_key[i - 4034]",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_response_request_hash_omitted",
+			"core_authentication",
+			"fn build_response_prefix",
+			"init_hash[i - 45]",
+			"0",
+			"complete response transcript",
+		),
+		(
+			"mldsa_response_field_order",
+			"core_authentication",
+			"fn parts",
+			"[&self.prefix, self.application, &self.assigned_id]",
+			"[&self.prefix, &self.assigned_id, self.application]",
+			"ordered response streaming parts",
+		),
+		(
+			"mldsa_response_assigned_id_big_endian",
+			"core_authentication",
+			"fn build_response_transcript",
+			"encode_u64_le(fields.key_id)",
+			"fields.key_id.to_be_bytes()",
+			"response binds streamed ciphertext length and assigned identifier",
+		),
+		(
+			"mldsa_ad_server_hash_slot",
+			"core_authentication",
+			"fn bind_associated_data",
+			"server_hash[i - 153]",
+			"beacon_hash[i - 153]",
+			"associated-data hash-slot order",
+		),
+		(
+			"mldsa_ad_beacon_hash_slot",
+			"core_authentication",
+			"fn bind_associated_data",
+			"beacon_hash[i - 217]",
+			"server_hash[i - 217]",
+			"associated-data hash-slot order",
+		),
+		(
+			"mldsa_token_context_public",
+			"core_session",
+			"",
+			"init_hash: [u8; TRANSCRIPT_HASH_LEN],",
+			"pub init_hash: [u8; TRANSCRIPT_HASH_LEN],",
+			"private accepted-token context",
+		),
+		(
+			"mldsa_model_context_match",
+			"mldsa_auth",
+			"",
+			"mldsa_public(signing_secret), context) = message.",
+			"mldsa_public(signing_secret), other_context) = message.",
+			"assumed matching secret, message and context",
+		),
+		(
+			"mldsa_model_request_pin_order",
+			"mldsa_auth",
+			"",
+			"server_ed, agent_ml, server_ml,",
+			"server_ed, server_ml, agent_ml,",
+			"symbolic request transcript",
+		),
+		(
+			"mldsa_model_request_field_omitted",
+			"mldsa_auth",
+			"",
+			"mldsa_length_prefixed(one_time), mldsa_length_prefixed(pq)",
+			"mldsa_length_prefixed(prekey), mldsa_length_prefixed(pq)",
+			"symbolic request transcript",
+		),
+		(
+			"mldsa_model_raw_response_constructor",
+			"mldsa_auth",
+			"",
+			"fun mldsa_response_fields(bitstring, bitstring, bitstring, bitstring, key_id)",
+			"fun mldsa_response_fields(bitstring, bitstring, bitstring, bitstring, bitstring)",
+			"raw response-field constructor",
+		),
+		(
+			"mldsa_model_response_request_hash",
+			"mldsa_auth",
+			"",
+			"mldsa_response_domain(), init_hash,",
+			"mldsa_response_domain(), mldsa_zero(),",
+			"symbolic raw response transcript",
+		),
+		(
+			"mldsa_model_response_raw_ciphertext",
+			"mldsa_auth",
+			"",
+			"mldsa_length_prefixed(raw_ctu)",
+			"mldsa_length_prefixed(kem)",
+			"symbolic raw response transcript",
+		),
+		(
+			"mldsa_model_beacon_role",
+			"mldsa_auth",
+			"",
+			"mldsa_spaces64(), mldsa_beacon_label(), mldsa_zero(), hash",
+			"mldsa_spaces64(), mldsa_server_label(), mldsa_zero(), hash",
+			"symbolic beacon role input",
+		),
+		(
+			"mldsa_model_server_role",
+			"mldsa_auth",
+			"",
+			"mldsa_spaces64(), mldsa_server_label(), mldsa_zero(), hash",
+			"mldsa_spaces64(), mldsa_beacon_label(), mldsa_zero(), hash",
+			"symbolic server role input",
+		),
+		(
+			"mldsa_model_init_wrapper",
+			"mldsa_auth",
+			"",
+			"fun mldsa_signed_init_kex(bitstring, bitstring, bitstring)",
+			"fun mldsa_signed_init_kex(bitstring, bitstring)",
+			"mandatory symbolic request wrapper",
+		),
+		(
+			"mldsa_model_response_wrapper",
+			"mldsa_auth",
+			"",
+			"fun mldsa_signed_kex_response(bitstring, bitstring)",
+			"fun mldsa_signed_kex_response(bitstring, bitstring, bitstring)",
+			"mandatory symbolic response wrapper",
+		),
+		(
+			"mldsa_model_ad_hash_order",
+			"mldsa_auth",
+			"",
+			"base, blake2b512(server_ml), blake2b512(agent_ml)",
+			"base, blake2b512(agent_ml), blake2b512(server_ml)",
+			"symbolic associated-data hash-slot order",
+		),
+		(
+			"mldsa_model_raw_tag_omitted",
+			"mldsa_auth",
+			"",
+			"mldsa_raw_ctu(body, tag, commitment).",
+			"mldsa_raw_ctu(body, body, commitment).",
+			"symbolic raw ciphertext projection",
+		),
+		(
+			"mldsa_model_restored_sequence",
+			"mldsa_auth",
+			"",
+			"commitment, first_sequence(), pinned).",
+			"commitment, next_sequence(first_sequence()), pinned).",
+			"symbolic fixed sequence and pinned sender restoration",
+		),
+		(
+			"mldsa_model_restored_sender",
+			"mldsa_auth",
+			"",
+			"commitment, first_sequence(), pinned).",
+			"commitment, first_sequence(), SERVER_KEY_ID).",
+			"symbolic fixed sequence and pinned sender restoration",
+		),
+		(
+			"mldsa_model_owned_key_not_public",
+			"mldsa_registration",
+			"",
+			"server_ml, beacon_ml, owned_ml_secret, mlkem_public(pq_secret)",
+			"server_ml, beacon_ml, mlkem_public(pq_secret)",
+			"public classical secrets and attacker-owned signing key",
+		),
+		(
+			"mldsa_model_init_verifier_bypassed",
+			"mldsa_registration",
+			"",
+			"let verified_init_input = mldsa_verify(candidate_signature,\n        candidate_ml, mldsa_signing_context()) in",
+			"let verified_init_input = mldsa_beacon_input(candidate_hash) in",
+			"symbolic self-presented request verification before classical projection",
+		),
+		(
+			"mldsa_model_honest_event_becomes_admission_guard",
+			"mldsa_registration",
+			"",
+			"((if candidate_ml = beacon_ml then",
+			"if candidate_ml = beacon_ml then\n      ((if candidate_ml = beacon_ml then",
+			"target events do not gate response admission",
+		),
+		(
+			"mldsa_model_response_ciphertext_substituted",
+			"mldsa_registration",
+			"",
+			"mldsa_raw_ctu(body, tag, commitment),",
+			"mldsa_raw_ctu(body, body, commitment),",
+			"symbolic signed raw response fields",
+		),
+		(
+			"mldsa_model_response_request_substitution",
+			"mldsa_registration",
+			"",
+			"let response_hash = mldsa_response_hash(candidate_hash, response)",
+			"let response_hash = mldsa_response_hash(honest_hash, response)",
+			"symbolic response signing and publication",
+		),
+		(
+			"mldsa_model_response_pin_substitution",
+			"mldsa_registration",
+			"",
+			"mldsa_verify(response_signature,\n        server_ml, mldsa_signing_context())",
+			"mldsa_verify(response_signature,\n        beacon_ml, mldsa_signing_context())",
+			"symbolic pinned server and retained request verification",
+		),
+		(
+			"mldsa_model_response_retained_hash_substitution",
+			"mldsa_registration",
+			"",
+			"mldsa_response_hash(honest_hash, candidate_response)",
+			"mldsa_response_hash(mldsa_zero(), candidate_response)",
+			"symbolic pinned server and retained request verification",
+		),
+		(
+			"mldsa_model_owned_admission_query_omitted",
+			"mldsa_queries",
+			"",
+			"query event(MldsaOwnedKeyAccepted()).",
+			"",
+			"exact focused query and control roster",
+		),
+		(
+			"mldsa_model_compromise_control_omitted",
+			"mldsa_queries",
+			"",
+			"MldsaRegistrationProfile() | MldsaCompromiseControl() |",
+			"MldsaRegistrationProfile() |",
+			"exact focused query and control roster",
+		),
+		(
+			"mldsa_core_init_length",
+			"core_authentication",
+			"",
+			"INIT_TRANSCRIPT_LEN: usize = 5495",
+			"INIT_TRANSCRIPT_LEN: usize = 5494",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_core_response_prefix_length",
+			"core_authentication",
+			"",
+			"RESPONSE_PREFIX_LEN: usize = 1293",
+			"RESPONSE_PREFIX_LEN: usize = 1292",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_core_signature_input_length",
+			"core_authentication",
+			"",
+			"SIGNATURE_INPUT_LEN: usize = 163",
+			"SIGNATURE_INPUT_LEN: usize = 162",
+			"fixed primitive and domain",
+		),
+		(
+			"mldsa_core_request_identity_length",
+			"core_authentication",
+			"fn build_init_transcript",
+			"let identity_len = encode_u64_le(33);",
+			"let identity_len = encode_u64_le(32);",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_core_request_signed_key_length",
+			"core_authentication",
+			"fn build_init_transcript",
+			"let signed_key_len = encode_u64_le(98);",
+			"let signed_key_len = encode_u64_le(97);",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_core_request_pq_length",
+			"core_authentication",
+			"fn build_init_transcript",
+			"let pq_key_len = encode_u64_le(1249);",
+			"let pq_key_len = encode_u64_le(1248);",
+			"request transcript field order and pins",
+		),
+		(
+			"mldsa_core_response_identity_length",
+			"core_authentication",
+			"fn build_response_prefix",
+			"let public_key_len = encode_u64_le(32);",
+			"let public_key_len = encode_u64_le(31);",
+			"complete response transcript",
+		),
+		(
+			"mldsa_core_response_kem_length",
+			"core_authentication",
+			"fn build_response_prefix",
+			"let kem_len = encode_u64_le(1088);",
+			"let kem_len = encode_u64_le(1087);",
+			"complete response transcript",
+		),
+		(
+			"mldsa_core_response_length_substitution",
+			"core_authentication",
+			"fn build_response_transcript",
+			"u64::try_from(fields.app_cipher_text.len())",
+			"u64::try_from(0_usize)",
+			"response binds streamed ciphertext length and assigned identifier",
+		),
+		(
+			"mldsa_core_response_ciphertext_substitution",
+			"core_authentication",
+			"fn build_response_transcript",
+			"application: fields.app_cipher_text,",
+			"application: &[],",
+			"response binds streamed ciphertext length and assigned identifier",
+		),
+		(
+			"mldsa_core_response_private_prefix",
+			"core_authentication",
+			"",
+			"\n\tprefix: [u8; RESPONSE_PREFIX_LEN],",
+			"\n\tpub prefix: [u8; RESPONSE_PREFIX_LEN],",
+			"private response streaming capability",
+		),
+		(
+			"mldsa_adapter_request_signature_role_shared",
+			"core_authentication",
+			"fn build_signature_input",
+			"AuthRole::Beacon => BEACON_LABEL,",
+			"AuthRole::Beacon => SERVER_LABEL,",
+			"TLS-style signed input",
+		),
+	] {
+		let mut changed = baseline.clone();
+		let source = match target {
+			"core_authentication" => &mut changed.core_authentication,
+			"core_session" => &mut changed.core_session,
+			"adapter_auth" => &mut changed.adapter_auth,
+			"adapter_server" => &mut changed.adapter_server,
+			"adapter_beacon" => &mut changed.adapter_beacon,
+			"adapter_pqxdh" => &mut changed.adapter_pqxdh,
+			"mldsa_auth" => &mut changed.mldsa_auth,
+			"mldsa_registration" => &mut changed.mldsa_registration,
+			"mldsa_queries" => &mut changed.mldsa_queries,
+			_ => panic!("unknown MLDSA mutation source: {target}"),
+		};
+		// Role traits repeat method names; select the concrete definition after them.
+		let scope_start = if scope.is_empty() {
+			0
+		} else {
+			source.rfind(scope).expect("MLDSA mutation scope missing")
+		};
+		let start = scope_start
+			+ source[scope_start..]
+				.find(from)
+				.expect("MLDSA mutation anchor missing");
+		source.replace_range(start..start + from.len(), to);
+		let result = if target.starts_with("adapter_")
+			|| target == "core_authentication"
+			|| target == "core_session"
+		{
+			validate_mldsa_source(&changed)
+		} else {
+			validate_mldsa_model(&changed)
+		};
+		let error = result.expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+		checked += 1;
+	}
+	assert_eq!(checked, MLDSA_TRANSCRIPT_MUTATION_COUNT);
+}

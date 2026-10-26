@@ -1,0 +1,74 @@
+{
+  "cohort": "source-bills6",
+  "source_base": "272a4ddbb1d6e3127cd9f7ebaf08691176578085",
+  "fetched_origin_vcvio": "8330cdef4f4659931b6764a026cd90c4caf833a4",
+  "source_manifest_sha256": "d723d1288b12b54356dfd1668b15a7394421b8e98f3772e0162cc605a630e975",
+  "source_files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeResources.lean": "1a19057c3cb9aee4ee66d7dd0b041fe481abe8d516661221115c750c5f151720",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSourceBills.lean": "3df336e701ea19406b6b18e24cfdbf0f712b6678c5a2940cbeedc3b1ecadc202",
+    "doc/impl/later-challenge-source-query-ledger.md": "6683fc041f81d9761257f8fbd6c25a2136391752a69bd49f646282efce57c697",
+    "doc/formal-verification-analysis.md": "583459eb3dee0e3d86c909e08534e006535215acfb627f21691764a79e9a1a61"
+  },
+  "direct_checks": [
+    {
+      "module": "PqxdhLaterChallengeBeforeResources",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeBeforeResources-final.log",
+      "bytes": 0,
+      "log_content": "",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhLaterChallengeSourceBills",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeSourceBills-final.log",
+      "bytes": 0,
+      "log_content": "",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "public_theorems": {
+    "PqxdhLaterChallengeBeforeResources": [
+      "client_uniform",
+      "compiled_uniform",
+      "prefix_class"
+    ],
+    "PqxdhLaterChallengeSourceBills": [
+      "prefix_bills",
+      "source_bills",
+      "pair"
+    ]
+  },
+  "review": {
+    "sha256": "68ec5bdd6d1d864a192ddafd9e8ef2288f64d079dae121afcc05cbee26a7bcb4",
+    "content": {
+      "reviewer": "/root/r1_scheduler_closure",
+      "timestamp": "2026-10-06T03:06:30.578432+00:00",
+      "decision": "APPROVE_SCOPED_COMPLETE_BEFORE_QUERY_ACCOUNTING",
+      "manifest": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/source-bills6-manifest.json",
+      "manifest_sha256": "d723d1288b12b54356dfd1668b15a7394421b8e98f3772e0162cc605a630e975",
+      "verified": {
+        "frozen_files": 4,
+        "guarded_public_theorems": 6,
+        "empty_successful_direct_logs": 2,
+        "new_builds": false
+      },
+      "semantic_review": [
+        "Read both full modules and all six theorem statements/proofs, guide and final analysis section; checked inherited callbackAllowance/external_uniform, concrete callbackCap/selectorCap, uniformCost and parentCost definitions.",
+        "client_uniform uses literal credential-bound preparation/application, initializer, selector and auxiliary callbacks from the source certificate. The saved monitor erases to the same whole continuation, so optional failure/refusal cannot hide preceding work. Suffix cap is 1+2C+qPost*(16*C), with C=1+2*(max(c.qLocal,64)+c.qDecap)+32+(34+c.qBase+c.qDecap)+c.qAux.",
+        "compiled_uniform binds the entire original generated prelude to that same suffix. Exact certificate/metadata erasure transfers prelude class bounds without dropping completed/cached branches or reordering draws.",
+        "prefix_bills consumes explicit original generator, local, selector, reserve and writer bounds quantified over their actual inputs/states. The original certificate\u2019s Post budget is replaced by the actual challenge wrapper budget; unrelated old Post behavior is never executed in the new reduction. Both possible encapsulations, complete preparation and source-ordered 184 material bytes are counted.",
+        "source_bills establishes uniform V+1+2C+(1+q)*16C, hash H+2+q, selected seal 2+q, and adaptive raw opening 2+q for the same complete guard-free program and arbitrary prefix/continuation bits. No ambient evaluated oracle work is declared free.",
+        "pair instantiates the prior full-state ordinary CTX comparison using these actual two-world prefix bills, preserving exact per-world named privacyLoss reductions and qSeal<2^96. Neither theorem assumes the finished observer is bounded as a whole nor assumes a desired security event."
+      ],
+      "scope_limits": [
+        "The source-interface resource hypotheses remain ordinary all-reply bounds; these query counts do not bound arbitrary deterministic CPU or attacker input lengths. Efficient bounded-input programs remain explicit computational premises.",
+        "The unfiltered source freshness/decision event, alias term, sticky nonce-refusal, initial Builder/complementary phases, and global target/session/application composition remain open.",
+        "No primitive algorithm/implementation proof, new cryptographic game assumption, snapshot or persistence premise."
+      ],
+      "findings": []
+    }
+  },
+  "scope": "Complete actual before reduction query accounting from original source interfaces. Includes original generator/selector/native/aux callbacks and complete saved suffix; consumes derived full prefix bounds in ordinary CTX pair. Source event/freshness/refusal/alias/other phases/global selection remain.",
+  "validation": "Two focused direct Lean checks,six guarded public statements,forbidden placeholder/custom-axiom scan and git diff --check passed. No Rust changed; no mutation rerun. Parent owns root import/inventory integration."
+}

@@ -1,0 +1,281 @@
+{
+  "cohort": "early-source34",
+  "source_base": "ee97549874d72711cfdf36d169f18a389358d8b4",
+  "fetched_origin_vcvio": "8330cdef4f4659931b6764a026cd90c4caf833a4",
+  "source_manifest_sha256": "6183181108be80780085d393f13d116962b8a2addc222c41a630b7d284a4cc75",
+  "source_files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBuilderObservation.lean": "4e670a0689438ac9ebe641fa80292e1ab7c37a7de7e423fe13696431ed941eac",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomEarly.lean": "ebe27a9d45e75fc75c6e319bab4856b967899bfdfc369f05001b29d7932675f4",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBuilderConsumer.lean": "3f7cb763d6ceb371b775a732f9a9b02c82225129522ff4de5b10e690ac127c2e",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeEarlyConsumer.lean": "2c3cd73c1f5a223e05892415e0e5c0768e977f55d59b1fccba979455d4021fb5",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeEarlyCompiled.lean": "4876af3cef65ff4bbebb79f608350d03341aad77fdd92381ec49490bf6c3bb2e",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeEarlyCertified.lean": "8a139c4eedfba5d0a079724dbf963b230929ffcfaf9315a26f7806a47993643a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBuilderBills.lean": "84e06d6dd7f3373e68e5a34629c822a3764c783acf6a5be864fd214c1df82dd1",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeEarlyResources.lean": "fbac57b83027c25a9f8561742084397a680355026b08e1b8259541c7bbbdb2de",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeEarlyPrivacy.lean": "5d46ff1e91d6ad9009161d911e48426bda5768bc578df28204e48222d161c1da",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeEarlySource.lean": "677aadda340cf03a23e8da7010f83a4e254d9fa40475a20a8d034544e8c937a3",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBuilderSource.lean": "6cc67f732ce38b7ca3c65b34db83c204f053f5cf863333a423d92e2194441bb8",
+    "doc/impl/later-challenge-early-source-comparison.md": "b3d2cb4ed05ef14f08a4a96c44f8836cb6885fa5bf6d21130074d72e23799a99",
+    "doc/formal-verification-analysis.md": "362f3d1103e0bf37fcdaefa208c71f5f283d9f685cdf383168a30195b750ecca"
+  },
+  "public_theorems": {
+    "PqxdhLaterChallengeBuilderObservation": [
+      "related_builder"
+    ],
+    "PqxdhLaterChallengeRandomEarly": [
+      "encoded_none",
+      "encoded_residual",
+      "encoded_pending",
+      "encoded_related",
+      "related_key",
+      "carried",
+      "retained"
+    ],
+    "PqxdhLaterChallengeBuilderConsumer": [
+      "only_fits",
+      "client_pre",
+      "client_random",
+      "whole_fits"
+    ],
+    "PqxdhLaterChallengeEarlyConsumer": [
+      "reached",
+      "same_prefix",
+      "same_continuation",
+      "random"
+    ],
+    "PqxdhLaterChallengeEarlyCompiled": [
+      "cache_irrelevant",
+      "resume_blind",
+      "evaluated",
+      "random"
+    ],
+    "PqxdhLaterChallengeEarlyCertified": [
+      "continuation_eq",
+      "compiled_eq",
+      "random"
+    ],
+    "PqxdhLaterChallengeBuilderBills": [
+      "client_bills",
+      "client_uniform"
+    ],
+    "PqxdhLaterChallengeEarlyResources": [
+      "continuation_bills",
+      "continuation_uniform",
+      "compiled_bills"
+    ],
+    "PqxdhLaterChallengeEarlyPrivacy": [
+      "source_random",
+      "pair"
+    ],
+    "PqxdhLaterChallengeEarlySource": [
+      "source_bills",
+      "pair"
+    ],
+    "PqxdhLaterChallengeBuilderSource": [
+      "whole_original",
+      "generated_whole"
+    ]
+  },
+  "direct_checks": [
+    {
+      "module": "PqxdhLaterChallengeBuilderObservation",
+      "source_sha256": "4e670a0689438ac9ebe641fa80292e1ab7c37a7de7e423fe13696431ed941eac",
+      "end_source_sha256": "4e670a0689438ac9ebe641fa80292e1ab7c37a7de7e423fe13696431ed941eac",
+      "start": "2026-10-06T03:50:25.994509+00:00",
+      "end": "2026-10-06T03:50:45.089060+00:00",
+      "exit": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/early34-PqxdhLaterChallengeBuilderObservation.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 1,
+      "log_content": ""
+    },
+    {
+      "module": "PqxdhLaterChallengeRandomEarly",
+      "source_sha256": "ebe27a9d45e75fc75c6e319bab4856b967899bfdfc369f05001b29d7932675f4",
+      "end_source_sha256": "ebe27a9d45e75fc75c6e319bab4856b967899bfdfc369f05001b29d7932675f4",
+      "start": "2026-10-06T03:50:45.089511+00:00",
+      "end": "2026-10-06T03:51:02.491039+00:00",
+      "exit": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/early34-PqxdhLaterChallengeRandomEarly.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 7,
+      "log_content": ""
+    },
+    {
+      "module": "PqxdhLaterChallengeBuilderConsumer",
+      "source_sha256": "3f7cb763d6ceb371b775a732f9a9b02c82225129522ff4de5b10e690ac127c2e",
+      "end_source_sha256": "3f7cb763d6ceb371b775a732f9a9b02c82225129522ff4de5b10e690ac127c2e",
+      "start": "2026-10-06T03:51:02.491489+00:00",
+      "end": "2026-10-06T03:51:13.275028+00:00",
+      "exit": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/early34-PqxdhLaterChallengeBuilderConsumer.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 4,
+      "log_content": ""
+    },
+    {
+      "module": "PqxdhLaterChallengeEarlyConsumer",
+      "source_sha256": "2c3cd73c1f5a223e05892415e0e5c0768e977f55d59b1fccba979455d4021fb5",
+      "end_source_sha256": "2c3cd73c1f5a223e05892415e0e5c0768e977f55d59b1fccba979455d4021fb5",
+      "start": "2026-10-06T03:51:13.275461+00:00",
+      "end": "2026-10-06T03:51:21.714659+00:00",
+      "exit": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/early34-PqxdhLaterChallengeEarlyConsumer.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 4,
+      "log_content": ""
+    },
+    {
+      "module": "PqxdhLaterChallengeEarlyCompiled",
+      "source_sha256": "4876af3cef65ff4bbebb79f608350d03341aad77fdd92381ec49490bf6c3bb2e",
+      "end_source_sha256": "4876af3cef65ff4bbebb79f608350d03341aad77fdd92381ec49490bf6c3bb2e",
+      "start": "2026-10-06T03:51:21.715177+00:00",
+      "end": "2026-10-06T03:51:33.650148+00:00",
+      "exit": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/early34-PqxdhLaterChallengeEarlyCompiled.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 4,
+      "log_content": ""
+    },
+    {
+      "module": "PqxdhLaterChallengeEarlyCertified",
+      "source_sha256": "8a139c4eedfba5d0a079724dbf963b230929ffcfaf9315a26f7806a47993643a",
+      "end_source_sha256": "8a139c4eedfba5d0a079724dbf963b230929ffcfaf9315a26f7806a47993643a",
+      "start": "2026-10-06T03:51:33.650639+00:00",
+      "end": "2026-10-06T03:51:44.146289+00:00",
+      "exit": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/early34-PqxdhLaterChallengeEarlyCertified.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 3,
+      "log_content": ""
+    },
+    {
+      "module": "PqxdhLaterChallengeBuilderBills",
+      "source_sha256": "84e06d6dd7f3373e68e5a34629c822a3764c783acf6a5be864fd214c1df82dd1",
+      "end_source_sha256": "84e06d6dd7f3373e68e5a34629c822a3764c783acf6a5be864fd214c1df82dd1",
+      "start": "2026-10-06T03:51:44.146725+00:00",
+      "end": "2026-10-06T03:51:55.085861+00:00",
+      "exit": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/early34-PqxdhLaterChallengeBuilderBills.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 2,
+      "log_content": ""
+    },
+    {
+      "module": "PqxdhLaterChallengeEarlyResources",
+      "source_sha256": "fbac57b83027c25a9f8561742084397a680355026b08e1b8259541c7bbbdb2de",
+      "end_source_sha256": "fbac57b83027c25a9f8561742084397a680355026b08e1b8259541c7bbbdb2de",
+      "start": "2026-10-06T03:51:55.086488+00:00",
+      "end": "2026-10-06T03:52:04.800190+00:00",
+      "exit": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/early34-PqxdhLaterChallengeEarlyResources.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 3,
+      "log_content": ""
+    },
+    {
+      "module": "PqxdhLaterChallengeEarlyPrivacy",
+      "source_sha256": "5d46ff1e91d6ad9009161d911e48426bda5768bc578df28204e48222d161c1da",
+      "end_source_sha256": "5d46ff1e91d6ad9009161d911e48426bda5768bc578df28204e48222d161c1da",
+      "start": "2026-10-06T03:52:04.800623+00:00",
+      "end": "2026-10-06T03:52:13.126658+00:00",
+      "exit": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/early34-PqxdhLaterChallengeEarlyPrivacy.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 2,
+      "log_content": ""
+    },
+    {
+      "module": "PqxdhLaterChallengeEarlySource",
+      "source_sha256": "677aadda340cf03a23e8da7010f83a4e254d9fa40475a20a8d034544e8c937a3",
+      "end_source_sha256": "677aadda340cf03a23e8da7010f83a4e254d9fa40475a20a8d034544e8c937a3",
+      "start": "2026-10-06T03:52:13.127252+00:00",
+      "end": "2026-10-06T03:52:20.669224+00:00",
+      "exit": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/early34-PqxdhLaterChallengeEarlySource.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 2,
+      "log_content": ""
+    },
+    {
+      "module": "PqxdhLaterChallengeBuilderSource",
+      "source_sha256": "6cc67f732ce38b7ca3c65b34db83c204f053f5cf863333a423d92e2194441bb8",
+      "end_source_sha256": "6cc67f732ce38b7ca3c65b34db83c204f053f5cf863333a423d92e2194441bb8",
+      "start": "2026-10-06T03:52:20.669719+00:00",
+      "end": "2026-10-06T03:52:27.751327+00:00",
+      "exit": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/early34-PqxdhLaterChallengeBuilderSource.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 2,
+      "log_content": ""
+    }
+  ],
+  "published_module_restoration": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSourceSharedRom.lean": {
+      "HEAD_sha256": "ecf6b8785f4c7d7f5cf4e42cee9ea27d0f75e4d633565b3ea1a58e516d20a32f",
+      "working_sha256": "ecf6b8785f4c7d7f5cf4e42cee9ea27d0f75e4d633565b3ea1a58e516d20a32f"
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedBefore.lean": {
+      "HEAD_sha256": "8e4d8c729e1609aab98fd0217fc09d70b4da63546ee2a3a6cd5fc905a9378ab6",
+      "working_sha256": "8e4d8c729e1609aab98fd0217fc09d70b4da63546ee2a3a6cd5fc905a9378ab6"
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeConsumer.lean": {
+      "HEAD_sha256": "57aad9c64f9626f8b2c0476f745ace4ce5c37b4c8328406475f7b3c30bbde2d2",
+      "working_sha256": "57aad9c64f9626f8b2c0476f745ace4ce5c37b4c8328406475f7b3c30bbde2d2"
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSourceBills.lean": {
+      "HEAD_sha256": "3df336e701ea19406b6b18e24cfdbf0f712b6678c5a2940cbeedc3b1ecadc202",
+      "working_sha256": "3df336e701ea19406b6b18e24cfdbf0f712b6678c5a2940cbeedc3b1ecadc202"
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedContinuation.lean": {
+      "HEAD_sha256": "4db129fb221d6fefaef7ac2b921f2734abf041f1ed6ad6ddf3f48489e9b3cca9",
+      "working_sha256": "4db129fb221d6fefaef7ac2b921f2734abf041f1ed6ad6ddf3f48489e9b3cca9"
+    }
+  },
+  "review": {
+    "sha256": "ace9eb53bdffe4208226384a360e974c8ae6ea4b4f11979b5c8ae130ec25a480",
+    "content": {
+      "reviewer": "/root/r1_scheduler_closure",
+      "reviewed_at": "2026-10-06T03:56:46.076471+00:00",
+      "decision": "APPROVE_SCOPED_EARLY_SOURCE_COMPARISON_AND_COUNTS",
+      "manifest": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/early-source34-manifest.json",
+      "manifest_sha256": "6183181108be80780085d393f13d116962b8a2addc222c41a630b7d284a4cc75",
+      "findings": [],
+      "read": [
+        "All eleven module definitions, theorem statements and proof bodies",
+        "Complete maintained guide and analysis addition",
+        "Inherited privacyLoss/source_random definition, source prefix bills and suffixAllowance supporting explicit counts/losses"
+      ],
+      "verified": {
+        "frozen_hashes": 13,
+        "exact_theorems_and_guards": 34,
+        "empty_successful_direct_logs": 11,
+        "published_dependency_sources_restored": 5,
+        "forbidden_placeholders_or_custom_axioms": 0
+      },
+      "semantic_findings": [
+        "Builder observation normalizes only the outside continuation, retaining native state, material and origin; non-Builder/complementary mass is mapped explicitly to None rather than conditioned away.",
+        "RandomEarly.carried preserves the joint pair of Builder/before observations in one full source distribution. Subsequent branching therefore does not assume separate marginal equality implies a joint coupling.",
+        "Executable continuation cannot read the component backend; its cache coordinate is ignored and never installed. Compiled equality runs the complete generated prefix and resumes from the same reached full state.",
+        "Builder structural Fits and before source-certified Fits erase exactly; resource certificates bound original requests without assuming the desired secrecy conclusion. Full selected outside wrapper is reinstated and actually charged.",
+        "Source_bills derives uniform/hash/seal/raw bounds from original native/primitive/callback/selector budgets; qR=qS=2+q and qH=H+2+q match privacyLoss; qS<2^96 remains explicit.",
+        "Both source games use exact constructed ordinary modified-CTX validation/view IND$ and attempt-indexed INT-CTXT reductions with the explicit 128/512-bit guessing terms. The pair proof uses one checked random middle and adds both complete losses.",
+        "Aliases, terminal freshness/monitor outcomes, optional refusal and other phases are not asserted negligible or impossible. Filtered source decision and global source/selection/freshness joins remain expressly unfinished. No primitive implementation or public-HKDF random table claim is made."
+      ],
+      "validation_limits": "Read-only semantic review. No prover, Lean build, Rust build or tests rerun; inspected and hash-verified all existing focused receipts. This approval is for the stated filtered early source comparison, not end-to-end confidentiality."
+    }
+  },
+  "scope": "One complete initial Builder and before-admission source comparison, full-history joint random coupling, source-certificate erasure, original-interface four-class accounting and explicit inherited modified CTX losses. Source event/freshness/alias/refusal/complementary-phase join remains.",
+  "validation": "Eleven focused single-file Lean4.34 checks -j1 -M8000,34 exact guarded standard axiom checks, forbidden scan and diff check passed. No Rust changed; no mutation suite rerun. Root imports/inventory reconciled by central integration."
+}

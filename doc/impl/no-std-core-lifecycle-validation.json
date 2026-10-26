@@ -1,0 +1,131 @@
+{
+  "scope": "Merge portable backend support onto existing core-lifecycle extraction without changing the core subtree",
+  "target_parent": "2b924febc49b9a5e6fb93990ff8d4b053b7ca4b2",
+  "incoming_parent": "30cbdc6a30a36867cc0ec4eddde96cdc5e0842c9",
+  "core_tree_sha1": "16ef0be42e3fff3facf21da48b48da7a7756910c",
+  "core_subtree_unchanged": true,
+  "runtime_tests_passed": 471,
+  "deferred_source_guards": 22,
+  "deferred_details": "no-std-core-lifecycle-deferred.json",
+  "all_features": true,
+  "commands": [
+    {
+      "label": "clippy-beaconcrypt",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "beaconcrypt",
+        "--all-targets",
+        "--all-features",
+        "--no-deps",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 34.57,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-clippy-beaconcrypt.log",
+      "log_sha256": "b1e943d55390272de0187333d79c0bdcbba25d463f2bf0660df0f1a29465b9d9"
+    },
+    {
+      "label": "clippy-beaconcrypt-crypto",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "beaconcrypt-crypto",
+        "--all-targets",
+        "--all-features",
+        "--no-deps",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 4.13,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-clippy-beaconcrypt-crypto.log",
+      "log_sha256": "56b598ac3058311a4102fcb469719fd1438eca69b017dc6957251024ff56103c"
+    },
+    {
+      "label": "clippy-beaconcrypt-ffi",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "beaconcrypt-ffi",
+        "--all-targets",
+        "--all-features",
+        "--no-deps",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 19.96,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-clippy-beaconcrypt-ffi.log",
+      "log_sha256": "5ffdd7d4ce82598bbe84163471fde2d867411d41b8b51d751c72b70de5ff0bc4"
+    },
+    {
+      "label": "check-beacon",
+      "command": [
+        "cargo",
+        "check",
+        "-p",
+        "beaconcrypt",
+        "--no-default-features",
+        "--features",
+        "pqxdh,beacon",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 9.47,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-check-beacon.log",
+      "log_sha256": "3911dc9c61f330fe03ea4b5d3615c08c3642980ddb9fc72e2fbacc0183903eb0"
+    },
+    {
+      "label": "check-server",
+      "command": [
+        "cargo",
+        "check",
+        "-p",
+        "beaconcrypt",
+        "--no-default-features",
+        "--features",
+        "pqxdh,server",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 4.55,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-check-server.log",
+      "log_sha256": "28879635f3632c763b8b17f72571d3d6f93c1487df33e0a58d822284c6a1f29a"
+    },
+    {
+      "label": "runtime",
+      "command": [
+        "cargo",
+        "nextest",
+        "run",
+        "--workspace",
+        "--all-features",
+        "--locked",
+        "--config-file=doc/impl/no-std-core-lifecycle-nextest.toml",
+        "--profile=mutants",
+        "--user-config-file=none"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 89.9,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-runtime.log",
+      "log_sha256": "e9565d8c6ec39f22d21dfd3f860d0842d5d0aab7e0fc2fadd8a9711b95818b57"
+    }
+  ],
+  "bindings_receipt": "no-std-core-lifecycle-bindings.json",
+  "portable_receipt": "no-std-core-lifecycle-portable.json",
+  "proofs": "Existing target proof files and assertions retained unchanged; no proof regeneration or verification requested",
+  "mutation_and_size_receipts": "Parent checkpoint receipts remain historical; no merged-tree mutation or library-size result is claimed"
+}

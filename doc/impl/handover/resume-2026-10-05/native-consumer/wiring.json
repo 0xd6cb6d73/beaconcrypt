@@ -1,0 +1,16 @@
+{
+  "PqxdhRegistrationJointServerPrefix": 8,
+  "PqxdhRegistrationJointServerPrefixCosts": 3,
+  "PqxdhRegistrationJointServerBirth": 7,
+  "PqxdhRegistrationJointInitializedPrefix": 6,
+  "PqxdhRegistrationJointServerBirthCosts": 1,
+  "PqxdhRegistrationJointServerAccept": 9,
+  "PqxdhRegistrationJointInitializedAccept": 5,
+  "PqxdhLaterChallengeInsideCache": 2,
+  "PqxdhLaterChallengeSampleActive": 1,
+  "PqxdhLaterChallengeInsidePublication": 3,
+  "PqxdhLaterChallengeInsideExcluded": 3,
+  "PqxdhLaterChallengeSampleExcluded": 2,
+  "PqxdhLaterChallengeGeneratedExcluded": 3,
+  "PqxdhLaterChallengeSourceExcluded": 3
+}

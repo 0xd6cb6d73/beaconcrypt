@@ -1,0 +1,306 @@
+{
+  "date": "2026-10-06T11:07:43.650967+00:00",
+  "scope": "Stage A of the accept/KEM join plan (modules M0-M3): tagged program and raw-accept ordinal bound, report run split at the raw cut with result-map naturality, address-free final-report bound and five query bills at AcceptCut.selected, attached-to-detached step, cut-time classification (T1 classify) and authentication bound (T2 protected_bound) for a target designated by the public raw-accept ordinal and KEM creation index. Protected is read at the cut (option (a) of owner decision 1). No KEM cut, KEM challenge, source-to-KEM bridge, main theorem, root/KDF or global claim.",
+  "basis": "51cf331399a719ccfe3fe799a90d7e2a614213a2",
+  "topic": {
+    "branch": "codex/accept-cut-join",
+    "worktree": "/tmp/beaconcrypt-accept-cut-join"
+  },
+  "plan": {
+    "path": "/tmp/bc-arc-scratch/accept-cut-join/plan.md",
+    "sha256": "22e5d74a4fd4e53fac57791393fc9ce7e14736ca4139510e84f98162d4774da0",
+    "stage": "A (M0-M3)"
+  },
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutTag.lean": "2039de27128c55378a8de5921879dc9bddc1729f1f23d512b7f47bbf3881fc2d",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutReports.lean": "487938b4fcbe04eda00f3d883a44cafbdfd1edf9051e8a394d06c4fe122bb35a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutEuf.lean": "1a901172c325e23254abc56f22c02ed10e48559486d291a8d7650c353ef3e77c",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptOrigin.lean": "49be92d8220a15217a75d67c36e23d98f1bc24fadf10f24ad42888296971d63e",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "c7f3fa431b4db9807e8b7e50dd5e37331d11032b9ba6968af0becd8a84272f50",
+    "beaconcrypt-core/proofs/check-inventory.sh": "59c94a5c12933cb586844b33a10d9959554c8332117de66d6a54beb6f7bacbdf",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "8feab564e5635e1cb6832e9e94eb630bfca902a2401a01f52c97e38c6a79ebfc",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "3c4e192b22f559deec73fed9da653a4de753a8426ca3e5181ac7c727b49f6527",
+    "doc/formal-verification-analysis.md": "7dcef046b672e984bd016a8defa3e580b8751b8ceb6c2b8bd7f17403eac848bc",
+    "doc/impl/registration-accept-kem-join.md": "ecf7fc4c59ff4e8eb19b488dd9623f6c217c61d0fd01c0d5892a764069f2303e"
+  },
+  "modules": {
+    "PqxdhRegistrationJointAcceptCutTag": [
+      "tag_split",
+      "finish_erase",
+      "tag_erase",
+      "tag_bound",
+      "decision_bound",
+      "accept_lt",
+      "accept_source"
+    ],
+    "PqxdhRegistrationJointAcceptCutReports": [
+      "commands_initialized_bind",
+      "initialized_bind",
+      "run_bind",
+      "cut_split",
+      "split_snd",
+      "split_fst",
+      "commands_initialized_map",
+      "reduction_map",
+      "initialized_map",
+      "run_map",
+      "selected_run",
+      "sourceResult_map",
+      "raw_eq"
+    ],
+    "PqxdhRegistrationJointAcceptCutEuf": [
+      "selected_certified",
+      "selected_report_bound",
+      "selected_service_bound",
+      "selected_reports_bound",
+      "selected_client_uniform",
+      "selected_reduction_uniform",
+      "selected_game_uniform"
+    ],
+    "PqxdhRegistrationJointAcceptOrigin": [
+      "attached_detached",
+      "protected_origin",
+      "chosen_mapped",
+      "protected_report_failure",
+      "classify",
+      "protected_bound"
+    ]
+  },
+  "statements": 33,
+  "guards": [
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.tag_split",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.finish_erase",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.tag_erase",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.tag_bound",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.decision_bound",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.accept_lt",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.accept_source",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.commands_initialized_bind",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.initialized_bind",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.run_bind",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.cut_split",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.split_snd",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.split_fst",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.commands_initialized_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.reduction_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.initialized_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.run_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.selected_run",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.sourceResult_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.raw_eq",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_certified",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_report_bound",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_service_bound",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_reports_bound",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_client_uniform",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_reduction_uniform",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_game_uniform",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.attached_detached",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.protected_origin",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.chosen_mapped",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.protected_report_failure",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.classify",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.protected_bound"
+  ],
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "axiom_output": {
+    "source": "/tmp/bc-arc-scratch/accept-cut-join/stage-a/axioms/Axioms.lean",
+    "source_sha256": "198522d6c4be9794253d18ebf39834b949581990124e3420901df0fda4e3f7df",
+    "log_sha256": "bbe094c792aade0189e1c4148ad7e79cac293bd1fa7c8ab1d5c9cf9325d5964f",
+    "utf8": "'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.tag_split' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.finish_erase' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.tag_erase' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.tag_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.decision_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.accept_lt' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.accept_source' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.commands_initialized_bind' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.initialized_bind' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.run_bind' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.cut_split' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.split_snd' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.split_fst' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.commands_initialized_map' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.reduction_map' depends on axioms: [propext,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.initialized_map' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.run_map' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.selected_run' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.sourceResult_map' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.raw_eq' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_certified' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_report_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_service_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_reports_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_client_uniform' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_reduction_uniform' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_game_uniform' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.attached_detached' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.protected_origin' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.chosen_mapped' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.protected_report_failure' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.classify' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.protected_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n"
+  },
+  "leanpath": {
+    "manifest": "/tmp/bc-arc-scratch/accept-cut-join/stage-a/leanpath",
+    "sha256": "4bdf85b7b37a54aad9c67033c58a02200a750ca51ed99322e6891f0376d1eb1a",
+    "note": "The retained raw-accept cut LEAN_PATH (/tmp/bc-arc-scratch/resume-2026-10-06/acceptcut/leanpath) with its first entry replaced by a fresh scratch prefix that mirrors its 1502 artifacts as symlinks; the four cut-module artifacts there were built from bytes identical to the basis. New artifacts were written only into the fresh prefix."
+  },
+  "direct_checks_final": [
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag",
+      "start": "2026-10-06T11:05:31.554205+00:00",
+      "end": "2026-10-06T11:05:34.556209+00:00",
+      "exit": 0,
+      "source_sha256": "2039de27128c55378a8de5921879dc9bddc1729f1f23d512b7f47bbf3881fc2d",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-a/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutTag.olean",
+        "/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutTag.lean"
+      ],
+      "leanpath_sha256": "4bdf85b7b37a54aad9c67033c58a02200a750ca51ed99322e6891f0376d1eb1a",
+      "artifact_sha256": "f59148f072c575be51b17470abe12a579092b29b9947f3113e90e6f624d8defa"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports",
+      "start": "2026-10-06T11:05:34.590553+00:00",
+      "end": "2026-10-06T11:05:37.730651+00:00",
+      "exit": 0,
+      "source_sha256": "487938b4fcbe04eda00f3d883a44cafbdfd1edf9051e8a394d06c4fe122bb35a",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-a/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutReports.olean",
+        "/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutReports.lean"
+      ],
+      "leanpath_sha256": "4bdf85b7b37a54aad9c67033c58a02200a750ca51ed99322e6891f0376d1eb1a",
+      "artifact_sha256": "5a2bf7ab89b989215d10dd79196feca2ac789b03d8c3a83bcbdfc2376824bef4"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf",
+      "start": "2026-10-06T11:05:37.762893+00:00",
+      "end": "2026-10-06T11:05:40.895604+00:00",
+      "exit": 0,
+      "source_sha256": "1a901172c325e23254abc56f22c02ed10e48559486d291a8d7650c353ef3e77c",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-a/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutEuf.olean",
+        "/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutEuf.lean"
+      ],
+      "leanpath_sha256": "4bdf85b7b37a54aad9c67033c58a02200a750ca51ed99322e6891f0376d1eb1a",
+      "artifact_sha256": "74821af1db408bd3b8dd41ce8628b5f4ef6c545315e2dbf4a283b0eb7bc6afae"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin",
+      "start": "2026-10-06T11:28:55.052192+00:00",
+      "end": "2026-10-06T11:28:58.362149+00:00",
+      "exit": 0,
+      "source_sha256": "49be92d8220a15217a75d67c36e23d98f1bc24fadf10f24ad42888296971d63e",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-a/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptOrigin.olean",
+        "/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptOrigin.lean"
+      ],
+      "leanpath_sha256": "4bdf85b7b37a54aad9c67033c58a02200a750ca51ed99322e6891f0376d1eb1a",
+      "artifact_sha256": "f7d5e0ddb84b5d5aaea9e096a4162ee3b0f0fa372464e678bbb9ab22dbf61cae",
+      "note": "Recheck after the docstring-only change to classify in the review follow-up; the other three modules are unchanged and keep the results above."
+    }
+  ],
+  "root_check": {
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core/proofs/lean",
+      "/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ],
+    "source_sha256": "c7f3fa431b4db9807e8b7e50dd5e37331d11032b9ba6968af0becd8a84272f50",
+    "start": "2026-10-06T11:29:02Z",
+    "end": "2026-10-06T11:29:04Z",
+    "exit": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "note": "Rerun in the review follow-up with the standard 180 s limit (the first run used 600 s, which was not needed), against the rechecked AcceptOrigin artifact."
+  },
+  "hygiene": {
+    "constants": "hygiene/Consts.lean: no axiom or opaque constants in the four modules (exit 0)",
+    "unused_premises": "hygiene/Premises.lean: no binder of any of the 33 theorems is unused in its proof term (exit 0)",
+    "guard_liveness": "hygiene/Liveness.lean: one deliberately wrong guard per module fails (4 guard errors, exit 1 as expected)",
+    "logs_sha256": {
+      "Consts": "793a17b0c5a5b53e577fe87241b1b789351ea6c669500ad2a9c731140e58fca0",
+      "Premises": "c9e5f577bf61e720d1135146252a2adfe6fbc27ee544272d14c2c41d68bd5910",
+      "Liveness": "035f41b3168f96f13978d29a67fabac1657e19dde96dcc4d038de70b6fab9774"
+    }
+  },
+  "focused_inventory": {
+    "command": [
+      "nix",
+      "develop",
+      "--no-update-lock-file",
+      "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+      "-c",
+      "make",
+      "-C",
+      "/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core",
+      "check-inventory",
+      "SHELL=bash"
+    ],
+    "state": "all review follow-up changes staged, including this receipt; only this focused_inventory record was edited afterwards",
+    "exit": 0,
+    "start": "2026-10-06T11:32:42Z",
+    "end": "2026-10-06T11:33:46Z",
+    "log_sha256": "261ae6d4218af9275b1fe5712266ae2e96d6206ac802cededd17200ad9bae5f7",
+    "comm_warnings": 0,
+    "handwritten_lean_count": 1469
+  },
+  "forbidden_scan": "zero matches of \\b(?:sorry|admit|axiom)\\b|sorryAx|native_decide|implemented_by|extern|unsafe|set_option linter in the four modules",
+  "correctness_scan": "zero matches of MlKem768RecipientCorrectness, supported_source, branch_real, KemGame.advantage, KemCertified.advantage or SecretInputKdf in the four modules",
+  "diff_check": "git diff --cached --check clean",
+  "deviations_from_plan": [
+    "Probability statements use 𝒟[(fun r => decide (P r)) <$> run] {true} under Classical.propDecidable (the native_origin_bound form) instead of Pr[P | run]: the VCVio revision deprecates probEvent, probOutput and evalSPMF, and the report outcome type has no MeasurableSpace.",
+    "split_fst is an equality of 𝒟 for every countable measurable observation of the cut component (covering every cut-time event via a Boolean observation) instead of an equality of event probabilities.",
+    "M2 and M3 are generic in the owner constant chosenOwner of AcceptCut.selected; the plan fixes 0, which is an instance.",
+    "Plan step label rawEq is the theorem raw_eq.",
+    "Five helper statements added and guarded: finish_erase (M0); run_bind, commands_initialized_map, reduction_map (M1); selected_certified (M2).",
+    "PqxdhRegistrationJointAcceptOrigin imports PqxdhRegistrationJointNativeKemOrigin directly (outside the AcceptCut import closure).",
+    "Definitions in M3 are generic in the report count; kemIndex and target range over Fin count, and protected_bound instantiates count + 1.",
+    "No planned statement was false or unprovable; none was weakened."
+  ],
+  "not_proved": [
+    "Rejection after successful attached verification (Rust get_shared_secret after validate_init_kex: consumed registration status, try_reserve, prekey and one-time key parses, ephemeral generation, PQ key parse, encapsulate, key conversions and DH steps, shared_secrets, server_accept, derive_root_key_input) is not separated by classify: such a cut lands in cases 3-5 and is excluded only later through accepted = false (accepted_reached, stage B) and classify_final (stage C).",
+    "Stage B: lane port L1, exposeAt, handler_eq against the ported KemSourceSuffix, scan_free_bind, rawCut_shape, accepted_reached, preRaw_source, branchRaw_source, branchRaw_real_error, advantageRaw_error and the KEM adversary bills.",
+    "Stage C: key-list monotonicity (M4), KEM-side naturality (M9a), the source-to-KEM bridge (M9), and in M10 the main theorem T5 with its bills companion T5b and the final classification classify_final (T1 plus accepted_reached).",
+    "Stage D: lane port L2 and the opaque KEM-ideal continuation (M11).",
+    "Owner decisions 2 (KDF backend for item 2), 5 (review before integration and publication) and 6 (confirmation of the existential owner address and the unread owner constant) of the plan.",
+    "Handoff items 2-8, including the Extract/HKDF hybrid and context secrecy of the candidate, and the final validation matrix."
+  ],
+  "checks_not_run": "No lake build, make verify, nix-collect-garbage, ProVerif, Rust or mutation run; no production Rust or ProVerif change.",
+  "review": "Independently reviewed under a semantic and a hygiene lens (both APPROVE_WITH_NITS; findings in /tmp/bc-arc-scratch/accept-cut-join/stage-a/review.json). The review follow-up addresses every finding; the follow-up itself is not yet reviewed. Not pushed.",
+  "owner_decisions_2026_10_06": [
+    "Decision 1: freshness for T5 is read at the accept (option (a)), as ProtectedAt and Protected implement.",
+    "Decision 3: fixed public (i, k) target designation with no selection loss; an adversary-chosen test session is left to handoff item 3.",
+    "Decision 4: the top-level statement may carry the inherited contracts shortRejects, setup.wiring and FunctionalDecapsulation; stage A uses only shortRejects and setup.wiring."
+  ],
+  "review_followup": {
+    "date": "2026-10-06",
+    "basis": "5b819a4e242c1e3e4ae2ff1636a27beec4b756ce",
+    "changes": [
+      "Guide and analysis: rejection after successful attached verification is not separated by classify (cases 3-5) and is excluded only through accepted_reached and classify_final; classify_final added to the stage C open list here and in the guide.",
+      "classify docstring and guide case-3 list: a generated owner outside the report range (impossible under capacity). Docstring-only Lean change; AcceptOrigin rechecked (exit 0, empty log, guards unchanged) and its source hash refreshed here and in reviewed-inventory.txt. The axiom output and hygiene scans above were taken before this docstring change; the module guards recheck the exact axiom output.",
+      "Analysis: VerifyRejected described as a raw registration that fails the Server's attached verification (parsing, identity-key or signature checks).",
+      "Guide: Names for consumers paragraph listing the short-name collisions (found by grep) and requiring selective open or qualified names.",
+      "Root import check rerun with timeout 180 (exit 0, empty log).",
+      "Guide: owner decisions of 2026-10-06 recorded (decisions 1, 3 and 4)."
+    ]
+  }
+}

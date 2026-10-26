@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-06T03:46:40.161929+00:00",
+  "base": "ac3ec9016a9175914beead43496b25ec38ca0213",
+  "scope": "Focused trusted-application ordinary fresh-record secrecy validation, not aggregate proof or public optional-plaintext confidentiality.",
+  "maintained_targets": 4,
+  "results": "twoTRUE ordinary secrecy, twoFALSE leak controls each with one confirmed trace",
+  "dedicated_regressions": 13,
+  "classification_regressions": 19,
+  "classified_rows": 3190,
+  "security_class_entries": 181,
+  "transcript_fidelity": 30,
+  "focused_make_exit": 0,
+  "inventory": "passed exact frozen source",
+  "fmt_diff": "passed",
+  "source_paper": "independently approved; maintained semantic/wiring/archive review pending",
+  "excluded_diagnostics": "four earlier positive probes unknown, with failed/assumed-hypothesis derivations, no confirmed attack; one old leak control retained historically; finalfour probes independently reviewed but not additional results",
+  "initial_regression_diagnostics": "test fixture expected8 None returns instead of6 and inserted an extraneous trace after the summary instead of in the primary section; both test fixtures corrected before source freeze; gate semantics unchanged",
+  "no_aggregate_claim": true
+}

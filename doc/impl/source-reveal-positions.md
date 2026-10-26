@@ -1,0 +1,39 @@
+# Actual compromise replies and material positions
+
+Eight statements in `RawCtxRevealPositions` connect the existing replicated record-compromise interface to the original source material relation. They retain the same supplied Server/Beacon families, full shared primitive state, private reveal history and actual optional API replies. The source computation is unchanged. This checkpoint builds on the independently reviewed position and compromise modules in integration `62d3e910fcc0262581743a54402e72aa504dbb4b`.
+
+## Actual selected owner and disclosures
+
+`selected_positions` uses the original compromise selector: a Server request selects its actual assigned peer entry, and a Beacon request selects only its established kernel. The returned kernel satisfies that owner's existing directional origin relation. Missing entries or inactive phases cannot satisfy a successful selection. Different handles and directions may have identical origin or key bytes; the proof never identifies owners from those bytes.
+
+`chain_reveal_positions` identifies both actual optional current-chain replies with the source chain at the selected kernel's actual native send or receive counter. `skipped_reveal_positions` uses the exact extracted tagged-material accessor and the established kernel relation. A successful skipped disclosure has a positive source wire sequence and returns material at receive position `sequence - 1`. `skipped_reveal_bytes` preserves the exact key and nonce in the original byte-model representation. None of these statements invents an absent cache entry or substitutes a claimed material value.
+
+## Full adaptive execution
+
+`reveal_step_positions` preserves every owner relation through either an original record/public call or a compromise read. Ordinary operations execute the existing cross-role interpreter; reads retain their exact selected result, role fields and shared primitive state. Failed sends preserve their allocated advancement, failed receives preserve their entry kernel and actual primitive effects, and repeated or missing-owner reads preserve the same original behavior.
+
+`reveal_schedule_positions` lifts those steps through every supported adaptive continuation and stopping decision of the existing compromise `SourceSpec`. It retains the same starting directional origins for all supplied owners jointly. The proof refers to complete execution support, not a ciphertext marginal or an assumed cryptographic success event. It adds no monitor, oracle call, rejection predicate or extra reply. The previous six source budgets, history bounds, native resource caps and `U + 64(S + R + H)` interpreted uniform cap therefore still apply to the identical source program. Actual lookup, copying, KDF/HMAC, record processing and other local computation remain work.
+
+## What an exposed chain derives
+
+`Direction`, `chainReveal`, `chainOrigin` and `chainIndex` are private proof projections of the existing two chain-read requests and fields. They do not add an adversarial capability. `chain_disclosure_index` identifies an actually returned chain with its selected direction's source chain at the actual native counter.
+
+`disclosed_descendant_material` then proves that evaluating the real deterministic ratchet from that disclosed chain reaches the original material at every mathematical position greater than or equal to the current counter. This includes offset zero: the current chain derives the next material position. Merely advancing the real public KDF does not restore secrecy after that chain disclosure. The theorem is an exact functional equation and introduces no cryptographic hardness assumption or new exposure oracle.
+
+Positions use `Nat`; values beyond the source's u64 exhaustion limit describe mathematical KDF iteration, not extra native send/receive capability. A real protocol schedule remains subject to its original counter, cache and query limits. The equation is stated for the selected direction; exposure across aliased owners or directions requires the actual source equality/correlation relation and must not be dismissed by treating labels as distinct keys.
+
+## Remaining composition
+
+All statements consume the supplied per-owner source relation, which the actual initializer and source position modules can establish and preserve. Global allocation/registration and the joint distribution of installed roots remain separate source operations. No uniqueness or independent-key assumption is inferred from initialization or selection.
+
+The existing reveal history and full theorem state remain private analysis context; only the actual requested disclosure is an adversary reply. Earlier chain inputs in the erased KDF log are not exposed or included in snapshots/persistence. Native representation, library, runtime and ownership contracts remain unchanged.
+
+An evolving-chain or multi-key security theorem must preserve these actual disclosure replies and source correlations, exclude exposed target material and descendants where appropriate, account for aliases, and handle receive recomputation and failed-send advancement. Restore/copy validity and rollback resistance require their explicit source/storage policy. Public network observation must still distinguish privileged application plaintext. These eight operational statements do not establish that global cryptographic composition or a new ProVerif correspondence.
+
+## Validation
+
+The isolated checkpoint passed the full Lean build (3,284 jobs), direct root elaboration and all eight persistent guarded dependency reports. The inventory check and an independent byte-level rehash covered all 398 unique entries, retaining the order of the previous 397 entries and adding one proof module; the handwritten Lean count is 234. Fresh source-transcript fidelity passed all 16 tests in 12.76 seconds. Rust formatting, forbidden-proof scans and `git diff --check` passed. Exact pinned vector submodules were initialized in this isolated checkout, and Rust 1.96 workspace Clippy with all targets and features passed in 19.29 seconds with the existing core lint warnings. No Rust, schema, ProVerif, fidelity-test or mutation input changed; this proof-only checkpoint does not rerun or claim new Rust mutation or symbolic correspondence results. The final integrated global verification matrix remains a separate obligation.
+
+## Integration with source consumption
+
+The current composition topic ports this exact eight-statement module from `82e62d72916000d3e85e40cada34d863fa1a524e` together with the exact 22-statement [source-consumption module](source-receive-consumption.md) from `df11bc5c222684ceedb687f30afa22a83dfe3781`, over the prepared key-family checkpoint `7531be71db54a82d758c03622d9045126c5114aa`. The full combined Lean library passes 3,287 jobs. Independent direct checking of all thirty dependency guards produces no diagnostics; semantic review checks actual optional replies, complete source/primitive-state erasure, consumed-position reasoning, actual disclosure positions and the absence of a key-uniqueness or restore-safety premise. All 401 inventory fingerprints are independently rehashed, preserving the previous 399 paths and order. The inventory records 237 handwritten Lean modules, 382 HB-91 statements and 56 HB-93 statements; HB-94 and all previous gates remain intact. Policy, root-import, inventory and whitespace gates pass. Formatting and sixteen transcript-fidelity tests (11.88 seconds) are explicitly inherited from the immediately preceding unchanged-Rust checkpoint. No Rust or ProVerif source changes and no Rust mutation run is required under the current user policy. These focused results establish the displayed source-state relations; persistent symbolic trace inclusion, evolving-key/compromise simulations and the complete global security theorem remain open.

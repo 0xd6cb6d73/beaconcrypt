@@ -83,7 +83,7 @@ func (store *testSnapshotStore) current() ([]byte, SnapshotHead, int) {
 func newPersistentPair(t *testing.T) (*Server, *Beacon, uint64, *testSnapshotStore) {
 	t.Helper()
 	store := &testSnapshotStore{}
-	server, err := NewServerWithStore(0, bytes.Repeat([]byte{9}, 32), store)
+	server, err := NewServerWithStore(0, bytes.Repeat([]byte{9}, 32), nil, store)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +92,7 @@ func newPersistentPair(t *testing.T) (*Server, *Beacon, uint64, *testSnapshotSto
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, pk)
+	beacon := newBeacon(t, server, pk)
 	response := registerBeacon(t, server, beacon)
 	return server, beacon, response.KeyID, store
 }
@@ -109,7 +109,7 @@ func requirePersistenceStatus(t *testing.T, err error, code PersistenceStatus) *
 func TestPersistentServerCommitsBeforeReturnAndRestoreClaimsGeneration(t *testing.T) {
 	store := &testSnapshotStore{}
 	lineage := [32]byte{27}
-	server, err := NewServerWithStoreAndLineage(0, bytes.Repeat([]byte{1}, 32), store, lineage)
+	server, err := NewServerWithStoreAndLineage(0, bytes.Repeat([]byte{1}, 32), nil, store, lineage)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,7 +136,7 @@ func TestPersistentServerCommitsBeforeReturnAndRestoreClaimsGeneration(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon := newBeacon(t, pk)
+	beacon := newBeacon(t, server, pk)
 	registration := registerBeacon(t, server, beacon)
 	before, err := server.Head()
 	if err != nil || before.Generation <= initial.Generation {
@@ -318,7 +318,7 @@ func TestPersistentServerStaleLoadAndOwnerCannotPublish(t *testing.T) {
 
 func TestPersistentRestorersRaceOnOneAuthoritativeHead(t *testing.T) {
 	store := &testSnapshotStore{}
-	initial, err := NewServerWithStore(0, nil, store)
+	initial, err := NewServerWithStore(0, nil, nil, store)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -400,9 +400,9 @@ func TestSnapshotConstructorsAcrossCallbackStackGrowth(t *testing.T) {
 					var server *Server
 					var err error
 					if explicitLineage {
-						server, err = NewServerWithStoreAndLineage(19, nil, store, [32]byte{1})
+						server, err = NewServerWithStoreAndLineage(19, nil, nil, store, [32]byte{1})
 					} else {
-						server, err = NewServerWithStore(19, nil, store)
+						server, err = NewServerWithStore(19, nil, nil, store)
 					}
 					if err != nil {
 						done <- err
@@ -437,7 +437,7 @@ func TestSnapshotHelpersRejectMalformedAndIncorrectParents(t *testing.T) {
 		}
 	}
 	store := &testSnapshotStore{}
-	server, err := NewServerWithStore(0, nil, store)
+	server, err := NewServerWithStore(0, nil, nil, store)
 	if err != nil {
 		t.Fatal(err)
 	}

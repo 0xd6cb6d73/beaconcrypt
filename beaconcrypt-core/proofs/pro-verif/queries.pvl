@@ -1,0 +1,156 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Baseline active-attacker secrecy for taskings routed to honest recipients.
+   baseline.pv also contains replicated attacker-owned registrations whose
+   complete beacon key state is public; those sessions receive only the
+   separately checked MALICIOUS_TASK_SECRET. *)
+query attacker(INITIAL_SECRET).
+query attacker(CACHED_SECRET).
+query attacker(ADVANCE_SECRET).
+query attacker(FUTURE_SECRET).
+query attacker(BEACON_RECORD_SECRET).
+
+(* For an honest beacon identity, acceptance and replay consumption agree on
+   the exact ordered, role-tagged InitKex transcript and semantic identifier.
+   The fresh origin marker makes the injective session correspondence
+   explicit without entering any cryptographic computation or replay check. *)
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      origin: bitstring;
+  inj-event(ServerAccepted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    root_input,
+    root,
+    origin
+  )) ==>
+  inj-event(BeaconInitiated(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    origin
+  )).
+
+(* The registration acceptance also agrees explicitly on the three selected public keys, not only their tagged InitKex representation. *)
+query bundle: authenticated_init_bundle_t;
+  inj-event(ServerBundleAccepted(bundle)) ==>
+  inj-event(BeaconBundleInitiated(bundle)).
+
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      origin: bitstring;
+  inj-event(ServerAccepted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    root_input,
+    root,
+    origin
+  )) ==>
+  inj-event(RegistrationConsumed(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    origin
+  )).
+
+(* This is the replay theorem: no two successful persistent-set insertions can
+   correspond to one honest single-use registration origin. *)
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      origin: bitstring;
+  inj-event(RegistrationConsumed(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    origin
+  )) ==>
+  inj-event(BeaconInitiated(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    origin
+  )).
+
+(* The modeled response failure occurs only after irreversible replay
+   consumption, matching the production ordering. *)
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      origin: bitstring;
+  inj-event(ServerResponseAborted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    root_input,
+    root,
+    origin
+  )) ==>
+  inj-event(RegistrationConsumed(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    origin
+  )).
+
+(* At sequence one, the exact authenticated record and its bound assigned ID originate at the server. Raw response encodings are absent; their historical equality query is retained as a negative regression control. *)
+query main_agreement: authenticated_registration_session_t, main_payload: bitstring, main_frame: bitstring, main_claimed: key_id;
+  inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement, first_sequence(), main_payload, main_frame, main_claimed)) ==>
+  inj-event(AuthenticatedRegistrationRecordSent(main_agreement, first_sequence(), main_payload, main_frame, main_claimed)).
+
+(* Authentication, replay resistance, peer binding, direction separation,
+   and sequence binding for every honest-role accepted record in the bounded
+   prefix.  The malicious server path emits none of these honest events. *)
+query session: bitstring,
+      message_direction: direction,
+      message_sequence: sequence,
+      sender: key_id,
+      receiver: key_id,
+      plaintext: bitstring;
+  inj-event(MessageReceived(
+    session,
+    message_direction,
+    message_sequence,
+    sender,
+    receiver,
+    plaintext
+  )) ==>
+  inj-event(MessageSent(
+    session,
+    message_direction,
+    message_sequence,
+    sender,
+    receiver,
+    plaintext
+  )).
+
+(* Every modeled completion agrees on pinned identities, the authenticated Phase-1 bundle and origin, actual root and associated data, and the exact authenticated record. Raw response encodings, pre-Extract input and assigned routing ID are excluded from this session equality. Later application payloads can authenticate a different ID prefix, so the all-sequence record query keeps claimed and originally assigned IDs distinct. *)
+query main_agreement: authenticated_registration_session_t, main_sequence: sequence, main_payload: bitstring, main_frame: bitstring, main_claimed: key_id, main_server_assigned: key_id;
+  inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_claimed)) ==>
+  inj-event(ServerAuthenticatedSessionCommitted(main_agreement, main_server_assigned)).
+
+query main_agreement: authenticated_registration_session_t, main_sequence: sequence, main_payload: bitstring, main_frame: bitstring, main_claimed: key_id, main_server_assigned: key_id;
+  inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_claimed)) ==>
+  inj-event(AuthenticatedRegistrationRecordSent(main_agreement, main_sequence, main_payload, main_frame, main_server_assigned)).

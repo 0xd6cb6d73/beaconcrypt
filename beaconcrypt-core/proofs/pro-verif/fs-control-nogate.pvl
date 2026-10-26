@@ -1,0 +1,31 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* NEGATIVE CONTROL C-NOGATE for fs-records-s2b: the finish has no
+   sequence-one gate, so a later frame that it opened continues to the
+   binding check and the commit, as on the branch vcvio, which lacks the
+   gate.  No receive attempt follows such a commit.  Loaded instead of
+   fs-records-s2b-gate.pvl; A1 must become FALSE through the later-record
+   substitution (HB-95). *)
+let FsS2bFinishLater(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+  assigned_key_id: key_id,
+  root: bitstring,
+  associated_data: bitstring,
+  expected_binding: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+  later_plaintext: bitstring
+) =
+  let registration_payload(
+    =expected_binding,
+    application_payload: bitstring
+  ) = later_plaintext in
+  event FsBeaconEstablished(
+    server_identity,
+    beacon_identity,
+    init,
+    assigned_key_id,
+    root,
+    associated_data,
+    application_payload
+  ).

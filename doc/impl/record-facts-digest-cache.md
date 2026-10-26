@@ -1,0 +1,9 @@
+# Canonical combined digest cache
+
+`PqxdhRecordFactsDigestCache` supplies six guarded state identities for the combined digest interface. `cacheOf` packs every coordinate's private suffix dictionary at `.inl (label, suffix)` and the actual shared ROM at `.inr bytes`. The ordinary lookup explicitly retains the existing `CtxRO` input `((), bytes)`; dropping the unique unit value introduces no extra hash namespace or injectivity premise.
+
+`cacheOf_initial` identifies actual normalized source initialization with the empty combined cache. `cacheOf_pending` shows that writer-buffer reinstallation preserves both halves. `sealedState` is the complete source keyed poststate obtained by the original local state lens and `sealResult`; `cacheOf_sealed` identifies its combined cache with precisely one private-address update, retaining every other private entry and every ordinary hash answer.
+
+`cacheOf_base` exposes both halves after an arbitrary base-state update. `cacheOf_base_frame` proves equality when that operation retains the shared cache. `withShared` changes only the existing shared ROM, preserving native and uniform instrumentation and every private entry. `cacheOf_shared_query` identifies its one-point update with exactly the corresponding ordinary-address update in the combined cache.
+
+These are extensional identities, not assumptions about independent values or adversarial access. They execute no sampling and introduce no reduction loss or query bound. The later compiler must still prove that its ordinary and private queries use these actual state projections, retain all original costs, and respect the first-seal conditions needed for a fresh private sample. No primitive, codec, deployment, freshness, snapshot or persistence contract is added. All six statements have exact axiom guards drawn only from `propext`, `Classical.choice` and `Quot.sound`.

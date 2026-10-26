@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-06T04:57:51.546950+00:00",
+  "reviewer": "root; independent of fs_source_abstraction author",
+  "manifest": "/tmp/bc-arc-scratch/pv-work/exact-interface-strong-secrecy/maintained-review-manifest.json",
+  "manifest_sha256": "43cc2258b98768a3eac92fbe5dd124ceb4ab7b4894b7d46dc072c5870319119f",
+  "decision": "approved for scoped source/shared-gate integration; final maintained solver archive to be checked before publication",
+  "scope": "Make serial extension wiring, unchanged prior fidelity gates, exact classification/allowlist/inventory preservation, resource ceilings, fail-closed result checks, documentation scope",
+  "evidence": {
+    "frozen_files": 46,
+    "prior_verdict_rows_preserved": 3190,
+    "new_verdict_rows": 8,
+    "prior_gate_lines_preserved": 21108,
+    "new_allowlist_rows": 25,
+    "new_axiom_or_restriction_entries": 0,
+    "independent_dedicated_regressions": 14,
+    "independent_classification_regressions": 20,
+    "check_only": "exit0"
+  },
+  "findings": [],
+  "semantic_review": "evolving strong-maintained-semantics.json SHA4821874348e086e5add20b2fe91a2cda3e96d5fa36532a63fcef19eb32ce1b7a covers paired paper/model comparator",
+  "limits": [
+    "Two bounded directional chosen-message T0 comparisons; no global or public optional-plaintext inference.",
+    "Four FALSE rows are reachability controls, not observed observational inequivalence.",
+    "Analysis annotations preserve source-point fresh restrictions; injectivity/ROM/computational reduction/query costs remain separate.",
+    "Focused initial inventory count failure retained; final corrected metadata pass must accompany publication."
+  ]
+}

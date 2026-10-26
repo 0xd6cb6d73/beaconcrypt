@@ -1,0 +1,705 @@
+{
+ "date": "2026-10-21",
+ "scope": "VCVio deprecation migration, stage S9 and final sweep, fixes of the confirming review at 9199ab6a (C1-1 minor: proof steps that rewrite the pin's expansion of Pr{...}; C1-2 nit: Boolean-advantage wording); Lean-only by owner decision item 5",
+ "basis": "86bbc791bb3f2f8ad3747394fc68620101faa8ae",
+ "previous_head": "9199ab6a55f0f2ae3793bf59178978619857f2c2",
+ "topic": {
+  "branch": "codex/vcvio-migration-S9",
+  "clone": "/home/user/bc-vmig-S9"
+ },
+ "commits": {
+  "fixes": "the commit that adds this receipt"
+ },
+ "review": {
+  "name": "S9 confirming review round 1 (stage S9 and final sweep review fixes)",
+  "verdict": "REQUEST_CHANGES",
+  "commit": "9199ab6a55f0f2ae3793bf59178978619857f2c2",
+  "findings_sha256": "17698c57f8ef95fae2317343968f27fc90e90357f1a2b4b92eaa6c3d285bf5d4",
+  "owner_pending": "none",
+  "findings": {
+   "C1-1": "minor",
+   "C1-2": "nit"
+  }
+ },
+ "owner_level": [],
+ "C1-1": {
+  "defect": "proof steps rewrite the bind that the pin's macro Pr{let x <- mx}[p x] = D[mx >>= fun x => pure (p x)] {True} adds (bind laws at the result type Prop, flattened laws stated for Prop-valued computations, full simplifications reaching it); upstream afa6593f elaborates the notation to prEvent ((fun x => p x) <$> mx), so the steps fail at the upgrade; they name no removed constant, so G5 and the residual report do not see them",
+  "probe": {
+   "file": "review-fix-2/scripts/ExpansionProbe.lean.in",
+   "sha256": "52a2b568e0a9c99fbc1fe292408cc3b4455777ba0f06f5193cb2fcae62cc329d",
+   "criterion_Q": "an application, in the value of a declaration outside the shim and bridge modules, of a theorem concluding @Eq (F b) l r with b a binder instantiated at Prop",
+   "criterion_P": "an application of a theorem with a binder of type F Prop or a function type into F Prop (prEvent_le_one/ne_top/lt_top applied with `_` are reported separately and are portable)",
+   "build_9199ab6a": {
+    "lease": "00002219",
+    "declarations": 56,
+    "by_stage": {
+     "S2": 1,
+     "S4": 3,
+     "S5": 11,
+     "S6": 7,
+     "S7": 11,
+     "S8": 4,
+     "S9": 19
+    }
+   },
+   "build_86bbc791": {
+    "lease": "00002123",
+    "declarations": 37,
+    "equal_to_the_earlier_stage_declarations_of_9199ab6a": true
+   },
+   "build_of_this_fix": {
+    "lease": "00002386",
+    "Q_rows": 0,
+    "P_bind_law_rows": 0
+   }
+  },
+  "declarations": [
+   {
+    "stage": "S5",
+    "module": "AdaptiveCtxAliasCoupling",
+    "declaration": "AdaptiveCtxAliasCoupling.flagged_bad_eq_first",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "OracleComp.prEvent_bind_congr_of_support"
+    ]
+   },
+   {
+    "stage": "S5",
+    "module": "AdaptiveCtxPrefixValidation",
+    "declaration": "AdaptiveCtxPrefixValidation.loggedProbe_le_validationReal",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.bind_pure_comp",
+     "LawfulMonad.pure_bind",
+     "OracleComp.prEvent_bind_mono_of_support"
+    ]
+   },
+   {
+    "stage": "S5",
+    "module": "AdaptiveRawNonceAead",
+    "declaration": "AdaptiveRawNonceAead.simulated_bad_eq_firstDiscrepancy",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "OracleComp.prEvent_bind_congr_of_support"
+    ]
+   },
+   {
+    "stage": "S5",
+    "module": "CtxComputationalPrivacy",
+    "declaration": "CtxComputationalPrivacy.ctxPrivacyDirectProbe_le_booleanRealInner",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.bind_pure_comp",
+     "LawfulMonad.pure_bind",
+     "OracleComp.prEvent_bind_mono_of_support"
+    ]
+   },
+   {
+    "stage": "S5",
+    "module": "CtxComputationalSecurity",
+    "declaration": "CtxComputationalSecurity.ctxClassifiedVerifier_le_inv_of_direct_support",
+    "constants": [
+     "Functor.map_map",
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.bind_pure_comp",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S5",
+    "module": "CtxComputationalSecurity",
+    "declaration": "CtxComputationalSecurity.ctxTypedFullFreshVerifier_le_classified_of_cache_sound",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S5",
+    "module": "CtxNonceAeadIndDollarValidation",
+    "declaration": "CtxNonceAeadIndDollarValidation.directProbe_le_booleanRealInner",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.bind_pure_comp",
+     "LawfulMonad.pure_bind",
+     "OracleComp.prEvent_bind_mono_of_support"
+    ]
+   },
+   {
+    "stage": "S5",
+    "module": "CtxUnclaimedAcceptance",
+    "declaration": "CtxUnclaimedAcceptance.acceptedVerifier_le_classified_of_cache_sound",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S5",
+    "module": "CtxUnclaimedAcceptance",
+    "declaration": "CtxUnclaimedAcceptance.classifiedVerifier_le_inv_of_direct_support",
+    "constants": [
+     "Functor.map_map",
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.bind_pure_comp",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S7",
+    "module": "PqxdhAuthenticatedRootCorrectness",
+    "declaration": "PqxdhAuthenticatedRootCorrectness.after_bound",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhDeploymentHeadlineAnomaly",
+    "declaration": "PqxdhDeploymentHeadlineAnomaly.ptc_random_le",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhDeploymentHeadlineCollision",
+    "declaration": "PqxdhDeploymentHeadlineCollision.pair_random_le",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhDeploymentHeadlineLor",
+    "declaration": "PqxdhDeploymentHeadlineLor.chance_split",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhDeploymentKemTwoSided",
+    "declaration": "PqxdhDeploymentKemTwoSided.real_le_run",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "OracleComp.prEvent_bind_const"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhDeploymentLaterKemTwoSided",
+    "declaration": "PqxdhDeploymentLaterKemTwoSided.real_le_run",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "OracleComp.prEvent_bind_const"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhDeploymentLaterServerBridge",
+    "declaration": "PqxdhDeploymentLaterServerBridge.run_le_real",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "OracleComp.prEvent_bind_const"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhDeploymentLaterServerKemHop",
+    "declaration": "PqxdhDeploymentLaterServerKemHop.real_error",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "OracleComp.prEvent_bind_const"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhDeploymentProvenance",
+    "declaration": "PqxdhDeploymentProvenance.client_transfer",
+    "constants": [
+     "Functor.map_map",
+     "LawfulApplicative.map_pure",
+     "LawfulMonad.bind_pure_comp",
+     "map_bind"
+    ]
+   },
+   {
+    "stage": "S4",
+    "module": "PqxdhDynamicIdentityRouting",
+    "declaration": "PqxdhDynamicIdentityRouting.reserved_event_le_global",
+    "constants": [
+     "Functor.map_map",
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S8",
+    "module": "PqxdhFirstBeaconRecordCtx",
+    "declaration": "PqxdhFirstBeaconRecordCtx.alias_bound",
+    "constants": [
+     "Functor.map_map",
+     "LawfulMonad.bind_pure_comp",
+     "map_bind"
+    ]
+   },
+   {
+    "stage": "S5",
+    "module": "PqxdhGeneratedPhase1Prefix",
+    "declaration": "PqxdhGeneratedPhase1Prefix.authentication_bound",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S7",
+    "module": "PqxdhInitialCommonSecrecy",
+    "declaration": "PqxdhInitialCommonSecrecy.actual_route",
+    "constants": [
+     "LawfulMonad.bind_assoc"
+    ]
+   },
+   {
+    "stage": "S7",
+    "module": "PqxdhInitialCommonSecrecy",
+    "declaration": "PqxdhInitialCommonSecrecy.local_bound",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S7",
+    "module": "PqxdhInitialHalfSecrecy",
+    "declaration": "PqxdhInitialHalfSecrecy.actual_route",
+    "constants": [
+     "LawfulMonad.bind_assoc"
+    ]
+   },
+   {
+    "stage": "S7",
+    "module": "PqxdhInitialHalfSecrecy",
+    "declaration": "PqxdhInitialHalfSecrecy.local_bound",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S7",
+    "module": "PqxdhInitialNativeRisk",
+    "declaration": "PqxdhInitialNativeRisk.callback_risk",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S7",
+    "module": "PqxdhInitialParentStoppedHop",
+    "declaration": "PqxdhInitialParentStoppedHop.actual_route",
+    "constants": [
+     "LawfulMonad.bind_assoc"
+    ]
+   },
+   {
+    "stage": "S7",
+    "module": "PqxdhInitialSampledParent",
+    "declaration": "PqxdhInitialSampledParent.local_bound",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S7",
+    "module": "PqxdhInitialSampledParentSecrecy",
+    "declaration": "PqxdhInitialSampledParentSecrecy.actual_route",
+    "constants": [
+     "LawfulMonad.bind_assoc"
+    ]
+   },
+   {
+    "stage": "S7",
+    "module": "PqxdhInitialSourceLaterMixture",
+    "declaration": "PqxdhInitialSourceLaterMixture.random_bound",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S7",
+    "module": "PqxdhInitialSourceLaterMixture",
+    "declaration": "PqxdhInitialSourceLaterMixture.real_bound",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S4",
+    "module": "PqxdhJointIdentityEvents",
+    "declaration": "PqxdhJointIdentityEvents.reportingRun_le_extractor",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S4",
+    "module": "PqxdhJointIdentityFreshness",
+    "declaration": "PqxdhJointIdentityFreshness.targetEvent_le_jointAdvantage",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind",
+     "OracleComp.prEvent_bind_mono_of_support"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhLaterCommonRisk",
+    "declaration": "PqxdhLaterCommonRisk.sample_inner_common",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhLaterInputAlias",
+    "declaration": "PqxdhLaterInputAlias.prepared_collision",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S5",
+    "module": "PqxdhPrivatePhase1Prefix",
+    "declaration": "PqxdhPrivatePhase1Prefix.authentication_bound",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhRecordFactsOriginFailedCallback",
+    "declaration": "PqxdhRecordFactsOriginFailedCallback.resume_probability",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhRecordFactsOriginFailedFlag",
+    "declaration": "PqxdhRecordFactsOriginFailedFlag.sampled_le_trace",
+    "constants": [
+     "LawfulApplicative.map_pure",
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.bind_pure_comp",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhRecordFactsOriginFailedFlag",
+    "declaration": "PqxdhRecordFactsOriginFailedFlag.sampled_probability",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhRecordLiftProjectionCut",
+    "declaration": "PqxdhRecordLiftProjectionCut.candidate_bound",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhRecordLiftSeedCut",
+    "declaration": "PqxdhRecordLiftSeedCut.candidate_bound",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhRegistrationJointFinalReportEvent",
+    "declaration": "PqxdhRegistrationJointFinalReportEvent.transport",
+    "constants": [
+     "Functor.map_map",
+     "LawfulMonad.bind_pure_comp",
+     "map_bind"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhRegistrationJointKemRawBridge",
+    "declaration": "PqxdhRegistrationJointKemRawBridge.run_le_real",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "OracleComp.prEvent_bind_const"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhRegistrationJointKemRawGame",
+    "declaration": "PqxdhRegistrationJointKemRawGame.branchRaw_real_error",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "OracleComp.prEvent_bind_const"
+    ]
+   },
+   {
+    "stage": "S9",
+    "module": "PqxdhRegistrationR1RootProbability",
+    "declaration": "PqxdhRegistrationR1RootProbability.prefix_probability",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S8",
+    "module": "PqxdhServerAuthCollision",
+    "declaration": "PqxdhServerAuthCollision.verified_third_probability",
+    "constants": [
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S8",
+    "module": "PqxdhServerAuthControlWitness",
+    "declaration": "PqxdhServerAuthControlWitness.wKemError",
+    "constants": [
+     "LawfulApplicative.map_pure",
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S8",
+    "module": "PqxdhServerAuthPublicationTag",
+    "declaration": "PqxdhServerAuthPublicationTag.first_seal_guess",
+    "constants": [
+     "LawfulMonad.bind_assoc",
+     "LawfulMonad.pure_bind"
+    ]
+   },
+   {
+    "stage": "S6",
+    "module": "RawCtxCheckedParentSecrecy",
+    "declaration": "RawCtxCheckedParentSecrecy.actual_route",
+    "constants": [
+     "LawfulMonad.bind_assoc"
+    ]
+   },
+   {
+    "stage": "S6",
+    "module": "RawCtxFamilyParentSecrecy",
+    "declaration": "RawCtxFamilyParentSecrecy.actual_route",
+    "constants": [
+     "LawfulMonad.bind_assoc"
+    ]
+   },
+   {
+    "stage": "S6",
+    "module": "RawCtxSelectedAliasCompiler",
+    "declaration": "RawCtxSelectedAliasCompiler.source_distance",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S6",
+    "module": "RawCtxSelectedParentHop",
+    "declaration": "RawCtxSelectedParentHop.actual_route",
+    "constants": [
+     "LawfulMonad.bind_assoc"
+    ]
+   },
+   {
+    "stage": "S6",
+    "module": "RawCtxSelectiveTargets",
+    "declaration": "RawCtxSelectiveTargets.event_partition",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S6",
+    "module": "RawCtxStoppedParentSecrecy",
+    "declaration": "RawCtxStoppedParentSecrecy.actual_route",
+    "constants": [
+     "LawfulMonad.bind_assoc"
+    ]
+   },
+   {
+    "stage": "S6",
+    "module": "RawCtxStoppedParentSecrecy",
+    "declaration": "RawCtxStoppedParentSecrecy.local_bound",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   },
+   {
+    "stage": "S2",
+    "module": "UniformTargetSelection",
+    "declaration": "UniformTargetSelection.split",
+    "constants": [
+     "LawfulMonad.bind_pure_comp"
+    ]
+   }
+  ],
+  "reviewer_steps": "the twelve named steps (KemTwoSided, LaterKemTwoSided, LaterServerBridge, KemRawBridge, KemRawGame, LaterServerKemHop, LaterInputAlias, RecordLiftProjectionCut, RecordLiftSeedCut, HeadlineAnomaly, HeadlineCollision, LaterCommonRisk) and the candidates FailedCallback (1 declaration) and FailedFlag (2) are among the 19 of stage S9",
+  "replacement": "named laws on the computation (OracleComp.EvalDistEq.bind_const with EvalDistEq.prEvent_eq; bind_pure_comp given the draw or the result type, then prEvent_map); bind laws restricted to the computation's result type; prEvent_bind_mono_of_forall_le_of_support / prEvent_bind_congr instead of the flattened laws; Boolean point-mass forms (prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_decide) for computation normalization; prEvent_pure / prEvent_false / prEvent_eq_zero_of_forall_not / OracleComp.prEvent_eq_zero_iff for pure or impossible branches; full simplifications only on goals without an event (le_of_eq_of_le, generalize of a point mass)",
+  "edit_script": {
+   "file": "review-fix-2/scripts/edit_lean_rf2.py",
+   "sha256": "b35d80dab660fc1a53994a62cfc4ed1c4187c29ec5c8400a7e8080ce7ecd558a",
+   "edits": 76,
+   "files": 49,
+   "note": "exact-text, count-checked replacements against the 9199ab6a blobs; apply on a copy equals the work tree and revert is byte-identical to the originals"
+  },
+  "replay": {
+   "bodies": {
+    "shapes-body.lean.in": "5938f55cc9580ff071b41f4e097963a6f7b70cc59ca04d4bf65fdcdfb59e8488",
+    "shapes2-body.lean.in": "fabecc4b11e556ba7a0165e9ad6f1037c2ed666c5eb632124a793d81b280439c",
+    "old2-body.lean.in": "a22cc9bdc72f8d64b2eb6a81b64064cf8cd032c6a480aa9ad8cc8d27c6b691ec"
+   },
+   "pin_leanpath": "the clone build (stage/leanpath-clone) or its overlay copy (review-fix-2/farm)",
+   "upstream_leanpath": "S0/base/leanpath-upstream-afa6593f",
+   "results": {
+    "replay-shapes-pin": {
+     "lease": "00002222",
+     "rc": 0,
+     "diagnostics": []
+    },
+    "replay-shapes-upstream": {
+     "lease": "00002223",
+     "rc": 0,
+     "diagnostics": []
+    },
+    "replay-shapes2-pin": {
+     "lease": "00002376",
+     "rc": 0,
+     "diagnostics": []
+    },
+    "replay-shapes2-upstream": {
+     "lease": "00002377",
+     "rc": 0,
+     "diagnostics": []
+    },
+    "replay-old2-pin": {
+     "lease": "00002378",
+     "rc": 0,
+     "diagnostics": []
+    },
+    "replay-old2-upstream": {
+     "lease": "00002379",
+     "rc": 1,
+     "diagnostics": [
+      "/tmp/bc-arc-scratch/vcvio-migration/S9/review-fix-2/replay/Old2Upstream.lean:21:2: error: `simp` made no progress",
+      "/tmp/bc-arc-scratch/vcvio-migration/S9/review-fix-2/replay/Old2Upstream.lean:28:2: error: `simp` made no progress",
+      "/tmp/bc-arc-scratch/vcvio-migration/S9/review-fix-2/replay/Old2Upstream.lean:34:7: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern",
+      "/tmp/bc-arc-scratch/vcvio-migration/S9/review-fix-2/replay/Old2Upstream.lean:41:2: error: `simp` made no progress",
+      "/tmp/bc-arc-scratch/vcvio-migration/S9/review-fix-2/replay/Old2Upstream.lean:52:8: error: typeclass instance problem is stuck"
+     ]
+    }
+   },
+   "note": "the replacement shapes of stage S9 (17 examples) and of the earlier stages (13 examples) compile without a diagnostic on both builds; the five replaced earlier-stage shapes compile on the pin and fail upstream (the reviewer's confirm-1 replay showed the same for the twelve S9 steps)"
+  },
+  "simp_bridge_exclusions": "stage S9: four rewritten proofs (FailedFlag.sampled_le_trace, Provenance.client_transfer, R1RootProbability.prefix_probability, HeadlineLor.chance_split) no longer exclude the pin's bridges, so five simp/simpa calls of the stage exclude all three and one (hitAt_bound) only evalDist_apply_singleton; stage S7: PqxdhInitialNativeRisk.callback_risk no longer needs it (eight declarations, 14 calls); stage S5: the three refused branches of the validation probes use simp only with event laws"
+ },
+ "C1-2": {
+  "defect": "LA-09 and the HB-124 summary listed the Boolean advantage among notions the pin defines on its subprobability layer; the pin defines ProbComp.boolDistAdvantage from the measure-valued evalDist, SPMF.boolDistAdvantage is used by no project declaration, and only the bound of the Boolean advantage by total variation is on that layer",
+  "changes": [
+   "trusted-boundary.md LA-09: 'total variation (with the bound of the Boolean advantage by it), expectations and the subdistribution adapter semantics'",
+   "trusted-boundary.md HB-124 summary: 'total variation and the bound of the Boolean advantage by it, ...; the pin defines the Boolean advantage itself from the measure-valued interface, and upstream removes it'",
+   "trusted-boundary.md final-sweep section: same wording",
+   "vcvio-upgrade-residual.md: subprobability statements reached through total variation (which also bounds the Boolean advantage) and expectations; ProbComp.boolDistAdvantage is residual because upstream removes it",
+   "formal-verification-analysis.md final acceptance paragraph: one statement also through the bound of the Boolean advantage by total variation"
+  ],
+  "change_of_trust": "none (documentation only)"
+ },
+ "documents": {
+  "edit_script": {
+   "file": "review-fix-2/scripts/edit_docs_rf2.py",
+   "sha256": "a818c29d61718d660a056b53c6f921ee7f66b4f2c9a0bfae96b0efa1892505e2"
+  },
+  "append_script": {
+   "file": "review-fix-2/scripts/append_docs_rf2.py",
+   "sha256": "35f705086b199c53345214d9496e3e5001f59bb0927bbe9c1a67e84a6b85fae4"
+  }
+ },
+ "build": {
+  "check_lean": {
+   "lease": "00002372",
+   "rc": 0,
+   "jobs": 5535,
+   "modules_built_count": 1827,
+   "error_records": 0
+  },
+  "warning_categories": true
+ },
+ "post_build": {
+  "declaration_diff_vs_9199ab6a": "DECL-DIFF before 95128 after 95133 added 5 removed 0 changed 57 by-columns {'value_hash': 56, 'type_fp': 1}",
+  "facade_probe_equal_to_9199ab6a": true,
+  "statement_names_equal_to_9199ab6a": true,
+  "usage_probe_equal_to_9199ab6a": false,
+  "used_probe_equal_to_9199ab6a": false,
+  "source_scan_equal_to_9199ab6a": false,
+  "step7_lean_scan": "LEAN-SCAN files 1994 hits 0",
+  "twin_names_in_comments": "TWIN-NAMES-IN-COMMENTS files 1994 hits 0",
+  "prose_check_vs_9199ab6a": "PROSE-CHECK files 49 modified 1 added 0 removed 0 wrapped-added 0 scratch-refs 0",
+  "step7_axiom_walk": [
+   "AXIOM-WALK roots 95133 reached 121982 unresolved 0",
+   "AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]",
+   "SERVER-DOMAIN PqxdhDeploymentKemTwoSided.kem_transfer_two_sided true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealCompile.ideal_compile true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealHandoff.ideal_world_view true",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss false",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared false",
+   "SERVER-DOMAIN PqxdhRegistrationJointBeaconFinishOnce.slotGame_two false"
+  ],
+  "step7_axiom_walk_note": "equal to the final sweep's lines except the counts: 95,133 roots (the five added generated helpers) and 121,982 reached constants, none unresolved",
+  "step7_axiom_walk_other_lines_equal_to_final": true,
+  "phaseb_report_equal_to_9199ab6a": true,
+  "phaseb_exception_lists_equal": true,
+  "cumulative_g4_vs_9199ab6a": "differs only in /added/by_class/generated helper 78 -> 83, /added/total 189 -> 194 and /final/declarations 95128 -> 95133",
+  "final_residual_equal_to_9199ab6a": true,
+  "final_acceptance": "RESULT PASS",
+  "final_acceptance_vs_9199ab6a": "differs only in /G4_cumulative/added/generated helper 78 -> 83 and /G4_cumulative/final/declarations 95128 -> 95133",
+  "rebuilt_closure": "expected (49 targets + transitive importers + root) 1827 built 1827 equal True",
+  "probe_differences": "same constants (used 546, usage 540); only user counts change (review-fix-2/logs/probe-diff-1.log)",
+  "scan_differences": "same 28 sites (bridge) and 54 comment mentions; 37 files differ in line counts, PqxdhServerAuthCollision has one more new-notation use (review-fix-2/logs/scan-diff-1.log)",
+  "declaration_diff_detail": "the 56 rewritten theorems change their proof terms (value_hash); added generated helpers: BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.loggedProbe_le_validationReal._simp_1_1, BeaconcryptCore.Computational.CtxComputationalPrivacy.ctxPrivacyDirectProbe_le_booleanRealInner._simp_1_1, BeaconcryptCore.Computational.CtxNonceAeadIndDollarValidation.directProbe_le_booleanRealInner._simp_1_4, BeaconcryptCore.Computational.PqxdhDeploymentProvenance.client_transfer._simp_1_1, BeaconcryptCore.Computational.PqxdhRecordFactsOriginFailedFlag.sampled_le_trace._simp_1_3; PqxdhLaterInputAlias.prepared_collision._proof_1_2 changes its binder-aware fingerprint only"
+ },
+ "certificates": {
+  "leases": [
+   "00002387",
+   "00002388"
+  ],
+  "pass": 54,
+  "negative_lines": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21
+  ],
+  "checker": "RESULT PASS"
+ },
+ "inventory": {
+  "recount": "handwritten-lean count unchanged (1987)",
+  "rehash": "proofs/trusted-boundary.md: 88365696d5c2 -> 489005369aa1",
+  "check_inventory_lease": "00002389"
+ },
+ "not_run": "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests and the mutation suite (owner decision item 5: only Lean files and documents change)"
+}

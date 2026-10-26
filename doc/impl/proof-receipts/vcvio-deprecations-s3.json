@@ -1,0 +1,2663 @@
+{
+ "date": "2026-10-20",
+ "scope": "VCVio deprecation migration, stage S3 (plan doc/impl/vcvio-deprecation-migration-plan.md section 7: PqxdhProjection*, PqxdhHidden*, PqxdhExtract*): restatement of 57 theorems of the three large proof files PqxdhProjectionCollisions, PqxdhHiddenRoot and PqxdhExtractRomHiddenSuffix in VCVio's forward vocabulary (Pr{let x <- mx}[...] and EvalDistEq), with out-of-build inverse-map certificates; two transitional twins and their ten later-stage consumer declarations; phase B proof rewrites in these files; Lean-only validation.",
+ "basis": "77950cf2fcac55ed52ff275de4afae307659c81b",
+ "topic": {
+  "branch": "codex/vcvio-migration-S3",
+  "clone": "/home/user/bc-vmig-S3"
+ },
+ "commits": {
+  "a8c9c2de96208b4e57df0732b0f52716d7ed6cda": "Migrate VCVio stage S3 to the forward probability vocabulary",
+  "docs": "the commit that adds this receipt"
+ },
+ "owner_decisions": {
+  "item 4 (decision 2026-10-19)": "D1-D5 and D8-D11 as recommended in plan section 11; D6 phase B included",
+  "item 5 (decision 2026-10-19, revising D7)": "Lean-only validation per stage: make check-lean, make check-inventory, the step 7 scans and the certificates; no verify-in-shell, ProVerif, transcript fidelity, cargo, Go or Python checks",
+  "amendments": "A1, A1.1 and A2 items 1-3 (/tmp/bc-arc-scratch/vcvio-migration/AMENDMENTS.md, recorded in the plan copy); A2 item 4 pending the owner"
+ },
+ "restated": {
+  "theorems": [
+   "PqxdhExtractRomHiddenSuffix.flag_agree",
+   "PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+   "PqxdhExtractRomHiddenSuffix.guess_finset_le",
+   "PqxdhExtractRomHiddenSuffix.guess_le",
+   "PqxdhExtractRomHiddenSuffix.secret_tvDist",
+   "PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+   "PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream",
+   "PqxdhHiddenRoot.evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame",
+   "PqxdhHiddenRoot.hiddenRootHiddenFirstCandidate_probEvent_eq_independent",
+   "PqxdhHiddenRoot.hiddenRootProgrammedView_probEvent_bad_eq",
+   "PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad",
+   "PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+   "PqxdhHiddenRoot.jointKdfSimulate_withQueryLog_probEvent_bad_eq",
+   "PqxdhHiddenRoot.jointKdfSingletonProgrammed_bad_le_random_candidate",
+   "PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_agree_good",
+   "PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq",
+   "PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+   "PqxdhHiddenRoot.jointKdfSingletonTracking_candidate_probEvent_eq_random",
+   "PqxdhHiddenRoot.probEvent_hiddenRootIndependentCandidateExperiment_le",
+   "PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le",
+   "PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le_hiddenFirstCandidate",
+   "PqxdhHiddenRoot.probEvent_uniformHiddenRoot_candidateHit_le",
+   "PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+   "PqxdhProjectionCollisions.evalSPMF_fixedJointStreamRandom_eq_eagerCoordinates",
+   "PqxdhProjectionCollisions.evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates",
+   "PqxdhProjectionCollisions.evalSPMF_map_run_simulateQ_eq_of_query_map_evalSPMF_eq",
+   "PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill",
+   "PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_insert_prefetch_irrelevant",
+   "PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant",
+   "PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_query_prefetch_irrelevant",
+   "PqxdhProjectionCollisions.evalSPMF_randomOracle_eq_uniform_prefill",
+   "PqxdhProjectionCollisions.evalSPMF_randomOracle_prefetch_irrelevant",
+   "PqxdhProjectionCollisions.evalSPMF_run_jointKdfStreamEagerCoordinateForwardImpl_miss",
+   "PqxdhProjectionCollisions.evalSPMF_sourceKdfEagerCoordinate_eq_deferred",
+   "PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_initial_bind_eq_deferred",
+   "PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_first_bind_eq_deferred",
+   "PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_nonce_bind_eq_deferred",
+   "PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_second_bind_eq_deferred",
+   "PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_query_bind_eq_deferred",
+   "PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_root_bind_eq_deferred",
+   "PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_step_bind_eq_deferred",
+   "PqxdhProjectionCollisions.evalSPMF_sourceProjectionObservedFullRandom_eq_deferred",
+   "PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream",
+   "PqxdhProjectionCollisions.probEvent_projectionCacheBad12_le_birthday",
+   "PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux",
+   "PqxdhProjectionCollisions.probEvent_projectionCacheBad32_le_birthday",
+   "PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux",
+   "PqxdhProjectionCollisions.probEvent_projectionObservedCollision_eq_cache",
+   "PqxdhProjectionCollisions.probEvent_sourceProjectionCollision_fullRandom_eq_cache",
+   "PqxdhProjectionCollisions.probOutput_collisionBit_eq_probEvent",
+   "PqxdhProjectionCollisions.probOutput_collisionReduction_random_eq_sourceEvent",
+   "PqxdhProjectionCollisions.probOutput_collisionReduction_real_eq_sourceEvent",
+   "PqxdhProjectionCollisions.sourceProjectionCacheBad12_random_le",
+   "PqxdhProjectionCollisions.sourceProjectionCacheBad32_random_le",
+   "PqxdhProjectionCollisions.sourceProjectionCollision_fullRandom_le",
+   "PqxdhProjectionCollisions.sourceProjectionCollision_random_le",
+   "PqxdhProjectionCollisions.sourceProjectionCollision_real_le"
+  ],
+  "private": [
+   "PqxdhProjectionCollisions.evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates",
+   "PqxdhProjectionCollisions.evalSPMF_map_run_simulateQ_eq_of_query_map_evalSPMF_eq",
+   "PqxdhProjectionCollisions.evalSPMF_run_jointKdfStreamEagerCoordinateForwardImpl_miss",
+   "PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux",
+   "PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux"
+  ],
+  "wrapper_definitions": [],
+  "textual_fallback_certificate": [
+   "PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream"
+  ],
+  "twins": [
+   "PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+   "PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream"
+  ],
+  "twin_headers_with_unused_variables_switch": [
+   "PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind"
+  ],
+  "consumer_references_renamed": 14,
+  "consumer_files_renamed": 8,
+  "consumer_declarations": 10,
+  "consumers": [
+   "PqxdhDeploymentLaterServerKemHop.real_error",
+   "PqxdhInitialAliasBound.cut_distance",
+   "RawCtxSelectedAliasCut.cut_distance",
+   "PqxdhKemCorrectnessStopped.after_bound",
+   "PqxdhKemCorrectnessStopped.prepared_bound",
+   "PqxdhKemCorrectnessStopped.stopped_bound",
+   "PqxdhRegistrationJointKemRawGame.branchRaw_real_error",
+   "PqxdhKemCorrectnessError.continuation_bound",
+   "PqxdhInitialAliasEvent.bound",
+   "PqxdhFullSecretInputKdf.projectedOutput_uniform"
+  ]
+ },
+ "lean_changes": {
+  "statements": "probOutput -> Pr{let x <- mx}[x = a]; probEvent -> Pr{let x <- mx}[p x] (old lambda binder names kept; a bare predicate p becomes Pr{let x <- mx}[p x], which the certificate's inverse map rebuilds by eta reduction); evalSPMF A = evalSPMF B and 𝒮[A] = 𝒮[B] -> EvalDistEq A B (amendment A1, no =ᵈ), including the hypothesis of the private transport lemma evalSPMF_map_run_simulateQ_eq_of_query_map_evalSPMF_eq",
+  "suppression_lines_removed": {
+   "PqxdhExtractRomHiddenSuffix": 8
+  },
+  "imports_added": {
+   "PqxdhExtractRomHiddenSuffix": [
+    "VCVioLegacyBridge"
+   ],
+   "PqxdhHiddenRoot": [
+    "VCVioLegacyBridge"
+   ]
+  },
+  "proofs_rewritten_statement_kept": [
+   "PqxdhExtractRomHiddenSuffix.prefix_tvDist",
+   "PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist",
+   "PqxdhExtractRomHiddenSuffix.hidden_suffix_bound",
+   "PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+   "PqxdhHiddenRoot.hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add"
+  ],
+  "phase_b_laws_used": [
+   "prEvent_map",
+   "prEvent_mono",
+   "prEvent_congr",
+   "prEvent_mono_of_support",
+   "prEvent_congr_of_support",
+   "prEvent_exists_finset_le",
+   "prEvent_exists_le",
+   "prEvent_or_le",
+   "prEvent_bind_le_of_forall_le_of_support",
+   "prEvent_bind_le_prEvent_add_of_support",
+   "prEvent_eq_zero_of_forall_not",
+   "prEvent_eq_zero_of_forall_mem_support",
+   "prEvent_eq_zero_of_not_mem_support",
+   "prEvent_eq_evalDist_singleton",
+   "prEvent_ne_top",
+   "prEvent_le_one",
+   "OracleComp.prEvent_bind_eq_tsum",
+   "OracleComp.prEvent_eq_one_of_forall_mem_support",
+   "OracleComp.tsum_prEvent_le_one",
+   "OracleComp.EvalDistEq.bind_bind_swap",
+   "OracleComp.EvalDistEq.bind_const",
+   "EvalDistEq.rfl/symm/trans/map/bind_left/bind_right/prEvent_eq",
+   "evalDistEq_iff_forall_prEvent_eq_output",
+   "SampleableType.prEvent_uniformSample",
+   "SampleableType.prEvent_uniformSample_eq_singleton",
+   "SampleableType.map_uniformSample_evalDistEq_of_bijective"
+  ],
+  "editing": "whole-declaration blocks written from the originals (S3/edits/blocks-*.lean, tools/declrep.py), multi-line computations inside Pr{...} parenthesized (tools/prparen.py); the pin-filtered codemod output (logs/codemod.log) served as a reference only"
+ },
+ "findings": {
+  "semantics_instance": "adapter users after the stage: BeaconcryptCore.Computational.CtxRomAuth, BeaconcryptCore.Computational.StatefulGoodEvent, BeaconcryptCore.Computational.VCVioLegacyBridge (the bridge and stage S2's adapter class only; every ProbComp use in the three modules is native)",
+  "calc_trans": "a calc step EvalDistEq _ (do ...) leaves the monad of the do block undetermined, and the Trans instance of EvalDistEq is not found; the steps pin (m := ProbComp) (m' := ProbComp)",
+  "layout": "a continuation line inside Pr{...} at or left of the column of its let ends the doSeq; multi-line computations are parenthesized",
+  "uniform_query": "the uniform-query step of the eager-coordinate law, earlier closed through OracleComp.evalSPMF_query, closes by EvalDistEq.rfl: $ᵗ unifSpec.Range n unfolds through SampleableType.Fin to unifSpec.query n",
+  "twin_tool_defect": "twins.py did not parse the twin TEXT header lines of CertTools 987e93df (S2 review fix EQ-S2-2 appends '; information: binders ...' inside the parenthesis); the header regex now accepts that clause and still parses the earlier format (S3/tools/twins.py, provenance copy twins.s2.py.txt)",
+  "identical_until_bad": "every identical-until-bad lemma of the pinned VCVio (probEvent_output_bad_eq', tvDist_simulateQ_run_le_probEvent_output_bad and its variants) is stated in the deprecated form; the three proofs that use them reach them through the bridge"
+ },
+ "build": {
+  "command": "make -C beaconcrypt-core check-lean SHELL=bash (proof shell, two-file flake copy of central's flake.nix/flake.lock)",
+  "base_build": {
+   "lease": "00000809",
+   "window": "2026-10-20T07:57:39+02:00..2026-10-20T08:20:12+02:00",
+   "rc": 0,
+   "jobs": 5535,
+   "log_sha256": "cf902ce32c5c840d3bc7f226adabe79f1d75fad8458513288933df35d536454b"
+  },
+  "partial_build": "lake build of the three stage modules (logs/lake-stage-1.log): rc 0, 39 modules rebuilt, before the twins were inserted",
+  "final": {
+   "lease": "00000812",
+   "window": "2026-10-20T08:49:35+02:00..2026-10-20T09:09:02+02:00",
+   "rc": 0,
+   "jobs": 5535,
+   "errors": 0,
+   "log_sha256": "745f1c05f43a5c34d9fb3135e0c3a96ea025baecb8206769cb892ecd3655caa8"
+  }
+ },
+ "gates": {
+  "G1": {
+   "base_unique": 1232,
+   "stage_unique": 1027,
+   "expected_stage_unique": 1027,
+   "decreased_file_name_counts": {
+    "BeaconcryptCore/Computational/PqxdhHiddenRoot.lean|evalSPMF": 19,
+    "BeaconcryptCore/Computational/PqxdhHiddenRoot.lean|probEvent": 38,
+    "BeaconcryptCore/Computational/PqxdhHiddenRoot.lean|probOutput": 8,
+    "BeaconcryptCore/Computational/PqxdhProjectionCollisions.lean|evalSPMF": 99,
+    "BeaconcryptCore/Computational/PqxdhProjectionCollisions.lean|probEvent": 36,
+    "BeaconcryptCore/Computational/PqxdhProjectionCollisions.lean|probOutput": 5
+   },
+   "increased_file_name_counts": {},
+   "decrease_outside_stage_files": [],
+   "removed_by_name": {
+    "probEvent": 74,
+    "evalSPMF": 118,
+    "probOutput": 13
+   },
+   "pass": true
+  },
+  "G2": {
+   "base_sites": 1611,
+   "stage_sites": 1380,
+   "base_warned": 1232,
+   "stage_warned": 1027,
+   "base_suppressed": 379,
+   "stage_suppressed": 353,
+   "removed_sites": 231,
+   "added_sites": [],
+   "suppression_lines_stage_outside_bridge": 168,
+   "suppression_lines_base": 176,
+   "stage_new_modules_sites": [],
+   "twin_sites_exempt": 24,
+   "base_twin_sites_exempt": 20,
+   "twin_lines": [
+    [
+     "BeaconcryptCore/Computational/CtxRomAuth.lean",
+     591,
+     "_root_.BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/JointEagerTable.lean",
+     113,
+     "_root_.BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/JointTableFreshCandidates.lean",
+     74,
+     "_root_.BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/PqxdhHiddenRoot.lean",
+     2194,
+     "_root_.BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/PqxdhMaterialKeyCollisions.lean",
+     56,
+     "_root_.BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/PqxdhOrderedChainHybrids.lean",
+     107,
+     "_root_.BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/PqxdhProjectionCollisions.lean",
+     175,
+     "_root_.BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/PqxdhSecretInputKdf.lean",
+     151,
+     "_root_.BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/PqxdhSecretInputKdf.lean",
+     169,
+     "_root_.BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/PqxdhSecretInputKdf.lean",
+     237,
+     "_root_.BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/RawKeyPartition.lean",
+     67,
+     "_root_.BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/StatefulGoodEvent.lean",
+     129,
+     "_root_.BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/UniformTargetSelection.lean",
+     18,
+     "_root_.BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy"
+    ]
+   ],
+   "twin_names_expected": [
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability",
+    "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot",
+    "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+    "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq"
+   ],
+   "pass": true
+  },
+  "G3": {
+   "base": 692,
+   "stage": 635,
+   "stage_in_new_modules": [],
+   "stage_in_stage_modules": [],
+   "pass": true,
+   "spmf_only_report": {
+    "what": "declarations whose type or definition body references SPMF but no deprecated statement head (report only)",
+    "base": 113,
+    "stage": 120,
+    "new_in_stage": [
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "theorem"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "theorem"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "theorem"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad",
+      "theorem"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+      "theorem"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "theorem"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "theorem"
+     ]
+    ],
+    "removed_in_stage": [],
+    "new_with_adapter_instance_in_type": [],
+    "adapter_source": "/tmp/bc-arc-scratch/vcvio-migration/S3/stage/facade-s3.tsv"
+   }
+  },
+  "G4": {
+   "count_base": 95237,
+   "count_stage": 95234,
+   "removed": [
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.HiddenRootCandidateHit.eq_1",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootLoggedRandomRun.eq_1",
+    "BeaconcryptCore.Computational.PqxdhJointKdfGame.JointKdfProjection.width.eq_1",
+    "BeaconcryptCore.Computational.PqxdhJointKdfGame.JointKdfProjection.width.eq_2",
+    "BeaconcryptCore.Computational.PqxdhJointKdfGame.JointKdfProjection.width.eq_3",
+    "_private.BeaconcryptCore.Computational.PqxdhHiddenRoot.0.BeaconcryptCore.Computational.PqxdhJointKdfGame.JointKdfProjection.width.match_1.eq_1",
+    "_private.BeaconcryptCore.Computational.PqxdhHiddenRoot.0.BeaconcryptCore.Computational.PqxdhJointKdfGame.JointKdfProjection.width.match_1.eq_2",
+    "_private.BeaconcryptCore.Computational.PqxdhHiddenRoot.0.BeaconcryptCore.Computational.PqxdhJointKdfGame.JointKdfProjection.width.match_1.eq_3",
+    "_private.BeaconcryptCore.Computational.PqxdhHiddenRoot.0.BeaconcryptCore.Computational.PqxdhJointKdfGame.JointKdfProjection.width.match_1.splitter",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_7",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux._simp_1_5",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux._proof_1_7",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux._simp_1_5"
+   ],
+   "added_by_module": {
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix": 1,
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot": 5,
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions": 4
+   },
+   "kind_changed": [],
+   "module_changed": [],
+   "levels_changed": [],
+   "fingerprints_compared": true,
+   "type_binder_only_changes": [
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_4",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux._proof_1_4"
+   ],
+   "type_changed_allowed": [
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flag_agree",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_finset_le",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_le",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootHiddenFirstCandidate_probEvent_eq_independent",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammedView_probEvent_bad_eq",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSimulate_withQueryLog_probEvent_bad_eq",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_bad_le_random_candidate",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_agree_good",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonTracking_candidate_probEvent_eq_random",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootIndependentCandidateExperiment_le",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le_hiddenFirstCandidate",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_uniformHiddenRoot_candidateHit_le",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_fixedJointStreamRandom_eq_eagerCoordinates",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_insert_prefetch_irrelevant",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_query_prefetch_irrelevant",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_randomOracle_eq_uniform_prefill",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_randomOracle_prefetch_irrelevant",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEagerCoordinate_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_initial_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_first_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_nonce_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_second_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_query_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_root_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_step_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceProjectionObservedFullRandom_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_le_birthday",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_le_birthday",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionObservedCollision_eq_cache",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_sourceProjectionCollision_fullRandom_eq_cache",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionBit_eq_probEvent",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionReduction_random_eq_sourceEvent",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionReduction_real_eq_sourceEvent",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad12_random_le",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad32_random_le",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_fullRandom_le",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_random_le",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_real_le",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_map_run_simulateQ_eq_of_query_map_evalSPMF_eq",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_run_jointKdfStreamEagerCoordinateForwardImpl_miss",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux"
+   ],
+   "type_changed_unexpected": [
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_4",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_6",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux._proof_1_4",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux._proof_1_6"
+   ],
+   "instance_flag_changed": [],
+   "opaque_value_changed": [],
+   "def_value_binder_only_changes": [],
+   "def_value_changed_allowed": [],
+   "def_value_changed_unexpected": [],
+   "theorem_value_changed": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.real_error",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flag_agree",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_finset_le",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_le",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.hidden_suffix_bound",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+    "BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.projectedOutput_uniform",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootHiddenFirstCandidate_probEvent_eq_independent",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammedView_probEvent_bad_eq",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSimulate_withQueryLog_probEvent_bad_eq",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_bad_le_random_candidate",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_agree_good",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonTracking_candidate_probEvent_eq_random",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootIndependentCandidateExperiment_le",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le_hiddenFirstCandidate",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_uniformHiddenRoot_candidateHit_le",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+    "BeaconcryptCore.Computational.PqxdhInitialAliasBound.cut_distance",
+    "BeaconcryptCore.Computational.PqxdhInitialAliasEvent.bound",
+    "BeaconcryptCore.Computational.PqxdhKemCorrectnessError.continuation_bound",
+    "BeaconcryptCore.Computational.PqxdhKemCorrectnessStopped.after_bound",
+    "BeaconcryptCore.Computational.PqxdhKemCorrectnessStopped.prepared_bound",
+    "BeaconcryptCore.Computational.PqxdhKemCorrectnessStopped.stopped_bound",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_fixedJointStreamRandom_eq_eagerCoordinates",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_insert_prefetch_irrelevant",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_query_prefetch_irrelevant",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_randomOracle_eq_uniform_prefill",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_randomOracle_prefetch_irrelevant",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEagerCoordinate_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_initial_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_first_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_nonce_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_second_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_query_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_root_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_step_bind_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceProjectionObservedFullRandom_eq_deferred",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_le_birthday",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_le_birthday",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionObservedCollision_eq_cache",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_sourceProjectionCollision_fullRandom_eq_cache",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionBit_eq_probEvent",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionReduction_random_eq_sourceEvent",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionReduction_real_eq_sourceEvent",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad12_random_le",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad32_random_le",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_fullRandom_le",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_random_le",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_real_le",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.branchRaw_real_error",
+    "BeaconcryptCore.Computational.RawCtxSelectedAliasCut.cut_distance",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_map_run_simulateQ_eq_of_query_map_evalSPMF_eq",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_run_jointKdfStreamEagerCoordinateForwardImpl_miss",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_6",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux._proof_1_6"
+   ],
+   "added_outside_new_modules": [
+    "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream._simp_1_2",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream._simp_1_3",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream._simp_1_4",
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy._simp_1_1",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_5",
+    "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux._proof_1_5"
+   ],
+   "unexplained_removed": [],
+   "unexplained_added_outside_new_modules": [],
+   "twin_declarations_added": [
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy"
+   ],
+   "twin_declarations_expected": [
+    "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy"
+   ],
+   "module_changed_relocated_generated": [],
+   "module_changed_unexplained": [],
+   "unexplained_type_changes": [],
+   "unexplained_levels_changes": [],
+   "note_generated_type_changes": "Of the four generated helpers in type_changed_unexpected (allowed_generated), only probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_6 and probEvent_projectionCacheBad32_run_le_sum_aux._proof_1_6 changed their type hash: they are arithmetic side goals of the rewritten proofs, not translated statements (after the same premises on the cache keys, base: 0 < m -> not m = m - 1 + 1 -> False; stage: forall j, not k + 1 + j = k + (j + 1) -> False; review-fix probe HelperTypes.lean on the base and stage builds). The two _proof_1_4 differ only in macro-scoped binder names: type hash, value hash and the scope-erased fingerprint are equal, only the raw binder-aware fingerprint differs (S3 review finding EQ-S3-2; see vcvio-deprecations-s3-review.json).",
+   "allowed_generated": {
+    "type_changed": [
+     "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_4",
+     "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_6",
+     "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux._proof_1_4",
+     "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux._proof_1_6"
+    ],
+    "levels_changed": [],
+    "note": "generated auxiliary declarations of explained parents (restated, edited or twin declarations); type_changed_unexpected and levels_changed list every change outside the configured allowlist, the gate criterion is unexplained_type_changes and unexplained_levels_changes"
+   },
+   "theorem_value_changed_outside_edited": [],
+   "pass": true
+  },
+  "G5": {
+   "residual_pairs_base": 3084,
+   "residual_pairs_stage": 3016,
+   "residual_pairs_stage_excluding_exempt": 3016,
+   "residual_new_pairs": [],
+   "residual_removed_pairs": [
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "NeverFail.probFailure_eq_zero"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "OracleComp.DeferredSampling.evalSPMF_bind_congr_left"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probEvent_bind_bind_swap"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probEvent_bind_eq_tsum"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probEvent_bind_le_of_forall_le"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probEvent_eq_eq_probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probEvent_eq_one_iff"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probEvent_eq_zero_iff"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probEvent_exists_finset_le_sum"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probEvent_ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probEvent_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probEvent_mono"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probEvent_ne_top"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probFailure"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probOutput_eq_zero_of_not_mem_support"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probOutput_ne_top"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "probOutput_uniformSample"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+     "tsum_probOutput_le_one"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "ProbComp.boolBiasAdvantage._proof_1"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "evalSPMF_bind"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "evalSPMF_bind_congr'"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "evalSPMF_ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "evalSPMF_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "evalSPMF_map_fst_uniformSample_prod"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_False"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_bind_bind_swap"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_bind_congr'"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_bind_eq_tsum"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_bind_le_of_forall_le"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_bind_pure_comp"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_eq_eq_probOutput'"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_exists_finset_le_sum"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_le_one"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_mono"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_ne_top"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probEvent_uniformSample"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probOutput_eq_zero_of_not_mem_support"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probOutput_map_bijective_uniform_cross"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probOutput_ne_top"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "probOutput_uniformSample"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+     "tsum_probOutput_ne_top"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "OracleComp.DeferredSampling.evalSPMF_bind_comm"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "OracleComp.DeferredSampling.evalSPMF_bind_congr_left"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "OracleComp.evalSPMF_query"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "OracleComp.probEvent_congr'"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "evalSPMF_bind"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "evalSPMF_bind_congr'"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "evalSPMF_ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "evalSPMF_map_eq_of_evalSPMF_eq"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "evalSPMF_uniformSample"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probEvent"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probEvent_bind_le_add"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probEvent_bind_le_of_forall_le"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probEvent_eq_eq_probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probEvent_eq_zero"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probEvent_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probEvent_or_le"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probEvent_uniformSample"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probFailure"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probFailure_of_liftM_PMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probOutput_map_bijective_uniform_cross"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probOutput_map_const"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "probOutput_pure"
+    ]
+   ],
+   "forbidden_new_pairs": [],
+   "forbidden_in_stage_modules": [],
+   "absent_upstream_in_new_modules": [],
+   "residual_new_pairs_relocated_generated": [],
+   "forbidden_new_outside_bridge": [],
+   "forbidden_new_relocated_generated": [],
+   "forbidden_in_stage_modules_new": [],
+   "pass": true
+  }
+ },
+ "warning_categories": {
+  "base": "check-lean-0 (base tree)",
+  "stage": "check-lean-2",
+  "checks": {
+   "vcvio_decrease_exact": true,
+   "growth": [],
+   "no_category_grows": true,
+   "new_kinds": [],
+   "no_new_kind": true,
+   "no_errors": true
+  }
+ },
+ "declaration_dumps": {
+  "base": {
+   "declarations": 95237,
+   "sha256": "b6068098cf788b4c9773ba261c777dca3bbf5afc24c4ea75364c6e46f38517ab",
+   "note": "taken against the published LEAN_PATH of 77950cf2; byte-identical to S2/stage/decls-all-s2.tsv"
+  },
+  "stage": {
+   "declarations": 95234,
+   "sha256": "8f286410a9936761bef43f43f31a256f2c554d707464f50825dabee6873e8a82"
+  }
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "987e93df28f0d50ad616536108c41d2220bd985b4feafffc521899f48ee1660e",
+   "imports": "Lean, VCVio.EvalDist.ProbabilityNotation (no project module)",
+   "olean_sha256": "779be810e6d5773ba092f71c3ba3ef5de65e540e321971cd075728e637097b9f",
+   "olean_equal_to_shared_build": true
+  },
+  "pre_stage_dump": {
+   "file": "base/s3-base.jsonl",
+   "entries": 57,
+   "sha256": "ce5eacae88630d0e9ec6c0c0ab6e97617e4999d8de7a5d44ca23605f0d65a110",
+   "taken_against": "published LEAN_PATH of 77950cf2"
+  },
+  "certificate_file": {
+   "S3Certificates.lean_sha256": "186c6064b5b548c897aae28432eeee8a3544b8bf45227b007f14bf90150681ac",
+   "negative_sha256": "c70c504afdd4044b5e2141a20c856533b64e6ab702c786c06ac03912267c829f",
+   "doctored_dump_sha256": "2712db271f89e42d504f0ce253fb8af6de8b3ace067e02e5d7e7469e78a55abb"
+  },
+  "inverse_map_pass": 56,
+  "inverse_map_expected": 56,
+  "pass_lines": [
+   "certificate PASS BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flag_agree against BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flag_agree: event mask 0 of 2 ambiguous nodes; old statement hash 882652419 and pp.all text equal; BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flag_agree ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist against BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist: event mask 0 of 0 ambiguous nodes; old statement hash 106701266 and pp.all text equal; BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_finset_le against BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_finset_le: event mask 0 of 0 ambiguous nodes; old statement hash 3198745008 and pp.all text equal; BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_finset_le ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_le against BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_le: event mask 0 of 0 ambiguous nodes; old statement hash 1773538544 and pp.all text equal; BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_le ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist against BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist: event mask 0 of 0 ambiguous nodes; old statement hash 1269296248 and pp.all text equal; BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent against BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent: event mask 1 of 1 ambiguous nodes; old statement hash 2562422471 and pp.all text equal; BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame against BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame: event mask 0 of 0 ambiguous nodes; old statement hash 3707077859 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootHiddenFirstCandidate_probEvent_eq_independent against BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootHiddenFirstCandidate_probEvent_eq_independent: event mask 0 of 0 ambiguous nodes; old statement hash 504036685 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootHiddenFirstCandidate_probEvent_eq_independent ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammedView_probEvent_bad_eq against BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammedView_probEvent_bad_eq: event mask 0 of 0 ambiguous nodes; old statement hash 4007308674 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammedView_probEvent_bad_eq ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad against BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad: event mask 0 of 0 ambiguous nodes; old statement hash 780586628 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad against BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad: event mask 0 of 0 ambiguous nodes; old statement hash 2900188378 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSimulate_withQueryLog_probEvent_bad_eq against BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSimulate_withQueryLog_probEvent_bad_eq: event mask 0 of 0 ambiguous nodes; old statement hash 1180891212 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSimulate_withQueryLog_probEvent_bad_eq ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_bad_le_random_candidate against BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_bad_le_random_candidate: event mask 0 of 0 ambiguous nodes; old statement hash 2616661475 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_bad_le_random_candidate ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_agree_good against BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_agree_good: event mask 0 of 2 ambiguous nodes; old statement hash 3906196777 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_agree_good ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq against BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq: event mask 0 of 0 ambiguous nodes; old statement hash 1817173956 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad against BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad: event mask 0 of 0 ambiguous nodes; old statement hash 1860160691 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonTracking_candidate_probEvent_eq_random against BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonTracking_candidate_probEvent_eq_random: event mask 0 of 0 ambiguous nodes; old statement hash 3850177154 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonTracking_candidate_probEvent_eq_random ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootIndependentCandidateExperiment_le against BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootIndependentCandidateExperiment_le: event mask 0 of 0 ambiguous nodes; old statement hash 1036828076 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootIndependentCandidateExperiment_le ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le against BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le: event mask 0 of 0 ambiguous nodes; old statement hash 2343769934 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le_hiddenFirstCandidate against BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le_hiddenFirstCandidate: event mask 0 of 0 ambiguous nodes; old statement hash 388012626 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le_hiddenFirstCandidate ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_uniformHiddenRoot_candidateHit_le against BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_uniformHiddenRoot_candidateHit_le: event mask 0 of 0 ambiguous nodes; old statement hash 129746022 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_uniformHiddenRoot_candidateHit_le ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind against BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind: event mask 3 of 2 ambiguous nodes; old statement hash 930778078 and pp.all text equal; BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_fixedJointStreamRandom_eq_eagerCoordinates against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_fixedJointStreamRandom_eq_eagerCoordinates: event mask 0 of 0 ambiguous nodes; old statement hash 2672446112 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_fixedJointStreamRandom_eq_eagerCoordinates ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates (private) against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates (private): event mask 0 of 0 ambiguous nodes; old statement hash 405555980 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates (private) ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_map_run_simulateQ_eq_of_query_map_evalSPMF_eq (private) against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_map_run_simulateQ_eq_of_query_map_evalSPMF_eq (private): event mask 0 of 0 ambiguous nodes; old statement hash 3623407151 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_map_run_simulateQ_eq_of_query_map_evalSPMF_eq (private) ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill: event mask 0 of 0 ambiguous nodes; old statement hash 2741033328 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_insert_prefetch_irrelevant against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_insert_prefetch_irrelevant: event mask 0 of 0 ambiguous nodes; old statement hash 458570716 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_insert_prefetch_irrelevant ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant: event mask 0 of 0 ambiguous nodes; old statement hash 2972135480 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_query_prefetch_irrelevant against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_query_prefetch_irrelevant: event mask 0 of 0 ambiguous nodes; old statement hash 2298243120 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_query_prefetch_irrelevant ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_randomOracle_eq_uniform_prefill against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_randomOracle_eq_uniform_prefill: event mask 0 of 0 ambiguous nodes; old statement hash 3027878162 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_randomOracle_eq_uniform_prefill ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_randomOracle_prefetch_irrelevant against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_randomOracle_prefetch_irrelevant: event mask 0 of 0 ambiguous nodes; old statement hash 3927645647 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_randomOracle_prefetch_irrelevant ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_run_jointKdfStreamEagerCoordinateForwardImpl_miss (private) against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_run_jointKdfStreamEagerCoordinateForwardImpl_miss (private): event mask 0 of 0 ambiguous nodes; old statement hash 773457798 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_run_jointKdfStreamEagerCoordinateForwardImpl_miss (private) ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEagerCoordinate_eq_deferred against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEagerCoordinate_eq_deferred: event mask 0 of 0 ambiguous nodes; old statement hash 1827737550 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEagerCoordinate_eq_deferred ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_initial_bind_eq_deferred against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_initial_bind_eq_deferred: event mask 0 of 0 ambiguous nodes; old statement hash 796219547 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_initial_bind_eq_deferred ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_first_bind_eq_deferred against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_first_bind_eq_deferred: event mask 0 of 0 ambiguous nodes; old statement hash 842831588 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_first_bind_eq_deferred ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_nonce_bind_eq_deferred against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_nonce_bind_eq_deferred: event mask 0 of 0 ambiguous nodes; old statement hash 1797214314 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_nonce_bind_eq_deferred ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_second_bind_eq_deferred against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_second_bind_eq_deferred: event mask 0 of 0 ambiguous nodes; old statement hash 1211440941 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_second_bind_eq_deferred ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_query_bind_eq_deferred against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_query_bind_eq_deferred: event mask 0 of 0 ambiguous nodes; old statement hash 3383861908 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_query_bind_eq_deferred ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_root_bind_eq_deferred against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_root_bind_eq_deferred: event mask 0 of 0 ambiguous nodes; old statement hash 2922143458 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_root_bind_eq_deferred ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_step_bind_eq_deferred against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_step_bind_eq_deferred: event mask 0 of 0 ambiguous nodes; old statement hash 3451931957 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_step_bind_eq_deferred ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceProjectionObservedFullRandom_eq_deferred against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceProjectionObservedFullRandom_eq_deferred: event mask 0 of 0 ambiguous nodes; old statement hash 2716914666 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceProjectionObservedFullRandom_eq_deferred ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream: event mask 0 of 0 ambiguous nodes; old statement hash 1332327694 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_le_birthday against BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_le_birthday: event mask 0 of 0 ambiguous nodes; old statement hash 2609885550 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_le_birthday ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux (private) against BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux (private): event mask 0 of 0 ambiguous nodes; old statement hash 2869922074 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux (private) ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_le_birthday against BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_le_birthday: event mask 0 of 0 ambiguous nodes; old statement hash 2000020569 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_le_birthday ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux (private) against BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux (private): event mask 0 of 0 ambiguous nodes; old statement hash 536359735 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux (private) ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionObservedCollision_eq_cache against BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionObservedCollision_eq_cache: event mask 3 of 2 ambiguous nodes; old statement hash 3644765759 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionObservedCollision_eq_cache ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_sourceProjectionCollision_fullRandom_eq_cache against BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_sourceProjectionCollision_fullRandom_eq_cache: event mask 3 of 2 ambiguous nodes; old statement hash 3802431849 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_sourceProjectionCollision_fullRandom_eq_cache ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionBit_eq_probEvent against BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionBit_eq_probEvent: event mask 2 of 2 ambiguous nodes; old statement hash 3653036956 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionBit_eq_probEvent ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionReduction_random_eq_sourceEvent against BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionReduction_random_eq_sourceEvent: event mask 2 of 2 ambiguous nodes; old statement hash 4190153417 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionReduction_random_eq_sourceEvent ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionReduction_real_eq_sourceEvent against BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionReduction_real_eq_sourceEvent: event mask 2 of 2 ambiguous nodes; old statement hash 1094978894 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionReduction_real_eq_sourceEvent ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad12_random_le against BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad12_random_le: event mask 0 of 0 ambiguous nodes; old statement hash 3404618248 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad12_random_le ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad32_random_le against BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad32_random_le: event mask 0 of 0 ambiguous nodes; old statement hash 2644979446 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad32_random_le ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_fullRandom_le against BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_fullRandom_le: event mask 1 of 1 ambiguous nodes; old statement hash 3491545697 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_fullRandom_le ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_random_le against BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_random_le: event mask 1 of 1 ambiguous nodes; old statement hash 314259819 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_random_le ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_real_le against BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_real_le: event mask 1 of 1 ambiguous nodes; old statement hash 386469858 and pp.all text equal; BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_real_le ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]"
+  ],
+  "textual_fallback": [
+   "same-type PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.certificateOld_evalSPMF_first32_uniformJointKdfStream against BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream: type hash 4272729143 and pp.all text equal to the dump; information: binders against the current BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream: 0 binders equal (names up to macro scopes, hygiene, annotations) Command being timed: \"/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 /tmp/bc-arc-scratch/vcvio-migration/S3/certificates/S3Certificates.lean\" User time (seconds): 6.13 System time (seconds): 0.77 Percent of CPU this job got: 99% Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.98 Average shared text size (kbytes): 0 Average unshared data size (kbytes): 0 Average stack size (kbytes): 0 Average total size (kbytes): 0 Maximum resident set size (kbytes): 4969016 Average resident set size (kbytes): 0 Major (requiring I/O) page faults: 0 Minor (reclaiming a frame) page faults: 107222 Voluntary context switches: 1134 Involuntary context switches: 21 Swaps: 0 File system inputs: 0 File system outputs: 56 Socket messages sent: 0 Socket messages received: 0 Signals delivered: 0 Page size (bytes): 4096 Exit status: 0"
+  ],
+  "textual_fallback_reason": "the old statement 𝒮[first32.project <$> $ᵗ JointKdfStream] = 𝒮[$ᵗ HiddenRootCoordinate] elaborates the left evalSPMF at List.Vector UInt8 (JointKdfProjection.width JointKdfProjection.first32) and the right one at HiddenRootCoordinate (equal after computing the width); EvalDistEq has one element type, so the inverse map rebuilds both at the left type (hash 173666182 against the dump's 4272729143); the fallback copies the old statement verbatim (certificateOld_), proves the conclusion iff (certificateIff_) and the whole-statement iff (certificateStatementIff_), each with an exact axiom guard, and compares the copy's type with the dump (same-type PASS above); negative control N7 is the inverse-map certificate of this theorem",
+  "twin_checks": [
+   "same-type PASS BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy against BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind: type hash 930778078 and pp.all text equal to the dump; information: binders against the current BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind: 9 binders equal (names up to macro scopes, hygiene, annotations)",
+   "same-type PASS BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream: type hash 1332327694 and pp.all text equal to the dump; information: binders against the current BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream: 0 binders equal (names up to macro scopes, hygiene, annotations)"
+  ],
+  "negative_controls_fail": [
+   "certificate FAIL BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad32_random_le against BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad12_random_le: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 2644979446 vs 3404618248",
+   "certificate FAIL BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_randomOracle_prefetch_irrelevant against BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 3927645647 vs 2972135480",
+   "same-type FAIL BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy against BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent: hash 930778078 vs 2562422471",
+   "certificate FAIL BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame against BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 3707077859 vs 3707077859",
+   "certificate FAIL BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_le against BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_le: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 1773538544 vs 1773538545",
+   "certificate FAIL BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux (private) against BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux (private): no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 536359735 vs 2869922074",
+   "certificate FAIL BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream against BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 173666182 vs 4272729143"
+  ],
+  "checker": [
+   "RESULT PASS"
+  ]
+ },
+ "phase_b": {
+  "report": {
+   "probe_version": 2,
+   "base": {
+    "package": {
+     "rows": 600,
+     "declarations": 62,
+     "by_module": {
+      "PqxdhExtractRomHiddenSuffix": 113,
+      "PqxdhHiddenRoot": 186,
+      "PqxdhProjectionCollisions": 301
+     },
+     "by_root": {
+      "ToMathlib": 309,
+      "VCVio": 291
+     },
+     "constants": {
+      "NeverFail.probFailure_eq_zero": 2,
+      "OracleComp.DeferredSampling.evalSPMF_bind_comm": 2,
+      "OracleComp.DeferredSampling.evalSPMF_bind_congr_left": 5,
+      "OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails": 1,
+      "OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'": 1,
+      "OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad": 2,
+      "OracleComp.evalSPMF_query": 1,
+      "OracleComp.instEvalDistCompatible": 16,
+      "OracleComp.probEvent_congr'": 3,
+      "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible": 2,
+      "SPMF": 121,
+      "SPMF.instAlternativeMonad": 29,
+      "SPMF.instLawfulAlternative": 1,
+      "SPMF.instLawfulMonad": 8,
+      "SPMF.instLawfulMonadLiftPMF": 29,
+      "SPMF.instMonadLiftPMF": 121,
+      "SPMF.tvDist": 2,
+      "abs_probOutput_toReal_sub_le_tvDist": 2,
+      "evalDist_apply_singleton": 2,
+      "evalSPMF": 47,
+      "evalSPMF_bind": 2,
+      "evalSPMF_bind_congr'": 2,
+      "evalSPMF_ext": 5,
+      "evalSPMF_map": 2,
+      "evalSPMF_map_eq_of_evalSPMF_eq": 2,
+      "evalSPMF_map_fst_uniformSample_prod": 2,
+      "evalSPMF_uniformSample": 1,
+      "instNeverFailOfLawfulMonadLiftTPMF": 1,
+      "instNeverFailProbCompUniformSample": 1,
+      "probEvent": 67,
+      "probEvent_False": 1,
+      "probEvent_bind_bind_swap": 2,
+      "probEvent_bind_congr'": 1,
+      "probEvent_bind_eq_tsum": 3,
+      "probEvent_bind_le_add": 2,
+      "probEvent_bind_le_of_forall_le": 4,
+      "probEvent_bind_pure_comp": 2,
+      "probEvent_eq_eq_probOutput": 2,
+      "probEvent_eq_eq_probOutput'": 1,
+      "probEvent_eq_one_iff": 1,
+      "probEvent_eq_zero": 2,
+      "probEvent_eq_zero_iff": 1,
+      "probEvent_exists_finset_le_sum": 2,
+      "probEvent_ext": 1,
+      "probEvent_le_one": 1,
+      "probEvent_map": 8,
+      "probEvent_mono": 3,
+      "probEvent_ne_top": 3,
+      "probEvent_or_le": 1,
+      "probEvent_uniformSample": 3,
+      "probFailure": 3,
+      "probFailure_of_liftM_PMF": 2,
+      "probOutput": 20,
+      "probOutput_eq_zero_of_not_mem_support": 3,
+      "probOutput_map_bijective_uniform_cross": 3,
+      "probOutput_map_const": 2,
+      "probOutput_ne_top": 2,
+      "probOutput_pure": 2,
+      "probOutput_uniformSample": 2,
+      "tsum_probOutput_le_one": 1,
+      "tsum_probOutput_ne_top": 1,
+      "tvDist": 22,
+      "tvDist_bind_left_le": 2,
+      "tvDist_bind_left_le_const": 1,
+      "tvDist_comm": 1,
+      "tvDist_le_one": 3,
+      "tvDist_map_le": 2,
+      "tvDist_nonneg": 2
+     }
+    },
+    "package_v1_roots_VCVio_ToMathlib": {
+     "rows": 600,
+     "declarations": 62
+    },
+    "project": {
+     "rows": 64,
+     "declarations": 40,
+     "by_module": {
+      "PqxdhExtractRomHiddenSuffix": 8,
+      "PqxdhHiddenRoot": 18,
+      "PqxdhProjectionCollisions": 38
+     },
+     "by_root": {
+      "BeaconcryptCore": 64
+     },
+     "constants": {
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist": 1,
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flag_agree": 1,
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist": 1,
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_finset_le": 1,
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_le": 1,
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist": 1,
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist": 1,
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootHiddenFirstCandidate_probEvent_eq_independent": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammedView_probEvent_bad_eq": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSimulate_withQueryLog_probEvent_bad_eq": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_bad_le_random_candidate": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_agree_good": 2,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonTracking_candidate_probEvent_eq_random": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootIndependentCandidateExperiment_le": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_hiddenRootProgrammedBadExperiment_le_hiddenFirstCandidate": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.probEvent_uniformHiddenRoot_candidateHit_le": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_fixedJointStreamRandom_eq_eagerCoordinates": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_insert_prefetch_irrelevant": 4,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant": 2,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_projectionCoordUnifiedRandom_query_prefetch_irrelevant": 2,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_randomOracle_eq_uniform_prefill": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEagerCoordinate_eq_deferred": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_initial_bind_eq_deferred": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_first_bind_eq_deferred": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_nonce_bind_eq_deferred": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_project_second_bind_eq_deferred": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_query_bind_eq_deferred": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_root_bind_eq_deferred": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceKdfEager_step_bind_eq_deferred": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_sourceProjectionObservedFullRandom_eq_deferred": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_le_birthday": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_le_birthday": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionObservedCollision_eq_cache": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_sourceProjectionCollision_fullRandom_eq_cache": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionBit_eq_probEvent": 2,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionReduction_random_eq_sourceEvent": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.probOutput_collisionReduction_real_eq_sourceEvent": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad12_random_le": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCacheBad32_random_le": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_fullRandom_le": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_random_le": 1,
+      "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates": 1,
+      "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_map_run_simulateQ_eq_of_query_map_evalSPMF_eq": 1,
+      "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_run_jointKdfStreamEagerCoordinateForwardImpl_miss": 1,
+      "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux": 1,
+      "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad32_run_le_sum_aux": 1
+     }
+    },
+    "bridge": {
+     "rows": 1,
+     "declarations": 1,
+     "by_module": {
+      "PqxdhProjectionCollisions": 1
+     },
+     "by_root": {
+      "BeaconcryptCore": 1
+     },
+     "constants": {
+      "BeaconcryptCore.VCVioLegacy.evalDist_singleton_eq_probOutput": 1
+     }
+    }
+   },
+   "stage": {
+    "package": {
+     "rows": 123,
+     "declarations": 16,
+     "by_module": {
+      "PqxdhExtractRomHiddenSuffix": 51,
+      "PqxdhHiddenRoot": 60,
+      "PqxdhProjectionCollisions": 12
+     },
+     "by_root": {
+      "ToMathlib": 62,
+      "VCVio": 61
+     },
+     "constants": {
+      "OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'": 1,
+      "OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad": 2,
+      "OracleComp.instEvalDistCompatible": 1,
+      "SPMF": 29,
+      "SPMF.instAlternativeMonad": 2,
+      "SPMF.instLawfulMonadLiftPMF": 2,
+      "SPMF.instMonadLiftPMF": 29,
+      "SPMF.tvDist": 2,
+      "abs_probOutput_toReal_sub_le_tvDist": 2,
+      "evalSPMF": 6,
+      "probEvent": 5,
+      "probOutput": 7,
+      "tvDist": 24,
+      "tvDist_bind_left_le": 2,
+      "tvDist_bind_left_le_const": 1,
+      "tvDist_comm": 1,
+      "tvDist_le_one": 3,
+      "tvDist_map_le": 2,
+      "tvDist_nonneg": 2
+     }
+    },
+    "package_v1_roots_VCVio_ToMathlib": {
+     "rows": 123,
+     "declarations": 16
+    },
+    "project": {
+     "rows": 12,
+     "declarations": 9,
+     "by_module": {
+      "PqxdhExtractRomHiddenSuffix": 5,
+      "PqxdhHiddenRoot": 6,
+      "PqxdhProjectionCollisions": 1
+     },
+     "by_root": {
+      "BeaconcryptCore": 12
+     },
+     "constants": {
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist": 1,
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist": 1,
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist": 1,
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist": 1,
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad": 1,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind": 2,
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le": 1,
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy._simp_1_1": 1
+     }
+    },
+    "bridge": {
+     "rows": 14,
+     "declarations": 11,
+     "by_module": {
+      "PqxdhExtractRomHiddenSuffix": 5,
+      "PqxdhHiddenRoot": 8,
+      "PqxdhProjectionCollisions": 1
+     },
+     "by_root": {
+      "BeaconcryptCore": 14
+     },
+     "constants": {
+      "BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq": 3,
+      "BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent": 4,
+      "BeaconcryptCore.VCVioLegacy.probOutput_eq_evalDist_singleton": 2,
+      "BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent": 5
+     }
+    }
+   },
+   "stage_rows": {
+    "package": [
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist",
+      "type",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist",
+      "value",
+      "abs_probOutput_toReal_sub_le_tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist",
+      "value",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "type",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "value",
+      "OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad",
+      "VCVio.ProgramLogic.Relational.SimulateQ.Epsilon",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "value",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "value",
+      "tvDist_comm",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.hidden_suffix_bound",
+      "value",
+      "OracleComp.instEvalDistCompatible",
+      "VCVio.OracleComp.EvalDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.hidden_suffix_bound",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.hidden_suffix_bound",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.hidden_suffix_bound",
+      "value",
+      "SPMF.tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.hidden_suffix_bound",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.hidden_suffix_bound",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.hidden_suffix_bound",
+      "value",
+      "tvDist_bind_left_le_const",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist",
+      "type",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "type",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "value",
+      "SPMF.instAlternativeMonad",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "value",
+      "SPMF.instLawfulMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "value",
+      "tvDist_le_one",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "value",
+      "tvDist_map_le",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "type",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "value",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "value",
+      "tvDist_bind_left_le",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "value",
+      "tvDist_le_one",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "value",
+      "tvDist_nonneg",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add",
+      "value",
+      "abs_probOutput_toReal_sub_le_tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add",
+      "value",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad",
+      "type",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+      "type",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq",
+      "value",
+      "OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'",
+      "VCVio.ProgramLogic.Relational.SimulateQ.Epsilon",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq",
+      "value",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "type",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad",
+      "VCVio.ProgramLogic.Relational.SimulateQ.Epsilon",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "SPMF.instAlternativeMonad",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "SPMF.instLawfulMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "tvDist_map_le",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "type",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "value",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "value",
+      "tvDist_bind_left_le",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "value",
+      "tvDist_le_one",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "value",
+      "tvDist_nonneg",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+      "type",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+      "type",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+      "type",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+      "value",
+      "SPMF.tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+      "value",
+      "tvDist",
+      "VCVio.EvalDist.TVDist",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy._simp_1_1",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy._simp_1_1",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ]
+    ],
+    "project": [
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.hidden_suffix_bound",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.hidden_suffix_bound",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy._simp_1_1",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "dep=0",
+      "fac=1"
+     ]
+    ],
+    "bridge": [
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probOutput_eq_evalDist_singleton",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.hidden_suffix_bound",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix",
+      "BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probOutput_eq_evalDist_singleton",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot",
+      "BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+      "BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy._simp_1_1",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ]
+    ]
+   },
+   "adapter_users_base": [
+    "BeaconcryptCore.Computational.CtxRomAuth",
+    "BeaconcryptCore.Computational.StatefulGoodEvent",
+    "BeaconcryptCore.Computational.VCVioLegacyBridge"
+   ],
+   "adapter_users_stage": [
+    "BeaconcryptCore.Computational.CtxRomAuth",
+    "BeaconcryptCore.Computational.StatefulGoodEvent",
+    "BeaconcryptCore.Computational.VCVioLegacyBridge"
+   ],
+   "adapter_only_bridge": false
+  }
+ },
+ "step7": {
+  "lean_scan": [
+   "LEAN-SCAN files 1994 hits 0"
+  ],
+  "axiom_walk": [
+   "AXIOM-WALK roots 95234 reached 122208 unresolved 0",
+   "AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]",
+   "SERVER-DOMAIN PqxdhDeploymentKemTwoSided.kem_transfer_two_sided true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealCompile.ideal_compile true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealHandoff.ideal_world_view true",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss false",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared false",
+   "SERVER-DOMAIN PqxdhRegistrationJointBeaconFinishOnce.slotGame_two false"
+  ]
+ },
+ "inventory": {
+  "recount": "handwritten-lean unchanged (1987)",
+  "rehash_rows": 13,
+  "twin_pins": 11,
+  "check_inventory": "make check-inventory (lease 00000814): Formal-verification inventory matches the reviewed boundary"
+ },
+ "axiom_guards": {
+  "changed_guards": 0,
+  "new_guards": 0,
+  "note": "twins are generated commands without guards; every existing guard of the 11 changed Lean files holds (check-lean rc 0)"
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "tool_sha256": {
+  "gates.py": "345fa103cd255222a1d57f45d0946faad801b9aa38fd70946cb3979c50db888d",
+  "gen_certificates.py": "e84431c2b6400f09ef2915e1a84d2d6b20425e991fa659ee883c263e4b5b4acd",
+  "check_certificates_s2.py": "f330b2676633e4d1b2921abd285282107f0242e34c9b8948f0a80298cceca540",
+  "twins.py": "ac5f7479e7f0eee59fcb7a50ee0aa02907a03752e47833c69e008549adb9884e",
+  "twins.s2.py.txt": "7b60d0d8bef7acdcfb634906a9a4f20f6a8041665ade7d623928c2f8aa95243d",
+  "gates.s2.py.txt": "94c3941486d62de3a008dbc0c2653ef8489cb8f092cb09d24d72ced901c08a1b",
+  "gen_s3_certificates.py": "c81ab631fd703f47385c8772ecf8b985f0136e6a840eb5f320c47fbf5c1c3f22",
+  "value_changes.py": "16be5ba19a2f4c737556014ef29b094d3ae35c75e37a847058e0aedafb690287",
+  "s3-certificates.sh": "946758e128175bb661dc48f373a6b759cbffb055940e9d3e88f49827b092caab",
+  "twin_rename.py": "2b7a59a985fd2d152aaff13b0c593f9ca78f55ee9b227329892dd6d16246ed40",
+  "phaseb.py": "ef85d02fe757a7419611d0b6c2aa91565d55372b2fba6c37e08936ea0bdf9b96",
+  "FacadeProbe.lean.in": "a0641c07c4eb38284d3e30a1c8f2376810b8db36a2134ee7f528ad903f500c8b",
+  "DeclsAll.lean.in": "0bc796a2a45c79394ecc9904f90ae45ac4066b0bfec9df80d9503f0539497f1b",
+  "DumpPpAll.lean.in": "1fa038548e58f7d91a70fd732a5952e05757a3966b1c85ae6d25e00acf05c284",
+  "scan_sources.py": "ae67c92d4ab3acc921e4582f78cc62f127ed97f10e12d54624dd03c559ed170a",
+  "warn_categories.py": "160cb0a9791c5bacfad1856f16d4c9c98eb8c361306f6fd6a9fd6cd395739703",
+  "declrep.py": "daf4e7fbb38acad7cc4845330d72bcd6dfae8ca020ee109cf53b54fb8dfe34b7",
+  "prparen.py": "9e5225e5f32ef323670e48316f8a9456ddbe0cb0d7c40e1c96b64f76ec73d4af"
+ },
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S3/logs/ (check-lean-0/1/2, lake-stage-1, sf/*, twintext-1, twins-insert, rename-1, certificates-1 (first run: one failure, the fallback case), certificates-2 and check-certificates-2 (second run: Lean output identical to run 3 apart from timing, checker RESULT FAIL because it did not find the fallback's whole-statement iff with its axiom guard in the form it requires in the certificate file; the generator gen_s3_certificates.py was corrected and rerun, writing the final certificate file, sha256 186c6064..., before run 3), certificates-3, certificates-negative-3, check-certificates-3, stage-*-1, inv-rehash-1/2, check-inventory-1 (before the Lean rows were rehashed: drift, as expected) and -2, warn-categories)",
+ "reviews": "two independent reviews at 08cb87f7 (2026-10-20, statement equivalence and hygiene, both APPROVE_WITH_NITS); their fixes and reruns are recorded in vcvio-deprecations-s3-review.json"
+}

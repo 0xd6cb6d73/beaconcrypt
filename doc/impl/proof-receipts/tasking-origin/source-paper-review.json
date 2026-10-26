@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-06T03:14:21.188607+00:00",
+  "reviewer": "/root/evolving_source_join",
+  "decision": "APPROVE_SCOPED_SYMBOLIC_SOURCE_PROJECTION",
+  "manifest_sha256": "7d7964d38b5858eccebd5823a6001f7b862b84091e4e802a22945112e547271f",
+  "files": {
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/interface.md": "6d6c194c2bcbd377f41022fda62a0d1316e48656af99d28247d2a876e495c62b",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/source-lifting.md": "cbbe84050314eacd47d7f792f2ccefb3df0bded77d0d94551cc2b4e32f214a7b",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/s2b-receive.pvl": "1fe5e5715f2c353f9d7b4687b1c6a9cceafb34fbca2099fd2e74b5f3991d39a9",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/s2b-kr1.pvl": "ac8d08dd69cb1bffcc4079ad35b053f521c12f99e4a3ddcfedfeaf1aae062dda",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/s2b-registration.pvl": "f3867c11d937943575c2475cc21e6a0172791db0b77422acfca70361a8b9a7b9",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/s2b-kr2.pvl": "e2652916db6e39d272299b15d32cdcc52164158865e7892287fd65e544b26746",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/s2b-sends.pvl": "83bc53513c3f8b795e96a4b3f9a03c91ed66fbae3be8bbb8308cc2e5ecb536cd",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/s2b-kr3.pvl": "520cf3c2c9fcf90ecbe4041f4430d57885f5ee0c54995b14d1291f680be79cbe",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/s2b-origin.pv": "aff857645a2cf077836c36ac0f39a97737e02e53b1e0e76b5f80cd7c35eed44a",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/s2b-initial.pv": "8043dcc213ef0dfb045e21776eaef8f937d10b25a6bd9ba1d3727910b8ace77d",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/s2b-identity.pv": "d3eb0c5bc77d0dbb8b63b4ea67bbb6e66affb62cc1526dcf7ee77c3cf11add5a",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-build-precise/s2b-control.pv": "1da05cc00ceb4fc83c449792d4a681f09fb7d267a11c95b23b3abd61f859fa6b",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-cache/s2b-receive.pvl": "3c48ec395e9fe869f7e5b234121312a76dd19bcb6de930109726785205a81014",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/probe-cache/s2b-cache.pv": "d40b7ec9486db89ea0c3d67f05f45435065c854ce19cf39db881f31d6ace3561",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/build-precise-kr3-origin.json": "d94d1dc379358bb4f0b032b2f5aa8f06dcd8bb2feeddcb4c07184f4670eae8c5",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/build-precise-kr3-origin.log": "455fddd0a9682747629145bcb2aa1411d257e2727d7c068b3fd982d162ea0b73",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/build-precise-kr3-initial.json": "37a6407c192fd0a594f027885cc5860854b786d4359d8a7b845590ca49c7718b",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/build-precise-kr3-initial.log": "72b1cb6a0e1b591c0fdb576b75ec31ca1c1feedfc9e6ccefc055ea50d0beafe1",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/build-precise-kr3-identity.json": "a2de69752b0cd75af9729ec2ba34e32f13d9ad3a6a09a8fc4e384611bd8d28f3",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/build-precise-kr3-identity.log": "f62ab859f60b5b16fdc8ebee01eb9bbdaad07d9e258bd72f997182b99a169116",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/build-precise-kr3-control.json": "6d66fb8df2ff1857c3e890d74ff24e0f9878409098e6d019c0fc649215649dfc",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/build-precise-kr3-control.log": "3e8c4f28ce46ea3db1ede159d2a6f7b2b0d4af0e9d723996182b3027e9293bbf",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/cache-kr2-cache.json": "bcf108e92198c549c5139195c6b4d27ddce6d07eff89c64209fa6b609526a3da",
+    "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/cache-kr2-cache.log": "de8e51ba9b532ecef7827c006eaea4283fd308fb9c8e2de18b05efde493a3264"
+  },
+  "checks": [
+    "All 31 frozen hashes verified.",
+    "Read full source paper and original source role dispatch, model receiver/build/send and exact same-process queries.",
+    "One source-ledger omission identified and corrected: installed protected-Server b2s receives are public-computable before selected finish from each accept disclosure.",
+    "Initial-finish origin consumed only after prefix simulation; omitted Beacon b2s observations use reflected root and actual disclosed chain. Source publication reflection retains actual successful returns, failed-seal allocation gaps, own versus assigned IDs and arbitrary labels.",
+    "Single selected Beacon finish gives exactly one linear receiver; remaining-target deletion supplies injectivity without cross-accept KEM/HKDF injectivity.",
+    "Ghost declaration/event erasure recovers main receiver bytes exactly; actual Kr2 trace has successful sequence 3 followed by cached sequence 2. Kr2 trace embeds as a Kr3 prefix with third input unscheduled.",
+    "No build performed. Existing exact Kr3 TRUE origin/initial/identity and FALSE control, Kr2 FALSE cached witness receipts inspected; optional injective query excluded."
+  ],
+  "limits": [
+    "Symbolic T0 event/deduction projection for stated independent key/application profile, positions 2/3, two sends per committed peer, three selected receive attempts, before first far success.",
+    "No full host-API trace equality, native codec/primitive proof, or global computational theorem. Every omitted call still belongs in computational bill.",
+    "Actual optional plaintext and public labels retained; no hidden plaintext inserted into attacker targets. Ordinary origin and source occurrence uniqueness compose; unrestricted legacy secrecy not claimed."
+  ],
+  "evidence": {
+    "build-precise-kr3-origin": {
+      "result_lines": [
+        "RESULT event(FsReceived(server_to_beacon,ed_public(SERVER_IDENTITY_SECRET[]),ed_public(k),kid,root_4,t,m)) && event(S2bSelectedIdentity(k)) ==> event(S2bPublished(server_to_beacon,ed_public(SERVER_IDENTITY_SECRET[]),ed_public(k),kid,root_4,t,m)) is true."
+      ],
+      "receipt_sha256": "d94d1dc379358bb4f0b032b2f5aa8f06dcd8bb2feeddcb4c07184f4670eae8c5"
+    },
+    "build-precise-kr3-initial": {
+      "result_lines": [
+        "RESULT event(FsBeaconEstablished(ed_public(SERVER_IDENTITY_SECRET[]),ed_public(k),init_1,kid,root_4,ad_1,p)) && event(S2bSelectedIdentity(k)) ==> event(FsServerCommitted(obj,ed_public(SERVER_IDENTITY_SECRET[]),ed_public(k),init_1,kid,root_4,ad_1,p)) is true."
+      ],
+      "receipt_sha256": "37a6407c192fd0a594f027885cc5860854b786d4359d8a7b845590ca49c7718b"
+    },
+    "build-precise-kr3-identity": {
+      "result_lines": [
+        "RESULT not (event(S2bSelectedIdentity(k)) && attacker(k)) is true."
+      ],
+      "receipt_sha256": "a2de69752b0cd75af9729ec2ba34e32f13d9ad3a6a09a8fc4e384611bd8d28f3"
+    },
+    "build-precise-kr3-control": {
+      "result_lines": [
+        "RESULT event(FsReceived(server_to_beacon,ed_public(SERVER_IDENTITY_SECRET[]),ed_public(k),kid,root_4,t,m)) && event(S2bSelectedIdentity(k)) ==> event(S2bPublished(server_to_beacon,ed_public(SERVER_IDENTITY_SECRET[]),ed_public(k),kid,root_4,t,m)) is false."
+      ],
+      "receipt_sha256": "6d66fb8df2ff1857c3e890d74ff24e0f9878409098e6d019c0fc649215649dfc"
+    },
+    "cache-kr2-cache": {
+      "result_lines": [
+        "RESULT not (event(S2bCachedAccepted(ed_public(SERVER_IDENTITY_SECRET[]),ed_public(k),kid,root_4,m)) && event(S2bSelectedIdentity(k))) is false."
+      ],
+      "receipt_sha256": "bcf108e92198c549c5139195c6b4d27ddce6d07eff89c64209fa6b609526a3da"
+    }
+  }
+}

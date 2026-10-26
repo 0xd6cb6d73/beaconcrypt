@@ -1,0 +1,19 @@
+(* SPDX-License-Identifier: 0BSD *)
+let S2bSend3(owner:bitstring,s:bitstring,b:bitstring,sender:key_id,kid:key_id,root:bitstring,ad:bitstring,chain:bitstring,selected_identity:bitstring)=
+ in(c,s2b_send(=owner,call:bitstring,use_chosen:bool,left:bitstring,right:bitstring,fail_seal:bool)) [precise];
+ if use_chosen then (let plaintext=left in
+  event FsSent(server_to_beacon(),s,b,kid,root,3,plaintext);
+  if fail_seal then (out(c,s2b_reply(call,s2b_none())); 0) else (event S2bPublished(server_to_beacon(),s,b,kid,root,3,plaintext);
+ out(c,s2b_reply(call,s2b_some(seal_frame(ratchet_material(chain),ad,fs_seq(3),sender,plaintext)))); 0)) else (let plaintext=if b=selected_identity then choice[left,right] else left in
+  event FsSent(server_to_beacon(),s,b,kid,root,3,plaintext);
+  if fail_seal then (out(c,s2b_reply(call,s2b_none())); 0) else (event S2bPublished(server_to_beacon(),s,b,kid,root,3,plaintext); event S2bFreshPublished(server_to_beacon(),s,b,kid,root,3,plaintext);
+ out(c,s2b_reply(call,s2b_some(seal_frame(ratchet_material(chain),ad,fs_seq(3),sender,plaintext)))); 0)).
+let S2bSend2(owner:bitstring,s:bitstring,b:bitstring,sender:key_id,kid:key_id,root:bitstring,ad:bitstring,chain:bitstring,selected_identity:bitstring)=
+ in(c,s2b_send(=owner,call:bitstring,use_chosen:bool,left:bitstring,right:bitstring,fail_seal:bool)) [precise];
+ if use_chosen then (let plaintext=left in
+  event FsSent(server_to_beacon(),s,b,kid,root,2,plaintext);
+  if fail_seal then (out(c,s2b_reply(call,s2b_none())); S2bSend3(owner,s,b,sender,kid,root,ad,ratchet_next(chain),selected_identity)) else (event S2bPublished(server_to_beacon(),s,b,kid,root,2,plaintext);
+ out(c,s2b_reply(call,s2b_some(seal_frame(ratchet_material(chain),ad,fs_seq(2),sender,plaintext)))); S2bSend3(owner,s,b,sender,kid,root,ad,ratchet_next(chain),selected_identity))) else (let plaintext=if b=selected_identity then choice[left,right] else left in
+  event FsSent(server_to_beacon(),s,b,kid,root,2,plaintext);
+  if fail_seal then (out(c,s2b_reply(call,s2b_none())); S2bSend3(owner,s,b,sender,kid,root,ad,ratchet_next(chain),selected_identity)) else (event S2bPublished(server_to_beacon(),s,b,kid,root,2,plaintext); event S2bFreshPublished(server_to_beacon(),s,b,kid,root,2,plaintext);
+ out(c,s2b_reply(call,s2b_some(seal_frame(ratchet_material(chain),ad,fs_seq(2),sender,plaintext)))); S2bSend3(owner,s,b,sender,kid,root,ad,ratchet_next(chain),selected_identity))).

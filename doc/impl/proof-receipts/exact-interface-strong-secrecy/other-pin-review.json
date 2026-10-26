@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-06T04:31:43.665412+00:00",
+  "paper_sha256": "93ea89bb2313cf23b658cfb0868f0fae5be02ea2b4c192397ad289931935114a",
+  "paired_freeze_sha256": "53cc2db6241ae76d4491e87c0256323f9dd4c6338ee110121bb3bf044e0b0252",
+  "loaded_sources": {
+    "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+    "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+    "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+    "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+    "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+    "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+    "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+    "application-secrecy-b2s-receive.pvl": "76650ccd17b7e6a0431b18a87af6c3d5afc1be64fc3b50512d8e7373e9ba91cb",
+    "record-origin-kr3.pvl": "248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209",
+    "application-secrecy-b2s-sends.pvl": "db939eac15c5b94c3b6329d7dd0a2c223f7548f2708d6e665cad07cc4c7689b8",
+    "application-secrecy-b2s.pvl": "918ce166ead0af118ef5009ae8344cbc98e2ac7946286850653600c2621eaf86",
+    "equivalence.pv": "b683c85182f7f00299c2b17b34a557fe7494afcda70c4cb8cb8515fe82512bff"
+  },
+  "note": "same underlying T0/output main sources as paired freeze; other direction output list also inspected; no new process/result"
+}

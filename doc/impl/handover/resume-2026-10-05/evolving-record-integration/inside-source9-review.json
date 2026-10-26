@@ -1,0 +1,37 @@
+{
+  "reviewer": "/root/r1_scheduler_closure",
+  "timestamp": "2026-10-05T21:33:59.297351+00:00",
+  "verdict": "APPROVE",
+  "manifest": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/inside-source-manifest.json",
+  "manifest_sha256": "f8bd45147a3659b54512fc005ff78dd770d2fca75e88eb19c9f44c02931f77c8",
+  "file_hashes_match": true,
+  "guards": 9,
+  "checks": [
+    {
+      "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsideState.lean",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/reviews/PqxdhLaterChallengeInsideState.log",
+      "log_bytes": 0
+    },
+    {
+      "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSampleInside.lean",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/reviews/PqxdhLaterChallengeSampleInside.log",
+      "log_bytes": 0
+    },
+    {
+      "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedInside.lean",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/reviews/PqxdhLaterChallengeGeneratedInside.log",
+      "log_bytes": 0
+    }
+  ],
+  "semantic_review": [
+    "Read all three full modules and nine public statements/proofs, Inside-source guide, generated-prefix guide and analysis additions.",
+    "InsideShape retains literal admitted wrapper request and chosen plaintext, full pre-request frontend and trace. Address derivation follows actual Server peer lookup or established Beacon, then normalBegin actual old sending-chain input under production label. Missing/empty/inactive/exhausted paths have no pending cut.",
+    "AtAddress supplies an existing selected kernel, avoiding vacuity in monitor Selected. selected_projection changes material representation only and preserves sending-chain fields. parent_unselected and inside_marker retain explicit complete frontend equality and target-versus-parent address inequality.",
+    "SampleInside uses one reached witness for original Builder support, original adaptive remainder and wrapper state, marker-preserving native prefix, exact callback cut and final cache. GeneratedInside uses packet-carried selection and actual evaluated original sampler. Existential source draw witness is inherited from CarriedChronology; no new probability or uniqueness claim.",
+    "No claimed stopped-component state coupling, successful-target event exclusion, confidentiality game hop or loss cancellation. Primitive contracts, callback budgets and alias allowance unchanged. Remaining refusal/state relation/Fresh/two-world/raw hop/resource obligations are explicit."
+  ],
+  "findings": []
+}

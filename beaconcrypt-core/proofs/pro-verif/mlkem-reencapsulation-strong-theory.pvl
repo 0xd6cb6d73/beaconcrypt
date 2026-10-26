@@ -1,0 +1,16 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Production-style control theory.  A public re-encapsulation term can be
+   attempted, but only a genuine ciphertext constructed for this exact public
+   key and fresh coins decapsulates.  The free mlkem_shared_secret constructor
+   therefore retains the production model's public-key-binding assumption. *)
+
+(* A separate destructor keeps this comparison theory isolated from the
+   production mlkem_decapsulate reduction declared in crypto.pvl. *)
+fun reencapsulate(bitstring, bitstring): bitstring.
+fun kem_control_decapsulate(bitstring, bitstring): bitstring
+reduc forall secret_key: bitstring, coins: bitstring;
+  kem_control_decapsulate(
+    mlkem_ciphertext(mlkem_public(secret_key), coins),
+    secret_key
+  ) = mlkem_shared_secret(mlkem_public(secret_key), coins).

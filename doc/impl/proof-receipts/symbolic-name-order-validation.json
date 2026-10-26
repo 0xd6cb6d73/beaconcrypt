@@ -1,0 +1,196 @@
+{
+  "stage": "E20 complete symbolic name-order trace argument",
+  "base": "8d2b5cdb146b6419ac62be092c4201771ae8dd7c",
+  "date_utc": "2026-10-06T02:08:15.912964+00:00",
+  "source_files": {
+    "beaconcrypt-core/Makefile": "3650f2864b7abb3d2f9966a2c1914350768744b25f95bacb943c355d018296e7",
+    "beaconcrypt-core/proofs/check-inventory.sh": "43da228a3b72af1506dd5f03993c175dd359f5a7d426eced9428ee81c6df6f82",
+    "beaconcrypt-core/proofs/pro-verif/declaration-allowlist.tsv": "9cc7a10575f77cf93cc0b8c3a3cb0a20825cb6463d0f56d26125f92bd1c8951e",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "9a5b9cc8da26245c5e1d6493d1fe01ce7bf60c44c5f587cc570fc13763420ec6",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "8dbf4e827462fe711d10b55c23a49b8f69fa9e49736d2336d3291ad4b42ecf7b",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "c9174defea8fa043f4cf7b3449e627658db52d2c7277a32dd8c038a19a462da5",
+    "doc/formal-verification-analysis.md": "92158baea84b2f73eaa8a2b329d26843ec0fb6d8e2f91538ec93b5dc74e4f643",
+    "doc/impl/proverif-free-schedule-records-b2s.md": "5e28e516566df491f3e61dfc8c82683f524da1cf15b3f9d22db13e6709b1f58a",
+    "doc/impl/proverif-free-schedule-records.md": "d4e370038b3b0101de778db83408f0058a6cc64c181b36ef8e31f2cbc47fe144",
+    "doc/impl/proverif-fs-source-abstraction.md": "7328223f81d75991d696d05c5303304d805227e2579a3909f79b2a5d12d20acf",
+    "beaconcrypt-core/proofs/pro-verif/symbolic-name-order.py": "dba5ccd7689cbeebf15b6731382466120de9a752a89c7723254795debd304f14",
+    "beaconcrypt-core/proofs/pro-verif/test-symbolic-name-order.py": "862165d4f31bcc80af94fc6798e37c591de977b401a6f195cad1629904956986",
+    "doc/impl/proverif-symbolic-name-order.md": "6715e4f823c8d0024f9c27e446d382506e3ece9bc1e24947afcb9103e40b1445"
+  },
+  "source_preservation": {
+    "base": "8d2b5cdb146b6419ac62be092c4201771ae8dd7c",
+    "counts": {
+      "lean": 1368,
+      "proverif_models_queries": 225,
+      "production_rust": 22,
+      "verdict_rows": 1
+    },
+    "verdict_rows": 3177
+  },
+  "scope": "Reviewed paper trace/recipe/event argument under existing T0 symbolic semantics; finite maintenance gates only. No computational sampler, distribution, history or query-bill equality and no new solver result.",
+  "cheap_checks": [
+    {
+      "name": "name-order",
+      "command": [
+        "python3",
+        "beaconcrypt-core/proofs/pro-verif/test-symbolic-name-order.py"
+      ],
+      "exit": 0,
+      "log": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.033s\n\nOK\n",
+      "log_sha256": "266ccb7e366515dce389671f4742a85e408ce173590b1744ae625df8f6fb7c5a"
+    },
+    {
+      "name": "finite-gate",
+      "command": [
+        "python3",
+        "beaconcrypt-core/proofs/pro-verif/symbolic-name-order.py",
+        "--check-only"
+      ],
+      "exit": 0,
+      "log": "Symbolic name-order premises: 2 complete Server continuations; paper trace argument only, no computational reorder or new solver verdict.\n",
+      "log_sha256": "e195a3406a9ee972b574d4787b1324f01c0237c7a046134037a005cecc04b4b5"
+    },
+    {
+      "name": "fmt",
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit": 0,
+      "log": "",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "diff",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit": 0,
+      "log": "",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "fidelity_and_classification": {
+    "run": {
+      "command": [
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "env",
+        "CARGO_TARGET_DIR=/tmp/beaconcrypt-primitive-fidelity-cargo-target",
+        "make",
+        "-C",
+        "beaconcrypt-core",
+        "SHELL=/run/current-system/sw/bin/bash",
+        "check-proverif-transcript-fidelity",
+        "check-inventory"
+      ],
+      "start": "2026-10-06T02:04:06.961889+00:00",
+      "end": "2026-10-06T02:04:27.814659+00:00",
+      "exit": 2,
+      "log_sha256": "9a35333dbd8fdd7a770ec571eb18eed75b05f4384fce7a4838cc7340a3d99ce0"
+    },
+    "log": "make: Entering directory '/tmp/beaconcrypt-proverif-symbolic-name-order/beaconcrypt-core'\npython3 proofs/pro-verif/test-verdict-classes.py\n................\n----------------------------------------------------------------------\nRan 16 tests in 2.941s\n\nOK\ncargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity\n   Compiling beaconcrypt-core v0.1.0 (/tmp/beaconcrypt-proverif-symbolic-name-order/beaconcrypt-core)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.54s\n     Running tests/proverif_transcript_fidelity.rs (/tmp/beaconcrypt-primitive-fidelity-cargo-target/debug/deps/proverif_transcript_fidelity-4c642cedc47740e4)\n\nrunning 30 tests\ntest compiled_core_matches_the_canonical_transcript ... ok\ntest free_schedule_roster_and_serial_wiring_are_pinned ... ok\ntest free_schedule_records_s2b_model_is_pinned ... ok\ntest free_schedule_records_b2s_model_is_pinned ... ok\ntest hkdf_prefix_smoke_has_an_exact_source_projection_check ... ok\ntest initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous ... ok\ntest free_schedule_rust_fidelity_annotations_are_exact ... ok\ntest free_schedule_vocabulary_and_registration_model_are_pinned ... ok\ntest later_registration_sequence_three_poststate_is_exact_and_nonvacuous ... ok\ntest main_registration_completion_schedules_preserve_the_checked_prefixes ... ok\ntest pin_origin_syntax_gate_cannot_be_omitted ... ok\ntest post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous ... ok\ntest free_schedule_checker_loader_and_targets_are_pinned ... ok\ntest production_manifest_symbolic_model_and_adapters_are_exact ... ok\ntest proverif_declarations_are_allowlisted ... ok\ntest initial_ratchet_mutation_matrix_is_complete_and_rejected ... ok\ntest phase1_registration_mutation_matrix_is_complete_and_rejected ... ok\ntest ratchet_effect_driver_mutation_matrix_is_complete_and_rejected ... ok\ntest registration_boundary_make_runners_are_checked ... ok\ntest proverif_verdict_classes_cover_every_checker_and_profile ... ok\ntest record_opening_source_mutations_are_rejected ... ok\ntest serial_proverif_ci_preserves_every_gate_and_separate_group ... ok\ntest symbolic_name_order_gates_cannot_be_omitted ... ok\ntest requested_transcript_mutations_are_rejected ... ok\ntest cryptoframe_wire_mutation_matrix_is_complete_and_rejected ... ok\ntest endpoint_frame_context_mutation_matrix_is_complete_and_rejected ... ok\ntest registration_lifecycle_mutation_matrix_is_complete_and_rejected ... ok\ntest post_registration_mutation_matrix_is_complete_and_rejected ... ok\ntest later_registration_mutation_matrix_is_complete_and_rejected ... ok\ntest finite_receive_state_fixture_mutation_matrix_is_complete_and_rejected ... ok\n\ntest result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.68s\n\nbash proofs/check-inventory.sh\nformal-verification inventory check failed: transcript-fidelity test count changed in tests/proverif_transcript_fidelity.rs (expected 29, got 30)\nmake: *** [Makefile:227: check-inventory] Error 1\nmake: Leaving directory '/tmp/beaconcrypt-proverif-symbolic-name-order/beaconcrypt-core'\n",
+    "result": "All16 classifier tests and all30 transcript-fidelity tests passed before Make entered inventory. The combined command exited2 because the inventory still expected29 tests; only that expected count and checker hash were subsequently changed."
+  },
+  "final_inventory": {
+    "run": {
+      "command": [
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "beaconcrypt-core",
+        "SHELL=/run/current-system/sw/bin/bash",
+        "check-inventory"
+      ],
+      "start": "2026-10-06T02:05:20.158984+00:00",
+      "end": "2026-10-06T02:06:26.044465+00:00",
+      "exit": 0,
+      "log_sha256": "c9ef15461c6ad0cba8553f6c5919cf09be6a503f07b766cfa72a6205434fc19d"
+    },
+    "log": "make: Entering directory '/tmp/beaconcrypt-proverif-symbolic-name-order/beaconcrypt-core'\nbash proofs/check-inventory.sh\nPin-origin argument inputs: 14 files, 28 reductions, 36 data constructors; scoped paper C2/C3 transfer, no new solver verdict.\nSymbolic name-order premises: 2 complete Server continuations; paper trace argument only, no computational reorder or new solver verdict.\nprimitive-fidelity manifest: 9 targets checked\nClassified 3177 expected verdicts: definitional=2836, diagnostic=8, differential-control=19, limitation=20, negative-control=34, security=174, witness=86\nThese are classified expectations, not new ProVerif validation receipts or independent theorem counts.\npending registration manifest: 4 focused targets checked\nOpen CTX manifest: 2 targets, 0 protocol security claims.\nactive strong-secrecy manifest: 6 targets checked\nSignature provenance manifest: 6 targets, 28 reductions, 44 data constructors.\nDelayed response manifest: 5 targets, 7 exact verdict lines; retained finish/control comparison.\nFormal-verification inventory matches the reviewed boundary.\nmake: Leaving directory '/tmp/beaconcrypt-proverif-symbolic-name-order/beaconcrypt-core'\n"
+  },
+  "comparison_digests": {
+    "fs-records-s2b.pvl": {
+      "early_sha256": "7466827303611aba1be060f364193598d4f3f9d03fd77b879490e2494629b1ee",
+      "late_sha256": "552adf2a5a0bcece9baab0830b03cf1ea1efd6caa7d56d146c89d7d12efabf4c",
+      "continuation_sha256": "506b244459853139daf74f4fc6dcba6ee42614932ac5b0f402c6f9c5f3eb0749"
+    },
+    "fs-records-b2s.pvl": {
+      "early_sha256": "31859f5c379eff5baa6bcb52cd72db4d7bf1a9f83ab0aed6f98ff11d36b1b4ae",
+      "late_sha256": "9e79fd13036a51feb786b506638e588c6b1ec646f571b152db9e690c84b3698f",
+      "continuation_sha256": "6e6ee69e306a66678f90d3b92971d2412179583a23aefde68781c6f9a67677fb"
+    }
+  },
+  "initial_diagnostics": [
+    {
+      "kind": "Finite checker initially used check-* name reserved for solver drivers",
+      "run": {
+        "command": [
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "env",
+          "CARGO_TARGET_DIR=/tmp/beaconcrypt-primitive-fidelity-cargo-target",
+          "make",
+          "-C",
+          "beaconcrypt-core",
+          "SHELL=/run/current-system/sw/bin/bash",
+          "check-proverif-transcript-fidelity",
+          "check-inventory"
+        ],
+        "start": "2026-10-06T01:58:39.872247+00:00",
+        "end": "2026-10-06T01:58:41.509786+00:00",
+        "exit": 2,
+        "log_sha256": "697011f417b53c03f571728286809dadac75e30672e7f53961b5c5868cf68890"
+      },
+      "log": "make: Entering directory '/tmp/beaconcrypt-proverif-symbolic-name-order/beaconcrypt-core'\npython3 proofs/pro-verif/test-verdict-classes.py\nE\n======================================================================\nERROR: setUpClass (__main__.ClassificationTests)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/beaconcrypt-proverif-symbolic-name-order/beaconcrypt-core/proofs/pro-verif/test-verdict-classes.py\", line 21, in setUpClass\n    cls.expected = CHECK.INVENTORY.expected_verdicts()\n                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"/tmp/beaconcrypt-proverif-symbolic-name-order/beaconcrypt-core/proofs/pro-verif/verdict-inventory.py\", line 264, in expected_verdicts\n    raise ValueError(f\"unclassified checker entry point: {actual ^ supported}\")\nValueError: unclassified checker entry point: {'check-results.awk', 'check-symbolic-name-order.py'}\n\n----------------------------------------------------------------------\nRan 0 tests in 0.384s\n\nFAILED (errors=1)\nmake: *** [Makefile:274: check-proverif-transcript-fidelity] Error 1\nmake: Leaving directory '/tmp/beaconcrypt-proverif-symbolic-name-order/beaconcrypt-core'\n",
+      "resolution": "Renamed to symbolic-name-order.py; existing classifier and its unknown-driver rejection remain unchanged."
+    },
+    {
+      "stage": "Review-requested extracted-helper drift regression",
+      "failure": "Initial test searched for a letfun declaration, but extraction/lib.pvl defines registration_id using a reduction; the mutation did not match and the test failed before validating the checker.",
+      "resolution": "Mutate the actual registration_identifier(identity, one_time) RHS and require the lexical pin to reject it."
+    },
+    {
+      "kind": "Existing precise input string not yet declared in Python-literal allowlist",
+      "run": {
+        "command": [
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "env",
+          "CARGO_TARGET_DIR=/tmp/beaconcrypt-primitive-fidelity-cargo-target",
+          "make",
+          "-C",
+          "beaconcrypt-core",
+          "SHELL=/run/current-system/sw/bin/bash",
+          "check-proverif-transcript-fidelity",
+          "check-inventory"
+        ],
+        "start": "2026-10-06T02:00:44.681451+00:00",
+        "end": "2026-10-06T02:01:03.431878+00:00",
+        "exit": 2,
+        "log_sha256": "3ae35ecc3a2deeffaa65ad149e05fa7dd0de6ed5ec7df00164097e3909f1939b"
+      },
+      "log": "make: Entering directory '/tmp/beaconcrypt-proverif-symbolic-name-order/beaconcrypt-core'\npython3 proofs/pro-verif/test-verdict-classes.py\n................\n----------------------------------------------------------------------\nRan 16 tests in 2.939s\n\nOK\ncargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity\n   Compiling beaconcrypt-core v0.1.0 (/tmp/beaconcrypt-proverif-symbolic-name-order/beaconcrypt-core)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.09s\n     Running tests/proverif_transcript_fidelity.rs (/tmp/beaconcrypt-primitive-fidelity-cargo-target/debug/deps/proverif_transcript_fidelity-4c642cedc47740e4)\n\nrunning 30 tests\ntest compiled_core_matches_the_canonical_transcript ... ok\ntest free_schedule_roster_and_serial_wiring_are_pinned ... ok\ntest free_schedule_records_s2b_model_is_pinned ... ok\ntest free_schedule_records_b2s_model_is_pinned ... ok\ntest hkdf_prefix_smoke_has_an_exact_source_projection_check ... ok\ntest initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous ... ok\ntest free_schedule_rust_fidelity_annotations_are_exact ... ok\ntest free_schedule_vocabulary_and_registration_model_are_pinned ... ok\ntest later_registration_sequence_three_poststate_is_exact_and_nonvacuous ... ok\ntest main_registration_completion_schedules_preserve_the_checked_prefixes ... ok\ntest pin_origin_syntax_gate_cannot_be_omitted ... ok\ntest post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous ... ok\ntest free_schedule_checker_loader_and_targets_are_pinned ... ok\ntest production_manifest_symbolic_model_and_adapters_are_exact ... ok\ntest proverif_declarations_are_allowlisted ... FAILED\ntest proverif_verdict_classes_cover_every_checker_and_profile ... ok\ntest ratchet_effect_driver_mutation_matrix_is_complete_and_rejected ... ok\ntest record_opening_source_mutations_are_rejected ... ok\ntest registration_boundary_make_runners_are_checked ... ok\ntest initial_ratchet_mutation_matrix_is_complete_and_rejected ... ok\ntest phase1_registration_mutation_matrix_is_complete_and_rejected ... ok\ntest serial_proverif_ci_preserves_every_gate_and_separate_group ... ok\ntest symbolic_name_order_gates_cannot_be_omitted ... ok\ntest requested_transcript_mutations_are_rejected ... ok\ntest registration_lifecycle_mutation_matrix_is_complete_and_rejected ... ok\ntest cryptoframe_wire_mutation_matrix_is_complete_and_rejected ... ok\ntest endpoint_frame_context_mutation_matrix_is_complete_and_rejected ... ok\ntest post_registration_mutation_matrix_is_complete_and_rejected ... ok\ntest later_registration_mutation_matrix_is_complete_and_rejected ... ok\ntest finite_receive_state_fixture_mutation_matrix_is_complete_and_rejected ... ok\n\nfailures:\n\n---- proverif_declarations_are_allowlisted stdout ----\n\nthread 'proverif_declarations_are_allowlisted' (1224190) panicked at beaconcrypt-core/tests/proverif_transcript_fidelity.rs:25161:75:\ncalled `Result::unwrap()` on an `Err` value: \"declaration is not on the reviewed allowlist: (\\\"proofs/pro-verif/symbolic-name-order.py\\\", \\\"precise\\\", \\\"[precise]\\\")\"\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    proverif_declarations_are_allowlisted\n\ntest result: FAILED. 29 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.26s\n\nerror: test failed, to rerun pass `-p beaconcrypt-core --test proverif_transcript_fidelity`\nmake: *** [Makefile:275: check-proverif-transcript-fidelity] Error 101\nmake: Leaving directory '/tmp/beaconcrypt-proverif-symbolic-name-order/beaconcrypt-core'\n",
+      "resolution": "Added exact existing checker1/test2 literal entries and explanatory analysis; no executable model annotation changed."
+    }
+  ],
+  "aggregate_status": "Full final aggregate proof validation remains pending. Unchanged Lean and solver sources were not rebuilt or rerun for this symbolic paper/maintenance-only stage. No production Rust changes, mutation run or garbage collection."
+}

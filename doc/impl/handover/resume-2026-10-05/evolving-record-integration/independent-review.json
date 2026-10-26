@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-10-05T22:08:51.037819+00:00",
+  "reviewer": "/root/fs_source_abstraction",
+  "decision": "APPROVE_SCOPED_INTEGRATION",
+  "manifest": "/tmp/bc-arc-scratch/resume-2026-10-05-codex/evolving-record-integration/review-manifest.json",
+  "manifest_sha256": "d3195923d569a39854b8cfa3e7279c21c51b3b6deff15fdeca6278f77398b414",
+  "base": "76a47a4ff5182e395e1a3faa362f523d8e8625d3",
+  "published_source": "73f333cb858bc77ecbdbd4db1655a889b1e69734",
+  "mechanical_review": [
+    "All135 frozen file hashes match.",
+    "87 added modules are byte-identical to published source; independently traversed842 retained repository dependencies are byte-identical to source and integration base.",
+    "87 distinct root imports added, no existing root import removed; all422 public theorem guard names and counts have exact checker entries.",
+    "All87 direct check source/artifact/log hashes match zero-exit receipts; complete root source/log and final inventory hashes match zero-exit receipts.",
+    "All prior inventory checker lines remain apart from expected handwritten-Lean count1220 replaced by1307. Rust, ProVerif, Make and CI bytes remain unchanged."
+  ],
+  "semantic_review": [
+    "Read integration guide and resource, original-event, inside-source, frame-join, common-mass and input-alias guides; inspected critical inside-state/generated packet, freshness/event, executable input-alias, full-distribution key-order and source-bills statements. This integration review consumes existing published cohort reviews rather than re-proving all historical modules.",
+    "inside_marker retains actual present-kernel source address, complete component-to-source frontend equality and target/parent inequality as explicit operational premises. Same generated packet support is retained; no marker=false to target-event exclusion is silently asserted.",
+    "pending_bound retains complete original observation, same reached cache, explicit alias condition, compiled event and same-run nonce refusal with coefficient one. Original freshness checker includes the actual selected message key; event_good derives hidden-key nondisclosure rather than introducing it as an assumption.",
+    "Input/parent joint collision term (8+67p)/2^256 is distinct from chronological common mass sum(j+1)/2^256 over j<7+67qPost. Parent self-alias is included only at the same joint hop; earlier losses are not cancelled.",
+    "Source-client bills retain U0+184+(7+67qPost)*(76+2C+32+D+A)+T uniform, 69qMain+1+69qPost+7+67qPost+1+p hash, and 1+p selected seal/raw calls; C,D,A,W,T and independent qPost/p are explicit. Primitive, challenger, byte and runtime costs remain separate.",
+    "The original authenticated evolving-source capability restrictions persist. New joint-service integration does not automatically discharge them. Source-model, stopped-state/event, two-world/raw endpoint and complete global secrecy joins remain open; no final security conclusion or new primitive assumption is claimed."
+  ],
+  "limitations": [
+    "No heavy tools rerun by reviewer; direct receipts, source/artifact identity and metadata independently checked.",
+    "Only scoped operational/event/resource integration approved, not full evolving-record secrecy or common computational/symbolic completion."
+  ]
+}

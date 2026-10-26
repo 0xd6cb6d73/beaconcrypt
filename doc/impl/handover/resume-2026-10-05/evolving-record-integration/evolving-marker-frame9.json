@@ -1,0 +1,17 @@
+{
+  "review": "APPROVE",
+  "reviewer": "root",
+  "time": "2026-10-05T22:38:33.523890",
+  "manifest_sha256": "867e50b0c70f28fdb071092f269c0f869fde4865322f2d41abe065eaa548ce52",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeMarkerPrefix.lean": "ad2eb13d8461d39caf341d3abea601bb11a507b7495007bb99a2596722c4c5ef",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterSavedFrameJoin.lean": "09e7d4b41160b6387479d21936d06068f600eb46f06d6aa55e6a0da12568d8d9",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedFrame.lean": "b6d4b80fa470559ef8dc848a9cc3fc806111dca3e488a7fab2492d7e645d5794",
+    "doc/impl/later-challenge-marker-prefix.md": "d09adc15dc14037da2f32a5dc5791fe2186f2d127249c0341e5fb7b5d1e63836",
+    "doc/impl/later-challenge-source-frame-join.md": "f179a645d0e6ff1318ca01a14959f6a51aa3bff85a0cf270bdb567c667da1f9e",
+    "doc/formal-verification-analysis.md": "8575552627e193e3370d99d99953d088d76aa5e3ff1c8ba5ded06a6bec7f7e76"
+  },
+  "kind": "semantic review, not independent Lean rebuild",
+  "scope": "Retained original frame computation and full native/frontend publication trace; same evaluated generated packet carries original source descriptor/resource certificate; excludes used phase on successful true marked-publication outcome. MarkerPrefix independently reviewed earlier and by R1 agent. Explicit callback/state parameters, no source/computational mass coupling or nonce-stopped executable implication inferred. No new assumptions, reduced costs, or loss deletion. Global source-prefix-to-monitor and inside-phase/freshness/raw-hop/resource joins remain open.",
+  "findings": []
+}

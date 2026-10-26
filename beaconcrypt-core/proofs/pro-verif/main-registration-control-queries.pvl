@@ -1,0 +1,37 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* These queries run the actual baseline process, including first-sequence admission and the later candidate. A false reachability query is an intentional acceptance witness. *)
+query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id;
+  event(BeaconRegistrationCompleted(main_agreement, first_sequence(), main_payload, main_frame, main_response, main_claimed)).
+query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id;
+  event(BeaconRegistrationCompleted(main_agreement, next_sequence(next_sequence(first_sequence())), main_payload, main_frame, main_response, main_claimed)).
+
+(* Both invalid application payload classes are actually emitted by the genuine server. *)
+query main_agreement: registration_session_t, main_response: bitstring, main_claimed: key_id;
+  event(MainRegistrationCandidateSent(main_agreement, main_registration_wrong_binding(), main_response)).
+query main_agreement: registration_session_t, main_response: bitstring, main_claimed: key_id;
+  event(MainRegistrationCandidateSent(main_agreement, main_registration_unframed(), main_response)).
+
+(* The same invalid candidate must never complete either honest scheduling branch. *)
+query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_sequence: sequence, main_claimed: key_id;
+  event(MainRegistrationCandidateSent(main_agreement, main_registration_wrong_binding(), main_response)) &&
+  event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)).
+query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_sequence: sequence, main_claimed: key_id;
+  event(MainRegistrationCandidateSent(main_agreement, main_registration_unframed(), main_response)) &&
+  event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)).
+
+(* Every completion on either scheduling branch agrees with the Server's sequence-one record over the HB-89 eleven-field authenticated session projection, so a genuine later record cannot replace the registration response. The former exact 18-field BeaconAnyCommitted-to-ServerCommitted query is now a historical control in exact-registration-origin-queries.pvl, because the accepted X25519 high-bit response alias refutes it for production. *)
+query main_agreement: authenticated_registration_session_t, main_sequence: sequence, main_payload: bitstring, main_frame: bitstring, main_claimed: key_id;
+  inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_claimed)) ==> inj-event(AuthenticatedRegistrationRecordSent(main_agreement, first_sequence(), main_payload, main_frame, main_claimed)).
+
+(* An authentic later payload still cannot complete when its outer numeric ID is relabelled to match its authenticated prefix. *)
+query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id;
+  event(MainRegistrationRelabelCompleted(main_agreement, main_payload, main_frame, main_response)).
+
+(* Every successful initial completion reports exactly sequence one. *)
+query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_sequence: sequence, main_claimed: key_id;
+  event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)) ==> main_sequence = first_sequence().
+
+(* The genuine later record still decrypts before the registration policy rejects it. *)
+query main_payload: bitstring, main_frame: bitstring;
+  event(MainRegistrationLaterOpened(next_sequence(next_sequence(first_sequence())), main_payload, main_frame)).

@@ -1,0 +1,35 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Sound Horn overapproximation of the same replicated process, without a
+   session cutoff. No unknown verdict is counted as a proved correspondence. *)
+set preciseActions = false.
+set maxHyp = 2.
+set preciseLetExpand = false.
+query owner:channel, attempt:bitstring, payload:bitstring, raw:bitstring;
+ event(RegistrationBeaconReturned(owner,attempt,payload)) ==> event(RegistrationBeaconAttempt(owner,attempt,raw)).
+query owner:channel, attempt:bitstring, raw:bitstring, assigned:key_id, ad:bitstring,
+ payload:bitstring, send:bitstring, receive:bitstring, cache:receive_cache, frame:bitstring;
+ event(RegistrationBeaconCommitted(owner,attempt,raw,assigned,ad,payload,send,receive,cache)) ==>
+ event(RegistrationBeaconOpened(owner,attempt,first_sequence(),registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(assigned)),registration_response_nonempty(payload)),frame)).
+query owner:channel, attempt:bitstring, raw:bitstring, assigned:key_id, ad:bitstring,
+ payload:bitstring, send:bitstring, receive:bitstring, cache:receive_cache,
+ root:bitstring, initial:bitstring, material:bitstring;
+ event(RegistrationBeaconCommitted(owner,attempt,raw,assigned,ad,payload,send,receive,cache)) ==>
+ event(RegistrationBeaconPrepared(owner,attempt,root,send,initial)) &&
+ event(RegistrationBeaconRawPlan(owner,attempt,first_sequence(),material,receive,cache)) && cache=receive_cache_empty().
+query owner:channel, attempt:bitstring, raw:bitstring;
+ event(RegistrationBeaconFailed(owner,attempt)) ==> event(RegistrationBeaconAttempt(owner,attempt,raw)).
+query owner:channel, attempt:bitstring, server:bitstring, ciphertext:bitstring;
+ event(RegistrationBeaconDhComplete(owner,attempt,server)) ==> event(RegistrationBeaconDecapsulated(owner,attempt,ciphertext)).
+query owner:channel, attempt:bitstring, target:sequence, opened:bitstring, frame:bitstring,
+ material:bitstring, next:bitstring, skipped:receive_cache;
+ event(RegistrationBeaconOpened(owner,attempt,target,opened,frame)) ==> event(RegistrationBeaconRawPlan(owner,attempt,target,material,next,skipped)).
+query owner:channel, attempt:bitstring, prior:bitstring, raw:bitstring;
+ event(RegistrationBeaconClosedRejected(owner,attempt)) ==> event(RegistrationBeaconAttempt(owner,prior,raw)).
+query owner:channel, attempt:bitstring, server:bitstring;
+ event(RegistrationBeaconPinRejected(owner,attempt,server)) ==> event(RegistrationBeaconDhComplete(owner,attempt,server)) && event(RegistrationBeaconSharedCleared(owner,attempt)).
+query owner:channel, attempt:bitstring, raw:bitstring, assigned:key_id, ad:bitstring,
+ payload:bitstring, send:bitstring, receive:bitstring, cache:receive_cache, root:bitstring;
+ event(RegistrationBeaconCommitted(owner,attempt,raw,assigned,ad,payload,send,receive,cache)) ==>
+ event(RegistrationBeaconPrepared(owner,attempt,root,send,hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())))) &&
+ send=hkdf_second_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())) &&
+ receive=hkdf_second_32(hkdf_sha512_no_salt(hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())),symmetric_ratchet_domain())) && cache=receive_cache_empty().

@@ -1,0 +1,12 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b S1, security result, (K_s, K_r, T_max) = (2, 3, 3): record
+   secrecy.  The attacker never learns a plaintext that a Server object
+   allocated, at sequence 1 (the registration payload behind the public
+   binding) or at a later tasking (fresh bytes behind an adversary-chosen
+   prefix), to a peer whose identity secret it does not hold. *)
+query s: bitstring, k: bitstring, kid: key_id, root: bitstring, t: nat, m: bitstring;
+  event(FsSent(server_to_beacon(), s, ed_public(k), kid, root, t, m)) && attacker(m)
+  ==> attacker(k).
+
+process FsRecordsS2bMain()

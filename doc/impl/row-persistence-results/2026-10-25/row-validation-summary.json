@@ -1,0 +1,47 @@
+{
+  "implementation_branch": "codex/row-persistence",
+  "runtime_tests": {
+    "native": 418,
+    "file_backed_row_integration": 17,
+    "additional_c_bridge": 2,
+    "python": 93,
+    "wasi_guest": 28,
+    "go": "Complete native race suite passed; no-CGO unsupported-path test passed"
+  },
+  "native_mutations": {
+    "current_catalog": 1640,
+    "fresh_run_1_cases": 1326,
+    "fresh_run_2_cases": 322,
+    "overlapping_cases": 8,
+    "caught": 1188,
+    "unviable": 452,
+    "missed": 0,
+    "timeout": 0,
+    "uncovered_current": 0,
+    "stale_historical_entries_not_counted": 86,
+    "final_outcome_names_match_catalog": true
+  },
+  "wasi_mutations": {
+    "total": 159,
+    "caught": 147,
+    "unviable": 12,
+    "missed": 0,
+    "timeout": 0
+  },
+  "proofs": "Explicitly out of scope. Five proof source-fidelity checks fail; the two proof-only test binaries are excluded from runtime/mutation validation.",
+  "excluded_proof_binaries": [
+    "proverif_transcript_fidelity",
+    "mldsa_joint_fidelity"
+  ],
+  "additional_checks": [
+    "All-feature/all-target workspace Clippy",
+    "Formatting",
+    "Server-only and beacon-only builds",
+    "Workspace doctests",
+    "Release benchmark build",
+    "Four synthetic summarizer tests",
+    "Duplicate benchmark CLI axes rejected before execution",
+    "Mythic provider engine race tests"
+  ],
+  "source_commit": "31e729f22bacf438773e67c984dc81aa67029282"
+}

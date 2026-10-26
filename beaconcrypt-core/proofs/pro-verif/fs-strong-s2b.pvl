@@ -1,0 +1,303 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Active strong-secrecy derivative of the maintained fs process.
+   See doc/impl/proverif-active-strong-secrecy.md for the exact bounds,
+   test eligibility and source-abstraction obligations. *)
+
+fun fs_strong_s2b_finished(key_id,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring):bitstring [data].
+letfun fs_strong_s2b_finish(server_identity:bitstring,beacon_identity:bitstring,
+  beacon_prekey_secret:bitstring,beacon_identity_secret:bitstring,
+  beacon_one_time_secret:bitstring,beacon_pq_secret:bitstring,response:bitstring) =
+  let kex_response(
+    response_server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    initial_frame,
+    assigned_key_id
+  ) = response in
+  
+  let server_identity_x = x25519_public_from_ed(response_server_identity) in
+  
+  let kem_secret = mlkem_decapsulate(kem_ciphertext, beacon_pq_secret) in
+  
+  let dh1 = x25519_beacon_dh(beacon_prekey_secret, server_identity_x) in
+  let dh2 = x25519_beacon_dh(beacon_identity_secret, server_ephemeral) in
+  let dh3 = x25519_beacon_dh(beacon_prekey_secret, server_ephemeral) in
+  let dh4 = x25519_beacon_dh(beacon_one_time_secret, server_ephemeral) in
+
+  if response_server_identity = server_identity then
+  
+  let root_input = beaconcrypt_core__pqxdh__build_root_key_input(
+    beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+      dh1,
+      dh2,
+      dh3,
+      dh4,
+      kem_secret
+    )
+  ) in
+  let root = pqxdh_root(
+    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+  ) in
+
+  let receive_chain_1 = server_to_beacon_chain(root) in
+  let receive_chain_2 = ratchet_next(receive_chain_1) in
+  let receive_chain_3 = ratchet_next(receive_chain_2) in
+  let receive_chain_4 = ratchet_next(receive_chain_3) in
+
+  let associated_data = beaconcrypt_core__pqxdh__build_associated_data(
+    server_identity,
+    beacon_identity
+  ) in
+  let expected_binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+    key_id_encoding(assigned_key_id)
+  ) in
+
+  let crypto_frame(
+    frame_cipher: bitstring,
+    frame_tag: bitstring,
+    frame_commitment: bitstring,
+    fs_seq(frame_t: nat),
+    =SERVER_KEY_ID
+  ) = initial_frame in
+  if frame_t = 1 then
+    let finish_plaintext = open_frame(
+      ratchet_material(receive_chain_1),
+      associated_data,
+      fs_seq(1),
+      SERVER_KEY_ID,
+      initial_frame
+    ) in
+
+    let registration_payload(
+      =expected_binding,
+      application_payload: bitstring
+    ) = finish_plaintext in
+
+    fs_strong_s2b_finished(assigned_key_id,root,associated_data,
+      receive_chain_2,receive_chain_3,receive_chain_4,application_payload,finish_plaintext,initial_frame).
+
+
+let FsS2bServer(obj: bitstring) =
+  let server_identity = ed_public(SERVER_IDENTITY_SECRET) in
+
+  new ephemeral_secret: bitstring;
+  
+  new kem_coins: bitstring;
+  
+  in(c, bundle: bitstring) ;
+  
+  let signed_init_kex(
+    tag_ed25519(identity: bitstring),
+    signed_prekey: bitstring,
+    signed_one_time: bitstring,
+    signed_pq: bitstring
+  ) = bundle in
+
+  let (
+    tag_mlkem768(pq: bitstring),
+    tag_x25519_prekey(prekey: bitstring),
+    tag_x25519_one_time(one_time: bitstring)
+  ) = (
+    verify_signature(signed_pq, identity),
+    verify_signature(signed_prekey, identity),
+    verify_signature(signed_one_time, identity)
+  ) in
+  let init = beaconcrypt_core__pqxdh__VerifiedInitKex(
+    identity,
+    prekey,
+    one_time,
+    pq
+  ) in
+
+  let registration_id = beaconcrypt_core__pqxdh__registration_id(init) in
+
+  let (dh1: bitstring, dh2: bitstring, dh3: bitstring, dh4: bitstring) = (
+    x25519_server_dh(SERVER_IDENTITY_SECRET, prekey),
+    x25519_server_dh(ephemeral_secret, x25519_public_from_ed(identity)),
+    x25519_server_dh(ephemeral_secret, prekey),
+    x25519_server_dh(ephemeral_secret, one_time)
+  ) in
+
+  let root_input = beaconcrypt_core__pqxdh__build_root_key_input(
+    beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+      dh1,
+      dh2,
+      dh3,
+      dh4,
+      mlkem_shared_secret(pq, kem_coins)
+    )
+  ) in
+  let root = pqxdh_root(
+    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+  ) in
+
+  event FsServerAccepted(
+    obj,
+    server_identity,
+    identity,
+    init,
+    registration_id,
+    root
+  );
+
+  in(c, build_request: bitstring) ;
+
+  let assigned_key_id = fs_kid(1) in
+
+  let send_chain_1 = server_to_beacon_chain(root) in
+  let send_chain_2 = ratchet_next(send_chain_1) in
+  let send_chain_3 = ratchet_next(send_chain_2) in
+
+  let associated_data = beaconcrypt_core__pqxdh__build_associated_data(
+    server_identity,
+    identity
+  ) in
+  
+  new payload: bitstring;
+  
+  let response_plaintext = registration_payload(
+    beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+      key_id_encoding(assigned_key_id)
+    ),
+    payload
+  ) in
+  
+  let initial_frame = seal_frame(
+    ratchet_material(send_chain_1),
+    associated_data,
+    fs_seq(1),
+    SERVER_KEY_ID,
+    response_plaintext
+  ) in
+  
+  event FsServerCommitted(
+    obj,
+    server_identity,
+    identity,
+    init,
+    assigned_key_id,
+    root,
+    associated_data,
+    payload
+  );
+  event FsSent(
+    server_to_beacon(),
+    server_identity,
+    identity,
+    assigned_key_id,
+    root,
+    1,
+    response_plaintext
+  );
+  
+  out(
+    c,
+    kex_response(
+      server_identity,
+      x25519_public(ephemeral_secret),
+      mlkem_ciphertext(pq, kem_coins),
+      initial_frame,
+      assigned_key_id
+    )
+  );
+  FsS2bTaskings(
+    server_identity,
+    identity,
+    assigned_key_id,
+    root,
+    associated_data,
+    send_chain_2,
+    send_chain_3
+  ).
+
+let FsS2bBeacon() =
+  
+  new beacon_identity_secret: bitstring;
+  new beacon_prekey_secret: bitstring;
+  new beacon_pq_secret: bitstring;
+  
+  new beacon_one_time_secret: bitstring;
+  let server_identity = ed_public(SERVER_IDENTITY_SECRET) in
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let beacon_prekey = x25519_public(beacon_prekey_secret) in
+  let beacon_one_time = x25519_public(beacon_one_time_secret) in
+  let beacon_pq = mlkem_public(beacon_pq_secret) in
+  let init = beaconcrypt_core__pqxdh__VerifiedInitKex(
+    beacon_identity,
+    beacon_prekey,
+    beacon_one_time,
+    beacon_pq
+  ) in
+  let registration_id = beaconcrypt_core__pqxdh__registration_id(init) in
+
+  event FsBeaconStarted(server_identity, beacon_identity, init, registration_id);
+
+  out(
+    c,
+    signed_init_kex(
+      tag_ed25519(beacon_identity),
+      sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),
+      sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),
+      sign(tag_mlkem768(beacon_pq), beacon_identity_secret)
+    )
+  );
+  
+  in(c, (call_label: bitstring, response: bitstring)) ;
+  
+  let finished = fs_strong_s2b_finish(server_identity,beacon_identity,
+    beacon_prekey_secret,beacon_identity_secret,beacon_one_time_secret,beacon_pq_secret,response) in (
+    let fs_strong_s2b_finished(assigned_key_id:key_id,root:bitstring,associated_data:bitstring,
+      receive_chain_2:bitstring,receive_chain_3:bitstring,receive_chain_4:bitstring,
+      application_payload:bitstring,finish_plaintext:bitstring,initial_frame:bitstring) = finished in (
+    event FsBeaconEstablished(
+      server_identity,
+      beacon_identity,
+      init,
+      assigned_key_id,
+      root,
+      associated_data,
+      application_payload
+    );
+    event FsReceived(
+      server_to_beacon(),
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      1,
+      finish_plaintext
+    );
+    event FsReceivedFrame(
+      server_to_beacon(),
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      1,
+      initial_frame
+    );
+    
+    out(c,fs_strong_reply(call_label, response, true));
+    (out(fs_strong_partner,(assigned_key_id,root)) |
+    FsS2bRecv1(
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      associated_data,
+      ratchet_material(receive_chain_2),
+      ratchet_material(receive_chain_3),
+      receive_chain_4,
+      1,
+      false
+    ))
+    ) else out(c,fs_strong_reply(call_label, response, false))
+  ) else out(c,fs_strong_reply(call_label, response, false)).
+
+let FsRecordsS2bMain() =
+  out(c, ed_public(SERVER_IDENTITY_SECRET));
+  (
+    (!(new obj: bitstring; FsS2bServer(obj)))
+    | (!FsS2bBeacon())
+  ).

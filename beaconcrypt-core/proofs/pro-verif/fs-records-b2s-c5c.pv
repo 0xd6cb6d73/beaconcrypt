@@ -1,0 +1,18 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s C5c, the replay-rejected witness, written as a
+   correspondence (expected FALSE): "a frame that a Server peer refused at
+   sequence t was never accepted by it before" is false: the frame of an
+   honest Beacon's record that the peer accepted at t is delivered again and
+   refused.  FsReceivedFrame and FsReceiveRejected carry the frame itself,
+   and a session accepts each sequence at most once (C3), so the refused
+   frame is the accepted frame of the record (t, m). *)
+query s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat, f: bitstring,
+      m: bitstring, i: time, j: time;
+  event(FsReceivedFrame(beacon_to_server(), s, b, kid, root, t, f))@i
+  && event(FsReceiveRejected(beacon_to_server(), s, b, kid, root, t, f))@j
+  && event(FsReceived(beacon_to_server(), s, b, kid, root, t, m))
+  && event(FsSent(beacon_to_server(), s, b, kid, root, t, m))
+  ==> j < i.
+
+process FsRecordsB2sMain()

@@ -1,0 +1,12 @@
+{
+  "Hax": {
+    "head": "b49608d5e402577b400569ee989c3f1b69e4aaf3",
+    "compatibility_patch_sha256": "6472470fb809800d6091fd8140cf4e56cd109d963b0d3500ac30f7c7f2c9e446",
+    "identical_to_prior_verified_tree": true
+  },
+  "aeneas": {
+    "head": "6852e6474ec508930acba4df79977b3483a10d10",
+    "compatibility_patch_sha256": "787e606ae63f90fdda8cc39b4e3f32f360c86a18b03acd5d64eac0caff6f651d",
+    "identical_to_prior_verified_tree": true
+  }
+}

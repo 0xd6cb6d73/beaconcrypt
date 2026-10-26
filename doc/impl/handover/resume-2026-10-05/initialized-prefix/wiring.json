@@ -1,0 +1,14 @@
+{
+  "PqxdhRegistrationJointPublicShared": 8,
+  "PqxdhRegistrationJointServerSchedule": 13,
+  "PqxdhRegistrationJointServerClient": 11,
+  "PqxdhRegistrationJointInitializedSchedule": 6,
+  "PqxdhLaterChallengeBeforeResume": 2,
+  "PqxdhLaterChallengeCarriedSource": 1,
+  "PqxdhLaterChallengeSourceBefore": 3,
+  "PqxdhLaterChallengeScanPhase": 7,
+  "PqxdhLaterChallengeScanCoupling": 3,
+  "PqxdhLaterChallengeBuilderCoupling": 2,
+  "PqxdhLaterChallengePrefixCoupling": 2,
+  "PqxdhLaterChallengePrefixMass": 3
+}

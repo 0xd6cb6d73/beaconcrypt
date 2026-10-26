@@ -148,12 +148,14 @@ static void print_state(const beaconcrypt_EncryptState *state) {
 static int run(void) {
   int result = 1;
   uint8_t server_seed[32];
+  uint8_t server_mldsa_seed[32];
   uint8_t *transport = NULL;
   size_t transport_len = 0;
 
   beaconcrypt_Server *server = NULL;
   beaconcrypt_Beacon *beacon = NULL;
   beaconcrypt_Buffer server_pk = {0};
+  beaconcrypt_Buffer server_mldsa_pk = {0};
   beaconcrypt_Buffer b_reg_1 = {0};
   beaconcrypt_RegistrationResponse s_reg_resp = {0};
   beaconcrypt_Buffer first_message = {0};
@@ -164,13 +166,15 @@ static int run(void) {
   beaconcrypt_Buffer b_task_1 = {0};
   beaconcrypt_EncryptState task_1 = {0};
 
-  if (fill_random(server_seed, sizeof(server_seed)) != 0) {
-    fprintf(stderr, "error: failed to generate server seed\n");
+  if (fill_random(server_seed, sizeof(server_seed)) != 0 ||
+      fill_random(server_mldsa_seed, sizeof(server_mldsa_seed)) != 0) {
+    fprintf(stderr, "error: failed to generate independent server seeds\n");
     goto cleanup;
   }
 
-  server = beaconcrypt_server_new_from_seed(SERVER_KID, server_seed,
-                                            sizeof(server_seed));
+  server = beaconcrypt_server_new_from_seed(
+      SERVER_KID, server_seed, sizeof(server_seed), server_mldsa_seed,
+      sizeof(server_mldsa_seed));
   if (server == NULL) {
     fprintf(stderr, "error: failed to create server\n");
     goto cleanup;
@@ -180,18 +184,21 @@ static int run(void) {
     goto cleanup;
   }
 
-  /* It is assumed that the server's public key is compiled into beacons. */
+  /* Provision both server identity public keys to beacons through a trusted channel. */
   server_pk = beaconcrypt_server_identity_pk(server);
-  if (buffer_is_empty(server_pk)) {
-    fprintf(stderr, "error: failed to get server public key\n");
+  server_mldsa_pk = beaconcrypt_server_mldsa_public_key(server);
+  if (buffer_is_empty(server_pk) || buffer_is_empty(server_mldsa_pk)) {
+    fprintf(stderr, "error: failed to get server public keys\n");
     goto cleanup;
   }
-  beacon = beaconcrypt_beacon_new(SERVER_KID, server_pk.ptr, server_pk.len);
+  beacon = beaconcrypt_beacon_new(SERVER_KID, server_pk.ptr, server_pk.len,
+                                server_mldsa_pk.ptr, server_mldsa_pk.len);
   if (beacon == NULL) {
     fprintf(stderr, "error: failed to create beacon\n");
     goto cleanup;
   }
   free_buffer(&server_pk);
+  free_buffer(&server_mldsa_pk);
 
   /* The beacon is run and registers. */
   b_reg_1 = beaconcrypt_generate_registration(beacon);
@@ -365,6 +372,7 @@ static int run(void) {
 cleanup:
   free(transport);
   free_buffer(&server_pk);
+  free_buffer(&server_mldsa_pk);
   free_buffer(&b_reg_1);
   free_registration_response(&s_reg_resp);
   free_buffer(&first_message);

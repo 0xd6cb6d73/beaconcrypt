@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-06T04:50:27.541829+00:00",
+  "reviewer": "evolving_source_join",
+  "decision": "APPROVE_SCOPED_OTHER_PIN_SYMBOLIC_RECIPE_LEDGER",
+  "paper": "/tmp/bc-arc-scratch/pv-work/exact-interface-strong-secrecy/other-pin-recipes.md",
+  "sha256": "93ea89bb2313cf23b658cfb0868f0fae5be02ea2b4c192397ad289931935114a",
+  "reviewed": [
+    "Complete proposed finite-construction and ciphertext-origin induction.",
+    "Exact loaded crypto.pvl and production transcript declarations, both full direction-specific main/receive/send output sites from reviewed 75-file paired freeze.",
+    "Initial F/H key spine versus disclosed outer-S directional descendants and root-domain dR versus symmetric-domain dC.",
+    "Successful different-pin finish DH1 term and exact protected initial/later-record ciphertext alternatives.",
+    "One instrumented symbolic attacker context and chronological root-recipe lookup preserving adaptive paired requests."
+  ],
+  "findings": [],
+  "scope": [
+    "For the stated exact-T0/OD2/no-echo selected-identity profile, current extra chain/root outputs add no missing initial-key ancestor origin.",
+    "A caller-public initial cipher supplies a logged root recipe; protected Server initial ciphertext forces its same pin under the explicitly idealized free DH/root/KDF theory; target-direction later ciphertext has a disjoint chain spine.",
+    "Locally generated unselected Server receipts give their exact roots with known Server/ephemeral material and selected public points.",
+    "The context records only available public evaluations or its own independent secrets and tests a chronological candidate list using public open/AD/sequence/binding operations; it does not extract a hidden key from an opaque ciphertext."
+  ],
+  "limits": [
+    "This is an independently reviewed symbolic paper argument, not a machine-checked source contextual equivalence theorem.",
+    "No native HKDF/Ed/XDH/KEM/AEAD constructor injectivity or ordinary primitive implication is inferred.",
+    "Instrumenting the symbolic adversary is not an efficient black-box computational reduction or a query-accounting result.",
+    "Exact current outputs, OD2 key-management restrictions, bounded near interval and private application/result-bit scope are necessary; public optional plaintext and correlated hidden imports are outside this result.",
+    "Positive equivalence verdicts and maintained comparator/annotation transformations require their independent exact-source checks; they are not certified by this paper review."
+  ]
+}

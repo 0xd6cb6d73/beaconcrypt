@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-10-05T22:09:21.818904+00:00",
+  "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+  "head": "e2ef678000bc950e93199f06a81e761b5208b53a",
+  "public_statements": 16,
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceCosts.lean": "eac023925edc4190f25ccd39e214db32b97d395ac48a105028051b8caaa635ef",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceLedger.lean": "5250604c01482c696ccfa9d2dd75ba46260136949b25738b435a5799f059245d",
+    "doc/impl/registration-joint-service-ledger.md": "aef720de06ca18c85b72cb2bd24e3ca2c2d6070acdf0edd8f2418ccd80b689c0",
+    "doc/impl/registration-joint-service-schedule.md": "372ed0f1ef0c5594e0f5a8443edd3c373f0c96f584b0a892734a46fdfcaebe7d",
+    "doc/formal-verification-analysis.md": "6d37a246c308d61e400dd9fb0d105e37d580b04f71509bd4caaee82458e2d15f"
+  },
+  "checks": [
+    {
+      "module": "PqxdhRegistrationJointServiceCosts",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/ledger16-PqxdhRegistrationJointServiceCosts.log",
+      "bytes": 0
+    },
+    {
+      "module": "PqxdhRegistrationJointServiceLedger",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/ledger16-PqxdhRegistrationJointServiceLedger.log",
+      "bytes": 0
+    }
+  ],
+  "reviewed_manifest_sha256": "7d8876435ee4fb5e730be876cbdcb6d3c250b549d3aa956c0f0cfaa7d59e7bf6",
+  "prose_correction": {
+    "reason": "State component bounds as upper bounds on attempts, including early failures.",
+    "changed": {
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceLedger.lean": {
+        "old": "a58e87664cecce81d650cdcfda204f18e7ced9127a3eb4f16aaf4de9dc4c2fd6",
+        "new": "5250604c01482c696ccfa9d2dd75ba46260136949b25738b435a5799f059245d"
+      },
+      "doc/impl/registration-joint-service-ledger.md": {
+        "old": "6dddbd77cdee2ffbf277467a3c25befe205c59a9d119bd960e65fe0e2ee4d943",
+        "new": "aef720de06ca18c85b72cb2bd24e3ca2c2d6070acdf0edd8f2418ccd80b689c0"
+      }
+    },
+    "theorem_statements_and_proofs_changed": false,
+    "check": {
+      "module": "PqxdhRegistrationJointServiceLedger",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/ledger16-post-review-ledger.log",
+      "log_bytes": 0
+    }
+  }
+}

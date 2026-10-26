@@ -1,0 +1,12 @@
+make: Entering directory '/tmp/beaconcrypt-proverif-pin-origin/beaconcrypt-core'
+bash proofs/check-inventory.sh
+Pin-origin argument inputs: 14 files, 28 reductions, 36 data constructors; scoped paper C2/C3 transfer, no new solver verdict.
+primitive-fidelity manifest: 9 targets checked
+Classified 3165 expected verdicts: definitional=2836, diagnostic=8, differential-control=19, limitation=20, negative-control=28, security=170, witness=84
+These are classified expectations, not new ProVerif validation receipts or independent theorem counts.
+pending registration manifest: 4 focused targets checked
+Open CTX manifest: 2 targets, 0 protocol security claims.
+active strong-secrecy manifest: 6 targets checked
+Signature provenance manifest: 6 targets, 28 reductions, 44 data constructors.
+Formal-verification inventory matches the reviewed boundary.
+make: Leaving directory '/tmp/beaconcrypt-proverif-pin-origin/beaconcrypt-core'

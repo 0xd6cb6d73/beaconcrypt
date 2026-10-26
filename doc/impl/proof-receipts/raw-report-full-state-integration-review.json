@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-06T02:38:07.503115+00:00",
+  "decision": "APPROVE_SCOPED_INTEGRATION",
+  "manifest_sha256": "705ae4fb00530e946ed1e412bb97d8425a637b7b5630d7ad156ee0ae52476ecf",
+  "validation_receipt_sha256": "847850611f035600c51e27dbb31d13e13dcc430b82f5b083cf8486be069cd627",
+  "reviewed": [
+    "All38 frozen hashes verified. All23 new modules byte-identical to the two published reviewed source topics;91 guarded statements.",
+    "Read integration guide, both component guides, analysis/trust changes and prior independent semantic reviews. Inspected actual raw report event and constructed reduction/service-bound statements, full-state compiled client/bills and paired privacy source definitions/statements.",
+    "Raw field-origin report is explicitly not accepted tuple-origin; generated capacity and N-advantage sum,3*qBundle signing,qFinish+qAccept DH,N*qAccept report attempts retained. Joint Ed/X contract not ordinary EUF assumption; actual real uniform bill not replaced-challenger all-reply bound.",
+    "Full random-state join retains actual reached state; ignored observation cache is not interpreter reset. Two exact CTX loss instances and prefix/hash caps retained. Noncomputable Fits and missing source freshness/other branches/alias/refusal/global costs remain explicit.",
+    "All old root imports preserved once;23 additions. All20396 existing require_ lines retained. Inventory mapping adds23 module rows, changes only root/checker/trust old digests; all row hashes verified. Row reordering is semantically inert.",
+    "23 direct check receipts, source and artifact hashes verified; all exit0/empty logs. Root0/empty and inventory0 embedded log hashes reproduced. Scratch zero-axiom-regex diagnostic is accurately separate from Lean failures.",
+    "Retained source byte comparison to base completed; no old PV/Make/FT or production source changes."
+  ],
+  "unchanged_counts": {
+    "other": 24,
+    "lean": 1380,
+    "pv_directory": 267
+  },
+  "validation_scope": "No build or prover rerun by reviewer; reused topic semantic reviews while independently checking the integration, endpoint statements and exact evidence. Final aggregate still pending.",
+  "findings": []
+}

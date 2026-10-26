@@ -1,0 +1,30 @@
+{
+  "cargo_hax": "0.4.2",
+  "tools": {
+    "aeneas": "nightly-2026.09.03-6852e64",
+    "charon": "nightly-2026.09.02"
+  },
+  "versions": {
+    "lean": "leanprover/lean4:v4.35.0",
+    "hax-lean-lib": "174840bf2f633ae3bae955e08f781b3737ffc0b8"
+  },
+  "rust_start_from": "beaconcrypt_core::authentication",
+  "lean_namespace": "beaconcrypt_authentication_core",
+  "charon_sysroot": "default",
+  "source_sha256": {
+    "beaconcrypt-core/src/authentication.rs": "794db37d54728df926e9c5f150ded8734eb7521d5781fa3fc4e2f4b2c1f5d1ef",
+    "beaconcrypt-core/src/constants.rs": "748979a5b3b340b692bc10a687a27250ef5e6e2a67d43876a32585177226ef0a",
+    "beaconcrypt-core/src/lib.rs": "f32716d2a108cdc1782274bd82cac40bbd70f36e50835e7d09cc31b94e167958",
+    "beaconcrypt-core/Cargo.toml": "8e41a5e7c6f9715417628967f404745000e89d177902bde70d1969ef00af5f09",
+    "Cargo.lock": "fa0bcc041f43039e1f186aa7b596260a5c49180d8bf7010eb2e09d6d4be7d17d",
+    "hax.toml": "5010245f379886dba312f63d3d56f0fa9d3378c927d488106dd096d1bc7206f1"
+  },
+  "generated_sha256": {
+    "Funs.lean": "2c48b08b57e4305c9ae419bc17d678166e8029bb2151bc334aeb392d1b4f6a03",
+    "FunsExternal.lean": "8ca710444281544d2e1b683514862369dbd90beb3091576b3c214d35ad867902",
+    "FunsExternal_Template.lean": "8ca710444281544d2e1b683514862369dbd90beb3091576b3c214d35ad867902",
+    "Types.lean": "971e511bafd01996bd72a2a789f1330d63b54bac8eac341c2d0f9d3d29ea276d",
+    "TypesExternal.lean": "f204402fb19d48d2ad0689d7d4dd93431b6c438645df07054b765602095d5db0",
+    "TypesExternal_Template.lean": "f204402fb19d48d2ad0689d7d4dd93431b6c438645df07054b765602095d5db0"
+  }
+}

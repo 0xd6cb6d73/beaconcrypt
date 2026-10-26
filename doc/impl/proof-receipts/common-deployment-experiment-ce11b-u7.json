@@ -1,0 +1,731 @@
+{
+ "date": "2026-10-10T02:54:17.551391+00:00",
+ "scope": "CE-11b unit U7 (track u7): the hand-off to CE-12 (design-v2 section 9.1 as amended by sections 15 and 30): run_origins (the all-real record compiler projected to the World state and the computed installation origins is the provenance-annotated record world) with the view-level forms, ideal_world (from ideal_compile and c1_idealGame), ideal_world_slots with its bound forms, and the view forms ideal_view_slots, ideal_world_view, ideal_world_view_slots, ideal_world_view_ct. One Lean commit and one documentation commit; reviewed at f23a204d (semantic and hygiene, both APPROVE_WITH_NITS; the findings, about documentation and records only, are fixed by a documentation-only review fix pass, see review); confirming review of 452b7e4c: APPROVE_WITH_NITS (all five findings resolved; statements, guards and receipt intact; four optional nits and one record, taken by the commit that records it, documentation only); not integrated at the record commit. CE-11b's main line is complete with track u4c's anomaly_le_pk (unit U4, codex/deployment-ce11b), integrated into central at 66f425ef, which this unit's integration merges; CE-12 composes ideal_world_view_slots with it (plan section 49, Q2, option (b), and section 84), and the _ct forms are option (a)'s corollaries.",
+ "basis": {
+  "start": "82b5fe43b1812c70ef284d4493ba2008d3575bf2",
+  "central_at_receipt": "82b5fe43b1812c70ef284d4493ba2008d3575bf2",
+  "merges": [],
+  "central_note": "central was 82b5fe43 (the integration of the fourth part of unit U6) at the start; the topic HEAD equalled central, so no merge was needed"
+ },
+ "topic": {
+  "branch": "codex/deployment-ce11b-cut",
+  "worktree": "/tmp/beaconcrypt-deployment-ce11b-cut",
+  "head_at_receipt": "452b7e4c7a52ed37e85af52dd6d3260ecc747163"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+  "sha256": "96cb560cce54f5b7e2acb7b62e927667e8aab609743f984035e8a01da10b7302",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/int/docs/plan.at-record-96cb560c.md",
+  "dated_copy_sha256": "96cb560cce54f5b7e2acb7b62e927667e8aab609743f984035e8a01da10b7302",
+  "sections": [
+   90,
+   92,
+   94
+  ],
+  "section_94": "the confirming review of 452b7e4c and its record commit (including the correction of section 92's \"sections 75 and 84\" phrase: section 75 and design-v2 section 31 put anomaly_le_pk into U4, section 84 fixes its route)",
+  "note": "sections 89, 91 and 93 belong to track u4c (integrated into central at 66f425ef; section 93 ends with its integration bullet); 90, 92 and 94 to this unit; section 92 is unchanged since the review fix pass, so central 66f425ef's snapshot body (working plan 93720dff) is a prefix of this plan",
+  "earlier": [
+   {
+    "note": "hash recorded by the review fix pass 452b7e4c (through section 92)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/fix/docs/plan.at-u7fix-receipt-3163263c.md",
+    "dated_copy_sha256": "3163263c088aebc644d64a7b186db30c00371c4961ba7c287348cee07d595830"
+   },
+   {
+    "note": "hash recorded by the receipt of the documentation commit f23a204d (through section 90)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/docs/plan.at-u7-receipt-feca373c.md",
+    "dated_copy_sha256": "feca373cc63061cfa3b614102a19bcc2ed658a0f05a60c2ee44bb5a304a65e68"
+   }
+  ],
+  "backup_before": [
+   {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/docs/plan.before-u7.md",
+    "sha256": "fee2f08156bef2d90cd9cd029ffa31b3aa0ddbe2fbd5c710298c07a5d42a30e4"
+   },
+   {
+    "copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/fix/docs/plan.before-fix.md",
+    "sha256": "575b313721d665f8e51062bf6cd4a9fa9e21162814f44dcf839b77e9f8597ae8",
+    "note": "the live plan when the fix pass started; it differs from the receipt-time copy only by track u4c's later edits (a sentence of section 89, corrected after its review, and the new section 91)"
+   },
+   {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/int/docs/plan.before-record-724db8d3.md",
+    "sha256": "724db8d3cc56e82d5aa90216d1350f09ece660c2163c7823b17b01ccbea7ec43",
+    "note": "the live plan when the record commit started: 3163263c plus track u4c's edits (section 89 clause, section 93 and its integration bullet)"
+   }
+  ]
+ },
+ "design": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/design-v2.md",
+  "sha256": "1caadd81bab3490f85b9318a91d3b3b3834900f5db3ad86f3f83993c372c7f14",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/fix/docs/design-v2.at-u7fix-receipt-1caadd81.md",
+  "dated_copy_sha256": "1caadd81bab3490f85b9318a91d3b3b3834900f5db3ad86f3f83993c372c7f14",
+  "sections": [
+   33
+  ],
+  "note": "section 32 is track u4c (concurrent); section 33 is this unit, corrected by the review fix pass (a new bullet on the anomaly term of the hand-off, the section 11 bullet corrected with a note of its first wording, the record line citing plan section 92)",
+  "backup_before": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/docs/design-v2.before-u7.md",
+   "sha256": "4509f109ddeb79c5d3313a7c5f1b2001ad2b6e8c94d45f93650316405d436ae8"
+  },
+  "before_review": {
+   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/docs/design-v2.at-u7-receipt-78b1b98d.md",
+   "dated_copy_sha256": "78b1b98df353065b222dc294f4cc8e7d432b16db001dda6e119f2750cf1488b6",
+   "note": "the design as pinned by the receipt of f23a204d (also the live design when the fix pass started: 78b1b98df353065b222dc294f4cc8e7d432b16db001dda6e119f2750cf1488b6)"
+  }
+ },
+ "notes": {
+  "track_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/NOTES.md",
+  "ce11b_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/NOTES.md (section \"Track u7\")",
+  "fix_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/fix/NOTES.md",
+  "confirm_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/confirm/NOTES.md",
+  "integration_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/int/NOTES.md"
+ },
+ "commits": [
+  {
+   "commit": "f8730e3e202c3892b2ea89be859fafbad472fcad",
+   "subject": "Prove CE-11b's hand-off to CE-12"
+  },
+  {
+   "commit": "f23a204d0ec22c3d4d97d0a2c4ee0e89e8ae27a1",
+   "subject": "Document CE-11b's hand-off to CE-12"
+  },
+  {
+   "commit": "452b7e4c7a52ed37e85af52dd6d3260ecc747163",
+   "subject": "Record the CE-11b unit U7 review fix pass"
+  }
+ ],
+ "commits_note": "First-parent commits on the topic after the basis made before this receipt was last generated; the commit that records the confirming review (and last regenerates this receipt) is not listed.",
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealHandoff.lean": "a61f8cecd930d96a9a4b1117e7f02a7b5c412a514e736f06b1cad579059ac345",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "231d7aaf4bad8807d518f3e6f881bdbfb42613584a239aedf3862af10d97a4ad",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "8cc78a4928a8a2c618e1a0563dc555e76440a01893cafcc5e38deb6f226c113a",
+  "beaconcrypt-core/proofs/check-inventory.sh": "f2ca4c43fb0fc0096ec91579d77e11f6973fa79128a090af1dc63c3d2ffb8420"
+ },
+ "files_sha256_note": "Lean and inventory files as committed in f8730e3e202c3892b2ea89be859fafbad472fcad (unchanged by the documentation commit).",
+ "modules": [
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff",
+   "unit": "U7",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealHandoff.lean",
+   "sha256": "a61f8cecd930d96a9a4b1117e7f02a7b5c412a514e736f06b1cad579059ac345",
+   "lean_commit": "f8730e3e202c3892b2ea89be859fafbad472fcad",
+   "theorem_count": 23,
+   "guard_count": 23,
+   "definitions": [
+    "originMap",
+    "annotatedView",
+    "decisionOn",
+    "viewObserved"
+   ],
+   "theorems": [
+    "originMap_two",
+    "annotatedView_analysis",
+    "handler_project",
+    "schedule_project",
+    "run_origins",
+    "chainView_split",
+    "protocol_view",
+    "realChains_view",
+    "realChains_analysis_slots",
+    "realChains_support",
+    "decision_observe",
+    "ceDecide_observed",
+    "evalDist_le_add",
+    "viewObserved_chainView",
+    "viewObserved_annotated",
+    "ideal_world",
+    "ideal_world_slots",
+    "ideal_world_slots_le",
+    "ideal_world_slots_ct",
+    "ideal_view_slots",
+    "ideal_world_view",
+    "ideal_world_view_slots",
+    "ideal_world_view_ct"
+   ],
+   "axiom_profile": {
+    "originMap_two": [
+     "Quot.sound"
+    ],
+    "annotatedView_analysis": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "handler_project": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "schedule_project": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "run_origins": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "chainView_split": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "protocol_view": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "realChains_view": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "realChains_analysis_slots": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "realChains_support": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "decision_observe": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "ceDecide_observed": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "evalDist_le_add": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "viewObserved_chainView": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "viewObserved_annotated": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "ideal_world": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "ideal_world_slots": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "ideal_world_slots_le": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "ideal_world_slots_ct": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "ideal_view_slots": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "ideal_world_view": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "ideal_world_view_slots": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ],
+    "ideal_world_view_ct": [
+     "propext",
+     "Classical.choice",
+     "Quot.sound"
+    ]
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentIdealCompile",
+    "BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon",
+    "BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound",
+    "BeaconcryptCore.Computational.PqxdhRecordLiftWorldProvenance",
+    "BeaconcryptCore.Computational.PqxdhRecordLiftIdeal"
+   ]
+  }
+ ],
+ "theorem_total": 23,
+ "allowed_axioms": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "handwritten_lean": {
+  "before": 1880,
+  "after": 1881,
+  "command": "coord.sh inv recount claude <core> (then coord.sh inv rehash claude <core> with the new row, then the default set: root and check-inventory.sh changed)"
+ },
+ "design_names_realized_as": {
+  "ideal_world (9.1)": "PqxdhDeploymentIdealHandoff.ideal_world (envGD at Target.ofCE budget g, identity index 0, in place of bindStart; from ideal_compile and c1_idealGame; no run_bindStart)",
+  "decisionOn (Appendix A)": "PqxdhDeploymentIdealHandoff.decisionOn (with decision_observe and ceDecide_observed)",
+  "ideal_world_slots (9.1)": "ideal_world_slots (equality with IdealSlots or Anomaly conjoined on annotatedRun), ideal_world_slots_le (bound with the anomaly probability on the record world), ideal_world_slots_ct (with ctGuess, the design bound on D_g and not IdealSlots)",
+  "run_origins (9.1)": "run_origins at the compiler level (Prod.map id project <$> PqxdhRecordLiftWorldCompiler.run (realPolicy ...) = annotatedRun), with protocol_view (PqxdhRecordLiftProtocol.run (realPolicy ...)), realChains_view, realChains_analysis_slots (the design form: analysis projection and handle-to-slot map) and realChains_support",
+  "ideal_world_view (9.1)": "ideal_world_view on chainView <$> realChains, with ideal_view_slots (C5 restated on the view, section 7.4), ideal_world_view_slots and ideal_world_view_ct (section 9.2 step)"
+ },
+ "deviations_from_design": [
+  "ideal_world without run_bindStart (decision envGD without bindStart, design-v2 section 15; guide U6 fourth part open point 2 as corrected).",
+  "ideal_world_slots conjoins IdealSlots or Anomaly (an equality); the design bound on D_g without IdealSlots is the pair ideal_world_slots_le / ideal_world_slots_ct.",
+  "run_origins stated one level below PqxdhRecordLiftProtocol.run (on the record compiler, extending run_erasure) and lifted by run_factor; no new per-command proof (PqxdhRecordLiftWorldProvenance.handler_origins).",
+  "originMap generic in the slot count (originMap_two links it to PqxdhDeploymentIdealTrace.originSlots).",
+  "evalDist_le_add stated with the evalDist notation only (VCVio probEvent notation deprecated).",
+  "scratch: a temporary guide extract was written to ce11b/u7-guide-u6p4.txt before ce11b/u7 was registered and then moved into ce11b/u7; nothing deleted."
+ ],
+ "contracts_used": {
+  "new_contracts": [],
+  "new_assumptions": [],
+  "premises": {
+   "PqxdhServerAuthNegativeControl.Phase1ReadBack": [
+    "ideal_world",
+    "ideal_world_slots",
+    "ideal_world_slots_le",
+    "ideal_world_slots_ct",
+    "ideal_view_slots",
+    "ideal_world_view",
+    "ideal_world_view_slots",
+    "ideal_world_view_ct"
+   ],
+   "PqxdhServerAuthNegativeControl.Phase2ReadBack": [
+    "ideal_world",
+    "ideal_world_slots",
+    "ideal_world_slots_le",
+    "ideal_world_slots_ct",
+    "ideal_view_slots",
+    "ideal_world_view",
+    "ideal_world_view_slots",
+    "ideal_world_view_ct"
+   ],
+   "Budget.Respects (the adversary budget)": [
+    "ideal_world",
+    "ideal_world_slots",
+    "ideal_world_slots_le",
+    "ideal_world_slots_ct",
+    "ideal_world_view",
+    "ideal_world_view_slots",
+    "ideal_world_view_ct"
+   ]
+  },
+  "premise_free": [
+   "originMap_two",
+   "annotatedView_analysis",
+   "handler_project",
+   "schedule_project",
+   "run_origins",
+   "chainView_split",
+   "protocol_view",
+   "realChains_view",
+   "realChains_analysis_slots",
+   "realChains_support",
+   "decision_observe",
+   "ceDecide_observed",
+   "evalDist_le_add",
+   "viewObserved_chainView",
+   "viewObserved_annotated"
+  ],
+  "premise_free_note": "premise_free means no contract or assumption premise (corrected wording after the review of f23a204d): handler_project and schedule_project assume the compiler invariant PqxdhRecordLiftWorldCompiler.Good setup.source state on the start state, which run_origins discharges by PqxdhRecordLiftWorldCompiler.initial_good; evalDist_le_add takes its implication hypothesis; realChains_support takes the outcome's support membership. None of these hypotheses is a contract or an assumption.",
+  "internal_hypotheses": {
+   "handler_project": "good : PqxdhRecordLiftWorldCompiler.Good setup.source state (the compiler invariant on the start state)",
+   "schedule_project": "good : PqxdhRecordLiftWorldCompiler.Good setup.source state (the compiler invariant on the start state; kept by PqxdhRecordLiftWorldCompiler.handler_good)",
+   "run_origins": "none (discharges schedule_project's Good by PqxdhRecordLiftWorldCompiler.initial_good)",
+   "evalDist_le_add": "implies : ∀ a ∈ support mx, P a → Q a ∨ R a",
+   "realChains_support": "member : result ∈ support (PqxdhRecordLiftIdeal.realChains …) (the support fact's antecedent)"
+  }
+ },
+ "leanpath": {
+  "file": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/leanpath",
+  "sha256": "f796fae0172e326ceccc95e43561cd1d09b4c9f533f672a73355082d7d7d14de",
+  "note": "ce11b/u7/olean (resolved symlink mirror of the first prefix ce11b/u6b/p4/int/olean of the published 82b5fe43 LEAN_PATH, without its root olean: src /tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/int/olean dst /tmp/bc-arc-scratch/common-experiment/ce11b/u7/olean links 6339 skipped 1; plus the module olean), then the published 82b5fe43 LEAN_PATH minus its first prefix",
+  "published": {
+   "file": "/tmp/bc-coord/leanpaths/82b5fe43b1812c70ef284d4493ba2008d3575bf2.leanpath",
+   "sha256": "be28ffb0a27693e48e77dfd12bebe33479dde108beda17ddef759637c6af553a"
+  }
+ },
+ "final_checks": {
+  "PqxdhDeploymentIdealHandoff": {
+   "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff",
+   "start": "2026-10-10T02:06:42.418558320Z",
+   "end": "2026-10-10T02:06:48.778396959Z",
+   "exit": 0,
+   "head": "82b5fe43b1812c70ef284d4493ba2008d3575bf2",
+   "dirty_paths": 4,
+   "source_sha256": "a61f8cecd930d96a9a4b1117e7f02a7b5c412a514e736f06b1cad579059ac345",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealHandoff.olean",
+   "artifact_sha256": "d964078c1e324955a6f558acc9052f0b11ac005fe4992e348a9f27fae90f6f94",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/leanpath",
+   "leanpath_sha256": "f796fae0172e326ceccc95e43561cd1d09b4c9f533f672a73355082d7d7d14de",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealHandoff.olean",
+    "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealHandoff.lean"
+   ]
+  },
+  "root": {
+   "module": "BeaconcryptCore",
+   "start": "2026-10-10T02:06:51.295925068Z",
+   "end": "2026-10-10T02:06:54.439585490Z",
+   "exit": 0,
+   "head": "82b5fe43b1812c70ef284d4493ba2008d3575bf2",
+   "dirty_paths": 4,
+   "source_sha256": "231d7aaf4bad8807d518f3e6f881bdbfb42613584a239aedf3862af10d97a4ad",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/root-checks/handoff/BeaconcryptCore.olean",
+   "artifact_sha256": "c34bb9f7030f5dda0715a28d8645dc61459b5d8a53a79a153d1cb678b93652c2",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/leanpath",
+   "leanpath_sha256": "f796fae0172e326ceccc95e43561cd1d09b4c9f533f672a73355082d7d7d14de",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/root-checks/handoff/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ]
+  }
+ },
+ "final_checks_note": "Both run through coord.sh lean (-j1 -M8000, timeout 180) before the Lean commit, on a tree whose module source equals the committed one (source_sha256); dirty_paths counts the then uncommitted module, root, inventory and check-inventory files.",
+ "negative_probe": {
+  "file": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/probe/PqxdhDeploymentIdealHandoffWrongGuard.lean",
+  "sha256": "57c663aad26c1e2d853e7d2b6304483f9ccc69b210269c7f79fc52a00d5dba37",
+  "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/logs/dev/PqxdhDeploymentIdealHandoffWrongGuard-1.log",
+  "log_sha256": "9f4221a289f0c3b1f33865df16c99f806b0947460219f8c087536047bee5cfcb",
+  "expected": "fails: the guard of ideal_world without Classical.choice does not match",
+  "exit": 1
+ },
+ "inventory": {
+  "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/logs/inventory-handoff1.log",
+  "log_sha256": "4e8d780988b252eac615b80fb06e8937c8ae5843efa06fd6ae774b7c170217a7",
+  "status": 0,
+  "commit": "82b5fe43b1812c70ef284d4493ba2008d3575bf2",
+  "dirt": [
+   " M beaconcrypt-core/proofs/check-inventory.sh",
+   " M beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+   " M beaconcrypt-core/proofs/reviewed-inventory.txt",
+   "?? beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealHandoff.lean"
+  ],
+  "command": "coord.sh lease mem claude @nix ... nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C <worktree>/beaconcrypt-core check-inventory SHELL=bash"
+ },
+ "other_checks": [
+  "git diff --cached --check before the Lean commit: clean",
+  "no sorry, admit or axiom in the module",
+  "dev runs under ce11b/u7/logs/dev (all without -o, against the published 82b5fe43 LEAN_PATH)"
+ ],
+ "not_run": [
+  "full lake build",
+  "make verify",
+  "mutation testing",
+  "nix-collect-garbage"
+ ],
+ "review": {
+  "reviewed_commit": "f23a204d0ec22c3d4d97d0a2c4ee0e89e8ae27a1",
+  "date": "2026-10-10",
+  "kinds": [
+   "semantic",
+   "hygiene"
+  ],
+  "verdict": "no error in the Lean statements or proofs; both parts APPROVE_WITH_NITS; 1 minor finding and 4 nits (the premise wording was raised by both parts), all about documentation and records",
+  "notes": [
+   {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/review-semantic/NOTES.md",
+    "sha256": "a073b7ea5ad101910ee00c85b6aba38bbe5a468e3a28df1308e14cf810225fd3"
+   },
+   {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/review-hygiene/NOTES.md",
+    "sha256": "72d50ccb4fbde182fb586c5f92bcebfc9a6d52cf882134633b023963358d81bc"
+   }
+  ],
+  "reviewer_checks": {
+   "semantic_module_compile": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/review-semantic/logs/handoff.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "exit": 0,
+    "leanpath": "published 82b5fe43",
+    "note": "without -o through coord.sh lean; source a61f8cec"
+   },
+   "hygiene_module_compile": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/review-hygiene/module.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "exit": 0,
+    "leanpath": "published 82b5fe43",
+    "note": "the committed module, without -o through coord.sh lean"
+   },
+   "composition_with_anomaly_le_pk": "by git show of codex/deployment-ce11b at c7f33970: the anomaly term of ideal_world_slots_le and ideal_world_view_slots is exactly the left side of anomaly_le_pk at Target.ofCE budget g, identity index 0 and setup.serverKeyId, in the same open Classical in context, so add_le_add composes either bound"
+  },
+  "fixes": [
+   {
+    "finding": "minor (semantic): the documentation puts anomaly_le_pk outside CE-11b's main line and offers ctGuess as a CE-12 anomaly route (guide status paragraph, re-estimate and closing section; analysis; design-v2 section 33; plan section 90; docstring of ideal_world_slots_ct), contradicting plan section 49 Q2 option (b) (ctGuess not an unbounded headline term), plan sections 75 and 84 and design-v2 section 31 (anomaly_le_pk in U4) and plan section 88 (anomaly_le_pk among CE-11b's remaining work); no Lean statement is wrong",
+    "fix": "documentation only: the guide (status paragraph, what is proved, decisions, names for consumers, open points with a new point 3, re-estimate, closing section) and the analysis (the forms for CE-12, the closing section) say that CE-11b's main line is complete once track u4c's anomaly_le_pk (U4) is integrated, that CE-12 composes ideal_world_view_slots with anomaly_le_pk for the predict-then-compare IND-CCA reduction (plan section 49 Q2(b), section 84), and that ideal_world_view_ct and ideal_world_slots_ct are option (a)'s forms, kept as corollaries; anomaly_le_pk is dropped from the lists of what is not part of the main line; plan section 90 and design-v2 section 33 corrected in place with a note of the first wording; the docstrings of ideal_world_slots_ct and of the module are left unchanged (a change would need a recompile and a new inventory digest), and the guide's decisions bullet on ideal_world_slots says that the _ct forms are the option (a) route"
+   },
+   {
+    "finding": "nit (semantic): the receipt's contracts_used.premise_free lists handler_project and schedule_project (which take the compiler invariant Good) and evalDist_le_add (which takes its implication hypothesis); the guide's \"take no premise\" also covers evalDist_le_add",
+    "fix": "the guide's \"contracts used\" says \"no contract or assumption premise\" and names the internal hypotheses (also realChains_support's support membership); this receipt keeps premise_free and adds contracts_used.premise_free_note and contracts_used.internal_hypotheses"
+   },
+   {
+    "finding": "nit (hygiene): \"no premise\" wording for handler_project and schedule_project (Good, discharged by initial_good in run_origins)",
+    "fix": "resolved with the previous nit"
+   },
+   {
+    "finding": "nit (hygiene): the clean-tree check-inventory at f23a204d is recorded only in scratch",
+    "fix": "both clean-tree runs at f23a204d (the implementer's after the documentation commit and the hygiene reviewer's) are recorded in review.checks.clean_tree_inventory and in the guide's \"CE-11b unit U7: checks\""
+   },
+   {
+    "finding": "nit (hygiene): status records to refresh when the review is recorded (\"Not reviewed, not integrated.\" markers, the publication bullet, the analysis's last U7 paragraph, registry notes; the committed plan snapshot ends at section 87 while the guide cites section 90; the scratch notes' count of definitions); the live plan's hash differs from the receipt's only by track u4c's later edits (no action needed)",
+    "fix": "status markers updated in the guide (status paragraph, publication bullet, open point 1) and the analysis (last U7 paragraph, a Review paragraph); registry notes of the module, the branch and the worktree refreshed with coord.sh registry add; the committed plan snapshot refreshed from the working plan through section 92 (plan_snapshot); scratch u7/NOTES.md corrected (\"4 defs-only helpers\"); the plan and design entries of this receipt point to the copies after the fix pass, with the receipt-time copies under before_review"
+   }
+  ],
+  "statements_changed": [],
+  "theorems_added": [],
+  "theorems_removed": [],
+  "definitions_added": [],
+  "docstrings_changed": [],
+  "module_docstring_changed": [],
+  "lean_fix_commit": null,
+  "files_changed": [
+   "doc/formal-verification-analysis.md",
+   "doc/impl/common-deployment-experiment.md",
+   "doc/impl/common-deployment-experiment-plan.md",
+   "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u7.json"
+  ],
+  "docs_fix_commit": "452b7e4c7a52ed37e85af52dd6d3260ecc747163",
+  "plan_snapshot": {
+   "path": "doc/impl/common-deployment-experiment-plan.md",
+   "sha256": "7b813b4c1d20006baca837e87e3fe192a5aa551a30467c3f46960eeab80c95c0",
+   "source": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/fix/docs/plan.at-u7fix-receipt-3163263c.md",
+   "source_sha256": "3163263c088aebc644d64a7b186db30c00371c4961ba7c287348cee07d595830",
+   "through_section": 92,
+   "before": "the snapshot at f23a204d (through section 87, sha256 894a73478fd46891931e5144a70c090f7798b927f4715ca1a067ce25e078c9af)",
+   "note": "the working plan's text with the snapshot paragraph after the title; adds sections 88 to 92 and takes over the integration bullet at the end of section 87 (fix/snapshot.py)"
+  },
+  "checks": {
+   "rechecks": {
+    "PqxdhDeploymentIdealHandoff": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff",
+     "exit": 0,
+     "log_bytes": 0,
+     "head": "f23a204d0ec22c3d4d97d0a2c4ee0e89e8ae27a1",
+     "dirty_paths": 3,
+     "source_equals_head_blob": true,
+     "source_sha256": "a61f8cecd930d96a9a4b1117e7f02a7b5c412a514e736f06b1cad579059ac345",
+     "start": "2026-10-10T02:33:20.482069086Z",
+     "end": "2026-10-10T02:33:25.532458109Z",
+     "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/fix/logs/PqxdhDeploymentIdealHandoff.json",
+     "record_sha256": "018dffc626a45c894a55756a0b4b73080f7af70dc1b05186bcd6f5861ae9cf17"
+    },
+    "root": {
+     "module": "BeaconcryptCore",
+     "exit": 0,
+     "log_bytes": 0,
+     "head": "f23a204d0ec22c3d4d97d0a2c4ee0e89e8ae27a1",
+     "dirty_paths": 3,
+     "source_equals_head_blob": true,
+     "source_sha256": "231d7aaf4bad8807d518f3e6f881bdbfb42613584a239aedf3862af10d97a4ad",
+     "start": "2026-10-10T02:33:25.592486221Z",
+     "end": "2026-10-10T02:33:28.005701314Z",
+     "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/fix/logs/root.json",
+     "record_sha256": "d9fc9bc1fd0d2013b5d0df55a60e2d3d63303c1f3481899102a6253c7dbafe49"
+    }
+   },
+   "rechecks_note": "the module and the root rechecked without -o through coord.sh lean (Lean 4.34, -j1, -M8000, timeout 180) against ce11b/u7/leanpath, on f23a204d with only the guide, the analysis and the plan snapshot changed (Lean sources equal to the f23a204d blobs)",
+   "leanpath": {
+    "file": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/leanpath",
+    "sha256": "f796fae0172e326ceccc95e43561cd1d09b4c9f533f672a73355082d7d7d14de"
+   },
+   "inventory_recount_rehash": "coord.sh inv recount (handwritten-lean count unchanged, 1881) and inv rehash (BeaconcryptCore.lean, trusted-boundary.md, check-inventory.sh unchanged): no change",
+   "focused_inventory": {
+    "who": "review fix pass, with this commit's documentation changes in the tree",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/fix/logs/inventory-fix1.log",
+    "log_sha256": "e74880f208cbb718f6aeeafedf8fe1d2be424b3a123d8d55c7bde55e68241ae1",
+    "status": "0",
+    "lease": "00000421 (released, exit 0)",
+    "commit": "f23a204d0ec22c3d4d97d0a2c4ee0e89e8ae27a1",
+    "start": "2026-10-10T02:34:06Z",
+    "end": "2026-10-10T02:35:56Z",
+    "dirt_before_lines": 3,
+    "dirt_after_lines": 3,
+    "result_line": "Formal-verification inventory matches the reviewed boundary."
+   },
+   "clean_tree_inventory": {
+    "implementer": {
+     "who": "implementer, after the documentation commit",
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/logs/inventory-handoff2-clean.log",
+     "log_sha256": "7a714b2e66de3139b9a5ded3064dc62a4fe476f638dd3b763a59917159078cb8",
+     "status": "0",
+     "lease": "00000417 (released, exit 0)",
+     "commit": "f23a204d0ec22c3d4d97d0a2c4ee0e89e8ae27a1",
+     "start": "2026-10-10T02:14:25Z",
+     "end": "2026-10-10T02:16:09Z",
+     "dirt_before_lines": 0,
+     "dirt_after_lines": 0,
+     "result_line": "Formal-verification inventory matches the reviewed boundary."
+    },
+    "reviewer": {
+     "who": "hygiene reviewer",
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/review-hygiene/inventory.log",
+     "log_sha256": "b6126dffc300be8887c4b7436d80123017ab1c5ad897b30f143fc321b9c11db4",
+     "status": "0 (lease ledger)",
+     "lease": "00000418 (released, exit 0; the reviewer recorded no status file, the lease ledger records exit 0)",
+     "commit": "f23a204d0ec22c3d4d97d0a2c4ee0e89e8ae27a1",
+     "start": "2026-10-10T02:19:45Z (lease ledger)",
+     "end": "2026-10-10T02:21:29Z (lease ledger)",
+     "dirt_before_lines": 0,
+     "dirt_after_lines": 0,
+     "result_line": "Formal-verification inventory matches the reviewed boundary."
+    },
+    "note": "both on the clean tree at f23a204d (empty git status before and after); the receipt's top-level inventory entry is the run before the Lean commit, on the tree with the uncommitted Lean and inventory changes at 82b5fe43"
+   },
+   "other_checks": [
+    "git diff --check before the commit: clean",
+    "every Lean file, reviewed-inventory.txt and check-inventory.sh byte-identical to f23a204d"
+   ],
+   "not_run": [
+    "full lake build",
+    "make verify",
+    "mutation testing",
+    "nix-collect-garbage"
+   ]
+  },
+  "notes_fix": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/fix/NOTES.md",
+  "status": "fix pass committed (452b7e4c) and confirmed by a confirming review of 452b7e4c (APPROVE_WITH_NITS: all five findings resolved; four optional nits and one record, taken by the commit that records it), recorded before the integration; not integrated at the record commit",
+  "confirming_review": {
+   "reviewed_range": "f23a204d0ec22c3d4d97d0a2c4ee0e89e8ae27a1..452b7e4c7a52ed37e85af52dd6d3260ecc747163",
+   "reviewed_commit": "452b7e4c7a52ed37e85af52dd6d3260ecc747163",
+   "date": "2026-10-10",
+   "scope": "the review fix pass 452b7e4c (one documentation commit over f23a204d: guide, analysis, plan snapshot, receipt): the five findings of the review of f23a204d, statements, guards, receipt hashes, documentation, the plan snapshot, a clean-tree check-inventory",
+   "verdict": "APPROVE_WITH_NITS: all five earlier findings resolved; statements, guards and receipt intact; four optional nits (a comma splice; plan section 84 cited as putting anomaly_le_pk into unit U4; the clean-tree inventory runs at 452b7e4c recorded only in scratch; the plan snapshot as a merge anchor shared with track u4c) and one record, all taken by the commit that records the review",
+   "checks": [
+    "HEAD = origin/codex/deployment-ce11b-cut = 452b7e4c (parent f23a204d); clean tree; footer exact; git diff --check clean",
+    "diff f23a204d..452b7e4c touches only the guide, the analysis, the plan snapshot and this receipt; beaconcrypt-core/ identical, so no statement, proof or guard changed",
+    "confirm/guards.py at 452b7e4c: 23 theorems, 23 exact guards in declaration order, within propext, Classical.choice, Quot.sound; no sorry, admit or axiom",
+    "module (source a61f8cec) recompiled without -o through coord.sh lean against the published 82b5fe43 LEAN_PATH: exit 0, empty log (confirm/logs/handoff.log)",
+    "confirm/hashes.py: every receipt hash matches (HEAD and f8730e3e blobs, plan snapshot 7b813b4c, dated copies, before_review, before_fix, backups, LEAN_PATH files, notes, logs, recheck records, inventory logs, probe); the live plan then (93720dff) differed from the receipt's (3163263c) only by track u4c's later edits (section 89 clause, new section 93); the design equals the receipt's (1caadd81)",
+    "plan snapshot at HEAD = dated copy 3163263c plus the snapshot paragraph, through section 92",
+    "focused check-inventory at the clean head 452b7e4c under @nix (lease 00000424): exit 0, empty dirt before and after",
+    "finding 1 (minor) resolved in the guide (status paragraph, what is proved, decisions, consumers, open points 2-3, re-estimate, closing), the analysis (forms for CE-12, Review, closing), design-v2 section 33 and plan sections 90 and 92; checked against plan 49 Q2(b), 75, 84, 88 and design-v2 31; track u4c names exist at origin/codex/deployment-ce11b 66f425ef (anomaly_le_pk, anomaly_prefix_le_pk, ctGuessByCca, anomalyGuesser)",
+    "findings 2-3 (nits) resolved: only handler_project, schedule_project, evalDist_le_add and realChains_support take Prop hypotheses, as the guide and contracts_used say",
+    "finding 4 (nit) resolved: the guide checks paragraph and review.checks.clean_tree_inventory; the lease ledger times of 00000417 and 00000418 match",
+    "finding 5 (nit) resolved: status markers, publication bullet, analysis, registry notes, snapshot through 92, scratch NOTES count"
+   ],
+   "check_scripts": {
+    "guards.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/confirm/guards.py",
+     "sha256": "5139d9ca689552ce57b6a610d829b6e7f109e580e20a03cef6ee2653d580bb8f"
+    },
+    "hashes.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/confirm/hashes.py",
+     "sha256": "7aa959a13b9478e6576a223949e1fc3df70d2ef8a65f00bfb22982f0515e789c"
+    }
+   },
+   "clean_tree_inventory": {
+    "implementer": {
+     "who": "implementer, after the review fix pass commit",
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/fix/logs/inventory-fix2-clean.log",
+     "log_sha256": "ee83fec7b2219a9b68d8cc6ef3916c48bbeeb35ace5f4824a7ac8b0a8c6b5973",
+     "status": "0",
+     "lease": "00000422 (ce11b-u7-fix-inventory-fix2-clean, released, exit 0)",
+     "commit": "452b7e4c7a52ed37e85af52dd6d3260ecc747163",
+     "start": "2026-10-10T02:37:45Z",
+     "end": "2026-10-10T02:39:30Z",
+     "dirt_before_lines": 0,
+     "dirt_after_lines": 0,
+     "result_line": "Formal-verification inventory matches the reviewed boundary.",
+     "command": "coord.sh lease mem claude @nix <label> --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C <worktree>/beaconcrypt-core check-inventory SHELL=bash (u7/fix/inventory.sh fix2-clean)"
+    },
+    "reviewer": {
+     "who": "confirming reviewer",
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/confirm/logs/inventory-head.log",
+     "log_sha256": "9c9420ad6eb0e397f42867964ea6f7a01fcd3448aa15e59b461792cace0a1c25",
+     "status": "0",
+     "lease": "00000424 (ce11b-u7-confirm-inventory, released, exit 0)",
+     "commit": "452b7e4c7a52ed37e85af52dd6d3260ecc747163",
+     "start": "2026-10-10T02:43:21Z",
+     "end": "2026-10-10T02:45:06Z",
+     "dirt_before_lines": 0,
+     "dirt_after_lines": 0,
+     "result_line": "Formal-verification inventory matches the reviewed boundary.",
+     "command": "coord.sh lease mem claude @nix <label> --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C <worktree>/beaconcrypt-core check-inventory SHELL=bash"
+    },
+    "note": "both on the clean tree at 452b7e4c (empty git status before and after); recorded only in scratch until this record (the confirming review's nit); the integration's checks receipt repeats them"
+   },
+   "findings_fixed": [
+    "nit: comma splice in the guide's \"CE-11b unit U7: what is proved\" before \"CE-12 bounds the second term\": now a period",
+    "nit: the guide's fix-pass bullet said that plan sections 75 and 84 put anomaly_le_pk into unit U4; it now says that plan section 75 and design-v2 section 31 put it into U4 and section 84 fixes its route (with a note of the first wording); plan section 92 keeps its summary, plan section 94 states the correction; review.fixes[0].finding quotes the review's finding and is kept",
+    "nit: the two clean-tree check-inventory runs at 452b7e4c (leases 00000422 and 00000424) are recorded in clean_tree_inventory above, in the guide's \"CE-11b unit U7: checks\" and in its new section \"CE-11b unit U7: confirming review\"",
+    "nit: open point 1 now names the committed plan snapshot among the anchors shared with track u4c and says that the integration takes the newer wholesale copy of the working plan instead of merging by hand and states the refresh in the integration record; this commit refreshes the snapshot through plan section 94 (plan_snapshot)"
+   ],
+   "records": [
+    "all five findings of the review of f23a204d resolved at 452b7e4c; statements, guards and receipt intact (no action)",
+    "track u4c (anomaly_le_pk, anomaly_prefix_le_pk, unit U8) was integrated into central at 66f425ef (82b5fe43..66f425ef) after 452b7e4c; the guide, the analysis and scope say that CE-11b's main line is complete with it, and that this unit's integration merges 66f425ef"
+   ],
+   "files_changed": [
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/common-deployment-experiment-plan.md",
+    "doc/formal-verification-analysis.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u7.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "notes": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/confirm/NOTES.md",
+    "sha256": "fb44687e6712e756a08990adc8c5ef328fd86017733a49c8d19f3c7ebf6569f5"
+   },
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/confirm (review checks), /tmp/bc-arc-scratch/common-experiment/ce11b/u7/int (record-commit scripts, plan copies, integration)"
+  }
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "sha256": "2318f819f58f203125eafa621c5406aa79310a6979ab4a0c00839878a972c0d3",
+  "refreshed_from_sha256": "96cb560cce54f5b7e2acb7b62e927667e8aab609743f984035e8a01da10b7302",
+  "through_section": 94,
+  "sections": "0-18 and the decision sections 19-94",
+  "script": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u7/int/scripts/snapshot.py",
+   "sha256": "62856f63e4ec017706899804a64dcc8e92aae9f448cb69191a4c6b593d9906f3"
+  },
+  "note": "refreshed in the commit that records the confirming review as a wholesale copy of the working plan: the body equals the working plan from its third line; the snapshot paragraph, built from central 66f425ef's (the newest), records the hash and the refresh history. Against this branch's snapshot (the review fix pass's, working plan 3163263c through section 92; review.plan_snapshot) the refresh adds the clause added to section 89 after track u4c's confirming review, section 93 with its integration bullet and section 94; against central 66f425ef's (working plan 93720dff through section 93, a prefix of this body) it adds section 93's integration bullet and section 94; the integration merge takes this snapshot (the newer wholesale copy) instead of merging by hand and states the refresh in the integration record"
+ },
+ "git_diff_check": {
+  "range": "82b5fe43b1812c70ef284d4493ba2008d3575bf2..working tree (with the confirming-review record, before this receipt was written)",
+  "exit": 0,
+  "output": ""
+ }
+}

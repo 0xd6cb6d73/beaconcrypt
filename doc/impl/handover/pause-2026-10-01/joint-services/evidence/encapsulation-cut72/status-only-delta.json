@@ -1,0 +1,6 @@
+{
+  "path": "doc/impl/registration-encapsulation-cut.md",
+  "before_sha256": "f660b458d6c1a68d54910c08a377fcde13fb6f0659c538628c51a74915fadfa1",
+  "after_sha256": "f08bdafc971564137634273b03a239f5ea17dbc89f1fe048fb33c2ee018ee5d9",
+  "change": "Only review-status sentence; no theorem or scope change."
+}

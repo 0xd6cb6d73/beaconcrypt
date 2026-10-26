@@ -1,0 +1,5 @@
+# Bounded strong-secrecy integration validation
+
+The frozen integration retains all 3,153 earlier expectation rows and appends the two P5 equivalence statements and four fresh-secret controls, with exact interface and capability scopes. The 21 added P5 source files and 18 published stage-receipt files remain byte-identical to their published commits; all 1,342 prior Lean-related files, including the complete root, remain unchanged. The stage guide states the remaining source and cryptographic composition obligations.
+
+The focused Make run passed 27 transcript-fidelity tests and the complete reviewed inventory. Thirteen classification regressions, twelve unchanged P5 checker regressions, formatting and diff checks passed. All six published solver logs were rechecked after their 27 input hashes and compressed/raw log hashes matched. No unchanged ProVerif search or Lean build was repeated. The copied stage receipt retains its historical 25-test count, distinct from this integration. Independent integration review approved the frozen source, exact scopes and shared gates. This receipt is not an aggregate proof result.

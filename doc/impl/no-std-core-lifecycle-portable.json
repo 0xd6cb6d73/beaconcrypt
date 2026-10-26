@@ -1,0 +1,222 @@
+{
+  "scope": "Portable functional validation of no_std RustCrypto merge into core-lifecycle; no proof changes or guest mutation rerun",
+  "target_branch": "codex/core-lifecycle",
+  "target_head_before_merge": "2b924febc49b9a5e6fb93990ff8d4b053b7ca4b2",
+  "incoming_commit": "30cbdc6a30a36867cc0ec4eddde96cdc5e0842c9",
+  "resource_lease_mib": 3072,
+  "cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/coord-00002840-no-std-core-lifecycle-portable.scope",
+  "environment": {
+    "CARGO_BUILD_JOBS": "2",
+    "RUSTC_WRAPPER": "/tmp/beaconcrypt-host-rustc-wrapper",
+    "CARGO_TARGET_DIR": "/home/user/worktrees/beaconcrypt-core-lifecycle/target-wasm",
+    "GOMAXPROCS": "2",
+    "GOFLAGS": "-p=2",
+    "GOCACHE": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/gocache"
+  },
+  "rustflags_cleared": true,
+  "commands": [
+    {
+      "label": "wasm-versions",
+      "argv": [
+        "bash",
+        "-c",
+        "rustc --version; cargo --version; go version"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "seconds": 0.021,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/wasm-versions.log",
+      "log_sha256": "67fbd11b20cba0daf1306610e9acf9ea962caef99e824dd054f652b5c33aa7cd"
+    },
+    {
+      "label": "wasi-guest-tests",
+      "argv": [
+        "bash",
+        "scripts/test-wasm.sh"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "seconds": 35.913,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/wasi-guest-tests.log",
+      "log_sha256": "4f037e6570db7fe1ace098552151124643db696f103cac1ccb203296c5a09fe0"
+    },
+    {
+      "label": "wasi-release",
+      "argv": [
+        "bash",
+        "scripts/build-wasm.sh"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "seconds": 20.407,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/wasi-release.log",
+      "log_sha256": "3079ae17da700e4a655f36c2a6bcd61c23638f10c3d77289e3d08e9365ea6e4e"
+    },
+    {
+      "label": "wasm-packaging-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "scripts/test_package_wasm.py"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "seconds": 0.25,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/wasm-packaging-tests.log",
+      "log_sha256": "fab94c5857871567c42d514cb88c6c20020899a869b8af7bdb1b722c30edf5de"
+    },
+    {
+      "label": "go-cgo-disabled",
+      "argv": [
+        "go",
+        "test",
+        "-count=1",
+        "./..."
+      ],
+      "environment_overrides": {
+        "CGO_ENABLED": "0"
+      },
+      "exit_code": 0,
+      "seconds": 9.565,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/go-cgo-disabled.log",
+      "log_sha256": "d1cfcbdc265409f325ab9947696103a02588be2bd473b9cd536c18e28d548aa3"
+    },
+    {
+      "label": "go-forced-wazero",
+      "argv": [
+        "go",
+        "test",
+        "-count=1",
+        "-tags",
+        "beaconcrypt_wazero",
+        "./..."
+      ],
+      "environment_overrides": {
+        "CGO_ENABLED": "1"
+      },
+      "exit_code": 0,
+      "seconds": 4.194,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/go-forced-wazero.log",
+      "log_sha256": "2cbabff39ce89ac753286ea2b28aa6a13b64add162d65a8c855022d346c07d26"
+    },
+    {
+      "label": "thumb-versions",
+      "argv": [
+        "bash",
+        "-c",
+        "rustc --version; cargo --version"
+      ],
+      "environment_overrides": {
+        "PATH": "/home/user/.rustup/toolchains/1.96.0-x86_64-unknown-linux-gnu/bin:/home/user/.cargo/bin:/nix/store/9wyldz5qids294k9h5qcg1f72i52jidi-gnumake-4.4.1/bin:/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/codex-path:/home/user/.codex/tmp/arg0-linux/codex-arg0IQCqhV:/nix/store/pvh5hvndqbhr9l89ikd7gkqbgjvkf1vq-ripgrep-15.1.0/bin:/nix/store/kxcgm56aqlvgffr88i2d76zhiklxj3r7-bubblewrap-0.11.2/bin:/run/wrappers/bin:/home/user/.nix-profile/bin:/nix/profile/bin:/home/user/.local/state/nix/profile/bin:/etc/profiles/per-user/user/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin",
+        "CARGO_TARGET_DIR": "/home/user/worktrees/beaconcrypt-core-lifecycle/target/no-std-consumer"
+      },
+      "exit_code": 0,
+      "seconds": 0.015,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/thumb-versions.log",
+      "log_sha256": "9b378274f975ddd4491c265d3831225864e8493c37da6d2ca2b9993be8efff8e"
+    },
+    {
+      "label": "thumb-independent-consumers",
+      "argv": [
+        "bash",
+        "scripts/check-no-std.sh"
+      ],
+      "environment_overrides": {
+        "PATH": "/home/user/.rustup/toolchains/1.96.0-x86_64-unknown-linux-gnu/bin:/home/user/.cargo/bin:/nix/store/9wyldz5qids294k9h5qcg1f72i52jidi-gnumake-4.4.1/bin:/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/codex-path:/home/user/.codex/tmp/arg0-linux/codex-arg0IQCqhV:/nix/store/pvh5hvndqbhr9l89ikd7gkqbgjvkf1vq-ripgrep-15.1.0/bin:/nix/store/kxcgm56aqlvgffr88i2d76zhiklxj3r7-bubblewrap-0.11.2/bin:/run/wrappers/bin:/home/user/.nix-profile/bin:/nix/profile/bin:/home/user/.local/state/nix/profile/bin:/etc/profiles/per-user/user/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin",
+        "CARGO_TARGET_DIR": "/home/user/worktrees/beaconcrypt-core-lifecycle/target/no-std-consumer"
+      },
+      "exit_code": 0,
+      "seconds": 21.561,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/thumb-independent-consumers.log",
+      "log_sha256": "94190bf701f394be98f221638eabb3ee74a9cf2c85f0cef614c1f82dcd9dbfb5"
+    }
+  ],
+  "success": true,
+  "guest": {
+    "bytes": 812323,
+    "sha256": "14aedb0c4d2836579358a794f6674260b7ef5c4926cd3c232e9da21d32877471"
+  },
+  "core_tree_unchanged": true,
+  "validated_build_info": {
+    "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/validated-beaconcrypt.build.json",
+    "sha256": "de0d33c78c28f08409842e2b1641314bfd23f8fca83a992e45272fd5eeb80f8e"
+  },
+  "functional_results": {
+    "guest_tests_passed": 27,
+    "isolated_allocation_failure_probe_passed": true,
+    "packaging_unit_tests_passed": 8,
+    "go_cgo_disabled_passed": true,
+    "go_forced_wazero_passed": true,
+    "thumb_independent_consumers_passed": [
+      "no roles",
+      "beacon",
+      "server",
+      "beacon,server"
+    ]
+  },
+  "warnings": [
+    "No-role consumer has expected unused private implementation warnings.",
+    "Prior beacon/server authentication-helper warnings were resolved by role cfg attributes; final role consumer blocks are warning-free."
+  ],
+  "follow_up": {
+    "reason": "Two role-specific cfg attributes on authentication helpers remove role-only dead-code warnings; both predicates hold in the combined WASI guest.",
+    "resource_lease_mib": 3072,
+    "cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/coord-00002843-no-std-core-lifecycle-portable-final.scope",
+    "prior_guest": {
+      "bytes": 812323,
+      "sha256": "14aedb0c4d2836579358a794f6674260b7ef5c4926cd3c232e9da21d32877471"
+    },
+    "commands": [
+      {
+        "label": "wasi-guest-tests",
+        "argv": [
+          "bash",
+          "scripts/test-wasm.sh"
+        ],
+        "environment_overrides": {},
+        "exit_code": 0,
+        "seconds": 11.856,
+        "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/followup-wasi-guest-tests.log",
+        "log_sha256": "7bed3ace2adbe91d515755f4d550f0593475f79e51c33e333415c60ad7d1d65a"
+      },
+      {
+        "label": "wasi-release",
+        "argv": [
+          "bash",
+          "scripts/build-wasm.sh"
+        ],
+        "environment_overrides": {},
+        "exit_code": 0,
+        "seconds": 10.417,
+        "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/followup-wasi-release.log",
+        "log_sha256": "3ae3c6b0179241ded236207c4345b58184f2b8e2bbe4fcfc45ecbc9bfade378b"
+      },
+      {
+        "label": "thumb-independent-consumers",
+        "argv": [
+          "bash",
+          "scripts/check-no-std.sh"
+        ],
+        "environment_overrides": {
+          "PATH": "/home/user/.rustup/toolchains/1.96.0-x86_64-unknown-linux-gnu/bin:/home/user/.cargo/bin:/nix/store/9wyldz5qids294k9h5qcg1f72i52jidi-gnumake-4.4.1/bin:/nix/store/i9s8mj0khxmdnbvsc41cnkmm47za525j-codex-0.164.0/codex-path:/home/user/.codex/tmp/arg0-linux/codex-arg0IQCqhV:/nix/store/pvh5hvndqbhr9l89ikd7gkqbgjvkf1vq-ripgrep-15.1.0/bin:/nix/store/kxcgm56aqlvgffr88i2d76zhiklxj3r7-bubblewrap-0.11.2/bin:/run/wrappers/bin:/home/user/.nix-profile/bin:/nix/profile/bin:/home/user/.local/state/nix/profile/bin:/etc/profiles/per-user/user/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin",
+          "CARGO_TARGET_DIR": "/home/user/worktrees/beaconcrypt-core-lifecycle/target/no-std-consumer"
+        },
+        "exit_code": 0,
+        "seconds": 2.656,
+        "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/followup-thumb-independent-consumers.log",
+        "log_sha256": "81d9cc3886325f80d6d1ae9af6982b87ed26b12fe64638acea7452625f4fef28"
+      }
+    ],
+    "success": true,
+    "guest_byte_identity_unchanged": true,
+    "prior_guest_go_and_packaging_checks_retained": "Exact guest bytes and SHA256 unchanged; prior both Go modes and 8 Python packaging tests remain applicable.",
+    "role_consumer_warnings_resolved": true
+  },
+  "post_commit_provenance_refresh": {
+    "helper": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-portable/refresh-provenance.py",
+    "helper_sha256": "545fbc38679dcab65ec52422031e2c4e074a648ab1fde5cbf168fd8250381642",
+    "prepared_not_run": true,
+    "guards": "Clean committed tree, exact validated guest bytes/hash, source build-input fingerprint, and build environment before revision-only metadata refresh."
+  }
+}

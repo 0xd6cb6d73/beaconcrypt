@@ -1,0 +1,458 @@
+{
+  "date": "2026-10-06T13:34:10.071167+00:00",
+  "scope": "Stage C of the accept/KEM join plan: modules M4 (key-list monotonicity along the report continuation and the recorded raw bytes), M9a (tagged/decision program conversions, the random-coins lemma under the stopped selected-KEM router and the router-run split), M9 (the bridge from the actual initialized execution of the tagged program to the raw-ordinal KEM real game, T4, as a probability inequality after the source-order equality) and M10 (T5, T5b and classify_final).",
+  "basis": "2bc7fa3c2dc522f013e3fce70eb2546f9b89f363",
+  "topic": {
+    "branch": "codex/accept-root-join",
+    "worktree": "/tmp/beaconcrypt-accept-root-join"
+  },
+  "plan": {
+    "path": "/tmp/bc-arc-scratch/accept-cut-join/plan.md",
+    "sha256": "05e3ad677061ac5b41a586b9cb2339db7b4cddc73bf9998ebbefa771d3995bb2",
+    "stage": "C (M4, M9a, M9, M10)"
+  },
+  "commits": [
+    {
+      "commit": "72edb4824524f23c56f56484bcd239f913cabd3c",
+      "subject": "Prove key-list monotonicity after the raw-accept cut"
+    },
+    {
+      "commit": "a254e7d4a3cf43d91c3c119119529056d2fd2b20",
+      "subject": "Relate the tagged and decision KEM programs"
+    },
+    {
+      "commit": "e216347269f9ea17c62531b3d1c3db510536cf2e",
+      "subject": "Bound the real tagged run by the raw-ordinal KEM game"
+    },
+    {
+      "commit": "8866634136fdfa9e40e968c641236101934a3057",
+      "subject": "Join the raw-accept cut to the selected ML-KEM challenge"
+    }
+  ],
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutMonotone.lean": "3d01f73c8d6aaf54f641a0dd2ea92779fb81f7bb096f065a152f4742aa043b95",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawNatural.lean": "7ca7aadb6eaf74183db384cb797a2a00798c37ed4d55c975f1a507981d895f12",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawBridge.lean": "6529e899c73223a708558f786cdd520f3988979853e5a762c2b3adcc7897721f",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAuthenticatedSelectedKem.lean": "3aeffac97d1e9e3db878a38c586d835e70bfe8008efccc6bb2bce6dfeb2e6027",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "bb77eecf75636449cc6e22ef5f00519ada8823ad6c72af84f0d39c37b3afd9c2",
+    "beaconcrypt-core/proofs/check-inventory.sh": "d5b4b5504f134cdbdf32a047cf3dd79e0717e23ae5060f1b951695f8c43bd9c6",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "c25169305f819bd092af742d3bb3c36d51729cb1d0cd5fbeeb4427e593fb0256",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "7cdfa1f7d81dcc1bc6bb372a10cc3fdc701c9a45cfbef7b384d5839fd1f35e84",
+    "doc/formal-verification-analysis.md": "fed58319ed5cd0b209d0743c2a7c0b187d2df34cf88bdf5bdae1178425ee65c4",
+    "doc/impl/registration-accept-kem-join.md": "2c8b2f70eb5405c7d9501f16cc037d66a15916383db9e9dbefee9c476bbd2d19"
+  },
+  "modules": {
+    "PqxdhRegistrationJointAcceptCutMonotone": {
+      "plan_id": "M4",
+      "statements": [
+        "simulate_result",
+        "pool_keys",
+        "impl_keys",
+        "extend_keys",
+        "program_keys",
+        "reduction_keys",
+        "continuation_keys",
+        "resume_keys_prefix",
+        "reported_result",
+        "resume_tag"
+      ],
+      "definitions": []
+    },
+    "PqxdhRegistrationJointKemRawNatural": {
+      "plan_id": "M9a",
+      "statements": [
+        "router_split",
+        "router_map",
+        "router_support",
+        "coins_stopped",
+        "finish_stopped",
+        "commands_map",
+        "program_map",
+        "decision_program",
+        "hide_map",
+        "exposeAt_map",
+        "exposeAt_tag",
+        "initialization_map",
+        "selectedFirst_map",
+        "scan_map",
+        "rawScan_map"
+      ],
+      "definitions": [
+        "mapOutcome",
+        "mapInitialized",
+        "cutMap"
+      ]
+    },
+    "PqxdhRegistrationJointKemRawBridge": {
+      "plan_id": "M9",
+      "statements": [
+        "rawResume_tag",
+        "program_tag",
+        "good_source",
+        "prefix_lookup",
+        "selected_lookup",
+        "active_raw",
+        "run_le_real",
+        "commands_le_real",
+        "actual_le_real",
+        "client_tag"
+      ],
+      "definitions": [
+        "Final",
+        "Decided",
+        "GoodKem",
+        "KeyMatchFinal",
+        "RunEvent"
+      ]
+    },
+    "PqxdhRegistrationJointAuthenticatedSelectedKem": {
+      "plan_id": "M10",
+      "statements": [
+        "resume_outcome",
+        "report_client",
+        "accepted_verified",
+        "classify_final",
+        "protected_to_final",
+        "final_marginal",
+        "cut_marginal",
+        "union_split",
+        "authenticated_selected_kem",
+        "authenticated_selected_kem_bills"
+      ],
+      "definitions": [
+        "AcceptedFinal"
+      ]
+    }
+  },
+  "statements": 45,
+  "exact_statements": {
+    "T4 actual_le_real": "theorem actual_le_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (decision : X → Bool)\n    (work : OracleComp (SourceSpec KemSK) X) (runtime : A) (budget : PqxdhRegistrationJointKemCommands.Budget)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (room : budget (.inl 1) ≤ count + 1) :\n    letI := Classical.propDecidable\n    𝒟[(fun final => decide (Decided decision final ∧ GoodKem selected final ∧\n        KeyMatchFinal setup codec checks selected final)) <$>\n      ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup), result.2)) <$>\n        (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied (tag work index)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true} ≤\n    𝒟[PqxdhRegistrationJointKemRawGame.sourceReal setup codec checks ensureInit supplied decision work runtime count\n      selected index] {true}",
+    "T5 authenticated_selected_kem": "theorem authenticated_selected_kem (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks)\n    (shortRejects : ∀ (publicKey : Ed25519PublicKey) bytes, bytes.length < 64 →\n      setup.source.crypto.verify publicKey.toList bytes = none)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (count : Nat)\n    (work : OracleComp (Spec KemSK) X) (runtime : A) (index : Nat)\n    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (capacity : (if supplied.isNone then 1 else 0) + budget (.inl 1) ≤ count + 1)\n    (decision : X → Bool) (kemIndex : Fin (count + 1)) (chosenOwner : Nat) (fallback : Pqxdh.Bytes)\n    (dynamicFallback : DynamicForgery) (ordinaryFallback : Forgery) :\n    (letI := Classical.propDecidable; 𝒟[(fun pair => decide (Decided decision (sourceResult pair.2) ∧\n        GoodKem kemIndex (sourceResult pair.2) ∧ Protected setup codec checks kemIndex pair.1)) <$>\n      split setup codec checks ensureInit supplied (count + 1) work index runtime] {true}) ≤\n    𝒟[PqxdhRegistrationJointKemRawGame.branch setup codec checks ensureInit supplied decision work runtime count\n        kemIndex index false] {true} +\n      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))\n        (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit supplied decision work runtime\n          count kemIndex index).toINDCCA +\n        PqxdhRegistrationJointKemRawGame.correctnessError setup) +\n      ∑ target : Fin (count + 1), advantage setup.joint\n        (reduction setup codec checks ensureInit supplied count (selected work index chosenOwner fallback) runtime\n          dynamicFallback ordinaryFallback target)",
+    "T5b authenticated_selected_kem_bills": "theorem authenticated_selected_kem_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)\n    (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)\n    (qInit : Nat) (initBound : ∀ runtime, (ensureInit.run runtime).IsTotalQueryBound qInit)\n    (supplied : Option Pqxdh.Bytes) (count : Nat) (work : OracleComp (Spec KemSK) X) (runtime : A) (index : Nat)\n    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (decision : X → Bool) (kemIndex : Fin (count + 1)) (chosenOwner : Nat) (fallback : Pqxdh.Bytes)\n    (dynamicFallback : DynamicForgery) (ordinaryFallback : Forgery) :\n    (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit supplied decision work runtime\n      count kemIndex index).MakesAtMostQueries\n      ((qInit + if supplied.isNone then 32 else 0) +\n        (caps.keygenCost * count + PqxdhRegistrationJointKemPostBills.uniformCap caps (budget (.inl 1))\n          (budget (.inl 5)) (PqxdhRegistrationJointOpenUniform.total caps budget) (budget (.inl 3))))\n      (caps.decapsBase * budget (.inl 5)) (budget (.inl 5))\n      (PqxdhRegistrationJointKemPostBills.uniformCap caps (budget (.inl 1)) (budget (.inl 5))\n        (PqxdhRegistrationJointOpenUniform.total caps budget) (budget (.inl 3)))\n      (caps.decapsBase * budget (.inl 5)) (budget (.inl 5)) ∧\n    (∀ (target : Fin (count + 1)) (jointPublic : PublicIdentity) (signing : Bool),\n      (reduction setup codec checks ensureInit supplied count (selected work index chosenOwner fallback) runtime\n        dynamicFallback ordinaryFallback target jointPublic).IsQueryBoundP\n        (IsClass (if signing then .sign else .staticDh))\n        (if signing then 3 * budget (.inl 2) else budget (.inl 5) + budget (.inl 3))) ∧\n    (client setup codec checks ensureInit supplied (count + 1) (selected work index chosenOwner fallback)\n      runtime).IsQueryBoundP PqxdhJointPhase1Reports.IsCandidateReport ((count + 1) * (budget (.inl 3) + 1)) ∧\n    (client setup codec checks ensureInit supplied (count + 1) (selected work index chosenOwner fallback)\n      runtime).IsQueryBoundP (PqxdhJointPhase1Reports.SourceClass (dynamicClass (IsClass .uniform)))\n        (total caps qInit budget) ∧\n    (∀ (target : Fin (count + 1)) (jointPublic : PublicIdentity),\n      (reduction setup codec checks ensureInit supplied count (selected work index chosenOwner fallback) runtime\n        dynamicFallback ordinaryFallback target jointPublic).IsQueryBoundP\n        (IsClass .uniform) (32 * count + total caps qInit budget)) ∧\n    (∀ target : Fin (count + 1),\n      (game setup.joint (reduction setup codec checks ensureInit supplied count (selected work index chosenOwner fallback)\n        runtime dynamicFallback ordinaryFallback target)).IsTotalQueryBound\n          (32 * (count + 1) + total caps qInit budget))",
+    "classify_final": "theorem classify_final (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (shortRejects : ∀ (publicKey : Ed25519PublicKey) bytes, bytes.length < 64 →\n      setup.source.crypto.verify publicKey.toList bytes = none)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (count : Nat)\n    (work : OracleComp (Spec KemSK) X) (index : Nat) (runtime : A)\n    (pair : ReportResult KemSK A (Cut KemSK X) count × ReportResult KemSK A (X × Tag) count)\n    (supported : pair ∈ support (split setup codec checks ensureInit supplied count work index runtime))\n    (kemIndex : Fin count) (chosenOwner : Nat) (fallback : Pqxdh.Bytes) :\n    ¬AcceptedFinal (sourceResult pair.2) ∨\n      (AcceptedFinal (sourceResult pair.2) ∧ VerifiedSome setup codec checks pair.1 ∧\n        ¬Protected setup codec checks kemIndex pair.1) ∨\n      (AcceptedFinal (sourceResult pair.2) ∧ Protected setup codec checks kemIndex pair.1 ∧\n        HonestTuple setup codec checks kemIndex pair.1 ∧ KeyMatchCut setup codec checks kemIndex pair.1) ∨\n      (AcceptedFinal (sourceResult pair.2) ∧ Protected setup codec checks kemIndex pair.1 ∧\n        PqxdhRegistrationJointFinalReportEvent.Failure setup.joint codec (mapChoice chosenOwner fallback pair.1))"
+  },
+  "guards": [
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.simulate_result",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.pool_keys",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.impl_keys",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.extend_keys",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.program_keys",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.reduction_keys",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.continuation_keys",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.resume_keys_prefix",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.reported_result",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.resume_tag",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.router_split",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.router_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.router_support",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.coins_stopped",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.finish_stopped",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.commands_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.program_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.decision_program",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.hide_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.exposeAt_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.exposeAt_tag",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.initialization_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.selectedFirst_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.scan_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.rawScan_map",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.rawResume_tag",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.program_tag",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.good_source",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.prefix_lookup",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.selected_lookup",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.active_raw",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.run_le_real",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.commands_le_real",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.actual_le_real",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.client_tag",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.resume_outcome",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.report_client",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.accepted_verified",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.classify_final",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.protected_to_final",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.final_marginal",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.cut_marginal",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.union_split",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.authenticated_selected_kem",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.authenticated_selected_kem_bills"
+  ],
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "axiom_output": {
+    "source": "/tmp/bc-arc-scratch/accept-cut-join/stage-c/axioms/AxiomsC.lean",
+    "source_sha256": "67ffd6da53666cc72ad431b43b8eeca666daa1c3b87b82cd1c03672493f1a304",
+    "log_sha256": "d18548a9ee0c01c2ca1c253fb1b7f388857a9f68dfc2486ea26c66719f0f6d3f",
+    "summary": "45 statements; 42 depend on [propext, Classical.choice, Quot.sound], KemRawNatural.router_split and router_map on [propext, Quot.sound], and KemRawBridge.selected_lookup on [propext]",
+    "utf8": "'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.simulate_result' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.pool_keys' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.impl_keys' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.extend_keys' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.program_keys' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.reduction_keys' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.continuation_keys' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.resume_keys_prefix' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.reported_result' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.resume_tag' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.router_split' depends on axioms: [propext,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.router_map' depends on axioms: [propext, Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.router_support' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.coins_stopped' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.finish_stopped' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.commands_map' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.program_map' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.decision_program' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.hide_map' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.exposeAt_map' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.exposeAt_tag' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.initialization_map' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.selectedFirst_map' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.scan_map' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.rawScan_map' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.rawResume_tag' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.program_tag' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.good_source' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.prefix_lookup' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.selected_lookup' depends on axioms: [propext]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.active_raw' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.run_le_real' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.commands_le_real' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.actual_le_real' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.client_tag' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.resume_outcome' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.report_client' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.accepted_verified' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.classify_final' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.protected_to_final' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.final_marginal' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.cut_marginal' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.union_split' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.authenticated_selected_kem' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.authenticated_selected_kem_bills' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n"
+  },
+  "leanpath": {
+    "manifest": "/tmp/bc-arc-scratch/accept-cut-join/stage-c/leanpath",
+    "sha256": "c852664c3814bf6f0ccc8562f272259586c62a02e789027e412982d40d0b5b89",
+    "note": "The stage B LEAN_PATH with its first entry replaced by a fresh scratch prefix (stage-c/olean) that mirrors the 1511 stage B artifacts as resolved symlinks; every stage A and B artifact was first checked to match the 2bc7fa3c sources, and every new artifact (four stage C modules) was written only into that prefix."
+  },
+  "direct_checks_final": [
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone",
+      "start": "2026-10-06T13:52:56.907643+00:00",
+      "end": "2026-10-06T13:53:00.252682+00:00",
+      "exit": 0,
+      "source_sha256": "3d01f73c8d6aaf54f641a0dd2ea92779fb81f7bb096f065a152f4742aa043b95",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-root-join/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-c/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutMonotone.olean",
+        "/tmp/beaconcrypt-accept-root-join/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutMonotone.lean"
+      ],
+      "leanpath_sha256": "c852664c3814bf6f0ccc8562f272259586c62a02e789027e412982d40d0b5b89",
+      "artifact_sha256": "937a1a5ec5e7a8c2bd9e511aab4e7fa092d479849f10bbda09d0c4aab2dffc7d"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural",
+      "start": "2026-10-06T13:28:55.577701+00:00",
+      "end": "2026-10-06T13:28:58.976256+00:00",
+      "exit": 0,
+      "source_sha256": "7ca7aadb6eaf74183db384cb797a2a00798c37ed4d55c975f1a507981d895f12",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-root-join/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-c/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawNatural.olean",
+        "/tmp/beaconcrypt-accept-root-join/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawNatural.lean"
+      ],
+      "leanpath_sha256": "c852664c3814bf6f0ccc8562f272259586c62a02e789027e412982d40d0b5b89",
+      "artifact_sha256": "31fc81f50df8cdf3dc6c281de21789db8bd6bd90e86fd2a01bd85c4b90f34931"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge",
+      "start": "2026-10-06T13:28:59.008289+00:00",
+      "end": "2026-10-06T13:29:03.773823+00:00",
+      "exit": 0,
+      "source_sha256": "6529e899c73223a708558f786cdd520f3988979853e5a762c2b3adcc7897721f",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-root-join/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-c/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawBridge.olean",
+        "/tmp/beaconcrypt-accept-root-join/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawBridge.lean"
+      ],
+      "leanpath_sha256": "c852664c3814bf6f0ccc8562f272259586c62a02e789027e412982d40d0b5b89",
+      "artifact_sha256": "084ff1a267b70e4e69405affa92074cdf132db42bbeb04c3db40599a74eb5aff"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem",
+      "start": "2026-10-06T13:53:04.578499+00:00",
+      "end": "2026-10-06T13:53:10.077446+00:00",
+      "exit": 0,
+      "source_sha256": "3aeffac97d1e9e3db878a38c586d835e70bfe8008efccc6bb2bce6dfeb2e6027",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-root-join/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-c/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointAuthenticatedSelectedKem.olean",
+        "/tmp/beaconcrypt-accept-root-join/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAuthenticatedSelectedKem.lean"
+      ],
+      "leanpath_sha256": "c852664c3814bf6f0ccc8562f272259586c62a02e789027e412982d40d0b5b89",
+      "artifact_sha256": "a2050b22ba0951e3a32ff1b67759d0e779da5a602ab3d90c36386ded21bccbd7"
+    }
+  ],
+  "root_checks": {
+    "root-m4": {
+      "exit": 0,
+      "source_sha256": "c60fd3ec3bee4d3e9280ca83ee2b3286f8bc5681ef3c234baa5a4f9633e94b53",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "root-m9a": {
+      "exit": 0,
+      "source_sha256": "e7e09acddeb19c3fa38757331a8c798d491ddff835db8ced5e3db5f9a7340f5b",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "root-m9": {
+      "exit": 0,
+      "source_sha256": "18bb1d117a0949dadd7a80e6541905b17f0cfba4f37740dcbdca87148841e5db",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "root-m10": {
+      "exit": 0,
+      "source_sha256": "bb77eecf75636449cc6e22ef5f00519ada8823ad6c72af84f0d39c37b3afd9c2",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "root-final": {
+      "exit": 0,
+      "source_sha256": "bb77eecf75636449cc6e22ef5f00519ada8823ad6c72af84f0d39c37b3afd9c2",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "root-fix": {
+      "exit": 0,
+      "source_sha256": "bb77eecf75636449cc6e22ef5f00519ada8823ad6c72af84f0d39c37b3afd9c2",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "hygiene": {
+    "constants": "hygiene/ConstsC.lean: no axiom or opaque constants in the four modules (exit 0)",
+    "unused_premises": "hygiene/PremisesC.lean: no binder of any of the 45 theorems is unused in its proof term (exit 0)",
+    "guard_liveness": "hygiene/LivenessC.lean: one deliberately wrong guard per statement (the true axiom list with its last entry dropped) fails for all 45 statements (45 guard errors, exit 1 as expected)",
+    "collisions": "hygiene/CollideC.lean over the root environment: KemRawNatural.initialization_map (PqxdhInitialCurrentBeacon), KemRawNatural.cutMap (PqxdhLaterChallengeCapture), KemRawNatural.program_map (PqxdhOpenContextBridge, PqxdhServerAuthPublicationPrefixSource, RawCtxInterpretedReceive, RawCtxInterpretedSend), KemRawBridge.Final (PqxdhInitialNativeAuditCarried, PqxdhInitialNativeCarried, PqxdhInitialParentStoppedHop)",
+    "logs_sha256": {
+      "ConstsC": "aaadd85ac107de5409773771a23e212cb6b9b24b12f268f05f8fc7b9c13c2f8f",
+      "PremisesC": "a963cde5f48fe7e2e6f6806959acd9b707b49d78a0d4e8a1fbf8e83d647b5aa0",
+      "LivenessC": "7f18b73d5eccd83145f121725b2b1f5d28b201626e4646f94e4dda17711c3352",
+      "CollideC": "8aed90a9731c8ec4f2a92e5a8235bb04500be709b32348c2fc756e6243d265a4"
+    },
+    "collision_output": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.initialization_map collides with 1: [PqxdhInitialCurrentBeacon]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.cutMap collides with 1: [PqxdhLaterChallengeCapture]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.program_map collides with 4: [PqxdhOpenContextBridge, PqxdhServerAuthPublicationPrefixSource, RawCtxInterpretedReceive, RawCtxInterpretedSend]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.Final collides with 3: [PqxdhInitialNativeAuditCarried, PqxdhInitialNativeCarried, PqxdhInitialParentStoppedHop]\n"
+  },
+  "focused_inventory_per_commit": {
+    "inv-m4": {
+      "exit": 0,
+      "start": "2026-10-06T13:02:18Z",
+      "end": "2026-10-06T13:03:23Z",
+      "log_sha256": "4e71ecc646e5c43229a04beb8ca19c1d32a0175083fc31b1ba36501db7d81e59",
+      "comm_warnings": 0
+    },
+    "inv-m9a": {
+      "exit": 0,
+      "start": "2026-10-06T13:05:55Z",
+      "end": "2026-10-06T13:06:59Z",
+      "log_sha256": "93655df46aeb9e9fbf299ca66b3a524ba2bee607091c8670ee78daade1813a54",
+      "comm_warnings": 0
+    },
+    "inv-m9": {
+      "exit": 0,
+      "start": "2026-10-06T13:16:49Z",
+      "end": "2026-10-06T13:17:53Z",
+      "log_sha256": "2e0fb7a1a2737e1e1edb1b64dbd01572433136c8a37eadb4cd0730bb68806aa8",
+      "comm_warnings": 0
+    },
+    "inv-m10": {
+      "exit": 0,
+      "start": "2026-10-06T13:25:36Z",
+      "end": "2026-10-06T13:26:41Z",
+      "log_sha256": "9e4e60fac826ed2979b06d766d7174b93446bb2260db97bdcf940c2e129da428",
+      "comm_warnings": 0
+    }
+  },
+  "focused_inventory_note": "Each focused module commit was checked with exactly its files staged and no later module present in the tree. handwritten-lean goes 1477 -> 1478 (M4) -> 1479 (M9a) -> 1480 (M9) -> 1481 (M10). The documentation commit that adds this receipt is checked the same way after the receipt is written (inv-docs, recorded in the stage C notes and the handoff report).",
+  "forbidden_scan": "zero matches of \\b(sorry|admit|axiom|native_decide|implemented_by|extern|unsafe)\\b and no set_option other than autoImplicit and backward.isDefEq.respectTransparency in the four modules",
+  "correctness_scan": "zero matches of MlKem768RecipientCorrectness, supported_source, branch_real, KemGame.advantage, KemCertified.advantage, supported_post or post_event in the four modules",
+  "diff_check": "git diff 2bc7fa3c --check clean",
+  "deviations_from_plan": [
+    "Probability statements use 𝒟[(fun r => decide (P r)) <$> ...] {true} under Classical.propDecidable, as in stages A and B. In T5 the classical instance is scoped to the left side, (letI := Classical.propDecidable; ...): a statement-wide letI would elaborate the ciphertext DecidableEq inside IND_CCA_Advantage classically, so the advantage would not be syntactically the term of KemRawCertified.real_le_ideal and KemRawBills.adversary_bound.",
+    "coins_stopped and router_split are in M9a (as the stage C task assigns them) instead of M9.",
+    "T4 is proved by writing the tagged program as the identity-observation exposure (exposeAt_tag) and the KEM game decision program as its result map at the cut (rawScan_map), transferring the event cut by cut; initialization_map and selectedFirst_map are proved as the plan lists them but are not used.",
+    "The plan equality real_split is replaced by the inequalities commands_le_real and run_le_real, which T4 needs.",
+    "active_raw is stated for a pending cut of the identity-observation exposure and a stopped-router continuation, with the reserved key given by a list lookup.",
+    "protected_to_final needs only KeyMatchCut (no Protected premise).",
+    "The plan T4 premise empty is implicit: the statement fixes the initial state with the empty KEM pool.",
+    "M4 proves the pool step directly from PqxdhLiveKemBirth.poolImpl; no lifting of PqxdhLiveKemReservation.noncreate_keys and no use of the R3 fallback.",
+    "T5 and T5b are stated for an arbitrary owner constant chosenOwner (the plan 0 is an instance), as in stage A.",
+    "The plan ideal_close is the existing stage B KemRawCertified.ideal_close and is not restated.",
+    "Helper statements added and guarded: simulate_result, pool_keys, impl_keys, extend_keys, program_keys, reduction_keys, continuation_keys, reported_result (M4); router_map, router_support, finish_stopped, decision_program, hide_map, exposeAt_tag, rawScan_map (M9a); rawResume_tag, program_tag, prefix_lookup, selected_lookup, run_le_real, commands_le_real, client_tag (M9); resume_outcome, report_client, accepted_verified, final_marginal, cut_marginal (M10).",
+    "M9 was completed, so the plan fallback (an openly incomplete join) is not used and no open obligation is left inside stage C. No planned statement was false or unprovable, none was weakened, and no existing theorem was modified."
+  ],
+  "open_obligations_in_stage": [],
+  "not_proved": [
+    "Stage D: lane port L2 and the opaque KEM-ideal continuation (M11), including rawCut_shape in the resume_reply form.",
+    "Context secrecy of the KEM-ideal candidate and the Extract/HKDF hybrid at the actual joint sampler (handoff item 2); T5 forms no KDF game and no SecretInputKdf.Context.",
+    "Global target selection, adversary-chosen test sessions and the common experiment reconciling cut-time Protected with whole-run GoodKem (handoff item 3); forward secrecy against a KEM key disclosed after the session.",
+    "Owner decisions 2 (KDF backend), 5 (review before integration and publication) and 6 (confirmation of the existential owner address and the unread owner constant).",
+    "Handoff items 4-8 and the final validation matrix."
+  ],
+  "checks_not_run": "No lake build, make verify, nix-collect-garbage, ProVerif, Rust or mutation run; no production Rust or ProVerif change.",
+  "review": "Stage C was independently reviewed under a semantic and a hygiene lens; both returned APPROVE_WITH_NITS. The findings are addressed by the follow-up recorded in review_followup. Not pushed.",
+  "owner_decisions_2026_10_06": [
+    "Decision 1: Protected read at the accept (cut), GoodKem over the whole run; T5 is an event of the report coupling split.",
+    "Decision 3: fixed public (index, kemIndex) target, no selection loss.",
+    "Decision 4: the top-level statement carries exactly shortRejects with setup.wiring and FunctionalDecapsulation."
+  ],
+  "review_followup": {
+    "date": "2026-10-06T13:57:40.836320+00:00",
+    "review_source": {
+      "path": "/tmp/bc-arc-scratch/accept-cut-join/stage-c/review.json",
+      "sha256": "0342890dcf622757a3b580a6093f689c8e1be948bb98825d1df63c423dac5ccc",
+      "reviewed_head": "9257319f",
+      "verdicts": {
+        "semantic": "APPROVE_WITH_NITS",
+        "hygiene": "APPROVE_WITH_NITS"
+      }
+    },
+    "commits": [
+      {
+        "commit": "the review follow-up commit that contains this version of the receipt",
+        "subject": "Address the stage C accept/KEM join review"
+      }
+    ],
+    "findings": [
+      "Semantic nit 1 (trusted-boundary clause counted the KEM-ideal probability as a loss): the stage C clause now reads \"The bound is the KEM-ideal probability plus a loss of one ordinary IND-CCA advantage, one ordinary ML-KEM correctness error and the joint-use weak-EUF sum, each with coefficient one, for the fixed public target.\"",
+      "Semantic nit 2 (stop case of the bridge): the analysis now separates the two cases, checked against run_le_real in KemRawBridge. A stop before the encapsulation of the selected accept leaves no outcome, (none, after), so RunEvent fails; the stopped router stops at a forbidden reveal of the chosen key and also at its creation cap (PqxdhDynamicKemRouter.source), and the proof treats every stop alike. A run that ends before that encapsulation is a completed cut, whose selected accept returned no session by AcceptKemCut.accepted_reached. In both cases the event fails.",
+      "Semantic nit 3 (every later step an inequality): the guide and the analysis now say that every later step is a probability inequality or an unconditional program identity inside the selected-first game and the KEM real game, and that no program is rewritten across the distributional equality. The words \"and the KEM real game\" are added to the suggested text because rawScan_map and router_map rewrite the prephase of KemRawGame.sourceReal; the analysis calls the selected-first game the chosen-key-first (selected-first) game, its name in that section. Commit e2163472 and the actual_le_real docstring keep their earlier wording; neither is rewritten, because the follow-up adds one commit and changes no stage C module except M4.",
+      "Semantic nit 4 (\"returned a session\"): the guide (definition of Decided) and the analysis (statement of T5) now say that \"returned a session\" means that the selected get_shared_secret attempt returned its pending registration output (session index), and that failures of build_registration_response are not excluded from the event. Checked against beaconcrypt/src/server.rs (get_shared_secret returns Option<RegistrationOutput>; build_registration_response is a separate call that can still fail) and the model (AcceptCutTag.accepted reads the Option Nat reply of the raw accept, which nativeAccept sets to the session index of the published pending token; build is a separate request).",
+      "Hygiene nit 1 (unused open): M4 now has open PqxdhRegistrationJointAcceptCut (Cut). M4 and its only dependent stage C module M10 were rechecked (tag fix) with exit 0, empty logs and byte-identical artifacts; KemRawNatural and KemRawBridge do not import M4 and are unchanged. The guard text is unchanged. The root check root-fix passes. The reviewed-inventory rows of M4 and trusted-boundary.md and this receipt hashes are refreshed.",
+      "Hygiene nit 2 (stray ignored files): beaconcrypt-core/proofs/lean/P1.log and the __pycache__ directories under beaconcrypt-core/proofs/pro-verif and beaconcrypt-core/proofs/source were deleted from the worktree. The scratch probe.sh now writes its log to stage-c/probe/<name>.log, and the scratch inventory.sh exports PYTHONDONTWRITEBYTECODE=1 and passes the absolute beaconcrypt-core path to make; git status --ignored is empty after the follow-up checks."
+    ],
+    "scratch_scripts_sha256": {
+      "probe.sh": "d72e30c91e2d0976be9462c236ffe764402a87a363abd8630f2ea0a66f271511",
+      "inventory.sh": "4b02ccf53973936148e0acf46401956d11c014eaf2392fda5e1aa6f4b5443de8",
+      "followup.py": "a1255cb93f9221f5c2207ef3e5a98bdbae91a39e87844abcbc767b437af871a2"
+    },
+    "direct_checks": "PqxdhRegistrationJointAcceptCutMonotone and PqxdhRegistrationJointAuthenticatedSelectedKem re-checked in dependency order (tag fix) with exit 0 and empty logs; recorded in direct_checks_final. Their artifacts are byte-identical to the stage C artifacts (M4 937a1a5e, M10 a2050b22).",
+    "root_check": "root-fix: exit 0, empty log (BeaconcryptCore.lean unchanged).",
+    "handwritten_lean_count": "unchanged at 1481; check-inventory.sh unchanged",
+    "diff_check": "git diff --cached --check clean",
+    "focused_inventory": {
+      "command": [
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-accept-root-join/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "environment": "PYTHONDONTWRITEBYTECODE=1 (scratch inventory.sh)",
+      "state": "review follow-up commit with every file staged, including this receipt; only this focused_inventory record was edited afterwards (the reviewed inventory does not cover doc/impl/proof-receipts)",
+      "exit": 0,
+      "start": "2026-10-06T13:57:40Z",
+      "end": "2026-10-06T13:58:45Z",
+      "log_sha256": "93655df46aeb9e9fbf299ca66b3a524ba2bee607091c8670ee78daade1813a54",
+      "comm_warnings": 0,
+      "matches_reviewed_boundary": true,
+      "handwritten_lean_count": 1481
+    }
+  }
+}

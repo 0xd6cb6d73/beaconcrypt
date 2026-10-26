@@ -1,0 +1,33 @@
+{
+  "reviewed_utc": "2026-10-25T13:57:29.823266+00:00",
+  "reviewer": "/root/row_sqlite",
+  "result": "Both row commit via query_one and snapshot CAS via execute await ReadyForQuery, including implicit commit acknowledgement. No adapter change or benchmark rerun needed.",
+  "versions": {
+    "postgres": "0.19.14",
+    "tokio-postgres": "0.7.18"
+  },
+  "registry_source_root": "/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f",
+  "source_review": {
+    "postgres-0.19.14/src/client.rs": {
+      "sha256": "f800871b735add96767e64e2869ef68e2db6486266780ac6a58824754dec713d",
+      "lines": "79,186,225",
+      "finding": "execute/query_one/query_opt block_on corresponding tokio futures"
+    },
+    "postgres-0.19.14/src/connection.rs": {
+      "sha256": "e4e8b16b20a201db8783933d15f966bfcf7ba72345fab29338ca8a05e45b3d74",
+      "lines": "51-87",
+      "finding": "polls future to completion"
+    },
+    "tokio-postgres-0.7.18/src/client.rs": {
+      "sha256": "f2f8cf1f87c5787cdc1b6cb3f862381954d8f7cd84b98c9b4070ce8d4ae16348",
+      "lines": "46-64,299,340-365",
+      "finding": "query_one awaits query_opt; query_opt drains stream to None; backend ErrorResponse/connection closure propagate as errors"
+    },
+    "tokio-postgres-0.7.18/src/query.rs": {
+      "sha256": "35ff925212ad24c95f9455e9be7bc1e692db15b7a523445987d83816b072bd0a",
+      "lines": "33-59,208-242,256-267,344-358",
+      "finding": "Bind+Execute+Sync; RowStream and execute record CommandComplete but await ReadyForQuery before successful completion"
+    }
+  },
+  "source_hashes_independently_checked_by_root": true
+}

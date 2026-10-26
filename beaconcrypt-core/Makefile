@@ -1,0 +1,1026 @@
+# SPDX-License-Identifier: 0BSD
+
+SHELL := /bin/bash
+
+NIX ?= nix
+PROOF_SHELL := path:..\#proofs
+EXPECTED_RUSTC := rustc 1.93.0-nightly (843f8ce2e 2025-11-07)
+EXPECTED_CARGO := cargo 1.93.0-nightly (636800288 2025-10-31)
+EXPECTED_HAX := 0.4.2
+EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
+HAX_PROVERIF_ITEMS := -** \
+	+!beaconcrypt_core::pqxdh::InitKex \
+	+!beaconcrypt_core::pqxdh::VerifiedInitKex \
+	+!beaconcrypt_core::pqxdh::RegistrationId \
+	+!beaconcrypt_core::pqxdh::PqxdhSharedSecrets \
+	+!beaconcrypt_core::pqxdh::RootKeyInput \
+	+!beaconcrypt_core::pqxdh::RegistrationKeyIdBinding \
+	+!beaconcrypt_core::pqxdh::registration_id \
+	+!beaconcrypt_core::pqxdh::build_root_key_input \
+	+!beaconcrypt_core::pqxdh::build_associated_data
+
+PROVERIF_DIR := proofs/pro-verif
+PROVERIF_EXTRACTION := $(PROVERIF_DIR)/extraction/lib.pvl
+PROVERIF_INTERFACE := $(PROVERIF_DIR)/production-transcript-interface.pvl
+PROVERIF_CRYPTO_LIBS := \
+	-lib $(PROVERIF_INTERFACE) \
+	-lib $(PROVERIF_DIR)/crypto.pvl
+PROVERIF_COMMON_LIBS := \
+	$(PROVERIF_CRYPTO_LIBS) \
+	-lib $(PROVERIF_EXTRACTION) \
+	-lib $(PROVERIF_DIR)/environment.pvl
+PROVERIF_QUANTUM_LIBS := \
+	$(PROVERIF_CRYPTO_LIBS) \
+	-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+	-lib $(PROVERIF_EXTRACTION) \
+	-lib $(PROVERIF_DIR)/environment.pvl
+PROVERIF_AEAD_CONTROL_LIBS := \
+	$(PROVERIF_CRYPTO_LIBS) \
+	-lib $(PROVERIF_DIR)/aead-commitment-negative-control.pvl \
+	-lib $(PROVERIF_DIR)/aead-commitment-negative-control-queries.pvl
+PROVERIF_CHECKER := $(PROVERIF_DIR)/check-results.awk
+PROVERIF_TIMEOUT ?= 240
+PROVERIF_MLDSA_LOG_DIR ?= $(abspath ../.build/proofs/mldsa-auth)
+PROVERIF_MLDSA_JOINT_LOG_DIR ?= $(abspath ../.build/proofs/mldsa-joint)
+PROVERIF_MLDSA_JOINT_TIMEOUT ?= 600
+override PROVERIF := proverif
+PROVERIF_SCENARIOS := \
+	aead-commitment \
+	aead-no-commitment \
+	active-classical \
+	passive-classical \
+	passive-classical-equivalence \
+	passive-quantum \
+	passive-quantum-equivalence \
+	quantum-mlkem-opacity \
+	quantum-mlkem-recovery \
+	mlkem-reencapsulation-strong \
+	mlkem-reencapsulation-weak \
+	hkdf-prefix-conformance \
+	hkdf-endpoint-controls \
+	hkdf-domain-distinct \
+	hkdf-domain-alias \
+	public-key-confusion-strong \
+	public-key-confusion-weak \
+	phase2-response-binding \
+	cbor-registration \
+	phase2-assigned-id-weak \
+	phase2-x25519-alias \
+	general-registration-admission \
+	registration-set-admission \
+	registration-set-response \
+	registration-beacon-admission \
+	later-sequence-registration \
+	post-registration-ratchet \
+	main-registration-controls \
+	active-quantum \
+	baseline \
+	reachability \
+	compromise \
+	failed-receive \
+	failed-receive-reachability \
+	failed-receive-compromise \
+	failed-receive-compromise-reachability
+PROVERIF_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_SCENARIOS))
+# Free-schedule (fs) scenarios run serially, one query per ProVerif process,
+# outside the parallel PROVERIF_SCENARIOS roster. Each target may need up to
+# PROVERIF_FS_TIMEOUT seconds and a PROVERIF_FS_ADDRESS_SPACE_KIB address space,
+# so the fs group must run alone on the machine. The checker keeps the logs of a
+# failed run in the temporary directory its error message names; set
+# PROVERIF_FS_LOG_DIR to keep every ProVerif log of the group in that directory.
+PROVERIF_FS_TIMEOUT ?= 1800
+PROVERIF_FS_ADDRESS_SPACE_KIB ?= 10485760
+PROVERIF_FS_LOG_DIR ?=
+# Separate owner-approved primitive/strong-secrecy group (2026-10-05).
+PROVERIF_OPEN_CTX_LOG_DIR ?=
+PROVERIF_PRIMITIVE_LOG_DIR ?=
+PROVERIF_PROVENANCE_TIMEOUT ?= 180
+PROVERIF_PROVENANCE_LOG_DIR ?=
+PROVERIF_DELAYED_TIMEOUT ?= 180
+PROVERIF_EXACT_FAR_TIMEOUT ?= 180
+PROVERIF_RECORD_ORIGIN_TIMEOUT ?= 180
+PROVERIF_RECORD_ORIGIN_LOG_DIR ?=
+PROVERIF_TASKING_ORIGIN_TIMEOUT ?= 180
+PROVERIF_TASKING_ORIGIN_LOG_DIR ?=
+PROVERIF_APPLICATION_SECRECY_TIMEOUT ?= 180
+PROVERIF_APPLICATION_SECRECY_LOG_DIR ?=
+PROVERIF_EXACT_INTERFACE_STRONG_TIMEOUT ?= 1800
+PROVERIF_EXACT_INTERFACE_STRONG_LOG_DIR ?=
+PROVERIF_EXACT_FAR_LOG_DIR ?=
+PROVERIF_DELAYED_LOG_DIR ?=
+PROVERIF_STRONG_LOG_DIR ?=
+# Finite pending-token operational checks; separate from security groups.
+PROVERIF_PENDING_TIMEOUT ?= 180
+PROVERIF_PENDING_LOG_DIR ?=
+PROVERIF_FS_SCENARIOS := \
+	fs-registration \
+	fs-records-s2b \
+	fs-records-b2s
+PROVERIF_FS_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_FS_SCENARIOS))
+PROVERIF_VERIFY_TARGETS := $(addprefix verify-proverif-,$(PROVERIF_SCENARIOS))
+PROVERIF_GENERATED_TARGETS := $(addprefix check-generated-proverif-,$(PROVERIF_SCENARIOS))
+PROVERIF_MATERIAL_TARGETS := \
+	check-proverif-live-material-origin \
+	check-proverif-live-material-no-disclosure \
+	check-proverif-live-material-reachable \
+	check-proverif-live-material-wrong-sequence \
+	check-proverif-live-material-endpoint-origin
+PROVERIF_APPLICATION_TARGETS := \
+	check-proverif-live-private-application-origin \
+	check-proverif-live-private-application-no-api \
+	check-proverif-live-private-application-no-key
+
+LEAN_DIR := proofs/lean
+LEAN_ROOT := $(LEAN_DIR)/BeaconcryptCore.lean
+AUTHENTICATION_EXTRACTION_WORK_DIR ?= $(abspath ../.build/proofs/authentication-extraction)
+LEAN_PROOF_PATHS := $(LEAN_DIR)/BeaconcryptCore $(LEAN_DIR)/BeaconcryptCore.lean
+LEAN_GENERATED_PATHS := \
+	$(LEAN_DIR)/BeaconcryptCore/Extraction.lean \
+	$(LEAN_DIR)/BeaconcryptCore/Extraction/Funs.lean \
+	$(LEAN_DIR)/BeaconcryptCore/Extraction/FunsExternal.lean \
+	$(LEAN_DIR)/BeaconcryptCore/Extraction/FunsExternal_Template.lean \
+	$(LEAN_DIR)/BeaconcryptCore/Extraction/Types.lean \
+	$(LEAN_DIR)/BeaconcryptCore/Extraction/TypesExternal_Template.lean \
+	$(LEAN_DIR)/BeaconcryptCore/AuthenticationExtraction \
+	$(LEAN_DIR)/llbc
+
+# Hax creates the Lean project/root files only when they are absent.
+# The checked-in root and Lake configuration are maintained verification entry points.
+# Extraction preserves their proof imports and all-module build glob.
+
+.PHONY: verify verify-in-shell \
+	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
+	verify-proverif-fs verify-proverif-extensions verify-proverif-fs-in-shell \
+	verify-proverif-extensions-in-shell check-proverif-generated-drift \
+	verify-proverif-live-material check-proverif-live-material $(PROVERIF_MATERIAL_TARGETS) \
+	verify-proverif-live-private-application check-proverif-live-private-application $(PROVERIF_APPLICATION_TARGETS) \
+	verify-proverif-kem-controller-auth check-proverif-kem-controller-auth \
+	check-proverif-passive-reachability check-proverif-quantum-capabilities \
+	check-proverif-transcript-fidelity check-proverif-primitive-fidelity check-proverif-active-strong-secrecy \
+	check-proverif-pending-registration check-proverif-aead-differential check-proverif-registration-provenance check-proverif-delayed-response check-proverif-exact-far check-proverif-record-origin check-proverif-tasking-origin check-proverif-application-secrecy check-proverif-exact-interface-strong \
+	check-proverif-mldsa-auth check-proverif-mldsa-joint \
+	verify-proverif-mldsa-joint verify-proverif-mldsa-joint-in-shell \
+	extract-authentication-lean check-generated-authentication-lean \
+	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
+	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
+	check-proverif-extraction check-generated check-generated-lean \
+	$(PROVERIF_CHECK_TARGETS) $(PROVERIF_VERIFY_TARGETS) \
+	$(PROVERIF_GENERATED_TARGETS) extract-lean prepare-lean-dependencies check-lean verify-lean \
+	verify-lean-in-shell
+
+# Enter the repository-locked proof shell, regenerate every backend, and check
+# every proof. --no-update-lock-file makes a stale or incomplete lock fail.
+verify:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-in-shell
+
+# This target is split out so CI and developers can reuse the locked shell
+# without recursively starting Nix.
+verify-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) check-generated-authentication-lean
+	$(MAKE) extract-proverif
+	$(MAKE) check-proverif
+	$(MAKE) check-proverif-mldsa-auth
+	$(MAKE) check-proverif-mldsa-joint
+	$(MAKE) check-proverif-fs
+	$(MAKE) check-proverif-primitive-fidelity
+	$(MAKE) check-proverif-active-strong-secrecy
+	$(MAKE) check-proverif-pending-registration
+	$(MAKE) check-proverif-aead-differential
+	$(MAKE) check-proverif-registration-provenance
+	$(MAKE) check-proverif-delayed-response
+	$(MAKE) check-proverif-exact-far
+	$(MAKE) check-proverif-record-origin
+	$(MAKE) check-proverif-tasking-origin
+	$(MAKE) check-proverif-application-secrecy
+	$(MAKE) check-proverif-exact-interface-strong
+	$(MAKE) extract-lean
+	$(MAKE) check-lean
+	$(MAKE) check-inventory
+
+verify-proverif:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-in-shell
+
+verify-proverif-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) extract-proverif
+	$(MAKE) check-proverif
+	$(MAKE) check-proverif-fs
+	$(MAKE) check-proverif-primitive-fidelity
+	$(MAKE) check-proverif-active-strong-secrecy
+	$(MAKE) check-proverif-pending-registration
+	$(MAKE) check-proverif-aead-differential
+	$(MAKE) check-proverif-registration-provenance
+	$(MAKE) check-proverif-delayed-response
+	$(MAKE) check-proverif-exact-far
+	$(MAKE) check-proverif-record-origin
+	$(MAKE) check-proverif-tasking-origin
+	$(MAKE) check-proverif-application-secrecy
+	$(MAKE) check-proverif-exact-interface-strong
+
+verify-proverif-live-material:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO=live-material
+
+verify-proverif-live-private-application:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO=live-private-application
+
+verify-proverif-kem-controller-auth:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO=kem-controller-auth
+
+$(PROVERIF_VERIFY_TARGETS): verify-proverif-%:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO='$*'
+
+verify-proverif-scenario-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) extract-proverif
+	$(MAKE) check-proverif-$(PROVERIF_SCENARIO)
+
+# Review tripwire for the complete production/proof trust boundary. Run after
+# extraction and proof checks so generated output is checked against the
+# reviewed baseline without preventing an intentional changed artifact from
+# first being analyzed.
+check-inventory:
+	bash proofs/check-inventory.sh
+
+# Fail before extraction if PATH or a flake edit selected a tool other than the
+# reviewed proof bundle.
+check-toolchain:
+	@set -euo pipefail; \
+		check_version() { \
+			local tool="$$1" expected="$$2" actual="$$3"; \
+			if [[ "$$actual" != "$$expected" ]]; then \
+				echo "unexpected $$tool version" >&2; \
+				echo "  expected: $$expected" >&2; \
+				echo "  actual:   $$actual" >&2; \
+				exit 1; \
+			fi; \
+			printf '%s: %s\n' "$$tool" "$$actual"; \
+		}; \
+		check_version rustc '$(EXPECTED_RUSTC)' "$$(rustc --version)"; \
+		check_version cargo '$(EXPECTED_CARGO)' "$$(cargo --version)"; \
+		check_version hax '$(EXPECTED_HAX)' \
+			"$$(cargo hax --version | awk -F= '$$1 == "version" { print $$2 }')"; \
+		check_version ProVerif '$(EXPECTED_PROVERIF)' \
+			"$$(proverif -help 2>&1 | sed -n '1p')"
+
+extract-proverif:
+	cargo hax -C --locked --features=proverif ';' into \
+		-i '$(HAX_PROVERIF_ITEMS)' \
+		--output-dir $(PROVERIF_DIR)/extraction pro-verif
+	# Hax emits one terminal empty line after replacement blocks; normalize it for the repository whitespace policy.
+	sed -i '$${/^$$/d;}' '$(PROVERIF_EXTRACTION)'
+
+check-proverif-extraction:
+	@if rg -n 'rust_primitives__hax__failure|REPLACE by|todo return|unimplemented' \
+		'$(PROVERIF_EXTRACTION)'; then \
+		echo 'unexpected ProVerif extraction placeholder' >&2; \
+		exit 1; \
+	fi
+	@for required in \
+		'beaconcrypt_core__pqxdh__registration_id' \
+		'beaconcrypt_core__pqxdh__build_root_key_input' \
+		'beaconcrypt_core__pqxdh__build_associated_data'; do \
+		rg -q "$$required" '$(PROVERIF_EXTRACTION)' || { \
+			echo "missing ProVerif extraction item: $$required" >&2; \
+			exit 1; \
+		}; \
+	done
+
+check-proverif-transcript-fidelity:
+	python3 $(PROVERIF_DIR)/test-verdict-classes.py
+	cargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity
+
+# Focused assumed-security profile; this does not upgrade the legacy projection proofs.
+check-proverif-mldsa-auth:
+	python3 $(PROVERIF_DIR)/test-mldsa-registration-auth-checker.py
+	python3 $(PROVERIF_DIR)/check-mldsa-registration-auth.py \
+		--proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)' \
+		--logdir '$(PROVERIF_MLDSA_LOG_DIR)'
+
+# Bounded joint KEX/record profile under the existing symbolic primitive assumptions.
+check-proverif-mldsa-joint:
+	cargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity \
+		mldsa_transcript_source_and_model_mutations_are_rejected -- --exact
+	cargo test --locked -p beaconcrypt-core --test mldsa_joint_fidelity
+	python3 $(PROVERIF_DIR)/test-mldsa-joint-session-checker.py
+	python3 $(PROVERIF_DIR)/test-verdict-classes.py MldsaJointClassificationTests
+	python3 $(PROVERIF_DIR)/check-mldsa-joint-session.py \
+		--proverif '$(PROVERIF)' --timeout '$(PROVERIF_MLDSA_JOINT_TIMEOUT)' \
+		--logdir '$(PROVERIF_MLDSA_JOINT_LOG_DIR)'
+
+verify-proverif-mldsa-joint:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-mldsa-joint-in-shell
+
+verify-proverif-mldsa-joint-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) check-proverif-mldsa-auth
+	$(MAKE) check-proverif-mldsa-joint
+
+$(PROVERIF_CHECK_TARGETS): check-proverif-transcript-fidelity
+check-proverif-passive-reachability check-proverif-quantum-capabilities: check-proverif-transcript-fidelity
+
+check-proverif: check-proverif-transcript-fidelity
+	+$(MAKE) --no-print-directory -j$(words $(PROVERIF_SCENARIOS)) \
+		$(PROVERIF_CHECK_TARGETS)
+
+# The fs group is serial: -j1 here, and each scenario runs its queries one at a
+# time. It is never a prerequisite of check-proverif.
+check-proverif-fs: check-proverif-transcript-fidelity
+	+$(MAKE) --no-print-directory -j1 $(PROVERIF_FS_CHECK_TARGETS)
+
+check-proverif-fs-registration: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
+	python3 $(PROVERIF_DIR)/check-free-schedule.py --scenario fs-registration \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_FS_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')
+
+check-proverif-fs-records-s2b: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-symbolic-name-order.py
+	python3 $(PROVERIF_DIR)/symbolic-name-order.py --check-only
+	python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
+	python3 $(PROVERIF_DIR)/check-free-schedule.py --scenario fs-records-s2b \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_FS_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')
+
+check-proverif-fs-records-b2s: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-symbolic-name-order.py
+	python3 $(PROVERIF_DIR)/symbolic-name-order.py --check-only
+	python3 $(PROVERIF_DIR)/test-pin-origin-checker.py
+	python3 $(PROVERIF_DIR)/pin-origin-theory.py --check-only
+	python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
+	python3 $(PROVERIF_DIR)/check-free-schedule.py --scenario fs-records-b2s \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_FS_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')
+
+# Kept outside both the parallel roster and the existing three-hour fs group.
+check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-primitive-fidelity-checker.py
+	python3 $(PROVERIF_DIR)/check-primitive-fidelity.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_FS_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_PRIMITIVE_LOG_DIR),--log-dir '$(PROVERIF_PRIMITIVE_LOG_DIR)')
+
+# A separate serial group with explicit bounded equivalence and traced controls.
+check-proverif-active-strong-secrecy: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-active-strong-secrecy-checker.py
+	python3 $(PROVERIF_DIR)/check-active-strong-secrecy.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_FS_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_STRONG_LOG_DIR),--log-dir '$(PROVERIF_STRONG_LOG_DIR)')
+
+check-proverif-pending-registration: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-pending-registration-checker.py
+	python3 $(PROVERIF_DIR)/check-pending-registration.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_PENDING_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_PENDING_LOG_DIR),--log-dir '$(PROVERIF_PENDING_LOG_DIR)')
+
+# Exact T0 provenance and independently reviewed source-profile lifting.
+check-proverif-registration-provenance: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-registration-provenance-checker.py
+	python3 $(PROVERIF_DIR)/check-registration-provenance.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_PROVENANCE_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_PROVENANCE_LOG_DIR),--log-dir '$(PROVERIF_PROVENANCE_LOG_DIR)')
+
+# Exact T0 delayed initial-response origin and its scoped source projection.
+check-proverif-delayed-response: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-delayed-response-checker.py
+	python3 $(PROVERIF_DIR)/check-delayed-response.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_DELAYED_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_DELAYED_LOG_DIR),--log-dir '$(PROVERIF_DELAYED_LOG_DIR)')
+
+# Literal first-far material and reviewed hidden-reply trace projection.
+check-proverif-exact-far: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-exact-far-checker.py
+	python3 $(PROVERIF_DIR)/check-exact-far.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_EXACT_FAR_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_EXACT_FAR_LOG_DIR),--log-dir '$(PROVERIF_EXACT_FAR_LOG_DIR)')
+
+check-proverif-record-origin: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-record-origin-checker.py
+	python3 $(PROVERIF_DIR)/check-record-origin.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_RECORD_ORIGIN_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_RECORD_ORIGIN_LOG_DIR),--log-dir '$(PROVERIF_RECORD_ORIGIN_LOG_DIR)')
+
+check-proverif-tasking-origin: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-tasking-origin-checker.py
+	python3 $(PROVERIF_DIR)/check-tasking-origin.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_TASKING_ORIGIN_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_TASKING_ORIGIN_LOG_DIR),--log-dir '$(PROVERIF_TASKING_ORIGIN_LOG_DIR)')
+
+check-proverif-application-secrecy: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-application-secrecy-checker.py
+	python3 $(PROVERIF_DIR)/check-application-secrecy.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_APPLICATION_SECRECY_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_APPLICATION_SECRECY_LOG_DIR),--log-dir '$(PROVERIF_APPLICATION_SECRECY_LOG_DIR)')
+
+check-proverif-exact-interface-strong: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-exact-interface-strong-checker.py
+	python3 $(PROVERIF_DIR)/check-exact-interface-strong.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_EXACT_INTERFACE_STRONG_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_EXACT_INTERFACE_STRONG_LOG_DIR),--log-dir '$(PROVERIF_EXACT_INTERFACE_STRONG_LOG_DIR)')
+
+# Open differential controls: no additional protocol security claims.
+check-proverif-aead-differential: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-aead-differential-checker.py
+	python3 $(PROVERIF_DIR)/check-aead-differential.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_FS_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_OPEN_CTX_LOG_DIR),--log-dir '$(PROVERIF_OPEN_CTX_LOG_DIR)')
+
+check-proverif-aead-commitment: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_AEAD_CONTROL_LIBS) \
+			$(PROVERIF_DIR)/aead-commitment.pv | \
+		awk -v scenario=aead-commitment -f '$(PROVERIF_CHECKER)'
+
+check-proverif-cbor-registration: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/cbor-registration.pvl \
+			$(PROVERIF_DIR)/cbor-registration.pv | \
+			awk -v scenario=cbor-registration -f '$(PROVERIF_CHECKER)'
+
+check-proverif-aead-no-commitment: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_AEAD_CONTROL_LIBS) \
+			$(PROVERIF_DIR)/aead-no-commitment.pv | \
+		awk -v scenario=aead-no-commitment -f '$(PROVERIF_CHECKER)'
+
+check-proverif-active-classical: check-proverif-extraction \
+	check-proverif-reachability
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/queries.pvl \
+			$(PROVERIF_DIR)/baseline.pv | \
+		awk -v scenario=active-classical -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-reachability: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/passive-reachability-queries.pvl \
+			$(PROVERIF_DIR)/passive.pv | \
+		awk -v scenario=passive-reachability -f '$(PROVERIF_CHECKER)'
+
+check-proverif-quantum-capabilities:
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+			-lib $(PROVERIF_DIR)/quantum-capability-control.pvl \
+			-lib $(PROVERIF_DIR)/quantum-capability-control-queries.pvl \
+			$(PROVERIF_DIR)/quantum-capability-control.pv | \
+		awk -v scenario=quantum-capabilities -f '$(PROVERIF_CHECKER)'
+
+check-proverif-quantum-mlkem-opacity:
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-control.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
+			$(PROVERIF_DIR)/quantum-mlkem-control.pv | \
+		awk -v scenario=quantum-mlkem-opacity -f '$(PROVERIF_CHECKER)'
+
+check-proverif-quantum-mlkem-recovery:
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-control.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
+			$(PROVERIF_DIR)/quantum-mlkem-control.pv | \
+		awk -v scenario=quantum-mlkem-recovery -f '$(PROVERIF_CHECKER)'
+
+check-proverif-mlkem-reencapsulation-strong: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-strong-theory.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control-queries.pvl \
+			$(PROVERIF_DIR)/mlkem-reencapsulation-control.pv | \
+		awk -v scenario=mlkem-reencapsulation-strong \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-mlkem-reencapsulation-weak: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-weak-theory.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control-queries.pvl \
+			$(PROVERIF_DIR)/mlkem-reencapsulation-control.pv | \
+		awk -v scenario=mlkem-reencapsulation-weak \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-prefix-conformance: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/hkdf-prefix-conformance.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-prefix-conformance-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-prefix-conformance.pv | \
+		awk -v scenario=hkdf-prefix-conformance -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-endpoint-controls: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/hkdf-endpoint-controls.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-endpoint-controls-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-endpoint-controls.pv | \
+		awk -v scenario=hkdf-endpoint-controls -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-domain-distinct: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-domain-distinct-control.pv | \
+		awk -v scenario=hkdf-domain-distinct -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-domain-alias: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-domain-alias-control.pv | \
+		awk -v scenario=hkdf-domain-alias -f '$(PROVERIF_CHECKER)'
+
+check-proverif-public-key-confusion-strong: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control-queries.pvl \
+			$(PROVERIF_DIR)/public-key-confusion-strong.pv | \
+		awk -v scenario=public-key-confusion-strong \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-public-key-confusion-weak: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-weak-theory.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control-queries.pvl \
+			$(PROVERIF_DIR)/public-key-confusion-weak.pv | \
+		awk -v scenario=public-key-confusion-weak \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-phase2-response-binding: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl \
+			-lib $(PROVERIF_DIR)/phase2-response-binding-control.pvl \
+			-lib $(PROVERIF_DIR)/phase2-response-binding-queries.pvl \
+			$(PROVERIF_DIR)/phase2-response-binding.pv | \
+		awk -v scenario=phase2-response-binding -f '$(PROVERIF_CHECKER)'
+
+check-proverif-phase2-assigned-id-weak: check-proverif-extraction \
+	check-proverif-phase2-response-binding
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-theory.pvl \
+			-lib $(PROVERIF_DIR)/phase2-response-binding-control.pvl \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-queries.pvl \
+			$(PROVERIF_DIR)/phase2-assigned-id-weak.pv | \
+		awk -v scenario=phase2-assigned-id-weak -f '$(PROVERIF_CHECKER)'
+
+check-proverif-phase2-x25519-alias: check-proverif-extraction
+	python3 $(PROVERIF_DIR)/check-phase2-x25519-alias.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
+
+check-proverif-general-registration-admission: check-proverif-extraction
+	python3 $(PROVERIF_DIR)/test-general-registration-checker.py
+	python3 $(PROVERIF_DIR)/check-general-registration.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
+
+check-proverif-registration-set-admission: check-proverif-extraction
+	python3 $(PROVERIF_DIR)/test-registration-set-checker.py
+	python3 $(PROVERIF_DIR)/check-registration-set.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
+
+check-proverif-registration-set-response: check-proverif-extraction
+	python3 $(PROVERIF_DIR)/test-registration-response-checker.py
+	python3 $(PROVERIF_DIR)/check-registration-response.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
+
+check-proverif-registration-beacon-admission: check-proverif-extraction
+	python3 $(PROVERIF_DIR)/test-registration-beacon-checker.py
+	@logdir=$$(mktemp -d); \
+		trap 'rm -rf "$$logdir"' EXIT; \
+		python3 $(PROVERIF_DIR)/check-registration-beacon.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)' --logdir "$$logdir"
+
+check-proverif-later-sequence-registration: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl \
+			-lib $(PROVERIF_DIR)/later-sequence-registration-control.pvl \
+			-lib $(PROVERIF_DIR)/later-sequence-registration-queries.pvl \
+			$(PROVERIF_DIR)/later-sequence-registration.pv | \
+		awk -v scenario=later-sequence-registration -f '$(PROVERIF_CHECKER)'
+
+check-proverif-post-registration-ratchet: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl \
+			-lib $(PROVERIF_DIR)/later-sequence-registration-control.pvl \
+			-lib $(PROVERIF_DIR)/post-registration-ratchet-control.pvl \
+			-lib $(PROVERIF_DIR)/post-registration-ratchet-queries.pvl \
+			$(PROVERIF_DIR)/post-registration-ratchet.pv | \
+		awk -v scenario=post-registration-ratchet -f '$(PROVERIF_CHECKER)'
+
+check-proverif-main-registration-controls: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/main-registration-control-queries.pvl \
+			$(PROVERIF_DIR)/baseline.pv | \
+		awk -v scenario=main-registration-controls -f '$(PROVERIF_CHECKER)'
+
+# HB-103: exact ideal protected-record origin and four reachable negative controls.
+# This primitive component is separate from the legacy parallel scenario roster.
+$(PROVERIF_MATERIAL_TARGETS): check-proverif-transcript-fidelity
+check-proverif-live-material: $(PROVERIF_MATERIAL_TARGETS)
+check-proverif: check-proverif-live-material
+
+check-proverif-live-material-origin check-proverif-live-material-no-disclosure \
+check-proverif-live-material-reachable check-proverif-live-material-wrong-sequence \
+check-proverif-live-material-endpoint-origin: check-proverif-live-material-%: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			$(PROVERIF_DIR)/live-material-$*.pv | \
+		awk -v scenario=live-material-$* -f '$(PROVERIF_CHECKER)'
+
+# HB-116: target-relative ideal private-message origin and two disclosure controls.
+# This supplemental component does not change the legacy parallel scenario roster.
+$(PROVERIF_APPLICATION_TARGETS): check-proverif-transcript-fidelity
+check-proverif-live-private-application: $(PROVERIF_APPLICATION_TARGETS)
+check-proverif: check-proverif-live-private-application
+
+# HB-125: original authentication queries under arbitrary public KEM replies.
+# This auxiliary gate leaves the main scenario roster and secrecy gates intact.
+check-proverif: check-proverif-kem-controller-auth
+check-proverif-kem-controller-auth: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-kem-controller-auth.py
+	python3 $(PROVERIF_DIR)/check-kem-controller-auth.py \
+		--proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
+
+check-proverif-live-private-application-origin check-proverif-live-private-application-no-api \
+check-proverif-live-private-application-no-key: check-proverif-live-private-application-%: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/live-private-application-service.pvl \
+			$(PROVERIF_DIR)/live-private-application-$*.pv | \
+		awk -v scenario=live-private-application-$* -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-classical-equivalence: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_COMMON_LIBS) \
+			$(PROVERIF_DIR)/passive-strong-secrecy.pv | \
+		awk -v scenario=passive-classical-equivalence -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-quantum-equivalence: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_QUANTUM_LIBS) \
+			$(PROVERIF_DIR)/passive-strong-secrecy.pv | \
+		awk -v scenario=passive-quantum-equivalence -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-classical: check-proverif-extraction \
+	check-proverif-passive-reachability \
+	check-proverif-passive-classical-equivalence
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/passive-queries.pvl \
+			$(PROVERIF_DIR)/passive.pv | \
+		awk -v scenario=passive-classical -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-quantum: check-proverif-extraction \
+	check-proverif-passive-reachability check-proverif-quantum-capabilities \
+	check-proverif-quantum-mlkem-opacity \
+	check-proverif-quantum-mlkem-recovery \
+	check-proverif-passive-quantum-equivalence
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_QUANTUM_LIBS) \
+			-lib $(PROVERIF_DIR)/passive-queries.pvl \
+			$(PROVERIF_DIR)/passive.pv | \
+		awk -v scenario=passive-quantum -f '$(PROVERIF_CHECKER)'
+
+check-proverif-active-quantum: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/active-quantum-witness.pvl \
+			-lib $(PROVERIF_DIR)/active-quantum-queries.pvl \
+			$(PROVERIF_DIR)/active-quantum.pv | \
+		awk -v scenario=active-quantum -f '$(PROVERIF_CHECKER)'
+
+check-proverif-baseline: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/queries.pvl \
+			$(PROVERIF_DIR)/baseline.pv | \
+		awk -v scenario=baseline -f '$(PROVERIF_CHECKER)'
+
+check-proverif-reachability: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/reachability-queries.pvl \
+			$(PROVERIF_DIR)/baseline.pv | \
+		awk -v scenario=reachability -f '$(PROVERIF_CHECKER)'
+
+check-proverif-compromise: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/compromise-queries.pvl \
+			$(PROVERIF_DIR)/compromise.pv | \
+		awk -v scenario=compromise -f '$(PROVERIF_CHECKER)'
+
+check-proverif-failed-receive: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/failed-receive-queries.pvl \
+			$(PROVERIF_DIR)/failed-receive.pv | \
+		awk -v scenario=failed-receive -f '$(PROVERIF_CHECKER)'
+
+check-proverif-failed-receive-reachability: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/failed-receive-reachability-queries.pvl \
+			$(PROVERIF_DIR)/failed-receive.pv | \
+		awk -v scenario=failed-receive-reachability \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-failed-receive-compromise: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/failed-receive-compromise-queries.pvl \
+			$(PROVERIF_DIR)/failed-receive-compromise.pv | \
+		awk -v scenario=failed-receive-compromise \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-failed-receive-compromise-reachability: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib \
+			$(PROVERIF_DIR)/failed-receive-compromise-reachability-queries.pvl \
+			$(PROVERIF_DIR)/failed-receive-compromise.pv | \
+		awk -v scenario=failed-receive-compromise-reachability \
+			-f '$(PROVERIF_CHECKER)'
+
+extract-lean:
+	@test -f '$(LEAN_ROOT)' || { \
+		echo 'missing maintained Lean verification root: $(LEAN_ROOT)' >&2; \
+		exit 1; \
+	}
+	rm -rf $(LEAN_DIR)/llbc
+	cargo hax -C --locked ';' into lean
+
+# The authentication cohort is regenerated separately while the global AD/CTX migration proceeds.
+# Both modes retain their isolated extraction evidence and preserve the historical Extraction files.
+extract-authentication-lean:
+	python3 proofs/extract-authentication.py --write \
+		--work-dir '$(AUTHENTICATION_EXTRACTION_WORK_DIR)'
+
+check-generated-authentication-lean:
+	python3 proofs/extract-authentication.py --check \
+		--work-dir '$(AUTHENTICATION_EXTRACTION_WORK_DIR)'
+
+check-lean-policy:
+	@if rg -n --pcre2 '\b(?:sorry|admit|axiom)\b|sorryAx' $(LEAN_PROOF_PATHS) \
+		--glob '*.lean'; then \
+		echo 'unexpected sorry/admit/axiom in repository-owned Lean proof' >&2; \
+		exit 1; \
+	fi
+	@if rg -n --pcre2 '^\+(?!\+\+).*\b(?:sorry|admit|axiom|unsafe)\b|sorryAx' \
+		$(LEAN_DIR)/patches/*.patch; then \
+		echo 'unexpected sorry/admit/axiom/unsafe addition in Lean dependency patch' >&2; \
+		exit 1; \
+	fi
+	@if rg -n --pcre2 '^\+(?!\+\+).*#guard_msgs\s*\([^)]*drop\s+error' \
+		$(LEAN_DIR)/patches/*.patch; then \
+		echo 'unexpected error suppression in Lean dependency patch' >&2; \
+		exit 1; \
+	fi
+
+check-lean-root:
+	@for module in \
+		BeaconcryptCore.Extraction \
+		BeaconcryptCore.PanicFreedom.API \
+		BeaconcryptCore.Refinement.PqxdhSession \
+		BeaconcryptCore.Refinement.PqxdhCommitment \
+		BeaconcryptCore.Refinement.TranscriptAuth \
+		BeaconcryptCore.Refinement.SessionBinding \
+		BeaconcryptCore.PanicFreedom.SessionBinding \
+		BeaconcryptCore.Refinement.PeerCollections \
+		BeaconcryptCore.Refinement.PeerOwnership \
+		BeaconcryptCore.PanicFreedom.PeerOwnership \
+		BeaconcryptCore.Refinement.Transport \
+		BeaconcryptCore.Computational.TransportSizingBridge \
+		BeaconcryptCore.PanicFreedom.Transport \
+		BeaconcryptCore.Refinement.KeyAgreement \
+		BeaconcryptCore.Refinement.RegistrationInputs \
+		BeaconcryptCore.Refinement.RegistrationBytePrimitives \
+		BeaconcryptCore.Refinement.RegistrationAuthentication \
+		BeaconcryptCore.Refinement.RegistrationInbound \
+		BeaconcryptCore.Refinement.RegistrationResponse \
+		BeaconcryptCore.Refinement.RegistrationSigning \
+		BeaconcryptCore.Refinement.RegistrationSigningContinuations \
+		BeaconcryptCore.Refinement.RegistrationPublication \
+		BeaconcryptCore.Refinement.RecordEffectsComposition \
+		BeaconcryptCore.Refinement.RecordEffects \
+		BeaconcryptCore.Refinement.RecordEffectsReceiveInvariant \
+		BeaconcryptCore.Computational.RecordEffectsSendBridge \
+		BeaconcryptCore.Computational.RecordEffectsReceiveRank \
+		BeaconcryptCore.Computational.RecordEffectsReceiveProgram \
+		BeaconcryptCore.Computational.RecordEffectsReceiveBridge \
+		BeaconcryptCore.Refinement.RecordEffectsRequests \
+		BeaconcryptCore.Refinement.RegistrationRecords \
+		BeaconcryptCore.Refinement.RegistrationReachability \
+		BeaconcryptCore.Refinement.RegistrationAuthenticationFlow \
+		BeaconcryptCore.Refinement.RegistrationSigningTrace \
+		BeaconcryptCore.Refinement.RegistrationSigningHistory \
+		BeaconcryptCore.Refinement.RegistrationSigningDispatch \
+		BeaconcryptCore.Verification.PqxdhCommitmentRefinement \
+		BeaconcryptCore.Refinement.RatchetControlRestore \
+		BeaconcryptCore.Refinement.RatchetEffectRefinement \
+		BeaconcryptCore.Model.Pqxdh.Instance \
+		BeaconcryptCore.Model.Pqxdh.InstanceCommit \
+		BeaconcryptCore.Model.Pqxdh.Acceptance \
+		BeaconcryptCore.Model.Pqxdh.Runs \
+		BeaconcryptCore.Model.Pqxdh.TranscriptAuth \
+		BeaconcryptCore.Computational.MldsaTranscriptAuth \
+		BeaconcryptCore.Computational.CtxReduction \
+		BeaconcryptCore.Computational.CtxTransitionReduction \
+		BeaconcryptCore.Computational.VCVioFeasibility \
+		BeaconcryptCore.Verification.ProofObligations; do \
+		rg -Fqx "import $$module" '$(LEAN_ROOT)' || { \
+			echo "missing verification-root import: $$module" >&2; \
+			exit 1; \
+		}; \
+	done
+	@rg -Fqx 'globs = ["BeaconcryptCore", "BeaconcryptCore.*"]' \
+		$(LEAN_DIR)/lakefile.toml || { \
+		echo 'Lean library must build the root and every BeaconcryptCore submodule' >&2; \
+		exit 1; \
+	}
+
+# Reconstruct unconditional contracts from every current extracted operation.
+# The following Lake build checks each certificate against that exact signature.
+check-lean-panic-freedom:
+	python3 ../scripts/test_check_lean_panic_freedom.py
+	python3 ../scripts/check_lean_panic_freedom.py
+
+prepare-lean-dependencies:
+	bash $(LEAN_DIR)/apply-dependency-patches.sh
+
+check-lean: prepare-lean-dependencies check-lean-policy check-lean-root check-lean-panic-freedom
+	cd $(LEAN_DIR) && lake --rehash build
+
+# Regenerate and check the complete default beaconcrypt-core production surface.
+verify-lean:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-lean-in-shell
+
+verify-lean-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) check-generated-authentication-lean
+	$(MAKE) extract-lean
+	$(MAKE) check-lean
+
+check-generated-lean: verify-lean
+	git diff --exit-code -- $(LEAN_GENERATED_PATHS)
+	@untracked="$$(git ls-files --others --exclude-standard -- \
+		$(LEAN_GENERATED_PATHS))"; \
+	if [[ -n "$$untracked" ]]; then \
+		echo 'untracked generated Lean proof artifacts:' >&2; \
+		printf '%s\n' "$$untracked" >&2; \
+		exit 1; \
+	fi
+
+$(PROVERIF_GENERATED_TARGETS): check-generated-proverif-%: verify-proverif-%
+	git diff --exit-code -- proofs/pro-verif/extraction
+	@untracked="$$(git ls-files --others --exclude-standard -- \
+		proofs/pro-verif/extraction)"; \
+		if [[ -n "$$untracked" ]]; then \
+			echo 'untracked generated ProVerif proof artifacts:' >&2; \
+			printf '%s\n' "$$untracked" >&2; \
+			exit 1; \
+		fi
+
+# Run this after committing generated output to ensure extraction is stable.
+check-generated: verify
+	git diff --exit-code -- proofs/pro-verif/extraction \
+		$(LEAN_GENERATED_PATHS)
+	@untracked="$$(git ls-files --others --exclude-standard -- \
+		proofs/pro-verif/extraction \
+		$(LEAN_GENERATED_PATHS))"; \
+		if [[ -n "$$untracked" ]]; then \
+			echo 'untracked generated proof artifacts:' >&2; \
+			printf '%s\n' "$$untracked" >&2; \
+			exit 1; \
+		fi
+
+# Serial groups have independent CI jobs and never join the parallel legacy roster.
+verify-proverif-fs verify-proverif-extensions: verify-proverif-%:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-$*-in-shell
+
+verify-proverif-fs-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) extract-proverif
+	$(MAKE) check-proverif-fs
+	$(MAKE) check-proverif-generated-drift
+
+verify-proverif-extensions-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) extract-proverif
+	$(MAKE) check-proverif-primitive-fidelity
+	$(MAKE) check-proverif-active-strong-secrecy
+	$(MAKE) check-proverif-pending-registration
+	$(MAKE) check-proverif-aead-differential
+	$(MAKE) check-proverif-registration-provenance
+	$(MAKE) check-proverif-delayed-response
+	$(MAKE) check-proverif-exact-far
+	$(MAKE) check-proverif-record-origin
+	$(MAKE) check-proverif-tasking-origin
+	$(MAKE) check-proverif-application-secrecy
+	$(MAKE) check-proverif-exact-interface-strong
+	$(MAKE) check-proverif-generated-drift
+
+check-proverif-generated-drift:
+	git diff --exit-code -- proofs/pro-verif/extraction
+	@untracked="$$(git ls-files --others --exclude-standard -- \
+		proofs/pro-verif/extraction)"; \
+		if [[ -n "$$untracked" ]]; then \
+			echo 'untracked generated ProVerif proof artifacts:' >&2; \
+			printf '%s\n' "$$untracked" >&2; \
+			exit 1; \
+		fi

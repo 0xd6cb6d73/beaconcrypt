@@ -1,0 +1,44 @@
+[
+  {
+    "module": "PqxdhRegistrationJointIdentityRouting",
+    "command": [
+      "bash",
+      "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+      "PqxdhRegistrationJointIdentityRouting"
+    ],
+    "started_utc": "2026-10-06T01:23:27.938341+00:00",
+    "finished_utc": "2026-10-06T01:23:31.386536+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/identity-simulation29/PqxdhRegistrationJointIdentityRouting.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha256": "3ba29d58ad57b32e5a2b7459d334e84d4421707d81c579d192214f1bf9d77a45"
+  },
+  {
+    "module": "PqxdhRegistrationJointIdentityCompiler",
+    "command": [
+      "bash",
+      "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+      "PqxdhRegistrationJointIdentityCompiler"
+    ],
+    "started_utc": "2026-10-06T01:23:31.386656+00:00",
+    "finished_utc": "2026-10-06T01:23:34.310410+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/identity-simulation29/PqxdhRegistrationJointIdentityCompiler.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha256": "27171146644aa07ff20272818ed730960e36b54ec2fcef1ae1ed510afe4c41a0"
+  },
+  {
+    "module": "PqxdhRegistrationJointIdentityCosts",
+    "command": [
+      "bash",
+      "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+      "PqxdhRegistrationJointIdentityCosts"
+    ],
+    "started_utc": "2026-10-06T01:23:34.310520+00:00",
+    "finished_utc": "2026-10-06T01:23:42.911634+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/identity-simulation29/PqxdhRegistrationJointIdentityCosts.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha256": "b621a611a52c2edfc4283f93847117d45f35e78845974de03d17756ed0335821"
+  }
+]

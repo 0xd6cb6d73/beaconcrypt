@@ -1,0 +1,533 @@
+{
+ "date": "2026-10-21",
+ "scope": "VCVio deprecation migration, stage S6, fixes of the two independent reviews at ed682b31 (statement equivalence EQ-S6-1, EQ-S6-2; hygiene H1, H2; all nits, no owner item). No Lean file, inventory row or check script changed: the fixes correct the reasons of four entries of the stage's phase B exception list (and record the same correction of five entries of stage S5's list for the final residual report), name the third declaration that excludes the pin's simplification bridges, and record the stages that switch back four twin-consumer files outside the plan's per-stage file lists. Supplements vcvio-deprecations-s6.json (the record of ed682b31).",
+ "basis": "940668338fef87df9f5e569c23b806b42e6df86d",
+ "previous_head": "ed682b31b8807f21ab5153fa4f1fc3836812b1cc",
+ "topic": {
+  "branch": "codex/vcvio-migration-S6",
+  "clone": "/home/user/bc-vmig-S6"
+ },
+ "commits": {
+  "fixes": "the commit that adds this receipt"
+ },
+ "reviews": {
+  "equivalence": {
+   "verdict": "APPROVE_WITH_NITS",
+   "commit": "ed682b31b8807f21ab5153fa4f1fc3836812b1cc",
+   "findings_sha256": "5ae9b11981ab548aa5925e2999c1619768fd506b1aa1072b134f2c4616b3af55",
+   "fixed": [
+    "EQ-S6-1",
+    "EQ-S6-2 (owners recorded; later-stage rule recorded)"
+   ]
+  },
+  "hygiene": {
+   "verdict": "APPROVE_WITH_NITS",
+   "commit": "ed682b31b8807f21ab5153fa4f1fc3836812b1cc",
+   "findings_sha256": "99a45eddb011a9fb06dfd4a4aa2e57fea8dda2be9d64863191f7d7061c4892e1",
+   "fixed": [
+    "H1 (same as EQ-S6-2)",
+    "H2"
+   ]
+  },
+  "owner_level": []
+ },
+ "fixes": {
+  "EQ-S6-1": "S6/tools/phaseb_exceptions_s6.py (original kept as phaseb_exceptions_s6.py.ed68.txt): total variation (tvDist, SPMF.tvDist) is kept apart from the SPMF type and its instances; the reason 'proof through total variation tvDist' is given only where tvDist or a lemma about it (the tvDist lemmas, abs_probOutput_toReal_sub_le_tvDist, tvDist_simulateQ_run_le_probEvent_output_bad) occurs; SPMF rows of other declarations are attributed to the pin's adapter semantics of StatefulGoodEvent.event_good or to the statement of probEvent_output_bad_eq'; the tool fails on an SPMF row with neither source and on an SPMF statement without tvDist. Rerun on S6/stage/phaseb-report.json: 39 declarations, 259 rows, only the reason lists of the four declarations in phase_b_exceptions.changed_reason_lists differ.",
+  "EQ-S6-2 and H1": "four twin-consumer files have no deprecated use of their own and are in no stage's file list of plan/stage-files.tsv; their switch-back owners are recorded in twin_consumers_outside_stage_files (S6/NOTES.md, PROGRESS.md and the staged verification record); each later stage takes its switch-back set from the twin references in the whole tree, not only from its plan file list.",
+  "H2": "the S6 entry of the staged verification record and the S6 section of the analysis now name the three declarations whose simp calls exclude evalDist_apply_singleton, evalDist_apply_setOf and evalDist_apply_univ: RawCtxSelectedAliasCompiler.source_distance, RawCtxStoppedParentSecrecy.local_bound and RawCtxSelectiveTargets.event_partition (three simp calls). No proof changed."
+ },
+ "phase_b_exceptions": {
+  "file": "/tmp/bc-arc-scratch/vcvio-migration/S6/review-fix/data/phaseB-exceptions.json",
+  "sha256": "a8c3fc8124af6f1a891fe2c3edd72d4f9f036a32b42aa7428af31dad4bd32a9c",
+  "stage_list_sha256": "95cabd53a99ce4a6c466543eda8dfdde333784660d3e01059bc295a1b4c84f40",
+  "declarations": 39,
+  "rows": 259,
+  "same_declarations_and_rows_as_stage_list": true,
+  "changed_reason_lists": [
+   "BeaconcryptCore.Computational.RawCtxFlaggedQueryAgreement.event_good",
+   "BeaconcryptCore.Computational.RawCtxSelectedLiveEvents.event_good",
+   "BeaconcryptCore.Computational.RawCtxSelectedLiveTrace.exposure_probability",
+   "BeaconcryptCore.Computational.RawCtxSelectedParentLive.event_good"
+  ],
+  "tool_sha256_before": "dac0fefa30599d6b7ddb484ec2d552b8dc952980d01b9467873871fe424d3d06",
+  "tool_sha256_after": "ae4352761a54529b6e09ba86135d093f5c78217dfdcb5b3a32834a7558af38a9",
+  "doctored_controls": "4 doctored copies of the stage's phase B report (logs/phaseb-exceptions-controls.log): an SPMF-only proof without tvDist, adapter instance or identical-until-bad lemma (c1) and an SPMF statement row without tvDist (c2) fail; the forbidden simp bridge evalDist_apply_singleton (c3) still fails; an adapter-class declaration that also uses tvDist (c4) passes with the total-variation reason and no SPMF-source reason. The earlier tool accepted c1 and c2.",
+  "corrected_entries": [
+   {
+    "name": "BeaconcryptCore.Computational.RawCtxFlaggedQueryAgreement.event_good",
+    "rows": 4,
+    "reasons": [
+     "amendment A2 items 1 and 3 (option (b), S6 decision): applies StatefulGoodEvent.event_good, stated with the pin's SPMF adapter semantics for an arbitrary uniform specification (at the pin the only semantics there), through the bridge in both directions",
+     "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the pin's SPMF adapter semantics instEvalDistSemanticsOfMonadLiftTSPMF of StatefulGoodEvent.event_good; no tvDist constant occurs",
+     "deprecated heads and instances inside those conversions (probEvent)"
+    ]
+   },
+   {
+    "name": "BeaconcryptCore.Computational.RawCtxSelectedLiveEvents.event_good",
+    "rows": 4,
+    "reasons": [
+     "amendment A2 items 1 and 3 (option (b), S6 decision): applies StatefulGoodEvent.event_good, stated with the pin's SPMF adapter semantics for an arbitrary uniform specification (at the pin the only semantics there), through the bridge in both directions",
+     "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the pin's SPMF adapter semantics instEvalDistSemanticsOfMonadLiftTSPMF of StatefulGoodEvent.event_good; no tvDist constant occurs",
+     "deprecated heads and instances inside those conversions (probEvent)"
+    ]
+   },
+   {
+    "name": "BeaconcryptCore.Computational.RawCtxSelectedLiveTrace.exposure_probability",
+    "rows": 5,
+    "reasons": [
+     "VCVio's identical-until-bad bound probEvent_output_bad_eq', stated at the pin only in the deprecated form (reached through the bridge)",
+     "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the statement of VCVio's identical-until-bad lemma probEvent_output_bad_eq' over the deprecated SPMF-valued output distributions; no tvDist constant occurs",
+     "deprecated heads and instances inside those conversions (probEvent, probOutput)"
+    ]
+   },
+   {
+    "name": "BeaconcryptCore.Computational.RawCtxSelectedParentLive.event_good",
+    "rows": 4,
+    "reasons": [
+     "amendment A2 items 1 and 3 (option (b), S6 decision): applies StatefulGoodEvent.event_good, stated with the pin's SPMF adapter semantics for an arbitrary uniform specification (at the pin the only semantics there), through the bridge in both directions",
+     "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the pin's SPMF adapter semantics instEvalDistSemanticsOfMonadLiftTSPMF of StatefulGoodEvent.event_good; no tvDist constant occurs",
+     "deprecated heads and instances inside those conversions (probEvent)"
+    ]
+   }
+  ],
+  "corrected_list": {
+   "stage": "S6",
+   "what": "declarations of the 67 stage modules that still reference deprecated or facade-stated package constants outside the bridge and the twins after phase B (facade probe v2, stage/facade-s6.tsv); input to the final residual report (amendment A2 item 4, accepted by the owner on 2026-10-20)",
+   "rows": 259,
+   "declarations": [
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxAdjacentCacheNormalization.adjacent_bound",
+     "rows": 6,
+     "reasons": [
+      "proof through total variation tvDist (defined at the pin from the deprecated output distributions)",
+      "tvDist_comm, stated at the pin only in the deprecated form",
+      "Boolean advantage to total variation (abs_probOutput_toReal_sub_le_tvDist), stated at the pin only in the deprecated form (reached through the bridge)",
+      "deprecated heads and instances inside those conversions (probOutput)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxAdjacentCacheNormalization.normalization",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "ofReal_tvDist_bind_left_event_le, stated at the pin only in the deprecated form",
+      "deprecated heads and instances inside those conversions (evalSPMF, probEvent)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxAdjacentCacheNormalization.normalization_after",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_bind_right_le, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxFlaggedQueryAgreement.event_good",
+     "rows": 4,
+     "reasons": [
+      "amendment A2 items 1 and 3 (option (b), S6 decision): applies StatefulGoodEvent.event_good, stated with the pin's SPMF adapter semantics for an arbitrary uniform specification (at the pin the only semantics there), through the bridge in both directions",
+      "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the pin's SPMF adapter semantics instEvalDistSemanticsOfMonadLiftTSPMF of StatefulGoodEvent.event_good; no tvDist constant occurs",
+      "deprecated heads and instances inside those conversions (probEvent)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.distance",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_map_le, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedAliasCompiler.source_distance",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_map_le, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedAliasCoupling.marked_distance",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "VCVio's identical-until-bad bound tvDist_simulateQ_run_le_probEvent_output_bad, stated at the pin only in the deprecated form (reached through the bridge)",
+      "deprecated heads and instances inside those conversions (probEvent, probOutput)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedAliasCoupling.recorded_distance",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_map_le, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedAliasCut.cut_bound",
+     "rows": 6,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedAliasCut.cut_distance",
+     "rows": 6,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedAliasCut.pointwise",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_map_le, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedAliasInitial.marked_distance_initial",
+     "rows": 7,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_le_one, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedAliasInitial.recorded_distance_initial",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_map_le, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedAliasPrimitives.recorded_distance",
+     "rows": 3,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedConfidentialityObserver.stopped_distance",
+     "rows": 8,
+     "reasons": [
+      "proof through total variation tvDist (defined at the pin from the deprecated output distributions)",
+      "tvDist_map_le, stated at the pin only in the deprecated form",
+      "Boolean advantage to total variation (abs_probOutput_toReal_sub_le_tvDist), stated at the pin only in the deprecated form (reached through the bridge)",
+      "deprecated heads and instances inside those conversions (probOutput)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedFamilyNonceCoupling.executable_distance",
+     "rows": 6,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedFamilyNonceCoupling.marked_distance",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "VCVio's identical-until-bad bound tvDist_simulateQ_run_le_probEvent_output_bad, stated at the pin only in the deprecated form (reached through the bridge)",
+      "deprecated heads and instances inside those conversions (probEvent, probOutput)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedFamilyNonceCoupling.source_distance",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_map_le, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedFamilyNonceCoupling.unmarked_distance",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_map_le, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedInitialMask.distance",
+     "rows": 6,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedKeyProbes.canonical_prefix_bound",
+     "rows": 3,
+     "reasons": [
+      "proof through total variation tvDist (defined at the pin from the deprecated output distributions)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedLiveAliases.exposure_alias_distance",
+     "rows": 7,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_triangle, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedLiveAliases.exposure_distance_initial",
+     "rows": 7,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_le_one, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedLiveAliases.native_distance",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_map_le, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedLiveAliases.source_distance",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_map_le, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedLiveEvents.event_good",
+     "rows": 4,
+     "reasons": [
+      "amendment A2 items 1 and 3 (option (b), S6 decision): applies StatefulGoodEvent.event_good, stated with the pin's SPMF adapter semantics for an arbitrary uniform specification (at the pin the only semantics there), through the bridge in both directions",
+      "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the pin's SPMF adapter semantics instEvalDistSemanticsOfMonadLiftTSPMF of StatefulGoodEvent.event_good; no tvDist constant occurs",
+      "deprecated heads and instances inside those conversions (probEvent)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedLiveEvents.good_alias_bound",
+     "rows": 3,
+     "reasons": [
+      "proof through total variation tvDist (defined at the pin from the deprecated output distributions)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedLiveSource.source_exposure_distance",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "tvDist_map_le, stated at the pin only in the deprecated form"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedLiveTrace.exposure_distance",
+     "rows": 9,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)",
+      "VCVio's identical-until-bad bound tvDist_simulateQ_run_le_probEvent_output_bad, stated at the pin only in the deprecated form (reached through the bridge)",
+      "deprecated heads and instances inside those conversions (probEvent, probOutput)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedLiveTrace.exposure_probability",
+     "rows": 5,
+     "reasons": [
+      "VCVio's identical-until-bad bound probEvent_output_bad_eq', stated at the pin only in the deprecated form (reached through the bridge)",
+      "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the statement of VCVio's identical-until-bad lemma probEvent_output_bad_eq' over the deprecated SPMF-valued output distributions; no tvDist constant occurs",
+      "deprecated heads and instances inside those conversions (probEvent, probOutput)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedNativeFreshLift.mass_tv",
+     "rows": 6,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedNativeFreshLift.native_event_bound",
+     "rows": 3,
+     "reasons": [
+      "proof through total variation tvDist (defined at the pin from the deprecated output distributions)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedNonceSourceEvent.executable_distance",
+     "rows": 6,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedParentAliases.distance",
+     "rows": 3,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedParentLive.event_good",
+     "rows": 4,
+     "reasons": [
+      "amendment A2 items 1 and 3 (option (b), S6 decision): applies StatefulGoodEvent.event_good, stated with the pin's SPMF adapter semantics for an arbitrary uniform specification (at the pin the only semantics there), through the bridge in both directions",
+      "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the pin's SPMF adapter semantics instEvalDistSemanticsOfMonadLiftTSPMF of StatefulGoodEvent.event_good; no tvDist constant occurs",
+      "deprecated heads and instances inside those conversions (probEvent)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedParentPrivate.distance",
+     "rows": 3,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedParentPrivateEvents.local_bound",
+     "rows": 9,
+     "reasons": [
+      "proof through total variation tvDist (defined at the pin from the deprecated output distributions)",
+      "tvDist_comm, tvDist_map_le, stated at the pin only in the deprecated form",
+      "Boolean advantage to total variation (abs_probOutput_toReal_sub_le_tvDist), stated at the pin only in the deprecated form (reached through the bridge)",
+      "deprecated heads and instances inside those conversions (probOutput)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedParentReadMask.alias_distance",
+     "rows": 3,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)"
+     ]
+    },
+    {
+     "name": "BeaconcryptCore.Computational.RawCtxSelectedSourceSendInputs.executable_distance",
+     "rows": 6,
+     "reasons": [
+      "statement about total variation tvDist, defined at the pin from the deprecated output distributions with no forward counterpart (amendment A2 item 2, plan section 10)"
+     ]
+    }
+   ]
+  }
+ },
+ "s5_phase_b_exceptions_reasons_corrected": {
+  "what": "stage S5's list (S5/stage/phaseB-exceptions.json, recorded in vcvio-deprecations-s5.json) has the same wrong total-variation reason for five declarations that use probEvent_output_bad_eq' without any tvDist constant; their corrected reasons (the corrected S6 tool applied to S5/stage/phaseb-report.json: 49 declarations, 370 rows, only these five reason lists change) are for the final residual report. The S5 receipt is not edited.",
+  "s5_list_sha256": "6e6504a4597c1d2a91139acbdfb98829a7a16eacfcf25520e6dbe18b21937321",
+  "corrected_list_file": "/tmp/bc-arc-scratch/vcvio-migration/S6/review-fix/data/s5-phaseB-exceptions.reasons-corrected.json",
+  "corrected_list_sha256": "3b6a96d4392fcdaef9222ea8b53586064d892137891b124ec402bdc4fb303d28",
+  "corrected_entries": [
+   {
+    "name": "BeaconcryptCore.Computational.AdaptiveCtxAliasCoupling.flagged_bad_eq",
+    "rows": 5,
+    "reasons": [
+     "VCVio's identical-until-bad bound probEvent_output_bad_eq', stated at the pin only in the deprecated form (reached through the bridge)",
+     "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the statement of VCVio's identical-until-bad lemma probEvent_output_bad_eq' over the deprecated SPMF-valued output distributions; no tvDist constant occurs",
+     "deprecated heads and instances inside those conversions (probEvent, probOutput)"
+    ]
+   },
+   {
+    "name": "BeaconcryptCore.Computational.AdaptiveCtxPrefix.flaggedGame_bad_eq",
+    "rows": 5,
+    "reasons": [
+     "VCVio's identical-until-bad bound probEvent_output_bad_eq', stated at the pin only in the deprecated form (reached through the bridge)",
+     "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the statement of VCVio's identical-until-bad lemma probEvent_output_bad_eq' over the deprecated SPMF-valued output distributions; no tvDist constant occurs",
+     "deprecated heads and instances inside those conversions (probEvent, probOutput)"
+    ]
+   },
+   {
+    "name": "BeaconcryptCore.Computational.AdaptiveRawNonceAead.adaptiveGame_bad_eq",
+    "rows": 5,
+    "reasons": [
+     "VCVio's identical-until-bad bound probEvent_output_bad_eq', stated at the pin only in the deprecated form (reached through the bridge)",
+     "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the statement of VCVio's identical-until-bad lemma probEvent_output_bad_eq' over the deprecated SPMF-valued output distributions; no tvDist constant occurs",
+     "deprecated heads and instances inside those conversions (probEvent, probOutput)"
+    ]
+   },
+   {
+    "name": "BeaconcryptCore.Computational.CtxComputationalPrivacy.ctxPrivacyIndependent_badProbability_eq_secretPrefix",
+    "rows": 5,
+    "reasons": [
+     "VCVio's identical-until-bad bound probEvent_output_bad_eq', stated at the pin only in the deprecated form (reached through the bridge)",
+     "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the statement of VCVio's identical-until-bad lemma probEvent_output_bad_eq' over the deprecated SPMF-valued output distributions; no tvDist constant occurs",
+     "deprecated heads and instances inside those conversions (probEvent, probOutput)"
+    ]
+   },
+   {
+    "name": "BeaconcryptCore.Computational.CtxNonceAeadIndDollar.ctxIndependent_badProbability_eq_prefixBad",
+    "rows": 5,
+    "reasons": [
+     "VCVio's identical-until-bad bound probEvent_output_bad_eq', stated at the pin only in the deprecated form (reached through the bridge)",
+     "SPMF rows (SPMF, SPMF.instMonadLiftPMF) from the statement of VCVio's identical-until-bad lemma probEvent_output_bad_eq' over the deprecated SPMF-valued output distributions; no tvDist constant occurs",
+     "deprecated heads and instances inside those conversions (probEvent, probOutput)"
+    ]
+   }
+  ],
+  "other_lists_checked": "S0/review-fix/phaseB-exceptions.json (no reason text), S3/review-fix/data/phaseB-exceptions.json (13 declarations) and S4/review-fix/data/phaseB-exceptions.json (16 declarations): no declaration with a total-variation reason without a tvDist constant (logs/earlier-lists-tvreason-check.log)"
+ },
+ "twin_consumers_outside_stage_files": {
+  "scan": "whole tree at ed682b31: 39 twins, 140 references outside the twin definitions in 74 files, all in files of stages S7, S8 and S9 of plan/stage-files.tsv except the four below (logs/twin-consumer-owners.log)",
+  "files": [
+   {
+    "file": "BeaconcryptCore/Computational/PqxdhFirstSharedMessagePrefix.lean",
+    "references": {
+     "RawCtxPrefixKeyOrder.complete_vcvioLegacy": 1
+    },
+    "family": "PqxdhFirst*",
+    "switch_back": "S8"
+   },
+   {
+    "file": "BeaconcryptCore/Computational/PqxdhLaterSharedMessagePrefix.lean",
+    "references": {
+     "RawCtxPrefixKeyOrder.complete_vcvioLegacy": 1
+    },
+    "family": "PqxdhLater*",
+    "switch_back": "S9"
+   },
+   {
+    "file": "BeaconcryptCore/Computational/PqxdhLaterExecutableCompletion.lean",
+    "references": {
+     "RawCtxPrefixKeyOrder.source_game_vcvioLegacy": 1
+    },
+    "family": "PqxdhLater*",
+    "switch_back": "S9"
+   },
+   {
+    "file": "BeaconcryptCore/Computational/PqxdhKeyScheduleFromRoot.lean",
+    "references": {
+     "PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy": 2
+    },
+    "family": "PqxdhKeySchedule* (in no stage of plan section 7)",
+    "switch_back": "no later than the S9 final sweep"
+   }
+  ],
+  "rule": "each later stage takes its switch-back set from the twin references in the whole tree (as S6 did for the twins it removed), not only from its plan file list"
+ },
+ "docs": {
+  "doc/impl/staged-verification-record.md": "S6 entry: 'Corrected in part' note and the H2 sentence; new entry 'VCVio deprecation migration, stage S6, review fixes (2026-10-21)'",
+  "doc/formal-verification-analysis.md": "S6 section: H2 sentence; the status sentence replaced by the record link; Reviews paragraph",
+  "doc/impl/proof-receipts/vcvio-deprecations-s6.json": "reviews pointer only"
+ },
+ "validation": {
+  "lean_files_changed": 0,
+  "inventory_rows_changed": 0,
+  "check_scripts_changed": 0,
+  "not_rerun_because_no_lean_change": "make check-lean, the certificates, the gates, the post-build probes and the step 7 scans; the results of ed682b31 (vcvio-deprecations-s6.json, S6/validation.md) stand",
+  "check_inventory_edited_tree": {
+   "lease": "00001140",
+   "rc": 0,
+   "result": "Formal-verification inventory matches the reviewed boundary"
+  },
+  "inv_recount_rehash": "not needed: no inventory row changed (the analysis, the record and the receipts are not rows)"
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "tool_sha256": {
+  "phaseb_exceptions_s6.py": "ae4352761a54529b6e09ba86135d093f5c78217dfdcb5b3a32834a7558af38a9",
+  "phaseb_controls.py": "c0abb55f8ff32c267f90d36dce9ca6fa6214920556fa42fc181c63cad846ad78",
+  "edit_docs_rf1.py": "6fc09e25d3e00d07fac26bf71a0ec275f60d784aa24a4f0cb2819d895f43d73a"
+ },
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S6/review-fix/logs/"
+}

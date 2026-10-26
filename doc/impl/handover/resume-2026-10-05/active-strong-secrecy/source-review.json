@@ -1,0 +1,30 @@
+{
+  "reviewer": "/root/r1_scheduler_closure",
+  "timestamp": "2026-10-05T23:03:09.365292+00:00",
+  "decision": "APPROVE_SCOPED_SOURCE_AND_SELECTIVE_RECEIPTS",
+  "manifest": "/tmp/bc-arc-scratch/pv-work/p5-active/final-source-review-manifest.json",
+  "manifest_sha256": "1dc06c7d720e6e7ceabe17e3829fb36bb31b3d949d580ca3007f0afc33a7c48f",
+  "frozen_hashes_verified": 28,
+  "findings": [],
+  "reviewed": [
+    "Full derivative generator, runner, tests, guide, source role processes, selected sends and all four controls",
+    "Receive source-to-derivative diff preserves all original arguments and success/failure continuations; additions are caller-label input and matching observable result bits",
+    "S2B selective precise annotations and simplifyProcess=false only affect analysis; declaration allowlist exact occurrences recorded, no equation/axiom/process capability added",
+    "Original main gates retained; new six-target serial group added to both aggregate routes and bounded by1800s/10GiB",
+    "Fresh-secret controls require exact FALSE reachability plus one reconstructed trace, not equivalence-FALSE or inconclusive success",
+    "Five selective maintained receipts independently revalidated exact source hashes, log hashes and exact current checker verdicts: SS-s2b TRUE and four controls FALSE"
+  ],
+  "scope": [
+    "Kr1 allows one post-registration receive per peer, not reachable cached/replayed history",
+    "Receive results reveal input-correlated Some/None bits, never application plaintext; caller labels do not route to workers",
+    "B2S arbitrary pins with honest-pin challenge eligibility; S2B honest-pin process and private matching assigned-ID/root deferred challenge slot; unpartnered slot waits",
+    "Symbolic KEM injectivity/binding, role-asymmetric DH, fixed KDF/AEAD/CTX remain idealizations",
+    "Non-one finish folding preserves terminal symbolic observation only, not primitive history/timing/query counts",
+    "Pending/object routing, raw optional plaintext experiment, reveals/freshness and global source/computational abstraction remain open"
+  ],
+  "limitations": [
+    "No new ProVerif process or Lean/build run by reviewer",
+    "Final complete maintained six-target Make result still pending and required for published pass",
+    "Earlier fs semantic review inspected as supporting history, not substituted for this frozen-source review"
+  ]
+}

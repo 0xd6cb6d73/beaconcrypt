@@ -1,0 +1,34 @@
+{
+  "reviewer": "/root/r1_scheduler_closure",
+  "reviewed_at": "2026-10-06T03:49:45.695440+00:00",
+  "decision": "APPROVE_SCOPED_MAINTAINED_APPLICATION_SECRECY_WIRING_AND_RECEIPTS",
+  "manifest": "/tmp/bc-arc-scratch/pv-work/source-record-secrecy/maintained-review-manifest.json",
+  "manifest_sha256": "745d72a199dbc3c4cd1f2d60d84889990855db9ecf93892a8c789998904cf4dc",
+  "findings": [],
+  "read": [
+    "Complete application-secrecy guide and maintained scope appendices",
+    "Complete checker, target roster/formulas/library ordering/limits, model reconstruction and negative regressions",
+    "Make, transcript-fidelity, inventory and classification diffs",
+    "Four maintained source-bound receipts and raw exact verdict/trace logs"
+  ],
+  "verified": {
+    "frozen_source_hashes": 31,
+    "old_classification_rows_preserved_byte_exact": 3186,
+    "appended_rows": 4,
+    "total_rows": 3190,
+    "security_class_rows": 181,
+    "actual_solver_targets": 4,
+    "true": 2,
+    "false_with_confirmed_trace": 2,
+    "source_log_binding": "Every ordered process/library hash matches receipt and frozen input; all raw-log hashes match; four existing exact output checks independently pass without solver rerun.",
+    "old_gates": "Prior serial groups, strict per-target ceilings and exact fidelity roster retained; new group and regression checks appended in all three maintained dispatch recipes."
+  },
+  "scope": [
+    "Ordinary selected successful fresh-publication name secrecy at Kr3/two sends in the existing trusted application profile; public optional-result bits but private plaintext and no target-dependent public action.",
+    "Chosen sends and failure branches remain; fresh marker occurs only after successful publication; same-query controls explicitly reveal the fresh name and yield confirmed attacks.",
+    "Target-name assignment argument separate from origin reflection and computational generator-order reasoning; comparator pins process tokens but does not mechanize whole source trace proof.",
+    "Other public chain/root disclosures remain explicit; exact own/assigned ID distinction retained.",
+    "No public optional-plaintext secrecy, observational equivalence, low-entropy message claim, numeric guessing bound or completed global computational bridge."
+  ],
+  "validation_limits": "Read-only review; no solver, Lean or Rust build and no new regression execution. Focused Make FT/inventory was pending in frozen manifest; this receipt does not infer its completion."
+}

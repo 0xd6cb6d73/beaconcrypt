@@ -1,0 +1,69 @@
+{
+  "reviewer": "/root/fs_source_abstraction",
+  "date": "2026-10-06T05:17:57.329341+00:00",
+  "verdict": "APPROVE_SCOPED_INTEGRATION",
+  "findings": [],
+  "manifest_sha256": "e4d70c68e39f58b440e9e327df5fdf45ee25d02d668a6c039945d1d948653732",
+  "validation_receipt_sha256": "7ef57da222f5e49b01958e20ca2cdf5930150130fe8450d84bff00caaae4c173",
+  "inspection": {
+    "manifest_sha256": "e4d70c68e39f58b440e9e327df5fdf45ee25d02d668a6c039945d1d948653732",
+    "files": 69,
+    "modules": 30,
+    "guards": 122,
+    "published_source_matches": {
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptDecoding.lean": "7cb3efaa5c6bf58c5d0f420ee649ae55e648b283",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointFinalCandidate.lean": "7cb3efaa5c6bf58c5d0f420ee649ae55e648b283",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointFinalReportEvent.lean": "7cb3efaa5c6bf58c5d0f420ee649ae55e648b283",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointIdentityUniform.lean": "7cb3efaa5c6bf58c5d0f420ee649ae55e648b283",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointNativeOriginBound.lean": "7cb3efaa5c6bf58c5d0f420ee649ae55e648b283",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointNativeOriginEvent.lean": "7cb3efaa5c6bf58c5d0f420ee649ae55e648b283",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointNativeOriginUniform.lean": "7cb3efaa5c6bf58c5d0f420ee649ae55e648b283",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenInitializedUniform.lean": "7cb3efaa5c6bf58c5d0f420ee649ae55e648b283",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointTerminalReports.lean": "7cb3efaa5c6bf58c5d0f420ee649ae55e648b283",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCertified.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemChallenge.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCut.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCutBounds.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCutInterpreted.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCutSelection.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCutSupport.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEncapsulation.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemExposedCounts.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemExposedPrivate.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemExposedUniform.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemGame.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostBills.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPreBills.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemProgramBills.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemReductionBills.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemResume.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSavedBills.lean": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeMarkedAddress.lean": "f3d50369273a8d26b6bd9f68129685f9d7c01ad8",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeMarkedBuilder.lean": "f3d50369273a8d26b6bd9f68129685f9d7c01ad8",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeMarkedTrace.lean": "f3d50369273a8d26b6bd9f68129685f9d7c01ad8"
+    },
+    "retained_unchanged": {
+      "lean": 1437,
+      "pv": 344,
+      "rust": 22
+    },
+    "old_require_guards_preserved": 21857,
+    "all_inventory_hashes_match": true
+  },
+  "semantic_review": [
+    "Read integration and three component guides; source identity and prior independent semantic reviews retained. Reused my complete EncapsulationCut72 review and inspected actual native-origin event/reduction/uniform and marked trace/address/Builder statements.",
+    "Native chosen raw tuple origin is tied to actual addressed generated owner and chronological signing/reveal history; explicit generated-index sum, no field/stopping loss. The guide clearly retains actual native-accept/encapsulation join as open.",
+    "Both explicit coin routes are charged for arbitrary challenger replies; local KEM/base/init work is included. Reduction uniform32*(N-1)+C and endpoint32*N+C, signing3*qBundle, DHqAccept+qFinish and reportsN*(qAccept+1) are correctly scoped.",
+    "KEM fixed filtered cut has complete scan/resume, selected secret confined to interpreter, coefficient-one ordinary IND-CCA and explicit per-phase qFinish caps; inactive/reveal branches and global selection remain open. Restricted Extract-ROM backend is explicit, no real-HKDF conclusion.",
+    "Marked same-execution prefix/request/reply/suffix erases to complete source; actual first Builder supplies initial validity/absence. Alias exclusion and sampled-parent support remain explicit; arbitrary further freshness predicate is preserved, not asserted.",
+    "No source/model/Rust semantics changed; no end-to-end security inference from coexistence of the cohorts."
+  ],
+  "validation_review": [
+    "All69 frozen source hashes and30 published module identities checked;122 guards/imports and21857 prior require_ lines retained.",
+    "All existing1437 nonroot Lean,344 PV model/checker/TSV and22 production Rust paths independently byte-compared; all inventory digests match.",
+    "Portable source freeze equality,30 successful empty direct logs/artifact/source hashes, empty root log and focused Make/fmt0 checked. Full final matrix explicitly not claimed."
+  ],
+  "executed": [
+    "Read-only source/hash/metadata/artifact validation scripts only; no Lean/Rust/ProVerif/Nix builds."
+  ]
+}

@@ -1,0 +1,29 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Near-event comparison only: original far calls are evaluated by the public recipe projection, not executed in this worker. No full API equality claimed. *)
+(* Exact-ID near worker with actual optional opening replies. *)
+fun l2_receive(bitstring,bitstring,bitstring):bitstring [data].
+fun l2_send(bitstring,bool,bitstring,bool):bitstring [data].
+fun l2_reply(bitstring,bitstring):bitstring [data].
+fun l2_some(bitstring):bitstring [data].
+fun l2_none():bitstring [data].
+event L2Published(direction,bitstring,bitstring,key_id,bitstring,nat,bitstring).
+event L2CachedAccepted(bitstring,bitstring,key_id,bitstring,bitstring).
+def L2_RECV_STEP(Cur,Next) {
+let Cur(owner:bitstring,s:bitstring,b:bitstring,kid:key_id,root:bitstring,ad:bitstring,m1:bitstring,m2:bitstring,far:bitstring,r:nat,cached:bool)=
+ in(c,l2_receive(=owner,call:bitstring,frame:bitstring)) [precise];
+ let crypto_frame(cipher:bitstring,tag:bitstring,commitment:bitstring,fs_seq(t:nat),=kid)=frame in (
+ if t<=r then (
+  if t=1 && cached then (let plaintext=open_frame(m1,ad,fs_seq(1),kid,frame) in (
+ event L2CachedAccepted(s,b,kid,root,plaintext);
+ event FsReceived(beacon_to_server(),s,b,kid,root,1,plaintext); event FsReceivedFrame(beacon_to_server(),s,b,kid,root,1,frame); out(c,l2_reply(call,l2_some(plaintext))); Next(owner,s,b,kid,root,ad,m1,m2,far,r,false)
+ ) else (out(c,l2_reply(call,l2_none())); Next(owner,s,b,kid,root,ad,m1,m2,far,r,cached))) else (out(c,l2_reply(call,l2_none())); Next(owner,s,b,kid,root,ad,m1,m2,far,r,cached))
+ ) else if t=1 then (let plaintext=open_frame(m1,ad,fs_seq(1),kid,frame) in (
+ event FsReceived(beacon_to_server(),s,b,kid,root,1,plaintext); event FsReceivedFrame(beacon_to_server(),s,b,kid,root,1,frame); out(c,l2_reply(call,l2_some(plaintext))); Next(owner,s,b,kid,root,ad,m1,m2,far,1,cached)
+ ) else (out(c,l2_reply(call,l2_none())); Next(owner,s,b,kid,root,ad,m1,m2,far,r,cached)))
+ else if t=2 then (let plaintext=open_frame(m2,ad,fs_seq(2),kid,frame) in (
+ event FsReceived(beacon_to_server(),s,b,kid,root,2,plaintext); event FsReceivedFrame(beacon_to_server(),s,b,kid,root,2,frame); out(c,l2_reply(call,l2_some(plaintext))); if r=0 then Next(owner,s,b,kid,root,ad,m1,m2,far,2,true) else Next(owner,s,b,kid,root,ad,m1,m2,far,2,cached)
+ ) else (out(c,l2_reply(call,l2_none())); Next(owner,s,b,kid,root,ad,m1,m2,far,r,cached)))
+ else (out(c,l2_reply(call,l2_none())); Next(owner,s,b,kid,root,ad,m1,m2,far,r,cached))
+ ) else (out(c,l2_reply(call,l2_none())); Next(owner,s,b,kid,root,ad,m1,m2,far,r,cached)).
+}
+let L2RecvStop(owner:bitstring,s:bitstring,b:bitstring,kid:key_id,root:bitstring,ad:bitstring,m1:bitstring,m2:bitstring,far:bitstring,r:nat,cached:bool)=0.

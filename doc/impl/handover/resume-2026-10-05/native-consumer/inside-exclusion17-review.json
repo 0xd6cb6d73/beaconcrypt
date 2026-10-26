@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-10-05T23:23:14.528813+00:00",
+  "reviewer": "/root",
+  "decision": "APPROVE_SCOPED_OPERATIONAL_RESULT",
+  "manifest_sha256": "13f2e4a9630b9b3e8696003c0d7492cad5535467af150e8ed1e368b5a6384dc8",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsideCache.lean": "04f84189c9cf0577c3c874b610b5b2a7266162bee2e2cb188076de3c497fc1c9",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSampleActive.lean": "32f233412bb2e96d506034bbc7ace309463d55a5050400069e79aa2739bad261",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsidePublication.lean": "ec640c937536a7d6dd657509626aaed039cc620dcc1520929a090b47e758965a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsideExcluded.lean": "5da349b4d5529a87e8b9f4498b51e607c054345f133f9ea3b0b508c4d1045db9",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSampleExcluded.lean": "509538ef1052e1ad792f90f12269b0dbda74b50395d8505becf0d179e0c41aa6",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedExcluded.lean": "1639624e63137b959fd35b39fba5f79dc2a2ee6e8d12f09ea879c33c6e2cb72f",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSourceExcluded.lean": "765d385abd1fb7adc5b550784d1aa6bd371f003b8f4fbcc9b4cce43200bce51f",
+    "doc/impl/later-challenge-inside-exclusion.md": "f9424387f0839cbe2f57e6e82b236636ed1a9a82c9071f80d7be14d8fc0e4e5f",
+    "doc/impl/later-challenge-retained-executor.md": "c474f82eb636eb50fcbdfd71d85f6f91bf35f23f5bf8404f0d776732d3364026",
+    "doc/formal-verification-analysis.md": "d2c36b6b2cedd83366aa06d3f07070f7ef212e8d1f9c424acdbb1180bd23421f"
+  },
+  "checks": [
+    "Read seven modules, guide and analysis; verified10frozen hashes,17pairedstandard guards,7emptyexit0 direct logs and no forbidden declarations.",
+    "The lineage, missing cursor and initialized path refer to the same actual sampled cache and pre-request frontend. No reconstructed or marginal-state prefix is substituted.",
+    "Whole retained completion supplies its actual intermediate callback and stored target reply. All-reply support is used for marker/wrapper bookkeeping; the sequence equation uses actual native retained sealing.",
+    "Generated carrier preserves all original preparation/initial64/parent76/nonce12/next32 draws. Support projection discards no probability term because no probability inequality or normalization is asserted.",
+    "Final saved-source consumer discharges atParent by literal descriptor and validity by its actual certificate; complete comparison state, callbacks and residual query Fits remain explicit.",
+    "Counter<=depth plus actual next counter contradicts target depth+2. No new injectivity/honesty premise or alias exception is introduced; existing alias, nonce-refusal mass, before/builder coupling, freshness and global query/security hops remain open."
+  ],
+  "findings": [],
+  "new_builds": false
+}

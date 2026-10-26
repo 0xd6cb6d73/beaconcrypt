@@ -1,0 +1,13 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Deliberately weakened control: omit only the equality requirement between the authenticated prefix and the outer response keyId binding. *)
+fun phase2_assigned_id_binding_gate(
+  beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+  beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding
+): beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding
+reduc forall authenticated_binding: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+             outer_binding: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding;
+  phase2_assigned_id_binding_gate(
+    authenticated_binding,
+    outer_binding
+  ) = authenticated_binding.

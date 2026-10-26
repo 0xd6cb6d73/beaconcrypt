@@ -1,0 +1,15 @@
+{
+  "modules": [
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointLiveRead",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointRevealSchedule",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointRevealCosts",
+    "BeaconcryptCore.Computational.RawCtxForwardFirstCut",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeInsideFirst",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeSampleFirst",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedFirst",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedHead",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedSequence",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeInsideRetained"
+  ],
+  "forbidden_matches": {}
+}

@@ -1,0 +1,12 @@
+import BeaconcryptCore.Computational.PqxdhRegistrationR1Journal
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Journal.route_journal
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Journal.program_with
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Journal.program_journal
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Journal.create_reply
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Journal.create_initial
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Journal.programWith_run
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Journal.prefix_with
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Journal.initialWith_audit
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Journal.audited_with
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Journal.experimentWith_audit
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Journal.experiment_journal

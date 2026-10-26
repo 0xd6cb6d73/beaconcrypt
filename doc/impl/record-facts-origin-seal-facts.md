@@ -1,0 +1,15 @@
+# Exact erased sealing effects and dictionary retention
+
+`PqxdhRecordFactsOriginSealFacts` establishes four structural facts about the existing erased source interpreter. The erased interpreter omits only previously justified discarded hash-cache completion work; these statements add no further erasure and preserve its actual complete returned state and optional result. They do not prove the final record-origin probability claim.
+
+`erased_local_seal_step` connects the exact local erased callback to the existing input-and-record dictionary rule. When a hidden record is generated, the dictionary stores the literal selected input and returned record. A callback that returns no record retains its old dictionary. The proof follows the existing linked local interpreter and its complete projection, rather than replacing the callback with an abstract draw.
+
+`erased_keyed_seal_step` lifts this rule through the actual selected-coordinate interpreter. It retains all other coordinates, the chain table, the produced-frame log and the pending-frame log. The shared primitive/hash state still undergoes the callback's actual changes; the theorem makes no equality claim about fields that it does not list.
+
+`erased_sealing_trace` follows the source associated-data length gate, selected input construction, dictionary update, pending-frame append and literal writer call. Invalid length rejects without inserting a seal. A generated record is stored and buffered even if its writer returns `none`; a successful writer returns exactly its own ciphertext, the caller's target handle and the allocated sequence. This uses the existing `SealingTrace` definition and preserves its complete optional writer result. It does not confuse a pending frame with successful publication.
+
+`erased_service_mono` proves that every previously generated dictionary entry remains present after every actual erased service, including receives, failures, publication and ambient work. Sealing either retains the dictionary or prepends one entry at its own material coordinate; all other services retain every dictionary. The statement quantifies over every supported complete callback result and every coordinate, so it can be used along the same actual adaptive execution.
+
+The only security-mode restriction is that each selected key mode is one of the existing ideal replay/random modes, expressed as `modes label ≠ .real`. The setup, codec, replacement function and actual input are arbitrary. These are structural source facts, not an assumption that an adversarial key is honest. No primitive, codec, source event, secrecy or authentication conclusion is hidden in a new contract.
+
+No query is added, removed, or declared free by these proofs. Original source bills, erased comparison bills and reduction bills remain distinct and governed by their existing accounting theorems. Source sealing sequence alignment, before-receive cut provenance, exact successful-receive metadata and the final failed-writer event inclusion remain separate consuming joins. Snapshots and persistence are outside this work.

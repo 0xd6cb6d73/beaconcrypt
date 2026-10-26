@@ -1,0 +1,164 @@
+[
+  {
+    "module": "PqxdhRegistrationJointKemEncapsulation",
+    "sha256": "d06d9cdafd3c814fe620335735c1debf15f61484bd677977bc85bbbbae9fbc24",
+    "start": "2026-10-06T04:52:11.789304+00:00",
+    "end": "2026-10-06T04:52:17.196786+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemEncapsulation-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemCut",
+    "sha256": "01d9bd704d6e7b31116712e1a7d678bfb477d0384a08de2634c0c5aa51b79eb5",
+    "start": "2026-10-06T04:52:17.197186+00:00",
+    "end": "2026-10-06T04:52:24.357805+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemCut-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemChallenge",
+    "sha256": "34e0d31fb7d1bd3fbcbc03a05dd66ab9ec950b12546a5fe5abf8c36d5573c314",
+    "start": "2026-10-06T04:52:24.358058+00:00",
+    "end": "2026-10-06T04:52:27.791632+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemChallenge-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemResume",
+    "sha256": "18d44db7c7e2d3975fd57560b7eef9fc8bfcff6d16858958d835a4a05e8220c8",
+    "start": "2026-10-06T04:52:27.791962+00:00",
+    "end": "2026-10-06T04:52:42.532687+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemResume-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemGame",
+    "sha256": "5843d1315aee0302e55c154323c2798a06a7dae157178cf6bb3410bfdc20a955",
+    "start": "2026-10-06T04:52:42.533054+00:00",
+    "end": "2026-10-06T04:52:46.169174+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemGame-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemExposedCounts",
+    "sha256": "5e6e66a03ced181edc31c3fea4bbd6da055ad1056ed0957a3ebed1cc1c4f1cdf",
+    "start": "2026-10-06T04:52:46.169532+00:00",
+    "end": "2026-10-06T04:52:52.388413+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemExposedCounts-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemExposedPrivate",
+    "sha256": "51eac66ef58eef2c7ceabfc82b217af71827c83b8f9817de4c149d76ec5087de",
+    "start": "2026-10-06T04:52:52.388771+00:00",
+    "end": "2026-10-06T04:53:00.265263+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemExposedPrivate-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemExposedUniform",
+    "sha256": "e4ae1ba06e893f47159c1f92d3b2a7b2acd384b1701c7c3fe4ab761702e1be6b",
+    "start": "2026-10-06T04:53:00.265570+00:00",
+    "end": "2026-10-06T04:53:11.002351+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemExposedUniform-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemCutBounds",
+    "sha256": "4178b3a4bc703c0807ccd0eb4db666ae263fcf115941e9d3f1ad0f38c7e23ff2",
+    "start": "2026-10-06T04:53:11.002657+00:00",
+    "end": "2026-10-06T04:53:13.861786+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemCutBounds-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemCertified",
+    "sha256": "795974547b2d96e0d3c1d1025399515e791cbcf1ed482b4756fd8135016d201e",
+    "start": "2026-10-06T04:53:13.862167+00:00",
+    "end": "2026-10-06T04:53:16.601456+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemCertified-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemCutSupport",
+    "sha256": "3ab01b0b15d5b10beede72e7d8254ab746e8d5d122cc12e896e0b9dab4de9ec5",
+    "start": "2026-10-06T04:53:16.601764+00:00",
+    "end": "2026-10-06T04:53:19.264482+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemCutSupport-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemProgramBills",
+    "sha256": "a5742f66f253021a1f20672072231881a0be0334deeb4ea951647bef7f9a1ae3",
+    "start": "2026-10-06T04:53:19.264902+00:00",
+    "end": "2026-10-06T04:53:21.865439+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemProgramBills-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemCutInterpreted",
+    "sha256": "0c94dacc714d4541b85a545f4b27ef1b3ee3a54e669f2eb91459d3ae0541e843",
+    "start": "2026-10-06T04:53:21.865808+00:00",
+    "end": "2026-10-06T04:53:24.422150+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemCutInterpreted-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemSavedBills",
+    "sha256": "0a2c43d40c75de7a06b2cb417f9ea88fb225f3c537b505e5af3b977129134aab",
+    "start": "2026-10-06T04:53:24.422598+00:00",
+    "end": "2026-10-06T04:53:27.005784+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemSavedBills-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemPostBills",
+    "sha256": "8d97a27d6d40b35a8f21e92b6fa5f6e9201009733e2686841b81d35282d09a62",
+    "start": "2026-10-06T04:53:27.006122+00:00",
+    "end": "2026-10-06T04:53:29.675585+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemPostBills-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemPreBills",
+    "sha256": "83524c1c621e9a957d6a24c86ea9b5e6c8c37a012a65351d4ea34873f3784877",
+    "start": "2026-10-06T04:53:29.675912+00:00",
+    "end": "2026-10-06T04:53:32.477915+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemPreBills-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemReductionBills",
+    "sha256": "eff267af611f2d569b6bd0f8c4473a9ff4fe14853efd54074cb12aa4770cab0d",
+    "start": "2026-10-06T04:53:32.478260+00:00",
+    "end": "2026-10-06T04:53:38.859486+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemReductionBills-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemCutSelection",
+    "sha256": "e1a3ff061171fceeead77f48a47a78831ee0df848d02f245daa6341a7af1b42d",
+    "start": "2026-10-06T04:53:38.860035+00:00",
+    "end": "2026-10-06T04:53:41.490680+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemCutSelection-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

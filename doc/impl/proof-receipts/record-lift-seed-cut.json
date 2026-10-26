@@ -1,0 +1,307 @@
+{
+  "component": "PqxdhRecordLiftSeedCut",
+  "status": "17 statements semantically approved; final49 dependency and all4 gates passed; merged118 publication hygiene approved",
+  "date_utc": "2026-10-07T23:00:15.445462+00:00",
+  "topic_branch": "codex/record-lift-seed-cut",
+  "merge_parents": [
+    "603b159563dc02066bb168d97059b393726aa8b1",
+    "071285d203f6b559f7f1ff7fab2392235a8b5410"
+  ],
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedCut.lean": "413cfe3034481e216f881cd53377352547659eabffad34a31be51813003befcb",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "f3978a2d5970bddc1478d70b9dedc9118a221ae4b793f2ff2b701db2ada7e44a",
+    "beaconcrypt-core/proofs/check-inventory.sh": "9ff1c2aa1106f20f2e4986099628f57a9fb651bf47d182951f00848dca162b0a",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "2ceb70bd49801647568fd841b6df86396c4561d7a216305b2134c31788feed24",
+    "doc/formal-verification-analysis.md": "60f104627258065dcd63932f24083d5a725c281431012405f8141eb5c1a54255",
+    "doc/impl/record-lift-seed-cut.md": "c2e8a3c560d39c30049335695c10fd39f1111e883f4ccbcc30e005ea9d62cbc6"
+  },
+  "theorems": 17,
+  "exact_guards": 17,
+  "handwritten_lean_count": 1573,
+  "checks": {
+    "module": {
+      "start": "2026-10-07T22:57:36.265211+00:00",
+      "end": "2026-10-07T22:57:41.062063+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "seed-cut-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/olean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedCut.olean",
+        "/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedCut.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/logs/module.log",
+      "log_sha256": "9809f7d19f07096c3fa8ee8e9e36ddb318fac96ffe7639ea833cdddb1aca4c7c",
+      "leanpath_sha256": "e9357bd79704d6aaa64d371cec7665be5cdf441a6d84a43b554a5e3d8dd032bb",
+      "source_sha256": "413cfe3034481e216f881cd53377352547659eabffad34a31be51813003befcb",
+      "artifact_sha256": "d913565c6f8e55bb5338bd92ba3a3ffcf768d79142f49612707fdfcdf46eff7a",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "root": {
+      "start": "2026-10-07T22:58:13.350555+00:00",
+      "end": "2026-10-07T22:58:20.870897+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "seed-cut-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/olean/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/logs/root.log",
+      "log_sha256": "a74118abb1f6a3c90accc6b4c09328f634f890726f571715295b0dc94cde7bf6",
+      "leanpath_sha256": "e9357bd79704d6aaa64d371cec7665be5cdf441a6d84a43b554a5e3d8dd032bb",
+      "source_sha256": "f3978a2d5970bddc1478d70b9dedc9118a221ae4b793f2ff2b701db2ada7e44a",
+      "artifact_sha256": "adf9967c69e6111c214ad38b17920d35a99fc0ea77f1ef669700b84b67b45a43",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "inventory": {
+      "start": "2026-10-07T22:58:13.350661+00:00",
+      "end": "2026-10-07T22:59:29.712113+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "seed-cut-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/logs/inventory.log",
+      "log_sha256": "8e7ea535a3eb8e6adad3c7927c6b536dd6c5868a18db90c419022e4f09823cbe",
+      "leanpath_sha256": "e9357bd79704d6aaa64d371cec7665be5cdf441a6d84a43b554a5e3d8dd032bb",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/target"
+    },
+    "fidelity": {
+      "start": "2026-10-07T22:58:13.350662+00:00",
+      "end": "2026-10-07T22:58:38.200930+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "seed-cut-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/logs/fidelity.log",
+      "log_sha256": "46dce4bbeb4bc4b7d20e116017463251ba8bf63e97b8eb6a84c7fdb548854e02",
+      "leanpath_sha256": "e9357bd79704d6aaa64d371cec7665be5cdf441a6d84a43b554a5e3d8dd032bb",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/target"
+    }
+  },
+  "semantic_review": {
+    "path": "/tmp/bc-arc-scratch/record-lift/reviews/seed-cut-semantic-2026-10-08.json",
+    "sha256": "c2379321ea5b9a79093201ae329b945575a6e4e444d3550e7d631a93d6d229c1",
+    "receipt": {
+      "reviewer": "Codex independent agent /root/record_interface_audit",
+      "author": "Codex parent /root",
+      "date_utc": "2026-10-07T22:31:32.229575+00:00",
+      "decision": "approve",
+      "scope": "Seventeen-statement selected directional seed-miss component with full-state continuation factoring and ordinary Unit-context uniform32 Extract/two-query HMAC reduction; not a global compiler or protocol security endpoint.",
+      "files": [
+        {
+          "path": "/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedCut.lean",
+          "sha256": "413cfe3034481e216f881cd53377352547659eabffad34a31be51813003befcb"
+        },
+        {
+          "path": "/tmp/beaconcrypt-record-lift-seed-cut/doc/impl/record-lift-seed-cut.md",
+          "sha256": "f41863573c90c9e0d14a7eef07e206f9c412986def150d110d9c46cd0f97244e"
+        }
+      ],
+      "findings": [],
+      "semantic_checks": [
+        "AtMiss requires an actual absent seed slot and the complete preceding sampler executes before the fresh pair draw. The old state may contain arbitrary prior keys or aliases; no independence of existing sessions is assumed.",
+        "The split equivalence preserves both complete32 halves. False selects seed.1, true seed.2, and kernel_inputs ties these to both concrete physical send/receive source fields.",
+        "realize_mask restores the exact World.resolve kernel, full seed cache, lookup/draw counts, uniform+64 and all other World fields. miss_continuation quantifies over the complete reply/poststate continuation.",
+        "observed_delayed hides the newly chosen32 from the entire masked observer and delays that actual sample. seedAt fallback is removed by the actual cacheQuery_self proof at the miss. No whole-source target-freeness assumption occurs.",
+        "candidate_bound is an unconditioned supported-list bound, including repetitions, with explicit qCandidates/2^256 and no hidden success, slot, or role loss.",
+        "first_source samples all prior context and opposite32 inside unitObserver; the primitive input sampler is the existing ordinary Unit-context uniform32 endpoint. The full continuation draw-order equality is explicit.",
+        "first_bound has only SourceFullCorrect as its functional premise and displays one Extract and one HMAC advantage, each coefficient one. No H7 forbidden source use or new related-key/public-context assumption occurs.",
+        "The component firstReal explicitly computes the actual source function after resolve. Its join to a reached native callback and native counter update is left to the global compiler, as documented.",
+        "Uniform query bounds include complete seed64, retained32, qSample/qObserve, unused input32, real HMAC key64, and both complete random64 replies. HMAC challenge cap is two."
+      ],
+      "hygiene": {
+        "theorem_count": 17,
+        "exact_guard_count": 17,
+        "guard_names_match_theorems": true,
+        "allowed_axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "forbidden_H7_source_uses": [],
+        "placeholders_or_custom_axioms": [],
+        "reviewer_builds": false,
+        "reviewer_source_edits": false
+      },
+      "validation": {
+        "author_check_receipt": "/tmp/bc-arc-scratch/record-lift/seed-cut/logs/14-guards.json",
+        "receipt_sha256": "1036e45d710fd5b95a4c3c127f498f4f9b78cf1b834af4695c31bf9998bdd655",
+        "exit": 0,
+        "source_hash_matches": true,
+        "artifact_hash_matches": true,
+        "log_hash_matches": true,
+        "leanpath_hash_matches": true,
+        "diagnostics": "Only disclosed VCVio probability compatibility deprecation warnings and coordination queue notices.",
+        "WorldBudget_snapshot_source_sha256": "926c5b19c9455fdda05cc4bb48e4038b8dd3dfa3d733628a2a06dfa768fb9b82",
+        "WorldBudget_snapshot_olean_sha256": "3efe800f83aea329e91375751cef0590c533946cbe9dc36b202443053e5baa9b"
+      },
+      "remaining_boundaries": [
+        "Publication must substitute reviewed final WorldBudget and repeat direct module/root checks, as the guide requires.",
+        "Actual dynamic masked compiler must erase all chosen-secret copies, reach native callbacks, retain both role uses, and transport budgets/alias/refusal events.",
+        "Publication metadata hygiene and final-tree checks are separate from this semantic approval."
+      ]
+    }
+  },
+  "final_hygiene": {
+    "path": "/tmp/bc-arc-scratch/record-lift/reviews/seed-cut-publication-hygiene-2026-10-08.json",
+    "sha256": "1558d3d6080e42bb88dafa520f7e0e23fb81aec01eb05d63f86ceaecefbde822",
+    "receipt": {
+      "reviewer": "/root/record_interface_audit",
+      "date_utc": "2026-10-07T23:02:48.980703+00:00",
+      "decision": "approve",
+      "scope": "Independent final merged-tree metadata/hygiene review of 118 previously independently reviewed statements; no new global security or compiler claim.",
+      "head": "603b159563dc02066bb168d97059b393726aa8b1",
+      "merge_head": "071285d203f6b559f7f1ff7fab2392235a8b5410",
+      "findings": [],
+      "counts": {
+        "PqxdhRecordLiftRealTable": 16,
+        "PqxdhRecordLiftChainCompiler": 18,
+        "PqxdhRecordLiftChainCoordinates": 18,
+        "PqxdhRecordLiftWorldBudget": 49,
+        "PqxdhRecordLiftSeedCut": 17
+      },
+      "files_sha256": {
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedCut.lean": "413cfe3034481e216f881cd53377352547659eabffad34a31be51813003befcb",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "f3978a2d5970bddc1478d70b9dedc9118a221ae4b793f2ff2b701db2ada7e44a",
+        "beaconcrypt-core/proofs/check-inventory.sh": "9ff1c2aa1106f20f2e4986099628f57a9fb651bf47d182951f00848dca162b0a",
+        "beaconcrypt-core/proofs/reviewed-inventory.txt": "2ceb70bd49801647568fd841b6df86396c4561d7a216305b2134c31788feed24",
+        "doc/formal-verification-analysis.md": "60f104627258065dcd63932f24083d5a725c281431012405f8141eb5c1a54255",
+        "doc/impl/record-lift-seed-cut.md": "c2e8a3c560d39c30049335695c10fd39f1111e883f4ccbcc30e005ea9d62cbc6",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftRealTable.lean": "ee3f941c4bb273ca0e01e63e5ccfb53c582660d023babad5834807c30aa87e48",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCompiler.lean": "7e971f04498f783172f9003a82cd022f79ae2cd1f4ffe281ead93e4a1808ecc0",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCoordinates.lean": "f278688a06572d8b1d2076503a13df6e165128d6af77427a297fdeb4414811c0",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftWorldBudget.lean": "b4bbf0f647aebc1a41e4f1056137703028f10d82ec1d80417abf9e11be49e2c4"
+      },
+      "topic_receipt_sha256": "5a7a78b996feecf1c024f2e9fa3fd411bf836ec8e92653dec7b8a26c08e4b42e",
+      "checks": {
+        "module": {
+          "path": "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/logs/module.json",
+          "sha256": "704a02dfa8c88e9c50626d59e6c0280cfceabd64d2b1dd3169fd6ec0c096aa0a",
+          "exit": 0,
+          "log_sha256": "9809f7d19f07096c3fa8ee8e9e36ddb318fac96ffe7639ea833cdddb1aca4c7c"
+        },
+        "root": {
+          "path": "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/logs/root.json",
+          "sha256": "320e166f083f5298f340a4b907ada9bd160761a6551d7d4556bf68a5b3250ddf",
+          "exit": 0,
+          "log_sha256": "a74118abb1f6a3c90accc6b4c09328f634f890726f571715295b0dc94cde7bf6"
+        },
+        "inventory": {
+          "path": "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/logs/inventory.json",
+          "sha256": "156978a4acdf65040d54feef8c3590adc77f75c0b59e631f6137c03147a18840",
+          "exit": 0,
+          "log_sha256": "8e7ea535a3eb8e6adad3c7927c6b536dd6c5868a18db90c419022e4f09823cbe"
+        },
+        "fidelity": {
+          "path": "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/logs/fidelity.json",
+          "sha256": "b9b3f625f0c04c73600157f133a8ecb1adc3c5565a73eab2694986be03c8029a",
+          "exit": 0,
+          "log_sha256": "46dce4bbeb4bc4b7d20e116017463251ba8bf63e97b8eb6a84c7fdb548854e02"
+        }
+      },
+      "review_notes": [
+        "All 118 theorem and exact guard names match, with one root import and existing gates retained from both merge parents.",
+        "All companion proof sources match reviewed topic digests; unchanged SeedCut17 compiles against the final published WorldBudget49 artifact, replacing the development snapshot.",
+        "Every inventory file digest matches the actual resolved tree; handwritten Lean count is1573. Both parents\u2019 prior inventory rows, root imports and gate statements are preserved.",
+        "Only additive owned metadata sections, two incoming reviewed modules and their own guides/receipts differ at this merge; no production or Claude source edits.",
+        "Guide validation-only update and shared analysis retain local source/mask scope and explicit outstanding global masked compiler, reached-callback, alias/refusal, CTX and later-phase joins. SourceFullCorrect remains the preexisting functional contract only.",
+        "Module/root/inventory/fidelity receipts, logs, LEAN_PATH and artifacts verified. Fidelity confirms20 Python and30 Rust tests. No reviewer builds performed.",
+        "Parent may incorporate this review/status metadata and finish the merge checkpoint. Subsequent central ae4 reconciliation requires its announced final tree gates and separate merge hygiene review."
+      ],
+      "reviewer_builds": false,
+      "reviewer_source_writes": false
+    }
+  },
+  "scope": [
+    "Actual seed-miss full-state and complete-continuation equations for either directional32 half.",
+    "Uniform32 first full76 source reduction with coefficient-one Extract and two-query HMAC advantages under SourceFullCorrect.",
+    "Explicit complete sampler and challenge bills, including opposite32, unusedinput32 and both full64 HMAC replies."
+  ],
+  "remaining": [
+    "Whole adaptive source masked-observer construction and reached-native callback join.",
+    "Ordered chain/alias/refusal and adaptive CTX lifts, full global event endpoints and later-phase composition."
+  ],
+  "dependency": {
+    "WorldBudget_source": "b4bbf0f647aebc1a41e4f1056137703028f10d82ec1d80417abf9e11be49e2c4",
+    "WorldBudget_artifact": "afb8eacdf2e85ae403c358ca3b955b5ad0287900ad94117d8ae3431cc0ac4c39",
+    "leanpath": "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/leanpath",
+    "leanpath_sha256": "e9357bd79704d6aaa64d371cec7665be5cdf441a6d84a43b554a5e3d8dd032bb",
+    "published_base": "d68e1ce442ac89fc65594d9fca074399beae9f94",
+    "incoming_pinned_packages": [
+      "chain-coordinates/publication.leanpath",
+      "world-budget/publication/leanpath"
+    ],
+    "old_development_snapshot_replaced": true
+  },
+  "unchanged_reviewed_companions": {
+    "PqxdhRecordLiftRealTable": "ee3f941c4bb273ca0e01e63e5ccfb53c582660d023babad5834807c30aa87e48",
+    "PqxdhRecordLiftChainCompiler": "7e971f04498f783172f9003a82cd022f79ae2cd1f4ffe281ead93e4a1808ecc0",
+    "PqxdhRecordLiftChainCoordinates": "f278688a06572d8b1d2076503a13df6e165128d6af77427a297fdeb4414811c0",
+    "PqxdhRecordLiftWorldBudget": "b4bbf0f647aebc1a41e4f1056137703028f10d82ec1d80417abf9e11be49e2c4"
+  },
+  "full_matrix": "Not run: outside this lane; no Rust or primitive changes, no mutation/PV/fullbuild/makeverify/NixGC."
+}

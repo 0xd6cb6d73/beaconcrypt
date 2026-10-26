@@ -1,0 +1,61 @@
+{
+  "reviewer": "evolving_source_join",
+  "timestamp": "2026-10-06T02:34:33.503073+00:00",
+  "verdict": "APPROVE_SCOPED_GHOST_REACHABILITY_PREFIX",
+  "files": {
+    "production-transcript-interface.pvl": {
+      "derivative": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "original": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f"
+    },
+    "crypto.pvl": {
+      "derivative": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "original": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36"
+    },
+    "extraction/lib.pvl": {
+      "derivative": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "original": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5"
+    },
+    "fs-common.pvl": {
+      "derivative": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "original": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81"
+    },
+    "fs-registration-binding.pvl": {
+      "derivative": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "original": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd"
+    },
+    "registration-set-admission.pvl": {
+      "derivative": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "original": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1"
+    },
+    "fs-pending-response.pvl": {
+      "derivative": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "original": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650"
+    },
+    "l2-receive.pvl": {
+      "derivative": "83411b75bd1011c6f14d0e864c57dfbdb7926c22fbd50db7fa4887e5eda8f2ec",
+      "original": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac"
+    },
+    "l2-sends.pvl": {
+      "derivative": "03683b93f5081d4911b340cf601c28717efeed31daa038fcd4ac196fc8beaa29",
+      "original": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1"
+    },
+    "l2-registration.pvl": {
+      "derivative": "55b3de0b13c4bed69a58a85e201a1b39a26795b48f0ba38a01f3bf26193c3a68",
+      "original": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d"
+    }
+  },
+  "receipt_sha256": "a04a1f7fbd4f20a7d1b441b06b342e1f2f70117cab2193e289d487a69cc5fc8b",
+  "log_sha256": "e32f1d0991600798a2c413a0b97108f76394fc19082e4bc2a8a2038b0dc8a37f",
+  "query_sha256": "00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b",
+  "kr2_sha256": "6abbcdc3a639ce6235f49e8c876a92583a6627f988b432a8310c3f75f05d67b6",
+  "kr3_sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+  "findings": [],
+  "checks": [
+    "All twelve prover input hashes and complete log hash match actual exit-zero FALSE+confirmed trace receipt.",
+    "Eight ordinary precise annotations occur on host inputs; removing those and exactly one declaration plus one event recovers all original process/helper bytes.",
+    "Ghost event is only in the successful cached-one branch and carries the actual returned plaintext, root, IDs; existing outputs, state transition and events remain.",
+    "Read trace: same selected Beacon and honest Server publication/acceptance at sequence two followed by cached-one acceptance at same root and assigned ID.",
+    "Kr2 receiver expansion is the first two literal steps of Kr3; terminal becomes a third unused blocking input, without additional output before witness."
+  ],
+  "scope": "Nonvacuity of selected near cached acceptance only. Original Kr3 security process and queries remain unchanged; this witness is not authentication, replay proof, full far API equality or computational security."
+}

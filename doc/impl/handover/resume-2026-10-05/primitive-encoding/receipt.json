@@ -1,0 +1,273 @@
+{
+  "commit": "db1d524aeb5f257e2172f01d59a7a9cd1cb5a5aa",
+  "status": "",
+  "start": "2026-10-05T22:15:10+02:00",
+  "end": "2026-10-05T22:19:11+02:00",
+  "make_exit": 0,
+  "caps": {
+    "per_target_seconds": 1800,
+    "address_space_kib": 10485760
+  },
+  "targets": [
+    {
+      "name": "encoding-A1",
+      "class": "security",
+      "bound": 2,
+      "results": [
+        "inj-event(FsBeaconEstablished(s,b,init_1,kid,root_1,ad,p)) ==> inj-event(FsServerCommitted(obj_1,s,b,init_1,kid,root_1,ad,p)) is true."
+      ],
+      "traces": 0,
+      "libraries": [
+        "production-transcript-interface.pvl",
+        "crypto-fs-encoding.pvl",
+        "extraction/lib.pvl",
+        "fs-common.pvl",
+        "fs-encoding-interface.pvl",
+        "fs-registration-consumed.pvl",
+        "fs-registration-binding.pvl",
+        "fs-encoding-registration.pvl",
+        "fs-registration-k2.pvl"
+      ],
+      "query": "fs-registration-a1.pv"
+    },
+    {
+      "name": "encoding-A2",
+      "class": "security",
+      "bound": 2,
+      "results": [
+        "event(FsServerAccepted(obj_1,s,ed_public(k),init_1,rid,root_1)) ==> event(FsBeaconStarted(s2,ed_public(k),init_1,rid)) || attacker(k) is true."
+      ],
+      "traces": 0,
+      "libraries": [
+        "production-transcript-interface.pvl",
+        "crypto-fs-encoding.pvl",
+        "extraction/lib.pvl",
+        "fs-common.pvl",
+        "fs-encoding-interface.pvl",
+        "fs-registration-consumed.pvl",
+        "fs-registration-binding.pvl",
+        "fs-encoding-registration.pvl",
+        "fs-registration-k2.pvl"
+      ],
+      "query": "fs-registration-a2.pv"
+    },
+    {
+      "name": "encoding-R1",
+      "class": "security",
+      "bound": 2,
+      "results": [
+        "event(FsServerAccepted(obj_1,s,b,i1,rid,r1))@i && event(FsServerAccepted(obj_1,s,b,i2,rid,r2))@j ==> i = j is true."
+      ],
+      "traces": 0,
+      "libraries": [
+        "production-transcript-interface.pvl",
+        "crypto-fs-encoding.pvl",
+        "extraction/lib.pvl",
+        "fs-common.pvl",
+        "fs-encoding-interface.pvl",
+        "fs-registration-consumed.pvl",
+        "fs-registration-binding.pvl",
+        "fs-encoding-registration.pvl",
+        "fs-registration-k2.pvl"
+      ],
+      "query": "fs-registration-r1.pv"
+    },
+    {
+      "name": "encoding-R1'",
+      "class": "security",
+      "bound": 2,
+      "results": [
+        "event(FsServerAccepted(obj_1,s,ed_public(k),i1,rid1,r1))@i && event(FsServerAccepted(obj_1,s,ed_public(k),i2,rid2,r2))@j ==> i = j || attacker(k) is true."
+      ],
+      "traces": 0,
+      "libraries": [
+        "production-transcript-interface.pvl",
+        "crypto-fs-encoding.pvl",
+        "extraction/lib.pvl",
+        "fs-common.pvl",
+        "fs-encoding-interface.pvl",
+        "fs-registration-consumed.pvl",
+        "fs-registration-binding.pvl",
+        "fs-encoding-registration.pvl",
+        "fs-registration-k2.pvl"
+      ],
+      "query": "fs-registration-r1prime.pv"
+    },
+    {
+      "name": "encoding-R3",
+      "class": "witness",
+      "bound": 2,
+      "results": [
+        "not (event(FsServerReplayRejected(obj_1,s,ed_public(k),rid)) && event(FsBeaconStarted(s,ed_public(k),init_1,rid))) is false."
+      ],
+      "traces": 1,
+      "libraries": [
+        "production-transcript-interface.pvl",
+        "crypto-fs-encoding.pvl",
+        "extraction/lib.pvl",
+        "fs-common.pvl",
+        "fs-encoding-interface.pvl",
+        "fs-registration-consumed.pvl",
+        "fs-registration-binding.pvl",
+        "fs-encoding-registration.pvl",
+        "fs-registration-k2.pvl"
+      ],
+      "query": "fs-registration-r3.pv"
+    },
+    {
+      "name": "encoding-R5",
+      "class": "witness",
+      "bound": 2,
+      "results": [
+        "event(FsServerAcceptFailed(obj_1,s,b,rid))@i && event(FsServerAccepted(obj_1,s,b,init_1,rid,root_1))@j ==> i > j is false."
+      ],
+      "traces": 1,
+      "libraries": [
+        "production-transcript-interface.pvl",
+        "crypto-fs-encoding.pvl",
+        "extraction/lib.pvl",
+        "fs-common.pvl",
+        "fs-encoding-interface.pvl",
+        "fs-registration-consumed.pvl",
+        "fs-registration-binding.pvl",
+        "fs-encoding-registration.pvl",
+        "fs-registration-k2.pvl"
+      ],
+      "query": "fs-registration-r5.pv"
+    },
+    {
+      "name": "encoding-W1",
+      "class": "witness",
+      "bound": 2,
+      "results": [
+        "not event(FsBeaconEstablished(s,b,init_1,fs_kid(1),root_1,ad,p)) is false."
+      ],
+      "traces": 1,
+      "libraries": [
+        "production-transcript-interface.pvl",
+        "crypto-fs-encoding.pvl",
+        "extraction/lib.pvl",
+        "fs-common.pvl",
+        "fs-encoding-interface.pvl",
+        "fs-registration-consumed.pvl",
+        "fs-registration-binding.pvl",
+        "fs-encoding-registration.pvl",
+        "fs-registration-k2.pvl"
+      ],
+      "query": "fs-registration-w1.pv"
+    },
+    {
+      "name": "encoding-C-NOCHECK",
+      "class": "control",
+      "bound": 2,
+      "results": [
+        "event(FsServerAccepted(obj_1,s,b,i1,rid,r1))@i && event(FsServerAccepted(obj_1,s,b,i2,rid,r2))@j ==> i = j is false."
+      ],
+      "traces": 1,
+      "libraries": [
+        "production-transcript-interface.pvl",
+        "crypto-fs-encoding.pvl",
+        "extraction/lib.pvl",
+        "fs-common.pvl",
+        "fs-encoding-interface.pvl",
+        "fs-control-nocheck.pvl",
+        "fs-registration-binding.pvl",
+        "fs-encoding-registration.pvl",
+        "fs-registration-k2.pvl"
+      ],
+      "query": "fs-registration-r1.pv"
+    },
+    {
+      "name": "encoding-ZERO-RETRY",
+      "class": "witness",
+      "bound": 2,
+      "results": [
+        "event(FsServerZeroRejected(obj_1,s,b,rid))@i && event(FsServerAccepted(obj_1,s,b,init_1,rid,root_1))@j ==> i > j is false."
+      ],
+      "traces": 1,
+      "libraries": [
+        "production-transcript-interface.pvl",
+        "crypto-fs-encoding.pvl",
+        "extraction/lib.pvl",
+        "fs-common.pvl",
+        "fs-encoding-interface.pvl",
+        "fs-registration-consumed.pvl",
+        "fs-registration-binding.pvl",
+        "fs-encoding-registration.pvl",
+        "fs-registration-k2.pvl"
+      ],
+      "query": "fs-encoding-zero-retry.pv"
+    }
+  ],
+  "input_sha256": {
+    "crypto-fs-encoding.pvl": "3c54136d292cd8b7d1eba1f90f16c6626ae803498c485a5ac656cf8d2d61fc53",
+    "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+    "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+    "fs-control-nocheck.pvl": "8a3b17cbab675e1d69047063ead9f30ae08e7f68fcc4d237cead81358ec4bfa7",
+    "fs-encoding-interface.pvl": "f9725f22b8d36c2bd7ea73f5cd063f15a6ae62c35be7b9772d9b4ce3e425799a",
+    "fs-encoding-registration.pvl": "f998c3182fa75eac5dd31638992450f475ac8e02ff0594e6dd90aa8921edb718",
+    "fs-encoding-zero-retry.pv": "5bacb56b4f1d06276bc417584dff628b78b6a592cfa6642751dc102f1466cc91",
+    "fs-registration-a1.pv": "48edc4042a3611a569ffc9fc19a7231551d8a34cfdcf8e3489b497b4762f41c7",
+    "fs-registration-a2.pv": "822d55e91ee5a554bf05364d1ea7331d6cd1809204f198a1825a7e4ab1e8e24b",
+    "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+    "fs-registration-consumed.pvl": "e55de96a05977010190d0e0b88c97efc197d452de435ac1467cf76700c996048",
+    "fs-registration-k2.pvl": "97cf3d4586808b3f78134d5f8b4da39244809a3f5fddc2f496e997d3d86fb234",
+    "fs-registration-r1.pv": "84b0592afceba4c4a2824663434dc7ca6d2fba8f15f87c73f7bb859bd1d03427",
+    "fs-registration-r1prime.pv": "c47ab5b19f09f219c494cad0799183ed87f4bbddbbcbeca02f32d984d43c7a68",
+    "fs-registration-r3.pv": "940fcd9cb00f947f0a7c581acabdfb278bbae245f34d5da5793bc3753dbf63a8",
+    "fs-registration-r5.pv": "20ae69225e745b1da7f9e09ab0e0d0e42d94560c61620d080015c449cceed290",
+    "fs-registration-w1.pv": "27b63d6b870feaeadc1e1e4143e04ff12cf1ee7e7fea90dc3c16c9e90c02f75a",
+    "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f"
+  },
+  "logs": {
+    "encoding-A1.log.gz": {
+      "uncompressed_sha256": "bef621f14ed353b46960c4794ce98f0f57c651c53ee84e425a47e854c1eb8d1b",
+      "gzip_sha256": "bcfb22d720a3e69950a4fe333e715ca0142a364d4e8961475e749ca5e480a5a1"
+    },
+    "encoding-A2.log.gz": {
+      "uncompressed_sha256": "3a916976488acaaba969ea1cae37de729ab7e7c31cb2aa1c2afb6c536a897df4",
+      "gzip_sha256": "edf5d330eaf474603bd009ee839f8a1e746e8839c2b4e272ee70dea88b6791c7"
+    },
+    "encoding-R1.log.gz": {
+      "uncompressed_sha256": "1fe33edce3900be1d17f001fe3fdf5f3d7ef3f91afc63c4ceb7cc65c093a563f",
+      "gzip_sha256": "c8170d7138f6e81e8a089654edc080b29ed6f40aece0ecc6c7a2cd966a04be6c"
+    },
+    "encoding-R1prime.log.gz": {
+      "uncompressed_sha256": "3ce47f46b46df17a1e2ee9458630cdbfc48608f3b6c03afd9e86742ed96edb6f",
+      "gzip_sha256": "066482fed5f5d5ba2c121c59805cd52099aafe3686c7e6cab896089b8f511c46"
+    },
+    "encoding-R3.log.gz": {
+      "uncompressed_sha256": "0193f98b8e11086f3f102b4ea8e197eeb56047791800c3a4fd07ddff469d64d8",
+      "gzip_sha256": "a8692928ec7e8c1b81095d119e457960764e5577a5342868810b34bf90af7598"
+    },
+    "encoding-R5.log.gz": {
+      "uncompressed_sha256": "08d3354de4dd9afb42e54f8ed0c3fbaf73a181d7f3caeaf5154e8a461aa2ebf1",
+      "gzip_sha256": "f0fa7611bb84f9b985e81a4a38581c05092d49f3919780626e13c08304868ad4"
+    },
+    "encoding-W1.log.gz": {
+      "uncompressed_sha256": "841e8762d2ecfe43dc0231dfad636f0100e54c2082d343ac1ffb15b5d32336ff",
+      "gzip_sha256": "0b4e7e175644d6b34f862a76905e8c47e6d19050316a4aa96a0541a8ce9b4f36"
+    },
+    "encoding-C-NOCHECK.log.gz": {
+      "uncompressed_sha256": "00c99fde2320200bea59cfc4c459f6678fd9a007076c58f16b64172ca3fa39d9",
+      "gzip_sha256": "603b19658fbe660278b6941fa19950cca69fd25484c70879e37fee6d3e0cd824"
+    },
+    "encoding-ZERO-RETRY.log.gz": {
+      "uncompressed_sha256": "95d4ccf414f274c84c0345bd1473d30c922b7d605cc83d2684d5f0d877f853e3",
+      "gzip_sha256": "f167cc0c615b135604b25f587a5ce2595b4b03665c050ce10fc864500d16e843"
+    },
+    "verify.log.gz": {
+      "uncompressed_sha256": "1d593304c80ee94697d0a82aa64c81b4d002eb0e25a5ad046241f3cc7c6ebcbe",
+      "gzip_sha256": "6af7557277a17677066932e6739cc7712962ac19444f27967acb4299235886f5"
+    },
+    "inventory.log.gz": {
+      "uncompressed_sha256": "01116764c67dd646bc16fa2bd02c7db25da1b5d7b6d299ea15659a295bca862c",
+      "gzip_sha256": "bdb4fbcbc932739f2144fda27eb0850a97ca6cc804f20a9f0a2b4e47913d073f"
+    }
+  },
+  "review": {
+    "semantic": "fs_source_abstraction APPROVE_WITH_NITS, both nits addressed",
+    "confirming": "fs_source_abstraction APPROVE, independent 17 checker tests and exact derivative check"
+  },
+  "verification": "minimal locked flake; Make check-proverif-primitive-fidelity (25 transcript-fidelity tests,17 checker regressions,9 exact ProVerif verdicts); separate Make check-inventory; cargo fmt; existing checker61 tests; no production Rust changed"
+}

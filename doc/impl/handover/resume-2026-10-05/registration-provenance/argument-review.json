@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-10-05T23:59:46.212701+00:00",
+  "reviewer": "/root/evolving_source_join",
+  "decision": "APPROVE_SCOPED_SYMBOLIC_ARGUMENT",
+  "files": {
+    "/tmp/bc-arc-scratch/pv-work/a2-provenance/known-material/source-lifting.md": "3c4f4bd3161caccd7c6af1d5ea2e4d3552cc572e3b4cf59390d60ffab6344115",
+    "/tmp/bc-arc-scratch/pv-work/a2-provenance/known-material/provenance.pvl": "3657d8a61b278402da340e74bf417f7ae1ddb342b859f6a2de0b5f6ee889f3f2",
+    "/tmp/bc-arc-scratch/pv-work/a2-provenance/known-material/audit-theory.py": "363c5ca2286d75a5c726ba53b6344f4dd22a25c5b002e3404245353974847f7a",
+    "/tmp/bc-arc-scratch/pv-work/a2-provenance/known-material/theory-audit.json": "ff1e681198a3c0fcbf8795600f83b05c67f63347c94e462fcf66e625a1420a77",
+    "/tmp/bc-arc-scratch/pv-work/a2-provenance/known-material/probe-receipts.json": "fa31535c69b7beba0b410cec1f54789cbb634294b9efda9e84786bbcead1b7ad"
+  },
+  "read": [
+    "Protected-term structural substitution and28 explicit reductions plus38 data constructors",
+    "Signature occurrence induction including non-atomic candidate keys and hidden Server import no-sign case",
+    "beacon.rs constructor,getters,one-time generation/deletion,get_registration_bundle state transition and its only3 sign calls",
+    "server.rs exact3 source verification order and subsequent acceptance gates",
+    "All6 PV source maps and original log SHA256 verified; audit reproduced without writing"
+  ],
+  "scope": [
+    "Exact T0 signature-origin projection, not computational or raw-byte correspondence",
+    "Imported inputs and applications restricted exactly as source profile states; no opaque callback premise",
+    "Target-specific counterexample reflection needs no honest-target premise or probabilistic selection factor",
+    "No full state transcript equivalence, root/record agreement, assigned-ID equality or end-to-end security claim"
+  ],
+  "findings": [],
+  "resolved": [
+    "Known-key statement now restricts imports to attacker-known inputs; hidden private Server imports excluded by no-sign origin",
+    "Injective renaming equality restricted to selected source T0 terms/profile, not native byte equality or parsing"
+  ],
+  "builds": "None; read-only review and audit/receipt verification only"
+}

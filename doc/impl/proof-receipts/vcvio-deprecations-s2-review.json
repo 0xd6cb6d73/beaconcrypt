@@ -1,0 +1,225 @@
+{
+ "date": "2026-10-20",
+ "scope": "VCVio deprecation migration, stage S2, fixes of the two independent reviews at 86ab011c (statement equivalence EQ-S2-1..EQ-S2-3, hygiene H1..H3). No Lean file of the build changed. Supplements vcvio-deprecations-s2.json (the record of 86ab011c) for the textual fallback certificate, the certificate tooling, the gate report, amendment A2 of the plan and the wording of the record, the analysis section, the boundary ledger and that receipt.",
+ "basis": "dfede233c4387789e56ff927de121335e6a1933f",
+ "previous_head": "86ab011cd44e93c857ca4f8ad2e16b0385f6e7dc",
+ "topic": {
+  "branch": "codex/vcvio-migration-S2",
+  "clone": "/home/user/bc-vmig-S2"
+ },
+ "commits": {
+  "fixes": "the commit that adds this receipt"
+ },
+ "reviews": {
+  "equivalence": {
+   "verdict": "APPROVE_WITH_NITS",
+   "findings_sha256": "2efe67014c17d32dcd26ab9d3c01b840bb576493e00a4dea93fc0bcbcf58e432",
+   "fixed": [
+    "EQ-S2-1 (items 1 to 3 of amendment A2)",
+    "EQ-S2-2",
+    "EQ-S2-3"
+   ]
+  },
+  "hygiene": {
+   "verdict": "APPROVE_WITH_NITS",
+   "findings_sha256": "347a5f4b72d6a71a17c84444c76575cee25bdb7c284b0522c751b571f979984f",
+   "fixed": [
+    "H1",
+    "H2",
+    "H3"
+   ]
+  },
+  "owner_level": [
+   "EQ-S2-1, the part that adjusts the plan's final acceptance check (section 9) and the D6 target: recorded as item 4 of amendment A2, pending the owner's decision, not in effect"
+  ]
+ },
+ "fixes": {
+  "EQ-S2-1": "amendment A2 of the plan (AMENDMENTS.md, recorded in the plan copy doc/impl/vcvio-deprecation-migration-plan.md): item 1 names the class (statements over a generic IsUniformSpec specification or over a specification without measurable answers keep the pin's SPMF adapter semantics; their proofs bridge; residual for the upgrade); item 2 adds the report-only G3 spmf_only_report to gates.py (108 -> 113, the five new declarations are exactly the adapter statements); item 3 states the decision point for the four later consumers of StatefulGoodEvent.event_good before S6 switches them back (a pin-only bridge theorem in VCVioLegacyBridge, or recorded phase B exceptions); item 4, the adjustment of the final acceptance check and of the D6 target, is pending the owner's decision. Receipt vcvio-deprecations-s2.json: G3 note naming the five statements",
+  "EQ-S2-2": "analysis section and record: the twins equal the recorded old types by type hash and pp.all text, and three of them (event_good, chance_eq, fixed_vector_bound) name instance binders that their originals leave anonymous; Expr.hash is called the hash of the elaborated term. CertTools: the same-type PASS line reports, as information, the leading binders of the checked declaration against the current declaration (name up to macro scopes, hygiene, annotation); the twin printer first tries each delaboration with its named instance binders written anonymously, accepted only if it round-trips and moves binders only towards the declaration's; optional 'named X' for self-tests",
+  "EQ-S2-3": "certificate file: certificateStatementIff_honest_decapsulation : (type_of% @honest_decapsulation) <-> (type_of% @certificateOld_honest_decapsulation), proved binder by binder from certificateIff_honest_decapsulation, with an exact axiom guard and a fail_if_success negative control (the same proof against honest_decapsulation_program fails); gen_s2_certificates.py documents the three-part fallback template for later stages; check_certificates_s2.py requires the theorem and its guard for every fallback declaration",
+  "H1": "doc/impl/production-boundary-ledger.md: classical_probEvent and later_probEvent are named the event forms, with a note that since stage S2 they are stated in the forward event form; the S2 review-fix record entry says that the dated PB-D records describe the pre-S2 form (left as historical)",
+  "H2": "record: 'Sixteen imports were added, none removed: the bridge in the 9 twin modules (StatefulGoodEvent and CtxRomAuth also use it in their proofs), VCVioForwardOracleComp in six modules and VCVioForwardEvalDist in LiveApplicationNative'",
+  "H3": "receipt vcvio-deprecations-s2.json G4 note on type_changed_unexpected; gates.py lists such entries under allowed_generated from now on"
+ },
+ "amendment_A2": {
+  "file": "/tmp/bc-arc-scratch/vcvio-migration/AMENDMENTS.md",
+  "sha256": "0ec668aca2f276a2eb3a882eb80b9375d3d1095713fffacdefde4d5c050e83a9",
+  "items_in_effect": [
+   1,
+   2,
+   3
+  ],
+  "pending_owner_decision": [
+   4
+  ]
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "987e93df28f0d50ad616536108c41d2220bd985b4feafffc521899f48ee1660e",
+   "olean_sha256": "779be810e6d5773ba092f71c3ba3ef5de65e540e321971cd075728e637097b9f",
+   "olean_review_fix_build_equal_to_shared_build": true,
+   "previous_CertTools.lean": "b737ffda3c81b84ca66c3377a95daa4e0e3fcd89920c14dda5da7955425cf0c5",
+   "previous_olean_sha256": "6b4f60e34a337f0eb163edc0392e971922ec3b93cf30641f7a8fac471351dde0",
+   "provenance": "/tmp/bc-arc-scratch/vcvio-migration/S2/review-fix/provenance/",
+   "gen_s2_certificates.py": "43facb639d34ca1acefffe6c476e07e1908c07e9aa077b7b41cdabd2aaaf12b7",
+   "check_certificates_s2.py": "f330b2676633e4d1b2921abd285282107f0242e34c9b8948f0a80298cceca540"
+  },
+  "pre_stage_dump": {
+   "sha256": "e34228fbbbb3437bc81a422f35b1100d1f2a16536231657b6973816f5d2e2add"
+  },
+  "certificate_file": {
+   "S2Certificates.lean_sha256": "b4925f1097f58984a5876b4bc7ec7269c59f8f85be03138772db1ea5fdb32ed5",
+   "stage_file_sha256": "835ca43acad91ba57475a15ec15e505410a7dd60a2853ff80bc12427df875fb5",
+   "difference": "adds certificateStatementIff_honest_decapsulation, its axiom guard and one fail_if_success negative control; the generated part (S2Certificates.gen.lean), the twins list and the doctored dump are byte-identical to the stage's",
+   "negative_sha256": "65c35e5dc4f43d97544b53b0dd28e51cae6ca26d323451c41ad270fb916e622f",
+   "negative_difference": "only the path of the doctored dump (review-fix/certificates)"
+  },
+  "pass_blocks": 53,
+  "pass_blocks_identical_to_stage_run_modulo_information": true,
+  "binder_information": {
+   "JointEagerTable.independent_comm_spmf_vcvioLegacy": "6 binders equal (names up to macro scopes, hygiene, annotations)",
+   "PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy": "6 binders equal (names up to macro scopes, hygiene, annotations)",
+   "PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy": "4 binders equal (names up to macro scopes, hygiene, annotations)",
+   "PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy": "3 binders equal (names up to macro scopes, hygiene, annotations)",
+   "StatefulGoodEvent.event_good_vcvioLegacy": "15 binders, 1 differ: #5 `inst` plain instance vs `inst` hygienic instance",
+   "UniformTargetSelection.chance_eq_vcvioLegacy": "4 binders, 1 differ: #4 `inst` plain instance vs `inst` hygienic instance",
+   "JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy": "13 binders, 2 differ: #8 `inst` plain instance vs `inst` hygienic instance, #9 `inst_1` plain instance vs `inst` hygienic instance",
+   "PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy": "2 binders equal (names up to macro scopes, hygiene, annotations)",
+   "RawKeyPartition.partition_continuation_vcvioLegacy": "4 binders equal (names up to macro scopes, hygiene, annotations)",
+   "PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy": "1 binders equal (names up to macro scopes, hygiene, annotations)",
+   "PqxdhChallengeSecretRouting.certificateOld_honest_decapsulation": "12 binders equal (names up to macro scopes, hygiene, annotations)"
+  },
+  "log_sha256": "15466663cc58d94fb01cfac293f379a0a9446b5bbda687a980c2b2bbab269ba7",
+  "checker": "RESULT PASS",
+  "checker_negative_control": "the certificate source with the theorem renamed: RESULT FAIL",
+  "earlier_runs": "rf1 failed only on an unreachable-tactic warning of the first form of the negative control (an iff whose second branch was never reached); rf2 and rf3 pass (rf3 with the final tool)"
+ },
+ "twin_printer_selftest": {
+  "file_sha256": "40df29631fdb443c128c636cb95cd10c25ccfdb32b600867f166ed7e9e54ded2",
+  "log_sha256": "d9305050b7097cfb2588921a360bb2c116c750b89c41092dc47b7598ef8ff571",
+  "identical_to_build": [
+   "CtxRomAuth.ctxSecretPrefixQueriedProbability",
+   "JointEagerTable.independent_comm_spmf",
+   "PqxdhMaterialKeyCollisions.material_key_mem",
+   "PqxdhOrderedChainHybrids.fullOutput_observed",
+   "PqxdhSecretInputKdf.evalSPMF_sample_comm",
+   "PqxdhSecretInputKdf.extractUniform_eq_hmacReal",
+   "PqxdhSecretInputKdf.hmacRandom_eq_independentRoot",
+   "RawKeyPartition.partition_continuation"
+  ],
+  "changed": {
+   "JointTableFreshCandidates.fixed_vector_bound": {
+    "anonymous_instance_binders": true,
+    "unused_variables_switch": true,
+    "binders_against_declaration": "13 binders equal (names up to macro scopes, hygiene, annotations)"
+   },
+   "StatefulGoodEvent.event_good": {
+    "anonymous_instance_binders": true,
+    "unused_variables_switch": true,
+    "binders_against_declaration": "15 binders equal (names up to macro scopes, hygiene, annotations)"
+   },
+   "UniformTargetSelection.chance_eq": {
+    "anonymous_instance_binders": true,
+    "unused_variables_switch": false,
+    "binders_against_declaration": "4 binders equal (names up to macro scopes, hygiene, annotations)"
+   }
+  },
+  "compiled_out_of_build": {
+   "file_sha256": "539c2964b60a8678f3ae9f559409fd858863978fc23737d0a2529ba17287982d",
+   "log_sha256": "a93602ce4959befca864544ef96fce44c66a925197af758c4ea23956d456f716",
+   "result": [
+    "same-type PASS BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacySelfTest against BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound: type hash 2344061657 and pp.all text equal to the dump; information: binders against the current BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound: 13 binders equal (names up to macro scopes, hygiene, annotations)",
+    "same-type PASS BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacySelfTest against BeaconcryptCore.Computational.StatefulGoodEvent.event_good: type hash 3685531767 and pp.all text equal to the dump; information: binders against the current BeaconcryptCore.Computational.StatefulGoodEvent.event_good: 15 binders equal (names up to macro scopes, hygiene, annotations)",
+    "same-type PASS BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacySelfTest against BeaconcryptCore.Computational.UniformTargetSelection.chance_eq: type hash 1991036842 and pp.all text equal to the dump; information: binders against the current BeaconcryptCore.Computational.UniformTargetSelection.chance_eq: 4 binders equal (names up to macro scopes, hygiene, annotations)"
+   ]
+  },
+  "note": "the build's twins are unchanged; event_good and fixed_vector_bound keep the unused-variable switch because other named binders of their statements (hypotheses not referenced by the conclusion, a lambda binder) still need it"
+ },
+ "gates": {
+  "tool_sha256": "94c3941486d62de3a008dbc0c2653ef8489cb8f092cb09d24d72ced901c08a1b",
+  "config_sha256": "6d1b89faf3403f5ff68400a7ca8df256c61aa435b88c5c1456bd09e0be60c689",
+  "report_sha256": "9e61403808ec16f465d066fb0d0af3cad4cec3d0f932c2e863b1b5703d68f6da",
+  "earlier_keys_identical_to_stage_report": true,
+  "pass": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true,
+   "G5": true
+  },
+  "G3_spmf_only_report": {
+   "what": "declarations whose type or definition body references SPMF but no deprecated statement head (report only)",
+   "base": 108,
+   "stage": 113,
+   "new_in_stage": [
+    [
+     "BeaconcryptCore.Computational.CtxRomAuth",
+     "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+     "theorem"
+    ],
+    [
+     "BeaconcryptCore.Computational.StatefulGoodEvent",
+     "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+     "theorem"
+    ],
+    [
+     "BeaconcryptCore.Computational.StatefulGoodEvent",
+     "BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+     "theorem"
+    ],
+    [
+     "BeaconcryptCore.Computational.StatefulGoodEvent",
+     "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+     "theorem"
+    ],
+    [
+     "BeaconcryptCore.Computational.StatefulGoodEvent",
+     "BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+     "theorem"
+    ]
+   ],
+   "removed_in_stage": [],
+   "new_with_adapter_instance_in_type": [
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false"
+   ]
+  },
+  "G4_allowed_generated": {
+   "type_changed": [
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_eq._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.independentHop_eq_hybrid._proof_1_1"
+   ],
+   "levels_changed": [
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed._simp_1_1"
+   ],
+   "note": "generated auxiliary declarations of explained parents (restated, edited or twin declarations); type_changed_unexpected and levels_changed list every change outside the configured allowlist, the gate criterion is unexplained_type_changes and unexplained_levels_changes"
+  }
+ },
+ "repository_checks": {
+  "inv_recount": "handwritten-lean count unchanged (1987)",
+  "inv_rehash": "no row changed (proofs/lean/BeaconcryptCore.lean: unchanged, proofs/trusted-boundary.md: unchanged, proofs/check-inventory.sh: unchanged)",
+  "check_inventory_edited_tree": {
+   "lease": "00000804",
+   "rc": 0
+  },
+  "check_lean": {
+   "lease": "00000805",
+   "rc": 0,
+   "jobs": [
+    "5535"
+   ],
+   "modules_built": 0
+  },
+  "lean_scan": "LEAN-SCAN files 1994 hits 0"
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S2/review-fix/logs/"
+}

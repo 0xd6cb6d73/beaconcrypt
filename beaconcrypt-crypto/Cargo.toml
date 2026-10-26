@@ -1,0 +1,24 @@
+[package]
+name = "beaconcrypt-crypto"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99.1"
+license-file = "../LICENSE"
+description = "Portable RustCrypto and Dalek primitives for beaconcrypt"
+
+[features]
+default = ["std"]
+std = ["dep:getrandom"]
+
+[dependencies]
+blake2 = { version = "0.11", default-features = false, features = ["zeroize"] }
+chacha20poly1305 = { version = "0.11", default-features = false, features = ["alloc", "zeroize"] }
+curve25519-dalek = { version = "5", default-features = false, features = ["zeroize"] }
+ed25519-dalek = { version = "3", default-features = false, features = ["zeroize"] }
+getrandom = { version = "0.4", optional = true }
+hkdf = { version = "0.13", default-features = false }
+ml-kem = { version = "0.3.3", default-features = false, features = ["alloc", "zeroize"] }
+rand_core = { version = "0.10", default-features = false }
+sha2 = { version = "0.11", default-features = false, features = ["zeroize"] }
+subtle = { version = "2.6", default-features = false }
+zeroize = { version = "1.9", default-features = false, features = ["alloc", "derive"] }

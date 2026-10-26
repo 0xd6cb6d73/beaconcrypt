@@ -1,0 +1,792 @@
+{
+ "date": "2026-10-08T04:04:50.803289+00:00",
+ "scope": "Handoff item 2, increment 3: stages S3b (entry 0's 108 bytes in the uniform-root world: factored services, relabelled hidden values, uniformGame_entry), S4b (idealKeysBranch and theorem T7) and S7 (every hidden entry ideal: indexed lazy-table hybrid, first-touch slot allocator in front of PqxdhRecordLiftLazyTable, naturality) of the extract-design plan. Stages T and S8 are not built.",
+ "basis": "a2b5380080ed397ae31b790e79304b39e16135b1",
+ "topic": {
+  "branch": "claude/extract-composition",
+  "worktree": "/tmp/claude-extract-inc1"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/extract-design/plan.md",
+  "sha256": "2866496a466e2d60b2aafba56b15780539391f0c9afd1356a2301c2911a76d35",
+  "snapshot": "doc/impl/extract-composition-plan.md",
+  "stages": "S3b, S4b, S7; sections 3, 4, 5, 9, 11, 17, 18, 20, 21",
+  "note": "SHA-256 after the confirming review of 3e2fe170 (section 21 header: review and integration status); after the review fixes of ddd954ec it was 5b88eadaf818e5072cbb9c0f6ca870774792d81c9396003107dad06d5ce0930f, and at ddd954ec 29fb8774b7abf7ec6dc77b3e49d45cac40b91fa9a0a9a6101e1e2c01d1cdf7a4. No owner decision, statement or assumption of the plan changed."
+ },
+ "commits": [
+  {
+   "commit": "fc7e1ff81067eb23314569fb39676c8345106a00",
+   "subject": "Factor entry 0 in the uniform-root world of item 2 stage S3b"
+  },
+  {
+   "commit": "7c33b74532f6bf06da6146e9deb732b2d29cd9a3",
+   "subject": "State the ideal-key branch and theorem T7 of item 2 stage S4b"
+  },
+  {
+   "commit": "9cab71ca5949429bb1e873e384b908db0f96bad7",
+   "subject": "Make every hidden entry ideal in item 2 stage S7"
+  },
+  {
+   "commit": "ddd954ecd6ab73650fb5e995182f6616cce15cfc",
+   "subject": "Record the third item 2 increment (S3b, S4b, S7)"
+  },
+  {
+   "commit": "3e2fe17054427d835c0a67711ff8251ffaa0af47",
+   "subject": "Fix the review findings of the third item 2 increment"
+  }
+ ],
+ "commits_note": "The stage commits from the base a2b53800 (central, containing increments 1 and 2), the documentation commit ddd954ec, which the semantic and hygiene reviews covered, and the review-fix commit 3e2fe170, which the confirming review covered. The documentation-only commit that re-issues this receipt follows them.",
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorTools.lean": "e18bcac3cb39b4237ad392fb880c21adac7ac3ec0dfb115296d3a2018f32c12b",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorNative.lean": "df0784ed761d22f3e7e29ab0d6a852627fd1f256311d17e7386d0328a67afa0a",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorSteps.lean": "031eb349888e80a55b7c33178e7ba4db4c8329922ac029d13cb1384b440c9897",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorResume.lean": "d2389d031d46c8c7ad7d89fa1b517b934a9a0a82ec49bf17b86c13e906ad50c9",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactor.lean": "e7d23209a795ca92cd35400f3154132fe25a5927d6c5307902672ede5776c5b9",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemIdealKeys.lean": "63c19fa500d724569faf2f0b30cb5958ada1d0b177e55a5764416b55e50cd67e",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.lean": "678c4e1c62fe5346de50243dae01ab005176e09bb718293510f666e480df34bc",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntry.lean": "ff0735be05d5c7bc607c53eef796db717cd76f57053f90a807ab3a71e19eeab9",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "968055d31eebb672238c5050c49b8b7b372d5e5abc204ddbc9a8fe81836974c9",
+  "beaconcrypt-core/proofs/check-inventory.sh": "ebcd7ebf15722b191b21c213de37ae352abc9d0106c4ab3f0ff3fb001f8ab46d",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "44b53876fe472114b956e697229128586ee02cb398671efb3ce000ea40472b3e",
+  "doc/impl/extract-composition.md": "1a7a8ad6b52dfde7f5f5788e343485608c5bb813107c6cf7cd398beb265666e4",
+  "doc/impl/extract-composition-plan.md": "a5ad6df9e445ca79b51704ef0ea5d30c6de5e48b1071beff4b13006782e534ff",
+  "doc/formal-verification-analysis.md": "b3a028bc94463b68b44b32ac874bdc01b859204223477c6f5a685f9ce3d813d2",
+  "doc/composition-assumptions.md": "558a2da40ee96316d51e68ef901a4167b78e86b2c92c78ca28adeeebcd1fe7c8",
+  "beaconcrypt-core/proofs/trusted-boundary.md": "845110e2a9f6d3a0a6cf88ba512bdc64f9190bb1599d563b1126734b1f908454"
+ },
+ "modules": [
+  {
+   "name": "PqxdhRegistrationJointKemEntryFactorTools",
+   "plan_stage": "S3b",
+   "statements": [
+    "support_simulateQ_subset",
+    "map_run_inv",
+    "mapRun_run",
+    "simulateQ_mapRun",
+    "relabel_inl",
+    "relabel_value",
+    "relabel_direct",
+    "relabel_liftComp",
+    "relabel_query_direct",
+    "relabel_query_value",
+    "relabel_query_base",
+    "relabel_fwd",
+    "relabel_fwdOption"
+   ],
+   "statement_count": 13,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 1,
+    "Quot.sound, propext": 8,
+    "(none)": 4
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T03:10:14.893649289Z",
+    "end": "2026-10-08T03:10:17.655115077Z",
+    "source_sha256": "e18bcac3cb39b4237ad392fb880c21adac7ac3ec0dfb115296d3a2018f32c12b",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "332d837f573f987d83357960acbd175226c5d4c1e513efe40e0f08b790c971c5",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorTools.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorTools.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRegistrationJointKemEntryFactorNative",
+   "plan_stage": "S3b",
+   "statements": [
+    "factorHidden_eq",
+    "hiddenAfter_factor",
+    "hiddenBuild_factor",
+    "proj_none",
+    "placeholderAt_none",
+    "placeholderAt_clean",
+    "placeholderAt_ctx",
+    "placeholderAt_ctx_eq",
+    "placeholderAt_server_eq",
+    "placeholderAt_sessions_eq",
+    "placeholderAt_server",
+    "placeholderAt_sessions",
+    "placeholderAt_pending_ne",
+    "placeholderAt_update",
+    "placeholderAt_clear",
+    "Rel.bind",
+    "Rel.pure",
+    "Rel.mono",
+    "relabelS_liftComp",
+    "Rel.tableRead",
+    "Rel.valueRead",
+    "Rel.gameStep",
+    "Rel.ctx",
+    "inv_stable",
+    "good_stable"
+   ],
+   "statement_count": 25,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 24,
+    "Quot.sound, propext": 1
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T03:10:17.685270045Z",
+    "end": "2026-10-08T03:10:22.204978051Z",
+    "source_sha256": "df0784ed761d22f3e7e29ab0d6a852627fd1f256311d17e7386d0328a67afa0a",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "55c0db95e5967bf3ab39bf7c982043807e11897207b995d806ca23b935cb27dd",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorNative.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorNative.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRegistrationJointKemEntryFactorSteps",
+   "plan_stage": "S3b",
+   "statements": [
+    "liftT_rel",
+    "Rel.setGame",
+    "Rel.modifyGame",
+    "inv_framed",
+    "good_framed",
+    "framed_and",
+    "Rel.consume",
+    "tailStep_rel",
+    "hmacStep_rel",
+    "hash_rel",
+    "reveal_rel",
+    "groupStep_rel",
+    "buildService_factor",
+    "buildStep_rel",
+    "acceptTail_eq",
+    "clientStep_rel",
+    "acceptBody_rel",
+    "acceptTail_rel",
+    "relabelE_encLift",
+    "forward_rel",
+    "acceptStep_rel",
+    "skelImpl_rel",
+    "skelImpl_run"
+   ],
+   "statement_count": 23,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 23
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T03:10:22.233690605Z",
+    "end": "2026-10-08T03:10:27.188375212Z",
+    "source_sha256": "031eb349888e80a55b7c33178e7ba4db4c8329922ac029d13cb1384b440c9897",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "4164b07071b1235e789a05126a35669be882d296733f89766e40d228fa6fde9a",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorSteps.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorSteps.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRegistrationJointKemEntryFactorResume",
+   "plan_stage": "S3b",
+   "statements": [
+    "RelC.bind",
+    "liftT_bind",
+    "liftT_pure",
+    "resume_prefix_run",
+    "resume_tail_run",
+    "resume_prefix_rel",
+    "mark_run",
+    "consumeGame_run",
+    "modifyGame_run",
+    "setGame_run",
+    "challenge_rel",
+    "inv_none",
+    "tail_rel",
+    "resume_rel",
+    "skelResume_factor",
+    "postSkel_factor"
+   ],
+   "statement_count": 16,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 16
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T03:10:27.218238408Z",
+    "end": "2026-10-08T03:10:35.274256175Z",
+    "source_sha256": "d2389d031d46c8c7ad7d89fa1b517b934a9a0a82ec49bf17b86c13e906ad50c9",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "d031f03c9ebea551dd8f19be85fb18385308ad7f1a5cef116c87f059628d94ad",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorResume.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorResume.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRegistrationJointKemEntryFactor",
+   "plan_stage": "S3b",
+   "statements": [
+    "relabelR_liftComp",
+    "publicLocal_relabel",
+    "internalize_relabel",
+    "eagerImpl_eq",
+    "mapCache_empty",
+    "mapCache_cacheQuery",
+    "firstTable_relabel",
+    "rootClient_entry",
+    "eager_entryD",
+    "uniformGame_entry",
+    "rootClient_entryD"
+   ],
+   "statement_count": 11,
+   "axiom_profile": {
+    "Quot.sound, propext": 3,
+    "Classical.choice, Quot.sound, propext": 7,
+    "(none)": 1
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T03:10:35.302139346Z",
+    "end": "2026-10-08T03:10:39.248254235Z",
+    "source_sha256": "e7d23209a795ca92cd35400f3154132fe25a5927d6c5307902672ede5776c5b9",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "3683fba1efc592eb57eee85a842a7c21906803e8f40ac0fd511d76c009d1dd16",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactor.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactor.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRegistrationJointKemIdealKeys",
+   "plan_stage": "S4b",
+   "statements": [
+    "advantage_left",
+    "uniform_idealKeys",
+    "opaqueBranch_idealKeys"
+   ],
+   "statement_count": 3,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 3
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T03:10:39.276490302Z",
+    "end": "2026-10-08T03:10:46.291007407Z",
+    "source_sha256": "b1cbcf4f1ca4cf6a67f02619cb4e8073f7fa40de518deebe837b07f986290b0a",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "6718c0bd8b4774ba23206a2888a194af98c785d3e91f03453e76d3c0ed6eef5e",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemIdealKeys.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemIdealKeys.lean"
+    ]
+   },
+   "direct_check_review_fixes": {
+    "exit": 0,
+    "start": "2026-10-08T03:37:28.365271444Z",
+    "end": "2026-10-08T03:37:31.754984259Z",
+    "source_sha256": "63c19fa500d724569faf2f0b30cb5958ada1d0b177e55a5764416b55e50cd67e",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "15f9284832efb1726e29edbe0c057b0652821316fb540ca9b04b6d415ed60f14",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/fix1/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemIdealKeys.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemIdealKeys.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRegistrationJointKemSecondEntryTable",
+   "plan_stage": "S7",
+   "statements": [
+    "pin_same",
+    "pin_other",
+    "pin_congr",
+    "indexed_coin",
+    "indexed_hit",
+    "indexed_miss",
+    "indexed_eager",
+    "indexed_eager_output",
+    "firstTable_started",
+    "pinned_started",
+    "firstTable_pinned",
+    "indexed_lazy",
+    "slot_coin",
+    "slot_some",
+    "slot_none",
+    "slot_natural",
+    "slotGood_empty",
+    "cacheOf_empty",
+    "slot_step",
+    "slot_lazy"
+   ],
+   "statement_count": 20,
+   "axiom_profile": {
+    "propext": 3,
+    "Quot.sound, propext": 5,
+    "Classical.choice, Quot.sound, propext": 11,
+    "(none)": 1
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T03:10:46.316881249Z",
+    "end": "2026-10-08T03:10:56.984928282Z",
+    "source_sha256": "9e59754c5aab7624eaf48ba95f7cc19e3e65493112639223d9f98294018a3396",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "1f34919425abee7e71c0424a9fe27920acc7da373fc09f7f2c73438106acbfef",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.lean"
+    ]
+   },
+   "direct_check_review_fixes": {
+    "exit": 0,
+    "start": "2026-10-08T03:37:34.936146302Z",
+    "end": "2026-10-08T03:37:44.905315734Z",
+    "source_sha256": "678c4e1c62fe5346de50243dae01ab005176e09bb718293510f666e480df34bc",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "bdbcbb68be5b14998919b033aeb438b9e5ca3055292a923dca4901f4dd8b36e3",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/fix1/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRegistrationJointKemSecondEntry",
+   "plan_stage": "S7",
+   "statements": [
+    "keySchedule_hop",
+    "advantage_right",
+    "publicLocalV_value",
+    "entryClient_value",
+    "run_eager",
+    "hybrid_root",
+    "hybrid_uniform",
+    "hybrid_hop",
+    "hybrid_telescope",
+    "entryDk_zero",
+    "uniform_hybrid",
+    "hybrid_all",
+    "slotGame_all",
+    "entryClient_natural",
+    "opaqueBranch_allIdeal",
+    "opaqueBranch_slots"
+   ],
+   "statement_count": 16,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 16
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T03:10:57.014207231Z",
+    "end": "2026-10-08T03:11:12.853640153Z",
+    "source_sha256": "8af9b9135c0f0678b45363a3e9cc3497771c1ca535a1f5ad53a825dcf96a738f",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "b4264bf376b6c36bcb12e8415a90a0ce7727eaed246d635143fecdff8184df3c",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntry.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntry.lean"
+    ]
+   },
+   "direct_check_review_fixes": {
+    "exit": 0,
+    "start": "2026-10-08T03:37:48.533544117Z",
+    "end": "2026-10-08T03:37:52.217139677Z",
+    "source_sha256": "ff0735be05d5c7bc607c53eef796db717cd76f57053f90a807ab3a71e19eeab9",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "d764a93ab452a62b0ee6be8e5f4f9c5e3cd4e6100f83bba6a0434e80cebcb274",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/fix1/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntry.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntry.lean"
+    ]
+   }
+  }
+ ],
+ "statements_total": 127,
+ "statements_per_stage": {
+  "S3b": 88,
+  "S4b": 3,
+  "S7": 36
+ },
+ "allowed_axioms": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "axiom_profile_from_guards": {
+  "Classical.choice, Quot.sound, propext": 101,
+  "Quot.sound, propext": 17,
+  "(none)": 6,
+  "propext": 3
+ },
+ "exact_statements": {
+  "PqxdhRegistrationJointKemEntryFactorTools.relabel_fwd": "theorem relabel_fwd {α : Type} (f : V → W) (layer : QueryImpl A (OracleComp B))\n    (work : OracleComp (A + ((D →ₒ W) + T)) α) :\n    simulateQ (relabel (B := B) (D := D) (T := T) f) (simulateQ (fwd (T := (D →ₒ W) + T) layer) work) =\n      simulateQ (fwd (T := (D →ₒ V) + T) layer) (simulateQ (relabel (B := A) (D := D) (T := T) f) work)",
+  "PqxdhRegistrationJointKemEntryFactorTools.relabel_fwdOption": "theorem relabel_fwdOption {J α : Type} (f : V → W) (layer : QueryImpl A (OptionT (StateT J (OracleComp B))))\n    (work : OracleComp (A + ((D →ₒ W) + T)) α) (state : J) :\n    simulateQ (relabel (B := B) (D := D) (T := T) f)\n        (((simulateQ (fwdOption (T := (D →ₒ W) + T) layer) work).run).run state) =\n      ((simulateQ (fwdOption (T := (D →ₒ V) + T) layer)\n        (simulateQ (relabel (B := A) (D := D) (T := T) f) work)).run).run state",
+  "PqxdhRegistrationJointKemEntryFactorTools.map_run_inv": "theorem map_run_inv {σ₁ σ₂ α : Type}\n    (impl₁ : QueryImpl spec (StateT σ₁ (OracleComp spec'))) (impl₂ : QueryImpl spec (StateT σ₂ (OracleComp spec')))\n    (inv : σ₁ → Prop) (proj : σ₁ → σ₂)\n    (hinv : ∀ query state, inv state → ∀ result ∈ support ((impl₁ query).run state), inv result.2)\n    (hproj : ∀ query state, inv state →\n      Prod.map id proj <$> (impl₁ query).run state = (impl₂ query).run (proj state))\n    (work : OracleComp spec α) (state : σ₁) (holds : inv state) :\n    Prod.map id proj <$> (simulateQ impl₁ work).run state = (simulateQ impl₂ work).run (proj state) ∧\n      ∀ result ∈ support ((simulateQ impl₁ work).run state), inv result.2",
+  "PqxdhRegistrationJointKemEntryFactorNative.factorHidden_eq": "theorem factorHidden_eq (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (context : PqxdhServerAuthEntryFactor.Context KemSK) (value : Output) :\n    factorHidden setup codec checks context value = factoredHidden setup codec checks value",
+  "PqxdhRegistrationJointKemEntryFactorNative.hiddenAfter_factor": "theorem hiddenAfter_factor (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (root : RootOutput) :\n    (nativeHidden setup codec checks root).hiddenAfter =\n      (factoredHidden setup codec checks (PqxdhServerAuthKeySchedule.fromRoot setup.source root)).hiddenAfter",
+  "PqxdhRegistrationJointKemEntryFactorNative.hiddenBuild_factor": "theorem hiddenBuild_factor (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (token other : PqxdhServerRelatedRootConsumer.Returned) (same : other.pending = token.pending)\n    (payload : Option Pqxdh.Bytes) (server : PqxdhServerAuthEntryFactor.ServerState) :\n    nativeResponse setup codec checks token payload server =\n      (factoredHidden setup codec checks (PqxdhServerAuthKeySchedule.fromRoot setup.source token.root)).hiddenBuild\n        other payload server",
+  "PqxdhRegistrationJointKemEntryFactorSteps.skelImpl_rel": "theorem skelImpl_rel (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (query : (GSpec KemSK Response).Domain) :\n    RelC (PqxdhServerAuthKeySchedule.fromRoot setup.source) id Inv (fun _ => Inv)\n      (skelImpl setup codec checks identityIndex publicIdentity (nativeServices setup codec checks) query)\n      (skelImpl setup codec checks identityIndex publicIdentity (factoredServices setup codec checks) query)",
+  "PqxdhRegistrationJointKemEntryFactorSteps.skelImpl_run": "theorem skelImpl_run {α : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (GSpec KemSK Response) α)\n    (state : SkelState KemSK RootOutput) (holds : Inv state) :\n    Prod.map id (proj (PqxdhServerAuthKeySchedule.fromRoot setup.source)) <$>\n        (simulateQ (skelImpl setup codec checks identityIndex publicIdentity (nativeServices setup codec checks)) work).run\n          state =\n      simulateQ (relabelE (PqxdhServerAuthKeySchedule.fromRoot setup.source))\n        ((simulateQ (skelImpl setup codec checks identityIndex publicIdentity (factoredServices setup codec checks)) work).run\n          (proj (PqxdhServerAuthKeySchedule.fromRoot setup.source) state)) ∧\n      ∀ result ∈ support\n        ((simulateQ (skelImpl setup codec checks identityIndex publicIdentity (nativeServices setup codec checks)) work).run\n          state), Inv result.2",
+  "PqxdhRegistrationJointKemEntryFactorResume.challenge_rel": "theorem challenge_rel (f : RootOutput → Output) (index : Nat) (point : PqxdhCorrelatedExtractFamily.Message)\n    (rid : beaconcrypt_core.pqxdh.RegistrationId) (token : beaconcrypt_core.pqxdh.PendingServerRegistration) :\n    Rel (KemSK := KemSK) f id (fun state => state.2 = none ∧ index < state.1.sessions) (fun _ => Inv)\n      (valueRead point >>= fun value => mark index value >>= fun _ => consumeGame rid >>= fun _ =>\n        PqxdhRegistrationJointKemPostSkeleton.modifyGame (publishAt index ⟨value, token⟩) >>= fun _ =>\n          Pure.pure (some index))\n      (valueRead point >>= fun value => mark index value >>= fun _ => consumeGame rid >>= fun _ =>\n        PqxdhRegistrationJointKemPostSkeleton.modifyGame\n          (publishAt index ⟨PqxdhServerAuthEntryFactor.sentinel, token⟩) >>= fun _ =>\n          Pure.pure (some index))",
+  "PqxdhRegistrationJointKemEntryFactorResume.resume_rel": "theorem resume_rel (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (raw : Pqxdh.Bytes)\n    (value : PqxdhServerRootPreparation.Verified Reader)\n    (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)\n    (ciphertext : PqxdhBeaconPhase2Preparation.Ciphertext) (game : GameState KemSK) (consumed : List Pqxdh.Bytes) :\n    RelC (PqxdhServerAuthKeySchedule.fromRoot setup.source) id (fun state => state = (game, none)) (fun _ => Inv)\n      (simulateQ (resumeImpl setup.hmac game.sessions (nativeServices setup codec checks))\n        (PqxdhRegistrationJointKemOpaqueResume.resume setup codec checks identityIndex publicIdentity raw value ephemeral\n          ciphertext .challenge game consumed))\n      (simulateQ (resumeImpl setup.hmac game.sessions (factoredServices setup codec checks))\n        (PqxdhRegistrationJointKemOpaqueResume.resume setup codec checks identityIndex publicIdentity raw value ephemeral\n          ciphertext .challenge game consumed))",
+  "PqxdhRegistrationJointKemEntryFactorResume.postSkel_factor": "theorem postSkel_factor (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (decision : X → Bool) (count : Nat) (selected : Fin (count + 1)) (chosen : MlKem768PublicKey × KemSK)\n    (challenge : MlKem768Ciphertext) (context : OpaqueContext Reader KemSK A X count) :\n    postSkel setup codec checks decision count selected (nativeServices setup codec checks) chosen challenge context =\n      simulateQ (relabelS (PqxdhServerAuthKeySchedule.fromRoot setup.source))\n        (postSkel setup codec checks decision count selected (factoredServices setup codec checks) chosen challenge\n          context)",
+  "PqxdhRegistrationJointKemEntryFactor.rootClient_entry": "theorem rootClient_entry (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) :\n    rootClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index =\n      simulateQ (relabelR (PqxdhServerAuthKeySchedule.fromRoot setup.source))\n        (entryClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n          index)",
+  "PqxdhRegistrationJointKemEntryFactor.eager_entryD": "theorem eager_entryD (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (root : RootOutput) :\n    (simulateQ (PqxdhRootFirstEntry.eagerImpl root)\n        (rootClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n          index)).run' (∅, none) =\n      entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        (PqxdhServerAuthKeySchedule.fromRoot setup.source root)",
+  "PqxdhRegistrationJointKemEntryFactor.uniformGame_entry": "theorem uniformGame_entry (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) :\n    𝒟[PqxdhCorrelatedExpandHybrid.uniformGame (rootClient (Reader := Reader) setup codec checks ensureInit supplied\n        decision work runtime count selected index)] =\n      𝒟[PqxdhServerAuthKeySchedule.rootHybrid setup.source (entryD (Reader := Reader) setup codec checks ensureInit\n        supplied decision work runtime count selected index)]",
+  "PqxdhRegistrationJointKemIdealKeys.uniform_idealKeys": "theorem uniform_idealKeys (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (correct : SourceFullCorrect setup.source setup.hmac) :\n    (PqxdhCorrelatedExpandHybrid.uniformGame (rootClient (Reader := Reader) setup codec checks ensureInit supplied\n        decision work runtime count selected index)).boolDistAdvantage\n      (idealKeysBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n        index) ≤\n      (extractRealGame setup.hmac uniform32 (initExtractReduction setup.source setup.hmac\n          (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n            index))).boolDistAdvantage\n          (extractUniformGame uniform32 (initExtractReduction setup.source setup.hmac\n            (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n              index))) +\n        (hmacPrfRealGame setup.hmac (initExpandReduction setup.source\n          (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n            index))).boolDistAdvantage\n          (hmacPrfRandomGame (initExpandReduction setup.source\n            (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n              index))) +\n        (extractRealGame setup.hmac uniform32 (stepExtractReduction setup.hmac\n          (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n            index))).boolDistAdvantage\n          (extractUniformGame uniform32 (stepExtractReduction setup.hmac\n            (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n              index))) +\n        (hmacPrfRealGame setup.hmac (stepExpandReduction\n          (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n            index))).boolDistAdvantage\n          (hmacPrfRandomGame (stepExpandReduction\n            (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n              index)))",
+  "PqxdhRegistrationJointKemIdealKeys.opaqueBranch_idealKeys": "theorem opaqueBranch_idealKeys (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (correct : SourceFullCorrect setup.source setup.hmac) :\n    (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        false).boolDistAdvantage\n      (idealKeysBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n        index) ≤\n      ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +\n        ∑ slot ∈ Finset.range (1 + budget (.inl 5)),\n          (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage\n            (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n              ensureInit supplied decision work runtime count selected index) slot)) +\n        ((extractRealGame setup.hmac uniform32 (initExtractReduction setup.source setup.hmac\n            (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n              index))).boolDistAdvantage\n            (extractUniformGame uniform32 (initExtractReduction setup.source setup.hmac\n              (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n                index))) +\n          (hmacPrfRealGame setup.hmac (initExpandReduction setup.source\n            (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n              index))).boolDistAdvantage\n            (hmacPrfRandomGame (initExpandReduction setup.source\n              (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n                index))) +\n          (extractRealGame setup.hmac uniform32 (stepExtractReduction setup.hmac\n            (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n              index))).boolDistAdvantage\n            (extractUniformGame uniform32 (stepExtractReduction setup.hmac\n              (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n                index))) +\n          (hmacPrfRealGame setup.hmac (stepExpandReduction\n            (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n              index))).boolDistAdvantage\n            (hmacPrfRandomGame (stepExpandReduction\n              (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n                index))))",
+  "PqxdhRegistrationJointKemSecondEntryTable.indexed_eager": "theorem indexed_eager {α : Type} (sampler : ℕ → ProbComp R) (k : ℕ) (client : OracleComp (Spec D R) α)\n    (state : IState D R) :\n    𝒮[(simulateQ (indexedImpl sampler) client).run state] =\n      𝒮[do let value ← sampler k; (simulateQ (indexedImpl (pin k value sampler)) client).run state]",
+  "PqxdhRegistrationJointKemSecondEntryTable.slot_natural": "theorem slot_natural {S₁ S₂ α : Type} (service₁ : SlotService S₁ R n) (service₂ : SlotService S₂ R n)\n    (inv : S₁ → Prop) (proj : S₁ → S₂)\n    (step : ∀ slot state, inv state →\n      Prod.map id proj <$> (service₁ slot).run state = (service₂ slot).run (proj state))\n    (keeps : ∀ slot state, inv state → ∀ result ∈ support ((service₁ slot).run state), inv result.2)\n    (client : OracleComp (Spec D R) α) (alloc : Alloc D n) (state : S₁) (holds : inv state) :\n    Prod.map id (Prod.map id proj) <$> (simulateQ (slotImpl service₁) client).run (alloc, state) =\n      (simulateQ (slotImpl service₂) client).run (alloc, proj state) ∧\n      ∀ result ∈ support ((simulateQ (slotImpl service₁) client).run (alloc, state)), inv result.2.2",
+  "PqxdhRegistrationJointKemSecondEntryTable.slot_lazy": "theorem slot_lazy {α : Type} (client : OracleComp (Spec D R) α) (m : ℕ)\n    (bounded : client.IsQueryBoundP (IsValue (D := D) (R := R)) m)\n    (state : Alloc D n × PqxdhRecordLiftLazyTable.State (Slot n →ₒ R)) (good : SlotGood state)\n    (room : state.1.2 + m ≤ n) :\n    Prod.map id cacheOf <$> (simulateQ (slotImpl tableService) client).run state =\n      (simulateQ lazyImpl client).run (cacheOf state)",
+  "PqxdhRegistrationJointKemSecondEntry.entryClient_value": "theorem entryClient_value (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source)) :\n    (entryClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n      index).IsQueryBoundP (IsValue (D := PqxdhCorrelatedExtractFamily.Message) (R := Output)) (1 + budget (.inl 5))",
+  "PqxdhRegistrationJointKemSecondEntry.hybrid_hop": "theorem hybrid_hop (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (correct : SourceFullCorrect setup.source setup.hmac)\n    (k : ℕ) :\n    (hybrid (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        k).boolDistAdvantage\n      (hybrid (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        (k + 1)) ≤\n      keyScheduleBound setup.source setup.hmac (entryDk (Reader := Reader) setup codec checks ensureInit supplied\n        decision work runtime count selected index k)",
+  "PqxdhRegistrationJointKemSecondEntry.slotGame_all": "theorem slotGame_all (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (n : ℕ)\n    (bounded : (entryClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count\n      selected index).IsQueryBoundP (IsValue (D := PqxdhCorrelatedExtractFamily.Message) (R := Output)) n) :\n    slotGame (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index n =\n      allIdealBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n        index",
+  "PqxdhRegistrationJointKemSecondEntry.entryClient_natural": "theorem entryClient_natural {S₁ S₂ : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)\n    (checks : Checks) (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) {n : ℕ}\n    (service₁ : SlotService S₁ Output n) (service₂ : SlotService S₂ Output n) (inv : S₁ → Prop) (proj : S₁ → S₂)\n    (step : ∀ slot state, inv state →\n      Prod.map id proj <$> (service₁ slot).run state = (service₂ slot).run (proj state))\n    (keeps : ∀ slot state, inv state → ∀ result ∈ support ((service₁ slot).run state), inv result.2)\n    (alloc : Alloc PqxdhCorrelatedExtractFamily.Message n) (state : S₁) (holds : inv state) :\n    (simulateQ (slotImpl service₁) (entryClient (Reader := Reader) setup codec checks ensureInit supplied decision work\n        runtime count selected index)).run' (alloc, state) =\n      (simulateQ (slotImpl service₂) (entryClient (Reader := Reader) setup codec checks ensureInit supplied decision work\n        runtime count selected index)).run' (alloc, proj state)",
+  "PqxdhRegistrationJointKemSecondEntry.opaqueBranch_allIdeal": "theorem opaqueBranch_allIdeal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (correct : SourceFullCorrect setup.source setup.hmac) :\n    (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        false).boolDistAdvantage\n      (allIdealBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n        index) ≤\n      ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +\n        ∑ slot ∈ Finset.range (1 + budget (.inl 5)),\n          (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage\n            (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n              ensureInit supplied decision work runtime count selected index) slot)) +\n        ∑ k ∈ Finset.range (1 + budget (.inl 5)), keyScheduleBound setup.source setup.hmac\n          (entryDk (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n            k)",
+  "PqxdhRegistrationJointKemSecondEntry.opaqueBranch_slots": "theorem opaqueBranch_slots (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (correct : SourceFullCorrect setup.source setup.hmac) :\n    (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        false).boolDistAdvantage\n      (slotGame (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        (1 + budget (.inl 5))) ≤\n      ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +\n        ∑ slot ∈ Finset.range (1 + budget (.inl 5)),\n          (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage\n            (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n              ensureInit supplied decision work runtime count selected index) slot)) +\n        ∑ k ∈ Finset.range (1 + budget (.inl 5)), keyScheduleBound setup.source setup.hmac\n          (entryDk (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n            k)",
+  "PqxdhRegistrationJointKemSecondEntryTable.indexed_eager_output": "theorem indexed_eager_output {α : Type} [MeasurableSpace α] (sampler : ℕ → ProbComp R) (k : ℕ)\n    (client : OracleComp (Spec D R) α) (state : IState D R) :\n    𝒟[(simulateQ (indexedImpl sampler) client).run' state] =\n      𝒟[do let value ← sampler k; (simulateQ (indexedImpl (pin k value sampler)) client).run' state]"
+ },
+ "leanpath": {
+  "manifest": "/tmp/bc-arc-scratch/extract-design/inc3/leanpath",
+  "sha256": "c79f9b3c9d7141a02fe09633f9aa897395e7ddd9574645fb01a7a2229fad2e5b",
+  "note": "First entry: the scratch prefix inc3/olean, a resolved mirror (mirror.py) of the first prefix of the published LEAN_PATH of central a2b53800 (extract-design/inc2-int/olean) without the root olean, followed by the published a2b53800 LEAN_PATH (/tmp/bc-coord/leanpaths/a2b5380080ed397ae31b790e79304b39e16135b1.leanpath). check.sh refuses to write over a mirror symlink, so no other prefix was written. The final checks rebuilt the eight modules and the root in import order after the documentation edits.",
+  "review_fixes": {
+   "manifest": "/tmp/bc-arc-scratch/extract-design/inc3/fix1/leanpath",
+   "sha256": "9ad5a74b387f0222dc03aba712e14eb59c5424ec3aeae68b5d5103029f278d02",
+   "note": "First entry: the fresh scratch prefix inc3/fix1/olean, a resolved symlink mirror of inc3/olean without the oleans of PqxdhRegistrationJointKemIdealKeys, PqxdhRegistrationJointKemSecondEntryTable, PqxdhRegistrationJointKemSecondEntry and the root, which were rebuilt there in import order; followed by the published a2b53800 LEAN_PATH. inc3/olean was not written."
+  }
+ },
+ "root_check_final": {
+  "exit": 0,
+  "start": "2026-10-08T03:11:12.881250375Z",
+  "end": "2026-10-08T03:11:21.064421235Z",
+  "source_sha256": "968055d31eebb672238c5050c49b8b7b372d5e5abc204ddbc9a8fe81836974c9",
+  "log_bytes": 0,
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "command": [
+   "coord.sh",
+   "lean",
+   "claude",
+   "<label>",
+   "--",
+   "timeout",
+   "180",
+   "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+   "-j1",
+   "-M8000",
+   "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+   "-o",
+   "/tmp/bc-arc-scratch/extract-design/inc3/olean/BeaconcryptCore.olean",
+   "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+  ]
+ },
+ "root_checks_note": "The root was also checked after each stage (exit 0, empty log), before the final rebuild.",
+ "focused_inventory": {
+  "inv-s3b": {
+   "exit": 0,
+   "log_bytes": 2032,
+   "log_sha256": "9cd6bcb8f9d7bcc7b92e533aaac9ee15915e4210b0707aae0fae963c6b46b4fb",
+   "last_line": "Formal-verification inventory matches the reviewed boundary.",
+   "start": "2026-10-08T02:40:59Z",
+   "end": "2026-10-08T02:42:17Z"
+  },
+  "inv-s4b": {
+   "exit": 0,
+   "log_bytes": 2032,
+   "log_sha256": "21dbc9f126728eee82570d298972ac126d8e4d468a3fa6617300325467f4f755",
+   "last_line": "Formal-verification inventory matches the reviewed boundary.",
+   "start": "2026-10-08T02:44:15Z",
+   "end": "2026-10-08T02:45:33Z"
+  },
+  "inv-s7": {
+   "exit": 0,
+   "log_bytes": 2031,
+   "log_sha256": "397a758ad0ce45c81c0b1e9d5b1843e17b59838cdf376b7cd03a9074c63e7064",
+   "last_line": "Formal-verification inventory matches the reviewed boundary.",
+   "start": "2026-10-08T03:00:42Z",
+   "end": "2026-10-08T03:02:01Z"
+  },
+  "inv-fix1": {
+   "exit": 0,
+   "log_bytes": 1929,
+   "log_sha256": "2be17543483d7120b67c729012ecd69eb4b273b02dcc3a80619bd53c5f87c068",
+   "last_line": "Formal-verification inventory matches the reviewed boundary.",
+   "start": "2026-10-08T03:45:30Z",
+   "end": "2026-10-08T03:46:49Z"
+  }
+ },
+ "focused_inventory_note": "check-inventory ran on the tree of each stage commit (S3b fc7e1ff8, S4b 7c33b745, S7 9cab71ca) in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C beaconcrypt-core check-inventory) under a coord.sh @nix lease. coord.sh inv recount ran before inv rehash at each stage, and a second inv rehash reported no change. The documentation commit changes no inventoried file. After the review fixes (inv-fix1): coord.sh inv recount (1618, unchanged) before inv rehash of the three rebuilt modules, the root, trusted-boundary.md and check-inventory.sh (last); a second rehash changed nothing; the focused check-inventory ran on the review-fix tree under a coord.sh @nix lease.",
+ "inventory_counts": {
+  "handwritten_lean_before": 1610,
+  "after_S3b": 1615,
+  "after_S4b": 1616,
+  "after_S7": 1618,
+  "after_review_fixes": 1618
+ },
+ "forbidden_scan": "No sorry, admit, axiom, opaque declaration, native_decide, implemented_by, extern or unsafe in the eight modules (rechecked on the three changed modules after the review fixes). Module-level options autoImplicit false and maxRecDepth 100000; one scoped set_option linter.deprecated false in (indexed_eager, VCVio probability notation, as in increment 1), recorded as an exception in the guide; its 𝒟 form indexed_eager_output has no scoped option and run_eager uses it. No deprecated lemma.",
+ "contamination_scan": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc3/probe/contamination-scan.lean",
+  "source_sha256": "c0a254dc7c1cce94bf5c5c06cfb6882a34249a897921b28e90fc493ce30fe068",
+  "log_sha256": "974f93d670e5bffe5bf552702c6ef60170df8dd7388e78b07bd14b9554bebcdd",
+  "output": "scanned 289 declarations of 8 modules; forbidden direct references: 0 []\nliveness: [BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily.realGame]"
+ },
+ "guard_liveness": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc3/probe/guard-liveness.lean",
+  "source_sha256": "26d501da31065412b28426ba57846163448e62ce8e618e099f7b7b69ff2ea1f8",
+  "log_sha256": "855bec16304968e2d33d38c4cce20b94bc6146a05108fe25e9df42f0b4eed91b",
+  "result": "exit 1 with 8 guard mismatches, one per module."
+ },
+ "guard_coverage": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc3/probe/theorem-coverage.lean",
+  "source_sha256": "bd345d71314a5778aa6d8bad8a52a1312f6dbfdc6333828243a37eb47e40cae9",
+  "log_sha256": "69ebdbd7487a044ec94507c58a17c1f344b16c353f028bc449eada843d18627c",
+  "result": "289 constants in the eight modules, all depending only on propext, Classical.choice and Quot.sound; the 126 theorem constants with declaration ranges are exactly the 126 guard names (logs/thm-range.txt and logs/guard-names.txt identical)."
+ },
+ "candidate_closure": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc3/probe/candidate-closure.lean",
+  "source_sha256": "693eb5baa4cac8ccb805bcdf50b524eb4a8efc708252c0d10c2698b664898fb4",
+  "log_sha256": "45524957b177ec8e797316360ae57a2790227deaaa07d2d0d16df62d9ce458b7",
+  "output": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactor.entryClient closure (types: false): 3079 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactor.entryClient closure (types: true): 5084 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactor.entryD closure (types: false): 3117 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactor.entryD closure (types: true): 5126 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemIdealKeys.idealKeysBranch closure (types: false): 3123 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemIdealKeys.idealKeysBranch closure (types: true): 5131 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.entryDk closure (types: false): 3122 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.entryDk closure (types: true): 5131 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.allIdealBranch closure (types: false): 3088 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.allIdealBranch closure (types: true): 5093 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.slotGame closure (types: false): 3106 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.slotGame closure (types: true): 5111 constants; candidate-carrying definitions reached: []\nliveness: sharedGame closure reaches sharedImpl: true\nliveness: groupedBranc"
+ },
+ "idealKeys_term_grep": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc3/probe/idealkeys-term-grep.lean",
+  "source_sha256": "9e641bb03f14d9f4ce5cd5730c774f1420c559893baad5535c3a2c51943732ac",
+  "log_sha256": "374d5947bfae55951958b481d8b2899b1e7401b37c8d541e0445657cd0daf94f",
+  "output": "root value: 0 uniform samplings\nreachable BeaconcryptCore constants: 1428\nconstants sampling MlKemSharedSecret (syntactic): 0 []\nall uniform samplings in reachable definition values: 8\n  BeaconcryptCore.Computational.PqxdhJointGapDh.sampleScalar: BeaconcryptCore.Computational.PqxdhJointGapDh.ScalarBytes\n  BeaconcryptCore.Computational.PqxdhJointGapDh.sampleScalar: BeaconcryptCore.Computational.PqxdhJointGapDh.ScalarBytes\n  BeaconcryptCore.Computational.PqxdhJointIdentity.sampleSeed: BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed\n  BeaconcryptCore.Computational.PqxdhJointIdentity.sampleSeed: BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed\n  BeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactor.entryD: BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput\n  BeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactor.entryD: BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput\n  BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.uniformGame: BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.Output\n  BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.uniformGame: BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.Output"
+ },
+ "allIdeal_term_grep": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc3/probe/allideal-term-grep.lean",
+  "source_sha256": "98888bacba14b51acc09aa3c02ed98131b7bbb69fe9b130625adb8d4a5bcfd65",
+  "log_sha256": "6a1213dbc02da39a80d65c76d2c52821de956e5ed87e7d1774a01a2804b9353e",
+  "output": "root value: 0 uniform samplings\nreachable BeaconcryptCore constants: 1397\nconstants sampling MlKemSharedSecret (syntactic): 0 []\nall uniform samplings in reachable definition values: 4\n  BeaconcryptCore.Computational.PqxdhJointGapDh.sampleScalar: BeaconcryptCore.Computational.PqxdhJointGapDh.ScalarBytes\n  BeaconcryptCore.Computational.PqxdhJointGapDh.sampleScalar: BeaconcryptCore.Computational.PqxdhJointGapDh.ScalarBytes\n  BeaconcryptCore.Computational.PqxdhJointIdentity.sampleSeed: BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed\n  BeaconcryptCore.Computational.PqxdhJointIdentity.sampleSeed: BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed"
+ },
+ "candidate_note": "No game or distinguisher of this increment has a candidate argument; each is built from sharedStart and the services skeleton, which draw no candidate (splitGame_root of increment 2 states that the split world, which draws none, is the random game on rootClient, and rootClient_entry relates rootClient to entryClient). The closure check and the term greps are scratch metaprograms; the term grep is syntactic on the type name (MlKemSharedSecret and RootOutput are both List.Vector UInt8 32) and finds no sampling at MlKemSharedSecret.",
+ "deviations_from_plan": [
+  "Order: the task order was S3b, S4b, T, S7, S8. Stage T was deferred (cross-layer KEM-index uniqueness invariant between the grouped client's owners and the post-challenge router's creation counter, through the prefix and the post-challenge phase; no existing lemma provides it); S7 was built generic in the number of hidden entries (1 + qFinish), so T only shortens its sum; S8 was not started.",
+  "S3b: split into five modules (EntryFactorTools, EntryFactorNative, EntryFactorSteps, EntryFactorResume, EntryFactor). The Beacon factor uses beacon_afterRoot_factor (native_tail and primitive_factor composed) directly at the skeleton's embedded prepared state; the nativeCtx lift at source14's original and the per-owner ReadyRel fallback were not needed. First-entry eager sampling is S3a's uniformGame_first with firstTable_relabel. The statement is an equality of output distributions.",
+  "S3b: the native and the factored skeletons receive different answers only at the resumption's private root request (root versus placeholder); root request, consumption and publication are compared as one block (challenge_rel), because the intermediate state may hold a stale pending token at the new session index.",
+  "S4b: idealKeysBranch is defined as PqxdhServerAuthKeySchedule.uniformGame entryD (H4).",
+  "S7: the indexed lazy-table hybrid of the plan's S7 row (rather than one extra entry under T), with the slot form behind a first-touch coordinate-to-slot allocator in front of PqxdhRecordLiftLazyTable; modules PqxdhRegistrationJointKemSecondEntryTable (generic) and PqxdhRegistrationJointKemSecondEntry.",
+  "No planned statement turned out false or unprovable; none was weakened; no assumption or contract added; no existing module changed."
+ ],
+ "contracts_used": "None new. T7 and T7-all take exactly T5's source budget certified and SourceFullCorrect setup.source setup.hmac (owner decision of 2026-10-06). The first term is valid only under the R1 random-oracle model of the zero-key 192-byte Extract slice (owner decision 2, extended to this line); the HMAC-SHA-512 PRF and Extract-on-uniform32 advantages are explicit terms. The R1 extension to this line is listed in doc/composition-assumptions.md and beaconcrypt-core/proofs/trusted-boundary.md since the review fixes.",
+ "headline_bound": "T7: (opaqueBranch ... false).boolDistAdvantage (idealKeysBranch ...) <= (qAccept + qFinish + qHmac)/2^256 + sum over slot < 1 + qFinish of AdvPRF(indexedReduction setup.hmac rootClient slot) + AdvExt_uniform32(initExtractReduction source hmac entryD) + AdvPRF(initExpandReduction source entryD) + AdvExt_uniform32(stepExtractReduction hmac entryD) + AdvPRF(stepExpandReduction entryD). T7-all: the same with the last four terms replaced by the sum over k < 1 + qFinish of keyScheduleBound source hmac (entryDk k), against allIdealBranch (= slotGame (1 + qFinish)).",
+ "not_proved": [
+  "Stage T (qRoot = 2, n = 2 slots); CE-11b waits for it (a hand-off at 1 + qFinish slots would need a request and an ack with Codex).",
+  "Stage S8 (resumption open bill, reduction bills with KemBound and initBound, hidden-entry sampler draws of entryD and entryDk k).",
+  "Stages S5 (T8, composite with T5), S6 (key-first form) and S9.",
+  "CE-11's law-level CoreNatural for idealReg g: slot_natural and entryClient_natural are exact-form analogues for item 2's clients and do not discharge it (CE-11b's obligation)."
+ ],
+ "re_estimate": "S3b, S4b and S7 (increment-2 re-estimate 3.5-9 agent-days) were built in one working session. Remaining: 9-17 agent-days: T 3-6, S8 3-5, S5+S6 1-2, S9 2-4. Main risks: stage T's cross-layer invariant and S8's per-layer cost accounting.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif, Rust or transcript-fidelity run; no production Rust or ProVerif change.",
+ "review": "Independently reviewed at ddd954ec by a semantic review and a hygiene review (one major finding, three minor findings and five nits, one of them a record of the hygiene checks). All are fixed in the review-fix commit 3e2fe170 (review_fixes); it adds one theorem (indexed_eager_output) and changes no existing statement. The confirming review of 3e2fe170 checked the eight review-fix items independently, found all resolved and approved, with documentation nits (confirming_review_fixes), fixed in the documentation-only commit that re-issues this receipt; it changes no Lean file. Integration into central follows (merge of central into the branch, coordination protocol section 6).",
+ "date_first_issue": "2026-10-08T03:12:19.519553+00:00",
+ "root_check_review_fixes": {
+  "exit": 0,
+  "start": "2026-10-08T03:37:57.333243616Z",
+  "end": "2026-10-08T03:38:06.102135192Z",
+  "source_sha256": "968055d31eebb672238c5050c49b8b7b372d5e5abc204ddbc9a8fe81836974c9",
+  "log_bytes": 0,
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "artifact_sha256": "658ca1a66b8a16fe63321ab789ea780b0c73782b00bee67fc92b248f7106913e",
+  "command": [
+   "coord.sh",
+   "lean",
+   "claude",
+   "<label>",
+   "--",
+   "timeout",
+   "180",
+   "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+   "-j1",
+   "-M8000",
+   "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+   "-o",
+   "/tmp/bc-arc-scratch/extract-design/inc3/fix1/olean/BeaconcryptCore.olean",
+   "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+  ]
+ },
+ "contamination_scan_review_fixes": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc3/fix1/probe/contamination-scan.lean",
+  "source_sha256": "c0a254dc7c1cce94bf5c5c06cfb6882a34249a897921b28e90fc493ce30fe068",
+  "log_sha256": "2f1cb8353a5672dd2fbf71d0867de368151e6bbb0b188e541f23209c54d9815b",
+  "output": "scanned 290 declarations of 8 modules; forbidden direct references: 0 []\nliveness: [BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily.realGame]"
+ },
+ "guard_coverage_review_fixes": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc3/fix1/probe/theorem-coverage.lean",
+  "source_sha256": "bd345d71314a5778aa6d8bad8a52a1312f6dbfdc6333828243a37eb47e40cae9",
+  "log_sha256": "1d9042267ea32d39a137046a651fdde1a25150804097eab1a64fe603db75255b",
+  "result": "290 constants in the eight modules, all depending only on propext, Classical.choice and Quot.sound; the 127 theorem constants with declaration ranges are exactly the 127 guard names (fix1/logs/thm-range.txt and fix1/logs/guard-names.txt identical)."
+ },
+ "guard_liveness_review_fixes": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc3/fix1/probe/liveness.lean",
+  "source_sha256": "aeb78679e9d228eef9bc32180a9d58d016cd2b181792d9fcbb68a66632a6c26a",
+  "log_sha256": "298ab5ce4d78796638ad9f8ed423cecb9693aa411da2e1c6fac7c64e3203bb13",
+  "result": "exit 1: the deliberately wrong guard for indexed_eager_output (missing Classical.choice) fails; the probe also prints the statements of indexed_eager_output and run_eager."
+ },
+ "git_diff_check_review_fixes": "clean",
+ "review_fixes": [
+  "Major, naturality: slot_natural and entryClient_natural are described as item 2's exact-form analogue (for clients of the allocator and for the closed client entryClient) of CE-11's CoreNatural, covering exact service projections such as LazyOracleDiscard.impl_project; 'which the exact form implies' is removed. CE-11b still has to prove CoreNatural in law, per command, for idealReg g with split marks; a LawEq variant of slot_natural over a client B + (D ->o R) would be the reusable piece; the S7 slot form stores the joined 108 bytes in the marks and is at n = 1 + qFinish. Changed: module documentation of SecondEntryTable and SecondEntry, docstrings of slot_natural and entryClient_natural, guide (S7 section, consumer notes, not claimed), analysis paragraph, plan section 21 and its snapshot. No Lean statement changed.",
+  "Minor, T7 module header: stage T (PqxdhRegistrationJointBeaconFinishOnce, not built) would restate the bound with 2.",
+  "Minor, stage T and n = 2: guide (stage T section, consumer notes), analysis and plan section 21 say that CE-11b waits for stage T; using 1 + qFinish slots would change the hand-off n (C4, per-slot record-lift terms) and needs a request and an ack with Codex. T and n = 2 stay open.",
+  "Minor, R1 in the assumption lists: new end-of-file sections in doc/composition-assumptions.md and beaconcrypt-core/proofs/trusted-boundary.md (the file the plan cites as trusted-boundary.md) record the R1 extension to this line (Extract ROM on the 192-byte slice and Extract game on a uniform 32-byte key; no new primitive game; correlated family not used; S1c, S2, T7 and T7-all depend on it). Existing Server-authentication paragraphs unchanged.",
+  "Nit, S8 bill: the guide S8 paragraph, plan section 21 note 4 and the scratch NOTES list the hidden-entry sampler draws of entryD and entryDk k.",
+  "Nits (two), 𝒮 statement of indexed_eager: kept unchanged and recorded as an exception in the guide checks; new theorem indexed_eager_output (𝒟 form for outputs, exact guard propext, Classical.choice, Quot.sound, no scoped option); run_eager now applies it (statement unchanged).",
+  "Nit, plan section 21 note 4: \"re-estimate 3-5 agent-days\"; snapshot header and this receipt name the new plan SHA-256.",
+  "Nit, hygiene record: no action."
+ ],
+ "confirming_review_fixes": [
+  "Assumption-list scope (analysis): the entries 'Extract PRG-type games' and 'zero-salt HKDF-Extract on 192-byte inputs as a programmable random oracle' of doc/formal-verification-analysis.md now include item 2's registration/KEM line under owner decision 2 in their scope parentheticals and end with a pointer to doc/composition-assumptions.md, section 'Item 2: route R1 on the registration KEM line'.",
+  "'Listed above' (doc/composition-assumptions.md): only the random-oracle idealization is said to be listed above; the section is called the first listing of the Extract PRG-type game in that file and cites the analysis entry (cryptographic assumptions).",
+  "Guide status: the increment-3 introduction and the top status paragraph give 127 theorems (126 at ddd954ec), the reviews at ddd954ec, the review-fix commit 3e2fe170, the confirming review and the integration step; new guide section \"Increment 3: confirming review\".",
+  "Optional, naturality in plain English: the analysis paragraph says 'up to a map of the table's internal state that may forget parts of it, such as its query counts' instead of 'up to a renaming'.",
+  "Optional, exact statements: every exact_statements entry is cut at the first top-level ':=' of its theorem; only factorHidden_eq changed (it extended into the next two declarations).",
+  "Record of the independent checks: no action."
+ ],
+ "plan_snapshot_refresh": "doc/impl/extract-composition-plan.md refreshed from the scratch plan (section 21 header: review and integration status); pre-edit copy /tmp/bc-arc-scratch/extract-design/inc3-int/plan.pre-int.md."
+}

@@ -1,0 +1,208 @@
+{
+ "date": "2026-10-20",
+ "scope": "VCVio deprecation migration, stage S3, fixes of the two independent reviews at 08cb87f7 (statement equivalence EQ-S3-1..EQ-S3-4, hygiene H1..H4). No Lean file of the build changed. Supplements vcvio-deprecations-s3.json (the record of 08cb87f7) for the certificate method stated in the trust boundary, the wording on the generated helpers, the list of certificate runs, the phase B exception list and the wording of the analysis section and the record.",
+ "basis": "77950cf2fcac55ed52ff275de4afae307659c81b",
+ "previous_head": "08cb87f72564959b8b5d64fb00520b81b3e18cc3",
+ "topic": {
+  "branch": "codex/vcvio-migration-S3",
+  "clone": "/home/user/bc-vmig-S3"
+ },
+ "commits": {
+  "fixes": "the commit that adds this receipt"
+ },
+ "reviews": {
+  "equivalence": {
+   "verdict": "APPROVE_WITH_NITS",
+   "findings_sha256": "c3016b6bae9bc0c9fa97972734f31cf6e886eb0653dc90dc5d582d55601c31ca",
+   "fixed": [
+    "EQ-S3-1 (exception list; the acceptance part is A2 item 4)",
+    "EQ-S3-2",
+    "EQ-S3-3",
+    "EQ-S3-4 (informational; S4 check recorded)"
+   ]
+  },
+  "hygiene": {
+   "verdict": "APPROVE_WITH_NITS",
+   "findings_sha256": "581c0a493a119de8cd50a6dd0d54bb5f71931675b8e1f910dcf8f7099e499e9f",
+   "fixed": [
+    "H1",
+    "H2",
+    "H3",
+    "H4"
+   ]
+  },
+  "owner_level": [
+   "EQ-S3-1, the part that would let the D6 target and the plan's final acceptance check accept recorded exceptions: item 4 of amendment A2, pending the owner's decision, not in effect"
+  ]
+ },
+ "fixes": {
+  "EQ-S3-1": "per-declaration phase B exception list of the stage (13 declarations, 103 facade-probe rows outside the bridge and the twins) written to /tmp/bc-arc-scratch/vcvio-migration/S3/review-fix/data/phaseB-exceptions.json from S3/stage/phaseb-report.json, to be carried into the final residual report after S9; A2 item 4 stays on the owner's agenda before the S9 final sweep",
+  "EQ-S3-2": "analysis section, S3 record entry (G4 bullet) and S3 receipt (G4 note_generated_type_changes): of the four generated helpers with type changes, only the two _proof_1_6 changed their type hash (arithmetic side goals of the rewritten proofs); the two _proof_1_4 differ only in macro-scoped binder names (equal type hash and value hash). Confirmed by a scratch probe on the base and stage builds",
+  "EQ-S3-3": "scratch PROGRESS.md: the five restated private lemmas are in PqxdhProjectionCollisions (the S3 line said PqxdhExtractRomHiddenSuffix)",
+  "EQ-S3-4": "informational: the removed on-demand equation lemmas and the splitter are used by nothing at the stage; S4 must confirm that evalSPMF_split_uniformJointKdfStream_vcvioLegacy._simp_1_1 and the twin's inventory pins disappear with the twin (recorded in S3/NOTES.md, PROGRESS.md and the record)",
+  "H1": "beaconcrypt-core/proofs/trusted-boundary.md, S3 section: 56 certificates invert the vocabulary map; the certificate of PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream (named in the section) is the plan's textual fallback; inventory row rehashed",
+  "H2": "analysis section: the Lean README writes the collision bound as Pr[collision] <= ..., the analysis and the trust boundary as Pr[visible collision] <= ...",
+  "H3": "S3 receipt logs entry: certificates-2 and check-certificates-2 (checker RESULT FAIL, generator corrected and rerun before run 3); S3/NOTES.md sentence",
+  "H4": "coord.sh registry note of the scratch directory /tmp/bc-arc-scratch/vcvio-migration/S3: 'S2-twin switch-back' replaced by 'consumer renames of the S3 twins (no S2-twin switch-back in S3)'"
+ },
+ "phase_b_exceptions": {
+  "file": "/tmp/bc-arc-scratch/vcvio-migration/S3/review-fix/data/phaseB-exceptions.json",
+  "sha256": "3f3a08a68f825dc094c292f217314a2c762977e1c1949a204c6a1ffd94d7a32a",
+  "counts": {
+   "declarations": 13,
+   "rows": 103,
+   "by_module": {
+    "PqxdhExtractRomHiddenSuffix": 6,
+    "PqxdhHiddenRoot": 7
+   },
+   "statement_about_total_variation": 10,
+   "twin_rows_excluded": 20,
+   "twin_declarations_excluded": [
+    "PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy",
+    "PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy",
+    "PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy._simp_1_1"
+   ]
+  },
+  "declarations": {
+   "PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist": [
+    "statement about total variation (tvDist: not deprecated at the pin, defined from the deprecated SPMF distributions, no forward counterpart at 98dc1089)",
+    "proof uses VCVio lemmas stated at the pin only in the deprecated form: output-probability difference bounded by total variation"
+   ],
+   "PqxdhExtractRomHiddenSuffix.flagged_tvDist": [
+    "statement about total variation (tvDist: not deprecated at the pin, defined from the deprecated SPMF distributions, no forward counterpart at 98dc1089)",
+    "proof uses VCVio lemmas stated at the pin only in the deprecated form: identical-until-bad (total variation)"
+   ],
+   "PqxdhExtractRomHiddenSuffix.hidden_suffix_bound": [
+    "proof goes through a total-variation bound",
+    "proof uses VCVio lemmas stated at the pin only in the deprecated form: total variation under a shared draw"
+   ],
+   "PqxdhExtractRomHiddenSuffix.prefix_tvDist": [
+    "statement about total variation (tvDist: not deprecated at the pin, defined from the deprecated SPMF distributions, no forward counterpart at 98dc1089)"
+   ],
+   "PqxdhExtractRomHiddenSuffix.secret_tvDist": [
+    "statement about total variation (tvDist: not deprecated at the pin, defined from the deprecated SPMF distributions, no forward counterpart at 98dc1089)"
+   ],
+   "PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent": [
+    "statement about total variation (tvDist: not deprecated at the pin, defined from the deprecated SPMF distributions, no forward counterpart at 98dc1089)",
+    "proof uses VCVio lemmas stated at the pin only in the deprecated form: total variation under a shared draw"
+   ],
+   "PqxdhHiddenRoot.hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add": [
+    "proof goes through a total-variation bound",
+    "proof uses VCVio lemmas stated at the pin only in the deprecated form: output-probability difference bounded by total variation"
+   ],
+   "PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_bad": [
+    "statement about total variation (tvDist: not deprecated at the pin, defined from the deprecated SPMF distributions, no forward counterpart at 98dc1089)"
+   ],
+   "PqxdhHiddenRoot.hiddenRootProgrammed_tracking_tvDist_le_programmedBad": [
+    "statement about total variation (tvDist: not deprecated at the pin, defined from the deprecated SPMF distributions, no forward counterpart at 98dc1089)"
+   ],
+   "PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_probEvent_bad_eq": [
+    "proof uses VCVio lemmas stated at the pin only in the deprecated form: identical-until-bad (bad-event probability)"
+   ],
+   "PqxdhHiddenRoot.jointKdfSingletonProgrammed_tracking_tvDist_le_bad": [
+    "statement about total variation (tvDist: not deprecated at the pin, defined from the deprecated SPMF distributions, no forward counterpart at 98dc1089)",
+    "proof uses VCVio lemmas stated at the pin only in the deprecated form: identical-until-bad (total variation)"
+   ],
+   "PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind": [
+    "statement about total variation (tvDist: not deprecated at the pin, defined from the deprecated SPMF distributions, no forward counterpart at 98dc1089)",
+    "proof uses VCVio lemmas stated at the pin only in the deprecated form: total variation under a shared draw"
+   ],
+   "PqxdhHiddenRoot.tvDist_hiddenRootSharedRandomGame_independentGame_le": [
+    "statement about total variation (tvDist: not deprecated at the pin, defined from the deprecated SPMF distributions, no forward counterpart at 98dc1089)"
+   ]
+  },
+  "amendment_A2": {
+   "file": "/tmp/bc-arc-scratch/vcvio-migration/AMENDMENTS.md",
+   "sha256": "0ec668aca2f276a2eb3a882eb80b9375d3d1095713fffacdefde4d5c050e83a9",
+   "items_in_effect": [
+    1,
+    2,
+    3
+   ],
+   "pending_owner_decision": [
+    4
+   ]
+  }
+ },
+ "generated_helper_probe": {
+  "file_sha256": "19af9f8f3ad6adb0feae458b7a1b98b8c7dd4287e6202bb3ee681e5afea66f45",
+  "logs_sha256": {
+   "base": "5aaf3a88672934c6ee0c42a6601d3be6958856f3f5bcf7a74625bae59ca46070",
+   "stage": "fe8d9221a75641130cb0dd01331c2b2b4d0fdedefe0e81922ee23721fec30313"
+  },
+  "type_hashes": {
+   "probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_4": {
+    "base": 1303063354,
+    "stage": 1303063354
+   },
+   "probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_6": {
+    "base": 265499323,
+    "stage": 2588090280
+   },
+   "probEvent_projectionCacheBad32_run_le_sum_aux._proof_1_4": {
+    "base": 1438865038,
+    "stage": 1438865038
+   },
+   "probEvent_projectionCacheBad32_run_le_sum_aux._proof_1_6": {
+    "base": 803900932,
+    "stage": 1907849645
+   }
+  },
+  "content": {
+   "_proof_1_6 base": "... -> 0 < m -> not m = m - 1 + 1 -> False",
+   "_proof_1_6 stage": "... -> forall j, not k + 1 + j = k + (j + 1) -> False"
+  }
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "987e93df28f0d50ad616536108c41d2220bd985b4feafffc521899f48ee1660e",
+   "olean_sha256": "779be810e6d5773ba092f71c3ba3ef5de65e540e321971cd075728e637097b9f",
+   "olean_equal_to_shared_build": true,
+   "check_certificates_s2.py": "f330b2676633e4d1b2921abd285282107f0242e34c9b8948f0a80298cceca540"
+  },
+  "certificate_file_sha256": "186c6064b5b548c897aae28432eeee8a3544b8bf45227b007f14bf90150681ac",
+  "certificate_file_equal_to_stage": true,
+  "negative_file_sha256": "c70c504afdd4044b5e2141a20c856533b64e6ab702c786c06ac03912267c829f",
+  "negative_file_equal_to_stage": true,
+  "pre_stage_dump_sha256": "ce5eacae88630d0e9ec6c0c0ab6e97617e4999d8de7a5d44ca23605f0d65a110",
+  "pass_lines": 59,
+  "negative_error_lines": [
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20
+  ],
+  "checker": "RESULT PASS",
+  "lean_output_equal_to_stage_run_3": true,
+  "lean_output_equal_to_validation_run": true,
+  "negative_output_equal_to_stage_run_3": true,
+  "log_sha256": "0f857cf1ea383972e0dd81bf01b771f3088854df823298a234abbb07bb6f7a4a"
+ },
+ "repository_checks": {
+  "inv_recount": "handwritten-lean count unchanged (1987)",
+  "inv_rehash": "proofs/lean/BeaconcryptCore.lean: unchanged; proofs/trusted-boundary.md: 92ea25b66602 -> a5003173a3da; proofs/check-inventory.sh: unchanged",
+  "check_inventory_edited_tree": {
+   "lease": "00000819",
+   "rc": 0
+  },
+  "check_lean": {
+   "lease": "00000820",
+   "rc": 0,
+   "jobs": [
+    "5535"
+   ],
+   "modules_built": 0,
+   "modules_replayed": 245
+  },
+  "lean_scan": "LEAN-SCAN files 1994 hits 0"
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S3/review-fix/logs/"
+}

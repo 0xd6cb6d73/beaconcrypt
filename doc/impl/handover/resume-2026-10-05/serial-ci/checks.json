@@ -1,0 +1,47 @@
+[
+  {
+    "label": "focused-final",
+    "command": [
+      "nix",
+      "develop",
+      "--no-update-lock-file",
+      "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+      "-c",
+      "env",
+      "CARGO_TARGET_DIR=/tmp/beaconcrypt-primitive-fidelity-cargo-target",
+      "make",
+      "-C",
+      "beaconcrypt-core",
+      "SHELL=/run/current-system/sw/bin/bash",
+      "check-proverif-transcript-fidelity",
+      "check-inventory"
+    ],
+    "start": "2026-10-05T23:55:23.342465+00:00",
+    "end": "2026-10-05T23:56:39.697590+00:00",
+    "exit": 0,
+    "log_sha256": "fb2861830224b609c5288c4527b8cc0a83873a57bea611491152af9dd6726c39"
+  },
+  {
+    "label": "dry-run",
+    "command": [
+      "nix",
+      "develop",
+      "--no-update-lock-file",
+      "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+      "-c",
+      "env",
+      "CARGO_TARGET_DIR=/tmp/beaconcrypt-primitive-fidelity-cargo-target",
+      "make",
+      "-C",
+      "beaconcrypt-core",
+      "SHELL=/run/current-system/sw/bin/bash",
+      "-n",
+      "verify-proverif-fs-in-shell",
+      "verify-proverif-extensions-in-shell"
+    ],
+    "start": "2026-10-05T23:56:39.697925+00:00",
+    "end": "2026-10-05T23:56:40.423475+00:00",
+    "exit": 0,
+    "log_sha256": "5be80c122033b08611de8cc4b49d497d918452c7f9b4b6e4463059739949caf3"
+  }
+]

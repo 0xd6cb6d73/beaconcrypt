@@ -12,8 +12,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-
-SPEC = importlib.util.spec_from_file_location("package_wasm", Path(__file__).with_name("package-wasm.py"))
+SPEC = importlib.util.spec_from_file_location(
+    "package_wasm", Path(__file__).with_name("package-wasm.py")
+)
 packager = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(packager)
 
@@ -62,7 +63,9 @@ class PackagingTest(unittest.TestCase):
             "LICENSE": b"0BSD fixture\n",
             "Cargo.toml": b"[workspace]\n",
             "Cargo.lock": b"# pinned fixture\n",
-            "scripts/wasm-toolchain.json": b'{"rust":"1.97.1","zig":"0.17.0","target":"wasm32-wasip1","wasm_abi_version":1}',
+            "beaconcrypt-crypto/Cargo.toml": b'[package]\nname="beaconcrypt-crypto"\n',
+            "beaconcrypt-crypto/src/lib.rs": b"#![no_std]\n",
+            "scripts/wasm-toolchain.json": b'{"rust":"1.99.1","target":"wasm32-wasip1","wasm_abi_version":1}',
             "internal/wasm/beaconcrypt.wasm": guest(),
             "internal/wasm/runtime.go": b"package wasm\n",
             "testdata/fixture.json": b'{"fixture":true}',
@@ -72,18 +75,63 @@ class PackagingTest(unittest.TestCase):
             destination = self.repo / path
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(content)
-        self.state = patch.object(packager, "git_state", return_value=("1" * 40, 1_700_000_000, False))
+        self.state = patch.object(
+            packager, "git_state", return_value=("1" * 40, 1_700_000_000, False)
+        )
         self.state.start()
         self.addCleanup(self.state.stop)
         self.record_build()
 
     def record_build(self):
-        versions = {("rustc", "--version"): "rustc 1.97.1 (fixture)",
-                    ("cargo", "--version"): "cargo 1.97.1 (fixture)", ("zig", "version"): "0.17.0"}
+        versions = {
+            ("rustc", "--version"): "rustc 1.99.1 (fixture)",
+            ("cargo", "--version"): "cargo 1.99.1 (fixture)",
+        }
         original_command = packager.command
-        with patch.object(packager, "command", side_effect=lambda repo, *args:
-                          versions[args] if args in versions else original_command(repo, *args)):
+        with patch.object(
+            packager,
+            "command",
+            side_effect=lambda repo, *args: (
+                versions[args] if args in versions else original_command(repo, *args)
+            ),
+        ):
             return packager.record_build(self.repo)
+
+    def test_rust_only_provenance_and_crypto_input_tracking(self):
+        versions = {
+            ("rustc", "--version"): "rustc 1.99.1 (fixture)",
+            ("cargo", "--version"): "cargo 1.99.1 (fixture)",
+        }
+        with patch.object(
+            packager, "command", side_effect=lambda repo, *args: versions[args]
+        ) as invoked:
+            info = packager.record_build(self.repo)
+        self.assertEqual(
+            [call.args[1:] for call in invoked.call_args_list], list(versions)
+        )
+        self.assertEqual(
+            info["toolchain"],
+            {
+                "rustc": versions[("rustc", "--version")],
+                "cargo": versions[("cargo", "--version")],
+            },
+        )
+        source = Path("beaconcrypt-crypto/src/lib.rs")
+        self.assertIn(str(source), info["build_inputs_sha256"])
+        (self.repo / source).write_text("#![no_std]\npub const CHANGED: bool = true;\n")
+        with self.assertRaisesRegex(ValueError, "inputs changed"):
+            packager.package(self.repo, self.output, "v0.6.0")
+
+    def test_legacy_toolchain_metadata_remains_packageable(self):
+        info = json.loads((self.repo / packager.BUILD_INFO_PATH).read_text())
+        info["toolchain"]["zig"] = "0.17.0"
+        (self.repo / packager.BUILD_INFO_PATH).write_bytes(packager.json_bytes(info))
+        archive = packager.package(self.repo, self.output, "v0.6.0")
+        with tarfile.open(archive, "r:gz") as bundle:
+            manifest = json.load(
+                bundle.extractfile("beaconcrypt-go-v0.6.0/" + packager.MANIFEST_NAME)
+            )
+            self.assertEqual(manifest["toolchain"]["zig"], "0.17.0")
 
     def initialize_git(self):
         self.state.stop()
@@ -91,9 +139,16 @@ class PackagingTest(unittest.TestCase):
         (self.repo / ".gitignore").write_bytes(ignore.read_bytes())
         empty_ignore = Path(self.temporary.name) / "global-ignore"
         empty_ignore.write_text("")
+
         def git(*args):
-            subprocess.run(["git", *args], cwd=self.repo, check=True,
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(
+                ["git", *args],
+                cwd=self.repo,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
         git("init", "--quiet")
         git("config", "user.name", "Packaging test")
         git("config", "user.email", "packaging@example.invalid")
@@ -101,8 +156,14 @@ class PackagingTest(unittest.TestCase):
         git("config", "core.excludesFile", str(empty_ignore))
         git("config", "core.hooksPath", str(Path(self.temporary.name) / "hooks"))
         git("add", ".")
-        git("commit", "--quiet", "-m", "Packaging fixture", "-m",
-            "Co-authored-by: Codex <codex@openai.com>")
+        git(
+            "commit",
+            "--quiet",
+            "-m",
+            "Packaging fixture",
+            "-m",
+            "Co-authored-by: Codex <codex@openai.com>",
+        )
 
     def test_complete_module_manifest_and_deterministic_archive(self):
         archive = packager.package(self.repo, self.output, "v0.6.0", require_clean=True)
@@ -112,20 +173,37 @@ class PackagingTest(unittest.TestCase):
         with tarfile.open(fileobj=io.BytesIO(original), mode="r:gz") as bundle:
             prefix = "beaconcrypt-go-v0.6.0/"
             names = bundle.getnames()
-            for required in ("go.mod", "go.sum", "api.go", "backend_wazero.go", "beaconcrypt_go.c",
-                             "beaconcrypt_go.h", "beaconcrypt/bindings.h", "LICENSE",
-                             str(packager.WASM_PATH), "internal/wasm/runtime.go", "testdata/fixture.json"):
+            for required in (
+                "go.mod",
+                "go.sum",
+                "api.go",
+                "backend_wazero.go",
+                "beaconcrypt_go.c",
+                "beaconcrypt_go.h",
+                "beaconcrypt/bindings.h",
+                "LICENSE",
+                str(packager.WASM_PATH),
+                "internal/wasm/runtime.go",
+                "testdata/fixture.json",
+            ):
                 self.assertIn(prefix + required, names)
-            self.assertFalse(any("target/" in entry or ".tools/" in entry for entry in names))
+            self.assertFalse(
+                any("target/" in entry or ".tools/" in entry for entry in names)
+            )
             manifest = json.load(bundle.extractfile(prefix + packager.MANIFEST_NAME))
             self.assertEqual(manifest["wasm_abi_version"], 1)
             self.assertEqual(manifest["source_revision"], "1" * 40)
             for filename, expected in manifest["files_sha256"].items():
-                actual = hashlib.sha256(bundle.extractfile(prefix + filename).read()).hexdigest()
+                actual = hashlib.sha256(
+                    bundle.extractfile(prefix + filename).read()
+                ).hexdigest()
                 self.assertEqual(actual, expected)
         for line in (self.output / "SHA256SUMS").read_text().splitlines():
             expected, filename = line.split("  ")
-            self.assertEqual(hashlib.sha256((self.output / filename).read_bytes()).hexdigest(), expected)
+            self.assertEqual(
+                hashlib.sha256((self.output / filename).read_bytes()).hexdigest(),
+                expected,
+            )
 
     def test_modified_wasm_or_rust_inputs_require_rebuild(self):
         wasm = self.repo / packager.WASM_PATH
@@ -146,15 +224,17 @@ class PackagingTest(unittest.TestCase):
             packager.inspect_wasm(b"not a module")
 
     def test_release_requires_clean_sources_and_safe_names(self):
-        with patch.object(packager, "git_state", return_value=("1" * 40, 1_700_000_000, True)):
+        with patch.object(
+            packager, "git_state", return_value=("1" * 40, 1_700_000_000, True)
+        ):
             with self.assertRaisesRegex(ValueError, "clean source"):
                 packager.package(self.repo, self.output, "v0.6.0", require_clean=True)
         with self.assertRaisesRegex(ValueError, "safe archive-name"):
             packager.package(self.repo, self.output, "../../escape")
 
-    def test_setup_zig_cache_keeps_real_release_checkout_clean(self):
+    def test_legacy_tool_cache_keeps_real_release_checkout_clean(self):
         self.initialize_git()
-        # setup-zig@v2 puts both caches under $GITHUB_WORKSPACE/.zig-cache.
+        # Old checkouts may retain the former Zig compiler cache.
         cache = self.repo / ".zig-cache" / "h" / "compiler-cache"
         cache.parent.mkdir(parents=True)
         cache.write_bytes(b"generated by Zig")
@@ -163,7 +243,9 @@ class PackagingTest(unittest.TestCase):
         archive = packager.package(self.repo, self.output, "v0.6.0", require_clean=True)
         with tarfile.open(archive, "r:gz") as bundle:
             self.assertFalse(any(".zig-cache/" in name for name in bundle.getnames()))
-            manifest = json.load(bundle.extractfile("beaconcrypt-go-v0.6.0/" + packager.MANIFEST_NAME))
+            manifest = json.load(
+                bundle.extractfile("beaconcrypt-go-v0.6.0/" + packager.MANIFEST_NAME)
+            )
             self.assertFalse(manifest["source_dirty"])
 
         for filename in ("api.go", "unexpected-source.go"):
@@ -173,7 +255,9 @@ class PackagingTest(unittest.TestCase):
                 source.write_bytes(b"package beaconcrypt // changed source\n")
                 self.assertTrue(packager.git_state(self.repo)[2])
                 with self.assertRaisesRegex(ValueError, "clean source"):
-                    packager.package(self.repo, self.output, "v0.6.0", require_clean=True)
+                    packager.package(
+                        self.repo, self.output, "v0.6.0", require_clean=True
+                    )
                 if original is None:
                     source.unlink()
                 else:

@@ -1,0 +1,186 @@
+{
+  "scope": "Native bindings validation for no_std merge into codex/core-lifecycle; no proof changes",
+  "merge_base_parent": "2b924febc49b9a5e6fb93990ff8d4b053b7ca4b2",
+  "incoming_parent": "30cbdc6a30a36867cc0ec4eddde96cdc5e0842c9",
+  "rust": "1.96.0",
+  "resource_scope": "coord lease",
+  "environment": {
+    "RUSTFLAGS": "-C linker-features=-lld",
+    "CARGO_BUILD_JOBS": "2",
+    "GOMAXPROCS": "2",
+    "GOFLAGS": "-p=2",
+    "GOCACHE": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/gocache",
+    "UV_PROJECT_ENVIRONMENT": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/venv"
+  },
+  "c_header_unchanged": true,
+  "c_header_sha256": "6a9b55319348356fb016a862d15de78ff4ecd65aaad91b6b76f2ec5a07ebcb82",
+  "c_persistence_passed": true,
+  "go_race_passed": true,
+  "python_tests_passed": 79,
+  "shared_source_files_checked": 15,
+  "parent_relative_library_target_preserved": true,
+  "source_archive": {
+    "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/dist/beaconcrypt-0.6.1.tar.gz",
+    "bytes": 582036,
+    "sha256": "123befe51254ebe768a87e8a3b5e7a5672cf557ddee703dcd2131c1e432df73c"
+  },
+  "wheel_from_unpacked_archive": {
+    "path": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/wheels/beaconcrypt-0.6.1-cp311-abi3-manylinux_2_34_x86_64.whl",
+    "bytes": 574769,
+    "sha256": "ff6da91a433663e6e45ca3a11c3e4023d6342c032c743ced5d55752cdfbce95d"
+  },
+  "commands": [
+    {
+      "label": "native-release",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "beaconcrypt-ffi",
+        "--release",
+        "--features",
+        "gobinds",
+        "--locked"
+      ],
+      "cwd": "/home/user/worktrees/beaconcrypt-core-lifecycle",
+      "environment": {},
+      "exit_code": 0,
+      "seconds": 30.65,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/native-release.log",
+      "log_sha256": "df6ab2548859665750d0b1351d41d420c3aa24b2fd887300a579f8bb7dc83967"
+    },
+    {
+      "label": "c-compile",
+      "command": [
+        "cc",
+        "-std=c11",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Ibeaconcrypt",
+        "beaconcrypt/tests/c_persistence.c",
+        "-Ltarget/release",
+        "-lbeaconcrypt",
+        "-Wl,-rpath,/home/user/worktrees/beaconcrypt-core-lifecycle/target/release",
+        "-o",
+        "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/c-persistence"
+      ],
+      "cwd": "/home/user/worktrees/beaconcrypt-core-lifecycle",
+      "environment": {},
+      "exit_code": 0,
+      "seconds": 0.075,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/c-compile.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "c-persistence",
+      "command": [
+        "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/c-persistence"
+      ],
+      "cwd": "/home/user/worktrees/beaconcrypt-core-lifecycle",
+      "environment": {},
+      "exit_code": 0,
+      "seconds": 0.006,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/c-persistence.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "go-race",
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "-count=1",
+        "./..."
+      ],
+      "cwd": "/home/user/worktrees/beaconcrypt-core-lifecycle",
+      "environment": {},
+      "exit_code": 0,
+      "seconds": 22.399,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/go-race.log",
+      "log_sha256": "80cf2e38a3385e2647dad1021cd33bc6fa3a25840b5ccb100a6852e97c71ab69"
+    },
+    {
+      "label": "python-develop",
+      "command": [
+        "uv",
+        "run",
+        "maturin",
+        "develop",
+        "--uv"
+      ],
+      "cwd": "/home/user/worktrees/beaconcrypt-core-lifecycle",
+      "environment": {},
+      "exit_code": 0,
+      "seconds": 19.61,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/python-develop.log",
+      "log_sha256": "f276679bba5e6df6a2c6ed35f9869d6e678a9b472009fd58a84328ee49842947"
+    },
+    {
+      "label": "python-tests",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "tests"
+      ],
+      "cwd": "/home/user/worktrees/beaconcrypt-core-lifecycle",
+      "environment": {},
+      "exit_code": 0,
+      "seconds": 7.248,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/python-tests.log",
+      "log_sha256": "469a4ec38ea728ea5c0814b4dd538de9048ad473a0354e0dd4f6cad47401e26b"
+    },
+    {
+      "label": "python-sdist",
+      "command": [
+        "uv",
+        "run",
+        "maturin",
+        "sdist",
+        "--out",
+        "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/dist"
+      ],
+      "cwd": "/home/user/worktrees/beaconcrypt-core-lifecycle",
+      "environment": {},
+      "exit_code": 0,
+      "seconds": 0.33,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/python-sdist.log",
+      "log_sha256": "11681f6abdc6b1b56780786f8a8960f9021e6ae96d5e93cc068d9f0cd816cf50"
+    },
+    {
+      "label": "python-sdist-wheel",
+      "command": [
+        "uv",
+        "run",
+        "--no-project",
+        "--with",
+        "maturin>=1.14,<2.0",
+        "maturin",
+        "build",
+        "--release",
+        "--locked",
+        "--interpreter",
+        "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/venv/bin/python",
+        "--out",
+        "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/wheels"
+      ],
+      "cwd": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/unpacked/beaconcrypt-0.6.1",
+      "environment": {
+        "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/sdist-target"
+      },
+      "exit_code": 0,
+      "seconds": 42.352,
+      "log": "/tmp/bc-arc-scratch/no-std-rustcrypto/merge-bindings/python-sdist-wheel.log",
+      "log_sha256": "8bd2ddc3cb803b55497f06d2932b76655c581155132a9a893c8cf7472856c4d2"
+    }
+  ],
+  "note": "Historical no-std branch size measurements and libraries remain unchanged. Source-archive build uses a separate target to preserve native release artifacts.",
+  "resource_lease": {
+    "ticket": "00002841",
+    "requested_mib": 3072,
+    "scope": "coord-00002841-no-std-core-lifecycle-bindings.scope"
+  },
+  "python_runtime": "Python 3.14.7",
+  "cleanup_note": "After the completed lease, coord disk check-delete approved removal of the own fresh Go cache (114 MiB) and isolated source-wheel target (151 MiB). Logs, source archive, wheel and Python environment remain retained."
+}

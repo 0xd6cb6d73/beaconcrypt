@@ -8,19 +8,24 @@ use beaconcrypt::{Beacon, ProviderBeacon, ProviderServer, Server};
 fn fallible_constructors_reject_incorrect_lengths() {
 	for length in [0, 1, 31, 33, 64] {
 		let bytes = vec![7; length];
-		assert!(Server::try_new(19, Some(&bytes)).is_err());
-		assert!(Beacon::try_new(19, &bytes).is_err());
+		assert!(Server::try_new(19, Some(&bytes), None).is_err());
+		assert!(Beacon::try_new(19, &bytes, &[0; beaconcrypt::MLDSA_PUBLIC_KEY_LEN]).is_err());
 	}
 }
 
 #[test]
 fn fallible_construction_preserves_identity_and_registration() {
 	let seed = [9; 32];
-	let mut server = Server::try_new(19, Some(&seed)).unwrap();
-	let same_identity = Server::try_new(19, Some(&seed)).unwrap();
+	let mut server = Server::try_new(19, Some(&seed), None).unwrap();
+	let same_identity = Server::try_new(19, Some(&seed), None).unwrap();
 	assert_eq!(server.identity_pk(), same_identity.identity_pk());
 	assert_eq!(server.server_kid(), 19);
-	let mut beacon = Beacon::try_new(19, server.identity_pk().as_bytes()).unwrap();
+	let mut beacon = Beacon::try_new(
+		19,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	)
+	.unwrap();
 	assert_eq!(beacon.server_kid(), 19);
 	assert_eq!(beacon.server_id(), server.identity_pk());
 	let bundle = beacon.get_registration_bundle().unwrap();
@@ -33,7 +38,7 @@ fn fallible_construction_preserves_identity_and_registration() {
 		b"constructor roundtrip"
 	);
 	assert_ne!(
-		Server::try_new(19, None).unwrap().identity_pk(),
+		Server::try_new(19, None, None).unwrap().identity_pk(),
 		server.identity_pk()
 	);
 }

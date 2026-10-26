@@ -1,0 +1,431 @@
+{
+  "baseline": "278204b921ae31a3e900cf21f690184173e531f5",
+  "branch": "codex/core-lifecycle",
+  "worktree": "/home/user/worktrees/beaconcrypt-core-lifecycle",
+  "updated_utc": "2026-10-25T11:45:46.815590+00:00",
+  "constraints": {
+    "full_verify_in_shell": "not run, per owner instruction",
+    "expensive_runs": "coordinated through /tmp/bc-coord",
+    "all_commits": "Co-authored-by: Codex <codex@openai.com>",
+    "full_lean_build": "Only after items4and5 fully done, per owner continuation instruction",
+    "generated_parser": "Generated codec files, generator artifacts and schema remain byte-identical to original baseline; no parser regeneration"
+  },
+  "item1": {
+    "commit": "ccaa4deb",
+    "operation_count": 309,
+    "new_behavioral_facts": 8,
+    "new_panic_certificates": 19,
+    "full_rust_tests": 428,
+    "wasi_tests": 27,
+    "wasi_allocation_failure_probe": "passed",
+    "native_mutations": {
+      "total": 1529,
+      "caught": 1101,
+      "compile_invalid": 428,
+      "missed": 0,
+      "timed_out": 0
+    },
+    "wasi_mutations": {
+      "total": 159,
+      "caught": 147,
+      "compile_invalid": 12,
+      "missed": 0,
+      "timed_out": 0
+    }
+  },
+  "item2": {
+    "operation_count": 391,
+    "new_behavioral_helper_facts": 100,
+    "new_unconditional_panic_certificates": 82,
+    "new_proof_modules": 20,
+    "full_rust_tests": 445,
+    "wasi_tests": 27,
+    "wasi_allocation_failure_probe": "passed",
+    "python_source_checker_regressions": 95,
+    "transcript_fidelity_tests": 36,
+    "joint_fidelity_tests": 2,
+    "native_mutations": {
+      "total": 1639,
+      "caught": 1116,
+      "compile_invalid": 523,
+      "missed": 0,
+      "timed_out": 0
+    },
+    "wasi_mutations": {
+      "total": 159,
+      "caught": 147,
+      "compile_invalid": 12,
+      "missed": 0,
+      "timed_out": 0
+    },
+    "all_unviable_mutants_audited": "actual Rust compilation errors",
+    "checker_regressions": 12,
+    "format_clippy_role_feature_checks": "passed",
+    "final_extraction": "passed; reviewed source-span/Cargo provenance refresh; no new external hole",
+    "focused_current_source_api_aggregate": "passed, 146-module import closure",
+    "locked_full_inventory": "passed",
+    "whole_canonical_project_build": "deferred to final three-item tree",
+    "temporary_initial_record_callback": "retained explicitly until item3",
+    "proof_source_counts": {
+      "proofs/lean/BeaconcryptCore/PanicFreedom/KeyAgreement.lean": 21,
+      "proofs/lean/BeaconcryptCore/PanicFreedom/Registration.lean": 9,
+      "proofs/lean/BeaconcryptCore/PanicFreedom/RegistrationPublication.lean": 8,
+      "proofs/lean/BeaconcryptCore/PanicFreedom/RegistrationResponse.lean": 2,
+      "proofs/lean/BeaconcryptCore/PanicFreedom/RegistrationSigning.lean": 2,
+      "proofs/lean/BeaconcryptCore/PanicFreedom/RegistrationSigningContinuations.lean": 4,
+      "proofs/lean/BeaconcryptCore/PanicFreedom/RegistrationTrivial.lean": 36,
+      "proofs/lean/BeaconcryptCore/Refinement/KeyAgreement.lean": 14,
+      "proofs/lean/BeaconcryptCore/Refinement/RegistrationAuthentication.lean": 8,
+      "proofs/lean/BeaconcryptCore/Refinement/RegistrationAuthenticationFlow.lean": 3,
+      "proofs/lean/BeaconcryptCore/Refinement/RegistrationBytePrimitives.lean": 4,
+      "proofs/lean/BeaconcryptCore/Refinement/RegistrationInbound.lean": 6,
+      "proofs/lean/BeaconcryptCore/Refinement/RegistrationInputs.lean": 8,
+      "proofs/lean/BeaconcryptCore/Refinement/RegistrationPublication.lean": 19,
+      "proofs/lean/BeaconcryptCore/Refinement/RegistrationResponse.lean": 5,
+      "proofs/lean/BeaconcryptCore/Refinement/RegistrationSigning.lean": 5,
+      "proofs/lean/BeaconcryptCore/Refinement/RegistrationSigningContinuations.lean": 6,
+      "proofs/lean/BeaconcryptCore/Refinement/RegistrationSigningDispatch.lean": 10,
+      "proofs/lean/BeaconcryptCore/Refinement/RegistrationSigningHistory.lean": 9,
+      "proofs/lean/BeaconcryptCore/Refinement/RegistrationSigningTrace.lean": 3
+    },
+    "commit": "fad03c43"
+  },
+  "proof_environment": {
+    "lean": "4.35.0",
+    "cargo_hax": "0.4.2",
+    "charon": "nightly-2026.09.02",
+    "aeneas": "nightly-2026.09.03-6852e64",
+    "new_foundations_only": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "reviewed_model_digest_unchanged": "c7acbc9e3aa1b262a31fdcc68838de236bd6f52294e8e53f5ee9c3134f917518"
+  },
+  "evidence_directory": "/tmp/bc-arc-scratch/core-lifecycle-20261025",
+  "item3": {
+    "parent_commit": "fad03c43",
+    "operation_count": 430,
+    "retired_complete_record_operations": 4,
+    "new_record_operations": 27,
+    "new_registration_operations": 16,
+    "new_unconditional_operation_certificates": 43,
+    "local_record_facts": 29,
+    "registration_behavioral_cohort_facts": 32,
+    "computational_bridge_facts": 19,
+    "retired_callback_certificates": 4,
+    "full_rust_tests": 455,
+    "wasi_tests": 27,
+    "wasi_allocation_failure_probe": "passed",
+    "transcript_fidelity_tests": 39,
+    "joint_fidelity_tests": 2,
+    "python_checker_and_getter_regressions": 433,
+    "native_mutations": {
+      "total": 1685,
+      "caught": 1116,
+      "compile_invalid": 569,
+      "missed": 0,
+      "timed_out": 0,
+      "all_unviable_audited": true
+    },
+    "wasi_mutations": {
+      "total": 159,
+      "caught": 147,
+      "compile_invalid": 12,
+      "missed": 0,
+      "timed_out": 0,
+      "all_unviable_audited": true
+    },
+    "canonical_live_api_jobs": 3732,
+    "canonical_whole_project_jobs": 5673,
+    "canonical_whole_project": "passed",
+    "locked_full_inventory": "passed",
+    "format_clippy_role_feature_checks": "passed",
+    "final_extraction": "passed, full global and isolated authentication; all external artifacts unchanged; no new hole",
+    "runtime_source_snapshot": "All41 production Rust files match the complete mutation checkpoint",
+    "proof_source_counts": {
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RecordEffectsReceiveBridge.lean": {
+        "public_theorems": 7,
+        "exact_guards": 7,
+        "sha256": "595532b2ae0fe9c8774f4c9293d5a7ac10efd49d42da5f821a8b864d6de2ce8f"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RecordEffectsReceiveProgram.lean": {
+        "public_theorems": 1,
+        "exact_guards": 1,
+        "sha256": "031553ea3a36682a0684bfd948dbcc5cd8a23781c95c563d60e08585f0bcf1a9"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RecordEffectsReceiveRank.lean": {
+        "public_theorems": 2,
+        "exact_guards": 2,
+        "sha256": "ec8a2dd4d13ab631bb265fe03a77967f39c663265f8ce981c9fd654cbf389ff8"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RecordEffectsSendBridge.lean": {
+        "public_theorems": 9,
+        "exact_guards": 9,
+        "sha256": "e949b0f66d27a40639650aa011187b8b0f45d9141605666fc78dda1a24bb0f69"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/PanicFreedom/RecordEffects.lean": {
+        "public_theorems": 25,
+        "exact_guards": 25,
+        "sha256": "acb6e1967b28fdee1ed4d4dab2f4fe6521d5226e9ea9816060dc440dfd2302ee"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/PanicFreedom/RecordEffectsSend.lean": {
+        "public_theorems": 2,
+        "exact_guards": 2,
+        "sha256": "6c71534cb2b7a6b76272e0b85674a66a0a93b3b5cd0224c21b78b4a9f224f9f5"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/PanicFreedom/RegistrationPublication.lean": {
+        "public_theorems": 24,
+        "exact_guards": 24,
+        "sha256": "5bd402abd2ef075f74d0b293b320f37f83fb8db1ca3f1f8b4fb0931931ab299a"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/PanicFreedom/RegistrationTrivial.lean": {
+        "public_theorems": 33,
+        "exact_guards": 33,
+        "sha256": "3470d28b40298a51c1331f6227dd078d382cfa77fa2da77d428e031ed0421517"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RecordEffects.lean": {
+        "public_theorems": 6,
+        "exact_guards": 6,
+        "sha256": "8bb560a8c2049afe12b5ffd82fff2c38c7657c1018be60c8a8044b2770587e34"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RecordEffectsComposition.lean": {
+        "public_theorems": 12,
+        "exact_guards": 12,
+        "sha256": "45077277ceda0ee0a0af7e8f2ade8ff1de7019f6602bec08eada0d6c3475c342"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RecordEffectsReceiveInvariant.lean": {
+        "public_theorems": 6,
+        "exact_guards": 6,
+        "sha256": "b1da47b47b22004b4d8624576de352285c974df2508f96daf9ed7e2f3cbe75a9"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RecordEffectsRequests.lean": {
+        "public_theorems": 5,
+        "exact_guards": 5,
+        "sha256": "3c73c230c01deba2087ead8d2cdeb32d785934bb2bcb12edf305693d459ee3ce"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RegistrationPublication.lean": {
+        "public_theorems": 9,
+        "exact_guards": 9,
+        "sha256": "8534c3b8609ac7fa992dfc4b1386c716d55ae9c64318c17e37ad355636e24316"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RegistrationReachability.lean": {
+        "public_theorems": 3,
+        "exact_guards": 3,
+        "sha256": "c274122a0cf4131e53b6aef4d8445ee7aa47d82dea7e779ffbbdd3f6339cb02e"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RegistrationRecords.lean": {
+        "public_theorems": 20,
+        "exact_guards": 20,
+        "sha256": "60785436207162b5c475254c5184ba84f5c659b7a98faaf41f8886623c02bddf"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RegistrationSigningDispatch.lean": {
+        "public_theorems": 10,
+        "exact_guards": 10,
+        "sha256": "e0f8b23b0913860234ad418d13508581c985b6b34dbae3d9ba0a657bc49366ec"
+      }
+    },
+    "later_validation_cleanup": "One literal-element test loop unrolled;39+2 fidelity tests rerun; nine formatted Python files retain identical ASTs",
+    "known_boundary": "Native interpreter/primitive/codec/compiler/persistence fidelity remains external; ordinaryFrame send and explicit decoded receive representation scopes; no fullML deployment or quantum security lift"
+  },
+  "items1_through3_final_verification": {
+    "full_verify_in_shell": "not run, per owner instruction",
+    "lean_policy_root_panic_preflight": "passed",
+    "canonical_whole_project": "passed",
+    "separate_inventory": "passed",
+    "mutation_campaigns": "complete at every item",
+    "nix_garbage_collection": {
+      "status": "deferred",
+      "reason": "Pre-existing top process PID2605055 in /home/user/beaconcrypt retains IN_NIX_SHELL; cleanup rule forbids collection while another repository process uses Nix",
+      "our_verification_leases": "none active"
+    }
+  },
+  "item4": {
+    "operation_count": 450,
+    "new_operations": 20,
+    "retired_operations": 0,
+    "behavioral_facts": 40,
+    "new_unconditional_panic_certificates": 20,
+    "focused_new_api_contracts": 20,
+    "full_lean_build": "deferred until all work is complete, per owner instruction",
+    "extraction": "complete global and isolated authentication extraction passed; generated external files and all six isolated authentication Lean outputs unchanged; retained definitions unchanged modulo two bound-variable alpha renames",
+    "full_rust_tests": 461,
+    "transcript_fidelity_tests": 41,
+    "joint_fidelity_tests": 2,
+    "python_checker_suites": 23,
+    "python_checker_tests": 433,
+    "clippy": "passed with existing warnings",
+    "role_checks_and_format": "passed",
+    "native_mutations": {
+      "status": "complete and audited",
+      "total": 1739,
+      "caught": 1127,
+      "compile_invalid": 612,
+      "missed": 0,
+      "timed_out": 0,
+      "all_invalid_logs": "actual Rust compilation errors, including three arithmetic-overflow and two uncoded parser diagnostics",
+      "outcomes_sha256": "f798087122e2e512258e4520441a2ac5960c77737e045b2d8a13d111f271a0af"
+    },
+    "wasi_mutations": {
+      "status": "complete and audited",
+      "total": 159,
+      "caught": 147,
+      "compile_invalid": 12,
+      "missed": 0,
+      "timed_out": 0,
+      "all_invalid_logs": "actual Rust compilation errors",
+      "outcomes_sha256": "44c049ed4b4812ddea874d480546bab85481c7eb96ea1629c72b590d37a0ce8e"
+    },
+    "inventory_sensitivity_controls": 54,
+    "peer_source_controls": 104,
+    "proofs": {
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/PeerOwnership.lean": {
+        "theorems": 30,
+        "axiom_guards": 30,
+        "sha256": "d6fa861b328020f6084fb35050119487ddd430e1827ae9326216072e4058c13b"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/PeerCollections.lean": {
+        "theorems": 10,
+        "axiom_guards": 10,
+        "sha256": "7aecd56907b6015aa5a8a1f037f708f8e993260f676ad970a941e99d0211362b"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/PanicFreedom/PeerOwnership.lean": {
+        "theorems": 20,
+        "axiom_guards": 20,
+        "sha256": "a8c3346a4552be68fa8726d8513a850e8548643d91404d610e97dc1f37556c17"
+      }
+    },
+    "known_boundary": "Faithful native collection laws and synchronous exact kernel wrapping are explicit; compiler, native primitives, allocation, physical erasure, persistence and cross-owner instance uniqueness remain external. No full mandatory-ML or quantum security lift.",
+    "wasi_tests": 27,
+    "wasi_allocation_failure_probe": "passed",
+    "separate_full_inventory": "passed; subsequent prose-only baseline-count correction reviewed and complete hash/category/membership prefix replay passed",
+    "inventory_categories": {
+      "core-rust": 16,
+      "handwritten-lean": 2060,
+      "validation": 80
+    },
+    "commit": "2be061d9"
+  },
+  "final_verification": {
+    "status": "complete",
+    "full_verify_in_shell": "not run, per owner instruction",
+    "canonical_whole_project": "passed all 5679 jobs after all requested implementation and focused proof work was complete; initial proof-elaboration failure repaired without changing its statement/guards, then incremental whole-project replay passed",
+    "lean_policy_root_panic_preflight": "passed; all 463 contracts, 12 generator regressions",
+    "separate_inventory": "final full inventory passed; subsequent independently reviewed proof-only delta checked with full hash/category/membership prefix, exact module guards and policy/root/API preflights",
+    "runtime": "467 all-feature Rust tests; 435 Python checker tests; 42 transcript and 2 joint fidelity tests; role checks, formatting and Clippy passed",
+    "mutation_campaigns": "complete native and actual-WASI campaigns passed at both items, zero missed or timed-out mutants; every compile-invalid outcome audited as an actual Rust error",
+    "generated_parser": "all six generated Rust/artifact/schema files unchanged from both original baseline and item4 checkpoint; no regeneration",
+    "nix_garbage_collection": {
+      "status": "deferred",
+      "reason": "Pre-existing top PID2605055 in /home/user/beaconcrypt still retains IN_NIX_SHELL; cleanup forbidden while another repository process uses Nix",
+      "our_verification_leases": "none active"
+    }
+  },
+  "item5": {
+    "operation_count": 463,
+    "new_operations": 13,
+    "retired_operations": 0,
+    "new_types": 3,
+    "new_nonmonadic_constants": 2,
+    "behavioral_and_sizing_facts": 27,
+    "new_unconditional_panic_certificates": 13,
+    "extraction": "complete global and isolated authentication extraction passed; all retained function/type definitions and all generated external files unchanged; all six isolated authentication Lean outputs unchanged",
+    "full_rust_tests": 467,
+    "transcript_fidelity_tests": 42,
+    "joint_fidelity_tests": 2,
+    "python_checker_suites": 23,
+    "python_checker_tests": 435,
+    "clippy": "passed; all warnings pre-existing",
+    "role_checks_and_format": "passed",
+    "native_mutations": {
+      "status": "complete and audited",
+      "total": 1755,
+      "caught": 1139,
+      "compile_invalid": 616,
+      "missed": 0,
+      "timed_out": 0,
+      "all_invalid_logs": "actual Rust compilation errors, including three arithmetic-overflow and two uncoded parser diagnostics",
+      "outcomes_sha256": "f951771ce0f1ac65e2ce27f2914ea313e7861b217d5645306221154870c44b5a"
+    },
+    "wasi_mutations": {
+      "status": "complete and audited",
+      "total": 159,
+      "caught": 147,
+      "compile_invalid": 12,
+      "missed": 0,
+      "timed_out": 0,
+      "all_invalid_logs": "actual Rust compilation errors",
+      "outcomes_sha256": "0284dd9627b3d658633cd7d05b496bd0ecce1cf16a8802bdb43f4d1c7da0c176"
+    },
+    "wasi_tests": 27,
+    "wasi_allocation_failure_probe": "passed",
+    "transport_source_controls": 61,
+    "inventory_sensitivity_controls": 96,
+    "generated_parser": "six generated codec/artifact/schema files unchanged from 278204b9 and 2be061d9; no regeneration",
+    "model_reconciliation": {
+      "init_size_before": 1490,
+      "init_size_after": 6757,
+      "mldsa_response_signature_bytes": 3309,
+      "response_signature_header_bytes": 3,
+      "one_byte_id_large_ciphertext_boundary_before": "maxMessageSize-1168",
+      "one_byte_id_large_ciphertext_boundary_after": "maxMessageSize-4480",
+      "downstream_scope": "CborAdmissionCompiler/CborProductionBoundary now use the actual signed-response admission bound; native behavior preserved"
+    },
+    "known_boundary": "Native descriptor-to-slice representation, generated parser/serializer execution, primitives, allocation, compiler correspondence and persistence remain external. No cryptographic security-scope upgrade.",
+    "focused_new_api_contracts": 13,
+    "proofs": {
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/Transport.lean": {
+        "public_theorems": 9,
+        "exact_guards": 9,
+        "sha256": "341ca2b8336e078895d999b0c394ad9fc6be6febe04aba840bbfd6436a9d51de"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/TransportSizingBridge.lean": {
+        "public_theorems": 18,
+        "exact_guards": 18,
+        "sha256": "da8d05c03b569dd2efdd00e1a5f5b5e8a71ca482c753e1eaf73bf7fc6b997a9f"
+      },
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/PanicFreedom/Transport.lean": {
+        "public_theorems": 13,
+        "exact_guards": 13,
+        "sha256": "0518c2c30af5465562252486f5d5a5087b3e1a99fdc718f206dbdedf0fefc341"
+      }
+    },
+    "additional_signed_layout_guard_controls": 15,
+    "separate_full_inventory": "passed on final tree after reviewed literal-plus checker correction and 15 new targeted controls",
+    "inventory_categories": {
+      "core-rust": 17,
+      "parser-rust": 5,
+      "handwritten-lean": 2063,
+      "validation": 82
+    },
+    "reviewed_inventory_rows": 2530,
+    "inventory_sensitivity_breakdown": {
+      "fidelity_source_guards": 81,
+      "model_transport_guards": 15
+    },
+    "final_build_proof_repair": {
+      "module": "Computational.CborAdmissionCompiler",
+      "theorem": "build_step_exact",
+      "initial_failure": "maximum recursion depth at broad change tactic; axiom guard rejected failed proof",
+      "repair": "simp only [nativeHandler, CborCommandFilter.handler, StateT.run]",
+      "unchanged": [
+        "statement",
+        "Good premise",
+        "definitions",
+        "imports",
+        "options/resource limits",
+        "all five original axiom guards"
+      ],
+      "source_sha256": "bb074eb55f2d4f2cfaf7811ac9a2c4841532cec6942f2cf51f366e4094f5dcab",
+      "focused_staged_compile": "passed with empty diagnostics",
+      "runtime_or_model_definition_change": false,
+      "focused_live_and_inventory_replay": "approved exact source; complete hash/category/membership prefix, exact module guards and all policy/root/463-operation checks passed"
+    },
+    "whole_maintained_lean": {
+      "exit": 0,
+      "jobs": 5679,
+      "source": "final complete tree after independently reviewed proof-only repair",
+      "log_sha256": "682448e05f343b0f98572c6bf0e2af753ac042fe6d77a863ba79230362f5d9e6"
+    }
+  }
+}

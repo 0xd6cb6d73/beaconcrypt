@@ -1,0 +1,450 @@
+{
+ "date": "2026-10-19",
+ "scope": "VCVio deprecation migration, stage S0 (plan doc/impl/vcvio-deprecation-migration-plan.md, owner decision 2026-10-19 item 4): forward shim modules VCVioForwardEvalDist, VCVioForwardOracleComp, VCVioForwardProbabilityTheory, VCVioForwardProgramLogic and the transitional VCVioLegacyBridge; 29 proof-only replacements in 14 files; inventory, documentation, tooling. No statement changed (restatement allowlist empty).",
+ "basis": "b8db7926ba1f9145ddfdb8b7d3f3e1202cb4221e",
+ "topic": {
+  "branch": "codex/vcvio-migration-S0",
+  "clone": "/home/user/bc-vmig-S0 (fresh clone of origin; Lake packages copied read-only from /home/user/bc-clean)"
+ },
+ "commits": {
+  "09bc331b": "Add VCVio forward shims and legacy bridge",
+  "66f4819f": "Route proof-only VCVio deprecations through the shims",
+  "docs": "the commit that adds this receipt"
+ },
+ "owner_decisions": {
+  "D1-D5,D8-D11": "recommended answers of plan section 11",
+  "D6": "phase B included",
+  "D7": "Lean-level checks for S0; verify-in-shell only after S3, S6, S9"
+ },
+ "build": {
+  "command": "make -C beaconcrypt-core check-lean SHELL=bash (proof shell, two-file flake copy of central's flake.nix/flake.lock)",
+  "lease": "00000754",
+  "window": "2026-10-19T22:17:01+02:00..22:36:59+02:00",
+  "jobs": 5535,
+  "errors": 0,
+  "rc": 0,
+  "log_sha256": "660708e876cfbfb8e045eff4240db8fdf4e1854020be34ae54981f1a7ea84c7e",
+  "no_build_check": "lake build --rehash --no-build after the commits: All targets up-to-date (5535 jobs)"
+ },
+ "gates": {
+  "G1": {
+   "base_unique": 1359,
+   "stage_unique": 1338,
+   "expected_stage_unique": 1338,
+   "decreased_file_name_counts": {
+    "BeaconcryptCore/Computational/AdaptiveCtxPrefixValidation.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 2,
+    "BeaconcryptCore/Computational/CtxComputationalPrivacy.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 2,
+    "BeaconcryptCore/Computational/CtxComputationalSecurity.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 2,
+    "BeaconcryptCore/Computational/CtxNonceAeadIndDollar.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/CtxNonceAeadIndDollarValidation.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/CtxUnclaimedAcceptance.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/PqxdhFirstRecordStopTagged.lean|SPMF": 2,
+    "BeaconcryptCore/Computational/PqxdhFirstRecordStopTagged.lean|evalSPMF": 5,
+    "BeaconcryptCore/Computational/PqxdhProjectionCollisions.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/RawCtxBadEventMixture.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/RawCtxFullPreimageTester.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/RawCtxScaledBadEventMixture.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/RawCtxSupportedMixture.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1
+   },
+   "increased_file_name_counts": {},
+   "decrease_outside_stage_files": [],
+   "removed_by_name": {
+    "SPMF": 2,
+    "evalSPMF": 5,
+    "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 14
+   },
+   "pass": true
+  },
+  "G2": {
+   "base_sites": 1753,
+   "stage_sites": 1724,
+   "base_warned": 1359,
+   "stage_warned": 1338,
+   "base_suppressed": 394,
+   "stage_suppressed": 386,
+   "removed_sites": 29,
+   "added_sites": [],
+   "suppression_lines_stage_outside_bridge": 182,
+   "suppression_lines_base": 183,
+   "stage_new_modules_sites": [],
+   "pass": true
+  },
+  "G3": {
+   "base": 756,
+   "stage": 756,
+   "stage_in_new_modules": [],
+   "stage_in_stage_modules": [],
+   "pass": true
+  },
+  "G4": {
+   "count_base": 95092,
+   "count_stage": 95248,
+   "removed": [
+    "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged.product_coupling._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.relTriple_support._simp_1_1"
+   ],
+   "added_by_module": {
+    "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory": 3,
+    "BeaconcryptCore.Computational.VCVioLegacyBridge": 61,
+    "BeaconcryptCore.Computational.VCVioForwardEvalDist": 66,
+    "BeaconcryptCore.Computational.VCVioForwardOracleComp": 28
+   },
+   "kind_changed": [],
+   "module_changed": [],
+   "levels_changed": [],
+   "type_changed_allowed": [],
+   "type_changed_unexpected": [],
+   "def_value_changed_allowed": [],
+   "def_value_changed_unexpected": [],
+   "theorem_value_changed": [
+    "BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.loggedProbe_le_indDollar",
+    "BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist",
+    "BeaconcryptCore.Computational.CtxComputationalPrivacy.ctxPrivacySecretPrefixProbability_le_booleanINDDollar",
+    "BeaconcryptCore.Computational.CtxComputationalPrivacy.ctxPrivacySecretPrefixProbability_le_probeINDDollar",
+    "BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedForgeryGame_le_direct_add_prefix",
+    "BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryGame_le_direct_add_prefix",
+    "BeaconcryptCore.Computational.CtxNonceAeadIndDollar.ctxSecretPrefixQueriedProbability_le_modifiedNonceAeadINDDollar",
+    "BeaconcryptCore.Computational.CtxNonceAeadIndDollarValidation.ctxSecretPrefixQueriedProbability_le_booleanINDDollar",
+    "BeaconcryptCore.Computational.CtxUnclaimedAcceptance.acceptedGame_le_direct_add_prefix",
+    "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged.product_coupling",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_real_le",
+    "BeaconcryptCore.Computational.PqxdhServerAuthControlWitness.instCountableUScalar_beaconcryptCore",
+    "BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.relTriple_support",
+    "BeaconcryptCore.Computational.PqxdhServerAuthPublicationPrivacy.canonical_bound",
+    "BeaconcryptCore.Computational.RawCtxBadEventMixture.local_probability",
+    "BeaconcryptCore.Computational.RawCtxFullPreimageTester.source_alias_bound",
+    "BeaconcryptCore.Computational.RawCtxScaledBadEventMixture.local_probability",
+    "BeaconcryptCore.Computational.RawCtxSupportedMixture.probability"
+   ],
+   "added_outside_new_modules": [],
+   "unexplained_removed": [],
+   "unexplained_added_outside_new_modules": [],
+   "unexplained_type_changes": [],
+   "unexplained_levels_changes": [],
+   "theorem_value_changed_outside_edited": [
+    "BeaconcryptCore.Computational.PqxdhServerAuthControlWitness.instCountableUScalar_beaconcryptCore"
+   ],
+   "pass": true
+  },
+  "G5": {
+   "residual_pairs_base": 3221,
+   "residual_pairs_stage": 3210,
+   "residual_pairs_stage_excluding_exempt": 3193,
+   "residual_new_pairs": [
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.Fintype"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.Fintype.mk"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.IsMeasureSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.IsUniformMeasureSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.boolBiasAdvantage._proof_1"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.boolDistAdvantage.eq_1"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "DiscreteEvalDistCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "OracleSpec.IsUniformSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalDist_apply_setOf"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalSPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalSPMF_ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "probEvent"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "probOutput"
+    ]
+   ],
+   "forbidden_new_pairs": [
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "DiscreteEvalDistCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ]
+   ],
+   "forbidden_in_stage_modules": [
+    [
+     "BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxComputationalPrivacy",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxComputationalSecurity",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxUnclaimedAcceptance",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.RawCtxBadEventMixture",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.RawCtxScaledBadEventMixture",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.RawCtxSupportedMixture",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ]
+   ],
+   "absent_upstream_in_new_modules": [
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.Fintype"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.Fintype.mk"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.IsMeasureSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.IsUniformMeasureSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.boolBiasAdvantage._proof_1"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.boolDistAdvantage.eq_1"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "DiscreteEvalDistCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "OracleSpec.IsUniformSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalDist_apply_setOf"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalSPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalSPMF_ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "probEvent"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "probOutput"
+    ]
+   ],
+   "forbidden_new_outside_bridge": [],
+   "forbidden_in_stage_modules_new": [],
+   "pass": true
+  }
+ },
+ "declaration_dumps": {
+  "base": {
+   "declarations": 95092,
+   "sha256": "31a7bc47ff91caf75ed03d297d31dd851373d1d48fd84ac97482aec839870044"
+  },
+  "stage": {
+   "declarations": 95248,
+   "sha256": "6ac3c498e0c9a6c530a36ec911df6a13d8d3ef9695846501b5d9f705aaa4a906"
+  }
+ },
+ "certificates": {
+  "stage_file": {
+   "entries": 0,
+   "result": "no restated declaration",
+   "sha256": "a59c59f068833891412ff994759ddfa4717266ca3884a52751014ef93cea6677"
+  },
+  "self_test": {
+   "pre_stage_dump": "selftest-base.jsonl of b8db7926",
+   "pre_stage_dump_sha256": "7999062b4591a311c5779d43a6213550e5f3b306bc2145d23fc53e90ae3e30c4",
+   "file_sha256": "8fba8881adde36719a5aaff8cffbbf3a46e821160b0d5e3170a75f4fca04bd53",
+   "output": [
+    "certificate PASS VCVioFeasibility.ctx_binding_bound_tight_s0SelfTest against VCVioFeasibility.ctx_binding_bound_tight: event mask 0 of 0 ambiguous nodes; old statement hash 1395186899 and pp.all text equal; VCVioFeasibility.ctx_binding_bound_tight_s0SelfTest ↔ old statement proved",
+    "certificate PASS RawKeyPartition.sampled_partition_s0SelfTest against RawKeyPartition.sampled_partition: event mask 0 of 0 ambiguous nodes; old statement hash 3551526074 and pp.all text equal; RawKeyPartition.sampled_partition_s0SelfTest ↔ old statement proved",
+    "certificate PASS StatefulGoodEvent.output_good_s0SelfTest against StatefulGoodEvent.output_good: event mask 0 of 4 ambiguous nodes; old statement hash 3385220471 and pp.all text equal; StatefulGoodEvent.output_good_s0SelfTest ↔ old statement proved",
+    "certificate PASS StatefulGoodEvent.event_good_s0SelfTest against StatefulGoodEvent.event_good: event mask 0 of 2 ambiguous nodes; old statement hash 3685531767 and pp.all text equal; StatefulGoodEvent.event_good_s0SelfTest ↔ old statement proved",
+    "certificate PASS JointEagerTable.independent_comm_spmf_s0SelfTest against JointEagerTable.independent_comm_spmf: event mask 0 of 0 ambiguous nodes; old statement hash 2392043918 and pp.all text equal; JointEagerTable.independent_comm_spmf_s0SelfTest ↔ old statement proved",
+    "certificate PASS JointTableFreshCandidates.fixed_fresh_guess_bound_s0SelfTest against JointTableFreshCandidates.fixed_fresh_guess_bound: event mask 0 of 0 ambiguous nodes; old statement hash 963609539 and pp.all text equal; JointTableFreshCandidates.fixed_fresh_guess_bound_s0SelfTest ↔ old statement proved",
+    "certificate PASS CtxRomAuth.ctxFreshAliasGame_le_inv_s0SelfTest against CtxRomAuth.ctxFreshAliasGame_le_inv: event mask 0 of 0 ambiguous nodes; old statement hash 3353333368 and pp.all text equal; CtxRomAuth.ctxFreshAliasGame_le_inv_s0SelfTest ↔ old statement proved",
+    "certificate PASS PqxdhSecretInputKdf.zeroSalt_key_probability_s0SelfTest against PqxdhSecretInputKdf.zeroSalt_key_probability: event mask 1 of 1 ambiguous nodes; old statement hash 2986595921 and pp.all text equal; PqxdhSecretInputKdf.zeroSalt_key_probability_s0SelfTest ↔ old statement proved",
+    "certificate PASS CtxReduction.ctxMisattributionAdvantage_s0SelfTest against CtxReduction.ctxMisattributionAdvantage: type unchanged; event mask 0 of 1; old body hash 2683253796 and pp.all text equal; CtxReduction.ctxMisattributionAdvantage_s0SelfTest = old body proved",
+    "certificate PASS CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_s0SelfTest against CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability: type unchanged; event mask 0 of 1; old body hash 603213692 and pp.all text equal; CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_s0SelfTest = old body proved",
+    "twin PqxdhSecretInputKdf.zeroSalt_key_probability_s0SelfTest_vcvioLegacy added"
+   ]
+  },
+  "negative_control": {
+   "file_sha256": "a829915abfbb343a6deba64849f3b5ea2e39cab845ac6ef14237d4626f366926",
+   "output": [
+    "certificates/S0CertificatesNegative.lean:18:0: error: certificate FAIL BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv_weakened against BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 15994"
+   ]
+  }
+ },
+ "forward_replay": {
+  "upstream": "VCVio afa6593f15e1e79ecb3cf22fc56191cecb452bb0 scratch build",
+  "laws": 80,
+  "hand_written": 2,
+  "result": "all pass",
+  "negative_control": "two altered statements fail",
+  "file_sha256": "082f881403cb0cb6099b504d5d557e6e72de490020f16f2d4f589aa9dcbb5b32",
+  "log_sha256": "2c120a7d87b0cfe71b050f76e78e4b3831502fc4ab8ee3fb3c726c308cf45d21"
+ },
+ "absence_check": {
+  "pin_package_lean_files": 874,
+  "names": 90,
+  "exact_hits": 0
+ },
+ "step7": {
+  "axiom_walk": [
+   "AXIOM-WALK roots 95248 reached 130895 unresolved 0",
+   "AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]",
+   "SERVER-DOMAIN PqxdhDeploymentKemTwoSided.kem_transfer_two_sided true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealCompile.ideal_compile true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealHandoff.ideal_world_view true",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss false",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared false",
+   "SERVER-DOMAIN PqxdhRegistrationJointBeaconFinishOnce.slotGame_two false"
+  ],
+  "source_scan": [
+   "BeaconcryptCore/Computational/VCVioForwardEvalDist.lean:29: @[inherit_doc] infix",
+   "BeaconcryptCore/Computational/VCVioLegacyBridge.lean:142: macro",
+   "BeaconcryptCore/Computational/VCVioLegacyBridge.lean:252: syntax",
+   "BeaconcryptCore/Computational/VCVioLegacyBridge.lean:268: addDecl",
+   "BeaconcryptCore/Computational/VCVioLegacyBridge.lean:286: syntax",
+   "LEAN-SCAN files 1994 hits 5"
+  ],
+  "note": "five scan lines, all in the new modules (=ᵈ notation, vcvio_legacy macro, two command syntaxes, addDecl of the twin command), required by D2 and D4; the scan is the owner's checklist program, not a maintained gate"
+ },
+ "inventory": {
+  "recount": "handwritten-lean 1982 -> 1987",
+  "check_inventory": "Formal-verification inventory matches the reviewed boundary (state of 66f4819f, lease 00000755; final tree, lease 00000756)"
+ },
+ "axiom_guards": {
+  "new_theorems": 97,
+  "propext_classical_choice_quot_sound": 96,
+  "propext_quot_sound": [
+   "bind_eq_attach_bind"
+  ]
+ },
+ "not_run": [
+  "verify-in-shell (D7)",
+  "cargo test, Go/Python binding tests, mutation suite (no Rust, Go or Python change)"
+ ],
+ "tool_sha256": {
+  "tools/absence_check.py": "5ae4a42948bd5056c051bf9cb40ef00349be02ea5081c4a5e45508d6d058b76b",
+  "tools/aggregate.py": "720b41d1617b5933f69fce5f06a60483d0e6d4bb921e88736497f1dfe08a4340",
+  "tools/decl_compare.py": "00bb2377ed5af63567a87f0200dbbbb372a1d1eccb4deb5458b15437061508ab",
+  "tools/decl_names.py": "688e9cd55d87cb410369412632a1d4995b5152d74c84b28bae28ef55af577422",
+  "tools/gates.py": "136a8a433b897ef54fb46c8cf06b980c6c007b25f25233e8e60ee19246d4f73f",
+  "tools/gen_certificates.py": "81f1510f0c6bb2d93134aa64e1c5a77df8baf12918e260bf1cf4b1953fb6c51f",
+  "tools/gen_guards.py": "861a90276b54b1d07b8e49e872e34c2c4d516a812f85ef92f80fc7d45f07de32",
+  "tools/gen_inventory_block.py": "631d878fba09b01758c28292ab9f3e8e25ca929e03a6fe1dc207f6a468f46016",
+  "tools/gen_replay.py": "654a61e625854d45dcc12db0f10b4dea229ac7548c5498dd8ccb761ca3b3e04d",
+  "tools/join.py": "26e0da122e7168f2cbae9d480b8c847742543bf221f62076cdc56c5b51a44621",
+  "tools/parse_log.py": "3aeb27eb90308e2b1bd9dd715f040e417e3f4d44fadd54368d8ce3d881811d2e",
+  "tools/reconcile.py": "86b9a22d200510a704274693127c2fbf7d05ce72e4d1d59db0f0fb19c18750c5",
+  "tools/scan_sources.py": "ae67c92d4ab3acc921e4582f78cc62f127ed97f10e12d54624dd03c559ed170a",
+  "tools/twin_rename.py": "bbf0629a0fcf4ff18619af13e3f5113beeca2d381613a8a7092eda50dce5ec21",
+  "tools/check-files.sh": "5e2943dedf1f87b26ecffbf97f93c6de1bc85db9bfa1f210878d0b87c7090e52",
+  "tools/check-inventory.sh": "75f3565649484a6a298101acbece3fdad773ea01c49be81bd36edaaba8b6cb52",
+  "tools/check-lean.sh": "9c949581b1415d336f34f269676b097d2b0889b55fcce73ef84db96212bb5e64",
+  "tools/lake-build.sh": "79f26ec3dd0e314610fa5b2bd4de2d6ecd30c3db4c3e677cde886cebb14a7f17",
+  "tools/lean-check.sh": "98c740522a66c70cef5002ac0b8edb037ee1319b68d826b333955b81eec609a4",
+  "tools/run-probe-usage.sh": "4f4bd6374d28023d0ff9edbafa83c43fe006096fa85f072ef5d9f06697d50e7a",
+  "tools/run-probe-used.sh": "da6fb64065382871071a5e500fc3a9c02e5c6d96297e3dc36f60ab570d7ea564",
+  "tools/ProbePlan.lean": "6efef36205ec22c8f02bb0847dab97a732c424af8e6c76b5952f842ea2791083",
+  "tools/ProbeUsage.lean": "9961b78b871e124a06b6dbeb1e16e210b83db04a479d70f5918465d58394a11e",
+  "tools/ProbeUsed.lean": "b44c603e64681619c6f1aa01bacda27ab78af4aadde24ad4a9846d4e56c20a2d",
+  "tools/DeclsAll.lean.in": "d326f3ed2dd7829edfcc921698975d325c0d4dce18a60cbe4a253237cc66703f",
+  "tools/DumpPpAll.lean.in": "e1cb4abfe43897a6244d5777ab185a5723801bcd140470074462667212f65f5d",
+  "tools/codemod/pin_codemod.py": "33dbd76e2af2eea28ddce9408243f8b5f508046229c037158c043dd56a089a61",
+  "tools/codemod/upstream_migrate_native_probability.py": "39bd842d163a1b5106e57720693ccb3a4b6bfabe82c96894d1c0e9df4bbffd5e",
+  "tools/codemod/renames-allowed.tsv": "621c9fc25125f2e921f9adf28144d5c7b8cdc724fa852bbfffbc4d50e8e53844",
+  "step7/AxiomWalkS0.lean": "f93cd6e6da2ccc6b3cfd51c1cd4a095731f3d87ca22bb5046f2f2987335b11ba",
+  "step7/lean-scan.py": "61deb5fdff698e45c7fc3180820c214aa4d6f22e6c96ace03f87a040f1248880",
+  "edits/apply_s0_sites.py": "09dc7ce022664d8aa2db6450a8a11882af11fdd0a048e8cd7c464e80a02b37f7"
+ },
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S0/logs/",
+ "reviews": "none yet",
+ "transcript_fidelity": "make check-proverif-transcript-fidelity on the final tree: Python 20 tests OK, Rust 30 passed (lease 00000759)"
+}

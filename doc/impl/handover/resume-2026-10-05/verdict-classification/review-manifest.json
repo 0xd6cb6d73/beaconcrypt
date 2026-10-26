@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-10-05T22:49:56.990112+00:00",
+  "worktree": "/tmp/beaconcrypt-proverif-verdict-fidelity",
+  "basis": "787319ade78ee9e0b599dc349fdc8b5cf6cbf7c0",
+  "files": {
+    "beaconcrypt-core/Makefile": "d39453ff6fc068bf62e5a6b2ca8f8edbef2c26acdd635214b2ac48986bf75e43",
+    "beaconcrypt-core/proofs/check-inventory.sh": "015308df733bfa4274b376ecc2f1cec8cfd4916fcb42e6072352c249659dd411",
+    "beaconcrypt-core/proofs/pro-verif/check-general-registration.py": "905f8308bd462ac6a68c336b5113fa65b90f42b9f45cbea3b9804a5f84960209",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "0518c6d639f6bca7f373d960df38f7e00200b8b297afeafcb4c63ab3d8001ac0",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "03487f4c4883f7ac2f50220293278d634ea4ba5c63ccfd8d6e0861f7f450af55",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "00ad273f7f0c37f632143f218753ead27e6ee55ee00ae2096b6d8ed5d9f70903",
+    "doc/formal-verification-analysis.md": "a1b21e7f00a3e42b965dcae9a97932e84762fe63b641b3066595c01fa37f9170",
+    "doc/formal-verification.md": "037f1679994ac9e8704b168fed22af404e24ea2378e537fe41ac81190d406c46",
+    "beaconcrypt-core/proofs/pro-verif/check-verdict-classes.py": "c829803aad4daa8f4d6167918bc426a63605f8b947ad389b2b7e9c1c7b6b95ce",
+    "beaconcrypt-core/proofs/pro-verif/test-verdict-classes.py": "6ff8f065ff7cdd35efc6df1f76b311281832507de83ff35045b0dbdeabd2fdc9",
+    "beaconcrypt-core/proofs/pro-verif/verdict-classes.tsv": "49d0f0a80dcb0b7625ce7f3a100a3b8ef90d20aeadb86da99a48b8af15a61911",
+    "beaconcrypt-core/proofs/pro-verif/verdict-inventory.py": "755cca66213e0f228a2094b7267638af2fb2d922738aab51886930fca3858b2c",
+    "doc/impl/proverif-verdict-classification.md": "7cecce41f32f125e6eb916e306d7e00703483dc9ee74bb39d1f57dfc974c5614"
+  },
+  "scope": "Exact expected-verdict classification and HKDF/source projection fidelity; zero new security results",
+  "validation": {
+    "FT": {
+      "tests": 27,
+      "exit": 0,
+      "log": "/tmp/beaconcrypt-proverif-verdict-fidelity-notes/ft-final.log"
+    },
+    "classification_regressions": 9,
+    "general_registration_regressions": 16,
+    "make_inventory_and_FT": "running session25990 after correcting structural anchor",
+    "ProVerif": "not run; model/query/theory inputs unchanged",
+    "general_expected_refactor": "prior/new AST blocks equal after final assignment-to-return replacement"
+  },
+  "review_fixes": [
+    "No owner-approval attribution",
+    "Per-query unreachable-antecedent/empty-cache classifications and causal implication table",
+    "Security-class expectations now165; general family61, unchanged2444total",
+    "New regression enforces reviewed vacuity exclusions"
+  ]
+}

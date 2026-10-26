@@ -87,7 +87,7 @@ def exchange(sender, receiver, plaintext, beacon_key):
     assert receiver.snapshot() == before, "replay changed the server checkpoint"
 
 
-def transfer(server, destination, identity):
+def transfer(server, destination, identity, mldsa_identity):
     checkpoint = server.request("snapshot")["data"]
     previous = server.request("head")["head"]
     server.request("close")
@@ -95,8 +95,13 @@ def transfer(server, destination, identity):
     restored = Endpoint(destination, handle, server=True)
     current = restored.request("head")["head"]
     assert current["Lineage"] == previous["Lineage"], "restore changed lineage"
-    assert current["Generation"] == previous["Generation"] + 1, "restore did not claim generation"
+    assert (
+        current["Generation"] == previous["Generation"] + 1
+    ), "restore did not claim generation"
     assert restored.request("identity")["data"] == identity, "restore changed identity"
+    assert (
+        restored.request("mldsa-public-key")["data"] == mldsa_identity
+    ), "restore changed ML-DSA identity"
     return restored
 
 
@@ -104,16 +109,31 @@ def check_pair(native_path, wasm_path, wasm_server):
     with ExitStack() as stack:
         native = stack.enter_context(Fixture(native_path))
         wasm = stack.enter_context(Fixture(wasm_path))
-        server_fixture, beacon_fixture = (wasm, native) if wasm_server else (native, wasm)
-        handle = server_fixture.request("server-new", kid=19, seed=encode(bytes([9]) * 32))["handle"]
+        server_fixture, beacon_fixture = (
+            (wasm, native) if wasm_server else (native, wasm)
+        )
+        handle = server_fixture.request(
+            "server-new",
+            kid=19,
+            seed=encode(bytes([9]) * 32),
+            mldsa_seed=encode(bytes([10]) * 32),
+        )["handle"]
         server = Endpoint(server_fixture, handle, server=True)
         identity = server.request("identity")["data"]
-        handle = beacon_fixture.request("beacon-new", kid=19, data=identity)["handle"]
+        mldsa_identity = server.request("mldsa-public-key")["data"]
+        assert len(base64.b64decode(mldsa_identity)) == 1952
+        handle = beacon_fixture.request(
+            "beacon-new", kid=19, data=identity, extra=mldsa_identity
+        )["handle"]
         beacon = Endpoint(beacon_fixture, handle)
         registration = beacon.request("registration")["data"]
-        registered = server.request("register", data=registration, extra=encode(b"initial message"))
+        registered = server.request(
+            "register", data=registration, extra=encode(b"initial message")
+        )
         beacon_key = registered["kid"]
-        assert beacon.request("finish", data=registered["data"])["data"] == encode(b"initial message")
+        assert beacon.request("finish", data=registered["data"])["data"] == encode(
+            b"initial message"
+        )
 
         def both_directions(label):
             exchange(beacon, server, label + b" beacon to server", beacon_key)
@@ -123,13 +143,15 @@ def check_pair(native_path, wasm_path, wasm_server):
         for sequence in range(26):
             both_directions(f"before transfer {sequence}".encode("ascii"))
 
-        server = transfer(server, beacon_fixture, identity)
+        server = transfer(server, beacon_fixture, identity, mldsa_identity)
         both_directions(b"after first backend transfer")
-        server = transfer(server, server_fixture, identity)
+        server = transfer(server, server_fixture, identity, mldsa_identity)
         both_directions(b"after second backend transfer")
         server.request("close")
         beacon.request("close")
-        print(f"PASS: {'WASM' if wasm_server else 'native'} server, mixed handshake/ratchets and both snapshot transfers")
+        print(
+            f"PASS: {'WASM' if wasm_server else 'native'} server, mixed handshake/ratchets and both snapshot transfers"
+        )
 
 
 def main():

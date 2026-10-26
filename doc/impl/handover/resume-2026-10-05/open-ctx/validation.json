@@ -1,0 +1,36 @@
+{
+  "source_commit": "1e9a0e2db7bc25692e78d13c0a352a685fa21588",
+  "scope": "Two definitional/differential controls; zero protocol security claims.",
+  "command": "nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c env CARGO_TARGET_DIR=/tmp/beaconcrypt-primitive-fidelity-cargo-target make -C beaconcrypt-core SHELL=/run/current-system/sw/bin/bash PROVERIF_OPEN_CTX_LOG_DIR=/tmp/bc-arc-scratch/pv-work/p6-open-ctx/committed-logs check-proverif-aead-differential check-inventory",
+  "exit": 0,
+  "transcript_tests": 25,
+  "checker_regressions": 9,
+  "proverif_targets": 2,
+  "primitive_implementation_or_production_rust_changes": false,
+  "logs": {
+    "make": {
+      "file": "make.log.gz",
+      "sha256": "0070434381d8e1ef695b895250134a8ef7a3fb4ce0756da97f6af3e7d017b529",
+      "gzip_sha256": "13f9c0b4977e7cf14e55d59fdee2fc2e96e6f9b8ec5de67a1ef966b852fb2a19",
+      "status": "pass"
+    },
+    "CTX-open": {
+      "file": "CTX-open.log.gz",
+      "sha256": "994515e58b9213787e2216dee612f4211063b339890ef5183fc76d5f97a1586f",
+      "gzip_sha256": "c9706497f5f67388b810ef10827dac89e2ce2212654cb670a2ecee08377f3559",
+      "status": "pass"
+    },
+    "CTX-open-no-commitment": {
+      "file": "CTX-open-no-commitment.log.gz",
+      "sha256": "3c16586492f42a0a735482ddbe0a6d43962630c9115ac4b5d2a4a24ac22ad13f",
+      "gzip_sha256": "81e05fa36a50fa31da3d4ff7a0fa234c5127943c282ab92aa2c9e5e0f6e10483",
+      "status": "pass"
+    },
+    "initial-warning-diagnostic": {
+      "file": "initial-warning-diagnostic.log.gz",
+      "sha256": "621a21daf30a401f1dd6f69b76772ba1be9095371e8a36c85279eb2065f92ef9",
+      "gzip_sha256": "f2abe5f2d628eed00804948a7069f229017a16f82ceda292a20a0ae7499668f8",
+      "status": "diagnostic failed strict warning gate"
+    }
+  }
+}

@@ -1,0 +1,369 @@
+coord: lease 00002693 granted: codex 2048 MiB class custom (row-benchmark-final-build)
+coord: lease 00002693 runs in memory scope coord-00002693-row-benchmark-final-build.scope (user@1000.service; MemoryMax 20480 MiB, MemorySwapMax 4096 MiB, OOMPolicy stop); LEAN_NUM_THREADS=6 (LEASE_LEAN_NUM_THREADS; set LEAN_NUM_THREADS to choose another value)
+RUN: cargo fmt --all --check
+RUN: cargo clippy --locked -p beaconcrypt --features gobinds --example persistence_bench
+   Compiling cbindgen v0.29.4
+   Compiling beaconcrypt v0.6.1 (/home/user/worktrees/beaconcrypt-row-persistence/beaconcrypt)
+    Checking module-lattice v0.2.3
+    Checking libsodium-rs v0.3.0
+    Checking ml-dsa v0.1.1
+    Checking beaconcrypt-core v0.1.1 (/home/user/worktrees/beaconcrypt-row-persistence/beaconcrypt-core)
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/pqxdh.rs:545:5
+    |
+545 |     if !(state.expected_server_binding.identity_public_key == inputs.response_server_identity) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(state.expected_server_binding.identity_public_key != inputs.response_server_identity)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+    = note: `#[warn(clippy::nonminimal_bool)]` on by default
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/pqxdh.rs:621:5
+    |
+621 |     if !(authenticated_server_key_id == candidate.server_binding.identity_key_id) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(authenticated_server_key_id != candidate.server_binding.identity_key_id)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/pqxdh.rs:624:5
+    |
+624 |     if !(authenticated_binding == candidate.key_id_binding().bytes) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(authenticated_binding != candidate.key_id_binding().bytes)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/pqxdh.rs:853:5
+    |
+853 |     if !(pending.server_binding.identity_key_id == current_server_binding.identity_key_id)
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(pending.server_binding.identity_key_id != current_server_binding.identity_key_id)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/pqxdh.rs:854:6
+    |
+854 |           || !(pending.server_binding.identity_public_key
+    |  ____________^
+855 | |             == current_server_binding.identity_public_key)
+    | |__________________________________________________________^ help: try: `(pending.server_binding.identity_public_key != current_server_binding.identity_public_key)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: re-implementing `PartialEq::ne` is unnecessary
+   --> beaconcrypt-core/src/pqxdh.rs:898:2
+    |
+898 |     fn ne(&self, other: &Self) -> bool {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#partialeq_ne_impl
+    = note: `#[warn(clippy::partialeq_ne_impl)]` on by default
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/pqxdh.rs:985:5
+    |
+985 |     if !(encoded[0] == SIGN_TYPE_ED25519) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(encoded[0] != SIGN_TYPE_ED25519)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/pqxdh.rs:996:5
+    |
+996 |     if !(encoded[0] == KEM_TYPE_X25519) || !(encoded[1] == expected_role) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(encoded[0] != KEM_TYPE_X25519)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/pqxdh.rs:996:41
+    |
+996 |     if !(encoded[0] == KEM_TYPE_X25519) || !(encoded[1] == expected_role) {
+    |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(encoded[1] != expected_role)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+    --> beaconcrypt-core/src/pqxdh.rs:1006:5
+     |
+1006 |     if !(encoded[0] == KEM_TYPE_MLKEM768) {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(encoded[0] != KEM_TYPE_MLKEM768)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/concrete.rs:141:5
+    |
+141 |     if !(advanced.key.sequence() == Some(sequence)) || !(advanced.state.send_sequence() == sequence)
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(advanced.key.sequence() != Some(sequence))`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/concrete.rs:141:53
+    |
+141 |     if !(advanced.key.sequence() == Some(sequence)) || !(advanced.state.send_sequence() == sequence)
+    |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(advanced.state.send_sequence() != sequence)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/concrete.rs:333:7
+    |
+333 |             if !(sequence == self.target) {
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(sequence != self.target)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/concrete.rs:368:6
+    |
+368 |         if !(advanced.state.receive_key_at(slot) == Some(sequence))
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(advanced.state.receive_key_at(slot) != Some(sequence))`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/concrete.rs:370:7
+    |
+370 |             || !(slot_index == self.first_slot as usize + self.skipped as usize)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(slot_index != self.first_slot as usize + self.skipped as usize)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/concrete.rs:415:8
+    |
+415 |                 if !(cached.sequence == prepared.sequence) {
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(cached.sequence != prepared.sequence)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/concrete.rs:573:6
+    |
+573 |         if !(advanced.state.receive_key_at(slot) == Some(sequence))
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(advanced.state.receive_key_at(slot) != Some(sequence))`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/concrete.rs:575:7
+    |
+575 |             || !(slot_index == self.first_slot as usize + self.derived as usize)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(slot_index != self.first_slot as usize + self.derived as usize)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/concrete.rs:591:7
+    |
+591 |             if !(sequence == self.target) {
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(sequence != self.target)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/control.rs:426:6
+    |
+426 |         || !(state.receive_cache.entries[slot_index] == target)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(state.receive_cache.entries[slot_index] != target)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/control.rs:541:5
+    |
+541 |     if !(requested_peer == peer.peer_id) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(requested_peer != peer.peer_id)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/control.rs:569:5
+    |
+569 |     if !(requested_peer == peer.peer_id) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(requested_peer != peer.peer_id)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:166:6
+    |
+166 |         if !(cached.sequence == sequence) {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(cached.sequence != sequence)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:329:5
+    |
+329 |     if !(state.control.receive_key_at(target_slot) == Some(sequence)) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(state.control.receive_key_at(target_slot) != Some(sequence))`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:336:5
+    |
+336 |     if !(target.sequence == sequence) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(target.sequence != sequence)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:357:5
+    |
+357 |     if !(last.sequence == last_sequence) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(last.sequence != last_sequence)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:370:5
+    |
+370 |     if !(removal.target_slot == target_slot) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(removal.target_slot != target_slot)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:373:5
+    |
+373 |     if !(removal.last_slot == last_slot) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(removal.last_slot != last_slot)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:511:6
+    |
+511 |         if !(entry.receive_key_at(current_slot) == committed.receive_key_at(current_slot)) {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(entry.receive_key_at(current_slot) != committed.receive_key_at(current_slot))`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:554:6
+    |
+554 |         if !(staged.sequence == expected) {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(staged.sequence != expected)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:558:6
+    |
+558 |         if !(pending.committed_control.receive_key_at(current_slot) == Some(expected)) {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(pending.committed_control.receive_key_at(current_slot) != Some(expected))`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:586:5
+    |
+586 |     if !(pending.target_sequence == requested) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(pending.target_sequence != requested)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:592:5
+    |
+592 |     if !(pending.first_slot == state.control.receive_cache_len()) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(pending.first_slot != state.control.receive_cache_len())`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:595:5
+    |
+595 |     if !(pending.committed_control.send_sequence() == state.control.send_sequence()) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(pending.committed_control.send_sequence() != state.control.send_sequence())`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:598:5
+    |
+598 |     if !(pending.committed_control.receive_sequence() == requested) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(pending.committed_control.receive_sequence() != requested)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:601:5
+    |
+601 |     if !(requested - entry_receive_sequence == pending.skipped as u64 + 1) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(requested - entry_receive_sequence != pending.skipped as u64 + 1)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:612:5
+    |
+612 |     if !(pending.committed_control.receive_cache_len() as usize == committed_len) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(pending.committed_control.receive_cache_len() as usize != committed_len)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: this boolean expression can be simplified
+   --> beaconcrypt-core/src/ratchet/refined.rs:853:5
+    |
+853 |     if !(cached.sequence == sequence) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(cached.sequence != sequence)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#nonminimal_bool
+
+warning: `beaconcrypt-core` (lib) generated 38 warnings (run `cargo clippy --fix --lib -p beaconcrypt-core -- ` to apply 37 suggestions)
+    Checking once_cell v1.21.4
+warning: large size difference between variants
+  --> beaconcrypt/src/beacon.rs:23:1
+   |
+23 | /   enum BeaconState {
+24 | |       Fresh {
+25 | |           control: verified_pqxdh::BeaconFresh,
+26 | |           prekey: crypto_kx::KeyPair,
+...  |
+35 | | /     InitSent {
+36 | | |         control: verified_pqxdh::BeaconInitSent,
+37 | | |         prekey: crypto_kx::KeyPair,
+38 | | |         onetime_key: crypto_kx::KeyPair,
+39 | | |         pq_key: crypto_kem::mlkem768::KeyPair,
+40 | | |     },
+   | | |_____- the second-largest variant contains at least 3784 bytes
+41 | | /     Established {
+42 | | |         control: verified_pqxdh::BeaconEstablished,
+43 | | |         associated_data: [u8; AD_SIZE],
+44 | | |         ratchet: RatchetManager,
+45 | | |     },
+   | | |_____- the largest variant contains at least 4017 bytes
+...  |
+48 | |       },
+49 | |   }
+   | |___^ the entire enum is at least 4024 bytes
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#large_enum_variant
+   = note: `#[warn(clippy::large_enum_variant)]` on by default
+help: consider boxing the large fields or introducing indirection in some other way to reduce the total size of the enum
+   |
+44 -         ratchet: RatchetManager,
+44 +         ratchet: Box<RatchetManager>,
+   |
+
+warning: `beaconcrypt` (lib) generated 1 warning
+    Checking tempfile v3.27.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 11.84s
+RUN: cargo build --locked --release -p beaconcrypt --features gobinds --example persistence_bench
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling beaconcrypt v0.6.1 (/home/user/worktrees/beaconcrypt-row-persistence/beaconcrypt)
+    Finished `release` profile [optimized] target(s) in 23.67s
+PASS: --peers rejects duplicate axes before execution
+PASS: --burst-chunks rejects duplicate axes before execution
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.005s
+
+OK

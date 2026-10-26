@@ -1,0 +1,85 @@
+{
+  "cohort": "RawReports41",
+  "base_commit": "364b9c11beba0183850a22b5da15ac371f4040d4",
+  "review_manifest_sha256": "a5249a8e3e50b40cb77a33b5a02cfc4e125b2d9b5e0b0c625ab67d259ea44f49",
+  "independent_review_sha256": "985fcd4a51aeb20e7bff95e45975f6552a79f5baf316466d97a8d45a41906809",
+  "status_only_delta": {
+    "path": "doc/impl/registration-joint-raw-field-reports.md",
+    "before_sha256": "c34a9ff25b2ab5a894996856efc38e243a8bc746684c7969a795e2e74e5b0f6d",
+    "after_sha256": "744a3ea35727ffdfa4217ba1fb6eddb1d8b50d605499621bd70cf2fd33efdc18",
+    "meaning": "Record completed independent scoped review; no theorem/assumption/query claim changed."
+  },
+  "source_files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointRawSignatures.lean",
+      "sha256": "73ab6cf36a25392e1bca401bacf612678ab4a43ac588bc276fd9f6f6f0c1a06a"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportLift.lean",
+      "sha256": "f61fd7bcbb9d72b13b1fc9670832669d0ee87353398dc5c0b1d871d0847b6724"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointRawReports.lean",
+      "sha256": "37594fe85415796bcb2c47abb86d21cb995e90d5b6d8d14ee161ea1a03e4ef7e"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportCommands.lean",
+      "sha256": "3c6cdcd4518f4dc77b9bc19cf429007405d9e5b8e28509f271ac5283703827e8"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportCompiler.lean",
+      "sha256": "4ea9f01432612c2aae9fa700b03853ecd35bf3a4a16abd2f7bf7983b23dc5bd9"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportSource.lean",
+      "sha256": "128ccde2ccc155ee16ef6cccabacd0eeee9a372dfc868c3104540555ebc808c2"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportCosts.lean",
+      "sha256": "662b19d7c106f0a79e818ff1b5f4b317fd022e40058f0443301294593140059c"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportAttempts.lean",
+      "sha256": "faa506201944287f02ee649f284f1a73146f0408e37de38562a2a423cc285968"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportedAuthentication.lean",
+      "sha256": "1a4423380ce1170a3655e1446aa8cedb6136ad4256b0c7710dc09493f6b3454f"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportEvents.lean",
+      "sha256": "ac3a2589ba609ec906e659439cff61a1482c36be1e7455779776cad37418fe01"
+    },
+    {
+      "path": "doc/impl/registration-joint-raw-field-reports.md",
+      "sha256": "744a3ea35727ffdfa4217ba1fb6eddb1d8b50d605499621bd70cf2fd33efdc18"
+    },
+    {
+      "path": "doc/formal-verification-analysis.md",
+      "sha256": "e4a82878706e96a03b7484478476e404207b9c1f9b9075af42d590d586a8730a"
+    }
+  ],
+  "evidence_files": [
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/raw-reports41/direct-checks.json",
+      "sha256": "7a224b1813b90b189e432ecf94e286399621b534f6a00a37c01ffe5b8608cf41"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/raw-reports41/independent-review.json",
+      "sha256": "985fcd4a51aeb20e7bff95e45975f6552a79f5baf316466d97a8d45a41906809"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/raw-reports41/review-manifest-before-nit.json",
+      "sha256": "1c904f7c94062567aacb53cd36835ee8c95a06ddf6d4881dc9516efa4f0d78b3"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/raw-reports41/review-manifest.json",
+      "sha256": "a5249a8e3e50b40cb77a33b5a02cfc4e125b2d9b5e0b0c625ab67d259ea44f49"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/raw-reports41/theorems.json",
+      "sha256": "d914f68263064f662c2fafa3465ac76757f5244a32fbda9edf9e79771960fd38"
+    }
+  ],
+  "reconciliation": "Fetched origin/vcvio, origin/codex/full-proof-composition and topic immediately before publication. Topic still equals published base; no shared older documentation/inventory merge. Parent semantically integrates this focused cohort on a fresh central topic."
+}

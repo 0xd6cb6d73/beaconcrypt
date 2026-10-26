@@ -1,0 +1,5 @@
+# E21 local symbolic trace argument
+
+The argument has independent review against the exact receive macro, neutral window hooks, ordinary/fail-stop three-attempt expansions and the C2/C4 formulas. The reviewed draft and maintained guide are byte-identical. Its projection preserves honest outputs, attacker knowledge and non-rejection events, and omits input-consumption/call labels. It transfers only the two existing bounded symbolic correspondences; source/API and computational composition remain open.
+
+The source update replaces stale scope descriptions and narrows two comments to the actual formulas. Python AST equality and ProVerif noncomment-token equality with the published base establish unchanged checker behavior and process text. The original review records the pre-comment input hashes; the new source manifest and meaning-preservation record explain the two changed comment-file digests. All 61 existing free-schedule checker tests and the reviewed inventory pass, along with diff checks. No solver search or Lean build was repeated, and no new computational result is claimed.

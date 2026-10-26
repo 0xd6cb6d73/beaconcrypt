@@ -1,0 +1,27 @@
+# Record-lift native source adapters
+
+`PqxdhRecordLiftNativeAdapters` closes the local adapter join between the complete growing-table source compiler and the literal extracted receive/send programs interpreted through their original native adapters. Its 13 theorems preserve the actual optional API reply and the complete caller primitive state. The interpreter can include the shared hash cache, counters, instrumentation and a produced-frame log; these fields are neither projected away nor assumed unchanged by opening or sealing.
+
+## Actual native callbacks
+
+`receiveKdf` and `sendKdf` invoke the supplied native interpreter with the original source request and convert its actual typed 76-byte response into the existing complete-output representation. `receive_kdf_response` and `send_kdf_response` prove that converting it back recovers exactly that native call, including all state effects. This is response representation, not a replacement by a random function. The existing real lookup invokes this callback even on repeated coordinates.
+
+`receiveOpen` applies the existing `RawCtxWholeOwner.adapter` to the native opening capability obtained from the current erased source state. `receive_open_missing` retains the adapter's missing-material rejection without a native opening invocation. `receive_open_present` forwards exactly the input selected by the source getters, then wraps the actual optional plaintext returned by the interpreter with the original source API metadata. No plaintext is added to the opening request or recovered and inserted into adversarial bytes.
+
+`sendSeal` uses the existing `RawCtxSourceSend.adapter` on the native seal capability. `send_seal_reply` proves that its API option contains precisely the writer bytes actually returned by the interpreter, wrapped with the original target ID and source sequence. A failed writer remains an actual failed option, and all primitive effects remain present. The underlying source send has already advanced its chain before this callback; this module keeps that original behavior.
+
+## Complete local execution
+
+`receive_callbacks` and `send_callbacks` prove that the local compiler handlers are the composition of the literal source adapter and the existing native interpreted-program adapter. These are exact handler equations for every query, without a callback realization hypothesis. `receive_native_state` and `send_native_state` then evaluate the existing complete source-program correspondence under the supplied stateful native interpreter. Their only result conversion wraps the refined kernel in `ConcreteRatchetKernel`; it preserves the optional API reply and the entire primitive poststate.
+
+`receive_adapter` and `send_adapter` compose these native equations with the growing-table compiler's complete local erasure theorem. The private labeled run uses its actual evolving table at each callback and its final table for kernel erasure. The result equals the literal original source receive/send program interpreted through the original adapter on the original primitive state. These generic forms explicitly retain the companion compiler's `LookupPreserves` and `LookupRealized` equations and the table/kernel reference premises. They do not assume that an arbitrary table interpreter is compatible with the source.
+
+`real_receive_adapter` and `real_send_adapter` instantiate the literal real lookup and discharge those two table equations using the existing `RealValid` invariant and ordinary functional `KdfReal` law. This law only says that the typed native response is the existing fixed source response; it does not assert secrecy, independence or a winning event. The global World compiler must instantiate that law from its actual primitive handler, with the source KDF counter bump and the unchanged unrelated fields. Its dynamic seed-cache framing and source routing remain separate proofs.
+
+## Scope and accounting
+
+No new primitive game, security contract or distributional premise is introduced. All 13 exact axiom guards permit only `propext`, `Classical.choice` and `Quot.sound`. The generic native interpreter can update arbitrary state and need not always succeed. Opening and sealing results are forwarded from that interpreter rather than supplied as a chosen successful result. Existing source control includes cached and future receives, skipped derivations, complete failed-opening rollback and send-counter exhaustion through the imported complete local compiler.
+
+The explicit callbacks show one KDF interpreter invocation per lookup call, no opening invocation on missing material, one opening invocation on present material, and one sealing invocation for the selected seal capability. These are callback facts; the native interpreter's internal KDF/hash/AEAD/uniform work is not free. Complete primitive-state equality retains whatever accounting and writer log that interpreter implements. Global oracle budgets remain the actual WorldBudget results and their compiler transport.
+
+Raw byte parsing and validation, selected peer lookup, associated-data routing, dynamic installation and owner-map updates belong to the World compiler. The module does not prove those global operations, kernel reachability from an installed dynamic handle, target-input independence, alias probability, a uniform evolving-chain hybrid or CTX secrecy/authentication. It provides the local native source equations needed for those joins without importing the global compiler or changing its state representation.

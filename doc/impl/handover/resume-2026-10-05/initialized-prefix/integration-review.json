@@ -1,0 +1,18 @@
+{
+  "reviewer": "fs_source_abstraction",
+  "decision": "APPROVE_SCOPED_INTEGRATION",
+  "manifest_sha256": "8db9a05374273a0ba347b1675e5b483bb16634500d7e78a7a35015575ce2768d",
+  "findings": [],
+  "checks": [
+    "All36 frozen hashes match; all12 modules match reviewed published d90be/603de source blobs exactly.",
+    "Read integration and three cohort guides, prior independent semantic reviews, actual initialized_source/initialized_native/uniform and source_owned statements, prepared before-cut measured equality, generated_event_pre and source phase assumptions. Historical cohort reviews reused for unchanged internal proofs.",
+    "Initialization derives same-run private Server slot/public key without an honest/imported target premise; whole14class continuation and all-reply uniform bill retained. Macro/base partition and real public HKDF remain explicitly pending.",
+    "Complete prefix pair retains both post-admission outcomes; beforeKey distribution equality includes None complement without discarding mass or claiming full post-admission equality. Source event/Fits/component-state/alias hypotheses stay explicit.",
+    "All61 guards wired, every prior require_ guard preserved and all12 root imports present once.",
+    "Verified1339 retained artifact source hashes,1002 retained dependency blob IDs and12newsourcehashes against current tree; no recompilation.",
+    "All12 direct-check receipts and complete-root receipt report empty successful output against frozen hashes; inventory gzip/rawhash matches successful log; setup diagnostics honestly retained separately.",
+    "No production Rust/PV changes or fullsecurity/primitiveimplementation claim. Query/environment contracts and remaining global reduction/source obligations are documented."
+  ],
+  "tests_rerun": [],
+  "review_limit": "Integration review of source-exact previously reviewed cohorts; no repeat of all historical proof checks or new solver/build run."
+}

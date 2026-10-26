@@ -1,0 +1,65 @@
+(* Single-world fresh-secret reachability control, not an equivalence verdict. *)
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Active strong-secrecy derivative of the maintained fs process.
+   See doc/impl/proverif-active-strong-secrecy.md for the exact bounds,
+   test eligibility and source-abstraction obligations. *)
+
+
+
+let FsB2sSends(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  assigned_key_id: key_id,
+  root: bitstring,
+  associated_data: bitstring,
+  send_chain_1: bitstring,
+  send_chain_2: bitstring
+) =
+  in(c, send_request_1: bitstring) [precise];
+  in(c, (left_1: bitstring, right_1: bitstring)) [precise];
+  new fs_strong_control_secret: bitstring;
+  event FsStrongControlSecret(fs_strong_control_secret);
+  let record_1 = if server_identity = ed_public(SERVER_IDENTITY_SECRET) then fs_strong_control_secret else left_1 in
+  out(c, record_1);
+  event FsSent(
+    beacon_to_server(),
+    server_identity,
+    beacon_identity,
+    assigned_key_id,
+    root,
+    1,
+    record_1
+  );
+  out(
+    c,
+    seal_frame(
+      ratchet_material(send_chain_1),
+      associated_data,
+      fs_seq(1),
+      assigned_key_id,
+      record_1
+    )
+  );
+  in(c, send_request_2: bitstring) [precise];
+  in(c, (left_2: bitstring, right_2: bitstring)) [precise];
+  let record_2 = if server_identity = ed_public(SERVER_IDENTITY_SECRET) then left_2 else left_2 in
+  event FsSent(
+    beacon_to_server(),
+    server_identity,
+    beacon_identity,
+    assigned_key_id,
+    root,
+    2,
+    record_2
+  );
+  out(
+    c,
+    seal_frame(
+      ratchet_material(send_chain_2),
+      associated_data,
+      fs_seq(2),
+      assigned_key_id,
+      record_2
+    )
+  ).

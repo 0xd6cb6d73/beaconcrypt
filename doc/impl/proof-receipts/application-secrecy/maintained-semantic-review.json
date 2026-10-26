@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-06T03:49:13.543248+00:00",
+  "reviewer": "evolving_source_join",
+  "status": "APPROVE_SCOPED_MAINTAINED_TRUSTED_APPLICATION_SECRECY",
+  "manifest": "/tmp/bc-arc-scratch/pv-work/source-record-secrecy/maintained-review-manifest.json",
+  "manifest_sha256": "745d72a199dbc3c4cd1f2d60d84889990855db9ecf93892a8c789998904cf4dc",
+  "checks": [
+    "All31 frozen source hashes matched",
+    "All12 static PV inputs token-identical to independently reviewed probes",
+    "Read complete transformation/comparator, exact-roster checker and13 negative regressions; independently evaluated read-only full-token model validation",
+    "Read complete maintained guide and exact diff from approved paper: only status paragraph and maintained roster/limits appended"
+  ],
+  "claims_reviewed": [
+    "All three actual successful optional plaintext replies become public success markers while private opening/plaintext/ghost events and entire state stay exact; no target ban",
+    "FreshPublished occurs only for fresh successful publication, failed-seal allocation and chosen branches retained; controls only reveal fresh plaintext at same marker with identical formulas",
+    "Actual own/assigned IDs, caller labels, delayed one-use pending build, original bounds, selected identity and protected Server query anchors retained",
+    "Precise accept/build annotations and b2s default fresh-name dependencies are explicit fixed analysis settings",
+    "Target-name chronological source induction and no-echo trusted application premise retained; ordinary fresh symbolic secrecy, not public-plaintext confidentiality/strong secrecy/computational closure"
+  ],
+  "static_probe_pairs": [
+    [
+      "application-secrecy-b2s.pvl",
+      "probe-b2s-nameargs/record-origin.pvl"
+    ],
+    [
+      "application-secrecy-b2s-receive.pvl",
+      "probe-b2s-nameargs/record-origin-receive.pvl"
+    ],
+    [
+      "application-secrecy-b2s-sends.pvl",
+      "probe-b2s-nameargs/record-origin-sends.pvl"
+    ],
+    [
+      "application-secrecy-b2s.pv",
+      "probe-b2s-nameargs/secrecy.pv"
+    ],
+    [
+      "application-secrecy-b2s-leak-sends.pvl",
+      "probe-b2s-nameargs-leak/record-origin-sends.pvl"
+    ],
+    [
+      "application-secrecy-b2s-leak.pv",
+      "probe-b2s-nameargs-leak/secrecy.pv"
+    ],
+    [
+      "application-secrecy-s2b.pvl",
+      "probe-s2b-accept/tasking-origin.pvl"
+    ],
+    [
+      "application-secrecy-s2b-receive.pvl",
+      "probe-s2b-accept/tasking-origin-receive.pvl"
+    ],
+    [
+      "application-secrecy-s2b-sends.pvl",
+      "probe-s2b-accept/tasking-origin-sends.pvl"
+    ],
+    [
+      "application-secrecy-s2b.pv",
+      "probe-s2b-accept/secrecy.pv"
+    ],
+    [
+      "application-secrecy-s2b-leak-sends.pvl",
+      "probe-s2b-leak-accept/tasking-origin-sends.pvl"
+    ],
+    [
+      "application-secrecy-s2b-leak.pv",
+      "probe-s2b-leak-accept/secrecy.pv"
+    ]
+  ],
+  "limits": [
+    "Root separately reviews Make/CI/declaration/inventory/classification integration and portable run receipts",
+    "No new builds or prover jobs",
+    "No new proof of paper trace induction or T0 computational soundness"
+  ],
+  "findings": []
+}

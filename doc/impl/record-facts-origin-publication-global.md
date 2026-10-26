@@ -1,0 +1,7 @@
+# Initialized source publication history
+
+`PqxdhRecordFactsOriginPublicationGlobal` proves three statements that discharge the starting conditions of the source publication-history invariant. `coin_lift` identifies the literal startup coin route through restricted environment effects. `startup_kept` proves that actual startup retains the initial empty coordinate dictionaries and writer logs; all startup calls and their effects still execute.
+
+`ctxRun_history` covers the complete initialized adaptive source execution, including startup failure, actual server installation, and the full adversarial continuation. Every seal dictionary entry in a successful final result has a matching frame and the correct physical sender owner. The frame either failed its actual writer or was published in the actual final transcript. Initialization supplies empty history from the checked source state; callers need no initial-history premise.
+
+This result uses replay/random hidden modes and the existing successful-writer `FrameReadBack` contract. It introduces no primitive or security assumption. It makes no claim that a final publication occurred before a particular receive: acceptance must still be related to that receive's actual transcript prefix. No numerical guessing or unpublished-acceptance bound follows from final history alone. All original source, sampler and reduction query costs remain charged separately. No Rust, registration, persistence or snapshot behavior changes.

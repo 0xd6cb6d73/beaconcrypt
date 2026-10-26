@@ -1,0 +1,5 @@
+# Open CTX control validation
+
+The exact published source commit `1e9a0e2db7bc25692e78d13c0a352a685fa21588` passed its focused Make gate and reviewed inventory on 2026-10-05. Both independently reviewed controls produced their required verdicts: the committed worker is a definitional TRUE check, while the deliberately uncommitted worker yields FALSE with one reconstructed trace. These controls establish no new protocol-security correspondence. The gate also passed 25 transcript-fidelity tests and nine checker regressions.
+
+`source-manifest.json` and `independent-review.json` bind the reviewed files. `proverif-receipts.json` binds each ordered input set, verifier limits and full compressed log. `validation.json` records the exact command, exit status and log hashes. The initial failed warning check is retained separately as diagnostic evidence: the bound variable was then renamed from `sequence` to `frame_sequence`, with no process or query change. No full aggregate verification, primitive implementation proof, or mutation campaign is claimed.

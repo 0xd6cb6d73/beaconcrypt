@@ -1,0 +1,5 @@
+make: Entering directory '/tmp/beaconcrypt-evolving-record-integration/beaconcrypt-core'
+bash proofs/check-inventory.sh
+primitive-fidelity manifest: 9 targets checked
+Formal-verification inventory matches the reviewed boundary.
+make: Leaving directory '/tmp/beaconcrypt-evolving-record-integration/beaconcrypt-core'

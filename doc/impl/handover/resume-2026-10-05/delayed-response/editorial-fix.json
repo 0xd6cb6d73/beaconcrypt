@@ -1,0 +1,7 @@
+{
+  "path": "doc/impl/proverif-serial-ci.md",
+  "before": "1e8953bc9df716c6124d89456dec8ca75fb0a71801b47327cdc431bf83cf8358",
+  "after": "29f9004e11ce6d2704adf1b0ede59da323a0f3c0a49493eb1b6993eb12a5f7cb",
+  "change": "Insert omitted comma and explicitly retain existing result/model/query/classification scope; reviewed A1 adds seven expectations.",
+  "semantic_or_validation_change": false
+}

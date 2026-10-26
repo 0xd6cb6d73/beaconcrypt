@@ -1,0 +1,41 @@
+{
+  "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+  "base": "ae279d74102240965d0ca39e70e97f3aecde0562",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointCreation.lean": "c1f6e9726dedca29aef2a7f60a556175c90b9ba16c152ec5100e614b6f384c10",
+    "doc/impl/registration-joint-creation.md": "f7364e5118a8068b044a3d7fbba9561b27cb740742590dac1b959a8b27d6d579",
+    "doc/formal-verification-analysis.md": "d8b0d58e81d4d424cef4fa8ce1332b12b4667a4c3f2b0a0d7f77b5da514d2a44"
+  },
+  "theorems": [
+    "client_source",
+    "native_source",
+    "client_material",
+    "native_continuation",
+    "client_continuation",
+    "client_present",
+    "service_owns",
+    "client_bills",
+    "client_uniform"
+  ],
+  "guards": 9,
+  "logs": {
+    "/tmp/beaconcrypt-registration-joint-creation-check.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0
+    },
+    "/tmp/beaconcrypt-registration-joint-creation-axioms.log": {
+      "sha256": "5e691200fa09c4b5fb2b2abd7a2d9108afec70bb55b1c788bdf52a4beab94c48",
+      "exit_code": 0
+    },
+    "/tmp/beaconcrypt-registration-joint-creation-guarded.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0
+    },
+    "/tmp/beaconcrypt-registration-joint-creation-guarded-final.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0
+    }
+  },
+  "scope": "Complete actual typed constructor and indexed service joint-sampler/full-continuation equality; ownership and logical1/1/32 plus evaluated64+G query bills. No whole scheduler, target-selection or security bound claimed. No prior proof/source change; metadata/inventory deferred to reviewed central integration.",
+  "review_correction": "Header now states the locally retained private prekey explicitly; no definition, theorem statement, proof body or guard changed. Final guarded single-file recheck exited0."
+}

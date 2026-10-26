@@ -1,0 +1,11 @@
+# Exact native hash compiler
+
+`PqxdhRecordFactsHashNative` proves eight guarded statements exposing the actual native commitment-hash requests while retaining the other native operations. HKDF, AEAD seal/open and the optional frame writer use the original functional source contracts. The shared hash uses the existing `AdaptiveCtxSharedHash.HashSpec` interface with the exact `((), bytes)` input. No primitive implementation is proved or replaced by a new contract.
+
+`native_exact` proves complete reply and shared-cache equality after interpreting each compiled native request with the existing shared random oracle. `counted_exact` and `counted_interpreter` retain the original native call counter, uniform-counter value and effect counters; they compare against the already reviewed interpreter with uniform-draw instrumentation projected away. They do not assert equality with the original uniform query cost. `program_exact` extends the equality through any adaptive native continuation and preserves its entire evaluated distribution.
+
+`logged_exact` and `loggedProgram_exact` wrap the actual source frame logger around one query or a complete adaptive native program. They preserve every submitted frame and the real optional writer reply, including refusal after sealing. No assumption about successful publication or supplied plaintext enters either theorem.
+
+`native_queries` and `counted_queries` give the exact local explicit-hash allowance: at most one hash request for a native hash call, and zero for the other native callbacks. The digest interpreter still consumes its separate finite uniform queries on a cache miss; the source native calls remain charged. The local bound does not make real HKDF, AEAD or writer computation free in a runtime model and does not supply the global protocol bill. The subsequent combined compiler must connect this shared-hash interface to the private/ordinary combined cache, retain the original source and reduction budgets, and join the actual record events to the statistical bound.
+
+All eight statements have exact guarded axiom checks allowing only `propext`, `Classical.choice` and `Quot.sound`. This module is a source wiring equality and local query calculation; it proves no global origin, binding or secrecy statement and adds no primitive, codec, deployment, snapshot or persistence premise.

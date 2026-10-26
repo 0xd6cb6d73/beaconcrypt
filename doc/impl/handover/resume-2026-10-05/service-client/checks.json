@@ -1,0 +1,90 @@
+[
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointBundleCompiler",
+    "start": "2026-10-06T00:23:45.525827",
+    "end": "2026-10-06T00:23:48.754557",
+    "exit": 0,
+    "source_sha256": "47549d81d9e94eda6dc081637de0fb0248573ef44a0bcaf7008ec89e843e7874",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-registration-service-client-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/service-client-integration/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointBundleCompiler.olean",
+      "/tmp/beaconcrypt-registration-service-client-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBundleCompiler.lean"
+    ],
+    "artifact_sha256": "ecff94466dad30ff3fb29fe0854b48f7b739abe213c79635b3b30488babf0709"
+  },
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule",
+    "start": "2026-10-06T00:23:48.755427",
+    "end": "2026-10-06T00:23:54.440030",
+    "exit": 0,
+    "source_sha256": "a8d2d5c8bd7fa089f9fdc3a13bc575aa51578cf6407ab7c0ec858901ea3532de",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-registration-service-client-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/service-client-integration/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceSchedule.olean",
+      "/tmp/beaconcrypt-registration-service-client-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceSchedule.lean"
+    ],
+    "artifact_sha256": "69d1373bcd1ce2df5525c3947bdd43e65cddc886c85db8245f20f50cccdedcde"
+  },
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointServiceCosts",
+    "start": "2026-10-06T00:23:54.442251",
+    "end": "2026-10-06T00:24:08.553798",
+    "exit": 0,
+    "source_sha256": "eac023925edc4190f25ccd39e214db32b97d395ac48a105028051b8caaa635ef",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-registration-service-client-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/service-client-integration/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceCosts.olean",
+      "/tmp/beaconcrypt-registration-service-client-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceCosts.lean"
+    ],
+    "artifact_sha256": "5421a869f24fb00ca2b9382d8b53729cae0c8edb0e655eb36ff85ed83b1d3fff"
+  },
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger",
+    "start": "2026-10-06T00:24:08.555903",
+    "end": "2026-10-06T00:24:13.500078",
+    "exit": 0,
+    "source_sha256": "5250604c01482c696ccfa9d2dd75ba46260136949b25738b435a5799f059245d",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-registration-service-client-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/service-client-integration/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceLedger.olean",
+      "/tmp/beaconcrypt-registration-service-client-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceLedger.lean"
+    ],
+    "artifact_sha256": "a7515df3853c98cedc4211ca4f1b1fa60e9cc1d7535ed3e1d0d179e3f6c737d2"
+  }
+]

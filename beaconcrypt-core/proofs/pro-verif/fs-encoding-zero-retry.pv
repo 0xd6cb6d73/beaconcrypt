@@ -1,0 +1,10 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Core-boundary witness: a zero DH rejection is followed by an acceptance for the same registration ID on the same object. The failed bundle can have a low-order prekey while the accepted bundle has a valid prekey; the registration ID uses the identity and one-time field. This is not a claim that native libsodium returns a zero DH result. *)
+query obj: bitstring, s: bitstring, b: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+      rid: beaconcrypt_core__pqxdh__t_RegistrationId, root: bitstring, i: time, j: time;
+  event(FsServerZeroRejected(obj, s, b, rid))@i
+  && event(FsServerAccepted(obj, s, b, init, rid, root))@j
+  ==> i > j.
+
+process FsRegistrationMain()

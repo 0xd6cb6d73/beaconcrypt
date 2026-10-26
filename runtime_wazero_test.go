@@ -40,7 +40,7 @@ func TestWasmInitializationRejectsInvalidModuleAndEntropy(t *testing.T) {
 		t.Fatal("module missing its ABI version export was accepted")
 	}
 	engine := testWasmEngine(t, failedWasmEntropy{})
-	if instance, err := engine.construct(1, 19, nil, nil, nil); instance != nil || err == nil {
+	if instance, err := engine.construct(1, 19, nil, []byte{0}, nil); instance != nil || err == nil {
 		t.Fatal("failed entropy returned a live server")
 	}
 }
@@ -55,7 +55,7 @@ func TestWasmTrapsAndCleanupFailuresSuppressOutputAndReleaseCallbacks(t *testing
 				t.Fatal(err)
 			}
 			store := &testSnapshotStore{}
-			instance, err := engine.construct(12, 19, nil, []byte{1, 0, 0, 0}, store)
+			instance, err := engine.construct(12, 19, nil, []byte{1, 0, 0, 0, 0}, store)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -93,7 +93,7 @@ func TestWasmObservedModuleClosureReleasesCallbacks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	instance, err := engine.construct(12, 19, nil, []byte{1, 0, 0, 0}, &testSnapshotStore{})
+	instance, err := engine.construct(12, 19, nil, []byte{1, 0, 0, 0, 0}, &testSnapshotStore{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,7 +126,7 @@ func TestWasmFailedConstructorsReleaseStoreAndPreserveCause(t *testing.T) {
 			case "load-panic":
 				store.panicLoad = true
 			case "cas-error", "cas-panic":
-				op, arg, extra, status = 12, 19, []byte{1, 0, 0, 0}, StatusStaleGeneration
+				op, arg, extra, status = 12, 19, []byte{1, 0, 0, 0, 0}, StatusStaleGeneration
 				store.casError = sentinel
 				store.panicCAS = scenario == "cas-panic"
 			}

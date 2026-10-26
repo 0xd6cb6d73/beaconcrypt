@@ -1,0 +1,57 @@
+{
+  "PqxdhRegistrationJointKemCommands": [
+    "creations",
+    "decapsulations",
+    "selected_source"
+  ],
+  "PqxdhRegistrationJointKemInitialization": [
+    "constructor_kem",
+    "initialized",
+    "constructor_order",
+    "initialized_first",
+    "actual_source_first"
+  ],
+  "PqxdhRegistrationJointKemOrigin": [
+    "issued_pq",
+    "selected_public",
+    "raw_selected"
+  ],
+  "PqxdhRegistrationJointKemRouting": [
+    "pre_source",
+    "post_source",
+    "fresh_pre_event",
+    "pre_decapsulations",
+    "post_decapsulations"
+  ],
+  "PqxdhRegistrationJointOpenUniform": [
+    "native_bound",
+    "prefix_step",
+    "prefix_bound",
+    "tail_bound",
+    "prepare_bound",
+    "accept_bound",
+    "pool_bound",
+    "backend_step",
+    "backend_program",
+    "total_eq",
+    "command_program"
+  ],
+  "PqxdhRegistrationJointKemCosts": [
+    "identity_creations",
+    "local_uniform",
+    "pre_uniform",
+    "post_uniform",
+    "local_base",
+    "pre_base",
+    "post_base"
+  ],
+  "PqxdhRegistrationJointKemInitializedRouter": [
+    "source"
+  ],
+  "PqxdhRegistrationJointKemInitializedCosts": [
+    "uniform",
+    "excluded",
+    "decapsulations",
+    "base"
+  ]
+}

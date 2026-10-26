@@ -1,0 +1,156 @@
+{
+  "cohort": "source-fits19",
+  "source_base": "78be2d7eed590c6da2f8190f5b95225837ef3179",
+  "fetched_origin_vcvio": "8330cdef4f4659931b6764a026cd90c4caf833a4",
+  "source_manifest_sha256": "21035c33c0f25d176a1300fb44406f3b814568af71e7071f00066c9b881057a8",
+  "source_files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCapturedFits.lean": "9f1607a0cae14bc29697318e5380b79a2a37b374b664f2e03de9a859e6d34747",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengePreparedFits.lean": "35b37c05fb9d7d0e571ac52cfdd68028bcc7b0a42e90dea8cae2c8199499a321",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSamplerFits.lean": "0cfdaeca8f994eee129b9086839d5d647115d7a01749a36af9e8e8711e4437bc",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedFits.lean": "77a9a943daec7b02dc407b732ada7ffb2e616a2f14108ea8551cdce71a883d7a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeUnguarded.lean": "d1f052ff18be817a99522a9a20eef3cd3930e5ac36bc3e829b8fcb438347b4c8",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCertifiedPrivacy.lean": "c1f3ad66d09eeecea349f7d83151c0757b2246f239979c8e31f6b7a306ab410b",
+    "doc/impl/later-challenge-source-allowance.md": "f8b73a819a1be3e0b567b846a6b44561583bbc9557af2285cf0da735561d35a7",
+    "doc/formal-verification-analysis.md": "7e0d62d77d64cc98860b599ddf81908cb248ae1468bd45df20e08f6ed308c78a"
+  },
+  "unchanged_published_files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeConsumer.lean",
+      "sha256": "57aad9c64f9626f8b2c0476f745ace4ce5c37b4c8328406475f7b3c30bbde2d2",
+      "head_equal": true
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomCompiled.lean",
+      "sha256": "0219730ee20fa0910a68b28af03b045e989178c244874f1cbde52a98530d31a7",
+      "head_equal": true
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedBefore.lean",
+      "sha256": "8e4d8c729e1609aab98fd0217fc09d70b4da63546ee2a3a6cd5fc905a9378ab6",
+      "head_equal": true
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSourceSharedRom.lean",
+      "sha256": "ecf6b8785f4c7d7f5cf4e42cee9ea27d0f75e4d633565b3ea1a58e516d20a32f",
+      "head_equal": true
+    }
+  ],
+  "direct_checks": [
+    {
+      "module": "PqxdhLaterChallengeCapturedFits",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeCapturedFits-final.log",
+      "bytes": 0,
+      "log_content": "",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhLaterChallengePreparedFits",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengePreparedFits-final.log",
+      "bytes": 0,
+      "log_content": "",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhLaterChallengeSamplerFits",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeSamplerFits-final.log",
+      "bytes": 0,
+      "log_content": "",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhLaterChallengeGeneratedFits",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeGeneratedFits-final.log",
+      "bytes": 0,
+      "log_content": "",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhLaterChallengeBeforeUnguarded",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeBeforeUnguarded-final.log",
+      "bytes": 0,
+      "log_content": "",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhLaterChallengeCertifiedPrivacy",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeCertifiedPrivacy-final.log",
+      "bytes": 0,
+      "log_content": "",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "public_theorems": {
+    "PqxdhLaterChallengeCapturedFits": [
+      "append_fits",
+      "wrapped_total",
+      "handler_total",
+      "captured_fits",
+      "builder_fits",
+      "shared_fits"
+    ],
+    "PqxdhLaterChallengePreparedFits": [
+      "prefix_fits",
+      "run_fits"
+    ],
+    "PqxdhLaterChallengeSamplerFits": [
+      "prepared_fits",
+      "after_fits",
+      "run_fits"
+    ],
+    "PqxdhLaterChallengeGeneratedFits": [
+      "run_fits",
+      "adversary_total",
+      "certified_erase"
+    ],
+    "PqxdhLaterChallengeBeforeUnguarded": [
+      "key_fits",
+      "client_eq",
+      "compiled_eq"
+    ],
+    "PqxdhLaterChallengeCertifiedPrivacy": [
+      "bills",
+      "pair"
+    ]
+  },
+  "review": {
+    "sha256": "cd34471ca8e84619ce16977fb5e2d4178ef053685f056974204d491469898292",
+    "content": {
+      "reviewer": "/root/r1_scheduler_closure",
+      "timestamp": "2026-10-06T02:50:06.721724+00:00",
+      "decision": "APPROVE_SCOPED_SOURCE_CERTIFIED_BEFORE_COMPARISON",
+      "manifest": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/source-fits19-manifest.json",
+      "manifest_sha256": "21035c33c0f25d176a1300fb44406f3b814568af71e7071f00066c9b881057a8",
+      "source_worktree": "/tmp/beaconcrypt-evolving-record-composition",
+      "verified": {
+        "frozen_files": 8,
+        "public_guarded_statements": 19,
+        "empty_successful_direct_logs": 6,
+        "builds_run_for_review": false
+      },
+      "semantic_review": [
+        "Read all six complete modules and their proof statements/bodies, source-allowance guide, new maintained analysis section, inherited Fits/post_fits, actual AdvBounded and privacyLoss endpoints.",
+        "CapturedFits derives both whole appended bit wrappers from the original all-reply query tree; each wrapper request emits at most one Post request. The same quiet inner certificate is retained, and no successful-target or conditional probability premise is added.",
+        "Prepared and sampler transfer uses the actual missing-address collector and full generated selection/carrier; completed, cached and absent-metadata branches remain unrestricted. Ordered source draws and complete saved state are retained.",
+        "GeneratedFits.adversary_total sums the original finite partition and counts a challenge through its literal directional send. certified attaches only a derived proof of this program\u2019s syntactic-support result; certified_erase is equality of the whole oracle tree, without testing Fits or conditioning source outcomes.",
+        "BeforeUnguarded.client eliminates only the semantic Fits branch using that proof. The original target/parent address-alias test, source monitor, optional refusal and final decision remain. compiled_eq holds for arbitrary prefix/continuation bits and preserves all actual queries, rather than merely their evaluated marginals.",
+        "CertifiedPrivacy names the two full constructed source clients and inherits the checked whole-state random-middle comparison. Each exact loss contains validation IND$, hash guessing qH/2^128, twice the indexed qR INT-CTXT sum, qR/2^512, and view IND$. Caps are qR=qS=2+sum(budget), qH=qHashPre+2+sum(budget), and qS<2^96.",
+        "No unavailable interpreter state is recovered by the client: the empty cache coordinate passed to beforeKey is the already reviewed proof-only ignored coordinate; the forwarded prelude and reached ordinary backend remain in one execution."
+      ],
+      "scope_limits": [
+        "No complete evolving-chain or end-to-end security claim.",
+        "Prelude hash and uniform bounds remain explicit; prefix uniform is not a bound on all suffix/native/ambient work or a complete PPT theorem.",
+        "Unfiltered source-event/freshness joins, initial Builder and other phases, address-alias and sticky nonce-refusal charges, and global target/session selection remain open.",
+        "No new primitive contract, public-key injectivity, snapshot or persistence premise."
+      ],
+      "findings": []
+    }
+  },
+  "scope": "Exact complete source-derived elimination of Fits guard; actual source AdvBounded budget, complete sampler and both literal resumed bit wrappers, inherited ordinary CTX privacy losses. Alias/phase/decision/refusal and full uniform/native resource joins remain explicit.",
+  "validation": "Six focused direct Lean checks,19 guarded axioms, forbidden placeholder/custom-axiom scan and git diff --check passed. No Rust changed; no mutation rerun. Parent owns root import/inventory and integration."
+}

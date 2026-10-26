@@ -1,0 +1,15 @@
+{
+  "decision": "APPROVE",
+  "reviewer": "root independent archive review",
+  "archive_manifest_sha256": "7c811ee18e2fdf49cded9d7f80d8673e2a067571eea298606739e850c01bf419",
+  "source_commit": "04c9213cdd71892192077ae3e656a439f9606014",
+  "checks": [
+    "All16 frozen archive hashes match.",
+    "All25 source hashes match exact published commit.",
+    "All6 decompressed logs match raw hashes, exact verdicts/trace counts and current ordered source inputs.",
+    "Full Make/inventory logs and validation record retain focused scope; existing independent argument/scope/integration reviews exact.",
+    "README distinguishes one protocol projection and two auxiliary security rows, T0/source profile and pending central reconciliation."
+  ],
+  "blocking_findings": [],
+  "tests_rerun": []
+}

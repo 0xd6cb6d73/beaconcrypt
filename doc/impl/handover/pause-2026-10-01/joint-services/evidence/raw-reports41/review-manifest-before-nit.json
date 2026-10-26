@@ -1,0 +1,198 @@
+{
+  "cohort": "RawReports41",
+  "frozen_at": "2026-10-06T02:23:23.957503+00:00",
+  "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+  "base_commit": "364b9c11beba0183850a22b5da15ac371f4040d4",
+  "files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointRawSignatures.lean",
+      "sha256": "73ab6cf36a25392e1bca401bacf612678ab4a43ac588bc276fd9f6f6f0c1a06a"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportLift.lean",
+      "sha256": "f61fd7bcbb9d72b13b1fc9670832669d0ee87353398dc5c0b1d871d0847b6724"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointRawReports.lean",
+      "sha256": "91aab4517b91be8b2067c7abba8775c6c1e6f40ef8231f0594322326813972e3"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportCommands.lean",
+      "sha256": "3c6cdcd4518f4dc77b9bc19cf429007405d9e5b8e28509f271ac5283703827e8"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportCompiler.lean",
+      "sha256": "4ea9f01432612c2aae9fa700b03853ecd35bf3a4a16abd2f7bf7983b23dc5bd9"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportSource.lean",
+      "sha256": "128ccde2ccc155ee16ef6cccabacd0eeee9a372dfc868c3104540555ebc808c2"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportCosts.lean",
+      "sha256": "662b19d7c106f0a79e818ff1b5f4b317fd022e40058f0443301294593140059c"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportAttempts.lean",
+      "sha256": "faa506201944287f02ee649f284f1a73146f0408e37de38562a2a423cc285968"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportedAuthentication.lean",
+      "sha256": "1a4423380ce1170a3655e1446aa8cedb6136ad4256b0c7710dc09493f6b3454f"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportEvents.lean",
+      "sha256": "ac3a2589ba609ec906e659439cff61a1482c36be1e7455779776cad37418fe01"
+    },
+    {
+      "path": "doc/impl/registration-joint-raw-field-reports.md",
+      "sha256": "c34a9ff25b2ab5a894996856efc38e243a8bc746684c7969a795e2e74e5b0f6d"
+    },
+    {
+      "path": "doc/formal-verification-analysis.md",
+      "sha256": "e4a82878706e96a03b7484478476e404207b9c1f9b9075af42d590d586a8730a"
+    }
+  ],
+  "guard_count": 41,
+  "direct_checks": [
+    {
+      "module": "PqxdhRegistrationJointRawSignatures",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointRawSignatures"
+      ],
+      "start": "2026-10-06T02:21:20.606778+00:00",
+      "exit_code": 0,
+      "source_sha256": "73ab6cf36a25392e1bca401bacf612678ab4a43ac588bc276fd9f6f6f0c1a06a",
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/raw-reports41/PqxdhRegistrationJointRawSignatures.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointReportLift",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointReportLift"
+      ],
+      "start": "2026-10-06T02:21:31.390467+00:00",
+      "exit_code": 0,
+      "source_sha256": "f61fd7bcbb9d72b13b1fc9670832669d0ee87353398dc5c0b1d871d0847b6724",
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/raw-reports41/PqxdhRegistrationJointReportLift.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointRawReports",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointRawReports"
+      ],
+      "start": "2026-10-06T02:21:37.375770+00:00",
+      "exit_code": 0,
+      "source_sha256": "91aab4517b91be8b2067c7abba8775c6c1e6f40ef8231f0594322326813972e3",
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/raw-reports41/PqxdhRegistrationJointRawReports.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointReportCommands",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointReportCommands"
+      ],
+      "start": "2026-10-06T02:21:47.623493+00:00",
+      "exit_code": 0,
+      "source_sha256": "3c6cdcd4518f4dc77b9bc19cf429007405d9e5b8e28509f271ac5283703827e8",
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/raw-reports41/PqxdhRegistrationJointReportCommands.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointReportCompiler",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointReportCompiler"
+      ],
+      "start": "2026-10-06T02:21:53.055328+00:00",
+      "exit_code": 0,
+      "source_sha256": "4ea9f01432612c2aae9fa700b03853ecd35bf3a4a16abd2f7bf7983b23dc5bd9",
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/raw-reports41/PqxdhRegistrationJointReportCompiler.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointReportSource",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointReportSource"
+      ],
+      "start": "2026-10-06T02:22:04.573877+00:00",
+      "exit_code": 0,
+      "source_sha256": "128ccde2ccc155ee16ef6cccabacd0eeee9a372dfc868c3104540555ebc808c2",
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/raw-reports41/PqxdhRegistrationJointReportSource.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointReportCosts",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointReportCosts"
+      ],
+      "start": "2026-10-06T02:22:17.249586+00:00",
+      "exit_code": 0,
+      "source_sha256": "662b19d7c106f0a79e818ff1b5f4b317fd022e40058f0443301294593140059c",
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/raw-reports41/PqxdhRegistrationJointReportCosts.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointReportAttempts",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointReportAttempts"
+      ],
+      "start": "2026-10-06T02:22:27.216740+00:00",
+      "exit_code": 0,
+      "source_sha256": "faa506201944287f02ee649f284f1a73146f0408e37de38562a2a423cc285968",
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/raw-reports41/PqxdhRegistrationJointReportAttempts.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointReportedAuthentication",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointReportedAuthentication"
+      ],
+      "start": "2026-10-06T02:22:37.836554+00:00",
+      "exit_code": 0,
+      "source_sha256": "1a4423380ce1170a3655e1446aa8cedb6136ad4256b0c7710dc09493f6b3454f",
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/raw-reports41/PqxdhRegistrationJointReportedAuthentication.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointReportEvents",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointReportEvents"
+      ],
+      "start": "2026-10-06T02:22:48.159545+00:00",
+      "exit_code": 0,
+      "source_sha256": "ac3a2589ba609ec906e659439cff61a1482c36be1e7455779776cad37418fe01",
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/raw-reports41/PqxdhRegistrationJointReportEvents.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "checks_manifest_sha256": "4102af94a2673eea0e979386423dd7fd8bf2766e9e3812836a2e73296577b553",
+  "scope": "Actual initialized source raw acceptance candidate reports; exact full-state erasure; constructed joint-use weak-EUF sum over generated targets; N*qAccept public reports, 3*qBundle signing and qFinish+qAccept DH per reduction. No full tuple-attempt/source-history invariant, selected KEM/root hop, or all-reply replaced-challenger uniform cap claimed.",
+  "wip_excluded": [
+    "PqxdhRegistrationJointIssuedAttempts.lean",
+    "PqxdhRegistrationJointAttemptTrace.lean",
+    "PqxdhRegistrationJointSigningTranscript.lean"
+  ],
+  "forbidden_scan": "10 frozen Lean modules contain no sorry/admit/sorryAx/custom axiom; 41 exact guarded prints use standard Lean axioms only.",
+  "diff_check": 0
+}

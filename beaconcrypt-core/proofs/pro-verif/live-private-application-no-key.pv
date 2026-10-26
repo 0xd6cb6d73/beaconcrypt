@@ -1,0 +1,15 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Negative control: only the indicated privacy alternative is removed; all capabilities and origin events are unchanged. *)
+
+query key: bitstring, nonce: bitstring, associated_data: bitstring, target: sequence,
+  sender: key_id, plaintext: bitstring, frame: bitstring;
+  event(PS1PrimitiveOpen(key, nonce, associated_data, target, sender, plaintext, frame))
+  ==> event(PS1PrimitiveSeal(key, nonce, associated_data, target, sender, plaintext, frame))
+    || event(PS1PrimitiveReveal(key)).
+
+query key: bitstring, plaintext: bitstring;
+  event(LiveHonestMessage(key, plaintext)) && attacker(plaintext)
+  ==> event(LiveApiPlaintext(key, plaintext)).
+
+process
+  (!LiveMaterialCreate() | !LiveMaterialAlias() | !LiveMaterialImport())

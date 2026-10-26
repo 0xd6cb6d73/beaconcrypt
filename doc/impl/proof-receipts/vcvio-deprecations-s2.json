@@ -1,0 +1,3574 @@
+{
+ "date": "2026-10-20",
+ "scope": "VCVio deprecation migration, stage S2 (plan doc/impl/vcvio-deprecation-migration-plan.md section 7, the leaf families): restatement of 40 theorems and of the bodies of two probability definitions of 15 modules in VCVio's forward vocabulary (Pr{let x <- mx}[...] and EvalDistEq), with out-of-build certificates (41 by the inverse vocabulary map, PqxdhChallengeSecretRouting.honest_decapsulation by the plan's textual fallback); the first transitional twins (11) and their later-stage consumers; phase B proof rewrites in these files; Lean-only validation.",
+ "basis": "dfede233c4387789e56ff927de121335e6a1933f",
+ "topic": {
+  "branch": "codex/vcvio-migration-S2",
+  "clone": "/home/user/bc-vmig-S2"
+ },
+ "commits": {
+  "64746489": "Migrate VCVio stage S2 to the forward probability vocabulary",
+  "docs": "the commit that adds this receipt"
+ },
+ "owner_decisions": {
+  "item 4 (decision 2026-10-19)": "D1-D5 and D8-D11 as recommended in plan section 11; D6 phase B included",
+  "item 5 (decision 2026-10-19, revising D7)": "Lean-only validation per stage: make check-lean, make check-inventory, the step 7 scans and the certificates; no verify-in-shell, ProVerif, transcript fidelity, cargo, Go or Python checks",
+  "amendments": "A1 and A1.1 (/tmp/bc-arc-scratch/vcvio-migration/AMENDMENTS.md, recorded in the plan copy)"
+ },
+ "restated": {
+  "theorems": [
+   "CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+   "CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv_512",
+   "CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv",
+   "CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv_512",
+   "CtxRomAuth.ctxFreshAliasGame_le_inv",
+   "CtxRomAuth.ctxFreshAliasGame_le_inv_512",
+   "CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+   "JointEagerTable.independent_comm_spmf",
+   "JointTableFreshCandidates.completed_result_vector_bound",
+   "JointTableFreshCandidates.fixed_fresh_guess_bound",
+   "JointTableFreshCandidates.fixed_vector_bound",
+   "JointTableFreshCandidates.mixed_completed_vector_bound",
+   "JointTableFreshCandidates.optional_fresh_guess_bound",
+   "LiveApplicationNative.native_observation",
+   "PqxdhBoundaryDeployment.classical_probEvent",
+   "PqxdhBoundaryDeploymentLater.later_probEvent",
+   "PqxdhChallengeSecretRouting.honest_decapsulation",
+   "PqxdhMaterialKeyCollisions.material_key_eq",
+   "PqxdhMaterialKeyCollisions.material_key_mem",
+   "PqxdhMaterialKeyCollisions.observedEager_collision_bound",
+   "PqxdhMaterialKeyCollisions.observedTapes_collision_bound",
+   "PqxdhMaterialKeyCollisions.observedTapes_collision_bound256",
+   "PqxdhMaterialKeyCollisions.sampleMaterials_collision_bound",
+   "PqxdhMaterialKeyCollisions.sampleTapes_collision_bound",
+   "PqxdhOrderedChainHybrids.fullOutput_observed",
+   "PqxdhOrderedChainHybrids.independentHop_eq_hybrid",
+   "PqxdhOrderedChainHybrids.materialChain_uniform",
+   "PqxdhPublicKdfCounterexample.publicEvaluation_random_probability",
+   "PqxdhSecretInputKdf.evalSPMF_sample_comm",
+   "PqxdhSecretInputKdf.extractUniform_eq_hmacReal",
+   "PqxdhSecretInputKdf.first32_uniform",
+   "PqxdhSecretInputKdf.hmacRandom_eq_independentRoot",
+   "PqxdhSecretInputKdf.zeroSalt_key_probability",
+   "RawKeyPartition.partition_continuation",
+   "RawKeyPartition.sampled_partition",
+   "StatefulGoodEvent.event_good",
+   "StatefulGoodEvent.output_bad_zero",
+   "StatefulGoodEvent.output_good",
+   "StatefulGoodEvent.output_good_false",
+   "UniformTargetSelection.chance_eq"
+  ],
+  "wrapper_definitions": [
+   "CtxRomAuth.ctxAliasTargetCacheHitProbability",
+   "CtxRomAuth.ctxSecretPrefixQueriedProbability"
+  ],
+  "private": [
+   "StatefulGoodEvent.output_bad_zero",
+   "StatefulGoodEvent.output_good_false"
+  ],
+  "textual_fallback_certificate": [
+   "PqxdhChallengeSecretRouting.honest_decapsulation"
+  ],
+  "twins": [
+   "CtxRomAuth.ctxSecretPrefixQueriedProbability",
+   "JointEagerTable.independent_comm_spmf",
+   "PqxdhSecretInputKdf.evalSPMF_sample_comm",
+   "PqxdhSecretInputKdf.extractUniform_eq_hmacReal",
+   "PqxdhSecretInputKdf.hmacRandom_eq_independentRoot",
+   "StatefulGoodEvent.event_good",
+   "UniformTargetSelection.chance_eq",
+   "JointTableFreshCandidates.fixed_vector_bound",
+   "PqxdhOrderedChainHybrids.fullOutput_observed",
+   "RawKeyPartition.partition_continuation",
+   "PqxdhMaterialKeyCollisions.material_key_mem"
+  ],
+  "twin_headers_with_unused_variables_switch": [
+   "StatefulGoodEvent.event_good",
+   "UniformTargetSelection.chance_eq",
+   "JointTableFreshCandidates.fixed_vector_bound"
+  ],
+  "consumer_references_renamed": 80,
+  "consumer_files_renamed": 50,
+  "wrapper_twin_patch": {
+   "sites": 5,
+   "files": [
+    "CtxPrefixIsolation",
+    "CtxNonceAeadIndDollar",
+    "CtxComputationalSecurity (2)",
+    "CtxUnclaimedAcceptance"
+   ],
+   "patch": "unfold ctxSecretPrefixQueriedProbability -> simp only [ctxSecretPrefixQueriedProbability_vcvioLegacy] (tools/wrapper_patch.py, apply/revert)"
+  },
+  "import_layers": [
+   "L0 CtxRomAuth, JointEagerTable, PqxdhSecretInputKdf, StatefulGoodEvent, UniformTargetSelection, PqxdhPublicKdfCounterexample",
+   "L1 JointTableFreshCandidates, PqxdhOrderedChainHybrids, PqxdhSecretInputInitializer, RawKeyPartition, LiveApplicationNative",
+   "L2 PqxdhMaterialKeyCollisions, PqxdhChallengeSecretRouting",
+   "L3 PqxdhBoundaryDeployment, PqxdhBoundaryDeploymentLater"
+  ]
+ },
+ "lean_changes": {
+  "statements": "probOutput -> Pr{let x <- mx}[x = a]; probEvent -> Pr{let x <- mx}[p x] (old lambda binder names kept); evalSPMF A = evalSPMF B -> EvalDistEq A B (amendment A1, no =ᵈ); honest_decapsulation: evalSPMF X = pure (some secret) -> EvalDistEq X (pure (some secret) : ProbComp _)",
+  "suppression_lines_removed": {
+   "UniformTargetSelection": 4,
+   "PqxdhBoundaryDeployment": 1,
+   "PqxdhBoundaryDeploymentLater": 1
+  },
+  "imports_added": {
+   "CtxRomAuth": [
+    "VCVioLegacyBridge"
+   ],
+   "JointEagerTable": [
+    "VCVioForwardOracleComp",
+    "VCVioLegacyBridge"
+   ],
+   "JointTableFreshCandidates": [
+    "VCVioLegacyBridge"
+   ],
+   "LiveApplicationNative": [
+    "VCVioForwardEvalDist"
+   ],
+   "PqxdhChallengeSecretRouting": [
+    "VCVioForwardOracleComp"
+   ],
+   "PqxdhMaterialKeyCollisions": [
+    "VCVioLegacyBridge"
+   ],
+   "PqxdhOrderedChainHybrids": [
+    "VCVioForwardOracleComp",
+    "VCVioLegacyBridge"
+   ],
+   "PqxdhPublicKdfCounterexample": [
+    "VCVioForwardOracleComp"
+   ],
+   "PqxdhSecretInputKdf": [
+    "VCVioForwardOracleComp",
+    "VCVioLegacyBridge"
+   ],
+   "RawKeyPartition": [
+    "VCVioLegacyBridge"
+   ],
+   "StatefulGoodEvent": [
+    "VCVioLegacyBridge"
+   ],
+   "UniformTargetSelection": [
+    "VCVioForwardOracleComp",
+    "VCVioLegacyBridge"
+   ]
+  },
+  "proofs_rewritten_statement_kept": [
+   "CtxRomAuth.ctxAliasTargetCacheHitProbability_le_secretPrefixQueriedProbability",
+   "JointEagerTable.independent_comm",
+   "PqxdhChallengeSecretRouting.honest_decapsulation_program",
+   "PqxdhChallengeSecretRouting.native_eq_real",
+   "PqxdhChallengeSecretRouting.source_eq_native",
+   "PqxdhOrderedChainHybrids.adjacent_bound",
+   "PqxdhPublicKdfCounterexample.publicEvaluation_advantage",
+   "PqxdhSecretInputInitializer.real_sourceRoot_advantage_eq_indCCA",
+   "PqxdhSecretInputKdf.sourceRootAdvantage_le_extract_add_hmac",
+   "UniformTargetSelection.chance_ne_top",
+   "UniformTargetSelection.split",
+   "UniformTargetSelection.split_of_eligible",
+   "UniformTargetSelection.sum_eq_card_mul"
+  ],
+  "docs_in_modules": "module documents of CtxRomAuth and StatefulGoodEvent (forward vocabulary, bridge-mediated dependencies); PqxdhBoundaryDeployment(Later) module documents and the classical_evalDist docstring name the event form",
+  "phase_b_laws_used": [
+   "prEvent_map",
+   "prEvent_congr",
+   "prEvent_mono_of_support",
+   "prEvent_exists_le",
+   "prEvent_false",
+   "prEvent_pure",
+   "prEvent_or_le",
+   "prEvent_bind_le_of_forall_le",
+   "prEvent_bind_le_prEvent_add_of_support",
+   "prEvent_bind_le_prEvent_of_support",
+   "prEvent_eq_zero_of_forall_not",
+   "prEvent_eq_zero_of_forall_mem_support",
+   "prEvent_eq_zero_of_not_mem_support",
+   "prEvent_eq_evalDist_singleton",
+   "prEvent_eq_evalDist_decide",
+   "prEvent_ne_top",
+   "OracleComp.prEvent_bind_eq_tsum",
+   "OracleComp.prEvent_eq_tsum_ite",
+   "OracleComp.prEvent_eq_one_of_forall_mem_support",
+   "OracleComp.evalDistEq_of_forall_prEvent_eq_output",
+   "OracleComp.mem_support_iff_evalDist_singleton_pos",
+   "OracleComp.EvalDistEq.bind_bind_swap",
+   "OracleComp.EvalDistEq.bind_const",
+   "OracleComp.EvalDistEq.bind_congr_of_support",
+   "EvalDistEq.refl/symm/trans/map_congr/bind_left/bind_right/evalDist_eq/prEvent_eq",
+   "evalDistEq_iff_forall_prEvent_eq_output",
+   "SampleableType.prEvent_uniformSample",
+   "SampleableType.prEvent_uniformSample_eq_singleton",
+   "SampleableType.map_uniformSample_evalDistEq_of_bijective"
+  ],
+  "codemod": "pin-filtered upstream codemod on copies of the 15 files (logs/codemod.log: 74 hand sites); =ᵈ rewritten to EvalDistEq by hand (A1)"
+ },
+ "findings": {
+  "semantics_instance": "Pr{...} on ProbComp elaborates with the native PFunctor.FreeM.instEvalDistSemanticsFreeM in all 15 modules, with or without the VCVioForwardOracleComp import (probe scratch/inst); on OracleComp CtxRO (64-byte answers without a measurable structure) and over a generic [IsUniformSpec spec'] it elaborates with the SPMF adapter instEvalDistSemanticsOfMonadLiftTSPMF in both cases; adding the measurable hypotheses that native semantics needs is forbidden (plan section 3), so these statements use the adapter; adapter users after the stage: BeaconcryptCore.Computational.CtxRomAuth, BeaconcryptCore.Computational.StatefulGoodEvent, BeaconcryptCore.Computational.VCVioLegacyBridge",
+  "kernel_memory": "the uniform-marginal card arithmetic over the concrete 32-byte vector types exhausted the kernel's memory (\"excessive memory consumption\"); a local counting fact over arbitrary finite types, instantiated, checks in about two seconds",
+  "simp_bridge_leak": "UniformTargetSelection.split's plain simp calls used the pin's simp bridge evalDist_apply_singleton (and with it PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible); the calls now exclude the three bridges",
+  "relocated_equation_lemma": "SPMF.boolDistAdvantage.eq_1 is generated on demand; it moved from PqxdhSecretInputInitializer (whose proof no longer unfolds SPMF.boolDistAdvantage) to PqxdhRegistrationJointKemGame (which unfolds it at line 120), identical in kind, universes, hashes, fingerprints and instance flag; its (module, constant) pairs moved with it (constants from a probe: SPMF, Bool, Eq, Real, SPMF.boolDistAdvantage, MeasureTheory.Measure.boolDist, SPMF.toMeasure, Bool.instMeasurableSpace)",
+  "rename_tool_defect": "twin_rename.py renamed the own header of the four consumers named event_good (RawCtxFlaggedQueryAgreement, RawCtxSelectedParentLive, PqxdhRecordFactsOriginMuteAdaptive, RawCtxSelectedLiveEvents); fixed (a bare suffix equal to the consumer's own name is never a reference), headers repaired, fixed tool rerun on base copies reproduces the repaired files byte for byte"
+ },
+ "build": {
+  "command": "make -C beaconcrypt-core check-lean SHELL=bash (proof shell, two-file flake copy of central's flake.nix/flake.lock)",
+  "base_build": {
+   "lease": "00000787",
+   "window": "2026-10-20T04:28:55+02:00..04:53:19+02:00",
+   "rc": 0,
+   "jobs": 5535,
+   "log_sha256": "281c6180834bbe05d175cbc200faa952ac63778151fd5df82b2962c08dc62875"
+  },
+  "layer_builds": {
+   "L0": "lease 00000788 rc 0",
+   "L1": "lease 00000791 rc 0 (after two failed attempts: layout, zero_le, precedence)",
+   "L2": "lease 00000793 rc 0 (after one failed attempt: layout, projection)",
+   "L3": "lease 00000795 rc 0 (after the rename-tool defect was repaired)"
+  },
+  "final": {
+   "lease": "00000797",
+   "window": "2026-10-20T05:28:40+02:00..05:38:58+02:00",
+   "rc": 0,
+   "jobs": 5535,
+   "errors": 0,
+   "log_sha256": "50dd439bfee6a84b842ba96ee9c34f748924b140416dc63ab17a20fd07cf8b69",
+   "note": "no Lean file modified after it started (mtime check)"
+  }
+ },
+ "gates": {
+  "G1": {
+   "base_unique": 1316,
+   "stage_unique": 1232,
+   "expected_stage_unique": 1232,
+   "decreased_file_name_counts": {
+    "BeaconcryptCore/Computational/CtxRomAuth.lean|probEvent": 10,
+    "BeaconcryptCore/Computational/JointEagerTable.lean|evalSPMF": 2,
+    "BeaconcryptCore/Computational/JointTableFreshCandidates.lean|probEvent": 7,
+    "BeaconcryptCore/Computational/LiveApplicationNative.lean|evalSPMF": 2,
+    "BeaconcryptCore/Computational/PqxdhChallengeSecretRouting.lean|SPMF": 1,
+    "BeaconcryptCore/Computational/PqxdhChallengeSecretRouting.lean|evalSPMF": 2,
+    "BeaconcryptCore/Computational/PqxdhChallengeSecretRouting.lean|probOutput": 3,
+    "BeaconcryptCore/Computational/PqxdhMaterialKeyCollisions.lean|probEvent": 11,
+    "BeaconcryptCore/Computational/PqxdhOrderedChainHybrids.lean|evalSPMF": 9,
+    "BeaconcryptCore/Computational/PqxdhPublicKdfCounterexample.lean|probOutput": 1,
+    "BeaconcryptCore/Computational/PqxdhSecretInputKdf.lean|evalSPMF": 14,
+    "BeaconcryptCore/Computational/PqxdhSecretInputKdf.lean|probEvent": 1,
+    "BeaconcryptCore/Computational/RawKeyPartition.lean|evalSPMF": 6,
+    "BeaconcryptCore/Computational/StatefulGoodEvent.lean|probEvent": 2,
+    "BeaconcryptCore/Computational/StatefulGoodEvent.lean|probOutput": 13
+   },
+   "increased_file_name_counts": {},
+   "decrease_outside_stage_files": [],
+   "removed_by_name": {
+    "probEvent": 31,
+    "probOutput": 17,
+    "evalSPMF": 35,
+    "SPMF": 1
+   },
+   "pass": true
+  },
+  "G2": {
+   "base_sites": 1702,
+   "stage_sites": 1611,
+   "base_warned": 1316,
+   "stage_warned": 1232,
+   "base_suppressed": 386,
+   "stage_suppressed": 379,
+   "removed_sites": 91,
+   "added_sites": [],
+   "suppression_lines_stage_outside_bridge": 176,
+   "suppression_lines_base": 182,
+   "stage_new_modules_sites": [],
+   "twin_sites_exempt": 20,
+   "twin_lines": [
+    [
+     "BeaconcryptCore/Computational/CtxRomAuth.lean",
+     591,
+     "_root_.BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/JointEagerTable.lean",
+     113,
+     "_root_.BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/JointTableFreshCandidates.lean",
+     74,
+     "_root_.BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/PqxdhMaterialKeyCollisions.lean",
+     56,
+     "_root_.BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/PqxdhOrderedChainHybrids.lean",
+     107,
+     "_root_.BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/PqxdhSecretInputKdf.lean",
+     151,
+     "_root_.BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/PqxdhSecretInputKdf.lean",
+     169,
+     "_root_.BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/PqxdhSecretInputKdf.lean",
+     237,
+     "_root_.BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/RawKeyPartition.lean",
+     67,
+     "_root_.BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/StatefulGoodEvent.lean",
+     129,
+     "_root_.BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy"
+    ],
+    [
+     "BeaconcryptCore/Computational/UniformTargetSelection.lean",
+     18,
+     "_root_.BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy"
+    ]
+   ],
+   "twin_names_expected": [
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability",
+    "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot",
+    "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+    "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq"
+   ],
+   "pass": true
+  },
+  "G3": {
+   "base": 734,
+   "stage": 692,
+   "stage_in_new_modules": [],
+   "stage_in_stage_modules": [],
+   "note_spmf_only": "G3 counts the deprecated statement heads (probOutput, probEvent, probFailure, evalSPMF, the Boolean lemma); it does not count SPMF itself. Five restated theorems, StatefulGoodEvent.event_good, output_good, output_bad_zero, output_good_false and CtxRomAuth.ctxFreshAliasVerifier_le_inv, elaborate the forward notation with the pin's SPMF adapter instEvalDistSemanticsOfMonadLiftTSPMF (no native semantics at the pin over a generic IsUniformSpec specification or over CtxRO), so their types reference SPMF and the adapter instance without any deprecated head. The review-fix gate report (G3 spmf_only_report, amendment A2) lists them: declarations referencing SPMF without a deprecated head 108 -> 113, the five new ones all with the adapter instance in their types; see vcvio-deprecations-s2-review.json.",
+   "pass": true
+  },
+  "G4": {
+   "count_base": 95214,
+   "count_stage": 95237,
+   "removed": [
+    "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.honest_decapsulation_program._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed._simp_1_2",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm._simp_1_1",
+    "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation._simp_1_1"
+   ],
+   "added_by_module": {
+    "BeaconcryptCore.Computational.CtxRomAuth": 2,
+    "BeaconcryptCore.Computational.JointEagerTable": 2,
+    "BeaconcryptCore.Computational.JointTableFreshCandidates": 1,
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions": 4,
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids": 2,
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf": 10,
+    "BeaconcryptCore.Computational.RawKeyPartition": 2,
+    "BeaconcryptCore.Computational.StatefulGoodEvent": 4,
+    "BeaconcryptCore.Computational.UniformTargetSelection": 1
+   },
+   "kind_changed": [],
+   "module_changed": [
+    "SPMF.boolDistAdvantage.eq_1"
+   ],
+   "levels_changed": [
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed._simp_1_1"
+   ],
+   "fingerprints_compared": true,
+   "type_binder_only_changes": [
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.independentHop_eq_hybrid._proof_1_1"
+   ],
+   "type_changed_allowed": [
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv_512",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv_512",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv_512",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+    "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.completed_result_vector_bound",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_fresh_guess_bound",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.mixed_completed_vector_bound",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.optional_fresh_guess_bound",
+    "BeaconcryptCore.Computational.LiveApplicationNative.native_observation",
+    "BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_probEvent",
+    "BeaconcryptCore.Computational.PqxdhBoundaryDeploymentLater.later_probEvent",
+    "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.honest_decapsulation",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_eq",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedEager_collision_bound",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedTapes_collision_bound",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedTapes_collision_bound256",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.sampleMaterials_collision_bound",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.sampleTapes_collision_bound",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.independentHop_eq_hybrid",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.materialChain_uniform",
+    "BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample.publicEvaluation_random_probability",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.first32_uniform",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.zeroSalt_key_probability",
+    "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation",
+    "BeaconcryptCore.Computational.RawKeyPartition.sampled_partition",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+    "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq",
+    "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+    "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false"
+   ],
+   "type_changed_unexpected": [
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_eq._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.independentHop_eq_hybrid._proof_1_1"
+   ],
+   "instance_flag_changed": [],
+   "opaque_value_changed": [],
+   "def_value_binder_only_changes": [],
+   "def_value_changed_allowed": [
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasTargetCacheHitProbability",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability"
+   ],
+   "def_value_changed_unexpected": [],
+   "theorem_value_changed": [
+    "BeaconcryptCore.Computational.AdaptiveCtxHonestCache.honestCompletion_guess_bound",
+    "BeaconcryptCore.Computational.AdaptiveCtxSharedKeySelection.source_prepared_selection",
+    "BeaconcryptCore.Computational.AdaptiveCtxSharedModePreparation.prepared_interpretation",
+    "BeaconcryptCore.Computational.AdaptiveCtxSharedPreparation.prepared_interpretation",
+    "BeaconcryptCore.Computational.AdaptiveRawKeySelection.source_prepared_selection",
+    "BeaconcryptCore.Computational.AdaptiveSealKeySelection.source_prepared_selection",
+    "BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedForgeryGame_le_direct_add_prefix",
+    "BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryGame_le_direct_add_prefix",
+    "BeaconcryptCore.Computational.CtxNonceAeadIndDollar.ctxSecretPrefixQueriedProbability_eq_directSampleProbe",
+    "BeaconcryptCore.Computational.CtxPrefixIsolation.ctxSecretPrefixQueriedProbability_toReal_eq_tsum",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv_512",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv_512",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasTargetCacheHitProbability_le_secretPrefixQueriedProbability",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv_512",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+    "BeaconcryptCore.Computational.CtxUnclaimedAcceptance.acceptedGame_le_direct_add_prefix",
+    "BeaconcryptCore.Computational.JointEagerTable.independent_comm",
+    "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.completed_result_vector_bound",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_fresh_guess_bound",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.mixed_completed_vector_bound",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.optional_fresh_guess_bound",
+    "BeaconcryptCore.Computational.LiveApplicationNative.native_observation",
+    "BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_probEvent",
+    "BeaconcryptCore.Computational.PqxdhBoundaryDeploymentLater.later_probEvent",
+    "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.honest_decapsulation",
+    "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.honest_decapsulation_program",
+    "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.native_eq_real",
+    "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.source_eq_native",
+    "BeaconcryptCore.Computational.PqxdhCorrelatedExpandHybrid.indexed_random",
+    "BeaconcryptCore.Computational.PqxdhCorrelatedExpandHybrid.indexed_real",
+    "BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily.real_eq_correlated",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.view_unslotted",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.identity_collision_game",
+    "BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.chance_eq_zero",
+    "BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.chance_ext",
+    "BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.chance_le_add",
+    "BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.split_create",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineChain.later_view_unslotted",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.constructor_order",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterTargetRange.split_create_later",
+    "BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.a1_bound",
+    "BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.a1_sum",
+    "BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.ce_a1",
+    "BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.seeds_eager",
+    "BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective",
+    "BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.injective_bound",
+    "BeaconcryptCore.Computational.PqxdhDeploymentSessionAgreement.ce_a1_agreement",
+    "BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.kem_transfer_create",
+    "BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.lazy_eager_complete",
+    "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged.delayed_bound",
+    "BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.fullExtractUniform_eq_hmacReal",
+    "BeaconcryptCore.Computational.PqxdhInitialAliasBound.delayed",
+    "BeaconcryptCore.Computational.PqxdhInitialChainComposition.initial_chains_observed",
+    "BeaconcryptCore.Computational.PqxdhJointIdentityFamily.sampleFamily_target_first",
+    "BeaconcryptCore.Computational.PqxdhKeyScheduleFromRoot.fromRoot_bound_context",
+    "BeaconcryptCore.Computational.PqxdhLiveKemReservation.complete",
+    "BeaconcryptCore.Computational.PqxdhLiveKemSelection.target_first",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_eq",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_eq._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedTapes_collision_bound",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedTapes_collision_bound256",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.sampleMaterials_collision_bound",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.sampleTapes_collision_bound",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.adjacent_bound",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.independentHop_eq_hybrid",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.materialChain_uniform",
+    "BeaconcryptCore.Computational.PqxdhPrivateKemSource.generators_complete_continuation",
+    "BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample.publicEvaluation_advantage",
+    "BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample.publicEvaluation_random_probability",
+    "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.event_good",
+    "BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.observed_source",
+    "BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.uniform_source",
+    "BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.child_independent",
+    "BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.child_source",
+    "BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.observed_delayed",
+    "BeaconcryptCore.Computational.PqxdhRecordLiftSeedCut.first_independent",
+    "BeaconcryptCore.Computational.PqxdhRecordLiftSeedCut.first_source",
+    "BeaconcryptCore.Computational.PqxdhRecordLiftSeedCut.observed_delayed",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemInitialization.constructor_order",
+    "BeaconcryptCore.Computational.PqxdhSecretInputInitializer.real_sourceRoot_advantage_eq_indCCA",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.first32_uniform",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.sourceRootAdvantage_le_extract_add_hmac",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.zeroSalt_key_probability",
+    "BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.keySchedule_bound_context",
+    "BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.rootExpand_random",
+    "BeaconcryptCore.Computational.PqxdhStatefulPhase1Authentication.generators_commute_complete_continuation",
+    "BeaconcryptCore.Computational.RawCtxFirstParentRisk.full_inputs",
+    "BeaconcryptCore.Computational.RawCtxFlaggedQueryAgreement.event_good",
+    "BeaconcryptCore.Computational.RawCtxFreshChainCut.observedCut_delayed",
+    "BeaconcryptCore.Computational.RawCtxFreshChainCut.sampledCut_partition",
+    "BeaconcryptCore.Computational.RawCtxInitialChildCandidates.uniform_delayed",
+    "BeaconcryptCore.Computational.RawCtxInitialSentinelSampler.full_observed",
+    "BeaconcryptCore.Computational.RawCtxPrefixKeyOrder.complete",
+    "BeaconcryptCore.Computational.RawCtxSelectedInitialSampler.delayed_eq",
+    "BeaconcryptCore.Computational.RawCtxSelectedInitialSampler.initial_delayed_eq",
+    "BeaconcryptCore.Computational.RawCtxSelectedInitialSecond.delayed_second",
+    "BeaconcryptCore.Computational.RawCtxSelectedInputCandidates.uniform_candidates",
+    "BeaconcryptCore.Computational.RawCtxSelectedLiveEvents.event_good",
+    "BeaconcryptCore.Computational.RawCtxSelectedMessageKey.key_observed",
+    "BeaconcryptCore.Computational.RawCtxSelectedParentLive.event_good",
+    "BeaconcryptCore.Computational.RawCtxSelectedParentSampler.delayed_eq",
+    "BeaconcryptCore.Computational.RawCtxSelectedParentSecrecy.joint_separated",
+    "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation",
+    "BeaconcryptCore.Computational.RawKeyPartition.sampled_partition",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+    "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq",
+    "BeaconcryptCore.Computational.UniformTargetSelection.chance_ne_top",
+    "BeaconcryptCore.Computational.UniformTargetSelection.split",
+    "BeaconcryptCore.Computational.UniformTargetSelection.split_of_eligible",
+    "BeaconcryptCore.Computational.UniformTargetSelection.sum_eq_card_mul",
+    "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+    "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false"
+   ],
+   "added_outside_new_modules": [
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasTargetCacheHitProbability._proof_1",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy",
+    "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy",
+    "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy._simp_1_1",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_eq._simp_1_2",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_eq._simp_1_3",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_eq._simp_1_4",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.first32_uniform._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.first32_uniform._simp_1_2",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.first32_uniform._simp_1_3",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.first32_uniform._simp_1_4",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy._simp_1_1",
+    "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy",
+    "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy._simp_1_1",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+    "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy",
+    "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1"
+   ],
+   "unexplained_removed": [],
+   "unexplained_added_outside_new_modules": [],
+   "twin_declarations_added": [
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy",
+    "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy",
+    "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+    "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy"
+   ],
+   "twin_declarations_expected": [
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy",
+    "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy",
+    "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+    "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy"
+   ],
+   "module_changed_relocated_generated": [
+    "SPMF.boolDistAdvantage.eq_1"
+   ],
+   "module_changed_unexplained": [],
+   "unexplained_type_changes": [],
+   "unexplained_levels_changes": [],
+   "note_type_changed_unexpected": "type_changed_unexpected and levels_changed list every change outside the configured allowlist. The three entries there (material_key_eq._simp_1_1, fullOutput_observed._simp_1_1, independentHop_eq_hybrid._proof_1_1; levels: fullOutput_observed._simp_1_1) are generated auxiliary declarations of restated theorems, which gates.py explains; the gate criterion is unexplained_type_changes and unexplained_levels_changes, both empty. From the review fixes on, gates.py also lists such entries under allowed_generated.",
+   "theorem_value_changed_outside_edited": [],
+   "pass": true
+  },
+  "G5": {
+   "residual_pairs_base": 3186,
+   "residual_pairs_stage": 3084,
+   "residual_pairs_stage_excluding_exempt": 3084,
+   "residual_new_pairs": [
+    [
+     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemGame",
+     "SPMF.boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemGame",
+     "SPMF.toMeasure"
+    ]
+   ],
+   "residual_removed_pairs": [
+    [
+     "BeaconcryptCore.Computational.CtxRomAuth",
+     "probEvent_bind_le_of_forall_le"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxRomAuth",
+     "probEvent_bind_le_probEvent_add"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxRomAuth",
+     "probEvent_eq_zero_iff._simp_1"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxRomAuth",
+     "probEvent_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxRomAuth",
+     "probEvent_mono"
+    ],
+    [
+     "BeaconcryptCore.Computational.JointEagerTable",
+     "evalDist_eq_of_evalSPMF_eq"
+    ],
+    [
+     "BeaconcryptCore.Computational.JointEagerTable",
+     "evalSPMF_ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.JointEagerTable",
+     "probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.JointEagerTable",
+     "probOutput_bind_eq_tsum"
+    ],
+    [
+     "BeaconcryptCore.Computational.JointTableFreshCandidates",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.JointTableFreshCandidates",
+     "probEvent_False"
+    ],
+    [
+     "BeaconcryptCore.Computational.JointTableFreshCandidates",
+     "probEvent_bind_le_of_forall_le"
+    ],
+    [
+     "BeaconcryptCore.Computational.JointTableFreshCandidates",
+     "probEvent_exists_finset_le_sum"
+    ],
+    [
+     "BeaconcryptCore.Computational.JointTableFreshCandidates",
+     "probEvent_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.JointTableFreshCandidates",
+     "probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.JointTableFreshCandidates",
+     "probOutput_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.JointTableFreshCandidates",
+     "probOutput_uniformSample"
+    ],
+    [
+     "BeaconcryptCore.Computational.LiveApplicationNative",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.LiveApplicationNative",
+     "evalSPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhBoundaryDeployment",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhBoundaryDeployment",
+     "probEvent"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhBoundaryDeployment",
+     "probEvent_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhBoundaryDeploymentLater",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhBoundaryDeploymentLater",
+     "probEvent"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhBoundaryDeploymentLater",
+     "probEvent_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "NeverFail.probFailure_eq_zero"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "SPMF.ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "SPMF.pure_apply"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "SPMF.pure_apply_self"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "SPMF.support"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "SPMF.support_pure"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "evalDist_eq_of_evalSPMF_eq"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "evalSPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "evalSPMF_bind_congr"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "evalSPMF_bind_congr'"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "evalSPMF_ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "evalSPMF_pure"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "probFailure"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "probFailure_of_liftM_PMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "probOutput_bind_const"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "probOutput_eq_one_of_support_subset_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "probOutput_eq_zero_iff"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting",
+     "probOutput_ne_zero_of_mem_support"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+     "OracleComp.probOutput_congr"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+     "evalSPMF_map_fst_uniformSample_prod"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+     "probEvent_False"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+     "probEvent_bind_le_of_forall_le"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+     "probEvent_bind_le_probEvent"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+     "probEvent_bind_le_probEvent_add"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+     "probEvent_eq_eq_probOutput'"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+     "probEvent_eq_zero_iff._simp_1"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+     "probEvent_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+     "probEvent_or_le"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+     "probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+     "probOutput_uniformSample"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+     "OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+     "evalDist_eq_of_evalSPMF_eq"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+     "evalSPMF_bind"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+     "evalSPMF_bind_congr'"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+     "evalSPMF_map_bijective_uniform_cross"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+     "probFailure"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+     "probFailure_of_liftM_PMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample",
+     "probEvent"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample",
+     "probEvent_eq_eq_probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample",
+     "probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample",
+     "probOutput_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample",
+     "probOutput_pure"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample",
+     "probOutput_uniformSample"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputInitializer",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputInitializer",
+     "SPMF.boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputInitializer",
+     "SPMF.toMeasure"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputInitializer",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputInitializer",
+     "evalSPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputInitializer",
+     "probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "evalDist_eq_of_evalSPMF_eq"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "evalSPMF_bind"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "evalSPMF_bind_congr'"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "evalSPMF_ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "evalSPMF_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "evalSPMF_map_bijective_uniform_cross"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "evalSPMF_map_fst_uniformSample_prod"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "evalSPMF_uniformSample"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "probEvent"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "probEvent_eq_eq_probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "probOutput_bind_eq_tsum"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+     "probOutput_uniformSample"
+    ],
+    [
+     "BeaconcryptCore.Computational.RawKeyPartition",
+     "evalSPMF_bind"
+    ],
+    [
+     "BeaconcryptCore.Computational.RawKeyPartition",
+     "evalSPMF_uniformSample"
+    ],
+    [
+     "BeaconcryptCore.Computational.StatefulGoodEvent",
+     "probOutput_eq_zero_of_not_mem_support"
+    ],
+    [
+     "BeaconcryptCore.Computational.UniformTargetSelection",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.UniformTargetSelection",
+     "probEvent_bind_eq_tsum"
+    ],
+    [
+     "BeaconcryptCore.Computational.UniformTargetSelection",
+     "probEvent_eq_eq_probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.UniformTargetSelection",
+     "probEvent_eq_tsum_ite"
+    ],
+    [
+     "BeaconcryptCore.Computational.UniformTargetSelection",
+     "probEvent_ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.UniformTargetSelection",
+     "probEvent_map"
+    ],
+    [
+     "BeaconcryptCore.Computational.UniformTargetSelection",
+     "probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.UniformTargetSelection",
+     "probOutput_le_one"
+    ],
+    [
+     "BeaconcryptCore.Computational.UniformTargetSelection",
+     "probOutput_uniformSample"
+    ]
+   ],
+   "forbidden_new_pairs": [
+    [
+     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemGame",
+     "SPMF.toMeasure"
+    ]
+   ],
+   "forbidden_in_stage_modules": [],
+   "absent_upstream_in_new_modules": [],
+   "residual_new_pairs_relocated_generated": [
+    [
+     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemGame",
+     "SPMF.boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemGame",
+     "SPMF.toMeasure"
+    ]
+   ],
+   "forbidden_new_outside_bridge": [],
+   "forbidden_new_relocated_generated": [
+    [
+     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemGame",
+     "SPMF.toMeasure"
+    ]
+   ],
+   "forbidden_in_stage_modules_new": [],
+   "pass": true
+  }
+ },
+ "warning_categories": {
+  "base": "check-lean-0 (base tree)",
+  "stage": "check-lean-1",
+  "checks": {
+   "vcvio_decrease_exact": true,
+   "growth": [],
+   "no_category_grows": true,
+   "new_kinds": [],
+   "no_new_kind": true,
+   "no_errors": true
+  }
+ },
+ "declaration_dumps": {
+  "base": {
+   "declarations": 95214,
+   "sha256": "2d797790f663dfec32ef6914a21c824e9dcd987e5254324a76599e977c10eb20",
+   "note": "taken against the published LEAN_PATH of dfede233; byte-identical to S1/stage/decls-all-s1.tsv"
+  },
+  "stage": {
+   "declarations": 95237,
+   "sha256": "b6068098cf788b4c9773ba261c777dca3bbf5afc24c4ea75364c6e46f38517ab"
+  }
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "b737ffda3c81b84ca66c3377a95daa4e0e3fcd89920c14dda5da7955425cf0c5",
+   "imports": "Lean, VCVio.EvalDist.ProbabilityNotation (no project module)",
+   "olean_sha256": "6b4f60e34a337f0eb163edc0392e971922ec3b93cf30641f7a8fac471351dde0",
+   "olean_equal_to_shared_build": true
+  },
+  "pre_stage_dump": {
+   "file": "base/s2-base.jsonl",
+   "entries": 42,
+   "sha256": "e34228fbbbb3437bc81a422f35b1100d1f2a16536231657b6973816f5d2e2add",
+   "taken_against": "published LEAN_PATH of dfede233"
+  },
+  "certificate_file": {
+   "S2Certificates.lean_sha256": "835ca43acad91ba57475a15ec15e505410a7dd60a2853ff80bc12427df875fb5",
+   "negative_sha256": "544dee86c713bff221b396e178c6a12af40e9fb3341df5579b4a775742236c5b",
+   "doctored_dump_sha256": "0fb22770f6f394343a51188d1ab82ffbf19f6685500b6283fdf53905bcadf8ba"
+  },
+  "inverse_map_pass": 41,
+  "pass_lines": [
+   "certificate PASS BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv against BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv: event mask 0 of 0 ambiguous nodes; old statement hash 716111881 and pp.all text equal; BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv_512 against BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv_512: event mask 0 of 0 ambiguous nodes; old statement hash 3149077864 and pp.all text equal; BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv_512 ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv against BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv: event mask 0 of 0 ambiguous nodes; old statement hash 3569727128 and pp.all text equal; BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv_512 against BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv_512: event mask 0 of 0 ambiguous nodes; old statement hash 3460711997 and pp.all text equal; BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv_512 ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.CtxRomAuth.ctxAliasTargetCacheHitProbability against BeaconcryptCore.Computational.CtxRomAuth.ctxAliasTargetCacheHitProbability: type unchanged; event mask 0 of 0; old body hash 116490361 and pp.all text equal; BeaconcryptCore.Computational.CtxRomAuth.ctxAliasTargetCacheHitProbability = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv against BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv: event mask 0 of 0 ambiguous nodes; old statement hash 3353333368 and pp.all text equal; BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv_512 against BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv_512: event mask 0 of 0 ambiguous nodes; old statement hash 1580502820 and pp.all text equal; BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv_512 ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv against BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv: event mask 0 of 0 ambiguous nodes; old statement hash 912492694 and pp.all text equal; BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability against BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability: type unchanged; event mask 0 of 0; old body hash 200990194 and pp.all text equal; BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf against BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf: event mask 0 of 0 ambiguous nodes; old statement hash 2392043918 and pp.all text equal; BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.JointTableFreshCandidates.completed_result_vector_bound against BeaconcryptCore.Computational.JointTableFreshCandidates.completed_result_vector_bound: event mask 0 of 0 ambiguous nodes; old statement hash 931924708 and pp.all text equal; BeaconcryptCore.Computational.JointTableFreshCandidates.completed_result_vector_bound ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_fresh_guess_bound against BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_fresh_guess_bound: event mask 0 of 0 ambiguous nodes; old statement hash 963609539 and pp.all text equal; BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_fresh_guess_bound ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound against BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound: event mask 0 of 0 ambiguous nodes; old statement hash 2344061657 and pp.all text equal; BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.JointTableFreshCandidates.mixed_completed_vector_bound against BeaconcryptCore.Computational.JointTableFreshCandidates.mixed_completed_vector_bound: event mask 0 of 0 ambiguous nodes; old statement hash 391360024 and pp.all text equal; BeaconcryptCore.Computational.JointTableFreshCandidates.mixed_completed_vector_bound ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.JointTableFreshCandidates.optional_fresh_guess_bound against BeaconcryptCore.Computational.JointTableFreshCandidates.optional_fresh_guess_bound: event mask 0 of 0 ambiguous nodes; old statement hash 192758721 and pp.all text equal; BeaconcryptCore.Computational.JointTableFreshCandidates.optional_fresh_guess_bound ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.LiveApplicationNative.native_observation against BeaconcryptCore.Computational.LiveApplicationNative.native_observation: event mask 0 of 0 ambiguous nodes; old statement hash 3376252900 and pp.all text equal; BeaconcryptCore.Computational.LiveApplicationNative.native_observation ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_probEvent against BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_probEvent: event mask 3 of 2 ambiguous nodes; old statement hash 596450503 and pp.all text equal; BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_probEvent ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhBoundaryDeploymentLater.later_probEvent against BeaconcryptCore.Computational.PqxdhBoundaryDeploymentLater.later_probEvent: event mask 3 of 2 ambiguous nodes; old statement hash 3453762962 and pp.all text equal; BeaconcryptCore.Computational.PqxdhBoundaryDeploymentLater.later_probEvent ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_eq against BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_eq: event mask 0 of 0 ambiguous nodes; old statement hash 3105664636 and pp.all text equal; BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_eq ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem against BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem: event mask 0 of 0 ambiguous nodes; old statement hash 2004364225 and pp.all text equal; BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedEager_collision_bound against BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedEager_collision_bound: event mask 0 of 0 ambiguous nodes; old statement hash 4127994700 and pp.all text equal; BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedEager_collision_bound ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedTapes_collision_bound against BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedTapes_collision_bound: event mask 0 of 0 ambiguous nodes; old statement hash 3177849555 and pp.all text equal; BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedTapes_collision_bound ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedTapes_collision_bound256 against BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedTapes_collision_bound256: event mask 0 of 0 ambiguous nodes; old statement hash 3487879995 and pp.all text equal; BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedTapes_collision_bound256 ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.sampleMaterials_collision_bound against BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.sampleMaterials_collision_bound: event mask 1 of 1 ambiguous nodes; old statement hash 510401612 and pp.all text equal; BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.sampleMaterials_collision_bound ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.sampleTapes_collision_bound against BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.sampleTapes_collision_bound: event mask 0 of 0 ambiguous nodes; old statement hash 64859379 and pp.all text equal; BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.sampleTapes_collision_bound ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed against BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed: event mask 0 of 0 ambiguous nodes; old statement hash 785425792 and pp.all text equal; BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.independentHop_eq_hybrid against BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.independentHop_eq_hybrid: event mask 0 of 0 ambiguous nodes; old statement hash 1085400306 and pp.all text equal; BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.independentHop_eq_hybrid ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.materialChain_uniform against BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.materialChain_uniform: event mask 0 of 0 ambiguous nodes; old statement hash 2725722085 and pp.all text equal; BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.materialChain_uniform ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample.publicEvaluation_random_probability against BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample.publicEvaluation_random_probability: event mask 0 of 1 ambiguous nodes; old statement hash 3779284169 and pp.all text equal; BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample.publicEvaluation_random_probability ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm against BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm: event mask 0 of 0 ambiguous nodes; old statement hash 2392043918 and pp.all text equal; BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal against BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal: event mask 0 of 0 ambiguous nodes; old statement hash 4182390082 and pp.all text equal; BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhSecretInputKdf.first32_uniform against BeaconcryptCore.Computational.PqxdhSecretInputKdf.first32_uniform: event mask 0 of 0 ambiguous nodes; old statement hash 1501217414 and pp.all text equal; BeaconcryptCore.Computational.PqxdhSecretInputKdf.first32_uniform ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot against BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot: event mask 0 of 0 ambiguous nodes; old statement hash 157877065 and pp.all text equal; BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.PqxdhSecretInputKdf.zeroSalt_key_probability against BeaconcryptCore.Computational.PqxdhSecretInputKdf.zeroSalt_key_probability: event mask 1 of 1 ambiguous nodes; old statement hash 2986595921 and pp.all text equal; BeaconcryptCore.Computational.PqxdhSecretInputKdf.zeroSalt_key_probability ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.RawKeyPartition.partition_continuation against BeaconcryptCore.Computational.RawKeyPartition.partition_continuation: event mask 0 of 0 ambiguous nodes; old statement hash 773023963 and pp.all text equal; BeaconcryptCore.Computational.RawKeyPartition.partition_continuation ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.RawKeyPartition.sampled_partition against BeaconcryptCore.Computational.RawKeyPartition.sampled_partition: event mask 0 of 0 ambiguous nodes; old statement hash 3551526074 and pp.all text equal; BeaconcryptCore.Computational.RawKeyPartition.sampled_partition ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.StatefulGoodEvent.event_good against BeaconcryptCore.Computational.StatefulGoodEvent.event_good: event mask 0 of 2 ambiguous nodes; old statement hash 3685531767 and pp.all text equal; BeaconcryptCore.Computational.StatefulGoodEvent.event_good ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero (private) against BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero (private): event mask 0 of 1 ambiguous nodes; old statement hash 3251959276 and pp.all text equal; BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero (private) ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.StatefulGoodEvent.output_good against BeaconcryptCore.Computational.StatefulGoodEvent.output_good: event mask 0 of 4 ambiguous nodes; old statement hash 3385220471 and pp.all text equal; BeaconcryptCore.Computational.StatefulGoodEvent.output_good ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false (private) against BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false (private): event mask 0 of 4 ambiguous nodes; old statement hash 3275548130 and pp.all text equal; BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false (private) ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+   "certificate PASS BeaconcryptCore.Computational.UniformTargetSelection.chance_eq against BeaconcryptCore.Computational.UniformTargetSelection.chance_eq: event mask 1 of 1 ambiguous nodes; old statement hash 1991036842 and pp.all text equal; BeaconcryptCore.Computational.UniformTargetSelection.chance_eq ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]"
+  ],
+  "textual_fallback": [
+   "same-type PASS BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.certificateOld_honest_decapsulation against BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.honest_decapsulation: type hash 2659210171 and pp.all text equal to the dump Command being timed: \"/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 /tmp/bc-arc-scratch/vcvio-migration/S2/certificates/S2Certificates.lean\" User time (seconds): 4.69 System time (seconds): 0.82 Percent of CPU this job got: 98% Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.58 Average shared text size (kbytes): 0 Average unshared data size (kbytes): 0 Average stack size (kbytes): 0 Average total size (kbytes): 0 Maximum resident set size (kbytes): 4861952 Average resident set size (kbytes): 0 Major (requiring I/O) page faults: 11 Minor (reclaiming a frame) page faults: 115313 Voluntary context switches: 2249 Involuntary context switches: 29 Swaps: 0 File system inputs: 32 File system outputs: 40 Socket messages sent: 0 Socket messages received: 0 Signals delivered: 0 Page size (bytes): 4096 Exit status: 0"
+  ],
+  "twin_checks": [
+   "same-body PASS BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy against BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability: BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability = old body, whose value hash 200990194 and pp.all text, and whose type, equal the dump",
+   "same-type PASS BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy against BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf: type hash 2392043918 and pp.all text equal to the dump",
+   "same-type PASS BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy against BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm: type hash 2392043918 and pp.all text equal to the dump",
+   "same-type PASS BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy against BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal: type hash 4182390082 and pp.all text equal to the dump",
+   "same-type PASS BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy against BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot: type hash 157877065 and pp.all text equal to the dump",
+   "same-type PASS BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy against BeaconcryptCore.Computational.StatefulGoodEvent.event_good: type hash 3685531767 and pp.all text equal to the dump",
+   "same-type PASS BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy against BeaconcryptCore.Computational.UniformTargetSelection.chance_eq: type hash 1991036842 and pp.all text equal to the dump",
+   "same-type PASS BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy against BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound: type hash 2344061657 and pp.all text equal to the dump",
+   "same-type PASS BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy against BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed: type hash 785425792 and pp.all text equal to the dump",
+   "same-type PASS BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy against BeaconcryptCore.Computational.RawKeyPartition.partition_continuation: type hash 773023963 and pp.all text equal to the dump",
+   "same-type PASS BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy against BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem: type hash 2004364225 and pp.all text equal to the dump"
+  ],
+  "negative_controls_fail": [
+   "certificate FAIL BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv against BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv_512: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 716111881 vs 3149077864",
+   "certificate FAIL BeaconcryptCore.Computational.CtxRomAuth.ctxAliasTargetCacheHitProbability against BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability: no event mask reproduces the old body; mask 0 gives hash 116490361",
+   "same-type FAIL BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy against BeaconcryptCore.Computational.JointTableFreshCandidates.completed_result_vector_bound: hash 2344061657 vs 931924708",
+   "certificate FAIL BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm against BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 2392043918 vs 2392043918",
+   "certificate FAIL BeaconcryptCore.Computational.UniformTargetSelection.chance_eq against BeaconcryptCore.Computational.UniformTargetSelection.chance_eq: no event mask of 1 ambiguous nodes reproduces the dump; mask 0 gives hash 1129091613 vs 1991036843",
+   "certificate FAIL BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.honest_decapsulation against BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.honest_decapsulation: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 674615695 vs 2659210171"
+  ],
+  "checker": [
+   "RESULT PASS"
+  ]
+ },
+ "phase_b": {
+  "report": {
+   "probe_version": 2,
+   "base": {
+    "package": {
+     "rows": 479,
+     "declarations": 58,
+     "by_module": {
+      "CtxRomAuth": 70,
+      "JointEagerTable": 12,
+      "JointTableFreshCandidates": 45,
+      "LiveApplicationNative": 6,
+      "PqxdhBoundaryDeployment": 9,
+      "PqxdhBoundaryDeploymentLater": 9,
+      "PqxdhChallengeSecretRouting": 54,
+      "PqxdhMaterialKeyCollisions": 65,
+      "PqxdhOrderedChainHybrids": 34,
+      "PqxdhPublicKdfCounterexample": 20,
+      "PqxdhSecretInputInitializer": 12,
+      "PqxdhSecretInputKdf": 52,
+      "RawKeyPartition": 22,
+      "StatefulGoodEvent": 31,
+      "UniformTargetSelection": 38
+     },
+     "by_root": {
+      "Examples": 1,
+      "ToMathlib": 253,
+      "VCVio": 225
+     },
+     "constants": {
+      "NeverFail.probFailure_eq_zero": 1,
+      "OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails": 1,
+      "OracleComp.instEvalDistCompatible": 13,
+      "OracleComp.probOutput_congr": 1,
+      "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible": 11,
+      "SPMF": 96,
+      "SPMF.boolDistAdvantage": 2,
+      "SPMF.ext": 1,
+      "SPMF.instAlternativeMonad": 33,
+      "SPMF.instFunLikeENNReal": 2,
+      "SPMF.instLawfulMonadLiftPMF": 27,
+      "SPMF.instMonadLiftPMF": 90,
+      "SPMF.pure_apply": 1,
+      "SPMF.pure_apply_self": 1,
+      "SPMF.support": 1,
+      "SPMF.support_pure": 1,
+      "SPMF.toMeasure": 1,
+      "evalDist_apply_singleton": 6,
+      "evalDist_eq_of_evalSPMF_eq": 5,
+      "evalSPMF": 29,
+      "evalSPMF_bind": 3,
+      "evalSPMF_bind_congr": 1,
+      "evalSPMF_bind_congr'": 4,
+      "evalSPMF_ext": 3,
+      "evalSPMF_map": 1,
+      "evalSPMF_map_bijective_uniform_cross": 2,
+      "evalSPMF_map_fst_uniformSample_prod": 2,
+      "evalSPMF_pure": 1,
+      "evalSPMF_uniformSample": 2,
+      "instNeverFailProbCompUniformSample": 1,
+      "probEvent": 54,
+      "probEvent_False": 4,
+      "probEvent_bind_eq_tsum": 1,
+      "probEvent_bind_le_of_forall_le": 3,
+      "probEvent_bind_le_probEvent": 1,
+      "probEvent_bind_le_probEvent_add": 2,
+      "probEvent_eq_eq_probOutput": 3,
+      "probEvent_eq_eq_probOutput'": 1,
+      "probEvent_eq_tsum_ite": 2,
+      "probEvent_eq_zero_iff._simp_1": 2,
+      "probEvent_exists_finset_le_sum": 1,
+      "probEvent_ext": 1,
+      "probEvent_from_fresh_query_le_inv": 1,
+      "probEvent_map": 10,
+      "probEvent_mono": 1,
+      "probEvent_or_le": 1,
+      "probEvent_pure": 2,
+      "probFailure": 3,
+      "probFailure_of_liftM_PMF": 2,
+      "probOutput": 22,
+      "probOutput_bind_const": 1,
+      "probOutput_bind_eq_tsum": 3,
+      "probOutput_eq_one_of_support_subset_singleton": 1,
+      "probOutput_eq_zero_iff": 1,
+      "probOutput_eq_zero_of_not_mem_support": 1,
+      "probOutput_le_one": 1,
+      "probOutput_map": 2,
+      "probOutput_ne_zero_of_mem_support": 1,
+      "probOutput_pure": 1,
+      "probOutput_uniformSample": 5,
+      "uniformSampleImpl.probEvent_simulateQ": 2
+     }
+    },
+    "package_v1_roots_VCVio_ToMathlib": {
+     "rows": 478,
+     "declarations": 58
+    },
+    "project": {
+     "rows": 36,
+     "declarations": 32,
+     "by_module": {
+      "CtxRomAuth": 6,
+      "JointEagerTable": 1,
+      "JointTableFreshCandidates": 4,
+      "PqxdhChallengeSecretRouting": 1,
+      "PqxdhMaterialKeyCollisions": 6,
+      "PqxdhOrderedChainHybrids": 4,
+      "PqxdhPublicKdfCounterexample": 1,
+      "PqxdhSecretInputKdf": 4,
+      "RawKeyPartition": 2,
+      "StatefulGoodEvent": 4,
+      "UniformTargetSelection": 3
+     },
+     "by_root": {
+      "BeaconcryptCore": 36
+     },
+     "constants": {
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv": 2,
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_secretPrefix_add_inv": 1,
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv": 1,
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv": 2,
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf": 1,
+      "BeaconcryptCore.Computational.JointTableFreshCandidates.completed_result_vector_bound": 1,
+      "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_fresh_guess_bound": 1,
+      "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound": 1,
+      "BeaconcryptCore.Computational.JointTableFreshCandidates.optional_fresh_guess_bound": 1,
+      "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.honest_decapsulation": 1,
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_eq": 1,
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem": 1,
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedTapes_collision_bound": 1,
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.observedTapes_collision_bound256": 1,
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.sampleMaterials_collision_bound": 1,
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.sampleTapes_collision_bound": 1,
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed": 1,
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed._simp_1_1": 1,
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.independentHop_eq_hybrid": 1,
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.materialChain_uniform": 1,
+      "BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample.publicEvaluation_random_probability": 1,
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm": 1,
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal": 1,
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.first32_uniform": 1,
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot": 1,
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation._simp_1_1": 1,
+      "BeaconcryptCore.Computational.RawKeyPartition.sampled_partition": 1,
+      "BeaconcryptCore.Computational.StatefulGoodEvent.output_good": 1,
+      "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq": 3,
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero": 2,
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false": 1
+     }
+    },
+    "bridge": {
+     "rows": 0,
+     "declarations": 0,
+     "by_module": {},
+     "by_root": {},
+     "constants": {}
+    }
+   },
+   "stage": {
+    "package": {
+     "rows": 184,
+     "declarations": 27,
+     "by_module": {
+      "CtxRomAuth": 27,
+      "JointEagerTable": 12,
+      "JointTableFreshCandidates": 6,
+      "PqxdhMaterialKeyCollisions": 6,
+      "PqxdhOrderedChainHybrids": 12,
+      "PqxdhSecretInputKdf": 36,
+      "RawKeyPartition": 12,
+      "StatefulGoodEvent": 67,
+      "UniformTargetSelection": 6
+     },
+     "by_root": {
+      "Examples": 1,
+      "ToMathlib": 110,
+      "VCVio": 73
+     },
+     "constants": {
+      "SPMF": 52,
+      "SPMF.instAlternativeMonad": 3,
+      "SPMF.instLawfulMonadLiftPMF": 3,
+      "SPMF.instMonadLiftPMF": 52,
+      "evalSPMF": 24,
+      "instEvalDistSemanticsOfMonadLiftTSPMF": 19,
+      "instLawfulEvalDistSemanticsOfMonadLiftTSPMF": 1,
+      "probEvent": 16,
+      "probEvent_eq_tsum_ite": 1,
+      "probEvent_from_fresh_query_le_inv": 1,
+      "probEvent_pure": 1,
+      "probOutput": 8,
+      "probOutput_bind_eq_tsum": 1,
+      "uniformSampleImpl.probEvent_simulateQ": 2
+     }
+    },
+    "package_v1_roots_VCVio_ToMathlib": {
+     "rows": 183,
+     "declarations": 27
+    },
+    "project": {
+     "rows": 16,
+     "declarations": 12,
+     "by_module": {
+      "CtxRomAuth": 2,
+      "JointEagerTable": 1,
+      "PqxdhOrderedChainHybrids": 1,
+      "PqxdhSecretInputKdf": 3,
+      "RawKeyPartition": 1,
+      "StatefulGoodEvent": 8
+     },
+     "by_root": {
+      "BeaconcryptCore": 16
+     },
+     "constants": {
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv": 2,
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy._simp_1_1": 1,
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy._simp_1_1": 1,
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy._simp_1_1": 1,
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy._simp_1_1": 1,
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy._simp_1_1": 1,
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy._simp_1_1": 1,
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good": 1,
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1": 1,
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2": 1,
+      "BeaconcryptCore.Computational.StatefulGoodEvent.output_good": 1,
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero": 2,
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false": 1,
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1": 1
+     }
+    },
+    "bridge": {
+     "rows": 20,
+     "declarations": 17,
+     "by_module": {
+      "CtxRomAuth": 6,
+      "JointEagerTable": 1,
+      "JointTableFreshCandidates": 1,
+      "PqxdhMaterialKeyCollisions": 1,
+      "PqxdhOrderedChainHybrids": 1,
+      "PqxdhSecretInputKdf": 3,
+      "RawKeyPartition": 1,
+      "StatefulGoodEvent": 5,
+      "UniformTargetSelection": 1
+     },
+     "by_root": {
+      "BeaconcryptCore": 20
+     },
+     "constants": {
+      "BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq": 6,
+      "BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent": 5,
+      "BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent": 3,
+      "BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent": 6
+     }
+    }
+   },
+   "stage_rows": {
+    "package": [
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+      "value",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+      "value",
+      "uniformSampleImpl.probEvent_simulateQ",
+      "VCVio.OracleComp.Constructions.SampleableType",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv",
+      "value",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv",
+      "value",
+      "uniformSampleImpl.probEvent_simulateQ",
+      "VCVio.OracleComp.Constructions.SampleableType",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "type",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "value",
+      "SPMF.instAlternativeMonad",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "value",
+      "SPMF.instLawfulMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "value",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "value",
+      "probEvent_from_fresh_query_le_inv",
+      "Examples.CommitmentScheme.Common",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "value",
+      "probEvent_pure",
+      "VCVio.EvalDist.Monad.Basic",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy",
+      "type",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy._simp_1_1",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy._simp_1_1",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointTableFreshCandidates",
+      "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointTableFreshCandidates",
+      "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointTableFreshCandidates",
+      "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy",
+      "type",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointTableFreshCandidates",
+      "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointTableFreshCandidates",
+      "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointTableFreshCandidates",
+      "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy",
+      "type",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy._simp_1_1",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy._simp_1_1",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy._simp_1_1",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy._simp_1_1",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy._simp_1_1",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy._simp_1_1",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy._simp_1_1",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy._simp_1_1",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy._simp_1_1",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy._simp_1_1",
+      "type",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy._simp_1_1",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy._simp_1_1",
+      "value",
+      "evalSPMF",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "type",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "value",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "value",
+      "probEvent_eq_tsum_ite",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "value",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1",
+      "type",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1",
+      "type",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1",
+      "value",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1",
+      "value",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2",
+      "type",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2",
+      "type",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2",
+      "value",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+      "type",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+      "type",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+      "value",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+      "value",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+      "type",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+      "value",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+      "type",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+      "value",
+      "SPMF.instAlternativeMonad",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+      "value",
+      "SPMF.instLawfulMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+      "value",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+      "value",
+      "instLawfulEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Monad.Basic",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "type",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "value",
+      "SPMF.instAlternativeMonad",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "value",
+      "SPMF.instLawfulMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "value",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "value",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "value",
+      "probOutput_bind_eq_tsum",
+      "VCVio.EvalDist.Monad.Basic",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1",
+      "type",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1",
+      "type",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1",
+      "value",
+      "instEvalDistSemanticsOfMonadLiftTSPMF",
+      "VCVio.EvalDist.Defs.Measure",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1",
+      "value",
+      "probOutput",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.UniformTargetSelection",
+      "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy",
+      "type",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.UniformTargetSelection",
+      "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy",
+      "type",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.UniformTargetSelection",
+      "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy",
+      "type",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.UniformTargetSelection",
+      "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy",
+      "value",
+      "SPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=1",
+      "fac=0"
+     ],
+     [
+      "BeaconcryptCore.Computational.UniformTargetSelection",
+      "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy",
+      "value",
+      "SPMF.instMonadLiftPMF",
+      "ToMathlib.ProbabilityTheory.SPMF",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.UniformTargetSelection",
+      "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy",
+      "value",
+      "probEvent",
+      "VCVio.EvalDist.Defs.Basic",
+      "dep=1",
+      "fac=1"
+     ]
+    ],
+    "project": [
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+      "value",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv",
+      "value",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy._simp_1_1",
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy._simp_1_1",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy._simp_1_1",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy._simp_1_1",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy._simp_1_1",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy._simp_1_1",
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "value",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1",
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "value",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2",
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "value",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+      "value",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+      "value",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "value",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+      "value",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1",
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "dep=0",
+      "fac=1"
+     ]
+    ],
+    "bridge": [
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.CtxRomAuth",
+      "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointEagerTable",
+      "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy._simp_1_1",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.JointTableFreshCandidates",
+      "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions",
+      "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids",
+      "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy._simp_1_1",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy._simp_1_1",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy._simp_1_1",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf",
+      "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy._simp_1_1",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.RawKeyPartition",
+      "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy._simp_1_1",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.StatefulGoodEvent",
+      "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ],
+     [
+      "BeaconcryptCore.Computational.UniformTargetSelection",
+      "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy",
+      "value",
+      "BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent",
+      "BeaconcryptCore.Computational.VCVioLegacyBridge",
+      "dep=0",
+      "fac=1"
+     ]
+    ]
+   },
+   "adapter_users_base": [
+    "BeaconcryptCore.Computational.VCVioLegacyBridge"
+   ],
+   "adapter_users_stage": [
+    "BeaconcryptCore.Computational.CtxRomAuth",
+    "BeaconcryptCore.Computational.StatefulGoodEvent",
+    "BeaconcryptCore.Computational.VCVioLegacyBridge"
+   ],
+   "adapter_only_bridge": false
+  },
+  "split": {
+   "package_rows": 184,
+   "twin_rows": 105,
+   "twin_declarations": [
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy",
+    "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy",
+    "BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy._simp_1_1",
+    "BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy",
+    "BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy._simp_1_1",
+    "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy",
+    "BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy._simp_1_1",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy",
+    "BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy"
+   ],
+   "nontwin_rows": 79,
+   "nontwin_declarations": [
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasGame_le_inv",
+    "BeaconcryptCore.Computational.CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_1",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.event_good._simp_1_2",
+    "BeaconcryptCore.Computational.StatefulGoodEvent.output_good",
+    "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_bad_zero",
+    "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false",
+    "_private.BeaconcryptCore.Computational.StatefulGoodEvent.0.BeaconcryptCore.Computational.StatefulGoodEvent.output_good_false._simp_1_1"
+   ],
+   "project_rows": 16,
+   "bridge_rows": 20,
+   "adapter_declarations": [
+    "CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv",
+    "CtxRomAuth.ctxFreshAliasGame_le_inv",
+    "CtxRomAuth.ctxFreshAliasVerifier_le_inv",
+    "StatefulGoodEvent.event_good",
+    "StatefulGoodEvent.event_good._simp_1_1",
+    "StatefulGoodEvent.event_good._simp_1_2",
+    "StatefulGoodEvent.event_good_vcvioLegacy",
+    "StatefulGoodEvent.output_good",
+    "_private.StatefulGoodEvent.0.StatefulGoodEvent.output_bad_zero",
+    "_private.StatefulGoodEvent.0.StatefulGoodEvent.output_good_false",
+    "_private.StatefulGoodEvent.0.StatefulGoodEvent.output_good_false._simp_1_1"
+   ]
+  }
+ },
+ "step7": {
+  "lean_scan": [
+   "LEAN-SCAN files 1994 hits 0"
+  ],
+  "axiom_walk": [
+   "AXIOM-WALK roots 95237 reached 122211 unresolved 0",
+   "AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]",
+   "SERVER-DOMAIN PqxdhDeploymentKemTwoSided.kem_transfer_two_sided true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealCompile.ideal_compile true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealHandoff.ideal_world_view true",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss false",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared false",
+   "SERVER-DOMAIN PqxdhRegistrationJointBeaconFinishOnce.slotGame_two false"
+  ]
+ },
+ "inventory": {
+  "recount": "handwritten-lean unchanged (1987)",
+  "rehash_rows": 71,
+  "twin_pins": 53,
+  "check_inventory": "make check-inventory (lease 00000798): Formal-verification inventory matches the reviewed boundary"
+ },
+ "axiom_guards": {
+  "changed_guards": 0,
+  "new_guards": 0,
+  "note": "twins are generated commands without guards; every existing guard of the 69 changed files holds (check-lean rc 0)"
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "tool_sha256": {
+  "gates.py": "aaf1fc55a11025358b3e5450d5ddf61f5c3f51b9db4fda5a62efb98e700ba753",
+  "gates.s1.py.txt": "24a66d2cace5ffc718d05c0b2f0728e105ac64d81df377b398b91c8c1fae730e",
+  "gen_certificates.py": "e84431c2b6400f09ef2915e1a84d2d6b20425e991fa659ee883c263e4b5b4acd",
+  "gen_s2_certificates.py": "c743fa030e929c46920c4a2b62fa204f36f4bfc81c7b2a60f75a33580b4aaaca",
+  "check_certificates_s2.py": "655f8d150e7964fa9f587100ed7273458465772a86be46eb3fe023c9434e4294",
+  "twins.py": "7b60d0d8bef7acdcfb634906a9a4f20f6a8041665ade7d623928c2f8aa95243d",
+  "twin_rename.py": "2b7a59a985fd2d152aaff13b0c593f9ca78f55ee9b227329892dd6d16246ed40",
+  "twin_rename.s1.py.txt": "bbf0629a0fcf4ff18619af13e3f5113beeca2d381613a8a7092eda50dce5ec21",
+  "wrapper_patch.py": "85482acb92fcbfc4b47d6dd29ca6d3846a061b2475771079d5d08ed49e8caa53",
+  "phaseb.py": "ef85d02fe757a7419611d0b6c2aa91565d55372b2fba6c37e08936ea0bdf9b96",
+  "FacadeProbe.lean.in": "a0641c07c4eb38284d3e30a1c8f2376810b8db36a2134ee7f528ad903f500c8b",
+  "DeclsAll.lean.in": "0bc796a2a45c79394ecc9904f90ae45ac4066b0bfec9df80d9503f0539497f1b",
+  "DumpPpAll.lean.in": "1fa038548e58f7d91a70fd732a5952e05757a3966b1c85ae6d25e00acf05c284",
+  "scan_sources.py": "ae67c92d4ab3acc921e4582f78cc62f127ed97f10e12d54624dd03c559ed170a",
+  "warn_categories.py": "160cb0a9791c5bacfad1856f16d4c9c98eb8c361306f6fd6a9fd6cd395739703"
+ },
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S2/logs/ (check-lean-0/1, lake-L0..L3b, twintext-L0/L1/L2, rename-L0/L1/L2, certificates-1, certificates-negative-1, check-certificates-1, stage-*-1, check-inventory-1, warn-categories)",
+ "reviews": "two independent reviews at 86ab011c (2026-10-20, statement equivalence and hygiene, both APPROVE_WITH_NITS); their fixes and reruns are recorded in vcvio-deprecations-s2-review.json"
+}

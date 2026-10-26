@@ -1,0 +1,21 @@
+{
+  "command": [
+    "nix",
+    "--extra-experimental-features",
+    "nix-command flakes",
+    "develop",
+    "--no-update-lock-file",
+    "path:/tmp/bc-arc-scratch/proof-flake",
+    "-c",
+    "make",
+    "-C",
+    "/tmp/beaconcrypt-proverif-delayed-response-origin/beaconcrypt-core",
+    "check-proverif-delayed-response",
+    "PROVERIF_DELAYED_LOG_DIR=/tmp/bc-arc-scratch/pv-work/a1-delayed-build/maintained/targets"
+  ],
+  "start": "2026-10-06T00:57:10.382122+00:00",
+  "end": "2026-10-06T00:57:10.423995+00:00",
+  "seconds": 0.04187624086625874,
+  "exit": 1,
+  "log_sha256": "a6d940770aee2e06de73e2bfdeed0266011c7614eb19311262a90af73e31a0ee"
+}

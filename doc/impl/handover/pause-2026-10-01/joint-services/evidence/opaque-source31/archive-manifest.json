@@ -1,0 +1,124 @@
+{
+  "cohort": "OpaqueSource31",
+  "date": "2026-10-06T09:16:55.339874+00:00",
+  "source_files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.lean",
+      "sha256": "3bd066ba1c3ef7065bd018bfdc0b49f21a94126ceb5c7114f724e1bb590be390"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.lean",
+      "sha256": "0f68ea01bb39a0f3c41f075aec4ec1a7c6ec61a7103430cc15d8833ad0a3a5e4"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.lean",
+      "sha256": "f1cb023bb74341edf3d5d86ab5d5bcf0cc816afe29796a672dad71bfa3ccc321"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.lean",
+      "sha256": "83862712472163d750c4da5adcad854564a95cc429efe02ddd8d6deb060e1e30"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.lean",
+      "sha256": "b507275343b7e88b411e83fb678768c8573b65229de17dcd224f87d385601be7"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.lean",
+      "sha256": "6ebeae2006d3f510b0f9cb99a270423b66f8c68d8580c37664fb42030465aa72"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.lean",
+      "sha256": "0bf28f4642bf67315aa20f91e0c4457bafbc5127239b7f711cd1e5d7bad6b444"
+    },
+    {
+      "path": "doc/impl/registration-opaque-kem-source.md",
+      "sha256": "dc7ba912c2a6d5156e49185832acabbae4335927ecc510b5a11098e46c177a89"
+    },
+    {
+      "path": "doc/formal-verification-analysis.md",
+      "sha256": "19226ccec50898397495667b980c7140d5eb78ff300f23fc588d6afa5c970c8e"
+    }
+  ],
+  "files": [
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/Axioms.lean",
+      "sha256": "e5c55d9a9106a18b39a177b9360bbe0e01445493bd0224867a6bb93c2e2971e7"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/GuardLiveness.lean",
+      "sha256": "d5749519ad832fac8a38b51311ec2b5d6fddb18520370a9fdbac9ade2fd5f030"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueClient-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueCore-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueCosts-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueReal-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueResume-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueSuffix-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueTail-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/README.md",
+      "sha256": "2f7922730298d71bd1c3d56a7dcddb3d78b55997a1c282e0654d4a181c9dfea2"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/axioms.log",
+      "sha256": "f497457d2d0c95119a1afcbd408ce82328ee27fd5b241e0778e8da46aeb02af7"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/check-inventory.log",
+      "sha256": "e4063f976a8419821527fbf915ae261f10187701a62c60da7bee8a8c27aedd23"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/check-lean-policy.log",
+      "sha256": "4300703d417a0a485afdf76cd62d52c20f4c46ff788472ca9090358b0822f168"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/check.py",
+      "sha256": "1c5cea8c9f4a8b5b0e9e905219e1232716f5e0f9ad30bb332255fddee7dc287c"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/direct-checks.json",
+      "sha256": "9e861a09d6772f55113db79474cfd41ec5144c75b18f53b60af72da741dfa88e"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/finding-responses.json",
+      "sha256": "93d553583290e171f66ddc84018c4dc82967ada94634e6e2f7ecf9423932d5f2"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/guard-liveness.log",
+      "sha256": "d2815a84d5be08cc44b110367c6d6423e32198b33b41060be245485afcf02bbb"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/leanpath",
+      "sha256": "6e33d8b1c006a0450319b8688ae4c907563bb979336c80f1230ea0f5cbe2527c"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/review-manifest.json",
+      "sha256": "6860611f3355ff58c040592b4eb41975fb30aaadaa3df2239c9719f9753720f5"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/theorems.json",
+      "sha256": "1468d5de6c16770db758bdf9983ea0551d7cf801bd72b1642de8f86516c49509"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "reviewer": "/root/r1_scheduler_closure",
+  "date_utc": "2026-10-06T00:04:39.391702+00:00",
+  "decision": "APPROVE",
+  "manifest": "/tmp/bc-arc-scratch/resume-2026-10-05-codex/serial-ci/review-manifest.json",
+  "manifest_sha256": "6eb6a9fe26ae105f54665aef96eae68e49b732980213f8120c4dd1224da24536",
+  "verified": {
+    "frozen_hashes": 15,
+    "unchanged_lean_related_files": 1356,
+    "unchanged_proverif_related_files": 235,
+    "focused_transcript_fidelity_tests": 28,
+    "inventory_exit": 0
+  },
+  "scope": "CI wiring and its validation receipts only; no solver runs or new proof/security conclusions.",
+  "findings": [
+    "Code preserves every original gate and adds two serial locked wrappers with ordered extraction and tracked/untracked drift rejection; aggregate workflow remains dependent on the full matrix.",
+    "Negative controls cover missing strong-secrecy gate, parallel gate substitution, missing drift, weakened tracked/untracked checks and omitted matrix jobs.",
+    "Read workflow, Make/check-inventory/test diffs, complete guide and archive, checked frozen hashes and raw/gzip receipts.",
+    "The pending-token gate retains its existing 180-second default. Guide and trust-boundary wording should say at most 1800 seconds, explicitly preserving pending 180 seconds; no code correction required."
+  ],
+  "validation_limits": "Read-only independent semantic review; existing supplied check receipts inspected, no new tests, Lean builds or ProVerif executions.",
+  "final_manifest_sha256": "5171bd431671bea2c95547b7ed1f48c806aee3fe59558ea8c3951800296d1114",
+  "prose_nit_resolution": "Both guide and trust boundary now say ceiling1800s and explicitly preserve pending180s. All15 final frozen hashes reverified; only two prose files and supporting inventory/archive metadata changed. Successful focused receipts correctly predate the prose-only clarification."
+}

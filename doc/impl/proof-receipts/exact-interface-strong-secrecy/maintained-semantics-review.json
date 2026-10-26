@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-06T04:57:00.342566+00:00",
+  "reviewer": "/root/evolving_source_join",
+  "status": "APPROVE_SCOPED_PAIRED_SYMBOLIC_SEMANTICS_AND_COMPARATOR",
+  "manifest": "/tmp/bc-arc-scratch/pv-work/exact-interface-strong-secrecy/maintained-review-manifest.json",
+  "manifest_sha256": "43cc2258b98768a3eac92fbe5dd124ceb4ab7b4894b7d46dc072c5870319119f",
+  "frozen_files_verified": 46,
+  "complete_reconstructions_verified": 29,
+  "probe_token_pairs_verified": 28,
+  "scope": [
+    "Read full comparator and exact eight-target/checker, all14 regression definitions, both original complete receiver and sender derivatives, both full maintained guides. Previous independent paired-routing/other-pin reviews reused and exact maintained scope retained.",
+    "Two alternatives use exact signing-identity eligibility, ordinary/ineligible calls left/left. Full failed send allocation and raw opening/cache/rollback/reply semantics retained. Extra selected identity is ghost routing/eligibility only.",
+    "Positive new[] annotations omit input dependencies in Horn name representation while preserving original per-replication restrictions and source draw order; no generator interchange or computational probability premise. Precision and nounif/simplifyProcess settings do not add source branches or security axioms.",
+    "Origin auxiliary is ordinary-message projection with full response/root events; same public first-equal receipt lookup, one bit-independent host/pending map, other-pin public construction ledger. Explicit T0 constructor idealizations retained.",
+    "Four controls are fresh-name reachability FALSE with confirmed traces, not observational inequivalence claims. Both actual positive probe logs and all auxiliary/control exact verdicts verified by maintained strict parser.",
+    "Private-app/noecho, selected identity/OD2, serial host Kr3/Ks2/pre-first-far boundaries remain explicit. No public optional plaintext, global computational closure, PPT bill or omitted free work inferred."
+  ],
+  "probe_checks": [
+    {
+      "target": "SSX-b2s",
+      "receipt": "/tmp/bc-arc-scratch/pv-work/exact-interface-strong-secrecy/b2s-coin-dependencies-long.json",
+      "receipt_sha256": "c7085c15fa91f25a399769f3cf008e352c526f985e598d325b2e50af777020c6",
+      "log_sha256": "ca3ab82cd1fddb2119772aa6c4141f86b04c5b520be74520427e8206896d1a6f"
+    },
+    {
+      "target": "SSX-s2b",
+      "receipt": "/tmp/bc-arc-scratch/pv-work/exact-interface-strong-secrecy/s2b-coin-dependencies.json",
+      "receipt_sha256": "3321504a953c9c2acefb7a494906560432ebbcf3974927d9b70dbd8dfc3dcfdd",
+      "log_sha256": "12b142db3561f1fb0a1ca30e7ec65d72ddc1aa3c63c22a1f6bed770bcba0d969"
+    },
+    {
+      "target": "SSX-b2s-origin",
+      "receipt": "/tmp/bc-arc-scratch/pv-work/exact-interface-strong-secrecy/b2s-response-root-origin.json",
+      "receipt_sha256": "5cbcf0416dbaca6208d85c14c5aac76b4aeb8fd1c9625d3ac15311e505f4ba33",
+      "log_sha256": "ec762524d37b519f66badf949b49e016261965b0e476e1197e38ee049b800951"
+    },
+    {
+      "target": "SSX-s2b-origin",
+      "receipt": "/tmp/bc-arc-scratch/pv-work/exact-interface-strong-secrecy/s2b-response-root-origin.json",
+      "receipt_sha256": "b09624ea639253c0e4555da3698605d8a10a3d4885e8a16363ba49f781641a70",
+      "log_sha256": "95b4e6c14543fa1094e8f390a558300409820c8583acdd6a71a07ddc9491a42f"
+    },
+    {
+      "target": "SSX-b2s-leak",
+      "receipt": "/tmp/bc-arc-scratch/pv-work/exact-interface-strong-secrecy/b2s-control-leak.json",
+      "receipt_sha256": "504fbe2d26248a8d4889b3fefb74f47e6baa206af89ed983b289c086bb8c3f91",
+      "log_sha256": "0ece7ea2ae38db2e4c718adab608bb08cb64c3c2ed8d628bd31c183550782a6f"
+    },
+    {
+      "target": "SSX-s2b-leak",
+      "receipt": "/tmp/bc-arc-scratch/pv-work/exact-interface-strong-secrecy/s2b-control-leak.json",
+      "receipt_sha256": "ae03b2aba7793263ed4333524c5ac4fd185f509ca5e45822a4febb22a2cc9e22",
+      "log_sha256": "d402b4b00079d6164978c2600e8e967f48ad8e818c150faa7dcc4d5143f9ca3b"
+    },
+    {
+      "target": "SSX-b2s-ungated",
+      "receipt": "/tmp/bc-arc-scratch/pv-work/exact-interface-strong-secrecy/b2s-control-ungated.json",
+      "receipt_sha256": "997b129421061b56571902c9351ecb2a410c142e707ff4d4d4d6437fd3e36ceb",
+      "log_sha256": "40c33908ec5a2bd8cd4f19db9a450b2400d2d4897f59f04a8623bcea4c3b738c"
+    },
+    {
+      "target": "SSX-s2b-ungated",
+      "receipt": "/tmp/bc-arc-scratch/pv-work/exact-interface-strong-secrecy/s2b-control-ungated.json",
+      "receipt_sha256": "2907e9b774454ccb8cfb4a8b10ecd3ea33b27c180053ae84d65305ba68b7d00c",
+      "log_sha256": "3f1614166f5a57a69dd7a30e05643f709a62b5077bb80e39682905adf702003c"
+    }
+  ],
+  "findings": [],
+  "not_reviewed": [
+    "Root owns final Make/shared-gating/inventory integration and maintained-run portable archive review; no new verifier/build invoked."
+  ]
+}

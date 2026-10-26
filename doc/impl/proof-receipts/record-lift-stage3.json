@@ -1,0 +1,439 @@
+{
+  "stage": "Reviewed source adapters, actual World costs and first directional seed reduction",
+  "date_utc": "2026-10-07T23:09:47.877830+00:00",
+  "status": "Exact merge gates and independent final merged-tree review approved",
+  "central_base": "ae4a49965c1c625b9fcc181cd281925e2e188f2b",
+  "merge_parents": [
+    "c6a13f34eb93ee6757d276e48a13856df3e46345",
+    "a7a9c229646eea13460d0e2100a53ea14700ca00"
+  ],
+  "topic": "codex/record-lift-seed-cut",
+  "modules": {
+    "PqxdhRecordLiftRealTable": {
+      "guarded_theorems": 16,
+      "reviewed_parent": "c6a13f34eb93ee6757d276e48a13856df3e46345",
+      "source_sha256": "ee3f941c4bb273ca0e01e63e5ccfb53c582660d023babad5834807c30aa87e48",
+      "artifact_sha256": "d44a01422d849d07c986b70a603d7418fcf168d46fbd2cf9f20954e81d9f7efa"
+    },
+    "PqxdhRecordLiftChainCompiler": {
+      "guarded_theorems": 18,
+      "reviewed_parent": "c6a13f34eb93ee6757d276e48a13856df3e46345",
+      "source_sha256": "7e971f04498f783172f9003a82cd022f79ae2cd1f4ffe281ead93e4a1808ecc0",
+      "artifact_sha256": "7eda5475cddd0c15b4a9951d04156ce609249f535c57c173f408fa4c3094d73c"
+    },
+    "PqxdhRecordLiftChainCoordinates": {
+      "guarded_theorems": 18,
+      "reviewed_parent": "c6a13f34eb93ee6757d276e48a13856df3e46345",
+      "source_sha256": "f278688a06572d8b1d2076503a13df6e165128d6af77427a297fdeb4414811c0",
+      "artifact_sha256": "c09169faba903a8ba7533c12e9b4f828173ffb0ed6b0c696e553b88d413e14ed"
+    },
+    "PqxdhRecordLiftWorldBudget": {
+      "guarded_theorems": 49,
+      "reviewed_parent": "c6a13f34eb93ee6757d276e48a13856df3e46345",
+      "source_sha256": "b4bbf0f647aebc1a41e4f1056137703028f10d82ec1d80417abf9e11be49e2c4",
+      "artifact_sha256": "afb8eacdf2e85ae403c358ca3b955b5ad0287900ad94117d8ae3431cc0ac4c39"
+    },
+    "PqxdhRecordLiftSeedCut": {
+      "guarded_theorems": 17,
+      "reviewed_parent": "c6a13f34eb93ee6757d276e48a13856df3e46345",
+      "source_sha256": "413cfe3034481e216f881cd53377352547659eabffad34a31be51813003befcb",
+      "artifact_sha256": "d913565c6f8e55bb5338bd92ba3a3ffcf768d79142f49612707fdfcdf46eff7a"
+    },
+    "PqxdhRecordLiftNativeAdapters": {
+      "guarded_theorems": 13,
+      "reviewed_parent": "a7a9c229646eea13460d0e2100a53ea14700ca00",
+      "source_sha256": "2902e3f1bde738799f7074fb39b020e070664e6c8f02cc74060fdc553b4f823f",
+      "artifact_sha256": "754675fd27380d2e9edb03f7a1cfbeb7471ce7faaf20951f57327a5409cf861d"
+    }
+  },
+  "guarded_statements": 131,
+  "handwritten_lean_count": 1580,
+  "files": {
+    "beaconcrypt-core/proofs/check-inventory.sh": "1ab97dbc02feafe7fd5c4c1fda050dfba19daafa60e6cef4c6a8dcef43f94df7",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "53c41307bcc525259f6d569f22936c289e97e3c8563aa26fe382719c2d358433",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCompiler.lean": "7e971f04498f783172f9003a82cd022f79ae2cd1f4ffe281ead93e4a1808ecc0",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCoordinates.lean": "f278688a06572d8b1d2076503a13df6e165128d6af77427a297fdeb4414811c0",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftNativeAdapters.lean": "2902e3f1bde738799f7074fb39b020e070664e6c8f02cc74060fdc553b4f823f",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftRealTable.lean": "ee3f941c4bb273ca0e01e63e5ccfb53c582660d023babad5834807c30aa87e48",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedCut.lean": "413cfe3034481e216f881cd53377352547659eabffad34a31be51813003befcb",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftWorldBudget.lean": "b4bbf0f647aebc1a41e4f1056137703028f10d82ec1d80417abf9e11be49e2c4",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "7e84a3eef62b3d85b8c9a579a2aa09fb1f87234af74812093f7a6b98becfc89a",
+    "doc/formal-verification-analysis.md": "2dd51be78e34e5e3d55eb3d0c8cde5a7c00f8698b0221a72cba4f213b44018dc",
+    "doc/impl/proof-receipts/record-lift-chain-compiler.json": "2a575211f8304f08248071998b62b4bd55a3f6c02023d255ac543aba5416094b",
+    "doc/impl/proof-receipts/record-lift-chain-coordinates.json": "9a978abf987046671997912e20b7a4e4ab106a0bc0854ba87378b9d93ef45705",
+    "doc/impl/proof-receipts/record-lift-native-adapters.json": "559362892f18e91c6d37329fa89e842bdd122b2c701bdd2617b666e2b31f8a52",
+    "doc/impl/proof-receipts/record-lift-seed-cut.json": "38716c80e4e486ee9306d65928e7a7da72a99d700d4055331fcc64af6fe5e867",
+    "doc/impl/proof-receipts/record-lift-world-budget.json": "2da7bd7c27a5855cb915c6672743a77f404226d23c676633f28bf393f92ab12f",
+    "doc/impl/record-lift-chain-compiler.md": "c6c4834ad04e6e36944609b5d87dec7c59331a7b95444e964564833d6e41e995",
+    "doc/impl/record-lift-chain-coordinates.md": "bd6caee9ddd8570acd6fcc8effb05e2f814806772421494764ee430dac148d1f",
+    "doc/impl/record-lift-native-adapters.md": "24b841a23a13d2499b56fcd9e0df98415f330dd1d5bdf2c451468167df29948a",
+    "doc/impl/record-lift-real-table.md": "24a40438e240893bd6a089beb8517be4d216b3fe712ac61d477c975f4246e387",
+    "doc/impl/record-lift-seed-cut.md": "c2e8a3c560d39c30049335695c10fd39f1111e883f4ccbcc30e005ea9d62cbc6",
+    "doc/impl/record-lift-world-budget.md": "d9d7005503c9ecde2d5f5d4dc6b0a28c9af15bc40d8d74f201b6d1351ac7c844"
+  },
+  "checks": {
+    "root": {
+      "start": "2026-10-07T23:07:55.604113+00:00",
+      "end": "2026-10-07T23:07:58.878177+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "seed-cut-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/stage3/olean/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/stage3/logs/root.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "633c3941ad48d69279ab16ee6c1be9c918c80df4df54e1f8a09ac419df2833a2",
+      "source_sha256": "53c41307bcc525259f6d569f22936c289e97e3c8563aa26fe382719c2d358433",
+      "artifact_sha256": "5a699023b0757b1496d5f2964c129f686880f517b15dc594ed98076754d3ea0c",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "inventory": {
+      "start": "2026-10-07T23:07:55.604591+00:00",
+      "end": "2026-10-07T23:09:13.937342+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "seed-cut-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/stage3/logs/inventory.log",
+      "log_sha256": "6c20d820d99a5c3618265e96870155e599b6e69ead8254d636f0b4b04ac16e67",
+      "leanpath_sha256": "633c3941ad48d69279ab16ee6c1be9c918c80df4df54e1f8a09ac419df2833a2",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/stage3/target"
+    },
+    "fidelity": {
+      "start": "2026-10-07T23:07:55.603857+00:00",
+      "end": "2026-10-07T23:08:20.228115+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "seed-cut-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/stage3/logs/fidelity.log",
+      "log_sha256": "b8010fec5c4afe9fe3e2a731c6dba6dbe44ee0811fd9a9b9a26e1e64f842689a",
+      "leanpath_sha256": "633c3941ad48d69279ab16ee6c1be9c918c80df4df54e1f8a09ac419df2833a2",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/stage3/target"
+    }
+  },
+  "component_receipts": {
+    "record-lift-chain-compiler": "2a575211f8304f08248071998b62b4bd55a3f6c02023d255ac543aba5416094b",
+    "record-lift-chain-coordinates": "9a978abf987046671997912e20b7a4e4ab106a0bc0854ba87378b9d93ef45705",
+    "record-lift-world-budget": "2da7bd7c27a5855cb915c6672743a77f404226d23c676633f28bf393f92ab12f",
+    "record-lift-seed-cut": "38716c80e4e486ee9306d65928e7a7da72a99d700d4055331fcc64af6fe5e867",
+    "record-lift-native-adapters": "559362892f18e91c6d37329fa89e842bdd122b2c701bdd2617b666e2b31f8a52"
+  },
+  "dependency": {
+    "published_base": "/tmp/bc-coord/leanpaths/ae4a49965c1c625b9fcc181cd281925e2e188f2b.leanpath",
+    "path": "/tmp/bc-arc-scratch/record-lift/stage3/leanpath",
+    "path_sha256": "633c3941ad48d69279ab16ee6c1be9c918c80df4df54e1f8a09ac419df2833a2",
+    "provenance_paths": [
+      "/tmp/bc-coord/leanpaths/ae4a49965c1c625b9fcc181cd281925e2e188f2b.leanpath",
+      "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/leanpath",
+      "/tmp/bc-arc-scratch/record-lift/native-adapters/publication.leanpath"
+    ],
+    "no_published_output_writes": true
+  },
+  "scope": [
+    "Complete local send/receive execution and native adapter equality retain optional replies, full primitive state and persistent table annotations.",
+    "Both directional counters, installed slot/direction and skipped-material sequence attribution are supplied by source seed constructors and preserved by actual local operations.",
+    "Actual World native derivations are at most S+51R; sealing/writing S, opening R, native hashing S+R. Shared-hash and full uniform/seed costs include the finite environment allowance.",
+    "The actual selected seed-miss continuation supports one uniform32 Extract advantage and one two-query HMAC PRF advantage, with complete sampler and challenger bills."
+  ],
+  "contracts": [
+    "No new primitive, compiler, storage or deployment contract.",
+    "SourceFullCorrect is the existing functional full76 KDF contract; selected seed game advantages are explicit ordinary endpoints.",
+    "Frame and Budget.Respects are resource/interface premises for the respective World cost results."
+  ],
+  "remaining": [
+    "Complete dynamic World compiler and global masked source continuation.",
+    "Ordered evolving-chain hybrids with explicit alias/refusal probabilities and finite selection.",
+    "Adaptive multi-session raw CTX/AEAD lift, record ideal-world events and composition.",
+    "Generic classical post-disclosure interface and both complete later lifts."
+  ],
+  "no_changes": [
+    "Production Rust and cryptographic primitive implementations.",
+    "Previously published proof modules and Claude central source files.",
+    "ProVerif profile or scenario budgets; no full build, make verify, mutation suite or Nix collection."
+  ],
+  "review": {
+    "semantic": "Each component receipt contains independent semantic/source/assumption/query and hygiene approvals.",
+    "claude_c4": "Messages85/86/91/92, no source change requested.",
+    "integration_intent": "Messages95/96.",
+    "final": {
+      "path": "/tmp/bc-arc-scratch/record-lift/reviews/stage3-final-integration-2026-10-08.json",
+      "sha256": "696db61c91195592bacb1ffe77d5a2494b2563d1a2fd1a605d0d24501ec6da23",
+      "receipt": {
+        "reviewer": "/root/record_interface_audit",
+        "date_utc": "2026-10-07T23:09:58.805820+00:00",
+        "decision": "approve",
+        "scope": "Final independent integration/metadata review of six unchanged previously semantically reviewed Codex proof modules, 131 exact guarded statements, reconciled with current Claude ae4 central.",
+        "base_central": "ae4a49965c1c625b9fcc181cd281925e2e188f2b",
+        "head": "c6a13f34eb93ee6757d276e48a13856df3e46345",
+        "merge_head": "a7a9c229646eea13460d0e2100a53ea14700ca00",
+        "findings": [],
+        "dependencies": {
+          "paths": [
+            "/tmp/bc-coord/leanpaths/ae4a49965c1c625b9fcc181cd281925e2e188f2b.leanpath",
+            "/tmp/bc-arc-scratch/record-lift/seed-cut/publication/leanpath",
+            "/tmp/bc-arc-scratch/record-lift/native-adapters/publication.leanpath"
+          ],
+          "files": 1614,
+          "modules": {
+            "PqxdhRecordLiftRealTable": {
+              "guarded_theorems": 16,
+              "reviewed_parent": "c6a13f34eb93ee6757d276e48a13856df3e46345",
+              "source_sha256": "ee3f941c4bb273ca0e01e63e5ccfb53c582660d023babad5834807c30aa87e48",
+              "artifact_sha256": "d44a01422d849d07c986b70a603d7418fcf168d46fbd2cf9f20954e81d9f7efa"
+            },
+            "PqxdhRecordLiftChainCompiler": {
+              "guarded_theorems": 18,
+              "reviewed_parent": "c6a13f34eb93ee6757d276e48a13856df3e46345",
+              "source_sha256": "7e971f04498f783172f9003a82cd022f79ae2cd1f4ffe281ead93e4a1808ecc0",
+              "artifact_sha256": "7eda5475cddd0c15b4a9951d04156ce609249f535c57c173f408fa4c3094d73c"
+            },
+            "PqxdhRecordLiftChainCoordinates": {
+              "guarded_theorems": 18,
+              "reviewed_parent": "c6a13f34eb93ee6757d276e48a13856df3e46345",
+              "source_sha256": "f278688a06572d8b1d2076503a13df6e165128d6af77427a297fdeb4414811c0",
+              "artifact_sha256": "c09169faba903a8ba7533c12e9b4f828173ffb0ed6b0c696e553b88d413e14ed"
+            },
+            "PqxdhRecordLiftWorldBudget": {
+              "guarded_theorems": 49,
+              "reviewed_parent": "c6a13f34eb93ee6757d276e48a13856df3e46345",
+              "source_sha256": "b4bbf0f647aebc1a41e4f1056137703028f10d82ec1d80417abf9e11be49e2c4",
+              "artifact_sha256": "afb8eacdf2e85ae403c358ca3b955b5ad0287900ad94117d8ae3431cc0ac4c39"
+            },
+            "PqxdhRecordLiftSeedCut": {
+              "guarded_theorems": 17,
+              "reviewed_parent": "c6a13f34eb93ee6757d276e48a13856df3e46345",
+              "source_sha256": "413cfe3034481e216f881cd53377352547659eabffad34a31be51813003befcb",
+              "artifact_sha256": "d913565c6f8e55bb5338bd92ba3a3ffcf768d79142f49612707fdfcdf46eff7a"
+            },
+            "PqxdhRecordLiftNativeAdapters": {
+              "guarded_theorems": 13,
+              "reviewed_parent": "a7a9c229646eea13460d0e2100a53ea14700ca00",
+              "source_sha256": "2902e3f1bde738799f7074fb39b020e070664e6c8f02cc74060fdc553b4f823f",
+              "artifact_sha256": "754675fd27380d2e9edb03f7a1cfbeb7471ce7faaf20951f57327a5409cf861d"
+            }
+          }
+        },
+        "dependencies_sha256": "873d2baf2adbcaf1b561da64d77ec4daf6fce382f04430165a14e33f4f9b6410",
+        "metadata_sha256": {
+          "beaconcrypt-core/proofs/check-inventory.sh": "1ab97dbc02feafe7fd5c4c1fda050dfba19daafa60e6cef4c6a8dcef43f94df7",
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "53c41307bcc525259f6d569f22936c289e97e3c8563aa26fe382719c2d358433",
+          "beaconcrypt-core/proofs/reviewed-inventory.txt": "7e84a3eef62b3d85b8c9a579a2aa09fb1f87234af74812093f7a6b98becfc89a",
+          "doc/formal-verification-analysis.md": "2dd51be78e34e5e3d55eb3d0c8cde5a7c00f8698b0221a72cba4f213b44018dc"
+        },
+        "guides_and_topic_receipts_sha256": {
+          "doc/impl/record-lift-real-table.md": "24a40438e240893bd6a089beb8517be4d216b3fe712ac61d477c975f4246e387",
+          "doc/impl/record-lift-chain-compiler.md": "c6c4834ad04e6e36944609b5d87dec7c59331a7b95444e964564833d6e41e995",
+          "doc/impl/proof-receipts/record-lift-chain-compiler.json": "2a575211f8304f08248071998b62b4bd55a3f6c02023d255ac543aba5416094b",
+          "doc/impl/record-lift-chain-coordinates.md": "bd6caee9ddd8570acd6fcc8effb05e2f814806772421494764ee430dac148d1f",
+          "doc/impl/proof-receipts/record-lift-chain-coordinates.json": "9a978abf987046671997912e20b7a4e4ab106a0bc0854ba87378b9d93ef45705",
+          "doc/impl/record-lift-world-budget.md": "d9d7005503c9ecde2d5f5d4dc6b0a28c9af15bc40d8d74f201b6d1351ac7c844",
+          "doc/impl/proof-receipts/record-lift-world-budget.json": "2da7bd7c27a5855cb915c6672743a77f404226d23c676633f28bf393f92ab12f",
+          "doc/impl/record-lift-seed-cut.md": "c2e8a3c560d39c30049335695c10fd39f1111e883f4ccbcc30e005ea9d62cbc6",
+          "doc/impl/proof-receipts/record-lift-seed-cut.json": "38716c80e4e486ee9306d65928e7a7da72a99d700d4055331fcc64af6fe5e867",
+          "doc/impl/record-lift-native-adapters.md": "24b841a23a13d2499b56fcd9e0df98415f330dd1d5bdf2c451468167df29948a",
+          "doc/impl/proof-receipts/record-lift-native-adapters.json": "559362892f18e91c6d37329fa89e842bdd122b2c701bdd2617b666e2b31f8a52"
+        },
+        "semantic_and_previous_reviews": [
+          {
+            "path": "/tmp/bc-arc-scratch/record-lift/reviews/chain-coordinates-semantic-2026-10-08.json",
+            "sha256": "633cc5b338684273eec217267d350bed2869ebbfff50e682e3d821f52477a614"
+          },
+          {
+            "path": "/tmp/bc-arc-scratch/record-lift/reviews/world-budget-semantic-2026-10-08.json",
+            "sha256": "364c31b17c433c4da34df950c5d1fa13d19cab248410462aa70d8dcf5e931088"
+          },
+          {
+            "path": "/tmp/bc-arc-scratch/record-lift/reviews/seed-cut-semantic-2026-10-08.json",
+            "sha256": "c2379321ea5b9a79093201ae329b945575a6e4e444d3550e7d631a93d6d229c1"
+          },
+          {
+            "path": "/tmp/bc-arc-scratch/record-lift/reviews/native-adapters-semantic-2026-10-08.json",
+            "sha256": "523abb3e34a91ba1025faeefd6a6a1b7ca848434d36655afefd45b03ddf41d79"
+          },
+          {
+            "path": "/tmp/bc-arc-scratch/record-lift/reviews/seed-cut-publication-hygiene-2026-10-08.json",
+            "sha256": "1558d3d6080e42bb88dafa520f7e0e23fb81aec01eb05d63f86ceaecefbde822"
+          }
+        ],
+        "checks": {
+          "root": {
+            "path": "/tmp/bc-arc-scratch/record-lift/stage3/logs/root.json",
+            "sha256": "134f446b7679803af01e8168a0701e123d32b2e1e25eaacf21c134e4f0665115",
+            "content": {
+              "start": "2026-10-07T23:07:55.604113+00:00",
+              "end": "2026-10-07T23:07:58.878177+00:00",
+              "exit": 0,
+              "command": [
+                "/tmp/bc-coord/coord.sh",
+                "lean",
+                "codex",
+                "seed-cut-root",
+                "--",
+                "timeout",
+                "180",
+                "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                "-j1",
+                "-M8000",
+                "--root=/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core/proofs/lean",
+                "-o",
+                "/tmp/bc-arc-scratch/record-lift/stage3/olean/BeaconcryptCore.olean",
+                "/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+              ],
+              "log": "/tmp/bc-arc-scratch/record-lift/stage3/logs/root.log",
+              "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "leanpath_sha256": "633c3941ad48d69279ab16ee6c1be9c918c80df4df54e1f8a09ac419df2833a2",
+              "source_sha256": "53c41307bcc525259f6d569f22936c289e97e3c8563aa26fe382719c2d358433",
+              "artifact_sha256": "5a699023b0757b1496d5f2964c129f686880f517b15dc594ed98076754d3ea0c",
+              "CARGO_BUILD_JOBS": null,
+              "CARGO_TARGET_DIR": null
+            }
+          },
+          "inventory": {
+            "path": "/tmp/bc-arc-scratch/record-lift/stage3/logs/inventory.json",
+            "sha256": "f7db692b8d2892106634e89e38973b584c36cbe840eb78b6c85392d56d80d77c",
+            "content": {
+              "start": "2026-10-07T23:07:55.604591+00:00",
+              "end": "2026-10-07T23:09:13.937342+00:00",
+              "exit": 0,
+              "command": [
+                "/tmp/bc-coord/coord.sh",
+                "lease",
+                "mem",
+                "codex",
+                "@nix",
+                "seed-cut-inventory",
+                "--eta",
+                "20m",
+                "--",
+                "nix",
+                "develop",
+                "--no-update-lock-file",
+                "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+                "-c",
+                "make",
+                "-C",
+                "/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core",
+                "check-inventory",
+                "SHELL=bash"
+              ],
+              "log": "/tmp/bc-arc-scratch/record-lift/stage3/logs/inventory.log",
+              "log_sha256": "6c20d820d99a5c3618265e96870155e599b6e69ead8254d636f0b4b04ac16e67",
+              "leanpath_sha256": "633c3941ad48d69279ab16ee6c1be9c918c80df4df54e1f8a09ac419df2833a2",
+              "source_sha256": null,
+              "artifact_sha256": null,
+              "CARGO_BUILD_JOBS": "2",
+              "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/stage3/target"
+            }
+          },
+          "fidelity": {
+            "path": "/tmp/bc-arc-scratch/record-lift/stage3/logs/fidelity.json",
+            "sha256": "d243df4cb1bf4325150f6ae2bceafc5b18a054845c115e3e5feb817bb4f42a08",
+            "content": {
+              "start": "2026-10-07T23:07:55.603857+00:00",
+              "end": "2026-10-07T23:08:20.228115+00:00",
+              "exit": 0,
+              "command": [
+                "/tmp/bc-coord/coord.sh",
+                "lease",
+                "mem",
+                "codex",
+                "@cargo",
+                "seed-cut-fidelity",
+                "--eta",
+                "20m",
+                "--",
+                "nix",
+                "develop",
+                "--no-update-lock-file",
+                "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+                "-c",
+                "make",
+                "-C",
+                "/tmp/beaconcrypt-record-lift-seed-cut/beaconcrypt-core",
+                "check-proverif-transcript-fidelity",
+                "SHELL=bash"
+              ],
+              "log": "/tmp/bc-arc-scratch/record-lift/stage3/logs/fidelity.log",
+              "log_sha256": "b8010fec5c4afe9fe3e2a731c6dba6dbe44ee0811fd9a9b9a26e1e64f842689a",
+              "leanpath_sha256": "633c3941ad48d69279ab16ee6c1be9c918c80df4df54e1f8a09ac419df2833a2",
+              "source_sha256": null,
+              "artifact_sha256": null,
+              "CARGO_BUILD_JOBS": "2",
+              "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/stage3/target"
+            }
+          }
+        },
+        "review_notes": [
+          "All six proof source hashes and artifacts match reviewed parent commits and pinned packages. All131 theorem names, exact print-axiom guards and additive source gates match; every module is imported once.",
+          "All preexisting gate statements, root imports, inventory rows and analysis paragraphs from both merge parents are preserved. Every inventory file digest matches the actual resolved tree; handwritten Lean count1580.",
+          "All six Claude ae4 new proof modules plus its two plans, guide and tracked receipt are byte-identical to central ae4. No prior proof source, production source or generated artifact changed.",
+          "The additional NativeAdapters13 analysis is confined to actual local source/callback/full-primitive-state equality, with operational lookup/realization premises explicit and KdfReal to be discharged by actual World implementation. No global security, hidden-input independence or completed compiler claim appears.",
+          "SeedCut17 uses final published WorldBudget49 and retains its unchanged independent semantic approval. Existing local RealTable16/Compiler18/Coordinates18 approvals remain applicable.",
+          "Combined root, inventory and transcript fidelity pass on this exact union; verified logs, path and artifact hashes. Fidelity20 Python and30 Rust tests pass. Empty root diagnostics. Reviewer performed no builds.",
+          "Parent may add the combined integration receipt and this review/status metadata only, commit/push the normal merge with required footer, and integrate the unchanged checked source/metadata tree through coordination.",
+          "The final group receipt was additionally read and checked against all21 file hashes, three exact gate records, module dependency map and unchanged topic receipts. Its stated completed and remaining scope matches the reviewed tree; only approval/status fields may change after review."
+        ],
+        "reviewer_builds": false,
+        "reviewer_source_writes": false,
+        "group_receipt_sha256": "157696e2a818d105781da408717ce0dc75d81f397b86832a467276a05eb8ceeb",
+        "pre_review_sha256": "7796c18bd6f727725fd8ea0545e3bf8bdb36c665e667089811cce5c1ac6533e5"
+      }
+    }
+  }
+}

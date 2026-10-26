@@ -1,0 +1,47 @@
+{
+  "source_commit": "04c9213cdd71892192077ae3e656a439f9606014",
+  "source_manifest_sha256": "99939010e23e124651614385d9f7b346620049d9eb84094eaaccfea9d0d3f139",
+  "exact_commit_results": {
+    "focused_make": 0,
+    "inventory": 0,
+    "targets_passed": 6,
+    "transcript_fidelity_passed": 27,
+    "dedicated_checker_regressions_passed": 13,
+    "classification_regressions_passed": 14
+  },
+  "source_preservation": "All25 frozen files match source commit and exact-commit gate inputs. No production Rust or Lean changes. No aggregate verification or full mutation campaign rerun.",
+  "gzip_roundtrips": {
+    "A2-C-purpose.log": {
+      "raw_sha256": "4fdada7cdccd6c0f797dac3c640f4a3ce3b4e5776f8f22369201b0dd889208b6",
+      "gzip_sha256": "ba720fc7d1c55ad3e753e9b813a1ce67804c6e54cfcfe587748ce5ed107ec1b6"
+    },
+    "A2-C-triple.log": {
+      "raw_sha256": "3e8efb1baad4fd1aac91524f74843ad74ce00e5a401d2f96693338933e43b135",
+      "gzip_sha256": "b536f88fe6c782cf28cebdecea74dee4a689b7404517eed11d9e2355ea6540e3"
+    },
+    "A2-beacon-key.log": {
+      "raw_sha256": "e34fafe4eb4777236b3f0ae6178453bc5d3208e5da3731c2f92cf9bf30e504a7",
+      "gzip_sha256": "8423b06762cd11b552981f07790dcf5a3befef56d764adfa50b8a530591a5dd5"
+    },
+    "A2-origin-witness.log": {
+      "raw_sha256": "aa9142617142b9637576dec19dc620be65b0c1290f54fb3842feff42f14de5af",
+      "gzip_sha256": "25ef611fdd47bb2735c739dbdfbd530e938d83d5840f3c9c7a50561ac174e418"
+    },
+    "A2-provenance.log": {
+      "raw_sha256": "2cd5801a2c0979e6435ebbc098ff7d087c8c124c9c6372b86771d9a88d744e14",
+      "gzip_sha256": "bf51625b1bda1542dc8d8df547e4bb8b8ca6a0b8847e17d6814da2af38b5dfe4"
+    },
+    "A2-server-key.log": {
+      "raw_sha256": "6bdee19837937e21399323efb729d567d413d8771ccd8ea22cf67b77f8dad91b",
+      "gzip_sha256": "e3574d9999f2eff3a8ac02b1deff26d0cb3f51448636472c9cd27a1e0f190f6c"
+    },
+    "committed-make.log": {
+      "raw_sha256": "d19085a8020a8f0bf39b10215c9616253a9e74d1dc5bc10d5c65e65fcc8f1610",
+      "gzip_sha256": "aac6df0755374e8c6750a99694d3785ff752253f7a34c7fce8f90f437cdbd3fe"
+    },
+    "committed-inventory.log": {
+      "raw_sha256": "ac4e1d69d609df44b01c4570dbc8d33f3cbb58bc63c01dd4ebaeceea2fe54031",
+      "gzip_sha256": "979c2aa633e3e5e181d04456bde9a92f29fe0c101369edf84037524145f55c6d"
+    }
+  }
+}

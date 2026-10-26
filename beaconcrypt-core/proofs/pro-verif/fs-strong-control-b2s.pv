@@ -1,0 +1,7 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Expected FALSE with a reconstructed trace. This tests reachability of
+   a generated test-secret disclosure, not observational inequivalence. *)
+query m: bitstring; event(FsStrongControlSecret(m)) && attacker(m).
+
+process FsRecordsB2sMainAnyPin()

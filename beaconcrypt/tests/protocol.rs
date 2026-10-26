@@ -1,11 +1,10 @@
 use beaconcrypt::*;
-use beaconcrypt_parse::{
-	CryptoFrame, InitKex, KexResponse, decode_frame, decode_init, decode_response, encode_init,
-};
+use beaconcrypt_parse::{CryptoFrame, InitKex, KexResponse, decode_frame, encode_init};
 
 use std::panic::{AssertUnwindSafe, catch_unwind};
 
 mod common;
+use common::{decode_init, decode_response};
 
 #[derive(serde::Deserialize)]
 struct SerializedStateUpdate {
@@ -61,9 +60,9 @@ const CRYPTO_PAYLOAD_OVERHEAD: usize = TAG_SIZE + COMMITMENT_SIZE;
 const RECEIVE_GAP_LIMIT: u64 = 50;
 
 fn new_pair() -> (Server, Beacon) {
-	let server = Server::new(SERVER_KID, None);
+	let server = Server::new(SERVER_KID, None, None);
 	let server_id = server.identity_pk().to_owned();
-	let beacon = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let beacon = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
 	assert_eq!(beacon.server_id(), &server_id);
 	(server, beacon)
 }
@@ -577,6 +576,7 @@ struct KexResponseParts {
 	kem_ciphertext: Vec<u8>,
 	app_ciphertext: Vec<u8>,
 	key_id: u64,
+	signature: Vec<u8>,
 }
 
 fn parse_kex_response(serialized: &[u8]) -> KexResponseParts {
@@ -587,6 +587,7 @@ fn parse_kex_response(serialized: &[u8]) -> KexResponseParts {
 		kem_ciphertext: response.kem_cipher_text.to_vec(),
 		app_ciphertext: response.app_cipher_text.to_vec(),
 		key_id: response.key_id,
+		signature: response.signature.to_vec(),
 	}
 }
 
@@ -597,6 +598,7 @@ fn serialize_kex_response(parts: &KexResponseParts) -> Vec<u8> {
 		kem_cipher_text: &parts.kem_ciphertext,
 		app_cipher_text: &parts.app_ciphertext,
 		key_id: parts.key_id,
+		signature: &parts.signature,
 	})
 }
 
@@ -617,10 +619,10 @@ fn rewrite_crypto_frame_key_id(serialized: &[u8], key_id: u64) -> Vec<u8> {
 
 #[test]
 fn server_uses_per_beacon_associated_data() {
-	let mut server = Server::new(SERVER_KID, None);
+	let mut server = Server::new(SERVER_KID, None, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut b1 = Beacon::new(SERVER_KID, server_id.as_bytes());
-	let mut b2 = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut b1 = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
+	let mut b2 = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
 
 	let b1_response = register_beacon(&mut server, &mut b1, Some(b"initial message for b1"));
 	let b2_response = register_beacon(&mut server, &mut b2, Some(b"initial message for b2"));
@@ -654,10 +656,10 @@ fn server_uses_per_beacon_associated_data() {
 
 #[test]
 fn server_can_encrypt_to_beacon_a_after_registering_beacon_b() {
-	let mut server = Server::new(SERVER_KID, None);
+	let mut server = Server::new(SERVER_KID, None, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut beacon_a = Beacon::new(SERVER_KID, server_id.as_bytes());
-	let mut beacon_b = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut beacon_a = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
+	let mut beacon_b = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
 
 	let beacon_a_response = register_beacon(&mut server, &mut beacon_a, None);
 	register_beacon(&mut server, &mut beacon_b, None);
@@ -675,10 +677,10 @@ fn server_can_encrypt_to_beacon_a_after_registering_beacon_b() {
 
 #[test]
 fn server_can_decrypt_from_beacon_a_after_registering_beacon_b() {
-	let mut server = Server::new(SERVER_KID, None);
+	let mut server = Server::new(SERVER_KID, None, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut beacon_a = Beacon::new(SERVER_KID, server_id.as_bytes());
-	let mut beacon_b = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut beacon_a = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
+	let mut beacon_b = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
 
 	let _beacon_a_response = register_beacon(&mut server, &mut beacon_a, None);
 	register_beacon(&mut server, &mut beacon_b, None);
@@ -694,10 +696,10 @@ fn server_can_decrypt_from_beacon_a_after_registering_beacon_b() {
 
 #[test]
 fn server_can_decrypt_from_beacon_a_after_encrypting_to_beacon_b() {
-	let mut server = Server::new(SERVER_KID, None);
+	let mut server = Server::new(SERVER_KID, None, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut beacon_a = Beacon::new(SERVER_KID, server_id.as_bytes());
-	let mut beacon_b = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut beacon_a = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
+	let mut beacon_b = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
 
 	let _beacon_a_response = register_beacon(&mut server, &mut beacon_a, None);
 	let beacon_b_response = register_beacon(&mut server, &mut beacon_b, None);
@@ -721,10 +723,10 @@ fn server_can_decrypt_from_beacon_a_after_encrypting_to_beacon_b() {
 
 #[test]
 fn interleaved_registrations_use_the_correct_associated_data() {
-	let mut server = Server::new(SERVER_KID, None);
+	let mut server = Server::new(SERVER_KID, None, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut b1 = Beacon::new(SERVER_KID, server_id.as_bytes());
-	let mut b2 = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut b1 = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
+	let mut b2 = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
 
 	let b1_phase_1 = b1.get_registration_bundle().unwrap();
 	let b2_phase_1 = b2.get_registration_bundle().unwrap();
@@ -791,7 +793,8 @@ fn failed_registration_response_does_not_commit_server_state() {
 	assert!(server.get_shared_secret(&phase_1).is_none());
 
 	let server_id = server.identity_pk().to_owned();
-	let mut accepted_beacon = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut accepted_beacon =
+		Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
 	let response = register_beacon(&mut server, &mut accepted_beacon, None);
 	assert_eq!(response.kid, expected_kid);
 	assert_eq!(server.server_kid(), expected_kid);
@@ -800,22 +803,18 @@ fn failed_registration_response_does_not_commit_server_state() {
 #[test]
 fn beacon_rejects_registration_response_from_wrong_server() {
 	let (mut expected_server, mut beacon) = new_pair();
-	let mut wrong_server = Server::new(SERVER_KID, None);
+	let mut wrong_server = Server::new(SERVER_KID, None, None);
 
 	let phase_1 = beacon.get_registration_bundle().unwrap();
 	assert!(expected_server.get_shared_secret(&phase_1).is_some());
-	let reg_out = wrong_server.get_shared_secret(&phase_1).unwrap();
-	let phase_2 = wrong_server
-		.build_registration_response(reg_out, Some(b"wrong server"))
-		.unwrap();
-
-	assert!(beacon.finish_registration(&phase_2.serialized).is_none());
+	assert!(wrong_server.get_shared_secret(&phase_1).is_none());
+	assert_eq!(wrong_server.server_kid(), SERVER_KID);
 }
 
 #[test]
 fn server_rejects_pending_registration_from_a_different_server() {
 	let (mut accepting_server, mut beacon) = new_pair();
-	let mut other_server = Server::new(SERVER_KID, None);
+	let mut other_server = Server::new(SERVER_KID, None, None);
 	let phase_1 = beacon.get_registration_bundle().unwrap();
 	let pending = accepting_server.get_shared_secret(&phase_1).unwrap();
 
@@ -829,7 +828,11 @@ fn server_rejects_pending_registration_from_a_different_server() {
 	assert!(accepting_server.get_shared_secret(&phase_1).is_none());
 
 	let accepting_identity = accepting_server.identity_pk().to_owned();
-	let mut fresh_beacon = Beacon::new(SERVER_KID, accepting_identity.as_bytes());
+	let mut fresh_beacon = Beacon::new(
+		SERVER_KID,
+		accepting_identity.as_bytes(),
+		&accepting_server.mldsa_public_key(),
+	);
 	let response = register_beacon(
 		&mut accepting_server,
 		&mut fresh_beacon,
@@ -935,10 +938,10 @@ fn decrypt_rejects_wrong_direction() {
 
 #[test]
 fn beacon_cannot_decrypt_message_for_different_beacon() {
-	let mut server = Server::new(SERVER_KID, None);
+	let mut server = Server::new(SERVER_KID, None, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut b1 = Beacon::new(SERVER_KID, server_id.as_bytes());
-	let mut b2 = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut b1 = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
+	let mut b2 = Beacon::new(SERVER_KID, server_id.as_bytes(), &server.mldsa_public_key());
 	let b1_response = register_beacon(&mut server, &mut b1, Some(&[0xFF; 32]));
 	let b2_response = register_beacon(&mut server, &mut b2, Some(&[0xFF; 32]));
 
@@ -1472,8 +1475,10 @@ fn registration_request_field_lengths_reject_before_consuming_replay_material() 
 		init.pre_key,
 		init.one_time_key,
 		init.pq_key,
+		init.mldsa_public_key,
+		init.signature,
 	];
-	assert_eq!(fields.map(<[u8]>::len), [33, 98, 98, 1_249]);
+	assert_eq!(fields.map(<[u8]>::len), [33, 98, 98, 1_249, 1_952, 3_309]);
 	assert_eq!(common::encode_unchecked_init(init), original);
 	for field in 0..fields.len() {
 		for length in [fields[field].len() - 1, fields[field].len() + 1] {
@@ -1484,6 +1489,8 @@ fn registration_request_field_lengths_reject_before_consuming_replay_material() 
 				pre_key: &changed[1],
 				one_time_key: &changed[2],
 				pq_key: &changed[3],
+				mldsa_public_key: &changed[4],
+				signature: &changed[5],
 			});
 			assert!(
 				decode_init(&candidate).is_none(),
@@ -1500,7 +1507,7 @@ fn registration_request_field_lengths_reject_before_consuming_replay_material() 
 
 #[test]
 fn registration_response_field_length_rejection_is_terminal() {
-	for (field, expected_length) in [(0, 32), (1, 32), (2, 1_088)] {
+	for (field, expected_length) in [(0, 32), (1, 32), (2, 1_088), (3, 3_309)] {
 		for length in [expected_length - 1, expected_length + 1] {
 			let (mut beacon, original) = pending_registration(b"field length checks");
 			assert_eq!(
@@ -1511,7 +1518,8 @@ fn registration_response_field_length_rejection_is_terminal() {
 			let changed = match field {
 				0 => &mut parts.identity_key,
 				1 => &mut parts.ephemeral_key,
-				_ => &mut parts.kem_ciphertext,
+				2 => &mut parts.kem_ciphertext,
+				_ => &mut parts.signature,
 			};
 			assert_eq!(changed.len(), expected_length);
 			changed.resize(length, 0);
@@ -1521,6 +1529,7 @@ fn registration_response_field_length_rejection_is_terminal() {
 				kem_cipher_text: &parts.kem_ciphertext,
 				app_cipher_text: &parts.app_ciphertext,
 				key_id: parts.key_id,
+				signature: &parts.signature,
 			});
 			assert!(
 				decode_response(&candidate).is_none(),
@@ -1538,13 +1547,17 @@ fn registration_response_field_length_rejection_is_terminal() {
 }
 
 #[test]
-fn replay_detection_uses_identity_and_one_time_key_across_distinct_signed_prekeys() {
+fn mldsa_rejects_changed_prekeys_even_with_valid_ed25519_signatures() {
 	use beaconcrypt_core::pqxdh::{KEM_TYPE_X25519, KEY_ROLE_PREKEY};
-	use libsodium_rs::{crypto_kx, crypto_sign};
+	use beaconcrypt_crypto::{crypto_kx, crypto_sign};
 
 	let seed = [0x4a; 32];
-	let mut server = Server::new(SERVER_KID, Some(&seed));
-	let mut beacon = Beacon::new(SERVER_KID, server.identity_pk().as_bytes());
+	let mut server = Server::new(SERVER_KID, Some(&seed), None);
+	let mut beacon = Beacon::new(
+		SERVER_KID,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let original = beacon.get_registration_bundle().unwrap();
 	let init = decode_init(&original).unwrap();
 	let replacement = crypto_kx::KeyPair::generate().unwrap();
@@ -1559,6 +1572,8 @@ fn replay_detection_uses_identity_and_one_time_key_across_distinct_signed_prekey
 			pre_key: &signed_prekey,
 			one_time_key: init.one_time_key,
 			pq_key: init.pq_key,
+			mldsa_public_key: init.mldsa_public_key,
+			signature: init.signature,
 		},
 		&mut changed,
 	);
@@ -1569,11 +1584,8 @@ fn replay_detection_uses_identity_and_one_time_key_across_distinct_signed_prekey
 	assert_eq!(changed_init.identity_key, init.identity_key);
 	assert_eq!(changed_init.one_time_key, init.one_time_key);
 
-	// Both canonical requests are valid before their shared registration material is consumed.
-	for request in [&original, &changed] {
-		let mut fresh = Server::new(SERVER_KID, Some(&seed));
-		assert!(fresh.get_shared_secret(request).is_some());
-	}
+	// The original remains usable after rejecting material with no valid ML-DSA transcript signature.
+	assert!(server.get_shared_secret(&changed).is_none());
 	assert!(server.get_shared_secret(&original).is_some());
 	assert!(server.get_shared_secret(&changed).is_none());
 	assert!(server.get_shared_secret(&original).is_none());
@@ -1606,15 +1618,23 @@ fn malformed_registration_framing_does_not_consume_replay_material() {
 #[test]
 fn server_key_id_exhaustion_does_not_wrap_or_commit_a_peer() {
 	let server_identity_kid = u64::MAX - 1;
-	let mut server = Server::new(server_identity_kid, None);
+	let mut server = Server::new(server_identity_kid, None, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut last_beacon = Beacon::new(server_identity_kid, server_id.as_bytes());
+	let mut last_beacon = Beacon::new(
+		server_identity_kid,
+		server_id.as_bytes(),
+		&server.mldsa_public_key(),
+	);
 
 	let last = register_beacon(&mut server, &mut last_beacon, None);
 	assert_eq!(last.kid, u64::MAX);
 	assert_eq!(server.server_kid(), u64::MAX);
 
-	let mut rejected_beacon = Beacon::new(server_identity_kid, server_id.as_bytes());
+	let mut rejected_beacon = Beacon::new(
+		server_identity_kid,
+		server_id.as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let phase_1 = rejected_beacon.get_registration_bundle().unwrap();
 	let pending = server.get_shared_secret(&phase_1).unwrap();
 

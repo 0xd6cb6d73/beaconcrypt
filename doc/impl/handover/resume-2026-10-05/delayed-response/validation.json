@@ -1,0 +1,83 @@
+{
+  "time": "2026-10-06T01:05:44.182537+00:00",
+  "base": "e47f17fc81daf28f67442365f2fb0c19981e3196",
+  "source_manifest_sha256": "17f47cc4439cfbeeab3ecf67efcc002f663c259864e415c29620ea7c2d9d7d11",
+  "make_exit": 0,
+  "full_ft_before_test_only_correction": 29,
+  "final_serial_test_only_correction": {
+    "passed": 1,
+    "filtered": 28,
+    "exit": 0
+  },
+  "dedicated_regressions": 11,
+  "classification_regressions": 15,
+  "final_inventory_exit": 0,
+  "cargo_fmt_exit": 0,
+  "git_diff_check_exit": 0,
+  "solver_targets": 5,
+  "exact_verdict_lines": 7,
+  "true_lines": 2,
+  "false_lines": 5,
+  "confirmed_traces": 3,
+  "solver_seconds": 1.3240293390117586,
+  "max_peak_rss_kib": 43104,
+  "roundtrips": [
+    {
+      "path": "make.log.gz",
+      "raw_sha256": "e710842441b0453fe658277fcf1399755de55b2f26839e3c9d7abdcdca4aeb2a",
+      "gzip_sha256": "4721dd48dd032dda3684e4781412b07a1337f3319b7a35fb5be62386c091f870"
+    },
+    {
+      "path": "inventory.log.gz",
+      "raw_sha256": "a5145649a56238ec5748354f6eee097db0da36a96a3123c92b562f50031a75ae",
+      "gzip_sha256": "c654d4f067f04e337560d744055be5494b6b75070c4c655c29769a71059f5c13"
+    },
+    {
+      "path": "final-serial-ft.log.gz",
+      "raw_sha256": "e57cdac0fd737789d05d4b447a74d96f4f5663cc7ba987302e18037897964f0c",
+      "gzip_sha256": "de00989c272299bb970de9c28548afc14d14a04b301d617b9f92398760660271"
+    },
+    {
+      "path": "setup-missing-shell-make.log.gz",
+      "raw_sha256": "a6d940770aee2e06de73e2bfdeed0266011c7614eb19311262a90af73e31a0ee",
+      "gzip_sha256": "df45839efcca4396e2bc250af97cf59dfd087f2d25d627b8eb3a686067c47e27"
+    },
+    {
+      "path": "setup-make-shell-make.log.gz",
+      "raw_sha256": "a97d1ce416824dad2a2ebfd9f1237993bf586230562868de27392bf3c4074298",
+      "gzip_sha256": "2c4a50ffddf4abf68e8c55b7222a667674360f0fc97d398d94115d1524c5c35d"
+    },
+    {
+      "path": "missing-declaration-make.log.gz",
+      "raw_sha256": "f107b70cf53125ec217fd26ca991920e3b297d0c2e4d4ed4430e0feed5017478",
+      "gzip_sha256": "0579095d75386c0060207348abf80977b44e736a85df98e217e59b34a13ee376"
+    },
+    {
+      "path": "targets/A1-C-binding.log.gz",
+      "raw_sha256": "75cbce3b29397640dc40a279168dd112d53ec328cd4325af479fa2f205acfb03",
+      "gzip_sha256": "6301681477bfd86c11db0aa8423f5ea6b14fbc7fdac61a0b3ca820f0548a5342"
+    },
+    {
+      "path": "targets/A1-C-chain.log.gz",
+      "raw_sha256": "bf5c4fde5e3f79c588e91b17a05a6f5ee2951784ba8fd9f6fd38c0b0e9ab3630",
+      "gzip_sha256": "3758d48ccdad34ae404909f14ef926aaae2db34ed30873ff5753d710ab228c5b"
+    },
+    {
+      "path": "targets/A1-completion.log.gz",
+      "raw_sha256": "a1a73f64ad624795ab5d68335f532734e9ccb74e7bdcf60f3cbfd54472bfc91c",
+      "gzip_sha256": "69ca1112e1dce44521aed341e65ff3a146fb502d4668b93e2f48620ad5cdf2f9"
+    },
+    {
+      "path": "targets/A1-delayed.log.gz",
+      "raw_sha256": "68cd356aedca97976d971a4a41800374a286f52ec9993d355380c53f7e169421",
+      "gzip_sha256": "a01210c2f3721d53f94ddbf7849d593fffbd686524cd4d25e3e60ffe720cf0a6"
+    },
+    {
+      "path": "targets/A1-root.log.gz",
+      "raw_sha256": "bf16511b832441f7ace31893d15d8ad7bbac6547f6230862feb94b49a09d71b3",
+      "gzip_sha256": "c2698fd651bfded6cfacf37dc2c83c95d5e0c2a97237359d4f4ce1afebad3884"
+    }
+  ],
+  "scope": "Content-bound focused checks. No production Rust or Lean changes, aggregate proof verification, native byte/cryptographic implementation proof, or full end-to-end computational result.",
+  "editorial_fix_after_review": "editorial-fix.json"
+}

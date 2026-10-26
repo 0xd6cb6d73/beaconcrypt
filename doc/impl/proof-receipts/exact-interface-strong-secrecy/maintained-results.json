@@ -1,0 +1,242 @@
+[
+  {
+    "name": "SSX-b2s",
+    "class": "security",
+    "start": "2026-10-06T04:48:57.058362+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "exact-interface-strong-registration.pvl": "c2d1b6232d694e520f7135b9d3d841ea16ce68d030afacf6b0a8159de9c98dbf",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "exact-interface-strong-b2s-receive.pvl": "76650ccd17b7e6a0431b18a87af6c3d5afc1be64fc3b50512d8e7373e9ba91cb",
+      "record-origin-kr3.pvl": "248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209",
+      "exact-interface-strong-b2s-sends.pvl": "db939eac15c5b94c3b6329d7dd0a2c223f7548f2708d6e665cad07cc4c7689b8",
+      "exact-interface-strong-b2s.pvl": "fbca435e6a043916c2b030a385ba852934bfda9dbcc4c0088bc28891337c153c",
+      "exact-interface-strong-b2s.pv": "089388fb6af7ab301f1386a1eb29d0ecb5412820967238e925f8c9dc79e5281f"
+    },
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T04:54:55.096952+00:00",
+    "seconds": 358.0384743711911,
+    "peak_rss_kib": 578896,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "ca3ab82cd1fddb2119772aa6c4141f86b04c5b520be74520427e8206896d1a6f",
+    "checked": true
+  },
+  {
+    "name": "SSX-s2b",
+    "class": "security",
+    "start": "2026-10-06T04:54:55.115402+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "exact-interface-strong-registration.pvl": "c2d1b6232d694e520f7135b9d3d841ea16ce68d030afacf6b0a8159de9c98dbf",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "exact-interface-strong-s2b-receive.pvl": "da0cca305d2eba4e3a106adbc7dc951b2135551051b73687ef824d61f5799249",
+      "tasking-origin-kr3.pvl": "555b01f83aba935d9e1e76d7dae93bab15374668778cb4cf3d5642517631d485",
+      "exact-interface-strong-s2b-sends.pvl": "da6e28953dbf5d38a057cdc735418362cce84961a39f6001748db2f996aee00b",
+      "exact-interface-strong-s2b.pvl": "07cb46e95d7439cd99abaea2e720e31d6bb1cd639af12019ca5f1ed800e4319c",
+      "exact-interface-strong-s2b.pv": "daf071083c261f994541e272bc7a0e6beba5b072954862b4a8d534e9828586b1"
+    },
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T04:56:23.903634+00:00",
+    "seconds": 88.78814898105338,
+    "peak_rss_kib": 312488,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "12b142db3561f1fb0a1ca30e7ec65d72ddc1aa3c63c22a1f6bed770bcba0d969",
+    "checked": true
+  },
+  {
+    "name": "SSX-b2s-origin",
+    "class": "security",
+    "start": "2026-10-06T04:56:23.918743+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "exact-interface-strong-b2s-origin-receive.pvl": "9e37b230b4366a66e62be7e6e7037bf31d29eb6f6c269d0e0576b4719e5ca85a",
+      "record-origin-kr3.pvl": "248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209",
+      "exact-interface-strong-b2s-origin-sends.pvl": "07725bebd8081dc05ca1a23d808a3defbfea4522acee3eef965371fa74ae3766",
+      "exact-interface-strong-b2s-origin.pvl": "a1791b11ac8bf435f5c580994e1c08079588e565c9b212a2627ce21de721a14e",
+      "exact-interface-strong-b2s-origin.pv": "3c15c0e4f7ce61f2f0ab91962ffc59de1333870049b67261d1b95cb8407fb289"
+    },
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T04:56:46.540603+00:00",
+    "seconds": 22.621794214937836,
+    "peak_rss_kib": 650756,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "ec762524d37b519f66badf949b49e016261965b0e476e1197e38ee049b800951",
+    "checked": true
+  },
+  {
+    "name": "SSX-s2b-origin",
+    "class": "security",
+    "start": "2026-10-06T04:56:46.557286+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "exact-interface-strong-s2b-origin-receive.pvl": "b5f4a7d120aaa4f215f64330c930c6ee143121c6c5738effa44d202d9f32e281",
+      "tasking-origin-kr3.pvl": "555b01f83aba935d9e1e76d7dae93bab15374668778cb4cf3d5642517631d485",
+      "exact-interface-strong-s2b-origin-sends.pvl": "d14b9ff4585ef155a897fb3e6d8a5a2825110afe8d04a0585e96ab43267354ae",
+      "exact-interface-strong-s2b-origin.pvl": "8aadbce9d6e962ae51551841535afefa0cd1f1619df527a24721b163ffe43c00",
+      "exact-interface-strong-s2b-origin.pv": "e355a81a855973b58dbe9e54ad490b6ff86dcb5448526fad36391652e014e8ae"
+    },
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T04:56:48.880963+00:00",
+    "seconds": 2.323599358089268,
+    "peak_rss_kib": 312180,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "95b4e6c14543fa1094e8f390a558300409820c8583acdd6a71a07ddc9491a42f",
+    "checked": true
+  },
+  {
+    "name": "SSX-b2s-leak",
+    "class": "negative-control",
+    "start": "2026-10-06T04:56:48.895167+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "exact-interface-strong-b2s-control-receive.pvl": "7d1b8155e006d01abb3e750bc8e210de4f11d298de2c48d29036ef7f039bf8dc",
+      "record-origin-kr3.pvl": "248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209",
+      "exact-interface-strong-b2s-leak-sends.pvl": "2ec715b064dccfb91ed6d4436d432f885e522bb24ae69d4059f802289a863b8b",
+      "exact-interface-strong-b2s-auxiliary.pvl": "918ce166ead0af118ef5009ae8344cbc98e2ac7946286850653600c2621eaf86",
+      "exact-interface-strong-b2s-leak.pv": "c2fc2ad632cfddd9ee9030fc4809d8f43e9942bffdaa1051c71faed479d33129"
+    },
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T04:57:18.550747+00:00",
+    "seconds": 29.65550969913602,
+    "peak_rss_kib": 834728,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "0ece7ea2ae38db2e4c718adab608bb08cb64c3c2ed8d628bd31c183550782a6f",
+    "checked": true
+  },
+  {
+    "name": "SSX-s2b-leak",
+    "class": "negative-control",
+    "start": "2026-10-06T04:57:18.569919+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "exact-interface-strong-s2b-control-receive.pvl": "68e93ead8c4813b9fbac47848c28fafa84ab44d0a5dfeebf159d05f5d15136b4",
+      "tasking-origin-kr3.pvl": "555b01f83aba935d9e1e76d7dae93bab15374668778cb4cf3d5642517631d485",
+      "exact-interface-strong-s2b-leak-sends.pvl": "08bfd0e801b48ded5eeaa4e1979e0e52dca60062e44591962009721e5faac659",
+      "exact-interface-strong-s2b-auxiliary.pvl": "8fd715849e5fa8ce7b9e407b81fd3d71d828b67f30555770a1c2304a8843132c",
+      "exact-interface-strong-s2b-leak.pv": "7d76e2000193e4140272f0de096551d45685ed6292fec918874e65fcff056c80"
+    },
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T04:57:20.121252+00:00",
+    "seconds": 1.551275614183396,
+    "peak_rss_kib": 236376,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "d402b4b00079d6164978c2600e8e967f48ad8e818c150faa7dcc4d5143f9ca3b",
+    "checked": true
+  },
+  {
+    "name": "SSX-b2s-ungated",
+    "class": "negative-control",
+    "start": "2026-10-06T04:57:20.136466+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "exact-interface-strong-b2s-control-receive.pvl": "7d1b8155e006d01abb3e750bc8e210de4f11d298de2c48d29036ef7f039bf8dc",
+      "record-origin-kr3.pvl": "248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209",
+      "exact-interface-strong-b2s-ungated-sends.pvl": "49590cb746a4e68409716d02273d67ccb10b3bf71b4c2ec669e972bf01c4f7ab",
+      "exact-interface-strong-b2s-auxiliary.pvl": "918ce166ead0af118ef5009ae8344cbc98e2ac7946286850653600c2621eaf86",
+      "exact-interface-strong-b2s-ungated.pv": "c2fc2ad632cfddd9ee9030fc4809d8f43e9942bffdaa1051c71faed479d33129"
+    },
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T04:57:35.702860+00:00",
+    "seconds": 15.56632288498804,
+    "peak_rss_kib": 465980,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "40c33908ec5a2bd8cd4f19db9a450b2400d2d4897f59f04a8623bcea4c3b738c",
+    "checked": true
+  },
+  {
+    "name": "SSX-s2b-ungated",
+    "class": "negative-control",
+    "start": "2026-10-06T04:57:35.722457+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "exact-interface-strong-s2b-control-receive.pvl": "68e93ead8c4813b9fbac47848c28fafa84ab44d0a5dfeebf159d05f5d15136b4",
+      "tasking-origin-kr3.pvl": "555b01f83aba935d9e1e76d7dae93bab15374668778cb4cf3d5642517631d485",
+      "exact-interface-strong-s2b-ungated-sends.pvl": "0f9aff4dd2290d65b63d1f2d8fc55be5906b699cc5e32fa2fe8dd3928ec76c6a",
+      "exact-interface-strong-s2b-auxiliary.pvl": "8fd715849e5fa8ce7b9e407b81fd3d71d828b67f30555770a1c2304a8843132c",
+      "exact-interface-strong-s2b-ungated.pv": "7d76e2000193e4140272f0de096551d45685ed6292fec918874e65fcff056c80"
+    },
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T04:57:37.007952+00:00",
+    "seconds": 1.2854121818672866,
+    "peak_rss_kib": 207688,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "3f1614166f5a57a69dd7a30e05643f709a62b5077bb80e39682905adf702003c",
+    "checked": true
+  }
+]

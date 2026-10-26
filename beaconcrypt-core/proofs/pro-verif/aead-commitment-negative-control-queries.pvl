@@ -1,0 +1,24 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* The first query is run against both negative-control processes. It must be true with CTX and false when the CTX validation is removed. The remaining queries require every single-field mutation to be rejected by the production CTX constructor. *)
+query left_key: bitstring,
+      right_key: bitstring,
+      left_context: bitstring,
+      right_context: bitstring,
+      left_plaintext: bitstring,
+      right_plaintext: bitstring;
+  event(WeakAeadMultiOpened(
+    left_key,
+    right_key,
+    left_context,
+    right_context,
+    left_plaintext,
+    right_plaintext
+  )).
+
+query event(CtxMutationAccepted(ctx_key_mutation())).
+query event(CtxMutationAccepted(ctx_nonce_mutation())).
+query event(CtxMutationAccepted(ctx_associated_data_mutation())).
+query event(CtxMutationAccepted(ctx_tag_mutation())).
+query event(CtxMutationAccepted(ctx_sequence_mutation())).
+query event(CtxMutationAccepted(ctx_sender_mutation())).

@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-06T02:00:53.088733+00:00",
+  "decision": "APPROVE_SCOPED_SYMBOLIC_ARGUMENT",
+  "manifest_sha256": "8e35062b3dbb65cf5c99366844956e7f600451a3daeb5454d48ce80646ac006b",
+  "files": {
+    "doc/impl/proverif-symbolic-name-order.md": "6715e4f823c8d0024f9c27e446d382506e3ece9bc1e24947afcb9103e40b1445",
+    "beaconcrypt-core/proofs/pro-verif/symbolic-name-order.py": "dba5ccd7689cbeebf15b6731382466120de9a752a89c7723254795debd304f14",
+    "beaconcrypt-core/proofs/pro-verif/test-symbolic-name-order.py": "862165d4f31bcc80af94fc6798e37c591de977b401a6f195cad1629904956986"
+  },
+  "scope": "Two complete exact fs Server macros; fresh pair remains local per instance; early/late symbolic restriction traces and deduction equivalent under consistent injective fresh-name renaming. No computational sampler/distribution/private-state/bill equality, API fidelity, retry generalization or solver verdict.",
+  "reviewed": [
+    "Both full Server macros and crossed one-input/four-let prefix",
+    "Actual Rust signature/validation/ephemeral/encapsulation/DH order and rejection paths",
+    "Full continuation, other concurrent contexts, full frames/recipes, event multiplicity, failure/waiting cuts and reverse direction",
+    "Finite checker and7negative regressions; added transitive extraction/lib pin and actual registration_id RHS mutation resolves finding"
+  ],
+  "checks": [
+    "All3 frozen hashes match",
+    "7regressions independently pass",
+    "No solver/Lean/aggregate build run"
+  ],
+  "remaining": "Maintained Make/FT/inventory/docs wiring and archive require separate review."
+}

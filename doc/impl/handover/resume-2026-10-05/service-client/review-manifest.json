@@ -1,0 +1,19 @@
+{
+  "base": "787319ade78ee9e0b599dc349fdc8b5cf6cbf7c0",
+  "source": "d93dfcfe875083ba84593ea99c434729ac2433f3",
+  "scope": "Service14 and Ledger16 operational equality and complete accounting; no cryptographic closure claim",
+  "files": {
+    "beaconcrypt-core/proofs/check-inventory.sh": "9d0eb7612ab13708b9b3ecfa178fec03edff1033233652559b21e8abc894dafa",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "26ff715e938497b1f6c37252d7d4f7654e083861c0e16f800f4780ddfd0b30fb",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "829fe919ec9c8554759a740ab65923b8736b365c6d084f88dbf28d13a184a7fc",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "ace59dea32075701dfeba2468be67432e0842dbee02cae621f5896abda684d39",
+    "doc/formal-verification-analysis.md": "64304f3175fbc8e089ac78614206a886ab105891ebb976cbf45e8354f497eb90",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBundleCompiler.lean": "47549d81d9e94eda6dc081637de0fb0248573ef44a0bcaf7008ec89e843e7874",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceCosts.lean": "eac023925edc4190f25ccd39e214db32b97d395ac48a105028051b8caaa635ef",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceLedger.lean": "5250604c01482c696ccfa9d2dd75ba46260136949b25738b435a5799f059245d",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceSchedule.lean": "a8d2d5c8bd7fa089f9fdc3a13bc575aa51578cf6407ab7c0ec858901ea3532de",
+    "doc/impl/registration-joint-service-ledger.md": "aef720de06ca18c85b72cb2bd24e3ca2c2d6070acdf0edd8f2418ccd80b689c0",
+    "doc/impl/registration-joint-service-schedule.md": "372ed0f1ef0c5594e0f5a8443edd3c373f0c96f584b0a892734a46fdfcaebe7d",
+    "doc/impl/registration-service-client-integration.md": "faf4cd2475f8849b97e009cfdbd21a3d386fbeb22521d70f52ba5372f831c089"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "review": "APPROVE",
+  "reviewer": "root",
+  "kind": "semantic theorem/source/interface/query-accounting review, not an independent build",
+  "manifest": "0c28a63721b732ccc6480265e9c1fc30f7571f7d655e67e1fabb412bc12e66ed",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCarriedChronology.lean": "18e6d9ec1a5049774108a4b0587b849e985d183c44558dd65f5a2d970313cd54",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterSavedOutsideSupport.lean": "d4a55f7f68901903d62470145d453d01c15af2b407d026512193b6d764aa8170",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterSavedCompilerSupport.lean": "54b7781263a643140963209bcb20c95144238a0e42672264808f2002cb10a53a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeMonitor.lean": "f37a758fe98e973ba10a66aa51c4eaffa7e45629c00ec83bb6ea855dcd033d46",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedBefore.lean": "8e4d8c729e1609aab98fd0217fc09d70b4da63546ee2a3a6cd5fc905a9378ab6",
+    "doc/impl/later-challenge-compiler-support.md": "d73ad1b28c078d450ca000dcb2e414414b4fa62d12a12b3c722821e280b7a4de"
+  },
+  "findings": [],
+  "scope": "All-reply source support through complete saved compiler, actual generated carried selection, source-derived unused callback and conditional before-phase monitored Pre from marker none. Complete sampler/support and compiler refusal/poststate premises retained. Operational Fits and existing explicit alias inequality are not new security assumptions. No prefix-probability or global two-world sampler equality inferred. No new resources or loss removed; existing alias charge retained. Whole-prefix marker, inside phase, publication exclusion, real/raw hop, freshness, selection and global ledger still open as documented."
+}

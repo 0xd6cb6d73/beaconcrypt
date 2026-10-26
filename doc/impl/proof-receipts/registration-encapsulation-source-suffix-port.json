@@ -1,0 +1,247 @@
+{
+  "date": "2026-10-06T11:41:50.912549+00:00",
+  "scope": "Port of lane cohort source-suffix14 (L1 of the accept/KEM join plan): PqxdhRegistrationJointKemCollected, PqxdhRegistrationJointKemRootBytes and PqxdhRegistrationJointKemSourceSuffix, unchanged, onto the composition topic, with root imports, check-inventory module blocks, reviewed-inventory rows, a trusted-boundary section, the carried-over guide and evidence and a hand-merged analysis section.",
+  "basis": "e34efbde7afc877be94ae31384986dbe0b590fbc",
+  "topic": {
+    "branch": "codex/accept-kem-step",
+    "worktree": "/tmp/beaconcrypt-accept-kem-step"
+  },
+  "source": {
+    "lane_branch": "codex/registration-opaque-kem-source",
+    "lane_head": "158e11aef9058012a3eb1eeef14414150bdbcec4",
+    "cohort_commit": "1881878f3cbf21febd1020f04a0d44e2b318c78c",
+    "note": "The later lane commits 97cb784e and 158e11ae do not touch the three modules, the guide or the evidence."
+  },
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCollected.lean": {
+      "lane_blob": "c6a418a9c8db6bedaca198cab51c4cab92084e88",
+      "sha256": "74439aad5721d31837a0e87ae45c7644d1643a0e7138c5b8c86c4ae4b85a6ecd",
+      "byte_identical_to_lane": true
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootBytes.lean": {
+      "lane_blob": "aa22be26fb56ddd79e21ac4eb204b94b157f70d5",
+      "sha256": "54da6ff697362600a5d5651c5571c0df8f73685fbb300459f1fbd15103e9ee97",
+      "byte_identical_to_lane": true
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSourceSuffix.lean": {
+      "lane_blob": "5f7bbd265b986d80718ed068541726b2a17e3159",
+      "sha256": "3eaee131c18f7d3999eb0bfc6e9ebd009bb1720d2861c6b852556426d520c358",
+      "byte_identical_to_lane": true
+    }
+  },
+  "carried_over": {
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/Axioms.lean": {
+      "sha256": "e592fad4cd1e71c780e0fcf8a9af004eec4880a665fb22e7efb6d3cf0447f9a1",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/PqxdhRegistrationJointKemCollected-final.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/PqxdhRegistrationJointKemRootBytes-final.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/PqxdhRegistrationJointKemSourceSuffix-final.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/README.md": {
+      "sha256": "04824b643ed7251eb42fbbc1a41fd98746c409ac463253144b79d49eb6e54382",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/archive-manifest.json": {
+      "sha256": "6e66d08588d3d6cf59b4a1539ba591ffc30ad270e39bcb79f560b2130405e071",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/axioms.log": {
+      "sha256": "4e3addb9568bce99db0b3db987ec2bc985ed447215e512955064f2bb2346a0f1",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/check-svc.sh": {
+      "sha256": "47dd4a8160375a9c0fba0a22f36655e5f57cdd0711dd9102c6056adc81f94760",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/direct-checks.json": {
+      "sha256": "1a424a349dcea9d8fa79a178e172ffe00998c739964b38611a721c59d0252370",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/independent-review.json": {
+      "sha256": "5bdd6828ff9428832c7743c6a8a1fa6f50592bc9cb92eb95745ef6bd85c5f322",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/review-manifest.json": {
+      "sha256": "16638d892a1b36a1e9530e2d56e5dbfc2fdb35c0fc97718dd0efddf20138b0c2",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/status-only-delta.json": {
+      "sha256": "3c3aa78e3695b05f00a5db75b3993bf1a32d9c211f64feecde4a18584e1be89a",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/theorems.json": {
+      "sha256": "dced51e0ef9e5afb1bde9e31cb2d2a91423ad283ffe4747ae45ed0614a8f3b5f",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/registration-encapsulation-source-suffix.md": {
+      "sha256": "7443c5ae545be5cb02910f3da09ce32c53da6b12e317a65d0c226af1e7aef7d6",
+      "byte_identical_to_lane": true
+    }
+  },
+  "analysis_merge": "The lane section \"Actual saved encapsulation suffix and source root input\" of doc/formal-verification-analysis.md is appended verbatim at the end of the file, followed by one new paragraph recording the port.",
+  "closure_check": "The transitive BeaconcryptCore import closure of the three modules has 874 modules; every module outside the three is byte-identical between the topic and lane commit 1881878f, and none of the 23 lane-only modules in /tmp/bc-arc-scratch/accept-cut-join/critique-work/lane-only.txt is imported.",
+  "statements": {
+    "PqxdhRegistrationJointKemCollected": [
+      "after_fields",
+      "collect_split",
+      "interpreted_fields"
+    ],
+    "PqxdhRegistrationJointKemRootBytes": [
+      "accepted_input",
+      "challenge_fields",
+      "challenge_input"
+    ],
+    "PqxdhRegistrationJointKemSourceSuffix": [
+      "ordered_source",
+      "preparation",
+      "encapsulation_query",
+      "suffix_cut",
+      "suffix_support",
+      "root_bytes",
+      "root_reply",
+      "accept_ordered"
+    ]
+  },
+  "statement_count": 14,
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "guards": "Every theorem keeps its lane #guard_msgs/#print axioms guard with exactly [propext, Classical.choice, Quot.sound]; the empty direct-check logs confirm them.",
+  "leanpath": {
+    "manifest": "/tmp/bc-arc-scratch/accept-cut-join/stage-b/leanpath",
+    "sha256": "74fa4cde85d2dfdb7552ce205ca34dc4a7d5b3ceb10c6aa6d29df24d3d9fe16c",
+    "note": "The stage A LEAN_PATH with its first entry replaced by a fresh scratch prefix (stage-b/olean) that mirrors the 1506 stage A artifacts as symlinks; the port artifacts are written only there."
+  },
+  "direct_checks": [
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemCollected",
+      "start": "2026-10-06T11:37:46.264513+00:00",
+      "end": "2026-10-06T11:37:50.586820+00:00",
+      "exit": 0,
+      "source_sha256": "74439aad5721d31837a0e87ae45c7644d1643a0e7138c5b8c86c4ae4b85a6ecd",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-kem-step/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-b/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCollected.olean",
+        "/tmp/beaconcrypt-accept-kem-step/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCollected.lean"
+      ],
+      "leanpath_sha256": "74fa4cde85d2dfdb7552ce205ca34dc4a7d5b3ceb10c6aa6d29df24d3d9fe16c",
+      "artifact_sha256": "a34ef442985971598ed9a98cbbeb52aae978eb62e4c1b47d56a31c068b533bbc"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootBytes",
+      "start": "2026-10-06T11:37:50.619034+00:00",
+      "end": "2026-10-06T11:37:54.566416+00:00",
+      "exit": 0,
+      "source_sha256": "54da6ff697362600a5d5651c5571c0df8f73685fbb300459f1fbd15103e9ee97",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-kem-step/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-b/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootBytes.olean",
+        "/tmp/beaconcrypt-accept-kem-step/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootBytes.lean"
+      ],
+      "leanpath_sha256": "74fa4cde85d2dfdb7552ce205ca34dc4a7d5b3ceb10c6aa6d29df24d3d9fe16c",
+      "artifact_sha256": "4630ab9838532997e30f4583d58440f4c0eb84a62aff175a0fd8ba6a55de3f16"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix",
+      "start": "2026-10-06T11:37:54.594372+00:00",
+      "end": "2026-10-06T11:37:58.413353+00:00",
+      "exit": 0,
+      "source_sha256": "3eaee131c18f7d3999eb0bfc6e9ebd009bb1720d2861c6b852556426d520c358",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-kem-step/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-b/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSourceSuffix.olean",
+        "/tmp/beaconcrypt-accept-kem-step/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSourceSuffix.lean"
+      ],
+      "leanpath_sha256": "74fa4cde85d2dfdb7552ce205ca34dc4a7d5b3ceb10c6aa6d29df24d3d9fe16c",
+      "artifact_sha256": "5924e56ae9429073cc0b0d3520150e858df15e7eb4352aad204383552db5530e"
+    }
+  ],
+  "root_check": {
+    "command": "LEAN_TIMEOUT=180 root.sh (flock lean.lock timeout 180 lean -j1 -M8000 --root=<worktree>/beaconcrypt-core/proofs/lean BeaconcryptCore.lean, no -o)",
+    "source_sha256": "e4b550bdf4ebdbc03c792ea6c2ad7de80506bcf558186fb2452224cd93c5adef",
+    "exit": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "guard_liveness": {
+    "source": "/tmp/bc-arc-scratch/accept-cut-join/stage-b/hygiene/L1Liveness.lean",
+    "exit": 1,
+    "guard_errors": 3,
+    "expected": "one deliberately wrong guard per module fails (3 errors, exit 1)"
+  },
+  "focused_inventory": {
+    "command": [
+      "nix",
+      "develop",
+      "--no-update-lock-file",
+      "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+      "-c",
+      "make",
+      "-C",
+      "/tmp/beaconcrypt-accept-kem-step/beaconcrypt-core",
+      "check-inventory",
+      "SHELL=bash"
+    ],
+    "state": "all port files staged; rerun after staging this receipt (see focused_inventory_with_receipt)",
+    "exit": 0,
+    "start": "2026-10-06T11:40:08Z",
+    "end": "2026-10-06T11:41:11Z",
+    "log_sha256": "8d6e50b132cbcb5c115955ecf1e6c279b72d0ccaa5eb27684b53627d22667658",
+    "comm_warnings": 0,
+    "handwritten_lean_count": "1469 -> 1472"
+  },
+  "forbidden_scan": "zero matches of \\b(?:sorry|admit|axiom)\\b (outside guards)|sorryAx|native_decide|implemented_by|extern|unsafe|set_option linter in the three modules",
+  "correctness_scan": "zero matches of MlKem768RecipientCorrectness, supported_source, branch_real, KemGame.advantage, KemCertified.advantage or SecretInputKdf in the three modules",
+  "diff_check": "git diff --cached --check clean",
+  "review": "The cohort was independently reviewed on the lane (evidence source-suffix14/independent-review.json, APPROVE_SCOPED_SOURCE_SUFFIX, no findings). The port itself (byte-identical modules, new inventory rows and documentation) is not yet independently reviewed. Not pushed.",
+  "not_proved": [
+    "Extract/HMAC games and the actual joint input/public-context sampler",
+    "source-level stop/event transport, generated-owner/KEM freshness and target selection",
+    "global composition"
+  ],
+  "focused_inventory_with_receipt": {
+    "state": "all port files staged, including this receipt; only this record was edited afterwards",
+    "exit": 0,
+    "start": "2026-10-06T11:41:54Z",
+    "end": "2026-10-06T11:43:00Z",
+    "log_sha256": "d3eb5ff15d21402158cf5dd8fe1f19aa1967f2b58d329cdd5a1512663140368b",
+    "comm_warnings": 0
+  }
+}

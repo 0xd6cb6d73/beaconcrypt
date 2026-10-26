@@ -1,0 +1,36 @@
+{
+  "reviewer": "/root/r1_scheduler_closure",
+  "reviewed_at": "2026-10-06T03:26:57.361984+00:00",
+  "decision": "APPROVE_SCOPED_MAINTAINED_S2B_WIRING_AND_RECEIPTS",
+  "manifest": "/tmp/bc-arc-scratch/pv-work/s2b-exact-id/maintained-review-manifest.json",
+  "manifest_sha256": "d3b659b2cc5207c35f6fdd3fe5412ff8a18ef10f6a59147146e8f39b8d00fc3d",
+  "findings": [],
+  "read": [
+    "complete tasking-origin guide and all maintained scope appendices",
+    "checker, target classes/formulas/library ordering/limits and strict inherited output checker usage",
+    "complete dedicated negative regressions and classification additions",
+    "Make and transcript-fidelity/inventory wiring diffs",
+    "tasking-origin comparator and local four-state replay audit",
+    "five maintained prover receipts and each exact checked raw verdict/trace"
+  ],
+  "verified": {
+    "source_hashes": 31,
+    "old_classification_rows_preserved_byte_exact": 3181,
+    "appended_rows": 5,
+    "total_rows": 3186,
+    "security_class_rows": 179,
+    "actual_solver_targets": 5,
+    "true": 3,
+    "false_with_confirmed_trace": 2,
+    "unchanged_old_gates": "All prior Make groups/serial caps and fidelity validation retained; added dedicated checks cannot bypass original groups.",
+    "source_log_binding": "Each ordered process/library input hash matches each receipt and frozen workingtree, each raw-log hash matches, all five exact inherited output checks pass."
+  },
+  "scope": [
+    "Three-slot selected near positions2/3 source-event projection; source-generated Server and single selected Beacon profile, actual own/assigned IDs and optional plaintext.",
+    "Same-process initial-finish origin supplies root provenance before omitted selected b2s sends; explicit chain observations supply optional-result recipes.",
+    "Ordinary-origin TRUE and separate paper occurrence uniqueness are not conflated with an injective solver verdict; cache reachability atKr2 is separately classified and itsKr3 prefix embedding explicit.",
+    "Public plaintext does not support unrestricted legacy secrecy. Query counts, global selection/freshness, primitive constructor idealizations and native-byte/common-computational joins remain open.",
+    "Comparator checks exact token transformations and80 finite local cases, not a mechanized arbitrary-source trace theorem; evolving reviewer separately owns full paperdelta/source semantics review."
+  ],
+  "validation_limits": "No Lean build, prover rerun, Rust build or new tests performed by reviewer. Focused Make FT/inventory was pending in freeze; source checker receipts and five actual existing logs independently verified without rerun."
+}

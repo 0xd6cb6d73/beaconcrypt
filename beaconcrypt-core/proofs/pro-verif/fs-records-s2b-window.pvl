@@ -1,0 +1,15 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b: how a Beacon receive attempt changes the receive state
+   (r, cached_2) after a successful cached open and after a failed open at a
+   target t <= T_max.  A successful cached open swap-removes the key, and a
+   failed open returns the exact entry state.  Exactly one of this file and
+   the negative controls fs-control-retain.pvl, fs-control-stale.pvl and
+   fs-control-failmut.pvl is loaded. *)
+(* @beaconcrypt-fs-fidelity key=window.cached_removal src=beaconcrypt-core/src/ratchet/refined.rs:700-721 anchor=pub(super) fn publish_cached_receive<SendChain, ReceiveChain, Material>( *)
+letfun fs_s2b_cached_after_success(cached_2: bool) = false.
+
+(* @beaconcrypt-fs-fidelity key=window.failure_keeps_entry src=beaconcrypt-core/src/ratchet/concrete.rs:436-443 anchor=pub fn finish<Plaintext>( *)
+letfun fs_s2b_failed_r(r: nat, target: nat) = r.
+
+letfun fs_s2b_failed_cached_2(r: nat, target: nat, cached_2: bool) = cached_2.

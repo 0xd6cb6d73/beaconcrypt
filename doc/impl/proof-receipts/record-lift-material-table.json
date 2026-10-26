@@ -1,0 +1,290 @@
+{
+  "date": "2026-10-07T21:55:15.679482+00:00",
+  "scope": "Operational source material-coordinate attribution and same-output persistent callback erasure; no global chain or record security conclusion.",
+  "basis": "a0827b192e956b7be9947b64d2aa9ec2f8d0d4ba",
+  "topic": {
+    "branch": "codex/record-lift-material-table",
+    "worktree": "/tmp/beaconcrypt-record-lift-material-table"
+  },
+  "publication_status": "Independent semantic and publication hygiene reviews approved; guarded module and all focused root/inventory/fidelity checks passed; ready for focused topic publication.",
+  "modules": [
+    {
+      "name": "PqxdhRecordLiftMaterialTable",
+      "statements": 38,
+      "exact_axiom_guards": 38,
+      "theorems": [
+        "material_mono",
+        "slots_mono",
+        "pending_mono",
+        "receive_lookup",
+        "slots_set",
+        "slots_update",
+        "resume_present",
+        "present_mono",
+        "slots_present_mono",
+        "begin_present",
+        "slots_property_get",
+        "future_publication",
+        "cached_publication",
+        "target_sequence",
+        "skipped_sequence",
+        "resume_attributed",
+        "resume_source_attributed",
+        "begin_attributed",
+        "index_member",
+        "opening_attributed",
+        "send_pending_mono",
+        "send_lookup",
+        "opening_getters",
+        "finish_erasure",
+        "finish_property",
+        "seeds_erasure",
+        "seeds_certified",
+        "receive_lookup_present",
+        "receive_continuation",
+        "send_continuation",
+        "send_begin_attributed",
+        "rollback_lookup",
+        "admission_erasure",
+        "send_admission_erasure",
+        "send_finish_erasure",
+        "opening_present",
+        "finish_certified",
+        "send_lookup_present"
+      ],
+      "allowed_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  ],
+  "contracts_used": [],
+  "operational_premises": [
+    "Available chain references and present material labels; initial and source one-step preservation proved",
+    "Supported outcomes of actual persistent lazy table queries",
+    "Source Tracked/Aligned/Admitted facts for exact callback sequence attribution; existing source laws discharge local request coordinates",
+    "Actual admitted Prepared state for publication bounds; malformed/ordinary rejection erasure remains unconditional"
+  ],
+  "query_accounting": "Uses existing LazyTable.step_facts: one lookup per callback and one full76 draw iff the request was absent; rollback retry retains full table and charges no draw. No new oracle or global uniform-byte/base/Extract/HMAC/hash/AEAD bound is asserted.",
+  "not_proved": [
+    "Dynamic-world labeled-kernel compiler and reachable-state invariant",
+    "Complete raw retry trace correspondence",
+    "Masked selected-cut observer and sampler distribution",
+    "Real fixed-HKDF replacement or alias/collision/refusal probabilities",
+    "Evolving-chain secrecy, CTX/AEAD lift, global query bills or security loss"
+  ],
+  "review": {
+    "semantic": {
+      "path": "/tmp/bc-arc-scratch/record-lift/reviews/material-table-semantic-2026-10-07.json",
+      "sha256": "fd2ab9308a8c97ed6ccc9366d8bd9fc596eaa116b415591cb8e852e7ba79b4bb",
+      "content": {
+        "date": "2026-10-07T21:52:55.639777+00:00",
+        "reviewer": "Codex /root, independent of author /root/record_lazy_table",
+        "verdict": "APPROVE",
+        "source_sha256": "31782d5a0071c3a3fe6212b737f03a2ad3104d7d36cfc307241c1df04c2ce7a5",
+        "guide_sha256": "fda38c5a0229ada10357c121301c5d563085b1d38facbb012d1bcd7c9ef63999",
+        "scope": "38 operational material-label/source callback and publication statements; no global source invariant or cryptographic advantage theorem",
+        "findings": [],
+        "checks": [
+          "Read all38 theorem statements and proofs, labels/presence/attribution definitions and exact axiom guards",
+          "Compared full76 split and begin/resume/getter/finish behaviour with extracted core concrete.rs and production ratchet.rs",
+          "Noninjective source interpretations preserve chain/material correlations, optional slots and sequence metadata; no key-distinctness premise",
+          "Supported actual lazy lookup links full reply/cache/counters under arbitrary full continuations; does not replace real HKDF",
+          "Present/available/closed/attribution/Prepared premises are operational: initial and local transition laws are given, global reachability explicitly deferred",
+          "Cached swap removal and future staged publication preserve complete source slot properties; actual optional plaintext retained; failed open restores entry and keeps table; failed send retains advanced kernel",
+          "Both role seeds match exact counters1/0 or0/1, direction coordinates and empty slots",
+          "Guide does not overclaim query accounting: counts inherited from lazy table, real work and source compiler remain required",
+          "No new contract, forbidden H7 use, primitive implementation proof, snapshot modelling or assigned-ID equality claim"
+        ],
+        "evidence": {
+          "receipt": "/tmp/bc-arc-scratch/record-lift/material-table/logs/material-table-215027.json",
+          "sha256": "c2dd9fef2160f0c70ee7455669eeda71320a59c776ce42ec0ce46e83c97904f6",
+          "guard_count": 38
+        },
+        "publication_hygiene": "Separate pending"
+      }
+    },
+    "publication_hygiene": {
+      "path": "/tmp/bc-arc-scratch/record-lift/reviews/material-table-publication-hygiene-2026-10-07.json",
+      "sha256": "32878acf6b450159107405244d570b3cdf4321a3d866953e3637456423af1cf6",
+      "content": {
+        "date": "2026-10-07T21:56:22.387237+00:00",
+        "reviewer": "Codex /root, independent of author /root/record_lazy_table",
+        "verdict": "APPROVE",
+        "source_sha256": "31782d5a0071c3a3fe6212b737f03a2ad3104d7d36cfc307241c1df04c2ce7a5",
+        "guide_sha256": "764f7fb6c498025327e312045da0b8a06fdaf547cc8c464f04057c884c8f610c",
+        "receipt_reviewed_sha256": "4e6d835ab0f3b7b8c9f2a12a3dc8600a9593565deb1b7c0e31b3806797e9b76c",
+        "checks": [
+          "Exact unchanged38-theorem source and guarded module artifact; no source edits since semantic approval",
+          "Four focused gate receipts exit0, source/artifact/log hashes verified",
+          "Root import added once; inventory one new row, correct1550count and root/checker hashes",
+          "All previous checker content preserved byte-for-byte except count;38 names gated exactly",
+          "Plain-English analysis and guide retain operational premises and explicit global compiler/security/query-accounting limits",
+          "Copied unchanged module artifact into fresh own publication namespace mirror; no pinned writes",
+          "Guide validation-only update accurately states module reuse and fresh root/inventory/fidelity checks"
+        ],
+        "findings": [],
+        "central_status": "Claude CE8 hold75; isolated topic checkpoint only until release"
+      }
+    }
+  },
+  "checks": {
+    "module": {
+      "start": "2026-10-07T21:50:27.139434+00:00",
+      "end": "2026-10-07T21:50:35.951305+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "material-table-215027",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-material-table/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/material-table/olean/BeaconcryptCore/Computational/PqxdhRecordLiftMaterialTable.olean",
+        "/tmp/beaconcrypt-record-lift-material-table/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaterialTable.lean"
+      ],
+      "source_sha256": "31782d5a0071c3a3fe6212b737f03a2ad3104d7d36cfc307241c1df04c2ce7a5",
+      "artifact_sha256": "510c5e9e7b217e844b3453202d37221f3dfe010f0d67d11f4cc84ebdc949d30e",
+      "leanpath_sha256": "15b86320a2b39e6107e7581779f02b559ff6f4e1dd444235fc405f1b73746813",
+      "log_sha256": "2a22d392c7b9b7ef551aa20847ebb7f107ed2973446726833a6926b09e25f60b",
+      "log": "/tmp/bc-arc-scratch/record-lift/material-table/logs/material-table-215027.log"
+    },
+    "root_import": {
+      "start": "2026-10-07T21:53:31.041837+00:00",
+      "end": "2026-10-07T21:53:34.074482+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "material-table-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-material-table/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/material-table/publication-olean/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-material-table/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null,
+      "source_sha256": "eca204d78f128164efd3e9445ce54a0661ee5ef9e1c8f31721ce78b143bd8acc",
+      "artifact_sha256": "faa1d270c21bf2f9085c0091bf24d2bdff211f756b83a693b8f0e75348bc67ea",
+      "leanpath_sha256": "322fd5dcad0b05fd125fc8db3c713f8ef46e4124e65f7235fb5acae5739b9d14",
+      "log_sha256": "5b55808196bad305587e80b917dcd04480f732dbed967bd0de12ef173548c982",
+      "log": "/tmp/bc-arc-scratch/record-lift/material-table/logs/publication-root.log"
+    },
+    "inventory": {
+      "start": "2026-10-07T21:53:31.041704+00:00",
+      "end": "2026-10-07T21:54:45.820499+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "material-table-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-material-table/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/material-table/target",
+      "source_sha256": "eca204d78f128164efd3e9445ce54a0661ee5ef9e1c8f31721ce78b143bd8acc",
+      "artifact_sha256": null,
+      "leanpath_sha256": "322fd5dcad0b05fd125fc8db3c713f8ef46e4124e65f7235fb5acae5739b9d14",
+      "log_sha256": "e7339be52ac6c7d7b091d1b10c006b9153e4af0cdeced9739f1a1a7b794c4efe",
+      "log": "/tmp/bc-arc-scratch/record-lift/material-table/logs/publication-inventory.log"
+    },
+    "transcript_fidelity": {
+      "start": "2026-10-07T21:53:31.047150+00:00",
+      "end": "2026-10-07T21:53:56.009055+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "material-table-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-material-table/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/material-table/target",
+      "source_sha256": "eca204d78f128164efd3e9445ce54a0661ee5ef9e1c8f31721ce78b143bd8acc",
+      "artifact_sha256": null,
+      "leanpath_sha256": "322fd5dcad0b05fd125fc8db3c713f8ef46e4124e65f7235fb5acae5739b9d14",
+      "log_sha256": "66407ca5fa1b01b8a25cda3c9ee96e43fed0985a1d90108058de379bd93b9569",
+      "log": "/tmp/bc-arc-scratch/record-lift/material-table/logs/publication-fidelity.log",
+      "tests_passed": 30
+    }
+  },
+  "checks_not_run": [
+    "Full lake build",
+    "make verify",
+    "ProVerif",
+    "Mutation suite; no Rust changes"
+  ],
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaterialTable.lean": "31782d5a0071c3a3fe6212b737f03a2ad3104d7d36cfc307241c1df04c2ce7a5",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "eca204d78f128164efd3e9445ce54a0661ee5ef9e1c8f31721ce78b143bd8acc",
+    "beaconcrypt-core/proofs/check-inventory.sh": "8991bd19331ef04463365281aa664784d40ce057981031d6becd2de74f85652e",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "391d9ed1b5fbf6fb3c8ecb92b4f004fb410a8ca03db0976423d2d4aaaf8bd16b",
+    "doc/formal-verification-analysis.md": "af0bfd9ff8386226858ecd55dbc2626a9ecb6d75cc5ca4f6ea73ece60a36751e",
+    "doc/impl/record-lift-material-table.md": "764f7fb6c498025327e312045da0b8a06fdaf547cc8c464f04057c884c8f610c"
+  },
+  "resource_caps": {
+    "focused_lean": "coord.sh lean; timeout180; -j1 -M8000",
+    "inventory": "@nix 2048 MiB",
+    "transcript_fidelity": "@cargo 3072 MiB; two jobs; isolated target"
+  },
+  "hygiene": {
+    "names_match": true,
+    "H7_source_scan": "clear",
+    "placeholder_custom_axiom_scan": "clear",
+    "frozen_source_sha256": "31782d5a0071c3a3fe6212b737f03a2ad3104d7d36cfc307241c1df04c2ce7a5",
+    "frozen_guide_sha256": "fda38c5a0229ada10357c121301c5d563085b1d38facbb012d1bcd7c9ef63999",
+    "guide_change_after_semantic_review": "Only final validation paragraph updated to passed checks/review facts; semantic explanations unchanged.",
+    "diff_check": "passed"
+  },
+  "artifact_provenance": {
+    "development_leanpath": "/tmp/bc-arc-scratch/record-lift/material-table/leanpath",
+    "publication_leanpath": "/tmp/bc-arc-scratch/record-lift/material-table/publication.leanpath",
+    "published_base": "/tmp/bc-coord/leanpaths/a0827b192e956b7be9947b64d2aa9ec2f8d0d4ba.leanpath",
+    "module_reuse": "The unchanged guarded module was checked after the source tree fast-forward to a0827b19 using the unchanged ChainTable import closure. Its own olean was copied byte-for-byte into a fresh publication overlay; the root is checked there.",
+    "copied_module_sha256": "510c5e9e7b217e844b3453202d37221f3dfe010f0d67d11f4cc84ebdc949d30e"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-06T04:59:55.884784+00:00",
+  "base": "5ab65a1a2d5a8de322e46572904f46fd0789d1b4",
+  "scope": "Focused exact T0 selected/private-application paired strong secrecy and source interpretation, no global computational or public optional-plaintext theorem.",
+  "maintained_targets": 8,
+  "results": "2TRUE equivalences +2TRUE full-response/root origin auxiliaries +4FALSE fresh-secret controls each with one confirmed trace",
+  "seconds": 519.8305373054463,
+  "peak_rss_kib": 834728,
+  "dedicated_regressions": 14,
+  "classification_regressions": 20,
+  "classified_rows": 3198,
+  "security_class_entries": 185,
+  "transcript_fidelity": 30,
+  "focused_make_exit": 2,
+  "focused_make_note": "20classification and30FT passed; inventory caught two converter total metadata counts. Only inventory checker totals and its digest changed; final inventory-only Make passes0.",
+  "final_inventory_make_exit": 0,
+  "fmt_diff": "passed",
+  "reviews": "paired routing/other-pin paper, final semantic comparator and shared gates approved; archive approval pending",
+  "excluded_probe_diagnostics": [
+    "b2s-coin-dependencies",
+    "b2s-precise",
+    "s2b-factored",
+    "s2b-precise",
+    "s2b-receive-precise",
+    "s2b-send-only-precise",
+    "s2b"
+  ],
+  "probe_scope_correction": "The historical runner scope string says equivalence generically; only coin-dependencies positives are maintained equivalence evidence. Origins are reachability auxiliaries, controls are fresh-secret reachability, and unknown/timeout/factored attempts are excluded.",
+  "historical_notes": [
+    "First metadata command failed because make was not on host PATH; subsequently used pinned Nix Make.",
+    "Initial regression fixture counted three s2b4 expression sites instead of actual two; corrected test count before final14pass, no model change.",
+    "One factored generator run failed after copying unchanged s2b sources; an inadvertently started unchanged run was interrupted. No verdict receipt exists, logs/inputpack preserved as diagnostic.",
+    "Unused b2s factoring generator used undeclared b2s_ identifiers instead of l2_; peer found and corrected before any b2s factoring solverrun. Neither positive uses receiver factoring."
+  ],
+  "no_aggregate_claim": true
+}

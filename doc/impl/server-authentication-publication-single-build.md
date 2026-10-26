@@ -1,0 +1,13 @@
+# One build per allocated pending occurrence
+
+`PqxdhServerAuthPublicationSingleBuild` consumes the literal compiled optional API's existing resource footprints. It reuses `PqxdhRegistrationPending.Spent`: an index is already allocated and its pending slot is empty. Later accepts allocate at the current counter, later builds only clear a slot, and all other operations preserve the pending registry. Every normal callback and arbitrary continuing adaptive suffix therefore preserve disposal.
+
+`missing_build` is an exact component-program equation: the original complete stopped build on an absent token returns the normal native `None` reply, preserves the full local state and stop monitor, and issues no component request. `no_rebuild` combines the actual first build, token disposal and arbitrary normal continuation. This includes inner or outer writer failure on the first build. An outer component refusal remains distinct and terminates the optional continuation; the theorem does not manufacture a subsequent continuing source execution after that refusal.
+
+`initial_allocated` proves that every present pending token reached after a normal prefix from the literal initial state has an index below the actual session counter. This discharges the allocated-index premise in `initial_no_rebuild`; a guessed absent future handle is not incorrectly treated as permanently consumed. The complete prefix, first build and suffix are supported executions of the actual compiler under arbitrary syntactic component replies. No honest-key, nonce, writer-success, acceptance or event premise is used.
+
+These are functional source-control results. They add no request or sampler and preserve all component work and optional results, but do not assert a new runtime bound. Byte-equal keys and frames remain allowed. The theorem identifies the same pending occurrence by its reached source index and disposal, rather than by byte equality.
+
+The accepted-record receipt still needs to be joined to the unique reached builder's actual inner seal and outer `ResponseFields` writer arguments. These statements alone do not establish that an existing publication contains the accepted record, that arbitrary outer serialization can be read back, or that eleven cryptographic-session fields match. The existing owner-publication probability theorem and its primitive losses remain unchanged.
+
+The module consumes the published JournalClient11 checkpoint `25f41fd82bbb810dd5b1a11cf48e72d3857cf70c` and the existing reviewed `PqxdhRegistrationPending` source without modification. Its nine guarded statements are checked separately; this topic checkpoint is not a new central aggregate validation.

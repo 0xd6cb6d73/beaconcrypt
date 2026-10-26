@@ -1,0 +1,18 @@
+{
+  "reviewer": "root",
+  "time": "2026-10-05T21:48:37.423624+00:00",
+  "decision": "APPROVE",
+  "manifest_sha256": "be6a1768292ecd6e6849bf0f4ad3527af33129b688c4cfa1c20cac6b20cf93ce",
+  "hashes_verified": 4,
+  "statements": 14,
+  "findings": [],
+  "scope": "Full adaptive typed one-Server/many-Beacon compiled service schedule equality under the existing real source interpreter, with generated ownership and complete source uniform bill. No cryptographic advantage or global simulation closure is claimed.",
+  "semantic_checks": [
+    "Read both full modules, prior finish compiler, full guide and relevant prior schedule review. Each constructor, bundle and finish keeps full private/native state and original continuation; optional writer failure retains signatures.",
+    "Service owner addresses remain independent of private slot indices. Missing owners reject without state changes. All-reply programs are unrestricted; only supported real interpreter replies establish ownership, and generated_source starts with empty owners.",
+    "No signing/DH secret is exposed to the caller. The client stores its source prekey/one-time fields and public/handle identity/KEM representation; the historical pool is still inaccessible through this public interface.",
+    "Shared Server/public operations remain explicit original source macros, including nativeAccept with Server seed inside the interpreter; no primitive assumption or free ambient work is introduced. Their later compilation is explicitly open.",
+    "The exact QueryImpl/OracleComp continuation equality justifies the unchanged source uniform bound, including KEM base work. Additional emitted-service accounting, live-field reveals, Server joint use and security hybrids remain future obligations."
+  ],
+  "validation": "Verified all four frozen hashes and two direct guarded empty logs. Fourteen standard-axiom guards, no placeholder/custom axiom tokens. No Rust/ProVerif change; no redundant aggregate build."
+}

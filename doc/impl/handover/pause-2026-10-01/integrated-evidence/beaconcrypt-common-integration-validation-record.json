@@ -1,0 +1,19 @@
+{
+  "head": "edc701e73d167b885bade97233bf16a69975a17a",
+  "file": "doc/impl/staged-verification-record.md",
+  "sha256": "e66a785552a327fb61b2107f040cbe292f84044f6810b0c7049de520318a51f8",
+  "appendix_sha256": "d5153b703ede626b5028015643245da46753fe5a6e93e5d6e9282226328d3593",
+  "static_sha256": "b8440ba0cada5c751948b9501a76f3f32523c4bc9505d5f8a0598411258ee5b1",
+  "make_log": {
+    "path": "/tmp/beaconcrypt-common-integration-verify-edc701e.log",
+    "sha256": "61fd5f169c25ad2baa07ae91b508cd938b0dfdd992ac23a7e1f18ce9358c3f9d",
+    "exit_code": 0
+  },
+  "rust_log": {
+    "path": "/tmp/beaconcrypt-common-integration-rust-matrix.log",
+    "sha256": "a45cc740bdb8915b62d263907769c32db23becd9000b2d0246b4e90c4fd84b4e",
+    "exit_code": 0,
+    "workspace_tests": 298,
+    "separate_fidelity": 18
+  }
+}

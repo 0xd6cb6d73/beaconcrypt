@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-06T03:26:58.871643+00:00",
+  "base": "f33684f9f72cd0c0010fe7b190208d04163f3ffd",
+  "scope": "Five maintained targets on exact bytes; focused metadata validation only. No full Lean/Rust/ProVerif matrix or mutation suite.",
+  "maintained_target_count": 5,
+  "results": "3 TRUE, chain-control FALSE+confirmed trace, selected cache FALSE+confirmed trace",
+  "dedicated_regressions": 14,
+  "classification_regressions": 18,
+  "classified_verdicts": 3186,
+  "security_class_entries": 179,
+  "transcript_fidelity": 30,
+  "focused_make_exit": 0,
+  "inventory": "passed on exact frozen source",
+  "initial_nix_invocation": "Failed before checks because Nix inferred git+file:///tmp; fixed by explicit path: flake URL.",
+  "initial_metadata_diagnostics": [
+    "classification collector rejected temporary checker name missing .py; fixed before freeze",
+    "converter count update initially missed a tab-indented anchor; fixed before focused inventory"
+  ],
+  "diagnostics": "v1 ordinary-origin unknown contains assumed-hypothesis trace attempts, not confirmed attacks; optional direct injective query timeout has no verdict. Both excluded.",
+  "source_paper": "independently approved; maintained semantic review approved; shared wiring/archive reviews pending",
+  "no_query_bill_inference": true
+}

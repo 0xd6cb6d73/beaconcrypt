@@ -1,0 +1,14 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b C1, security result, (K_s, K_r, T_max) = (2, 3, 3):
+   injective record agreement.  Every acceptance of sequence t with
+   plaintext m by a Beacon that pins the honest Server key (the finish at
+   t = 1, or a later receive) is matched by its own, distinct allocation of
+   sequence t for m by a Server object to the peer installed for that Beacon,
+   with the same identities, key ID and root, also when rejected frames are
+   interleaved.  Also the target of the control C-RETAIN. *)
+query s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat, m: bitstring;
+  inj-event(FsReceived(server_to_beacon(), s, b, kid, root, t, m))
+  ==> inj-event(FsSent(server_to_beacon(), s, b, kid, root, t, m)).
+
+process FsRecordsS2bMain()

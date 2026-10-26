@@ -1,0 +1,9 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* The network sees only the optional-result bit, correlated to the raw
+   submitted value. Application plaintext is not a network observation. *)
+fun fs_strong_reply(bitstring, bitstring, bool): bitstring [data].
+
+(* A resolution-selection heuristic for two independent biprocess worlds;
+   it adds no equation or assumption. ProVerif 2.05 manual A.6 and 6.7.2. *)
+nounif x:bitstring, y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).

@@ -1,0 +1,287 @@
+{
+  "time": "2026-10-05T22:46:56.366673",
+  "base": "a292016584a3f8cd67c289487035ba4cbb175060",
+  "source_topics": {
+    "r1": "75d3ae4ad9b42d8ca45d7bb8a57303d57fde2a85",
+    "builder_context": "971f41ba3aca958ae45596263e19f29696f06a94"
+  },
+  "modules": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationSchedule.lean",
+      "sha256": "d19ec110f9db9b50f4443d93c4c0fe36912beddbc8d2783cd3dcff2c6f51d92d",
+      "guarded_statements": 18,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:38:33.820644",
+      "check_end": "2026-10-05T22:38:46.051886",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "8abb90203153c69da2e9fcfd4cfa2953de921eabcdc6c8b2b79900670cd4d2bc"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationScheduleState.lean",
+      "sha256": "bf0e92416ef7cd36892da45a60a6f455fb4f47afa4e0518aeffe030e6960b4a9",
+      "guarded_statements": 15,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:38:46.054909",
+      "check_end": "2026-10-05T22:38:50.259285",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "f2906830d4e505c61792a6ce8156b1e96fbd7a4144bd4dc1bfa2da89fc54ab54"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationScheduleLedger.lean",
+      "sha256": "aed89a688297e8a4faba86bd0d6c21df9c52123e8f74ca6f0df72eae36bc9a93",
+      "guarded_statements": 7,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:38:50.260678",
+      "check_end": "2026-10-05T22:38:53.852540",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "1e3cbac436c735897cd98faf447337576b6373a84a65ba9fe7b6436b27672601"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLiveServerConstruction.lean",
+      "sha256": "18dcfe24426d064ec4b04d23e0b01b88d8bb1f1844158465fc9336e8e2538812",
+      "guarded_statements": 3,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:38:53.853526",
+      "check_end": "2026-10-05T22:38:57.163544",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "a95d016f011c842976e804afc15be741f4f1e44fb07b42f09bd324b417cc0e3d"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationScheduleInitial.lean",
+      "sha256": "abc46b85f055b13839f4eb6583a99f5f1e9e9403d0dab46057df5fd0241a1ecc",
+      "guarded_statements": 7,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:38:57.164647",
+      "check_end": "2026-10-05T22:39:00.673071",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "7a554cbb3671ce175e40267beb0885af23b0dff66a68b4ebc316cc73669c264c"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationScheduleSurface.lean",
+      "sha256": "db1ee41aeed70b56c6187b6ccd317ddc5a2e09c3b370aee798e862d541913972",
+      "guarded_statements": 9,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:00.674415",
+      "check_end": "2026-10-05T22:39:04.477058",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "e293862610c838088b58ab290150f27f6b79032530ad3ba56c6df55e84243bcd"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationScheduleExecution.lean",
+      "sha256": "6f2ca99daa54afb94290d65ec02470f2d410d90e656af8cb54dd1c975400de4c",
+      "guarded_statements": 2,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:04.478516",
+      "check_end": "2026-10-05T22:39:07.966466",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "1ecca947426cd96e527c359f0fd7c8ec1d4791086a2a596e528ceb58bbc605b5"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Restriction.lean",
+      "sha256": "f56d224a0b642ed3185a272cca3c67adfaaf8236a3d1745fb87a76b40aebbe6c",
+      "guarded_statements": 16,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:07.967516",
+      "check_end": "2026-10-05T22:39:15.730771",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "f62e7caa1c34ae871c4af79e835ef732aeeac044011da5bbef158a0355bfe22f"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Audit.lean",
+      "sha256": "b661fa9db81a7a20302723d501aed8bc1b0ef851f65ca40cb3237fd964c66482",
+      "guarded_statements": 10,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:15.736339",
+      "check_end": "2026-10-05T22:39:19.401606",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "0e30eba75eeca0427e4a45cde5c0927514d7075f3bc2fa9ec9a0ea1883ed7d16"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointCreation.lean",
+      "sha256": "c1f6e9726dedca29aef2a7f60a556175c90b9ba16c152ec5100e614b6f384c10",
+      "guarded_statements": 9,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:19.403543",
+      "check_end": "2026-10-05T22:39:23.127885",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "c8d53e486204721596528f126a137ad57559e0aa57153c338a734294d1f90538"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBundle.lean",
+      "sha256": "a122a40926294a71d72f24c255a3dab3c2b8df9c5490f5518d1465f0f8baabdf",
+      "guarded_statements": 11,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:23.129126",
+      "check_end": "2026-10-05T22:39:27.217909",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "714a57d671c6eb8e3fa42bac5d189966c2738d6422e7d9295f8ca5bd6e0c5aab"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Initial.lean",
+      "sha256": "5472c77648f2f1adbc82c308e7a3fb980695267e3897815200f195da41c37c6b",
+      "guarded_statements": 6,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:27.219733",
+      "check_end": "2026-10-05T22:39:30.880114",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "deb821a3b4b794876ed7463ff6e602a3e824e32856b3734965e7a8c5b8a8f755"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Surface.lean",
+      "sha256": "69a923f7f6f0e85ed14bb7e2a59e2487a25279609b3a606941ae6d5b516e93d0",
+      "guarded_statements": 6,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:30.885702",
+      "check_end": "2026-10-05T22:39:34.569138",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "5e5f818ff97106a48c36b5e69a4768c564fe101088dc0c35dd7ed1b77cbf8db0"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationScheduleCosts.lean",
+      "sha256": "5997f7f1dfc2eadc6075ea72b11095d7d9d1523f1f0906e6f966b21da70fd39c",
+      "guarded_statements": 18,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:34.570984",
+      "check_end": "2026-10-05T22:39:38.724057",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "01558a187df86300091cfb6ec3f8ccae17c7f0654327056496852a1791861a8d"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationScheduleResources.lean",
+      "sha256": "b61acb7acba12aeec5780f41c127d48e4551968ad7c6b9e3cb9d5edb84b40f80",
+      "guarded_statements": 5,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:38.726187",
+      "check_end": "2026-10-05T22:39:42.414312",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "fcc8b8f3b58e68b2e8c4fbc30081e35c7394258f34f3e1a08defc5837d7bc7bc"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationCellState.lean",
+      "sha256": "bebbb3d9a818c591cc267a2e2d7cb4ca409ef5fd2c57bf1524f9450f0462ade6",
+      "guarded_statements": 10,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:42.419681",
+      "check_end": "2026-10-05T22:39:45.879632",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "c216d49b70cc02a512df0e6e77b20ba10542be3e0076c84feb84fad299d79b44"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationCellSurface.lean",
+      "sha256": "02fa88dae886ef5208e5056913e990b0a1ca3ccf8630092c4c0a2bec1b0e40fb",
+      "guarded_statements": 10,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:45.881605",
+      "check_end": "2026-10-05T22:39:49.391483",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "91c1b18390199de9d2c09806c8d492ce65a0eed72e217f215df577cb19880cca"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Journal.lean",
+      "sha256": "8bb77ca33d60b6dc8eacad413f51206b2e21487913cc5cab1fb2ae763b859470",
+      "guarded_statements": 11,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:49.393051",
+      "check_end": "2026-10-05T22:39:53.470634",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "7ba89a7334f7a6dc97dc68f63da37067fd820268573ed04a13076944451b73c4"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1RootAudit.lean",
+      "sha256": "8aa751c37495a887a1972259cefc87b17213584ddda9bfee5cf47d9666c79348",
+      "guarded_statements": 6,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:53.472641",
+      "check_end": "2026-10-05T22:39:56.338614",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "3afb09ba48ff86dfe5f94940ac56b60cb250411725974b89e489eb6636c07f15"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1RootJournal.lean",
+      "sha256": "9dca14cb0412f7cf37501fbc397bf235ca440f14b1358baecbecbe9d703da91b",
+      "guarded_statements": 5,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:56.339868",
+      "check_end": "2026-10-05T22:39:58.937457",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "40f70d07b8a7254198f5231f701f9475273228d587a79bdaa31e3c9d093c3934"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1RootSurface.lean",
+      "sha256": "d504e46440620fd78dd3c855ed95d6f7f6a05b0a48cf76a2acf88b9de536f53a",
+      "guarded_statements": 4,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:39:58.938749",
+      "check_end": "2026-10-05T22:40:01.541304",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "5c856db9b8484008104229a775552252774e5b46059286b7a01c9c9f79f69557"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1RootProbability.lean",
+      "sha256": "3011cbd1463fbeba731b7f0776a43149686a4086e8d4aea5f747cd806bd59dae",
+      "guarded_statements": 3,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:40:01.542623",
+      "check_end": "2026-10-05T22:40:04.032707",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "810b37f5e48da041e78563d7fe3312889b77b9692b13449fe318bddc14b135d1"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Authentication.lean",
+      "sha256": "2bafe48ccf974ddfc7eeb305c990b8b6e88d7faccacf4cd0796a3bc24a61b731",
+      "guarded_statements": 3,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:40:04.034770",
+      "check_end": "2026-10-05T22:40:06.524666",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "081a19bb63666bb827ae61345ecaab888244b145736f8e99195e54c06aa42b9f"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Resources.lean",
+      "sha256": "d7549687431f52abf265106411fc4a6f25bd31baf7caa76e57a8f0b50f77b66b",
+      "guarded_statements": 7,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:40:06.525696",
+      "check_end": "2026-10-05T22:40:10.378762",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "4ee98b556e5985bf249d95d2725fc9a3319bb5072a85ba5ddf0f6642f8446037"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationBuildContext.lean",
+      "sha256": "bc2d622ad1613e85ad1106a5f4522c96b712ac65cd14f1833a375b573d899f6b",
+      "guarded_statements": 7,
+      "check_exit": 0,
+      "check_start": "2026-10-05T22:40:10.380357",
+      "check_end": "2026-10-05T22:40:13.897220",
+      "check_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "3128ea88458100ed710dc892a28806fa3bbd36df3c7f72d95a86d7189efcbe1b"
+    }
+  ],
+  "existing_closure_sources_unchanged": 995,
+  "additional_root_cache_sources_unchanged": 195,
+  "lean": "4.34.0",
+  "options": [
+    "-j1",
+    "-M8000"
+  ],
+  "root_check": {
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-registration-composition-integration/beaconcrypt-core/proofs/lean",
+      "/tmp/beaconcrypt-registration-composition-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ],
+    "start": "2026-10-05T22:45:07.470461",
+    "end": "2026-10-05T22:45:09.698694",
+    "exit": 0,
+    "root_sha256": "89eff9fa7bd12a79423311d1e42c83eb1a3f4743789b916091107160acc3b1fc",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "aggregate_build": "not repeated; direct added modules and combined root against source-matched cached dependencies",
+  "scope": "25 exact source modules;208 guarded statements; actual singleton common-authentication consumer, complete raw source state/query ledger and full builder-context naturality. Global dynamic owner, evolving records, symbolic trace/computational bridge still open."
+}

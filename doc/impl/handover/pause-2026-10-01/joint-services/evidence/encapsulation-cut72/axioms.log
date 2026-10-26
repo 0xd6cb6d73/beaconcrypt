@@ -1,0 +1,212 @@
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemEncapsulation.forward_actual' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemEncapsulation.prefix_query' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemEncapsulation.prefix_program' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemEncapsulation.prepare_actual' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemEncapsulation.lift_actual' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemEncapsulation.accept_actual' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemEncapsulation.query_actual' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemEncapsulation.program_actual' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemEncapsulation.commands_actual' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCut.scan_target' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCut.scan_prior' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCut.scan_other' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCut.scan_finish' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCut.commands_cut' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemChallenge.pre_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemResume.post_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemResume.supported_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemGame.branch_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemGame.branch_real' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemGame.advantage' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedCounts.forward_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedCounts.lift_no_encapsulation' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedCounts.prefix_step' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedCounts.prefix_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedCounts.accept_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedCounts.backend_step' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedCounts.command_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedPrivate.lift_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedPrivate.prefix_step' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedPrivate.prefix_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedPrivate.prepare_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedPrivate.accept_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedPrivate.backend_step' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedPrivate.backend_program' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedPrivate.command_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedUniform.lift_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedUniform.prefix_step' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedUniform.prefix_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedUniform.prepare_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedUniform.accept_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedUniform.backend_step' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemExposedUniform.command_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCutBounds.bind_prefix' depends on axioms: [propext, Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCutBounds.actual_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCutBounds.scan_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCutBounds.residual' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCertified.prefix_erase' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCertified.branch_erase' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCertified.advantage' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCutSupport.successful_support' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCutSupport.pre_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemProgramBills.creates_class' depends on axioms: [propext,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemProgramBills.decaps_class' depends on axioms: [propext,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemProgramBills.count_private' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemProgramBills.commands' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCutInterpreted.encaps_private' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCutInterpreted.encaps_uniform' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCutInterpreted.actual_bills' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCutInterpreted.scan_bills' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemSavedBills.saved' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemSavedBills.pending' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemPostBills.post_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemPostBills.adversary_post' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemPreBills.scan_bills' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemPreBills.uniform' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemPreBills.excluded' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemPreBills.decapsulations' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemPreBills.base' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemReductionBills.annotated_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemReductionBills.adversary_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCutSelection.occurrence_lt' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCutSelection.source_occurrence' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]

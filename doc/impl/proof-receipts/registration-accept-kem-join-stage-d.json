@@ -1,0 +1,554 @@
+{
+  "date": "2026-10-06T14:26:48.327294+00:00",
+  "scope": "Stage D of the accept/KEM join plan: lane port L2 (opaque-source31, seven modules, 31 statements, unchanged; separate port receipt) and module M11 PqxdhRegistrationJointKemRawOpaque (theorem T6: the raw-ordinal KEM branch, in particular the KEM-ideal game of T5, equals an opaque branch whose candidate is an argument only of the private Server root interpreter and of the KEM router, which hands it to the source's own Beacon-finish code only on a decapsulation of the exact challenge ciphertext under the selected key; T5 restated with that opaque game).",
+  "basis": "12c5c8c00e4008e5fd697e4053892383d2f26717",
+  "topic": {
+    "branch": "codex/accept-opaque-continuation",
+    "worktree": "/tmp/beaconcrypt-accept-opaque"
+  },
+  "plan": {
+    "path": "/tmp/bc-arc-scratch/accept-cut-join/plan.md",
+    "sha256": "05e3ad677061ac5b41a586b9cb2339db7b4cddc73bf9998ebbefa771d3995bb2",
+    "stage": "D (L2, M11)"
+  },
+  "commits": [
+    {
+      "commit": "ec736c5164578f40e2ff51f7b5047f76c7b3efdb",
+      "subject": "Port the reviewed opaque-source31 KEM continuation cohort"
+    },
+    {
+      "commit": "f86403fa625faeb1314a4ebdf78798783e705657",
+      "subject": "Rewrite the raw-ordinal KEM-ideal game in opaque form"
+    }
+  ],
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.lean": "3bd066ba1c3ef7065bd018bfdc0b49f21a94126ceb5c7114f724e1bb590be390",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.lean": "0f68ea01bb39a0f3c41f075aec4ec1a7c6ec61a7103430cc15d8833ad0a3a5e4",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.lean": "f1cb023bb74341edf3d5d86ab5d5bcf0cc816afe29796a672dad71bfa3ccc321",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.lean": "83862712472163d750c4da5adcad854564a95cc429efe02ddd8d6deb060e1e30",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.lean": "b507275343b7e88b411e83fb678768c8573b65229de17dcd224f87d385601be7",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.lean": "6ebeae2006d3f510b0f9cb99a270423b66f8c68d8580c37664fb42030465aa72",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.lean": "0bf28f4642bf67315aa20f91e0c4457bafbc5127239b7f711cd1e5d7bad6b444",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawOpaque.lean": "07b02ec98ea43c89856c2913ed42a4863fd5e9859f74d1c0e47baa7ead6bac21",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "3bc72ce9ef6d26b1156f2b38ba36edb750a06deb070f2e6d5e21cf39fccab701",
+    "beaconcrypt-core/proofs/check-inventory.sh": "ef56988bfe53de1543aa466698a1605411398198d6f2492bc551d81eb932ad1d",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "55c6733ea8a726efd843ced68cb4169eca7e2d70fa3817f86d34788daf162b57",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "225a488d9924d65c5205af6e1487b45dc1cbd76eb21b5a28fb10c04484f82a68",
+    "doc/formal-verification-analysis.md": "0a762d6880d5bdc403af13cdca5f31c91e593bea7a2c0b02fd31d77ed6cde5a1",
+    "doc/impl/registration-accept-kem-join.md": "3f9651d31bb9845733314a1597a5497151ff4dd03b55cf5aace0f0a9cf200d88",
+    "doc/impl/registration-opaque-kem-source.md": "e208a953e20a34a37ddc0492ce4530079943e0334349250e04d6233a58eca49c",
+    "doc/impl/proof-receipts/registration-opaque-kem-source-port.json": "e574389435e29e587bd55e4cc43b3b8d540d8631763aa6154327fef446e8baf6"
+  },
+  "port": {
+    "receipt": "doc/impl/proof-receipts/registration-opaque-kem-source-port.json",
+    "lane_commits": [
+      "97cb784e3cad922e489500218a50588be67de1ec",
+      "158e11aef9058012a3eb1eeef14414150bdbcec4"
+    ],
+    "modules": [
+      "PqxdhRegistrationJointKemOpaqueSuffix",
+      "PqxdhRegistrationJointKemOpaqueCore",
+      "PqxdhRegistrationJointKemOpaqueClient",
+      "PqxdhRegistrationJointKemOpaqueReal",
+      "PqxdhRegistrationJointKemOpaqueTail",
+      "PqxdhRegistrationJointKemOpaqueResume",
+      "PqxdhRegistrationJointKemOpaqueCosts"
+    ],
+    "statements": 31,
+    "direct_checks": [
+      {
+        "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix",
+        "start": "2026-10-06T14:02:46.750969+00:00",
+        "end": "2026-10-06T14:02:50.868281+00:00",
+        "exit": 0,
+        "source_sha256": "3bd066ba1c3ef7065bd018bfdc0b49f21a94126ceb5c7114f724e1bb590be390",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.olean",
+          "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.lean"
+        ],
+        "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+        "artifact_sha256": "e06f3922bf5eb54c7979e0c80c87a797751a9d6077c51d6f02493e66878b6249"
+      },
+      {
+        "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore",
+        "start": "2026-10-06T14:02:50.902650+00:00",
+        "end": "2026-10-06T14:02:54.695931+00:00",
+        "exit": 0,
+        "source_sha256": "0f68ea01bb39a0f3c41f075aec4ec1a7c6ec61a7103430cc15d8833ad0a3a5e4",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.olean",
+          "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.lean"
+        ],
+        "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+        "artifact_sha256": "77b6dec1144dbd470ae84d6a1857e5ed8f614dc3ca83dd97fa671c93beda2323"
+      },
+      {
+        "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient",
+        "start": "2026-10-06T14:02:54.725315+00:00",
+        "end": "2026-10-06T14:02:58.469511+00:00",
+        "exit": 0,
+        "source_sha256": "f1cb023bb74341edf3d5d86ab5d5bcf0cc816afe29796a672dad71bfa3ccc321",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.olean",
+          "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.lean"
+        ],
+        "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+        "artifact_sha256": "9392e29345bdedf525f8d15a2c46ef901e54ca1a8644b8f89de4ef1dea36c803"
+      },
+      {
+        "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal",
+        "start": "2026-10-06T14:02:58.499595+00:00",
+        "end": "2026-10-06T14:03:02.172518+00:00",
+        "exit": 0,
+        "source_sha256": "83862712472163d750c4da5adcad854564a95cc429efe02ddd8d6deb060e1e30",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.olean",
+          "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.lean"
+        ],
+        "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+        "artifact_sha256": "27c454e34f792988536d0a376325952807e1b0ede4bb7e8481a867a7eb5c6572"
+      },
+      {
+        "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail",
+        "start": "2026-10-06T14:03:02.204281+00:00",
+        "end": "2026-10-06T14:03:06.172352+00:00",
+        "exit": 0,
+        "source_sha256": "b507275343b7e88b411e83fb678768c8573b65229de17dcd224f87d385601be7",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.olean",
+          "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.lean"
+        ],
+        "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+        "artifact_sha256": "e5cf4f514c5224f330129bd5c619b6f40d873a3f3837023c13deadf49a96b511"
+      },
+      {
+        "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume",
+        "start": "2026-10-06T14:03:06.202712+00:00",
+        "end": "2026-10-06T14:03:10.379805+00:00",
+        "exit": 0,
+        "source_sha256": "6ebeae2006d3f510b0f9cb99a270423b66f8c68d8580c37664fb42030465aa72",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.olean",
+          "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.lean"
+        ],
+        "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+        "artifact_sha256": "6bc209766088e8077e91144ca15dc845ead9d613e5abb13630cfe18950193d37"
+      },
+      {
+        "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts",
+        "start": "2026-10-06T14:03:10.409770+00:00",
+        "end": "2026-10-06T14:03:14.988775+00:00",
+        "exit": 0,
+        "source_sha256": "0bf28f4642bf67315aa20f91e0c4457bafbc5127239b7f711cd1e5d7bad6b444",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.olean",
+          "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.lean"
+        ],
+        "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+        "artifact_sha256": "b7ca155efc2d801dcecff519e02d8960de771727607d4551c29e83778c923a3d"
+      }
+    ]
+  },
+  "module": {
+    "name": "PqxdhRegistrationJointKemRawOpaque",
+    "plan_id": "M11",
+    "statements": [
+      "scan_opaque",
+      "rawResume_opaque",
+      "rawCut_resume",
+      "rejectRun_complete",
+      "opaque_pending",
+      "preRaw_opaque",
+      "post_opaque",
+      "branchRaw_opaque",
+      "authenticated_selected_opaque"
+    ],
+    "definitions": [
+      "OpaqueCut",
+      "rejectRun",
+      "opaqueScan",
+      "toCut",
+      "opaqueResume",
+      "OpaqueContext",
+      "toContext",
+      "sourcePreOpaque",
+      "opaquePost",
+      "opaqueBranch"
+    ]
+  },
+  "statements": 9,
+  "exact_statements": {
+    "T6 branchRaw_opaque": "theorem branchRaw_opaque (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (real : Bool) :\n    PqxdhRegistrationJointKemRawGame.branch setup codec checks ensureInit supplied decision work runtime count selected\n      index real =\n      opaqueBranch setup codec checks ensureInit supplied decision work runtime count selected index real",
+    "T6 first part rawCut_resume": "theorem rawCut_resume (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)\n    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry) (state : NativeState KemSK)\n    (request : PqxdhRegistrationJointKemCut.Request)\n    (resume : PqxdhRegistrationJointKemCut.Reply →\n      OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK R))\n    (reached : .pending request resume ∈ support (PqxdhRegistrationJointKemCut.scan setup\n      (exposeAt setup codec checks identityIndex publicIdentity observe work index owners state) 0)) :\n    ∃ raw next value ephemeral consumed native after,\n      PqxdhRegistrationJointAcceptCut.Cut.pending raw next ∈ support (PqxdhRegistrationJointAcceptCut.scan work index) ∧\n      PqxdhRegistrationJointRawSignatures.verified setup codec checks raw = some value ∧\n      request = (raw, value.keys.pqKey) ∧\n      ∀ ciphertext candidate, resume (reply ciphertext candidate) =\n        opaqueResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native after\n          next ciphertext candidate",
+    "scan_opaque": "theorem scan_opaque (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)\n    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry) (state : NativeState KemSK) :\n    PqxdhRegistrationJointKemCut.scan setup\n      (exposeAt setup codec checks identityIndex publicIdentity observe work index owners state) 0 =\n      toCut setup codec checks identityIndex publicIdentity observe <$>\n        opaqueScan (Reader := Reader) setup codec checks identityIndex publicIdentity observe work index owners state",
+    "authenticated_selected_opaque": "theorem authenticated_selected_opaque (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks)\n    (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →\n      setup.source.crypto.verify publicKey.toList bytes = none)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (count : Nat)\n    (work : OracleComp (SourceSpec KemSK) X) (runtime : A) (index : Nat)\n    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (capacity : (if supplied.isNone then 1 else 0) + budget (.inl 1) ≤ count + 1)\n    (decision : X → Bool) (kemIndex : Fin (count + 1)) (chosenOwner : Nat) (fallback : Pqxdh.Bytes)\n    (dynamicFallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) :\n    (letI := Classical.propDecidable; 𝒟[(fun pair =>\n        decide (PqxdhRegistrationJointKemRawBridge.Decided decision\n            (PqxdhRegistrationJointInitializedReports.sourceResult pair.2) ∧\n          PqxdhRegistrationJointKemRawBridge.GoodKem kemIndex\n            (PqxdhRegistrationJointInitializedReports.sourceResult pair.2) ∧\n          PqxdhRegistrationJointAcceptOrigin.Protected setup codec checks kemIndex pair.1)) <$>\n      PqxdhRegistrationJointAcceptCutReports.split setup codec checks ensureInit supplied (count + 1) work index\n        runtime] {true}) ≤\n    𝒟[opaqueBranch setup codec checks ensureInit supplied decision work runtime count kemIndex index false] {true} +\n      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))\n        (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit supplied decision work runtime\n          count kemIndex index).toINDCCA +\n        PqxdhRegistrationJointKemRawGame.correctnessError setup) +\n      ∑ target : Fin (count + 1), advantage setup.joint\n        (PqxdhRegistrationJointNativeOriginBound.reduction setup codec checks ensureInit supplied count\n          (PqxdhRegistrationJointAcceptCut.selected work index chosenOwner fallback) runtime\n          dynamicFallback ordinaryFallback target)"
+  },
+  "exact_definitions": {
+    "opaqueResume": "noncomputable def opaqueResume (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)\n    (value : PqxdhServerRootPreparation.Verified Reader)\n    (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)\n    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)\n    (next : Option Nat → OracleComp (SourceSpec KemSK) X)\n    (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :\n    OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK R) := do\n  let answer ← (simulateQ (liftImpl clientNative setup native.2.sessions candidate forwardClient)\n    (PqxdhRegistrationJointKemOpaqueResume.resume setup codec checks identityIndex publicIdentity raw value ephemeral\n      (PqxdhAcceptedRegistration.ciphertextArray ciphertext) .challenge native.2 consumed)).run native\n  hide setup (commands setup codec checks identityIndex publicIdentity (tagged observe raw next answer.1) owners answer.2)",
+    "opaquePost": "noncomputable def opaquePost (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (decision : X → Bool) (count : Nat) (selected : Fin (count + 1))\n    (transcript : MlKemChallengeTranscript (OpaqueContext Reader KemSK A X count)) (candidate : MlKemSharedSecret) :\n    OracleComp (MlKemCCAOracleSpec baseSpec) (ResultState KemSK A Bool count) := do\n  match transcript.context with\n  | .ready created others (some (.pending raw value ephemeral consumed native owners next)) state _ =>\n    if value.keys.pqKey = transcript.publicKey then\n      let reached ← (((simulateQ (PqxdhDynamicKemJointRouter.post setup.joint setup.kem selected.val\n        (PqxdhDynamicKemRouter.selectedReservation selected transcript.publicKey others)\n        transcript.ciphertext candidate)\n        (simulateQ (actual setup) (opaqueResume setup codec checks created.server.server.metadata.identityIndex\n          created.publicIdentity (decideTag decision) raw value ephemeral consumed native owners next\n          transcript.ciphertext candidate))).run).run state)\n      pure (toContext setup codec checks decision transcript.context, some reached)\n    else pure (toContext setup codec checks decision transcript.context, none)\n  | _ => pure (toContext setup codec checks decision transcript.context, none)",
+    "opaqueBranch": "noncomputable def opaqueBranch (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (real : Bool) : ProbComp Bool := do\n  let chosen ← simulateQ (kemAmbientImpl setup.baseImpl) setup.kem.keygen\n  let context ← sourcePreOpaque (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count\n    selected index chosen\n  let encapsulated ← simulateQ (kemAmbientImpl setup.baseImpl) (setup.kem.encaps chosen.1)\n  let uniform ← $ᵗ MlKemSharedSecret\n  PqxdhRegistrationJointKemGame.decision <$> PqxdhDynamicKemPost.evaluate setup.baseImpl setup.kem chosen.2\n    encapsulated.1 (opaquePost setup codec checks decision count selected ⟨chosen.1, encapsulated.1, context⟩\n      (if real then encapsulated.2 else uniform))"
+  },
+  "guards": [
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.scan_opaque",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.rawResume_opaque",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.rawCut_resume",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.rejectRun_complete",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.opaque_pending",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.preRaw_opaque",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.post_opaque",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.branchRaw_opaque",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.authenticated_selected_opaque"
+  ],
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "axiom_output": {
+    "source": "/tmp/bc-arc-scratch/accept-cut-join/stage-d/axioms/AxiomsD.lean",
+    "source_sha256": "5ca34300efb5180e27b3b9ba13e05dd5b976b90c2782120cffa50c6068c068d3",
+    "log_sha256": "8c214376c972f7df226ad273aec6483e92dbe630f4d09c0a8e709e26fe3d5fd8",
+    "summary": "40 statements (31 ported, 9 M11); every one depends on exactly [propext, Classical.choice, Quot.sound]",
+    "utf8": "'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.after_replace' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.materialize_erase' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.program_native' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.compiled_native' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore.cleared_shape' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore.cleared_replace' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore.accept_native' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore.accepted_original' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.accepted_bytes' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.rom_root_native' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.client_native' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal.root_source' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal.client_source' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail.forward_run' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail.tail_native' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.prefix_run' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.tail_run' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.lift_prefix' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.lift_tail' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_lift' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_native' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.forward_client' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_client' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_actual' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_service' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_reply' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_post' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts.client_root' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts.client_calls' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts.client_uniform' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts.tail_calls' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.scan_opaque' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.rawResume_opaque' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.rawCut_resume' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.rejectRun_complete' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.opaque_pending' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.preRaw_opaque' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.post_opaque' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.branchRaw_opaque' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.authenticated_selected_opaque' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n"
+  },
+  "leanpath": {
+    "manifest": "/tmp/bc-arc-scratch/accept-cut-join/stage-d/leanpath",
+    "sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+    "note": "The stage C LEAN_PATH with its first entry replaced by a fresh scratch prefix (stage-d/olean) mirroring the 1515 stage C artifacts as resolved symlinks, minus a stale KemOpaqueSuffix artifact of an older work tree. Lean 4.34 resolves every BeaconcryptCore module from the first LEAN_PATH entry that contains a BeaconcryptCore directory and never consults later entries, so each module must be built into that prefix (stage-d/olean) before anything that imports it; the ported modules were therefore checked strictly in import order (l2.sh stops at the first failure). The older KemOpaque artifacts in a later entry (/tmp/beaconcrypt-pin-width-olean/svc) were never consulted. The stage D review (hygiene lens) corrected the earlier stated reason, which said the strict order was needed so that imports did not resolve to those later artifacts. Every new artifact was written only into that prefix."
+  },
+  "direct_check_final": {
+    "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque",
+    "start": "2026-10-06T14:48:51.128530+00:00",
+    "end": "2026-10-06T14:48:56.115314+00:00",
+    "exit": 0,
+    "source_sha256": "07b02ec98ea43c89856c2913ed42a4863fd5e9859f74d1c0e47baa7ead6bac21",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawOpaque.olean",
+      "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawOpaque.lean"
+    ],
+    "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+    "artifact_sha256": "18ae0e70f38d2213afa34b27bffa4cd0b2861defdca0e66de8c5290a26744aa4"
+  },
+  "root_checks": {
+    "root-l2": {
+      "exit": 0,
+      "source_sha256": "abd6597e9e53cc66c6edb96aee55af2f406df39f1d62a404c33ca27375067f4d",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+        "BeaconcryptCore.lean"
+      ],
+      "invocation": "LEAN_TIMEOUT=180 root.sh root-l2 (cwd beaconcrypt-core/proofs/lean, LEAN_PATH from stage-d/leanpath, no -o)"
+    },
+    "root-m11": {
+      "exit": 0,
+      "source_sha256": "3bc72ce9ef6d26b1156f2b38ba36edb750a06deb070f2e6d5e21cf39fccab701",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "${LEAN_TIMEOUT:-600}",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+        "BeaconcryptCore.lean"
+      ],
+      "invocation": "root.sh root-m11 (cwd beaconcrypt-core/proofs/lean, LEAN_PATH from stage-d/leanpath, no -o). root.sh then ran timeout ${LEAN_TIMEOUT:-600} and the LEAN_TIMEOUT of this run was not recorded, so its cap was 180 s or the 600 s default.",
+      "duration_seconds": "3.1 (from the .source and .status timestamps), far below either cap"
+    },
+    "root-m11b": {
+      "exit": 0,
+      "source_sha256": "3bc72ce9ef6d26b1156f2b38ba36edb750a06deb070f2e6d5e21cf39fccab701",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "${LEAN_TIMEOUT:-600}",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+        "BeaconcryptCore.lean"
+      ],
+      "invocation": "root.sh root-m11b (cwd beaconcrypt-core/proofs/lean, LEAN_PATH from stage-d/leanpath, no -o). root.sh then ran timeout ${LEAN_TIMEOUT:-600} and the LEAN_TIMEOUT of this run was not recorded, so its cap was 180 s or the 600 s default.",
+      "duration_seconds": "2.9 (from the .source and .status timestamps), far below either cap"
+    },
+    "root-followup": {
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+        "BeaconcryptCore.lean"
+      ],
+      "invocation": "LEAN_TIMEOUT=180 root.sh root-followup (cwd beaconcrypt-core/proofs/lean, LEAN_PATH from stage-d/leanpath, no -o); root.sh now defaults to timeout 180",
+      "start": "2026-10-06T14:48:59Z",
+      "end": "2026-10-06T14:49:02Z",
+      "exit": 0,
+      "source_sha256": "3bc72ce9ef6d26b1156f2b38ba36edb750a06deb070f2e6d5e21cf39fccab701",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0
+    }
+  },
+  "hygiene": {
+    "constants": "hygiene/ConstsL2.lean and ConstsM11.lean: no axiom or opaque constant in the eight modules (exit 0)",
+    "unused_premises": "hygiene/PremisesM11.lean: no binder of the nine M11 theorems is unused in its proof term (exit 0)",
+    "guard_liveness": "hygiene/L2Liveness.lean (one wrong guard per ported module, 7 guard errors) and LivenessM11.lean (one wrong guard per M11 statement, 9 guard errors), both exit 1 as expected",
+    "collisions": "hygiene/CollideD.lean over the root environment (collision_scan): no collision for the M11 declarations, in agreement with the earlier source scan (the draft helper rejected, present in seven modules, was renamed rejectRun); 38 of the 91 scanned short names, all from the L2 port, collide. The guide names the join-family collisions (AcceptCutReports.resume, KemEncapsulation, KemCommands, ServerAccept, IdentityCompiler, ServerSchedule) and tells consumers to open selectively or qualify.",
+    "logs_sha256": {
+      "ConstsL2": "6e0745df91aa77ceded603ea64febedd6b32731d867cc56e724ef04405cf99c8",
+      "L2Liveness": "f86bf4acebedafb704f8a77c9197973dd5ffe9a79586d4b02c45c1bb8ebbc15d",
+      "ConstsM11": "c49cdc9a85bdcf66c6165d267649911cc72ba7537ce9fd38446e63386ccca3c6",
+      "PremisesM11": "08ee29f6027422e7b39986a181d83686f4ca1de8f238e7dad48e872e4ae628b1",
+      "LivenessM11": "efe95e7056a9bf81b64b9fcc26344537ee52566501bb36229fe6d7d9eb6335c8"
+    },
+    "liveness_errors": {
+      "L2Liveness": 7,
+      "LivenessM11": 9
+    },
+    "collision_scan": {
+      "source": "/tmp/bc-arc-scratch/accept-cut-join/stage-d/hygiene/CollideD.lean",
+      "source_sha256": "523a6cc5599a827c63047d9ebcc9be2bae5751abc21b4871772df7c8ffd1fda8",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "CollideD.lean"
+      ],
+      "method": "all 1473 root imports; every declaration of the seven L2 modules and M11 directly in a BeaconcryptCore.Computational.* namespace (internal names and names containing eq_ skipped, as in stages B and C; none of the eight modules declares such an eq_ name) against every declaration directly in such a namespace, the declaration itself excluded",
+      "exit": 0,
+      "log_sha256": "c84a69cbb915f2b5602cb855c1fa0598d834ea01aa8c0585df36f54c60838c60",
+      "utf8": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.program collides with 56: [PqxdhCommonSharedRegistration, PqxdhGeneratedPhase1Prefix, PqxdhInitialAliasQueryBounds, PqxdhInitialCounterPublication, PqxdhInitialCurrentPost, PqxdhInitialForwardBuilder, PqxdhInitialForwardPost, PqxdhInitialHalfProgram, PqxdhInitialHalfSourceMap, PqxdhInitialOriginForwardBuilder, PqxdhInitialOriginForwardPost, PqxdhInitialOriginPostMap, PqxdhInitialOriginPostPath, PqxdhInitialParentPost, PqxdhInitialParentStoppedHop, PqxdhInitialPendingCurrent, PqxdhInitialSentinelPost, PqxdhInitialSourceAliasCompiler, PqxdhLaterChallengeRandomProjection, PqxdhLaterChallengeTwin, PqxdhNativeSharedContinuation, PqxdhOrdinaryNativeSharedRom, PqxdhOrdinarySharedScheduler, PqxdhPrivatePhase1Prefix, PqxdhRegistrationJointKemCommands, PqxdhRegistrationJointNonSigningHistory, PqxdhRegistrationJointRoutedHistorySchedule, PqxdhRegistrationJointRoutedRevealSchedule, PqxdhRegistrationR1Surface, PqxdhSelectedStateInterpreter, PqxdhServerAuthBuildProgram, PqxdhServerAuthFinishMaterial, PqxdhServerAuthPublicationBlindKnown, PqxdhServerAuthPublicationPrefixSource, RawCtxChainReceive, RawCtxChainSend, RawCtxFiniteLineageCheck, RawCtxForwardFamily, RawCtxForwardLive, RawCtxForwardOwner, RawCtxForwardServer, RawCtxInterpretedReceive, RawCtxInterpretedSend, RawCtxNativeKdfFamily, RawCtxOwnerOracle, RawCtxPendingFamilyLiveTails, RawCtxPendingFamilyTails, RawCtxPendingLiveTails, RawCtxPendingOwnerTails, RawCtxPendingReceiveQueries, RawCtxPendingSelectiveFamily, RawCtxPendingServerTails, RawCtxSelectiveKdfFamily, RawCtxSelectiveSharedRom, RawCtxSourceEventRecorder, RawCtxSourceSend]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.program_native collides with 6: [PqxdhRegistrationJointServerSchedule, PqxdhServerAuthNative, RawCtxChainReceive, RawCtxChainSend, RawCtxInterpretedReceive, RawCtxInterpretedSend]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.erase collides with 25: [AdaptiveCtxDynamicKnownKeys, AdaptiveCtxSharedFamily, AdaptiveCtxSharedModeFamily, PqxdhErasedParentSample, PqxdhInitialFinishOrigin, PqxdhInitialNativeLog, PqxdhInitialSourceAliases, PqxdhPhase1AcceptanceOracle, PqxdhRegistrationJointAttemptInitialized, PqxdhRegistrationJointReportLift, PqxdhServerAuthApiJournal, PqxdhServerAuthObservedGame, PqxdhServerAuthPublicationPrefixStop, PqxdhServerAuthPublicationTrace, PqxdhServerAuthRootExecution, RawCtxCanonicalSchedule, RawCtxForwardAnnotation, RawCtxPendingLiveQueries, RawCtxPendingOwnerQueries, RawCtxPublishedRecords, RawCtxSelectedDriverAudit, RawCtxSelectedProductionAudit, RawCtxSelectedSendTrace, RawCtxSelectedTraceOwner, RawCtxSupportedSample]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.materialize collides with 3: [PqxdhPhase2DecapsulationRouting, PqxdhPhase2GapDhSource, PqxdhServerStaticDhSource]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.Token collides with 1: [PqxdhInitialInstallOccurrence]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.Prepared collides with 11: [AdaptiveCtxSharedModePreparation, AdaptiveCtxSharedPreparation, AdaptiveRawKeyPreparation, PqxdhBeaconPhase1Publication, PqxdhBeaconPhase2Preparation, PqxdhBeaconPhase2Shared, PqxdhCorrelatedExtractFamily, PqxdhFirstRecordReplay, PqxdhPhase2DhMetadata, PqxdhPrivateRootSource, RawCtxNativeFramePrelude]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.compiled collides with 9: [LiveApplicationNative, PqxdhLaterChallengeBeforeUnguarded, PqxdhLaterChallengeEarlyCertified, PqxdhLaterSavedPostComparison, PqxdhServerAuthBuildProgram, PqxdhServerAuthPublicationTrace, RawCtxForwardParentSampler, RawCtxSelectedFamilyNonceCoupling, RawCtxSharedBackendBounds]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore.accept_native collides with 2: [PqxdhRegistrationJointServerSchedule, PqxdhServerAuthNative]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore.accept collides with 6: [PqxdhProtocolAcceptance, PqxdhRegistrationJointAttemptPreservation, PqxdhRegistrationJointKemEncapsulation, PqxdhRegistrationJointOpenBackend, PqxdhServerAuthCtxState, PqxdhServerRelatedRootInput]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.RootSpec collides with 2: [PqxdhCorrelatedExpand, PqxdhJointDhExtractRoot]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.romImpl collides with 1: [PqxdhExtractRomFamily]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.client collides with 35: [PqxdhAdaptiveAcceptedResult, PqxdhInitialCurrentAliases, PqxdhInitialRootEventAccepted, PqxdhInitialSourceAliasCompiler, PqxdhInitialSourceAliases, PqxdhLaterChallengeBeforeConsumer, PqxdhLaterChallengeBeforeUnguarded, PqxdhLaterChallengeBuilderConsumer, PqxdhLaterChallengeEarlyCompiled, PqxdhLaterChallengeMonitor, PqxdhLaterChallengeRandomCompiled, PqxdhLaterExecutableCompletion, PqxdhRegistrationJointCreation, PqxdhRegistrationJointFinalCandidate, PqxdhRegistrationJointInitializedAccept, PqxdhRegistrationJointInitializedPrefix, PqxdhRegistrationJointInitializedSchedule, PqxdhRegistrationJointOpenInitialization, PqxdhRegistrationJointPublicShared, PqxdhRegistrationJointRevealSchedule, PqxdhRegistrationJointServerAccept, PqxdhRegistrationJointServerBirth, PqxdhSelectedPostCompiler, PqxdhServerAuthCtxExperiment, PqxdhServerAuthJointIdentityCompiler, PqxdhServerAuthJointPresealWitness, PqxdhServerAuthPublicationHandler, PqxdhServerAuthPublicationObservedCompiler, PqxdhServerAuthPublicationPrefixSource, PqxdhServerAuthPublicationReference, PqxdhServerRelatedRootConsumer, RawCtxSelectedChallengeFamily, RawCtxSelectedFamilyLiveCompiler, RawCtxSelectedProductionAudit, RawCtxSelectedProtocolOriginEvent]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.romRoot collides with 1: [PqxdhServerAuthNative]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.Spec collides with 76: [AdaptiveCtxDynamicKnownKeys, AdaptiveSealKeyFamily, KemFunctionalGraph, PqxdhBeaconPhase2Preparation, PqxdhBeaconPhase2Shared, PqxdhInitialForwardBuilder, PqxdhInitialForwardPost, PqxdhInitialFusedBeacon, PqxdhInitialFusedCompiler, PqxdhInitialFusedOwner, PqxdhInitialGenericPost, PqxdhInitialHalfObserverCompiler, PqxdhInitialLabelCompiler, PqxdhInitialNativeAudit, PqxdhInitialNativeLog, PqxdhInitialOriginForwardBuilder, PqxdhInitialOriginForwardPost, PqxdhInitialParentObserverCompiler, PqxdhInitialPendingPost, PqxdhInitialResponseService, PqxdhInitialRootEventCompiler, PqxdhInitialRootLabelService, PqxdhJointDhExtractFamily, PqxdhKemCoordinateController, PqxdhLiveBeaconBirth, PqxdhLiveJointBirth, PqxdhLiveKemBirth, PqxdhLivePhase1Bundle, PqxdhPhase2DhRootConsumer, PqxdhPhase2DhStage, PqxdhPhase2LiveFinish, PqxdhPhase2PostScheduler, PqxdhPhase2SourceAux, PqxdhPhase2SourceScheduler, PqxdhProtocolSelector, PqxdhRegistrationJointFinish, PqxdhRegistrationJointFinishCompiler, PqxdhRegistrationJointIdentityRouting, PqxdhRegistrationJointKemEncapsulation, PqxdhRegistrationJointKemOpaqueResume, PqxdhRegistrationJointKemOpaqueTail, PqxdhRegistrationJointOpenBackend, PqxdhRegistrationJointOpenInitialization, PqxdhRegistrationJointPreparation, PqxdhRegistrationJointReportLift, PqxdhRegistrationJointRevealSchedule, PqxdhRegistrationJointServerBirth, PqxdhRegistrationJointServerPrefix, PqxdhRegistrationJointServiceSchedule, PqxdhRegistrationSchedule, PqxdhSelectedCallbackCompiler, PqxdhSelectedInitialOwnerCompiler, PqxdhServerAuthBuildProgram, PqxdhServerAuthPublicationPrefixStop, PqxdhServerRelatedRootConsumer, PqxdhServerRootPreparation, RawCtxFamilySourceFreshness, RawCtxFiniteLineageCheck, RawCtxForwardAnnotation, RawCtxForwardFamily, RawCtxForwardLive, RawCtxForwardOwner, RawCtxForwardServer, RawCtxGenericLiveRead, RawCtxInitializedKdfFamily, RawCtxKdfRequestViews, RawCtxPendingFamilyLiveQueries, RawCtxPendingLiveQueries, RawCtxPendingOwnerQueries, RawCtxPendingReceiveQueries, RawCtxPendingSelectiveFamily, RawCtxReachedParentCut, RawCtxSelectedAliasPrimitives, RawCtxSelectedFamilyAudit, RawCtxSelectedLiveCompiler, RawCtxSharedReceiveCompiler]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.coordinates collides with 2: [PqxdhCorrelatedExtractFamily, PqxdhPhase2InputBytes]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.Input collides with 8: [PqxdhAcceptedRegistration, PqxdhInitialPreparedSourceInput, PqxdhInitialSourceInitialSecrecy, PqxdhInitialSourceSampler, PqxdhInitialSupportedCertificate, RawCtxFamilyFreshnessProxy, RawCtxFamilyReadCompiler, RawCtxInterpretedArguments]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.auxiliary collides with 3: [PqxdhLivePhase2PrivateRoot, PqxdhPreparedSelectedCallbackBounds, PqxdhServerAuthJointIdentityCompiler]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.client_native collides with 2: [PqxdhRegistrationJointServerAccept, PqxdhServerAuthNative]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal.root collides with 5: [PqxdhCorrelatedExtractFamily, PqxdhInitialSourceExperiment, PqxdhInitialSourceHalf, PqxdhJointDhExtractRoot, PqxdhPhase2DhRootConsumer]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal.client_source collides with 8: [PqxdhInitialSourceAliasCompiler, PqxdhRegistrationJointBundle, PqxdhRegistrationJointCreation, PqxdhRegistrationJointServerAccept, PqxdhRegistrationJointServerBirth, PqxdhServerAuthCtxExperiment, PqxdhServerAuthPublicationObservedCompiler, PqxdhServerRelatedRootConsumer]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal.impl collides with 33: [LiveApplicationNative, PqxdhInitialCounterPublication, PqxdhInitialOriginPostPath, PqxdhJointDhExtractFamily, PqxdhKemCoordinateController, PqxdhLiveBeaconBirth, PqxdhLiveJointBirth, PqxdhLiveJointSigning, PqxdhLiveKemBirth, PqxdhPhase2DhRootConsumer, PqxdhPhase2DhStage, PqxdhRegistrationJointFinishCompiler, PqxdhRegistrationJointIdentityCompiler, PqxdhRegistrationJointKemEncapsulation, PqxdhRegistrationJointKemOpaqueResume, PqxdhRegistrationJointKemOpaqueTail, PqxdhRegistrationJointOpenBackend, PqxdhRegistrationJointServerBirth, PqxdhRegistrationJointServerClient, PqxdhRegistrationJointServerPrefix, PqxdhRegistrationJointServiceSchedule, PqxdhSelectedPostCompiler, PqxdhServerAuthBuildProgram, PqxdhServerAuthPublicationPrivateView, PqxdhServerRelatedRootConsumer, RawCtxGenericBeacon, RawCtxGenericFamilyFrontend, RawCtxGenericFamilyLive, RawCtxSelectedChallengeFamily, RawCtxSelectedFamilyLiveCompiler, RawCtxSelectedProductionAudit, RawCtxSourceFamilyPath, RawCtxSourceOwnerLabels]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal.root_source collides with 3: [PqxdhPhase2DhRootConsumer, PqxdhServerRelatedRootConsumer, PqxdhServerRelatedRootInput]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail.forward_run collides with 2: [PqxdhRegistrationJointIdentityCompiler, PqxdhServerAuthPresealControl]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail.forward collides with 11: [AdaptiveCtxSharedTarget, PqxdhInitialNativeLineageCheck, PqxdhRegistrationJointIdentityCompiler, PqxdhRegistrationJointKemEncapsulation, PqxdhServerAuthPresealControl, RawCtxFamilyLineageCompletion, RawCtxForwardAnnotationLift, RawCtxKdfRequestViews, RawCtxPendingReceiveQueries, RawCtxSelectedLiveRead, RawCtxSourceSharedRom]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail.impl collides with 33: [LiveApplicationNative, PqxdhInitialCounterPublication, PqxdhInitialOriginPostPath, PqxdhJointDhExtractFamily, PqxdhKemCoordinateController, PqxdhLiveBeaconBirth, PqxdhLiveJointBirth, PqxdhLiveJointSigning, PqxdhLiveKemBirth, PqxdhPhase2DhRootConsumer, PqxdhPhase2DhStage, PqxdhRegistrationJointFinishCompiler, PqxdhRegistrationJointIdentityCompiler, PqxdhRegistrationJointKemEncapsulation, PqxdhRegistrationJointKemOpaqueReal, PqxdhRegistrationJointKemOpaqueResume, PqxdhRegistrationJointOpenBackend, PqxdhRegistrationJointServerBirth, PqxdhRegistrationJointServerClient, PqxdhRegistrationJointServerPrefix, PqxdhRegistrationJointServiceSchedule, PqxdhSelectedPostCompiler, PqxdhServerAuthBuildProgram, PqxdhServerAuthPublicationPrivateView, PqxdhServerRelatedRootConsumer, RawCtxGenericBeacon, RawCtxGenericFamilyFrontend, RawCtxGenericFamilyLive, RawCtxSelectedChallengeFamily, RawCtxSelectedFamilyLiveCompiler, RawCtxSelectedProductionAudit, RawCtxSourceFamilyPath, RawCtxSourceOwnerLabels]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail.tail_native collides with 3: [PqxdhInitialFusedBeacon, PqxdhInitialGenericBeaconNative, PqxdhServerAuthExperiment]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail.tail collides with 9: [PqxdhBeaconPhase2Publication, PqxdhBeaconPhase2Shared, PqxdhInitialFusedBeacon, PqxdhInitialGenericBeacon, PqxdhPhase2DhRootConsumer, PqxdhRegistrationJointServerAccept, PqxdhRegistrationR1Surface, PqxdhServerAuthCtxNative, PqxdhServerAuthPresealControl]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail.Spec collides with 76: [AdaptiveCtxDynamicKnownKeys, AdaptiveSealKeyFamily, KemFunctionalGraph, PqxdhBeaconPhase2Preparation, PqxdhBeaconPhase2Shared, PqxdhInitialForwardBuilder, PqxdhInitialForwardPost, PqxdhInitialFusedBeacon, PqxdhInitialFusedCompiler, PqxdhInitialFusedOwner, PqxdhInitialGenericPost, PqxdhInitialHalfObserverCompiler, PqxdhInitialLabelCompiler, PqxdhInitialNativeAudit, PqxdhInitialNativeLog, PqxdhInitialOriginForwardBuilder, PqxdhInitialOriginForwardPost, PqxdhInitialParentObserverCompiler, PqxdhInitialPendingPost, PqxdhInitialResponseService, PqxdhInitialRootEventCompiler, PqxdhInitialRootLabelService, PqxdhJointDhExtractFamily, PqxdhKemCoordinateController, PqxdhLiveBeaconBirth, PqxdhLiveJointBirth, PqxdhLiveKemBirth, PqxdhLivePhase1Bundle, PqxdhPhase2DhRootConsumer, PqxdhPhase2DhStage, PqxdhPhase2LiveFinish, PqxdhPhase2PostScheduler, PqxdhPhase2SourceAux, PqxdhPhase2SourceScheduler, PqxdhProtocolSelector, PqxdhRegistrationJointFinish, PqxdhRegistrationJointFinishCompiler, PqxdhRegistrationJointIdentityRouting, PqxdhRegistrationJointKemEncapsulation, PqxdhRegistrationJointKemOpaqueClient, PqxdhRegistrationJointKemOpaqueResume, PqxdhRegistrationJointOpenBackend, PqxdhRegistrationJointOpenInitialization, PqxdhRegistrationJointPreparation, PqxdhRegistrationJointReportLift, PqxdhRegistrationJointRevealSchedule, PqxdhRegistrationJointServerBirth, PqxdhRegistrationJointServerPrefix, PqxdhRegistrationJointServiceSchedule, PqxdhRegistrationSchedule, PqxdhSelectedCallbackCompiler, PqxdhSelectedInitialOwnerCompiler, PqxdhServerAuthBuildProgram, PqxdhServerAuthPublicationPrefixStop, PqxdhServerRelatedRootConsumer, PqxdhServerRootPreparation, RawCtxFamilySourceFreshness, RawCtxFiniteLineageCheck, RawCtxForwardAnnotation, RawCtxForwardFamily, RawCtxForwardLive, RawCtxForwardOwner, RawCtxForwardServer, RawCtxGenericLiveRead, RawCtxInitializedKdfFamily, RawCtxKdfRequestViews, RawCtxPendingFamilyLiveQueries, RawCtxPendingLiveQueries, RawCtxPendingOwnerQueries, RawCtxPendingReceiveQueries, RawCtxPendingSelectiveFamily, RawCtxReachedParentCut, RawCtxSelectedAliasPrimitives, RawCtxSelectedFamilyAudit, RawCtxSelectedLiveCompiler, RawCtxSharedReceiveCompiler]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume collides with 18: [PqxdhCorrelatedExtractFamily, PqxdhInitialOriginContext, PqxdhInitialPreparedParent, PqxdhInitialServiceExperiment, PqxdhLaterChallengeEarlyConsumer, PqxdhLaterChallengeRandomConsumer, PqxdhLaterChallengeSavedMonitor, PqxdhRegistrationJointAcceptCutReports, PqxdhSharedParentResources, RawCtxChainReceive, RawCtxChainSend, RawCtxInterpretedReceive, RawCtxInterpretedSend, RawCtxLoggedParentResponse, RawCtxOwnerOracle, RawCtxSelectedPendingReceiveCompiler, RawCtxSelectiveChainPrefix, RawCtxStoppedParentSource]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.Client collides with 4: [PqxdhRegistrationJointIdentityCompiler, PqxdhRegistrationJointKemEncapsulation, PqxdhRegistrationJointOpenBackend, PqxdhRegistrationJointServiceSchedule]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.impl collides with 33: [LiveApplicationNative, PqxdhInitialCounterPublication, PqxdhInitialOriginPostPath, PqxdhJointDhExtractFamily, PqxdhKemCoordinateController, PqxdhLiveBeaconBirth, PqxdhLiveJointBirth, PqxdhLiveJointSigning, PqxdhLiveKemBirth, PqxdhPhase2DhRootConsumer, PqxdhPhase2DhStage, PqxdhRegistrationJointFinishCompiler, PqxdhRegistrationJointIdentityCompiler, PqxdhRegistrationJointKemEncapsulation, PqxdhRegistrationJointKemOpaqueReal, PqxdhRegistrationJointKemOpaqueTail, PqxdhRegistrationJointOpenBackend, PqxdhRegistrationJointServerBirth, PqxdhRegistrationJointServerClient, PqxdhRegistrationJointServerPrefix, PqxdhRegistrationJointServiceSchedule, PqxdhSelectedPostCompiler, PqxdhServerAuthBuildProgram, PqxdhServerAuthPublicationPrivateView, PqxdhServerRelatedRootConsumer, RawCtxGenericBeacon, RawCtxGenericFamilyFrontend, RawCtxGenericFamilyLive, RawCtxSelectedChallengeFamily, RawCtxSelectedFamilyLiveCompiler, RawCtxSelectedProductionAudit, RawCtxSourceFamilyPath, RawCtxSourceOwnerLabels]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.prefixLift collides with 1: [PqxdhPhase2DhStage]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.tailLift collides with 5: [PqxdhBeaconPhase2Publication, PqxdhBeaconPhase2Shared, PqxdhInitialFusedOwner, PqxdhPhase2DhStage, PqxdhRegistrationJointFinishCompiler]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.Spec collides with 76: [AdaptiveCtxDynamicKnownKeys, AdaptiveSealKeyFamily, KemFunctionalGraph, PqxdhBeaconPhase2Preparation, PqxdhBeaconPhase2Shared, PqxdhInitialForwardBuilder, PqxdhInitialForwardPost, PqxdhInitialFusedBeacon, PqxdhInitialFusedCompiler, PqxdhInitialFusedOwner, PqxdhInitialGenericPost, PqxdhInitialHalfObserverCompiler, PqxdhInitialLabelCompiler, PqxdhInitialNativeAudit, PqxdhInitialNativeLog, PqxdhInitialOriginForwardBuilder, PqxdhInitialOriginForwardPost, PqxdhInitialParentObserverCompiler, PqxdhInitialPendingPost, PqxdhInitialResponseService, PqxdhInitialRootEventCompiler, PqxdhInitialRootLabelService, PqxdhJointDhExtractFamily, PqxdhKemCoordinateController, PqxdhLiveBeaconBirth, PqxdhLiveJointBirth, PqxdhLiveKemBirth, PqxdhLivePhase1Bundle, PqxdhPhase2DhRootConsumer, PqxdhPhase2DhStage, PqxdhPhase2LiveFinish, PqxdhPhase2PostScheduler, PqxdhPhase2SourceAux, PqxdhPhase2SourceScheduler, PqxdhProtocolSelector, PqxdhRegistrationJointFinish, PqxdhRegistrationJointFinishCompiler, PqxdhRegistrationJointIdentityRouting, PqxdhRegistrationJointKemEncapsulation, PqxdhRegistrationJointKemOpaqueClient, PqxdhRegistrationJointKemOpaqueTail, PqxdhRegistrationJointOpenBackend, PqxdhRegistrationJointOpenInitialization, PqxdhRegistrationJointPreparation, PqxdhRegistrationJointReportLift, PqxdhRegistrationJointRevealSchedule, PqxdhRegistrationJointServerBirth, PqxdhRegistrationJointServerPrefix, PqxdhRegistrationJointServiceSchedule, PqxdhRegistrationSchedule, PqxdhSelectedCallbackCompiler, PqxdhSelectedInitialOwnerCompiler, PqxdhServerAuthBuildProgram, PqxdhServerAuthPublicationPrefixStop, PqxdhServerRelatedRootConsumer, PqxdhServerRootPreparation, RawCtxFamilySourceFreshness, RawCtxFiniteLineageCheck, RawCtxForwardAnnotation, RawCtxForwardFamily, RawCtxForwardLive, RawCtxForwardOwner, RawCtxForwardServer, RawCtxGenericLiveRead, RawCtxInitializedKdfFamily, RawCtxKdfRequestViews, RawCtxPendingFamilyLiveQueries, RawCtxPendingLiveQueries, RawCtxPendingOwnerQueries, RawCtxPendingReceiveQueries, RawCtxPendingSelectiveFamily, RawCtxReachedParentCut, RawCtxSelectedAliasPrimitives, RawCtxSelectedFamilyAudit, RawCtxSelectedLiveCompiler, RawCtxSharedReceiveCompiler]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.serviceImpl collides with 1: [PqxdhJointGapDh]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts.client_uniform collides with 10: [PqxdhLaterChallengeBeforeResources, PqxdhLaterChallengeBuilderBills, PqxdhLaterExecutableResources, PqxdhRegistrationJointBundle, PqxdhRegistrationJointCreation, PqxdhRegistrationJointServerAccept, PqxdhRegistrationJointServerBirth, PqxdhServerAuthCtxResources, PqxdhServerAuthNativeUniformCosts, PqxdhServerRelatedRootBounds]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts.IsRoot collides with 1: [PqxdhCorrelatedExpandHybrid]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts.tail_calls collides with 1: [PqxdhBeaconPhase2Routed]\nscanned 91 names, 38 with collisions\n"
+    }
+  },
+  "closure": "M11 import closure 948 modules (closure.py on the topic); none of the 23 excluded lane-only modules of critique-work/lane-only.txt is in it.",
+  "focused_inventory_per_commit": {
+    "inv-l2": {
+      "exit": 0,
+      "start": "2026-10-06T14:05:17Z",
+      "end": "2026-10-06T14:06:24Z",
+      "log_sha256": "592c385ae81e42dec9db296d1484b1f8d2727ce29695c4bdcb6da8298add68a4",
+      "comm_warnings": 0
+    },
+    "inv-l2-receipt": {
+      "exit": 0,
+      "start": "2026-10-06T14:07:22Z",
+      "end": "2026-10-06T14:08:27Z",
+      "log_sha256": "7f61403fc8a02782e59720323c59b1c3805ab47e7a9255e151cf02b08b751580",
+      "comm_warnings": 0
+    },
+    "inv-m11": {
+      "exit": 0,
+      "start": "2026-10-06T14:18:14Z",
+      "end": "2026-10-06T14:19:19Z",
+      "log_sha256": "8d393ec87af779899d83bf39b0e41d6ce04d33b793af6b0564e947c56b804db2",
+      "comm_warnings": 0
+    },
+    "inv-m11b": {
+      "exit": 0,
+      "start": "2026-10-06T14:21:03Z",
+      "end": "2026-10-06T14:22:09Z",
+      "log_sha256": "8d393ec87af779899d83bf39b0e41d6ce04d33b793af6b0564e947c56b804db2",
+      "comm_warnings": 0
+    }
+  },
+  "focused_inventory_note": "Each commit was checked with exactly its files staged. handwritten-lean goes 1481 -> 1488 (L2 port) -> 1489 (M11). inv-m11b is the recheck after renaming the helper rejected to rejectRun, folded into the M11 commit before publication. The documentation commit that adds this receipt is checked the same way after the receipt is written (focused_inventory_with_receipt).",
+  "forbidden_scan": "zero matches of \\b(sorry|admit|axiom|native_decide|implemented_by|extern|unsafe)\\b outside guards and no set_option other than autoImplicit in M11; the ported modules are unchanged from the lane and pass the same scan",
+  "correctness_scan": "zero matches of MlKem768RecipientCorrectness, supported_source, branch_real, KemGame.advantage, KemCertified.advantage or SecretInputKdf in M11",
+  "diff_check": "git diff 12c5c8c0 --check clean",
+  "deviations_from_plan": [
+    "T6 branchRaw_opaque is stated for both values of the branch bit real; the plan statement branch ... false = opaqueBranch ... is its instance real = false.",
+    "Instead of rewriting the active case through the support statement rawCut_shape, scan_opaque proves as a program equality that the KEM scan of exposeAt is the image of an explicit opaque scan with saved source parameters; the opaque game is therefore defined without choice and T6 is an equality of programs. rawCut_resume is still proved from rawCut_shape in the plan form, with the plan rest being the remaining tagged run inside opaqueResume.",
+    "Added statements: scan_opaque, rawResume_opaque, rejectRun_complete, opaque_pending, preRaw_opaque, post_opaque, and the corollary authenticated_selected_opaque (T5 with the opaque KEM-ideal game), which joins the opaque continuation to the selected accept of T5.",
+    "post_opaque uses KemOpaqueResume.resume_post under the exact interpreter chain of KemResume.post, as the plan specifies; rawResume_opaque uses resume_reply.",
+    "Port: the ported lane analysis section keeps its two paragraphs verbatim with its heading raised from ### to ##; the evidence README carried over verbatim still says the lane review is pending (the guide records the approval).",
+    "No planned statement turned out false or unprovable, none was weakened, and no existing theorem was modified."
+  ],
+  "open_obligations_in_stage": [],
+  "not_proved": [
+    "The Extract/HKDF hybrid at the actual joint sampler starting from the opaque KEM-ideal game, context secrecy of the candidate (it never enters a secret-input KDF context here, but nothing shows the saved private state is safe public context), and routing dynamic Beacon finishes into root requests with every repeated challenge-ciphertext use under one joint sampler (handoff item 2).",
+    "The KDF backend for item 2 (owner decision 2): T6 keeps the restricted Extract-ROM root of the actual source; KemOpaqueReal.client_source (fixed HKDF) is not used.",
+    "Transport of the existing prefix uniform charges server_prefix_uniform and accept_uniform to the opaque resumption.",
+    "Global target selection, adversary-chosen test sessions and the common experiment (handoff item 3); forward secrecy against a KEM key disclosed after the session.",
+    "Owner decisions 5 (review before integration and publication) and 6 (confirmation of the existential owner address and the unread owner constant).",
+    "Handoff items 4-8 and the final validation matrix."
+  ],
+  "checks_not_run": "No lake build, make verify, nix-collect-garbage, ProVerif, Rust or mutation run; no production Rust or ProVerif change.",
+  "review": "Stage D (port and M11) was independently reviewed under a semantic and a hygiene lens; both returned APPROVE_WITH_NITS. The findings are addressed by the follow-up recorded in review_followup. Not pushed.",
+  "focused_inventory_with_receipt": {
+    "exit": 0,
+    "start": "2026-10-06T14:25:35Z",
+    "end": "2026-10-06T14:26:42Z",
+    "log_sha256": "8d393ec87af779899d83bf39b0e41d6ce04d33b793af6b0564e947c56b804db2",
+    "comm_warnings": 0
+  },
+  "review_followup": {
+    "date": "2026-10-06T14:52:57.883260+00:00",
+    "review_source": {
+      "path": "/tmp/bc-arc-scratch/accept-cut-join/stage-d/review.json",
+      "sha256": "1f92147d4a62a9deaa3eabf6763052742ed042f7f07d9d4c82b65609dca9f0ba",
+      "reviewed_head": "c958c8f5",
+      "verdicts": {
+        "semantic": "APPROVE_WITH_NITS",
+        "hygiene": "APPROVE_WITH_NITS"
+      }
+    },
+    "commits": [
+      {
+        "commit": "the review follow-up commit that contains this version of the receipt",
+        "subject": "Address the stage D accept/KEM join review"
+      }
+    ],
+    "findings": [
+      "Semantic minor 1 (summaries said the KEM-ideal candidate reaches only private interpreters): the guide status and the lead sentence of the stage D analysis section now say that the candidate is an argument only of the private Server root interpreter and of the KEM router, which hands it to the source's own Beacon-finish code only on a decapsulation of the exact challenge ciphertext under the selected key, and that routing those finishes into root requests is part of item 2; the third step of the analysis, the opaqueBranch docstring of M11 and this receipt's scope say the same. The guide body note that routing the finishes into root requests is part of item 2 is kept. The trusted-boundary sections make no such claim, and the module docstring, the opaquePost docstring and the guide body already said that the router returns the candidate only for the exact challenge ciphertext under the selected key; they are unchanged.",
+      "Semantic nit 2 (trusted-boundary stage C paragraph): it now reads \"The opaque KEM-ideal continuation (supplied by stage D below), context secrecy of the candidate, global target selection and the KDF and global joins remain open.\"",
+      "Semantic nit 3 (\"instead of a saved program\" / \"instead of a closure\"): the analysis now says the cut is described by plain data instead of the Server's saved continuation and that the module rebuilds that continuation; the guide and the OpaqueCut docstring say instead of the Server's saved continuation AcceptKemCut.rawResume, which toCut rebuilds; the guide deviation paragraph names the closure AcceptKemCut.rawResume.",
+      "Hygiene minor 1 (L2 short-name collisions): the stage D names-for-consumers note now has an L2 paragraph from the root-environment scan hygiene/CollideD.lean (hygiene.collision_scan, full output recorded): 38 of the 91 scanned short names collide, all from the L2 port, including KemOpaqueResume.resume with AcceptCutReports of stage A, and KemOpaqueCore.accept, KemOpaqueTail.forward, KemOpaqueResume.Client, the three Spec and the three impl declarations with KemEncapsulation; consumers must open selectively or qualify. M11 has no collision.",
+      "Hygiene nit 2 (stated reason for the import-order checks): the guide evidence paragraph and the leanpath notes of this receipt and of the port receipt now say that Lean uses only the first LEAN_PATH prefix that has a BeaconcryptCore directory, so each module must be built into that prefix before anything that imports it, and that later entries are never consulted.",
+      "Hygiene nit 3 (command and timeout of the M11 root checks): root_checks now records the exact command of every root check. root-m11 and root-m11b ran root.sh, whose timeout then defaulted to 600 s, with an unrecorded LEAN_TIMEOUT; each took about 3 s. root.sh now defaults to 180 s, and root-followup reran the root check with explicit timeout 180 (exit 0, empty log)."
+    ],
+    "docstring_changes": "Only two M11 docstrings changed (OpaqueCut and opaqueBranch); no statement, definition, proof or #guard_msgs guard text changed.",
+    "previous_direct_check_final": {
+      "start": "2026-10-06T14:20:24.372377+00:00",
+      "source_sha256": "b2c7991f529a075b8dd63d9967fef1b018191e10c309a64d9007169639a8c322",
+      "artifact_sha256": "d8edc45760df5db71096d8675d5b8519874eecc245f2572a3351997a0f634094"
+    },
+    "direct_checks": "PqxdhRegistrationJointKemRawOpaque rechecked (tag followup) with exit 0 and an empty log; recorded in direct_check_final. The artifact hash changed from d8edc457 to 18ae0e70 because the docstrings are stored in the artifact. No ported module changed, and no module imports M11 except the root.",
+    "root_check": "root-followup: exit 0, empty log (BeaconcryptCore.lean unchanged).",
+    "scratch_scripts_sha256": {
+      "root.sh": "c29bdfa622e6d5a95717d1bea05affe387e01bfbbebc036daf0fceb23ad99ffa",
+      "check.py": "967a3c3be66e4aad33393b1283be2f4ac72449496b94b12992f570c2b6254747",
+      "repl.py": "bb37c57fd35f3b715cb49bbfcd2f43db03fd323b7d3233c48413f48956074313",
+      "followup.py": "f60c2e2f7974b3bd707346e554934302c161563afe0a5d61ee0c5e23f5bf1234",
+      "CollideD.lean": "523a6cc5599a827c63047d9ebcc9be2bae5751abc21b4871772df7c8ffd1fda8",
+      "invrecord.py": "9be1d26444b2570263676506e0c8d5dc60318c0761a298a65a407195dedaccbd"
+    },
+    "handwritten_lean_count": "unchanged at 1489; check-inventory.sh unchanged; reviewed-inventory rows of M11 and trusted-boundary.md refreshed",
+    "diff_check": "git diff --cached --check clean",
+    "focused_inventory": {
+      "command": [
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "environment": "PYTHONDONTWRITEBYTECODE=1 (scratch inventory.sh inv-followup)",
+      "state": "review follow-up commit with every file staged, including this receipt; only this focused_inventory record was edited afterwards (the reviewed inventory does not cover doc/impl/proof-receipts)",
+      "exit": 0,
+      "start": "2026-10-06T14:53:06Z",
+      "end": "2026-10-06T14:54:11Z",
+      "log_sha256": "57ce0025be9248bc14e0e010baad7a0e47ef0e0d2d2316d96cc04379d58a1e25",
+      "comm_warnings": 0,
+      "matches_reviewed_boundary": true,
+      "handwritten_lean_count": 1489,
+      "log_note": "the log differs from inv-docs.log only in the unittest run time line"
+    }
+  }
+}

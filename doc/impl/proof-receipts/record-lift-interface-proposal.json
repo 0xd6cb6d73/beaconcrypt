@@ -1,0 +1,186 @@
+{
+  "date": "2026-10-07T19:46:52.554881+00:00",
+  "scope": "Reviewed provisional R1 capability types and open program only. Private interpreter, source simulation, probabilistic game and security lift remain unimplemented.",
+  "basis": "e90d54d934387bd08bfadff345449b84ebd1be2d",
+  "branch": "codex/record-lift-interface",
+  "status": "Topic proposal for Claude cross-review; not frozen or approved for central integration",
+  "statements": 3,
+  "contracts_used": [],
+  "review": {
+    "review_id": "record-lift-interface-semantic-fixpass-2026-10-07",
+    "reviewer": "Codex subagent /root/record_interface_audit; independent of implementation",
+    "timestamp_utc": "2026-10-07T19:43:09.880282+00:00",
+    "base_commit": "e90d54d934387bd08bfadff345449b84ebd1be2d",
+    "reviewed_state": "Uncommitted fix-pass draft; exact source hashes below",
+    "supersedes": "/tmp/bc-arc-scratch/record-lift/reviews/interface-semantic-2026-10-07.json",
+    "artifacts": [
+      {
+        "path": "/tmp/beaconcrypt-record-lift-interface/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftInterface.lean",
+        "sha256": "41780176567df9ed2f09feb335770847ec63cd6a56d985acb37de97b00d9d970"
+      },
+      {
+        "path": "/tmp/beaconcrypt-record-lift-interface/doc/impl/record-lift-interface.md",
+        "sha256": "a44c0031805861e037cc98f15ed6c9bc5e3bdaf60a8b9b4d50f8ea0a10da90f0"
+      }
+    ],
+    "analysis_section": {
+      "path": "/tmp/beaconcrypt-record-lift-interface/doc/formal-verification-analysis.md",
+      "heading": "Record-lift capability interface proposal (R1)",
+      "body_sha256": "2047cc4dbe6a24392ed7fd585f8e5f8577ed575d6e56aef57b1ffee2dac11808"
+    },
+    "verdict": "APPROVE_PROVISIONAL_TYPE_PROPOSAL",
+    "scope": "Approval covers the capability types, restricted environment programs, open program, three elementary lemmas, guide and added analysis prose. It is not approval of a completed R1 probabilistic world, source simulation, H4 ideal backend, C1-C6 discharge, cryptographic reduction, central integration or final validation matrix.",
+    "blocking_findings": [],
+    "resolved_findings": [
+      {
+        "id": "R1-S1",
+        "resolution": "Environment.start now samples an optional pair of Created Unit and E through ordinary uniform effects. program passes that exact Created value through a private initialization request unavailable to EnvEffects, initializes env execution from the paired E, ends with none on startup failure, and obtains the ledger Server ID from the same Created value. Frame now bounds startup uniform calls."
+      },
+      {
+        "id": "R1-S2",
+        "resolution": "Public hash is excluded from IsEnvironment and native dispatches it directly to Capability.hash. Both public and environment-requested hash work therefore reach the same capability interpreter; its future shared-cache equation remains explicit."
+      },
+      {
+        "id": "R1-A1",
+        "resolution": "Guide now explicitly requires ticket binding to slot, owner, phase/generation, expected sender, AD and retained kernel; changed pinned sender and AD are rejected; direct installation rejects role-tag mismatch; advanceOwner cannot reset an established kernel."
+      },
+      {
+        "id": "R1-A2",
+        "resolution": "candidateReply_some and the guide now describe preservation of a supplied sequence-one optional plaintext and explicitly defer source provenance to the missing interpreter simulation."
+      },
+      {
+        "id": "R1-A3",
+        "resolution": "The proposal consistently identifies itself as an unfrozen type/open-program proposal, says no probabilistic RecordLift.game exists yet, and leaves concrete interpreter, installation invariants, source simulation, ideal games and security results open. Approval is restricted to this provisional scope."
+      },
+      {
+        "id": "R1-A4",
+        "resolution": "Frame remains solely a startup/per-command resource condition. It does not assume secrecy, independence, noninterference, freshness, small refusal probability or game-distance bounds."
+      }
+    ],
+    "semantic_checks": [
+      "Canonical CE Secrecy.wrap/asModeO remain outside environment.step. EnvEffects has no ordinary raw receive or initialization command and exposes neither ledger nor world-state lens.",
+      "The private initialization capability receives the startup Created value only before the wrapped adversary begins; env.start cannot read future hidden slot seeds.",
+      "Exact existing CE/source record reply types and mode projection are reused; no source command semantics are reimplemented in this open program.",
+      "Transient candidates are retained in the proposed type surface; sequence gating occurs after their future complete opening; callback cost remains separately visible.",
+      "Publicly constructible Ticket indices require interpreter validation, with no ticket-unforgeability assumption.",
+      "No successful-install kernel code or ideal backend is claimed to exist in this module.",
+      "C1 and C5 remain on the CE side. Generic-post execution and R6 remain deferred.",
+      "Added formal-verification-analysis prose matches the three elementary theorem claims and explicitly states the missing interpreter/security work."
+    ],
+    "hygiene_checks": [
+      {
+        "check": "Source placeholder/custom-axiom scan",
+        "result": "No sorry, admit or axiom token"
+      },
+      {
+        "check": "Forbidden direct names and forbidden CE successor imports",
+        "result": "No hits for PqxdhCorrelatedExtractFamily, jointKdfView, fixedHkdfSha512JointStream, productionHiddenRoot, RawCtxSourceHkdf.rootResponse, PqxdhDeploymentIdealKeys or PqxdhDeploymentHeadlines"
+      },
+      {
+        "check": "Theorem/guard coverage",
+        "result": "Exactly 3 theorem declarations, 3 #guard_msgs blocks and 3 #print axioms commands; guarded axiom lists are subsets of propext, Classical.choice and Quot.sound"
+      },
+      {
+        "check": "Source/guide trailing whitespace",
+        "result": "None"
+      },
+      {
+        "check": "Guide and new analysis paragraph layout",
+        "result": "No added mid-sentence Markdown line wrapping"
+      },
+      {
+        "check": "New root import and inventory row",
+        "result": "Observed one root import and a row matching final module hash; final metadata validation is parent-owned"
+      },
+      {
+        "check": "New check-inventory theorem gates",
+        "result": "Observed 3-theorem/3-guard gates and one declaration/axiom-print gate per theorem"
+      },
+      {
+        "check": "Lean compilation",
+        "result": "Not independently run. Parent reports focused compile; inspected check-05.log contains only lock queue output, so this receipt makes no independent exit-status claim"
+      },
+      {
+        "check": "Final inventory/root build and trust-boundary validation",
+        "result": "Not certified by this receipt; parent performs final gates"
+      },
+      {
+        "check": "Changes by reviewer",
+        "result": "Review receipt only; no source/document edits or builds"
+      }
+    ]
+  },
+  "checks": {
+    "module": {
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "record-interface-final",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=.",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/interface/olean/BeaconcryptCore/Computational/PqxdhRecordLiftInterface.olean",
+        "BeaconcryptCore/Computational/PqxdhRecordLiftInterface.lean"
+      ],
+      "start": "2026-10-07T19:43:07.118282+00:00",
+      "end": "2026-10-07T19:43:11.167892+00:00",
+      "exit": 0,
+      "source_sha256": "41780176567df9ed2f09feb335770847ec63cd6a56d985acb37de97b00d9d970",
+      "artifact_sha256": "8b855c8f987a3956c591f5ab7412aeb2c8fa3ebfa3e8a12c65a9021103196c35",
+      "leanpath_sha256": "806aa29ffab053dcd75bc4814d91a29d1a3a4a0339d435cc7f2a86f4b5bbcbe2"
+    },
+    "root_import": {
+      "exit": 0,
+      "source_sha256": "3695f56f5af9fda873cc587677f3fc66fd94cd5eb61bd480169409d19a183a3b",
+      "artifact_sha256": "a9e82ee94888c8905abc9a2253860cd81afa3d3b2b12308bc7af745b3bd44b15",
+      "log": "/tmp/bc-arc-scratch/record-lift/interface/logs/root-import.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": "coord.sh lean codex record-interface-root -- timeout 180 lean -j1 -M8000 --root=. -o OWN_OVERLAY/BeaconcryptCore.olean BeaconcryptCore.lean"
+    },
+    "inventory": {
+      "exit": 0,
+      "lease": "@nix 2048 MiB",
+      "command": "nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-record-lift-interface/beaconcrypt-core check-inventory SHELL=bash",
+      "log": "/tmp/bc-arc-scratch/record-lift/interface/logs/inventory.log",
+      "log_sha256": "cb1e4e17dde0963103068e07c835e042b6bf87b6309a0192edf3a529c0887be7"
+    },
+    "transcript_fidelity": {
+      "exit": 0,
+      "passed": 30,
+      "lease": "@cargo 3072 MiB",
+      "CARGO_BUILD_JOBS": 2,
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/interface/target",
+      "command": "nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c cargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity",
+      "log": "/tmp/bc-arc-scratch/record-lift/interface/logs/transcript.log",
+      "log_sha256": "4ca94113ba7b3e87bca5b1cf1453b7d5d1547740b14d93f0a37406e2d57ca2b1"
+    },
+    "diff_check": {
+      "exit": 0
+    },
+    "scan": {
+      "result": "No forbidden direct names, placeholder declarations or custom axioms; exact 3 theorem/guard pairs reviewed."
+    }
+  },
+  "no_production_changes": true,
+  "not_run": [
+    "make verify",
+    "full lake build",
+    "ProVerif",
+    "mutation suite"
+  ],
+  "query_accounting": "No reduction bound yet. Frame bounds startup uniform calls and actual per-environment-command effect counts. Candidate receives and private sends are explicit Caps parameters. Proposed derivations expression is not a proved transport bound.",
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftInterface.lean": "41780176567df9ed2f09feb335770847ec63cd6a56d985acb37de97b00d9d970",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "3695f56f5af9fda873cc587677f3fc66fd94cd5eb61bd480169409d19a183a3b",
+    "beaconcrypt-core/proofs/check-inventory.sh": "8deb64ce3fc9a68674e36102ea5730e0b72a68726b32a2a42b233a3250c28549",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "8eed720fa69057d5c82c55532f7f3f8e258984cc58f757531c5c58878fd51247",
+    "doc/formal-verification-analysis.md": "fb4c6e93967aaa64dca60fc58407137a0256e8fe26eb311bc4ee95504359e380",
+    "doc/impl/record-lift-interface.md": "a44c0031805861e037cc98f15ed6c9bc5e3bdaf60a8b9b4d50f8ea0a10da90f0"
+  }
+}

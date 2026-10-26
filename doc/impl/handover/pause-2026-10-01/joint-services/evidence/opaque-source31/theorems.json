@@ -1,0 +1,47 @@
+{
+  "PqxdhRegistrationJointKemOpaqueSuffix": [
+    "after_replace",
+    "materialize_erase",
+    "program_native",
+    "compiled_native"
+  ],
+  "PqxdhRegistrationJointKemOpaqueCore": [
+    "cleared_shape",
+    "cleared_replace",
+    "accept_native",
+    "accepted_original"
+  ],
+  "PqxdhRegistrationJointKemOpaqueClient": [
+    "accepted_bytes",
+    "rom_root_native",
+    "client_native"
+  ],
+  "PqxdhRegistrationJointKemOpaqueReal": [
+    "root_source",
+    "client_source"
+  ],
+  "PqxdhRegistrationJointKemOpaqueTail": [
+    "forward_run",
+    "tail_native"
+  ],
+  "PqxdhRegistrationJointKemOpaqueResume": [
+    "prefix_run",
+    "tail_run",
+    "lift_prefix",
+    "lift_tail",
+    "resume_lift",
+    "resume_native",
+    "forward_client",
+    "resume_client",
+    "resume_actual",
+    "resume_service",
+    "resume_reply",
+    "resume_post"
+  ],
+  "PqxdhRegistrationJointKemOpaqueCosts": [
+    "client_root",
+    "client_calls",
+    "client_uniform",
+    "tail_calls"
+  ]
+}

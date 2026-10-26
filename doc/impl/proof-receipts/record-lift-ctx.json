@@ -1,0 +1,2772 @@
+{
+ "date": "2026-10-08T12:03:56.740212+00:00",
+ "scope": "Items 4 and 5 (record-layer lift), stage S4 of the takeover plan, integrity half (CTX track X1-X4, item 4): PqxdhRecordLiftCtxHybrid, PqxdhRecordLiftCtxLink, PqxdhRecordLiftCtxAvailability, PqxdhRecordLiftKeyCut, PqxdhRecordLiftCtx and PqxdhRecordLiftCtxBills, 215 guarded statements; PqxdhRecordLiftCtxBills.ctxAuthLiftTarget proves PqxdhRecordLiftIdeal.CtxAuthLiftTarget as defined on central ee7878ee (both forms, zero refusal term) for the explicit reduction family PqxdhRecordLiftCtx.ctxReduction and the explicit bills ctxBills, and ctxAuthLiftStatement gives CtxAuthLiftStatement for every refusal term. This receipt also records the independent semantic and hygiene reviews of a6f3b00d and the fix pass of their findings. The privacy half (CtxPrivLiftStatement) is not part of this increment.",
+ "basis": "ee7878ee4c42f59460a3a8b80983a4a209bd4e0d",
+ "topic": {
+  "branch": "codex/deployment-record-ctx",
+  "worktree": "/tmp/beaconcrypt-deployment-record-ctx",
+  "registry": "scratch /tmp/bc-arc-scratch/items45/ctx (and its subdirectory fix1, registered separately before creation), worktree and branch registered to claude before creation; modules under the PqxdhRecordLift* names Claude owns since the owner decision of 2026-10-08 (/tmp/bc-coord/decision-2026-10-08.txt); the worktree note was updated in the fix pass to name all six modules (hygiene nit H7)"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/items45-takeover/takeover-plan.md",
+  "sha256": "10c055c36fa0b1a2aee9c3f8b35915fae001741b2241274d6a4b3ec67eb2eb0a",
+  "sections": "2 (S4: X1-X4; decisions D1-D5), 8 (CTX track status)",
+  "note": "Hash at the time of this receipt; the fix pass corrected section 8 (contracts used; expected handwritten-lean count after merging central 98b906d9 is 1679, not 1676) and appended a fix-pass update. Section 2 S4 is unchanged.",
+  "sha256_nit_fix": "11e68f937e2309a0d34ddcc6ba94b90dd6812506771726763fbe86847b994c81",
+  "note_nit_fix": "The plan is a scratch status file outside the repository. It was edited after the receipt commit ca34bf0a was generated (the fix-pass update paragraph of section 8, which names ca34bf0a, was appended about two minutes later), so sha256 names the version the fix pass read and sha256_nit_fix the version the confirming-review nit fix read (confirming-review nit 2). Sections 2 (S4) and the S4 decisions are unchanged; later status paragraphs (such as the integration update) change the hash again."
+ },
+ "brief": {
+  "path": "/tmp/bc-coord/tasks/codex-items-4-5.md",
+  "sha256": "c947e27514ecf3b8041a1d61ef78b158c2c732d1f7bb8782b94c1e796a92b99e",
+  "sections": "H-1 to H-7, 7"
+ },
+ "targets": {
+  "module": "PqxdhRecordLiftIdeal (central ee7878ee, unchanged)",
+  "guide": "doc/impl/record-lift-ideal.md",
+  "delivered": "PqxdhRecordLiftCtxBills.ctxAuthLiftTarget : CtxAuthLiftTarget setup codec route serverKid bounds n fallback (PqxdhRecordLiftCtx.ctxReduction setup codec route serverKid bounds) ctxBills; PqxdhRecordLiftCtxBills.ctxAuthLiftStatement : CtxAuthLiftStatement ... ctxBills refusal for every refusal term",
+  "hops": "hops n budget = (sends + 51 * receives) * (n * 2); one integrityLoss per index of Fin (hops n budget), coefficient one, telescoped by PqxdhComposition.finiteHybridBound_of_hop_bounds; the factor 2 on INT-CTXT stays inside integrityLoss",
+  "bill": "ctxBills: uniform = programBill .uniform + decision + 64 * programBill .hash; hash = sharedHashTotal (hash_bill); seals = 1 (program_target_seal, from PqxdhRecordLiftProtocolHistory.program_fresh); raw = Budget.receives",
+  "statements_changed": "None. No definition of PqxdhRecordLiftIdeal and no statement of the six modules changed in the fix pass; the Lean edits are module docstrings and the removal of one superfluous set_option linter.deprecated false in (before key_cut_measure)."
+ },
+ "contracts": {
+  "hypotheses": "No theorem of the six modules has an assumption or contract hypothesis. Main-theorem premises: budget.Respects, Frame, the decision coin bound, the step client query bounds and StepBilled bills (budget facts and properties of the explicit construction); internal-lemma premises are facts about states, programs and requests.",
+  "method": "Closure probe over the constant dependencies of every theorem of the six modules (216 theorems found: the 215 guarded ones plus the generated RawCtxUniversalDecoder.envelope.congr_simp, which reaches no marker). A theorem uses a marker when a chain of theorem constants leads from it to the marker (PROOFLEVEL); markers reached only inside definitions are structural.",
+  "probe": "/tmp/bc-arc-scratch/items45/ctx/fix1/ContractProbe.lean",
+  "probe_sha256": "2a7f190894a7d0163ff68c7e5c67ff8f8985268a4c2542b5568a6a13ac6d7dbf",
+  "log_fix": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/contracts-f1.log",
+  "log_fix_sha256": "4183c966fad8e61f72433fe76a779ddc6bf4734a8b7fce7c3a911933a6581859",
+  "log_a6f3b00d": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/contracts-a6f3b00d-3.log",
+  "log_a6f3b00d_sha256": "59a0f5e825a8c349f6b5e9be8bca203cb9e3b94c317214b5126dfe957eb5dce9",
+  "leanpath_sha256": "df118ea22342a4690e3ac4f1cac375654291e821ec94fdad31c4d5ab7d24940b",
+  "identical": "The a6f3b00d run (track prefix) and the fix-pass run (fix1 prefix) give the same output apart from the THEOREM list added for the fix-pass run.",
+  "per_theorem": {
+   "ctxAuthLiftTarget, ctxAuthLiftStatement (PqxdhRecordLiftCtxBills); hop_bound, ctxAuthLiftBool_of_billed, ctxAuthLiftTarget_of_billed (PqxdhRecordLiftCtx)": "functional AEAD correctness: Pqxdh.Crypto.aead_open_seal (path: hop_bound -> PqxdhRecordLiftCtxModeBounds.selected_integrity -> AdaptiveCtxPrivacyGuard.canonical_replay_advantage_bound -> AdaptiveCtxAliasCoupling ... -> AdaptiveCtxLoggedSource.seal_preserves_history -> aead_open_seal; the invariant AdaptiveRawNonceAead.HistoryCorrect is reached by the same five theorems) and Pqxdh.Crypto.aeadSeal_tag_length; the modified-nonce AEAD IND$ and INT-CTXT games only as advantage terms of integrityLoss; the BLAKE2b ROM as the world model (qHash/2^128 and qRaw/2^512 stated within it)",
+   "allReal_bare, allReal_view, allReal_decision, hybrid_zero_view, step_bare, schedule_bare, opening_bare, sealing_bare, real_open_cache, real_seal_cache (PqxdhRecordLiftCtxHybrid)": "Pqxdh.Crypto.aeadSeal_tag_length only (16-byte Poly1305 tags), through PqxdhRecordLiftCtxServices.sealRom_typed and the record-building definitions CtxRomAuth.ctxSeal and CtxRomAuth.ctxSealOracle; no aead_open_seal, no game; BLAKE2b ROM worlds",
+   "every other theorem (hybrid family of PqxdhRecordLiftCtxHybrid; all of PqxdhRecordLiftCtxLink, PqxdhRecordLiftCtxAvailability, PqxdhRecordLiftKeyCut; game_real, game_replay, advantage_congr of PqxdhRecordLiftCtx; the 32 bill theorems of PqxdhRecordLiftCtxBills)": "no contract"
+  },
+  "classification": "aeadSeal_tag_length is classified under functional AEAD correctness of the H-7 list (the AEAD functional specification in the primitive record), as in the milestone B9a notes (doc/impl/handover/milestone-b/stage-notes/b9a-notes.md, N2), which list it next to aead_open_seal. This is a documentation classification of an existing record field used by central definitions, not a new hypothesis; reported to the owner once, as an FYI, in the orchestrator's report of the CTX-track integration (confirming-review nit 4); no new contract and no owner decision is needed unless the owner classifies the field differently.",
+  "structural": "Pqxdh.Crypto.dh_comm, xpub_length and x25519_length (66 theorems) occur only inside the DH-interface definitions reached through the type PqxdhServerAuthExperiment.Setup of the setup parameter (the structural constants of the H-7 closure guard); Pqxdh.Crypto.hkdf_length (68 theorems) only inside the KDF definitions RawCtxSourceHkdf.response and PqxdhJointKdf.productionStream; and Pqxdh.Crypto.aeadSeal_tag_length, for 53 of the 68 theorems that reach it, only inside the AEAD record-building definitions (CtxRomAuth.ctxSeal, CtxRomAuth.ctxSealOracle, the localSeal definitions of AdaptiveCtxSharedReplay and AdaptiveCtxSharedHash, and the other definitions listed in structural_frontier). For these theorems no proof step uses the fields. The other 15 theorems that reach aeadSeal_tag_length use it at proof level (per_theorem).",
+  "structural_frontier": {
+   "aeadSeal_tag_length": [
+    "AdaptiveCtxSharedReplay.localSeal",
+    "CtxHonestTagSampling.ctxDirectSampleKeyFreeSealOracle",
+    "CtxIndependentTags.ctxKeyFreeSealOracle",
+    "CtxRomAuth.ctxSeal",
+    "CtxNonceAeadIndDollarValidation.ctxRealValidationCiphertext",
+    "AdaptiveCtxSharedHash.localSeal",
+    "CtxRomAuth.ctxSealOracle",
+    "CtxNonceAeadIntCtxt.modifiedNonceAeadSealOracle",
+    "CtxNonceAeadIndDollarValidation.ctxValidationTag",
+    "AdaptiveCtxReplayDictionary.abstractSeal"
+   ],
+   "hkdf_length": [
+    "RawCtxSourceHkdf.response",
+    "PqxdhJointKdf.productionStream"
+   ],
+   "source": "Confirming-review probe /tmp/bc-arc-scratch/items45/ctx/confirm/ContractConfirm.lean (SHA-256 231f0a43033577480d645fb7a7e09b060652360ae90bc4007de13fd0b5243aee), log /tmp/bc-arc-scratch/items45/ctx/confirm/logs/probe1.log (SHA-256 11f2c65f7aa59840037f5c25572805d9813ae6ab8002be8fb5498d1e367c3030): the definitions of the closure (namespace BeaconcryptCore.Computational) that use the field directly, over all theorems of the six modules that reach it; aeadSeal_tag_length: 68 theorems, 15 at proof level, 53 only inside definitions; hkdf_length: 68 theorems, 0 at proof level. The probe also found no raw projection of a propositional field of Pqxdh.Crypto and no use of its recursor.",
+   "note": "Added in the confirming-review nit fix (nit 1): the fix-pass version of structural listed the DH fields and hkdf_length (with RawCtxSourceHkdf.response only) and omitted aeadSeal_tag_length for the theorems that reach it only inside definitions."
+  },
+  "absent": "No theorem reaches Pqxdh.Crypto.verify_sign, conv_agree, decap_encap, edPub_length, kemPub_length, encap_ss_length, decap_length, blake2b_length, SourceFullCorrect, FrameReadBack, Phase1ReadBack, Phase2ReadBack, DecoderAgreement or RawCtxSelectedPlaintextOrigins.HistoryCorrect; HMAC-PRF and Extract-on-uniform32 are not used.",
+  "composition_assumptions": "doc/composition-assumptions.md already lists functional AEAD correctness, the modified-nonce AEAD INT-CTXT and IND$ games and the BLAKE2b ROM for AdaptiveCtxDynamicKnownKeys.sourceGame; PqxdhRecordLiftCtxModes.sourceGame, used here, is its variant with replay-mode known calls. No new contract, so composition-assumptions.md and trusted-boundary.md are unchanged."
+ },
+ "provenance": "New Claude work; nothing adapted from Codex WIP (the hygiene review searched the Codex WIP handover directory and Codex scratch for the distinctive names). The modules import the published central PqxdhRecordLiftCtxProgramBounds, which carries its own provenance (adapted from Codex WIP 879a91bdf51208e3308bc6a6f9d3f52994553fdb4549d18f15ac82b545a178fd).",
+ "commits": [
+  {
+   "commit": "9622b5fd2e263516e6be757aa8b56c7eb87958bd",
+   "subject": "Prove the record-lift CTX source equality and hybrid family (S4, X1)"
+  },
+  {
+   "commit": "27dd10e19868953eb855369a291dff7808ed0ca3",
+   "subject": "Document the record-lift CTX source equality and hybrid family (S4, X1)"
+  },
+  {
+   "commit": "00eaeb0455c729cf95bccd5bdbf14707fb4f6760",
+   "subject": "Link one record-lift CTX hybrid step to the one-key challenger (S4, X1)"
+  },
+  {
+   "commit": "1ec902a97b1a1c1bd0b9a8276ce656a741803de5",
+   "subject": "Document the record-lift CTX link to the one-key challenger (S4, X1)"
+  },
+  {
+   "commit": "edf8a2f37522fa416ae8cb92fea83d87dca82095",
+   "subject": "Prove record-lift CTX availability and the last hybrid (S4)"
+  },
+  {
+   "commit": "8030e58deaa9fdeb3e9f91a97f1adfe819edca89",
+   "subject": "Document record-lift CTX availability"
+  },
+  {
+   "commit": "7f34c88520f8f11ed9f5402f5edcfd0bfdecc756",
+   "subject": "Prove the record-lift selected-key law (S4, X2)"
+  },
+  {
+   "commit": "861ebd188d0b46ecf37f0b5a355bde90b07df73f",
+   "subject": "Telescope the record-lift CTX integrity hybrids (S4, X3)"
+  },
+  {
+   "commit": "5be73cbb4b3a4e66758fb1f47ac81522d58a6679",
+   "subject": "Document the record-lift selected-key law and CTX telescope"
+  },
+  {
+   "commit": "2ba13dd7ba5d4c038b0bdcca8228e18d969a826c",
+   "subject": "Prove the record-lift CTX bills and integrity target (S4, X4)"
+  },
+  {
+   "commit": "75474c4271cdb2a9eff8ad991d8c85977fd2c926",
+   "subject": "Document the record-lift CTX bills and integrity target"
+  },
+  {
+   "commit": "a6f3b00dcecbd48b122bff3c6a5748905e498a35",
+   "subject": "Refine the record-lift CTX privacy-half plan"
+  },
+  {
+   "commit": "a3418026846cde516b7fbafdbdea5a5b1cf4c062",
+   "subject": "Fix the CTX-track review findings in docstrings and guides"
+  },
+  {
+   "commit": "ca34bf0aecd156c7198f56feafe336ac020fe334",
+   "subject": "Add the record-lift CTX-track receipt"
+  }
+ ],
+ "commits_note": "Twelve track commits 9622b5fd..a6f3b00d (six module commits, six documentation commits), the fix-pass commit a3418026 (docstrings, guide, analysis, inventory rehash) and the receipt commit ca34bf0a; this version of the receipt is written by the confirming-review nit-fix commit that follows ca34bf0a (documentation only: the guide and this receipt).",
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.lean": "ccda3d9ae827b18e5adfc86439634c38b12f3125df4fea943b94c3f164bd4526",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.lean": "ae508bb0e91226e8960b64e25796ee8d0ff409277706cd962ac6209e800721a8",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.lean": "b8ef23b334ee3dae716e8efb0b7bfc319d631f4c1d562484a87c50857caa6002",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.lean": "b7de32c70c908ae95e4a94e83bb6b218e53d954d7422094e4eafa2cc19f37e00",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.lean": "2410f999a25684bb939a005b994dda4964d242f1053e8f895c7a2e324f31eaaa",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxBills.lean": "b174949df3225fefb27b171fae7de3cb95f147c6428052353ff8206c060a5aef",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "5d0a013ecbf00b120e3e6e44173f2f61d8daf462f247f6665fae1832d539a744",
+  "beaconcrypt-core/proofs/check-inventory.sh": "20155424217acbabec0ffe7831101bef1664ae8f7b1ca51501f12ebf1cd718a9",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "5fcfd80e08faef23f9230e5f35f76829235eb20d024f29d10e08fce8e006c905",
+  "doc/impl/record-lift-ctx-hybrid.md": "3da35daa94d97d1379c9838e869085d1ecc5a8deb7fefeed305369591bf4564a",
+  "doc/formal-verification-analysis.md": "04e52696d920768eea18c8265e12deda31f20c6efad249ba09a1c5f633ef4972"
+ },
+ "files_sha256_note": "At the confirming-review nit-fix commit (the commit that adds this version of the receipt); only doc/impl/record-lift-ctx-hybrid.md differs from files_sha256_fix1. The receipt itself is not listed.",
+ "files_sha256_fix1": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.lean": "ccda3d9ae827b18e5adfc86439634c38b12f3125df4fea943b94c3f164bd4526",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.lean": "ae508bb0e91226e8960b64e25796ee8d0ff409277706cd962ac6209e800721a8",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.lean": "b8ef23b334ee3dae716e8efb0b7bfc319d631f4c1d562484a87c50857caa6002",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.lean": "b7de32c70c908ae95e4a94e83bb6b218e53d954d7422094e4eafa2cc19f37e00",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.lean": "2410f999a25684bb939a005b994dda4964d242f1053e8f895c7a2e324f31eaaa",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxBills.lean": "b174949df3225fefb27b171fae7de3cb95f147c6428052353ff8206c060a5aef",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "5d0a013ecbf00b120e3e6e44173f2f61d8daf462f247f6665fae1832d539a744",
+  "beaconcrypt-core/proofs/check-inventory.sh": "20155424217acbabec0ffe7831101bef1664ae8f7b1ca51501f12ebf1cd718a9",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "5fcfd80e08faef23f9230e5f35f76829235eb20d024f29d10e08fce8e006c905",
+  "doc/impl/record-lift-ctx-hybrid.md": "da2ee9aa73f4ecd5714bceea650c6f9785acd32d15b6063ee9787872e16aa1be",
+  "doc/formal-verification-analysis.md": "04e52696d920768eea18c8265e12deda31f20c6efad249ba09a1c5f633ef4972"
+ },
+ "files_sha256_fix1_note": "At the fix-pass commit a3418026846cde516b7fbafdbdea5a5b1cf4c062, the tree that the fix-pass checks cover; the receipt commit ca34bf0a added only this file.",
+ "files_sha256_a6f3b00d": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.lean": "f7157b8af9047e878267c225b451758191d59ac9281d8d0db93ea129d59e2cb2",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.lean": "f96c25ef06ee0dc42985fb7b97a5e1716f6da3d34f4c36cbd02c3dae0e695d04",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.lean": "211dd7ba8afc9bb18c7da105b938e96f11f48c0d93ed4915e699a9fc98aea7c0",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.lean": "745d9646226ee3cfa6bab308024e54ead029ec4e517d2f7be60477e21251b331",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.lean": "8a96b20ddf16b66ce87482ce05784535236f6fb4c95a582bf07cb83731cef738",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxBills.lean": "2da68d46711aba47dba7e1a7751aaee58d9bc09ffd983d3230447ced1e1b7871",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "5d0a013ecbf00b120e3e6e44173f2f61d8daf462f247f6665fae1832d539a744",
+  "beaconcrypt-core/proofs/check-inventory.sh": "20155424217acbabec0ffe7831101bef1664ae8f7b1ca51501f12ebf1cd718a9",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "5953c7682866f324164f770914c160e25a9f76d6c5ed66d4aff0bc6550a7c016",
+  "doc/impl/record-lift-ctx-hybrid.md": "c363c847310db4fca45e92aff11e0ced26c76c1eeab39fc93245a211ab6f883b",
+  "doc/formal-verification-analysis.md": "3c0c91b4405e96644f09d99d21ac8aae003474cae2c163035e7559096bbee96e"
+ },
+ "modules": [
+  {
+   "name": "PqxdhRecordLiftCtxHybrid",
+   "plan_stage": "X1",
+   "module_commit": "9622b5fd",
+   "statement_count": 29,
+   "statements": [
+    {
+     "name": "keyed_bare",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "openArguments_facts",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "real_open_cache",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "opening_bare",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "stateT_map_apply",
+     "axioms": []
+    },
+    {
+     "name": "stateT_bind_apply",
+     "axioms": []
+    },
+    {
+     "name": "real_seal_cache",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "eraseSeal_arguments",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sealing_bare",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "base_bare",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keyed_other",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hash_support",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "real_nonseal_nonces",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keyed_self",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "opening_nonces",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sealing_other",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "step_bare",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "base_keys",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "step_unsealed",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "schedule_bare",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "initial_unsealed",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "allReal_bare",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "allReal_view",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "allReal_decision",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hybridModes_zero",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hybrid_zero_view",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hybridModes_last",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hybridModes_unchanged",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hybridModes_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 27,
+    "none": 2
+   },
+   "source_sha256_a6f3b00d": "f7157b8af9047e878267c225b451758191d59ac9281d8d0db93ea129d59e2cb2",
+   "source_sha256_fix": "ccda3d9ae827b18e5adfc86439634c38b12f3125df4fea943b94c3f164bd4526",
+   "check_a6f3b00d": {
+    "start": "2026-10-08T09:43:50.285500359Z",
+    "end": "2026-10-08T09:43:57.546864056Z",
+    "exit": 0,
+    "source_sha256": "f7157b8af9047e878267c225b451758191d59ac9281d8d0db93ea129d59e2cb2",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.olean",
+    "artifact_sha256": "e1670dde3be163d1fba5dd046e62080f333584273ad8f66dadae9f25823e46fb",
+    "leanpath_sha256": "02ff0a1e656b125ece3b8bab72fa47c3d59d979b4b9dd9193099a10d12704749",
+    "log": "/tmp/bc-arc-scratch/items45/ctx/logs/PqxdhRecordLiftCtxHybrid-m2.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.olean",
+     "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.lean"
+    ],
+    "tag": "m2"
+   },
+   "check_fix": {
+    "start": "2026-10-08T11:54:44.737442588Z",
+    "end": "2026-10-08T11:54:52.422521829Z",
+    "exit": 0,
+    "source_sha256": "ccda3d9ae827b18e5adfc86439634c38b12f3125df4fea943b94c3f164bd4526",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.olean",
+    "artifact_sha256": "2875ade84cd974568523d41effa16411b9c74a402ba7bd4a70b0894d6254b797",
+    "leanpath_sha256": "df118ea22342a4690e3ac4f1cac375654291e821ec94fdad31c4d5ab7d24940b",
+    "log": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/PqxdhRecordLiftCtxHybrid-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.olean",
+     "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.lean"
+    ],
+    "tag": "f1"
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftCtxLink",
+   "plan_stage": "X1",
+   "module_commit": "00eaeb04",
+   "statement_count": 27,
+   "statements": [
+    {
+     "name": "ctxRunWith_tableKey",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keyedWith_erase",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "base_erase",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxInterpreterWith_erase",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "slotOf_ne_zero",
+     "axioms": [
+      "propext"
+     ]
+    },
+    {
+     "name": "slotOf_injective",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keysOf_reserved",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "coinForward_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "coinForward_program",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "simulateQ_hashForward",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hashForward_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hashForward_program",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keysOf_selected",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keysOf_other",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keyImpl_bool",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keyImpl_known",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "routeKeyed_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "known_link",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "linked_run",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "linked_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "linked_schedule",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxInterpreterWith_schedule",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "linkProj_initial",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "link",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hybridModes_notRandom",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "selectedModes_hybrid_real",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "selectedModes_hybrid_replay",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 23,
+    "propext": 1,
+    "Quot.sound, propext": 3
+   },
+   "source_sha256_a6f3b00d": "f96c25ef06ee0dc42985fb7b97a5e1716f6da3d34f4c36cbd02c3dae0e695d04",
+   "source_sha256_fix": "ae508bb0e91226e8960b64e25796ee8d0ff409277706cd962ac6209e800721a8",
+   "check_a6f3b00d": {
+    "start": "2026-10-08T10:01:59.759719298Z",
+    "end": "2026-10-08T10:02:05.741802293Z",
+    "exit": 0,
+    "source_sha256": "f96c25ef06ee0dc42985fb7b97a5e1716f6da3d34f4c36cbd02c3dae0e695d04",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.olean",
+    "artifact_sha256": "1041da126afc6c313865f793878c1efc97e47c08e757460c1953a1eb16b1c000",
+    "leanpath_sha256": "02ff0a1e656b125ece3b8bab72fa47c3d59d979b4b9dd9193099a10d12704749",
+    "log": "/tmp/bc-arc-scratch/items45/ctx/logs/PqxdhRecordLiftCtxLink-m1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.olean",
+     "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.lean"
+    ],
+    "tag": "m1"
+   },
+   "check_fix": {
+    "start": "2026-10-08T11:54:52.465861995Z",
+    "end": "2026-10-08T11:54:58.231976073Z",
+    "exit": 0,
+    "source_sha256": "ae508bb0e91226e8960b64e25796ee8d0ff409277706cd962ac6209e800721a8",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.olean",
+    "artifact_sha256": "a9ef1883d4d289c16874957b1fd18554c278882cf72afa2de05d09c8ba6e5c9a",
+    "leanpath_sha256": "df118ea22342a4690e3ac4f1cac375654291e821ec94fdad31c4d5ab7d24940b",
+    "log": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/PqxdhRecordLiftCtxLink-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.olean",
+     "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.lean"
+    ],
+    "tag": "f1"
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftCtxAvailability",
+   "plan_stage": "none (obligation found by the track; plan section 8, deviation 3)",
+   "module_commit": "edf8a2f3",
+   "statement_count": 80,
+   "statements": [
+    {
+     "name": "opening_material_present",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "lookup_factor",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "lookup_kdf",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "lookup_support",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "historyTable_present",
+     "axioms": [
+      "propext"
+     ]
+    },
+    {
+     "name": "historyTable_mono",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "historyTable_append",
+     "axioms": [
+      "propext"
+     ]
+    },
+    {
+     "name": "localSafe_query_bind",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "localTrack_query_bind",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "receive_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "send_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "serviceSafe_query_bind",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "serviceSafe_pure",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "trace_pure",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "track_member",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "serviceSafe_bind",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "trace_bind",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "serviceSafe_map",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "trace_map",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "localLift_safe",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "localLift_trace",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "localTrack_support",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ready_mono",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "kernelReceive_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "kernelSend_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "trace_pure_member",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ownerStep_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ownerRun_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "controlReady_mono",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "controlReady_server",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "controlReady_owner",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "controlReady_attempts",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "serverStep_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "beaconStep_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "controlReady_markUsed",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "controlReady_congr",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "markUsed_server",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "controlReady_peers",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "resolve_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "capability_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "effects_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "initializeServer_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "handler_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "schedule_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "initial_ready",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "program_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "localLift_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "query_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "kernelReceive_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "kernelSend_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ownerRun_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "resolve_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "capability_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "effects_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "serverStep_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "beaconStep_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "handler_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "world_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "program_lookups",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "lookupCoordinates_length",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "history_depth",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "history_bounded",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxInterpreterWith_of",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keyedWith_chain",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keyedWith_congr",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "material_chains",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "openArguments_material",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "opening_congr",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "query_bind_congr",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sealing_congr",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "simulate_chain",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "chain_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "touches_of_avail",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "certified_map",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "history_empty",
+     "axioms": [
+      "propext"
+     ]
+    },
+    {
+     "name": "program_map",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxInterpreterOf_congr",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "program_congr",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxRunWith_congr",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hybrid_last",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 74,
+    "propext": 3,
+    "Quot.sound, propext": 3
+   },
+   "source_sha256_a6f3b00d": "211dd7ba8afc9bb18c7da105b938e96f11f48c0d93ed4915e699a9fc98aea7c0",
+   "source_sha256_fix": "b8ef23b334ee3dae716e8efb0b7bfc319d631f4c1d562484a87c50857caa6002",
+   "check_a6f3b00d": {
+    "start": "2026-10-08T10:43:38.575850760Z",
+    "end": "2026-10-08T10:43:47.170387411Z",
+    "exit": 0,
+    "source_sha256": "211dd7ba8afc9bb18c7da105b938e96f11f48c0d93ed4915e699a9fc98aea7c0",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.olean",
+    "artifact_sha256": "c4b62d7141008dde004927a019f2ee9267bca1e8d6fd3a4e0ca31f29ed336138",
+    "leanpath_sha256": "02ff0a1e656b125ece3b8bab72fa47c3d59d979b4b9dd9193099a10d12704749",
+    "log": "/tmp/bc-arc-scratch/items45/ctx/logs/PqxdhRecordLiftCtxAvailability-m1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.olean",
+     "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.lean"
+    ],
+    "tag": "m1"
+   },
+   "check_fix": {
+    "start": "2026-10-08T11:54:58.267337200Z",
+    "end": "2026-10-08T11:55:06.713050270Z",
+    "exit": 0,
+    "source_sha256": "b8ef23b334ee3dae716e8efb0b7bfc319d631f4c1d562484a87c50857caa6002",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.olean",
+    "artifact_sha256": "3ff37558fbcd1b800c1d0ca387a5a01bf4be67687d8520a64e27dc111d4d00f9",
+    "leanpath_sha256": "df118ea22342a4690e3ac4f1cac375654291e821ec94fdad31c4d5ab7d24940b",
+    "log": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/PqxdhRecordLiftCtxAvailability-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.olean",
+     "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.lean"
+    ],
+    "tag": "f1"
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftKeyCut",
+   "plan_stage": "X2",
+   "module_commit": "7f34c885",
+   "statement_count": 39,
+   "statements": [
+    {
+     "name": "lookup_miss",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "lookup_hit",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "world_id",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "world_other",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "world_miss",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "miss_eager",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "table_eager",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "base_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keyStore_material",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "chain_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "nonce_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "key_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "selectedKey_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hiddenOpening_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hiddenSealing_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keyedWith_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "simulate_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "opening_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sealing_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "mask_miss_self",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "mask_miss_other",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "maskAt_none",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "world_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "chain_frame",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "world_preserve",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "initial_chain",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "initial_stored",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "tableKey_selected",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "world_selected_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "selected_table",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keyStore_mask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "mask_absent",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "world_id_impl",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "selected_keyedMask",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "stored_view",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxView_map",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "key_cut_view",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "key_cut",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "key_cut_measure",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 39
+   },
+   "source_sha256_a6f3b00d": "745d9646226ee3cfa6bab308024e54ead029ec4e517d2f7be60477e21251b331",
+   "source_sha256_fix": "b7de32c70c908ae95e4a94e83bb6b218e53d954d7422094e4eafa2cc19f37e00",
+   "check_a6f3b00d": {
+    "start": "2026-10-08T11:06:17.124612989Z",
+    "end": "2026-10-08T11:06:22.737882363Z",
+    "exit": 0,
+    "source_sha256": "745d9646226ee3cfa6bab308024e54ead029ec4e517d2f7be60477e21251b331",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.olean",
+    "artifact_sha256": "371d987b1bc2c39e60a5016131c4fa0983c264f28da5381fa4efe419022fd3d8",
+    "leanpath_sha256": "02ff0a1e656b125ece3b8bab72fa47c3d59d979b4b9dd9193099a10d12704749",
+    "log": "/tmp/bc-arc-scratch/items45/ctx/logs/PqxdhRecordLiftKeyCut-m1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.olean",
+     "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.lean"
+    ],
+    "tag": "m1"
+   },
+   "check_fix": {
+    "start": "2026-10-08T11:55:09.694954784Z",
+    "end": "2026-10-08T11:55:15.931260598Z",
+    "exit": 0,
+    "source_sha256": "b7de32c70c908ae95e4a94e83bb6b218e53d954d7422094e4eafa2cc19f37e00",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.olean",
+    "artifact_sha256": "4f5af57bfbd281ede13a654556e94cdb0290287a3cbad55dd3e2faba6b5eddda",
+    "leanpath_sha256": "df118ea22342a4690e3ac4f1cac375654291e821ec94fdad31c4d5ab7d24940b",
+    "log": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/PqxdhRecordLiftKeyCut-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.olean",
+     "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.lean"
+    ],
+    "tag": "f1"
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftCtx",
+   "plan_stage": "X3",
+   "module_commit": "861ebd18",
+   "statement_count": 6,
+   "statements": [
+    {
+     "name": "game_real",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "game_replay",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "advantage_congr",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hop_bound",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxAuthLiftBool_of_billed",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxAuthLiftTarget_of_billed",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 6
+   },
+   "source_sha256_a6f3b00d": "8a96b20ddf16b66ce87482ce05784535236f6fb4c95a582bf07cb83731cef738",
+   "source_sha256_fix": "2410f999a25684bb939a005b994dda4964d242f1053e8f895c7a2e324f31eaaa",
+   "check_a6f3b00d": {
+    "start": "2026-10-08T11:12:58.292739165Z",
+    "end": "2026-10-08T11:13:02.518066498Z",
+    "exit": 0,
+    "source_sha256": "8a96b20ddf16b66ce87482ce05784535236f6fb4c95a582bf07cb83731cef738",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.olean",
+    "artifact_sha256": "16b33f5a79f3dcc91462b51abd890fa06adb8a2632ec00186ba917887f7aebe5",
+    "leanpath_sha256": "02ff0a1e656b125ece3b8bab72fa47c3d59d979b4b9dd9193099a10d12704749",
+    "log": "/tmp/bc-arc-scratch/items45/ctx/logs/PqxdhRecordLiftCtx-m1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.olean",
+     "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.lean"
+    ],
+    "tag": "m1"
+   },
+   "check_fix": {
+    "start": "2026-10-08T11:55:15.969320908Z",
+    "end": "2026-10-08T11:55:20.690194704Z",
+    "exit": 0,
+    "source_sha256": "2410f999a25684bb939a005b994dda4964d242f1053e8f895c7a2e324f31eaaa",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.olean",
+    "artifact_sha256": "5fbcccff8bab838a1761eda6b1a506b60f4c6594b1e79132162bde79257af596",
+    "leanpath_sha256": "df118ea22342a4690e3ac4f1cac375654291e821ec94fdad31c4d5ab7d24940b",
+    "log": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/PqxdhRecordLiftCtx-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.olean",
+     "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.lean"
+    ],
+    "tag": "f1"
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftCtxBills",
+   "plan_stage": "X4",
+   "module_commit": "2ba13dd7",
+   "statement_count": 34,
+   "statements": [
+    {
+     "name": "weighted_cost_mono",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "run_bound",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "query_categories",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "publish_cost",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "charge_cost",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ownerRun_categories",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "resolve_categories",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "capability_categories",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "effects_categories",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "serverStep_categories",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "beaconStep_categories",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "handler_categories",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "worldBill_split",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "world_categories",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "program_categories",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "fresh_target_seal",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "program_target_seal",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "coinForward_route",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hashForward_route",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "allocate_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "bareLookup_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "opening_route",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sealing_route",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reduction_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reduction_uniform",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reduction_hash",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reduction_private",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reduction_seal",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reduction_raw",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "link_route",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hash_bill",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "stepBilled",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxAuthLiftTarget",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxAuthLiftStatement",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "Quot.sound, propext": 1,
+    "Classical.choice, Quot.sound, propext": 33
+   },
+   "source_sha256_a6f3b00d": "2da68d46711aba47dba7e1a7751aaee58d9bc09ffd983d3230447ced1e1b7871",
+   "source_sha256_fix": "b174949df3225fefb27b171fae7de3cb95f147c6428052353ff8206c060a5aef",
+   "check_a6f3b00d": {
+    "start": "2026-10-08T11:27:03.567193352Z",
+    "end": "2026-10-08T11:27:10.213801970Z",
+    "exit": 0,
+    "source_sha256": "2da68d46711aba47dba7e1a7751aaee58d9bc09ffd983d3230447ced1e1b7871",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxBills.olean",
+    "artifact_sha256": "be25416e4a51fd6f842eb90d30caf2c049b8d0d4b5a20f25f7c90f46303a2caf",
+    "leanpath_sha256": "02ff0a1e656b125ece3b8bab72fa47c3d59d979b4b9dd9193099a10d12704749",
+    "log": "/tmp/bc-arc-scratch/items45/ctx/logs/PqxdhRecordLiftCtxBills-m1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxBills.olean",
+     "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxBills.lean"
+    ],
+    "tag": "m1"
+   },
+   "check_fix": {
+    "start": "2026-10-08T11:55:20.725019513Z",
+    "end": "2026-10-08T11:55:27.884084952Z",
+    "exit": 0,
+    "source_sha256": "b174949df3225fefb27b171fae7de3cb95f147c6428052353ff8206c060a5aef",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxBills.olean",
+    "artifact_sha256": "e6206c067290360b07a2ec76b162d441bc26e5b1ed16d51b0436eaec00988f35",
+    "leanpath_sha256": "df118ea22342a4690e3ac4f1cac375654291e821ec94fdad31c4d5ab7d24940b",
+    "log": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/PqxdhRecordLiftCtxBills-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxBills.olean",
+     "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxBills.lean"
+    ],
+    "tag": "f1"
+   }
+  }
+ ],
+ "statements": 215,
+ "statement_counts": {
+  "PqxdhRecordLiftCtxHybrid": 29,
+  "PqxdhRecordLiftCtxLink": 27,
+  "PqxdhRecordLiftCtxAvailability": 80,
+  "PqxdhRecordLiftKeyCut": 39,
+  "PqxdhRecordLiftCtx": 6,
+  "PqxdhRecordLiftCtxBills": 34
+ },
+ "allowed_axioms": [
+  "Classical.choice",
+  "Quot.sound",
+  "propext"
+ ],
+ "axiom_profile_from_guards": {
+  "Classical.choice, Quot.sound, propext": 202,
+  "none": 2,
+  "propext": 4,
+  "Quot.sound, propext": 7
+ },
+ "leanpath": {
+  "track": {
+   "manifest": "/tmp/bc-arc-scratch/items45/ctx/leanpath",
+   "sha256": "02ff0a1e656b125ece3b8bab72fa47c3d59d979b4b9dd9193099a10d12704749",
+   "prefix": "/tmp/bc-arc-scratch/items45/ctx/olean",
+   "mirror_script": "/tmp/bc-arc-scratch/items45/ctx/mirror.py",
+   "mirror_log": "source /tmp/bc-arc-scratch/items45/ideal/int/olean links 1696 skipped 1 broken 0",
+   "note": "Resolved symlink mirror of the first prefix of the published LEAN_PATH of central ee7878ee (/tmp/bc-coord/leanpaths/ee7878ee4c42f59460a3a8b80983a4a209bd4e0d.leanpath) without its root olean, in front of that published LEAN_PATH; used by the track checks up to a6f3b00d."
+  },
+  "fix": {
+   "manifest": "/tmp/bc-arc-scratch/items45/ctx/fix1/leanpath",
+   "sha256": "df118ea22342a4690e3ac4f1cac375654291e821ec94fdad31c4d5ab7d24940b",
+   "prefix": "/tmp/bc-arc-scratch/items45/ctx/fix1/olean",
+   "mirror_script": "/tmp/bc-arc-scratch/items45/ctx/fix1/mirror.py",
+   "mirror_log": "source /tmp/bc-arc-scratch/items45/ideal/int/olean links 1696 skipped 1 broken 0",
+   "published_sha256": "bbc444378bf8646ea024e97a79432e0ccbe5225c81cc9b08356e94d83f9fc991",
+   "note": "Fresh prefix of the fix pass, built the same way from the same published LEAN_PATH; the six CTX oleans and the root olean were written into it by the f1 checks. This is the LEAN_PATH that reproduces the fix-pass tree."
+  }
+ },
+ "root_checks": {
+  "root-r7 (2ba13dd7 tree; the root file is unchanged up to a6f3b00d)": {
+   "start": "2026-10-08T11:27:27.307822069Z",
+   "end": "2026-10-08T11:27:30.435577341Z",
+   "exit": 0,
+   "source_sha256": "5d0a013ecbf00b120e3e6e44173f2f61d8daf462f247f6665fae1832d539a744",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore.olean",
+   "artifact_sha256": "aeb32484f589186ba6c70ccd0995027d306c5398400252fe284a74e1dae04253",
+   "leanpath_sha256": "02ff0a1e656b125ece3b8bab72fa47c3d59d979b4b9dd9193099a10d12704749",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/logs/root-r7.log",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/items45/ctx/olean/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ]
+  },
+  "root-f1 (a3418026 tree)": {
+   "start": "2026-10-08T11:55:33.935191661Z",
+   "end": "2026-10-08T11:55:37.207474519Z",
+   "exit": 0,
+   "source_sha256": "5d0a013ecbf00b120e3e6e44173f2f61d8daf462f247f6665fae1832d539a744",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore.olean",
+   "artifact_sha256": "aeb32484f589186ba6c70ccd0995027d306c5398400252fe284a74e1dae04253",
+   "leanpath_sha256": "df118ea22342a4690e3ac4f1cac375654291e821ec94fdad31c4d5ab7d24940b",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/root-f1.log",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/items45/ctx/fix1/olean/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ]
+  }
+ },
+ "inventory": {
+  "track": "coord.sh inv recount claude then coord.sh inv rehash claude at every module commit; handwritten-lean 1663 -> 1669 (+6 modules; logs inv-recount-{1,link,avail,keycut,ctx,bills}.log); the six gate blocks (theorem and guard counts and names) before \"# Separate primitive-fidelity profile\"; root imports at the end of the import block; manifest rows at the end of reviewed-inventory.txt",
+  "fix": {
+   "recount": "handwritten-lean count unchanged (1669)",
+   "rehash": "proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.lean: f7157b8af904 -> ccda3d9ae827; proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.lean: f96c25ef06ee -> ae508bb0e912; proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.lean: 211dd7ba8afc -> b8ef23b334ee; proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.lean: 745d9646226e -> b7de32c70c90; proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.lean: 8a96b20ddf16 -> 2410f999a256; proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxBills.lean: 2da68d46711a -> b174949df322",
+   "rehash_default": "proofs/lean/BeaconcryptCore.lean: unchanged; proofs/trusted-boundary.md: unchanged; proofs/check-inventory.sh: unchanged"
+  },
+  "integration_note": "A trivial-mode git merge-tree of ee7878ee, central 98b906d9 and a6f3b00d (hygiene review) conflicts only in check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt and doc/formal-verification-analysis.md, and central adds none of the six module names. After the merge with 98b906d9 the expected handwritten-lean count is 1673 + 6 = 1679 (hygiene finding H3; the earlier note said 1676).",
+  "integration_note_nit_fix": "Central has moved past 98b906d9: at the confirming review it was 0b70190e (CE-11b increment 2, handwritten-lean 1674). Merging 0b70190e gives 1674 + 6 = 1680 (confirming-review nit 3); the integration recounts against the central tip it merges and records the result in its checks receipt."
+ },
+ "focused_inventory": {
+  "inventory-x1": {
+   "exit": 2,
+   "start": "2026-10-08T09:43:24Z",
+   "end": "2026-10-08T09:43:30Z",
+   "recorded_head": "d78ebbabe41e332297f31502a942416dd6ccce05",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/logs/inventory-x1.log",
+   "log_sha256": "a39ea349ac0e5826426ddb3768f79edf8c7b17e136be83b23ab76262091a63c3",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "tree": "d78ebbab (unpushed, amended)",
+   "note": "Failed (exit 2) on the word \"axiom\" in a docstring of the first local version of the Hybrid commit; reworded and the unpushed commit amended into 9622b5fd; d78ebbab was never pushed."
+  },
+  "inventory-x1b": {
+   "exit": 0,
+   "start": "2026-10-08T09:44:06Z",
+   "end": "2026-10-08T09:45:28Z",
+   "recorded_head": "9622b5fd2e263516e6be757aa8b56c7eb87958bd",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/logs/inventory-x1b.log",
+   "log_sha256": "c3499c1a43875b6cbde59ceac2ab5aee565747f8b5fa2ae17bec10c26407d7a4",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "tree": "9622b5fd (clean commit)",
+   "note": "PqxdhRecordLiftCtxHybrid"
+  },
+  "inventory-link": {
+   "exit": 0,
+   "start": "2026-10-08T10:02:36Z",
+   "end": "2026-10-08T10:03:57Z",
+   "recorded_head": "00eaeb0455c729cf95bccd5bdbf14707fb4f6760",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/logs/inventory-link.log",
+   "log_sha256": "02ccfbea65281de82fbf69437ada746bc1aca5c125c565e9d33740c85645c7ac",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "tree": "00eaeb04 (clean commit)",
+   "note": "PqxdhRecordLiftCtxLink"
+  },
+  "inventory-avail": {
+   "exit": 0,
+   "start": "2026-10-08T10:44:20Z",
+   "end": "2026-10-08T10:45:41Z",
+   "recorded_head": "1ec902a97b1a1c1bd0b9a8276ce656a741803de5",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/logs/inventory-avail.log",
+   "log_sha256": "dcbfadd58acc31fe026f8c401a343e2e135131bbc4688eb669df811d26e2035d",
+   "dirt_bytes_before": 247,
+   "dirt_bytes_after": 247,
+   "tree": "staged tree that became edf8a2f3",
+   "note": "Recorded head is the parent 1ec902a9; the run ended 8 s before the module commit (hygiene finding H4)."
+  },
+  "inventory-keycut": {
+   "exit": 0,
+   "start": "2026-10-08T11:06:44Z",
+   "end": "2026-10-08T11:08:04Z",
+   "recorded_head": "8030e58deaa9fdeb3e9f91a97f1adfe819edca89",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/logs/inventory-keycut.log",
+   "log_sha256": "c64429c4d9cc6b610a6cb792536977b00dae5ec28a8a7544808dd7bb75c18fad",
+   "dirt_bytes_before": 238,
+   "dirt_bytes_after": 238,
+   "tree": "staged tree that became 7f34c885",
+   "note": "Recorded head is the parent 8030e58d; the run ended about 10 s before the module commit."
+  },
+  "inventory-ctx": {
+   "exit": 0,
+   "start": "2026-10-08T11:13:16Z",
+   "end": "2026-10-08T11:14:38Z",
+   "recorded_head": "7f34c88520f8f11ed9f5402f5edcfd0bfdecc756",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/logs/inventory-ctx.log",
+   "log_sha256": "b295b31bf57e9fbb8ac611e2a1e88679d172c4bb7d8caf71a54300651b099104",
+   "dirt_bytes_before": 235,
+   "dirt_bytes_after": 235,
+   "tree": "staged tree that became 861ebd18",
+   "note": "Recorded head is the parent 7f34c885; the run ended about 9 s before the module commit."
+  },
+  "inventory-bills": {
+   "exit": 0,
+   "start": "2026-10-08T11:27:30Z",
+   "end": "2026-10-08T11:28:52Z",
+   "recorded_head": "5be73cbb4b3a4e66758fb1f47ac81522d58a6679",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/logs/inventory-bills.log",
+   "log_sha256": "c14db8af13effe25729a66a55dbd4ed0aac9814f042242d09e5fdbd9b642a09e",
+   "dirt_bytes_before": 240,
+   "dirt_bytes_after": 240,
+   "tree": "staged tree that became 2ba13dd7",
+   "note": "Recorded head is the parent 5be73cbb; the run ended about 9 s before the module commit."
+  },
+  "review-hygiene": {
+   "exit": 0,
+   "tree": "a6f3b00d (clean)",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/review-hygiene/logs/inventory.log",
+   "log_sha256": "6fedded492b4a9af5f0a5325c6da889e9a752d023d285e702a5231bc3a68a1b4",
+   "note": "Independent run by the hygiene review; its per-commit static replay (invcommits.py) found all 13 commits consistent."
+  },
+  "inventory-f1": {
+   "exit": 0,
+   "start": "2026-10-08T11:59:40Z",
+   "end": "2026-10-08T12:01:03Z",
+   "recorded_head": "a3418026846cde516b7fbafdbdea5a5b1cf4c062",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/inventory-f1.log",
+   "log_sha256": "85dab7afca7972e25d5d3fa7ae5e82a0fcd2448452d750480f17dd5526181def",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "tree": "a3418026 (clean commit)",
+   "note": "Fix-pass run on the clean fix-pass commit",
+   "command": "coord.sh lease mem claude @nix items45-ctxfix-inventory-f1 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core check-inventory SHELL=bash"
+  },
+  "inventory-f2": {
+   "exit": 0,
+   "start": "2026-10-08T12:04:19Z",
+   "end": "2026-10-08T12:05:42Z",
+   "recorded_head": "ca34bf0aecd156c7198f56feafe336ac020fe334",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/inventory-f2.log",
+   "log_sha256": "2994741a6d12970fbeb0e6d367d5e9dd9c7a6bc155c5807d20a6521c13b43eba",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "tree": "ca34bf0a (clean receipt commit)",
+   "note": "Run at the receipt commit ca34bf0a after this receipt was written, so it was recorded only outside the repository until the confirming-review nit fix. The nit-fix commit changes only Markdown and this receipt, which check-inventory does not read.",
+   "command": "coord.sh lease mem claude @nix items45-ctxfix-inventory-f2 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core check-inventory SHELL=bash"
+  }
+ },
+ "diff_check": "git diff --check clean on every track commit (hygiene review) and on the fix-pass commit",
+ "forbidden_scan": "No sorry, admit, axiom declaration, native_decide, implemented_by, extern, unsafe or opaque in the six modules (hygiene review; guards.py verify in the fix pass); options: autoImplicit false in all six, set_option maxRecDepth 2048 in (one use in PqxdhRecordLiftCtxBills), set_option linter.deprecated false in before exactly miss_eager, table_eager, key_cut_view and key_cut of PqxdhRecordLiftKeyCut (four; the fifth, before key_cut_measure, was removed in the fix pass); the check-inventory escape-hatch scan passes",
+ "h7_scan": {
+  "tool": "/tmp/bc-arc-scratch/items45/ctx/tools/h7scan.py",
+  "tool_sha256": "53cd7e6977b22a073febb1ae52f45b3fb4d28e51d2b130944bc2dd8db8ced1d2",
+  "tool_note": "Version 3, identical to /tmp/bc-arc-scratch/items45/A/int2/tools/h7scan.py; case-insensitive, with the version-3 addition of the name of the random-oracle specification behind the fixed-HKDF random table (not spelled out here, so that this receipt passes the same scan)",
+  "track": {
+   "outputs": "/tmp/bc-arc-scratch/items45/ctx/logs/h7scan-{hybrid,link,availability,keycut,ctx,bills}.json",
+   "result": "six modules: no forbidden hit"
+  },
+  "review": {
+   "output": "/tmp/bc-arc-scratch/items45/ctx/review-semantic/logs/h7scan.json",
+   "result": "six modules: no forbidden hit (semantic review)"
+  },
+  "fix_modules": {
+   "output": "/tmp/bc-arc-scratch/items45/ctx/fix1/h7scan-modules.json",
+   "sha256": "361b1774ff76cfcdfe88b7ffa7857d140a1b298565cd4b21a2cc17917d63b168",
+   "result": "six modules: no forbidden hit"
+  },
+  "fix_docs": {
+   "output": "/tmp/bc-arc-scratch/items45/ctx/fix1/h7scan-docs.json",
+   "sha256": "d1c8f1e79a9bb9b2e83b70243027b1378bc6d4dc607d5f4ff15d4f99a4aa77a7",
+   "result": "guide doc/impl/record-lift-ctx-hybrid.md and the lines that the branch adds to doc/formal-verification-analysis.md: no forbidden and no informational hit"
+  },
+  "fix_receipt": {
+   "output": "/tmp/bc-arc-scratch/items45/ctx/fix1/h7scan-receipt.json",
+   "result": "this receipt: no forbidden hit; informational FixedHkdfSha512NoSaltSource only where this receipt describes the informational hits of the modules"
+  },
+  "informational": "FixedHkdfSha512NoSaltSource at PqxdhRecordLiftCtxAvailability line 94 and PqxdhRecordLiftCtxBills line 385: the type of setup.source in accounting lemmas over the central ChainOracle lookup signature; no random table replaces a public HKDF evaluation"
+ },
+ "meta_check": {
+  "probe": "/tmp/bc-arc-scratch/items45/ctx/tools/H7Closure.lean",
+  "probe_sha256": "cc903a3626bffbcb7c9a0b0f1e862b5a16be52b5137a575b64138a8e21a0e4b0",
+  "track": {
+   "9622b5fd (Hybrid)": "H-7 guard: modules 1; declared constants 67; closure 23816; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+   "00eaeb04 (+Link)": "H-7 guard: modules 2; declared constants 170; closure 23955; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+   "edf8a2f3 (+Availability)": "H-7 guard: modules 3; declared constants 388; closure 24608; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+   "7f34c885 (+KeyCut)": "H-7 guard: modules 4; declared constants 467; closure 24905; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+   "861ebd18 (+Ctx)": "H-7 guard: modules 5; declared constants 478; closure 27050; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+   "2ba13dd7 (+Bills)": "H-7 guard: modules 6; declared constants 622; closure 27616; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12"
+  },
+  "track_note": "Each run covers the modules committed so far (the closure tool imports the newest module); the guide of a6f3b00d gave the five-module numbers for the KeyCut commit too (hygiene finding H4), corrected in the fix pass.",
+  "reviews": "Semantic review rerun (review-semantic/logs/h7closure.log) and hygiene review rerun (review-hygiene/logs/h7closure.log): modules 6, 622 declared constants, closure 27616, 0 direct, 0 violations, 12 of 12 structural; hygiene negative control (dropped Quot.sound in the ctxAuthLiftTarget guard) fails with exit 1",
+  "fix": {
+   "log": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/h7closure-f1.log",
+   "log_sha256": "8119f9652cfb9ade2f6c00ff9900dc7521c1d55f2a2ca52fd53424983735b501",
+   "result": "H-7 guard: modules 6; declared constants 622; closure 27616; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+   "leanpath_sha256": "df118ea22342a4690e3ac4f1cac375654291e821ec94fdad31c4d5ab7d24940b"
+  }
+ },
+ "deviations_from_plan": [
+  "(1) Hops are linked through PqxdhRecordLiftCtxModes (real and replay known calls) instead of program_reduction_cut of PqxdhRecordLiftCtxProtocol, so the X2 item \"discharge parentIdeal of program_reduction_cut\" is replaced by the selected-key law (PqxdhRecordLiftKeyCut).",
+  "(2) Six modules (Hybrid, Link, Availability, KeyCut, Ctx, Bills) instead of four.",
+  "(3) New obligation found and proved: CTX worlds read keys from the chain table with an all-zero fallback, so the hybrid argument needs the availability and depth invariant (PqxdhRecordLiftCtxAvailability), missing from the S1 notes.",
+  "(4) Replay mode also seals with the key, so the selected-key law is used on both sides of every hop.",
+  "(5) qSeal = 1 comes from PqxdhRecordLiftProtocolHistory.program_fresh (Budget has no cap below 2^96 on sends), not from a Budget field."
+ ],
+ "not_proved": [
+  "The privacy half CtxPrivLiftStatement (idealAuth to randomRecords, per-key loss privacyLoss), including the open S1 point that PqxdhRecordLiftIdeal.randomImpl matches the IND$ random experiment behind replay_random_advantage (the semantic review compared them at definition level and saw no mismatch; still an obligation)",
+  "RecordLiftStatement and the origin, binding and hiding targets (S5), R6 forms (S6): other stages"
+ ],
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in the track, the fix pass or the nit fix; no production Rust or ProVerif change. Transcript fidelity (cargo under @cargo) and the central integration checks of PROTOCOL section 6 run on the merged tip (nit_fix.integration_checks).",
+ "review": {
+  "reviewed_commit": "a6f3b00dcecbd48b122bff3c6a5748905e498a35",
+  "reviewed_range": "ee7878ee..a6f3b00d",
+  "semantic": {
+   "reviewer": "independent Claude semantic review (did not write the modules)",
+   "notes": "/tmp/bc-arc-scratch/items45/ctx/review-semantic/NOTES.md",
+   "verdict": "APPROVE_WITH_NITS",
+   "evidence": "probe/Probe.lean: ctxAuthLiftTarget elaborates as the central CtxAuthLiftStatement ... (PqxdhRecordLiftCtx.ctxReduction ...) ctxBills noTerm, only argument fallback, axioms propext, Classical.choice, Quot.sound; ctxBills.seals = 1 and raw = Budget.receives; PqxdhRecordLiftIdeal, CtxModes and CtxModeBounds byte-identical to central 98b906d9; six modules recompiled without -o (exit 0, empty logs); H-7 scan v3 and closure guard rerun clean; contracts probe probe/Contracts.lean (logs/contracts.log)"
+  },
+  "hygiene": {
+   "reviewer": "independent Claude hygiene review (did not write the modules)",
+   "notes": "/tmp/bc-arc-scratch/items45/ctx/review-hygiene/NOTES.md",
+   "verdict": "APPROVE_WITH_NITS",
+   "evidence": "guard/theorem bijection 29/27/80/39/6/34; independent rechecks of six modules and root (exit 0, empty logs); negative control exit 1; per-commit static inventory replay (invcommits.py, 13 commits OK); focused check-inventory at a6f3b00d exit 0; deprecated-API probe KeyCutNoSuppress.lean (11 evalSPMF warnings, all in miss_eager, table_eager, key_cut_view, key_cut); merge-tree dry run against 98b906d9; footers, origin and registry checked"
+  },
+  "findings": [
+   {
+    "review": "semantic",
+    "id": "S1",
+    "severity": "minor",
+    "title": "The docs say the integrity half uses no contract, but the final theorem relies on functional AEAD correctness (H-7 list)",
+    "response": "Contracts listed per theorem in the docstrings of PqxdhRecordLiftCtx (Contracts paragraph) and PqxdhRecordLiftCtxBills (Contracts paragraph), the Scope or Contracts paragraphs of the other four modules, the guide (first paragraph and new section \"Contracts per theorem\"), the last FVA paragraph, takeover plan section 8 and this receipt (contracts). The fix pass ran a per-theorem closure probe: aead_open_seal at proof level exactly in the five final theorems; it also found that the record field aeadSeal_tag_length is used at proof level by the ten Hybrid source-equality theorems and the five final ones, so \"no contract\" is kept only for the theorems the probe confirms (see contracts.classification).",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S2",
+    "severity": "nit",
+    "title": "FVA S4 section: out-of-date \"not yet\" sentences and a heading that does not mention the finished integrity half",
+    "response": "Heading now \"Items 4 and 5, stage S4: the integrity half of the record-encryption lift\"; a status lead (integrity half proved, privacy half open); the three forward-looking sentences rephrased as module-scoped history naming the module that proved each fact; the Scope paragraphs of Hybrid, Link, Availability and KeyCut now name the later module for each item.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S3",
+    "severity": "nit",
+    "title": "FVA Link paragraph wrongly says the reduction samples only the other table entries",
+    "response": "Now: \"it samples every table entry itself, including the step position's entry, whose key bytes it never reads\".",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S4",
+    "severity": "nit",
+    "title": "Guide opening line labels all six modules as step X1",
+    "response": "Now \"steps X1 to X4\" with the module per step; Availability has no X label (plan section 8, deviation 3).",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S5",
+    "severity": "nit",
+    "title": "Review record (no defect): what was checked for the semantic lens",
+    "response": "Recorded in review.semantic; the randomImpl correspondence stays an open obligation of the privacy half (not_proved).",
+    "outcome": "no_change_needed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H1",
+    "severity": "minor",
+    "title": "No in-repo checks receipt; the guide cites its evidence only by /tmp paths",
+    "response": "This receipt (format of record-lift-chain.json); the guide's first paragraph and Checks section point to it first, with /tmp paths as secondary references.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H2",
+    "severity": "minor",
+    "title": "Four KeyCut theorems use the deprecated evalSPMF API; one of the five linter suppressions does nothing",
+    "response": "Removed the superfluous set_option linter.deprecated false in before key_cut_measure (module recheck f1: exit 0, empty log). The KeyCut docstring and the guide now say that key_cut_measure (in 𝒟) is the exported law and the only form PqxdhRecordLiftCtx uses, and that miss_eager, table_eager, key_cut_view and key_cut are internal bridges in 𝒮 because the central eager_run and split_continuation are stated in 𝒮. No statement restated (no theorem changed).",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H3",
+    "severity": "minor",
+    "title": "Expected handwritten-lean count after the merge is 1679, not 1676",
+    "response": "Corrected in takeover plan section 8, the track NOTES.md and inventory.integration_note of this receipt.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H4",
+    "severity": "nit",
+    "title": "Guide Checks paragraph misstates the KeyCut closure numbers and run points",
+    "response": "The Checks section gives the closure numbers per module commit (KeyCut: four modules, 467/24905) and says that the inventory runs for Availability, KeyCut, Ctx and Bills ran on the staged tree that became the module commit (recorded head = parent); focused_inventory records the same.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H5",
+    "severity": "nit",
+    "title": "Stale \"not yet\" statements in the appended FVA narrative",
+    "response": "Same fix as S2: the Hybrid paragraph names PqxdhRecordLiftCtxAvailability as the module that proves availability, the Ctx paragraph says the sixth module removes the premise.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H6",
+    "severity": "nit",
+    "title": "Provenance line only in the Hybrid and Link docstrings",
+    "response": "Availability, KeyCut, Ctx and Bills docstrings now end with \"New Claude work; nothing adapted from Codex WIP.\"",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H7",
+    "severity": "nit",
+    "title": "Registry worktree note lists only four modules",
+    "response": "coord.sh registry add claude worktree /tmp/beaconcrypt-deployment-record-ctx active with a note naming all six modules.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H8",
+    "severity": "nit",
+    "title": "One guide for six modules (the chain track has one guide per module)",
+    "response": "Kept: the six modules form one stage whose sections (hybrid family, contracts per theorem, checks) are shared; every module docstring names the guide, and the guide has one section per module.",
+    "outcome": "no_change_needed"
+   }
+  ],
+  "confirming_review": {
+   "reviewed_commit": "ca34bf0aecd156c7198f56feafe336ac020fe334",
+   "reviewed_range": "a6f3b00d..ca34bf0a (fix-pass commit a3418026 and receipt commit ca34bf0a)",
+   "reviewer": "independent Claude confirming review of the fix pass (a reviewer that did not write the modules); read only",
+   "notes": "/tmp/bc-arc-scratch/items45/ctx/confirm/NOTES.md",
+   "notes_sha256": "63ef43e6c57b15a3adae704fb9034a49280d97ba18e0724d6f3d387368bf87df",
+   "verdict": "APPROVE_WITH_NITS",
+   "outcome": "every finding S1-S5 and H1-H8 of the semantic and hygiene reviews resolved or answered (H8 kept, reasoned); four documentation nits; no finding against a Lean statement, definition, guard or inventory row",
+   "evidence": [
+    "HEAD == git ls-remote == ca34bf0a, clean worktree; the Lean diff of the fix pass is six module docstrings and the removal of one set_option line; no statement changed",
+    "receipt files_sha256 equal the blobs at a3418026 and ca34bf0a, files_sha256_a6f3b00d the blobs at a6f3b00d; inventory rows equal the module SHA-256; module check records (source, artifact, log, leanpath) verified",
+    "/tmp/bc-arc-scratch/items45/ctx/confirm/guardscan2.py (SHA-256 135fae6691dc5c0025fdf1be11eef79fef5078cf4a99f67236202d11f2ab5436): 215/215 guards OK at ca34bf0a; the receipt axiom lists equal the guards; linter.deprecated suppressions exactly on miss_eager, table_eager, key_cut_view and key_cut",
+    "/tmp/bc-arc-scratch/items45/ctx/confirm/logs/: rechecks without -o of the six modules and the root import via coord.sh lean against the fix-pass leanpath, exit 0, empty logs (PqxdhRecordLiftKeyCut without a deprecation warning)",
+    "own contract probes /tmp/bc-arc-scratch/items45/ctx/confirm/ContractConfirm.lean and ContractConfirm2.lean (logs/probe1.log SHA-256 11f2c65f7aa59840037f5c25572805d9813ae6ab8002be8fb5498d1e367c3030, logs/probe2.log SHA-256 875f7889bb95daee4f9424d3cd41c32bc857f58b2091d41cd661898a3992d041): aead_open_seal and AdaptiveRawNonceAead.HistoryCorrect 5/5 at proof level, aeadSeal_tag_length 68 (15 at proof level), hkdf_length 68 (0), DH fields 66 (0), matching the fix-pass probe; the IND$ and INT-CTXT advantages and integrityLoss are reached only by the five final theorems; HMAC-PRF, Extract, privacyLoss and hopLoss by none",
+    "H-7 source scan version 3 of the six modules, the guide, the added analysis lines and the receipt clean (/tmp/bc-arc-scratch/items45/ctx/confirm/logs/h7scan.json); git diff --check ee7878ee..ca34bf0a clean; footers exact",
+    "focused check-inventory runs f1 (a3418026) and f2 (ca34bf0a) exit 0 on clean trees; recount 1669; closure numbers per commit verified",
+    "git fetch and git merge-tree --write-tree of central 0b70190e with ca34bf0a: conflicts only in the four anchor files"
+   ],
+   "findings": [
+    {
+     "severity": "nit",
+     "title": "The list of fields that occur only inside definitions leaves out aeadSeal_tag_length",
+     "response": "The guide section \"Contracts per theorem\" and contracts.structural now list aeadSeal_tag_length for the 53 theorems that reach it only inside the AEAD record-building definitions (contracts.structural_frontier lists the ten), and both KDF definitions RawCtxSourceHkdf.response and PqxdhJointKdf.productionStream for hkdf_length. No Lean change.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "The receipt plan hash no longer matches the takeover plan",
+     "response": "plan.sha256_nit_fix and plan.note_nit_fix record the current hash and that the plan was edited after the receipt (the fix-pass update paragraph naming ca34bf0a).",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "Central has moved past 98b906d9; the expected count at integration is 1680",
+     "response": "inventory.integration_note_nit_fix: merging 0b70190e gives 1674 + 6 = 1680; the integration recounts against the central tip it merges. No branch change.",
+     "outcome": "fixed (receipt note); the recount runs at integration"
+    },
+    {
+     "severity": "nit",
+     "title": "The fix report and the receipt disagree on whether the tag-length classification goes to the owner",
+     "response": "The orchestrator's report of the CTX-track integration mentions the classification once as an FYI; contracts.classification says so. No new contract.",
+     "outcome": "fixed"
+    }
+   ]
+  }
+ },
+ "nit_fix": {
+  "date": "2026-10-08",
+  "base": "ca34bf0aecd156c7198f56feafe336ac020fe334",
+  "scope": "Documentation only: doc/impl/record-lift-ctx-hybrid.md (section \"Contracts per theorem\": the structural fields with aeadSeal_tag_length and both KDF definitions; the Status paragraph names the confirming review) and this receipt. No Lean file, inventory row, count, digest, root import or check-inventory.sh line changes.",
+  "h7_scan_docs": {
+   "output": "/tmp/bc-arc-scratch/items45/ctx/nits/h7scan-docs.json",
+   "sha256": "a993a8eae53d43281b9920c6834ea0d8940ac1931dd851edc1e642e84a5f8cb9",
+   "result": "guide doc/impl/record-lift-ctx-hybrid.md: no forbidden hit (version 3); informational hit only productionStream, on the line of section \"Contracts per theorem\" that names the KDF definition"
+  },
+  "h7_scan_receipt": "This receipt is scanned after it is written (/tmp/bc-arc-scratch/items45/ctx/nits/h7scan-receipt.json, recorded in the integration checks receipt).",
+  "diff_check": "git diff --check clean",
+  "integration_checks": "/tmp/bc-arc-scratch/items45/ctx/int/checks-receipt.json (module checks into a fresh prefix, root import, inv recount/rehash, focused check-inventory, transcript fidelity and git diff --check on the merged tip)"
+ }
+}

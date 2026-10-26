@@ -1,0 +1,11 @@
+# Opaque record callback budgets
+
+`PqxdhRecordLiftOpaqueBounds` counts the literal private lookup, opening, and sealing queries emitted by `OpaqueDrivers` before an interpreter is supplied. These are syntax bounds over every typed continuation, including unsuccessful opening or sealing replies. No source reachability, kernel validity, table independence, or cryptographic hypothesis is required.
+
+`receive_lookup` retains the source allowance `max(1, remaining)` for a pending derivation. It uses the checked source resume decrease, including the zero and one phases, rather than the larger termination rank. Source admission then gives at most 51 lookup queries for a complete receive. The same receive emits at most one opening and no sealing query, including cached keys and rejected or rolled-back attempts. A send emits at most one lookup and one sealing query, and no opening; exhaustion emits none. The admission corollaries use the literal existing `normalBegin` transitions.
+
+The three category predicates read only query domains. Their `Domain` alias fixes unused reply-type parameters to `Unit`; it does not replace an actual callback reply. The source programs and all bounds retain their original optional plaintext and optional encrypted output types. No callback receives stronger information and no writer failure becomes a stop.
+
+These lemmas count private service invocations. They do not make source work free: one opening or sealing service still performs its actual hashing, parser, primitive, and writer operations. Native counters, shared random-oracle cache misses, hidden-seed sampling, and uniform full76 misses require separate interpreter accounting. The bounds can feed the concrete mixed-source accounting and the separate CTX program-budget transport, but this module itself proves no global budget or security endpoint.
+
+The module contains 12 statements with exact axiom guards. Independent semantic review approved the frozen source and this guide’s operational scope. Fresh direct checks and the shared publication checks are recorded in the [51-statement bundle receipt](proof-receipts/record-lift-source-prefix.json); the original development receipts remain historical evidence.

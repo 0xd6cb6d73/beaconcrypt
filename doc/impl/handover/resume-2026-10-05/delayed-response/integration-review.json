@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-10-06T01:05:14.194786+00:00",
+  "reviewer": "/root/evolving_source_join",
+  "decision": "APPROVE_SCOPED_INTEGRATION",
+  "manifest": "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/review-manifest.json",
+  "manifest_sha256": "972c2e2f3912b5ade367091bb078d214a63022dfa5907a76b45b4533111ebcb9",
+  "all_25_hashes_match": true,
+  "prior_review": "a1-source-lifting.json",
+  "inspected": {
+    "beaconcrypt-core/proofs/pro-verif/delayed-response.pvl": "2c4da8d9d58371d4be7484b26cfb73c860fbc58c68ec3eb11b0820dbba2ec900",
+    "beaconcrypt-core/proofs/pro-verif/delayed-response-wrong-binding.pvl": "e17f0f3756fa79f6b9ede9fc038d30edadbc7f97b232222068f19f3f1cba5187",
+    "beaconcrypt-core/proofs/pro-verif/delayed-response-models.py": "3bcdbfdcdf3856dc64d30c4bf0bf44a3a50678959d66c6e1b2dc4a789e9ccf1a",
+    "beaconcrypt-core/proofs/pro-verif/check-delayed-response.py": "d6409dfd19709400e28dc236d422a349124a0df86500e4c6be3c52e42ea004c8",
+    "beaconcrypt-core/proofs/pro-verif/test-delayed-response-checker.py": "31c3e9c350957cd65a8f6707ecb723402e544b0286a748ce39976de37c8a2b74",
+    "doc/impl/proverif-delayed-response.md": "d2f840777093c08bfcec68de99cc6a7ad426728ebebef844094df759091ee03e"
+  },
+  "checks": [
+    "Both maintained model token streams independently match the reviewed probe-v3 token streams; all original five formulas preserve their prototype semantics.",
+    "Read complete role/finish/control comparator: exact retained FsBeacon finish transformation and only assigned binding guard removal; read strict result checker and all eleven regression definitions.",
+    "Ran read-only checker --check-only with bytecode writing disabled; exact five target roster, seven result lines, six Rust source pins and complete comparator pass.",
+    "Read complete maintained guide delta: approved finite source projection unchanged, native nonempty guard omission correctly described as success overapproximation; stronger descendant observation and freshness remain explicit.",
+    "Verified final 25-file manifest hashes; root independently reviews full integration wiring, final Make receipts and precision metadata deltas."
+  ],
+  "findings": [
+    {
+      "severity": "editorial-nit",
+      "file": "doc/impl/proverif-serial-ci.md",
+      "detail": "Opening paragraph needs comma after open CTX differential controls, and no result/model/query/classification changes should specify no existing result etc because A1 adds seven expectations."
+    }
+  ],
+  "scope_limits": [
+    "Approval covers integration and exact current frozen semantic sources; root separately verifies final Make/archive receipts.",
+    "No new native-byte/common computational experiment or source query bound is established."
+  ],
+  "integration_checks": [
+    "Read complete base-to-current Make serial gate/prerequisite/cap changes; prior groups and generated drift gates retained in order.",
+    "Read transcript-fidelity exact recipe lists and omission regressions; prior provenance-only deletion case restored.",
+    "Read verdict inventory/classifier extension and per-target scope regression; independently ran full classification check and verified every prior3165 line retained plus7.",
+    "Independently verified every reviewed inventory file digest and category counts220 handwrittenPV/46 validation/1347 unchanged Lean.",
+    "Independently counted exact4/4/3 precision annotations and reviewed allowlist rationale; no semantic restriction introduced.",
+    "Read source abstraction/trust/analysis/classification/serial docs; declared source profile, auxiliary root scope and computational/query limits retained."
+  ]
+}

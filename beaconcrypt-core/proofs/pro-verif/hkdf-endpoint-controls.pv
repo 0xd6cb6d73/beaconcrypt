@@ -1,0 +1,10 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+process
+  (
+    HkdfCorrectRootEndpoint()
+  | HkdfWrongRootLabelEndpoint()
+  | HkdfCorrectSymmetricEndpoint()
+  | HkdfWrongSymmetricLabelEndpoint()
+  | HkdfWrongProjectionEndpoint()
+  )

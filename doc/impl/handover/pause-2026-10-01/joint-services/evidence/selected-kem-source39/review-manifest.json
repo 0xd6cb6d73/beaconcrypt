@@ -1,0 +1,184 @@
+{
+  "cohort": "SelectedKemSource39",
+  "frozen_at": "2026-10-06T03:55:40.510603+00:00",
+  "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+  "base_commit": "fb6ff29f2b37868db53a7d23825f2ddd2e20c43c",
+  "files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCommands.lean",
+      "sha256": "80816d3d4813f01cfbad95cc576c379806465a0782a1f3d36c3f97d0b3be507a"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemInitialization.lean",
+      "sha256": "c70a30ded00172cd6bf8d4889d7561e1304c63c5bc1be2c96050e84be0039b6b"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOrigin.lean",
+      "sha256": "323615ef4d7e46643819831ad775a6398a5de92cf0c10e533d2b698b85fe9773"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRouting.lean",
+      "sha256": "6499b51369d73da55eacae1ab403fbbdb0a83cf72d9c9cf87f26cca64e3fd7bb"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenUniform.lean",
+      "sha256": "8adebf298aea89783d1bef5bca75ea7cb78aaa020da59551f022b38c16149412"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCosts.lean",
+      "sha256": "1a00fdb67560f89e2a5e04c927273dbf3c8550ad2ef5d70134f178a5b2adae22"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemInitializedRouter.lean",
+      "sha256": "0ccba62c57c427cc125a40a85b9335bfc90653c08be6c4b7e1586d84923bc5c4"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemInitializedCosts.lean",
+      "sha256": "a299cf8baf0f40bdda309134f28154c02d43d41c7647d6e94387445f0e1a927f"
+    },
+    {
+      "path": "doc/impl/registration-selected-kem-source.md",
+      "sha256": "71eb1924934c189d25cf3c61d34aa28bb86f82fe50dc1d811df2dc53d69dc553"
+    },
+    {
+      "path": "doc/formal-verification-analysis.md",
+      "sha256": "14efd6945ae3dc8166333e2f406c15c38cc1a77bbfb8813327b9ba13bd55c5ec"
+    }
+  ],
+  "theorems": {
+    "PqxdhRegistrationJointKemCommands": [
+      "creations",
+      "decapsulations",
+      "selected_source"
+    ],
+    "PqxdhRegistrationJointKemInitialization": [
+      "constructor_kem",
+      "initialized",
+      "constructor_order",
+      "initialized_first",
+      "actual_source_first"
+    ],
+    "PqxdhRegistrationJointKemOrigin": [
+      "issued_pq",
+      "selected_public",
+      "raw_selected"
+    ],
+    "PqxdhRegistrationJointKemRouting": [
+      "pre_source",
+      "post_source",
+      "fresh_pre_event",
+      "pre_decapsulations",
+      "post_decapsulations"
+    ],
+    "PqxdhRegistrationJointOpenUniform": [
+      "native_bound",
+      "prefix_step",
+      "prefix_bound",
+      "tail_bound",
+      "prepare_bound",
+      "accept_bound",
+      "pool_bound",
+      "backend_step",
+      "backend_program",
+      "total_eq",
+      "command_program"
+    ],
+    "PqxdhRegistrationJointKemCosts": [
+      "identity_creations",
+      "local_uniform",
+      "pre_uniform",
+      "post_uniform",
+      "local_base",
+      "pre_base",
+      "post_base"
+    ],
+    "PqxdhRegistrationJointKemInitializedRouter": [
+      "source"
+    ],
+    "PqxdhRegistrationJointKemInitializedCosts": [
+      "uniform",
+      "excluded",
+      "decapsulations",
+      "base"
+    ]
+  },
+  "guards": 39,
+  "checks": [
+    {
+      "module": "PqxdhRegistrationJointKemCommands",
+      "sha256": "80816d3d4813f01cfbad95cc576c379806465a0782a1f3d36c3f97d0b3be507a",
+      "start": "2026-10-06T03:54:45.347631+00:00",
+      "end": "2026-10-06T03:54:48.709533+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemCommands-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemInitialization",
+      "sha256": "c70a30ded00172cd6bf8d4889d7561e1304c63c5bc1be2c96050e84be0039b6b",
+      "start": "2026-10-06T03:54:48.709831+00:00",
+      "end": "2026-10-06T03:54:52.096406+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemInitialization-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemOrigin",
+      "sha256": "323615ef4d7e46643819831ad775a6398a5de92cf0c10e533d2b698b85fe9773",
+      "start": "2026-10-06T03:54:52.096756+00:00",
+      "end": "2026-10-06T03:54:55.463119+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemOrigin-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemRouting",
+      "sha256": "6499b51369d73da55eacae1ab403fbbdb0a83cf72d9c9cf87f26cca64e3fd7bb",
+      "start": "2026-10-06T03:54:55.463413+00:00",
+      "end": "2026-10-06T03:54:58.616276+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemRouting-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointOpenUniform",
+      "sha256": "8adebf298aea89783d1bef5bca75ea7cb78aaa020da59551f022b38c16149412",
+      "start": "2026-10-06T03:54:58.616623+00:00",
+      "end": "2026-10-06T03:55:03.458633+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointOpenUniform-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemCosts",
+      "sha256": "1a00fdb67560f89e2a5e04c927273dbf3c8550ad2ef5d70134f178a5b2adae22",
+      "start": "2026-10-06T03:55:03.459224+00:00",
+      "end": "2026-10-06T03:55:06.677201+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemCosts-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemInitializedRouter",
+      "sha256": "0ccba62c57c427cc125a40a85b9335bfc90653c08be6c4b7e1586d84923bc5c4",
+      "start": "2026-10-06T03:55:06.677507+00:00",
+      "end": "2026-10-06T03:55:10.106288+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemInitializedRouter-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemInitializedCosts",
+      "sha256": "a299cf8baf0f40bdda309134f28154c02d43d41c7647d6e94387445f0e1a927f",
+      "start": "2026-10-06T03:55:10.106650+00:00",
+      "end": "2026-10-06T03:55:13.338058+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemInitializedCosts-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "scope": "Actual initialized one-Server/many-Beacon source14 command compiler, selected creation-index full-continuation reservation/order, issued-PQ-or-unissued alternative, ordinary CCA pre/post and actual KEM disclosure routing, whole initialized executable pre simulator with no selected secret argument, all-reply uniform/base/logical caps. Final source selected-encapsulation challenge cut, authentication/freshness join, KDF input/context and global losses remain.",
+  "axioms": "Only propext/Classical.choice/Quot.sound; issued_pq needs none. 39 exact guards.",
+  "forbidden_scan": "No sorry/admit/sorryAx/custom axiom/native_decide; no production code/proof gate changed.",
+  "validation_limits": "Eight final direct guarded module checks, actual axiom probe and diff check only; no full build, root import, inventory, Rust, prover or mutation run. Parent owns central integration."
+}

@@ -1,0 +1,110 @@
+{
+  "PqxdhRegistrationJointKemEncapsulation": [
+    "forward_actual",
+    "prefix_query",
+    "prefix_program",
+    "prepare_actual",
+    "lift_actual",
+    "accept_actual",
+    "query_actual",
+    "program_actual",
+    "commands_actual"
+  ],
+  "PqxdhRegistrationJointKemCut": [
+    "scan_target",
+    "scan_prior",
+    "scan_other",
+    "scan_finish",
+    "commands_cut"
+  ],
+  "PqxdhRegistrationJointKemChallenge": [
+    "pre_source"
+  ],
+  "PqxdhRegistrationJointKemResume": [
+    "post_source",
+    "supported_source"
+  ],
+  "PqxdhRegistrationJointKemGame": [
+    "branch_source",
+    "branch_real",
+    "advantage"
+  ],
+  "PqxdhRegistrationJointKemExposedCounts": [
+    "forward_bound",
+    "lift_no_encapsulation",
+    "prefix_step",
+    "prefix_bound",
+    "accept_bound",
+    "backend_step",
+    "command_bound"
+  ],
+  "PqxdhRegistrationJointKemExposedPrivate": [
+    "lift_bound",
+    "prefix_step",
+    "prefix_bound",
+    "prepare_bound",
+    "accept_bound",
+    "backend_step",
+    "backend_program",
+    "command_bound"
+  ],
+  "PqxdhRegistrationJointKemExposedUniform": [
+    "lift_bound",
+    "prefix_step",
+    "prefix_bound",
+    "prepare_bound",
+    "accept_bound",
+    "backend_step",
+    "command_bound"
+  ],
+  "PqxdhRegistrationJointKemCutBounds": [
+    "bind_prefix",
+    "actual_bound",
+    "scan_bound",
+    "residual"
+  ],
+  "PqxdhRegistrationJointKemCertified": [
+    "prefix_erase",
+    "branch_erase",
+    "advantage"
+  ],
+  "PqxdhRegistrationJointKemCutSupport": [
+    "successful_support",
+    "pre_bound"
+  ],
+  "PqxdhRegistrationJointKemProgramBills": [
+    "creates_class",
+    "decaps_class",
+    "count_private",
+    "commands"
+  ],
+  "PqxdhRegistrationJointKemCutInterpreted": [
+    "encaps_private",
+    "encaps_uniform",
+    "actual_bills",
+    "scan_bills"
+  ],
+  "PqxdhRegistrationJointKemSavedBills": [
+    "saved",
+    "pending"
+  ],
+  "PqxdhRegistrationJointKemPostBills": [
+    "post_bound",
+    "adversary_post"
+  ],
+  "PqxdhRegistrationJointKemPreBills": [
+    "scan_bills",
+    "uniform",
+    "excluded",
+    "decapsulations",
+    "base"
+  ],
+  "PqxdhRegistrationJointKemReductionBills": [
+    "annotated_bound",
+    "adversary_bound"
+  ],
+  "PqxdhRegistrationJointKemCutSelection": [
+    "occurrence_lt",
+    "source_occurrence"
+  ]
+}

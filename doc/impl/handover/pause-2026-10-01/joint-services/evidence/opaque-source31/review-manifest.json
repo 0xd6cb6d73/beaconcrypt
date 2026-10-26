@@ -1,0 +1,351 @@
+{
+  "cohort": "OpaqueSource31",
+  "supersedes": {
+    "cohort": "OpaqueSource22",
+    "manifest": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/opaque-source22/review-manifest.json",
+    "manifest_sha256": "09612f506a2cf2873c50721882df0339f628ae7c77806dac03236032327425d4",
+    "review": "/tmp/bc-arc-scratch/resume-2026-10-06/review-results.json",
+    "review_sha256": "667d04c6dbb8bf028b790919a3a11d9c81aaf86db810217d72ca1090432e6bf0"
+  },
+  "time": "2026-10-06T09:16:29.556970+00:00",
+  "worktree": "/tmp/beaconcrypt-opaque-kem-source",
+  "branch": "codex/registration-opaque-kem-source",
+  "base_commit": "1881878f3cbf21febd1020f04a0d44e2b318c78c",
+  "ported_from": {
+    "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+    "note": "seven untracked modules and the guide copied; the analysis append applied as a hunk; that worktree was not edited"
+  },
+  "lean": {
+    "toolchain": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "version": "Lean (version 4.34.0, x86_64-unknown-linux-gnu, commit 293d5d0c0c3f3dded4688b3ccd6a33939ac5102b, Release)",
+    "flags": [
+      "-j1",
+      "-M8000"
+    ],
+    "timeout_seconds": 180,
+    "lock": "/tmp/bc-arc-scratch/lean.lock",
+    "proof_root": "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+    "LEAN_PATH": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean:/tmp/beaconcrypt-registration-joint-service-check/olean:/tmp/beaconcrypt-publication-composition-check/olean:/tmp/beaconcrypt-server-auth-withheld-olean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/Cli/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/cslib/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/batteries/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/Qq/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/aesop/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/importGraph/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/plausible/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/PolyFun/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/aeneas/backends/lean/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/mathlib/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/Hax/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/VCVio/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean:/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/lib/lean",
+    "leanpath_file": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/leanpath",
+    "leanpath_sha256": "6e33d8b1c006a0450319b8688ae4c907563bb979336c80f1230ea0f5cbe2527c",
+    "artifact_prefix": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean",
+    "artifact_prefix_note": "Symlink mirror of /tmp/beaconcrypt-pin-width-olean/svc without the seven Opaque, the three SourceSuffix14 and the root BeaconcryptCore artifacts; the three SourceSuffix14 dependencies and the seven cohort modules were rebuilt into this prefix from the committed/topic bytes. The remaining LEAN_PATH entries are the lane leanpath /tmp/beaconcrypt-registration-joint-service-check/leanpath, unchanged.",
+    "checker": "check.py (archived copy)"
+  },
+  "files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.lean",
+      "sha256": "3bd066ba1c3ef7065bd018bfdc0b49f21a94126ceb5c7114f724e1bb590be390"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.lean",
+      "sha256": "0f68ea01bb39a0f3c41f075aec4ec1a7c6ec61a7103430cc15d8833ad0a3a5e4"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.lean",
+      "sha256": "f1cb023bb74341edf3d5d86ab5d5bcf0cc816afe29796a672dad71bfa3ccc321"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.lean",
+      "sha256": "83862712472163d750c4da5adcad854564a95cc429efe02ddd8d6deb060e1e30"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.lean",
+      "sha256": "b507275343b7e88b411e83fb678768c8573b65229de17dcd224f87d385601be7"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.lean",
+      "sha256": "6ebeae2006d3f510b0f9cb99a270423b66f8c68d8580c37664fb42030465aa72"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.lean",
+      "sha256": "0bf28f4642bf67315aa20f91e0c4457bafbc5127239b7f711cd1e5d7bad6b444"
+    },
+    {
+      "path": "doc/impl/registration-opaque-kem-source.md",
+      "sha256": "dc7ba912c2a6d5156e49185832acabbae4335927ecc510b5a11098e46c177a89"
+    },
+    {
+      "path": "doc/formal-verification-analysis.md",
+      "sha256": "19226ccec50898397495667b980c7140d5eb78ff300f23fc588d6afa5c970c8e"
+    }
+  ],
+  "theorems": {
+    "PqxdhRegistrationJointKemOpaqueSuffix": [
+      "after_replace",
+      "materialize_erase",
+      "program_native",
+      "compiled_native"
+    ],
+    "PqxdhRegistrationJointKemOpaqueCore": [
+      "cleared_shape",
+      "cleared_replace",
+      "accept_native",
+      "accepted_original"
+    ],
+    "PqxdhRegistrationJointKemOpaqueClient": [
+      "accepted_bytes",
+      "rom_root_native",
+      "client_native"
+    ],
+    "PqxdhRegistrationJointKemOpaqueReal": [
+      "root_source",
+      "client_source"
+    ],
+    "PqxdhRegistrationJointKemOpaqueTail": [
+      "forward_run",
+      "tail_native"
+    ],
+    "PqxdhRegistrationJointKemOpaqueResume": [
+      "prefix_run",
+      "tail_run",
+      "lift_prefix",
+      "lift_tail",
+      "resume_lift",
+      "resume_native",
+      "forward_client",
+      "resume_client",
+      "resume_actual",
+      "resume_service",
+      "resume_reply",
+      "resume_post"
+    ],
+    "PqxdhRegistrationJointKemOpaqueCosts": [
+      "client_root",
+      "client_calls",
+      "client_uniform",
+      "tail_calls"
+    ]
+  },
+  "theorem_count": 31,
+  "guards": 31,
+  "axioms": {
+    "log": "axioms.log",
+    "sha256": "f497457d2d0c95119a1afcbd408ce82328ee27fd5b241e0778e8da46aeb02af7",
+    "allowed": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "observed_all_exact": true
+  },
+  "guard_liveness": {
+    "probe": "GuardLiveness.lean",
+    "log": "guard-liveness.log",
+    "expected_exit": 1,
+    "note": "a deliberately wrong guard on resume_lift fails, so the guards are enforced with this LEAN_PATH"
+  },
+  "checks": [
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix",
+      "source_sha256": "3bd066ba1c3ef7065bd018bfdc0b49f21a94126ceb5c7114f724e1bb590be390",
+      "start": "2026-10-06T09:12:25.702866+00:00",
+      "end": "2026-10-06T09:12:29.005704+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueSuffix-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.olean",
+      "artifact_sha256": "e06f3922bf5eb54c7979e0c80c87a797751a9d6077c51d6f02493e66878b6249",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.lean"
+      ]
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore",
+      "source_sha256": "0f68ea01bb39a0f3c41f075aec4ec1a7c6ec61a7103430cc15d8833ad0a3a5e4",
+      "start": "2026-10-06T09:12:29.047283+00:00",
+      "end": "2026-10-06T09:12:32.252318+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueCore-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.olean",
+      "artifact_sha256": "77b6dec1144dbd470ae84d6a1857e5ed8f614dc3ca83dd97fa671c93beda2323",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.lean"
+      ]
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient",
+      "source_sha256": "f1cb023bb74341edf3d5d86ab5d5bcf0cc816afe29796a672dad71bfa3ccc321",
+      "start": "2026-10-06T09:12:32.298522+00:00",
+      "end": "2026-10-06T09:12:35.667255+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueClient-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.olean",
+      "artifact_sha256": "9392e29345bdedf525f8d15a2c46ef901e54ca1a8644b8f89de4ef1dea36c803",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.lean"
+      ]
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal",
+      "source_sha256": "83862712472163d750c4da5adcad854564a95cc429efe02ddd8d6deb060e1e30",
+      "start": "2026-10-06T09:12:35.710856+00:00",
+      "end": "2026-10-06T09:12:39.073685+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueReal-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.olean",
+      "artifact_sha256": "27c454e34f792988536d0a376325952807e1b0ede4bb7e8481a867a7eb5c6572",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.lean"
+      ]
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail",
+      "source_sha256": "b507275343b7e88b411e83fb678768c8573b65229de17dcd224f87d385601be7",
+      "start": "2026-10-06T09:12:39.121058+00:00",
+      "end": "2026-10-06T09:12:42.456348+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueTail-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.olean",
+      "artifact_sha256": "e5cf4f514c5224f330129bd5c619b6f40d873a3f3837023c13deadf49a96b511",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.lean"
+      ]
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume",
+      "source_sha256": "6ebeae2006d3f510b0f9cb99a270423b66f8c68d8580c37664fb42030465aa72",
+      "start": "2026-10-06T09:12:42.507251+00:00",
+      "end": "2026-10-06T09:12:46.234678+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueResume-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.olean",
+      "artifact_sha256": "6bc209766088e8077e91144ca15dc845ead9d613e5abb13630cfe18950193d37",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.lean"
+      ]
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts",
+      "source_sha256": "0bf28f4642bf67315aa20f91e0c4457bafbc5127239b7f711cd1e5d7bad6b444",
+      "start": "2026-10-06T09:12:46.279838+00:00",
+      "end": "2026-10-06T09:12:50.043591+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueCosts-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.olean",
+      "artifact_sha256": "b7ca155efc2d801dcecff519e02d8960de771727607d4551c29e83778c923a3d",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.lean"
+      ]
+    }
+  ],
+  "statement_changes": {
+    "unchanged_statements": 22,
+    "unchanged_note": "All 22 original statements keep identical statement text. resume_native is now proved as the identity-morphism case of resume_lift; its docstring is narrowed. Only docstrings, whitespace and doubled blank lines changed elsewhere.",
+    "new_statements": [
+      "lift_prefix",
+      "lift_tail",
+      "resume_lift",
+      "forward_client",
+      "resume_client",
+      "resume_actual",
+      "resume_service",
+      "resume_reply",
+      "resume_post"
+    ],
+    "weakened_or_deleted": []
+  },
+  "scope": "Literal post-encapsulation source program and full stateful compiler equality with an opaque KEM marker; exact extracted admission and cleared token; complete source root/erase/consume, allocation and pending publication; join of the saved suffix and the native tail for every outer monad with a monad morphism from the native game and every prefix interpreter in it; instantiations at the native game, the exposed encapsulation-cut client, the real encapsulator with open services, the stateful private services of the actual accept state, the ordinary challenge reply of the saved suffix_cut continuation, and the KemResume.post interpreter chain; separate real fixed-HKDF functional interpretation.",
+  "bounds": {
+    "client_private_root": 1,
+    "client_internal_requests": 4,
+    "tail_internal_requests": 6,
+    "current_native_client_uniform": 64
+  },
+  "limits": "Operational compiler/source correspondence only. Current scheduler restricted zero-salt 192-byte Extract-ROM backend unchanged. No real/ROM hybrid, Extract context secrecy or correlated sampler/family claim. resume_reply and resume_post are stated for the accept-form continuation; showing that the scan of the complete source program reaches it is the raw-accept cut join and remains open. Existing server_prefix_uniform/accept_uniform charges are not transported to compiled/resume. Actual dynamic Beacon repeated-ciphertext finish routing, state erasure, freshness/selection and global losses remain open. No advantage is charged by any statement.",
+  "process": "Per the lane process (source-suffix14 README), parent integration owns root imports and reviewed-inventory rows; none are added here.",
+  "validation": {
+    "direct_checks": "7/7 exit 0 with empty logs (tag final), in dependency order",
+    "axioms": "31/31 exact [propext, Classical.choice, Quot.sound]",
+    "git_diff_cached_check": "exit 0 before commit",
+    "forbidden_scan": "cohort files: inventory/policy regex \\b(?:sorry|admit|axiom)\\b|sorryAx no match; native_decide/unsafe/implemented_by/extern/partial/opaque/#eval/#exit/#check no match",
+    "check_inventory": {
+      "log": "check-inventory.log",
+      "exit": 2,
+      "result": "fails on pre-existing lane drift: 11 tracked handwritten ProVerif files from lane commit 555af159 are absent from reviewed-inventory.txt; the script stops there. The lane also has 121 tracked handwritten Lean modules absent from the inventory before this cohort. Not caused by this cohort; owned by parent integration."
+    },
+    "check_lean_policy": {
+      "log": "check-lean-policy.log",
+      "exit": 2,
+      "result": "fails on pre-existing lane file PqxdhRegistrationResponseEncoding.lean line 16 (the word axiom in a docstring, lane commit 7bc9e8ad); cohort files do not match."
+    },
+    "not_run": "No full lake build, make verify, root import check, Rust, ProVerif, mutation testing or nix-collect-garbage."
+  },
+  "review": "Fresh independent semantic review of this revision is pending."
+}

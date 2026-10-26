@@ -1,0 +1,137 @@
+[
+  {
+    "name": "A1-delayed",
+    "class": "security",
+    "start": "2026-10-06T01:00:22.206628+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "delayed-response.pvl": "2c4da8d9d58371d4be7484b26cfb73c860fbc58c68ec3eb11b0820dbba2ec900",
+      "delayed-response-a1.pv": "6ce32fc14ac2716c2156d6d3dc23a763d502f3f02f3e396e2ebc923b8397ad4c"
+    },
+    "limits": {
+      "seconds": 180,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T01:00:22.555880+00:00",
+    "seconds": 0.3491400701459497,
+    "peak_rss_kib": 41608,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "68cd356aedca97976d971a4a41800374a286f52ec9993d355380c53f7e169421",
+    "checked": true
+  },
+  {
+    "name": "A1-root",
+    "class": "security",
+    "start": "2026-10-06T01:00:22.558898+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "delayed-response.pvl": "2c4da8d9d58371d4be7484b26cfb73c860fbc58c68ec3eb11b0820dbba2ec900",
+      "delayed-response-root.pv": "ca2cd0a40a8277dab920f79d6a02e1ff68c816d59e6d4d9054dfed167d37d43c"
+    },
+    "limits": {
+      "seconds": 180,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T01:00:22.748875+00:00",
+    "seconds": 0.18990435195155442,
+    "peak_rss_kib": 33928,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "bf16511b832441f7ace31893d15d8ad7bbac6547f6230862feb94b49a09d71b3",
+    "checked": true
+  },
+  {
+    "name": "A1-completion",
+    "class": "witness",
+    "start": "2026-10-06T01:00:22.750677+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "delayed-response.pvl": "2c4da8d9d58371d4be7484b26cfb73c860fbc58c68ec3eb11b0820dbba2ec900",
+      "delayed-response-reachable.pv": "ad9f9274e9bc9c40d12bc1f26f97cc5a50ffaf56344c84cd78a71e403fa58270"
+    },
+    "limits": {
+      "seconds": 180,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T01:00:22.936071+00:00",
+    "seconds": 0.1853347180876881,
+    "peak_rss_kib": 35040,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "a1a73f64ad624795ab5d68335f532734e9ccb74e7bdcf60f3cbfd54472bfc91c",
+    "checked": true
+  },
+  {
+    "name": "A1-C-binding",
+    "class": "negative-control",
+    "start": "2026-10-06T01:00:22.940163+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "delayed-response-wrong-binding.pvl": "e17f0f3756fa79f6b9ede9fc038d30edadbc7f97b232222068f19f3f1cba5187",
+      "delayed-response-control-binding.pv": "cea28de64c7146d76febd4dae014497e121f46a9b0849d977de446f23ea9d9a1"
+    },
+    "limits": {
+      "seconds": 180,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T01:00:23.285467+00:00",
+    "seconds": 0.3452428069431335,
+    "peak_rss_kib": 43104,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "75cbce3b29397640dc40a279168dd112d53ec328cd4325af479fa2f205acfb03",
+    "checked": true
+  },
+  {
+    "name": "A1-C-chain",
+    "class": "negative-control",
+    "start": "2026-10-06T01:00:23.289771+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "delayed-response.pvl": "2c4da8d9d58371d4be7484b26cfb73c860fbc58c68ec3eb11b0820dbba2ec900",
+      "delayed-response-control-chain.pv": "063ce329ec18130afabb3175ebbf04fa9984383a9687e1f371a9ab29e90ed117"
+    },
+    "limits": {
+      "seconds": 180,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T01:00:23.544249+00:00",
+    "seconds": 0.25440739188343287,
+    "peak_rss_kib": 38624,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "bf5c4fde5e3f79c588e91b17a05a6f5ee2951784ba8fd9f6fd38c0b0e9ab3630",
+    "checked": true
+  }
+]

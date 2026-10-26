@@ -1,0 +1,113 @@
+{
+  "basis": "9be4f3ea1cb9b8a3f753b5cd96bc63b7a665c700",
+  "fetched_before_publication": {
+    "full-proof-composition": "e79d66c4ee0814c081ec03a6e6c4ff58a60da877",
+    "vcvio": "8330cdef4f4659931b6764a026cd90c4caf833a4"
+  },
+  "frozen_manifest_sha256": "d229da4d42600aed54403358887c5abaa25d0c6f9cb66bf116ce89c72b415c78",
+  "expected_verdicts": 3153,
+  "security_class_expectations": 165,
+  "new_rows": 6,
+  "old_rows_byte_preserved": 3147,
+  "transcript_fidelity_tests": 27,
+  "classification_regressions": 11,
+  "pending_regressions": 25,
+  "open_ctx_regressions": 9,
+  "general_regressions": 16,
+  "archived_actual_prover_outputs_rechecked": 6,
+  "new_prover_searches": 0,
+  "new_lean_builds": 0,
+  "logs": {
+    "focused-make": {
+      "file": "focused-make.log.gz",
+      "sha256": "da753a6e6fd91e0fd00d9466fa7647a4ed9acc7b15908460222581beab2051b0",
+      "gzip_sha256": "2d25c20fdacb7d4f0f57438e5fb67d9ffa935703e2d48fe45d8c31653b302577",
+      "exit": 0
+    },
+    "final-inventory": {
+      "file": "final-inventory.log.gz",
+      "sha256": "37f943202600df93b70bcc11738c6391bb31e1ebfc43886ecedcffef83e9e798",
+      "gzip_sha256": "c9b7f581b81de4781999799be8e723f21022479639571debf02e0aef33ceabad",
+      "exit": 0
+    }
+  },
+  "regressions": [
+    {
+      "command": [
+        "python3",
+        "beaconcrypt-core/proofs/pro-verif/test-verdict-classes.py"
+      ],
+      "exit": 0,
+      "start": "2026-10-05T23:09:07.919836+00:00",
+      "end": "2026-10-05T23:09:08.847665+00:00",
+      "file": "regression-0.log.gz",
+      "sha256": "262cf14d117ca3b657234b32ea8c6373b69db12782054e4920bcbb6cfafa5c36",
+      "gzip_sha256": "1551edcf85c1dfdd6288dc06d077ea489f063f64a630e4a75c22001cf03285f1"
+    },
+    {
+      "command": [
+        "python3",
+        "beaconcrypt-core/proofs/pro-verif/test-pending-registration-checker.py"
+      ],
+      "exit": 0,
+      "start": "2026-10-05T23:09:08.847698+00:00",
+      "end": "2026-10-05T23:09:08.945929+00:00",
+      "file": "regression-1.log.gz",
+      "sha256": "0d222ce7cbb2c6b8a91558ef151009777f4fa9fa6075d9241bfdbf82d1631047",
+      "gzip_sha256": "f9d07cb5c9eb6f64ca1dd98aa01a7844194250e59ad4f2922d7e76b3fa895eed"
+    },
+    {
+      "command": [
+        "python3",
+        "beaconcrypt-core/proofs/pro-verif/test-aead-differential-checker.py"
+      ],
+      "exit": 0,
+      "start": "2026-10-05T23:09:08.945960+00:00",
+      "end": "2026-10-05T23:09:09.008279+00:00",
+      "file": "regression-2.log.gz",
+      "sha256": "44da5ff3d8732677572559b618a09686fa21efd87af4d2b415dc65f98118d47f",
+      "gzip_sha256": "5bd1163cdaaa1b529bf8234ac0bbfc4e823e74d5d6ad3d95852fdab4b0869a03"
+    },
+    {
+      "command": [
+        "python3",
+        "beaconcrypt-core/proofs/pro-verif/test-general-registration-checker.py"
+      ],
+      "exit": 0,
+      "start": "2026-10-05T23:09:09.008299+00:00",
+      "end": "2026-10-05T23:09:10.545936+00:00",
+      "file": "regression-3.log.gz",
+      "sha256": "82023cfd0f58bff51587b38dfc1b32344a89cc39e1a81965047e244ef92dca8b",
+      "gzip_sha256": "0d030437fb634a040d20f114ff39c399649ce7cf96b7d01397a5d4428692c032"
+    },
+    {
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit": 0,
+      "start": "2026-10-05T23:09:10.545964+00:00",
+      "end": "2026-10-05T23:09:10.810527+00:00",
+      "file": "regression-4.log.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzip_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit": 0,
+      "start": "2026-10-05T23:09:10.810555+00:00",
+      "end": "2026-10-05T23:09:10.987982+00:00",
+      "file": "regression-5.log.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzip_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    }
+  ],
+  "scope": "Exact source/receipt and validation integration; no new protocol security theorem. The initial combined Make passed all27FT and inventory; duplicate prose removed after review, then final inventory rerun passed with no source/checker/model change."
+}

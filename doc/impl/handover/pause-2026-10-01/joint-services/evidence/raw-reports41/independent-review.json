@@ -1,0 +1,82 @@
+{
+  "reviewer": "/root",
+  "timestamp": "2026-10-06T02:30:08.757335+00:00",
+  "decision": "APPROVE_SCOPED_RAW_REPORT_AUTHENTICATION",
+  "manifest_sha256": "a5249a8e3e50b40cb77a33b5a02cfc4e125b2d9b5e0b0c625ab67d259ea44f49",
+  "inspected_files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointRawSignatures.lean",
+      "sha256": "73ab6cf36a25392e1bca401bacf612678ab4a43ac588bc276fd9f6f6f0c1a06a"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportLift.lean",
+      "sha256": "f61fd7bcbb9d72b13b1fc9670832669d0ee87353398dc5c0b1d871d0847b6724"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointRawReports.lean",
+      "sha256": "37594fe85415796bcb2c47abb86d21cb995e90d5b6d8d14ee161ea1a03e4ef7e"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportCommands.lean",
+      "sha256": "3c6cdcd4518f4dc77b9bc19cf429007405d9e5b8e28509f271ac5283703827e8"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportCompiler.lean",
+      "sha256": "4ea9f01432612c2aae9fa700b03853ecd35bf3a4a16abd2f7bf7983b23dc5bd9"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportSource.lean",
+      "sha256": "128ccde2ccc155ee16ef6cccabacd0eeee9a372dfc868c3104540555ebc808c2"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportCosts.lean",
+      "sha256": "662b19d7c106f0a79e818ff1b5f4b317fd022e40058f0443301294593140059c"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportAttempts.lean",
+      "sha256": "faa506201944287f02ee649f284f1a73146f0408e37de38562a2a423cc285968"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportedAuthentication.lean",
+      "sha256": "1a4423380ce1170a3655e1446aa8cedb6136ad4256b0c7710dc09493f6b3454f"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointReportEvents.lean",
+      "sha256": "ac3a2589ba609ec906e659439cff61a1482c36be1e7455779776cad37418fe01"
+    },
+    {
+      "path": "doc/impl/registration-joint-raw-field-reports.md",
+      "sha256": "c34a9ff25b2ab5a894996856efc38e243a8bc746684c7969a795e2e74e5b0f6d"
+    },
+    {
+      "path": "doc/formal-verification-analysis.md",
+      "sha256": "e4a82878706e96a03b7484478476e404207b9c1f9b9075af42d590d586a8730a"
+    }
+  ],
+  "validation": {
+    "frozen_files": 12,
+    "modules": 10,
+    "guards": 41,
+    "direct_logs": "All final supplied logs verified empty and exit zero; RawReports alone rechecked after comment-only nit",
+    "forbidden_scan": "clear",
+    "reviewer_builds": "none"
+  },
+  "semantics": [
+    "Read all ten full modules, guide and analysis append. Literal raw getter fields are reported after actual source acceptance. Functional attached/detached and short rejection contracts are explicit; no authentication conclusion is assumed.",
+    "Complete initialized command, private identity/KEM/native/runtime and adaptive state are preserved by exact erasure; report snapshot preservation supports unchanged history across the complete generated-slot batch.",
+    "Constructed ordinary joint-use weak-EUF reductions sum over generated targets with g+qCreate<=N, no honest target, key injectivity, field or report-position factor; imports remain known caller seeds.",
+    "Unit reports permit both-direction all-reply original capability transfer. N*qAccept reports, 3*qBundle signing and qFinish+qAccept converted-DH per constructed reduction are explicit.",
+    "Evaluated real-source uniform/base budget is retained; it is not an all-reply replaced-challenger cap. Public report verification/scanning is explicit work, not claimed cost-free."
+  ],
+  "scope_limits": [
+    "Fresh unissued raw field event; full native issued-attempt tuple history and final authenticated root are still missing.",
+    "Fourteen source commands, one Server, generated and supplied identities; raw construction, new_onetime, deletion and record/multi-Server surfaces not silently included.",
+    "No new primitive security assumption, public fixed-HKDF random-table conclusion, snapshot/persistence or full protocol claim."
+  ],
+  "findings": [
+    {
+      "status": "resolved",
+      "detail": "Narrowed report_erase comment to original replies/cryptographic requests; public verification/scanning remains report work. No theorem/proof change."
+    }
+  ]
+}

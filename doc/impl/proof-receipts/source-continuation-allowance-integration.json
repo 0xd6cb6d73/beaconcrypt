@@ -1,0 +1,221 @@
+{
+  "stage": "Source-derived continuation allowance in the common root",
+  "base": "fa1a174e72dfb2f33ff97a9a0a9f1654b5c93418",
+  "date_utc": "2026-10-06T03:02:29.948235+00:00",
+  "topics": [
+    "272a4ddbb1d6e3127cd9f7ebaf08691176578085"
+  ],
+  "source_files": {
+    "beaconcrypt-core/proofs/check-inventory.sh": "4a0c943a92165b4862753e2f18d8e6bb44637c1b3e2eea35c73b31c43e1e3b0d",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "b401b7a8a07b3b082a706ea845b749e8f1152a51f9db7edd835538dc2f96000b",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeUnguarded.lean": "d1f052ff18be817a99522a9a20eef3cd3930e5ac36bc3e829b8fcb438347b4c8",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCapturedFits.lean": "9f1607a0cae14bc29697318e5380b79a2a37b374b664f2e03de9a859e6d34747",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCertifiedPrivacy.lean": "c1f3ad66d09eeecea349f7d83151c0757b2246f239979c8e31f6b7a306ab410b",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedFits.lean": "77a9a943daec7b02dc407b732ada7ffb2e616a2f14108ea8551cdce71a883d7a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengePreparedFits.lean": "35b37c05fb9d7d0e571ac52cfdd68028bcc7b0a42e90dea8cae2c8199499a321",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSamplerFits.lean": "0cfdaeca8f994eee129b9086839d5d647115d7a01749a36af9e8e8711e4437bc",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "a5eeeeec3866c20a73cb9f9db4f23f1c28878c86d592a1e168566a70fd5d2b4d",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "081d14000c657e933e037c4aab378d000aeff7355aa651e2ea9c69cdf0bc0c1b",
+    "doc/formal-verification-analysis.md": "1a4c8c10bdbafc14a03ff57de5894910641f20bce022b2023e5cf4f5380772a8",
+    "doc/impl/later-challenge-source-allowance.md": "f8b73a819a1be3e0b567b846a6b44561583bbc9557af2285cf0da735561d35a7",
+    "doc/impl/proof-receipts/later-challenge-source-allowance.json": "254571dc8de22f1ac8fa80a037b5d9bc2dcb180eee6884b296f6e5fd8de9dd45",
+    "doc/impl/source-continuation-allowance-integration.md": "25010f8a989442d2b3cd4ac1d0089ce52713dbb819f3d48eac51a3b1c684754d"
+  },
+  "source_freeze_sha256": "a8ba14d014ea8d2048a9c31f083bec7dd4a1bf703f448b13c4630c7a644b82ef",
+  "scope": "Six unchanged reviewed modules deriving the complete resumed-wrapper allowance from the original all-reply source certificate and removing the semantic Fits branch. Two concrete ordinary CTX source games remain scoped to the before case; global event/freshness, complementary phases, alias/refusal and complete resource composition remain open.",
+  "module_checks": [
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhLaterChallengeCapturedFits",
+      "start": "2026-10-06T04:55:34.798013",
+      "end": "2026-10-06T04:55:38.082480",
+      "exit": 0,
+      "source_sha256": "9f1607a0cae14bc29697318e5380b79a2a37b374b664f2e03de9a859e6d34747",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-05-codex/source-continuation-allowance-integration/olean/BeaconcryptCore/Computational/PqxdhLaterChallengeCapturedFits.olean",
+        "/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCapturedFits.lean"
+      ],
+      "artifact_sha256": "307158e46e9328b160819ba0b523f55ca2fdb223b588e039ecbacf64dc859433"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhLaterChallengePreparedFits",
+      "start": "2026-10-06T04:55:38.083539",
+      "end": "2026-10-06T04:55:42.695644",
+      "exit": 0,
+      "source_sha256": "35b37c05fb9d7d0e571ac52cfdd68028bcc7b0a42e90dea8cae2c8199499a321",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-05-codex/source-continuation-allowance-integration/olean/BeaconcryptCore/Computational/PqxdhLaterChallengePreparedFits.olean",
+        "/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengePreparedFits.lean"
+      ],
+      "artifact_sha256": "a8af3761a2076516519c79f1bf6f4e99a4d9470f0ac55f3789afaa46b0f0f3d5"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhLaterChallengeSamplerFits",
+      "start": "2026-10-06T04:55:42.698188",
+      "end": "2026-10-06T04:55:52.164433",
+      "exit": 0,
+      "source_sha256": "0cfdaeca8f994eee129b9086839d5d647115d7a01749a36af9e8e8711e4437bc",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-05-codex/source-continuation-allowance-integration/olean/BeaconcryptCore/Computational/PqxdhLaterChallengeSamplerFits.olean",
+        "/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSamplerFits.lean"
+      ],
+      "artifact_sha256": "2c7b33cf000e74601ce6d8f437a6a6ce1af2ffc18bd73ccdba2e05dc90815235"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedFits",
+      "start": "2026-10-06T04:55:52.167946",
+      "end": "2026-10-06T04:55:57.767507",
+      "exit": 0,
+      "source_sha256": "77a9a943daec7b02dc407b732ada7ffb2e616a2f14108ea8551cdce71a883d7a",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-05-codex/source-continuation-allowance-integration/olean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedFits.olean",
+        "/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedFits.lean"
+      ],
+      "artifact_sha256": "6013b921ef17f51e30103703b607343044e8425ad03c10a342268c213066edeb"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhLaterChallengeBeforeUnguarded",
+      "start": "2026-10-06T04:55:57.770581",
+      "end": "2026-10-06T04:56:08.976194",
+      "exit": 0,
+      "source_sha256": "d1f052ff18be817a99522a9a20eef3cd3930e5ac36bc3e829b8fcb438347b4c8",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-05-codex/source-continuation-allowance-integration/olean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeUnguarded.olean",
+        "/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeUnguarded.lean"
+      ],
+      "artifact_sha256": "2226b744dc093c8239792954baa304c8a57aa20b2a424842e4711311c0c86303"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhLaterChallengeCertifiedPrivacy",
+      "start": "2026-10-06T04:56:08.981215",
+      "end": "2026-10-06T04:56:17.033846",
+      "exit": 0,
+      "source_sha256": "c1f3ad66d09eeecea349f7d83151c0757b2246f239979c8e31f6b7a306ab410b",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-05-codex/source-continuation-allowance-integration/olean/BeaconcryptCore/Computational/PqxdhLaterChallengeCertifiedPrivacy.olean",
+        "/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCertifiedPrivacy.lean"
+      ],
+      "artifact_sha256": "bed5de8a0166cde296704d1fefac3a67a39e98f8d993513b5dad19585bd45d61"
+    }
+  ],
+  "root_check": {
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "300",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean",
+      "/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ],
+    "start": "2026-10-06T02:58:32.840562+00:00",
+    "end": "2026-10-06T02:58:35.207794+00:00",
+    "exit": 0,
+    "source_sha256": "b401b7a8a07b3b082a706ea845b749e8f1152a51f9db7edd835538dc2f96000b",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "inventory_check": {
+    "command": [
+      "nix",
+      "develop",
+      "--no-update-lock-file",
+      "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+      "-c",
+      "make",
+      "-C",
+      "beaconcrypt-core",
+      "SHELL=/run/current-system/sw/bin/bash",
+      "check-inventory"
+    ],
+    "start": "2026-10-06T04:56:24.553958",
+    "end": "2026-10-06T04:57:26.916499",
+    "exit": 0,
+    "log_sha256": "46cb1f23fd53e19163934fb8a6e46b8526b116b93e1c2593fdd64c6aab2bbe91"
+  },
+  "new_guards": 19,
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "retained_artifacts": {
+    "count": 1388,
+    "sha256": "c67cec42eb2d5311cc36fcb5e2316196527b57a56c5c09ca8e7b1ab1723cddc4",
+    "check": "Every source and resolved artifact hash verified before direct checks."
+  },
+  "retained_dependency_blobs": {
+    "count": 947,
+    "sha256_of_closure": "e0fbd5d03a30c8cb75a54b8eded1eea6aeae621ad678afe723f0169121c851e4",
+    "check": "All retained dependencies match exact source topic blobs."
+  },
+  "static_checks": {
+    "frozen_sources_verified": true,
+    "original_root_and_checker_gates_preserved": true,
+    "git diff --check": 0,
+    "cargo fmt --all -- --check": 0
+  },
+  "aggregate_status": "Full final verification remains pending. Production Rust and symbolic source unchanged; no mutation testing or garbage collection.",
+  "root_log": "",
+  "inventory_log": "make: Entering directory '/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core'\nbash proofs/check-inventory.sh\nPin-origin argument inputs: 14 files, 28 reductions, 36 data constructors; scoped paper C2/C3 transfer, no new solver verdict.\nSymbolic name-order premises: 2 complete Server continuations; paper trace argument only, no computational reorder or new solver verdict.\nprimitive-fidelity manifest: 9 targets checked\nClassified 3181 expected verdicts: definitional=2836, diagnostic=8, differential-control=19, limitation=20, negative-control=35, security=176, witness=87\nThese are classified expectations, not new ProVerif validation receipts or independent theorem counts.\npending registration manifest: 4 focused targets checked\nOpen CTX manifest: 2 targets, 0 protocol security claims.\nactive strong-secrecy manifest: 6 targets checked\nSignature provenance manifest: 6 targets, 28 reductions, 44 data constructors.\nDelayed response manifest: 5 targets, 7 exact verdict lines; retained finish/control comparison.\nRecord origin manifest: 4 targets; Kr3 security, Kr2 cache-prefix witness, scoped paper replay composition.\nFormal-verification inventory matches the reviewed boundary.\nmake: Leaving directory '/tmp/beaconcrypt-source-continuation-allowance-integration/beaconcrypt-core'\n"
+}

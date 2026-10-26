@@ -1,0 +1,13 @@
+{
+  "recorded_utc": "2026-10-25T12:32:09.287393+00:00",
+  "reviewer": "/root/cached_review",
+  "result": "No concrete findings",
+  "scope": "Completion/hash gates, paired ratios, 72-group/216-pair/648-batch exports, fixed totals, warm and measured adapter counters, non-summed overlapping noise windows, README authorization and scope",
+  "executed": false,
+  "measurement_data_read": false,
+  "sha256": {
+    "export-completed-v2.py": "a0ddb290ff37555ae3b7c40714810c93f05746b4130390367980635b56c9c5a6",
+    "export-completed-v2-README.md": "f8ecbac949cee61441ffa498a559c0bd12f822703e2ba9c8c1ca816770f7d2e7",
+    "analysis-plan.json": "4450b721243b36bd544b8da3f6c9dc0139a34706aa514e5e0c2a4a58ba42f325"
+  }
+}

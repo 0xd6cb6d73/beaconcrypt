@@ -1,0 +1,21 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* One bounded honest trace with each record plaintext replaced by a biprocess choice. A successful equivalence result is stronger than fixed-name non-deducibility for these five challenges, but it remains a symbolic bounded-trace result. *)
+free INITIAL_SECRET_ALTERNATIVE: bitstring [private].
+free CACHED_SECRET_ALTERNATIVE: bitstring [private].
+free ADVANCE_SECRET_ALTERNATIVE: bitstring [private].
+free FUTURE_SECRET_ALTERNATIVE: bitstring [private].
+free BEACON_RECORD_SECRET_ALTERNATIVE: bitstring [private].
+
+process
+  out(c, ed_public(SERVER_IDENTITY_SECRET));
+  (
+    HonestBeacon(choice[BEACON_RECORD_SECRET, BEACON_RECORD_SECRET_ALTERNATIVE])
+    | Server(
+        choice[INITIAL_SECRET, INITIAL_SECRET_ALTERNATIVE],
+        choice[CACHED_SECRET, CACHED_SECRET_ALTERNATIVE],
+        choice[ADVANCE_SECRET, ADVANCE_SECRET_ALTERNATIVE],
+        choice[FUTURE_SECRET, FUTURE_SECRET_ALTERNATIVE]
+      )
+    | KeepBeaconStatePrivate()
+  )

@@ -1,0 +1,49 @@
+{
+  "worktree": "/tmp/beaconcrypt-proverif-active-strong-secrecy",
+  "files": {
+    "beaconcrypt-core/Makefile": "30e179613930f368b28305e402b666fcf3ac6776ecaa949adb4bcdcf3a2cae96",
+    "beaconcrypt-core/proofs/check-inventory.sh": "685f192c78595fae0351b29f6361cd58c653256b86005bd990b78650cb7fe4ac",
+    "beaconcrypt-core/proofs/pro-verif/declaration-allowlist.tsv": "6e32b43b7596a4ea357c93f6f412cb0ef167fc1f3802340f095557858b5ec90c",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "ece948e8af842f6f206fc8ca1ed712056f4d37659ba2f36aa866a66869c8dd96",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "b842c0568b59bca148ecb12c287ed1a90a5c2b86b7ca413926ef09c73227db5c",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "d9799dafac14ce8a76ef3ef881750472fb28f574b382e6ae6d1be12e916ef5cd",
+    "doc/formal-verification-analysis.md": "227d76ea3599b971582542142d36e7df5034a71a90c5394c78ff7d878fca9df5",
+    "beaconcrypt-core/proofs/pro-verif/active-strong-secrecy-models.py": "484a27903624227f4dde6f617d81707c6da53f067a31ce21301d2bb2b78d1fca",
+    "beaconcrypt-core/proofs/pro-verif/check-active-strong-secrecy.py": "a9cecd504835becc819ebd79cf72a9beb31fe8124ba9e58a0a1f8d8c9c86b5eb",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-b2s-receive.pvl": "f41c0422bd968153838f451c7f54777291f78f0db401bdd07b8c979bc39161a1",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-b2s-sends.pvl": "858dfc49ffcfc2e3ac2629dd844ca0bf2d0d2e8fa843b5bd573ef2b83e933d35",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-b2s.pv": "6ed64f389414cf97a08ed23413b3a6d2936dd4c8ee6320039badbbda47d4f5c1",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-b2s.pvl": "d34d2f92809c0e084eca0402a6c02d7d28f3dc50fe755a568612fa2f2a7e11c1",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-common.pvl": "12a0d5e758883c273c82e879e4036834350fc06c093ef4fc4249ecf1336a3882",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-control-b2s-leak.pvl": "f70e00f26d630ec422dbbd3f4ec2f7e07399c8775fed264a8851496a50fd7bb3",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-control-b2s-ungated.pvl": "891be3db43c8b7ebee61f7e1a306872dfc4f31ebb34c44167494624ad5aab75b",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-control-b2s.pv": "94ed2d1067a444388e56d5dfa8698912d02f646e66da8b18cb50a20707f65baa",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-control-common.pvl": "ba9a8410ae55c30de1a139b66291b6318213e4a5c9886f2ed432bcb184523295",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-control-s2b-leak.pvl": "10d52c27d93a6c7bcc62d3c9e6a6fc77748ed5fd578bfcd790b0429591edcc41",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-control-s2b-ungated.pvl": "d4c7150b3e6bda3fd46c33d6bf38fcd060c503185bd589333942b32f4bb33932",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-control-s2b.pv": "d4cf18e20d306f4dff04bc6af969b576d7077fbe9ba7d53e6cdcb6360c24c8fb",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-s2b-interface.pvl": "9ac59132e8b40749da7206880980e1e21785a167efc91b6a0c69716f20cd2186",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-s2b-receive.pvl": "73075500b88f896d9e6a188709f8596c3ab3e83451848820ab0844eafa635a00",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-s2b-taskings.pvl": "a146c380a7c84a93094f8ce7825d5284c5f31a1881e0da743f1c7fa1c202fcae",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-s2b.pv": "7bb2c677861d3122fd7d6b09dab701c7eabab71c0226b692561bef796e4ae303",
+    "beaconcrypt-core/proofs/pro-verif/fs-strong-s2b.pvl": "c5f500d1e25a3c5d846b2e322888e9afca6a3ac1bfa23d3855803c06f9b23c46",
+    "beaconcrypt-core/proofs/pro-verif/test-active-strong-secrecy-checker.py": "c48aea4333a9213febb501b79111c2ad91dc883c77b644e80121e746b89f097e",
+    "doc/impl/proverif-active-strong-secrecy.md": "50a527fae51895d8bb9891f6a881dabf99083533624d5d296e9acaeff11f247c"
+  },
+  "status_only_changes": {
+    "doc/formal-verification-analysis.md": {
+      "before": "6175aaf6cb47d30bef8de619600fbb513626f782259e2aedfdf52025fa9f2b3b",
+      "after": "227d76ea3599b971582542142d36e7df5034a71a90c5394c78ff7d878fca9df5"
+    },
+    "doc/impl/proverif-active-strong-secrecy.md": {
+      "before": "38c5e06c6902a6c7580e263b16550bf98ade8f6c8ae7c8f1f7e79c1e27739287",
+      "after": "50a527fae51895d8bb9891f6a881dabf99083533624d5d296e9acaeff11f247c"
+    }
+  },
+  "receipts": "/tmp/bc-arc-scratch/pv-work/p5-active/maintained-final/receipts.json",
+  "receipts_sha256": "953ec8c11113d7a37fb3b621dffa74aae83ff4ed5a387f3474c541b108073882",
+  "make_log": "/tmp/bc-arc-scratch/pv-work/p5-active/maintained-final-make.log",
+  "make_log_sha256": "fc41fa27ad527f8fdd0eb925de8586e4d947eff8507b6bb0ee51eba05971725e",
+  "exit": 0,
+  "scope": "Two bounded symbolic equivalences with public input-correlated optional bits and four single-world controls; no computational/global-source claim."
+}

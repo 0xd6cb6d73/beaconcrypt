@@ -1,0 +1,6 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Public-far-key control: selected far event belongs to a fresh honest Beacon identity. *)
+query s: bitstring, s2: bitstring, k: bitstring, kid: key_id, root: bitstring, t: nat, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex, rid: beaconcrypt_core__pqxdh__t_RegistrationId;
+  event(FsFarAccepted(beacon_to_server(),s,ed_public(k),kid,root,t)) && event(FsBeaconStarted(s2,ed_public(k),init,rid)).
+process FsRecordsB2sMainAnyPin()

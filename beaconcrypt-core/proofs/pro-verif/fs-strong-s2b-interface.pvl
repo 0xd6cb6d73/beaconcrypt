@@ -1,0 +1,6 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* OD5: a deferred eligible test slot, released by a successful honest
+   Beacon finish with the same root and assigned identifier. This is private
+   test bookkeeping, not a production receive/admission gate. *)
+free fs_strong_partner: channel [private].

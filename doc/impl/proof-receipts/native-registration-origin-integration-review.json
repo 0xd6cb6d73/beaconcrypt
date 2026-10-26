@@ -1,0 +1,22 @@
+{
+  "status": "APPROVE_SCOPED_INTEGRATION",
+  "date": "2026-10-06T04:13:13.347850+00:00",
+  "reviewer": "/root/fs_source_abstraction",
+  "base": "19fd13a858cdd29f90d907944063711eb0c953a1",
+  "manifest_sha256": "d6bde8b47c957079787bc41a6e70d6fc6cdf6ceabdbe387c0e3b4a163d0bc846",
+  "receipt_sha256": "4ce48507a5cf465bde73475f79ff751a6b3624d17571ac7f9c57e5c562fa79f2",
+  "checks": [
+    "Verified all75 frozen files, all28 added modules byte-identical to one of the two published source refs and144 exact guarded theorem statements/imports/checker anchors.",
+    "Independently compared1396 existing nonroot Lean files and284 ProVerif/production Rust files with base19fd; all unchanged. All20712 prior require_ gate lines retained.",
+    "Verified every1804 reviewed-inventory digest, with1418 handwritten Lean entries, and retained3190-verdict scope in unchanged PV source/checker.",
+    "Verified28 direct source/artifact hashes and empty exit0 logs in portable receipt, complete root source/log exit0, inventory output hash/exit0, formatting/diff results. No build or solver rerun.",
+    "Read full integration and three source guides; inspected owner_origin, initialized source/freshness consumers, actual public-only selected-KEM wrapper/source equality and every-reply uniform/base/decapsulation bounds. Reused independent source reviews for byte-identical detailed proofs."
+  ],
+  "scope": [
+    "Actual accepted tuple under a mapped generated key with native report-prefix freshness is a complete earlier signing attempt or original-field EUF event; no honest-target premise or public-key injectivity.",
+    "Existing joint Ed/X endpoint and target-index sum/signing3*qBundle/DH(qAccept+qFinish)/report N*qAccept bills retained.",
+    "Selected KEM wrapper retains complete initialized source, local keys, failure branches and source continuation; selected secret confined to interpretation. Actual selected encapsulation cut, source-event probability consumer, root-input/nonexposure and global experiment explicitly remain open.",
+    "Restricted Extract-ROM analysis does not justify randomizing public fixed HKDF. No primitive implementation, snapshot/persistence or aggregate final-proof claim."
+  ],
+  "findings": []
+}

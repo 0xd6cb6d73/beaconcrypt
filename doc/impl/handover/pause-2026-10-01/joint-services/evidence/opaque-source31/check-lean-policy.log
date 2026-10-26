@@ -1,0 +1,6 @@
+make: Entering directory '/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core'
+proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationResponseEncoding.lean:16:/-- Equality of two actual encoded payloads determines their typed U64 identifier and suffix. The proof uses the existing concrete eight-byte encoding, not a free-constructor axiom. -/
+unexpected sorry/admit/axiom in repository-owned Lean proof
+make: *** [Makefile:598: check-lean-policy] Error 1
+make: Leaving directory '/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core'
+exit 2

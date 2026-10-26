@@ -1,0 +1,191 @@
+{
+  "basis": "5ab65a1a2d5a8de322e46572904f46fd0789d1b4",
+  "worktree": "/tmp/beaconcrypt-proverif-exact-interface-strong-secrecy",
+  "scope": "Exact T0 selected/private-application paired Kr3/Ks2 strong secrecy; no global/public-plaintext/computational closure",
+  "files": [
+    {
+      "path": "beaconcrypt-core/Makefile",
+      "sha256": "019ec156f5862706c3c3195e5afb019634d63042b5cc0791e923e4d40bd15e3f"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/check-inventory.sh",
+      "sha256": "6de17355cb5fd9e6de860f0d1c62ac52e07f174d02de0b9d912c658906e69348"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/check-exact-interface-strong.py",
+      "sha256": "a52686e09e88a0fcda17a670e311e58b5b2f38f7613d3117c353a0b518fd3eea"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/check-verdict-classes.py",
+      "sha256": "e7de93188da0a1cb07907a287864819d52560c3744b937e5d3e7df136c8060e2"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/declaration-allowlist.tsv",
+      "sha256": "51cae441d4b0de9e968196a2096a08b190bc8a3ce56e351adeba3502e45750a7"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s-auxiliary.pvl",
+      "sha256": "918ce166ead0af118ef5009ae8344cbc98e2ac7946286850653600c2621eaf86"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s-control-receive.pvl",
+      "sha256": "7d1b8155e006d01abb3e750bc8e210de4f11d298de2c48d29036ef7f039bf8dc"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s-leak-sends.pvl",
+      "sha256": "2ec715b064dccfb91ed6d4436d432f885e522bb24ae69d4059f802289a863b8b"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s-leak.pv",
+      "sha256": "c2fc2ad632cfddd9ee9030fc4809d8f43e9942bffdaa1051c71faed479d33129"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s-origin-receive.pvl",
+      "sha256": "9e37b230b4366a66e62be7e6e7037bf31d29eb6f6c269d0e0576b4719e5ca85a"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s-origin-sends.pvl",
+      "sha256": "07725bebd8081dc05ca1a23d808a3defbfea4522acee3eef965371fa74ae3766"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s-origin.pv",
+      "sha256": "3c15c0e4f7ce61f2f0ab91962ffc59de1333870049b67261d1b95cb8407fb289"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s-origin.pvl",
+      "sha256": "a1791b11ac8bf435f5c580994e1c08079588e565c9b212a2627ce21de721a14e"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s-receive.pvl",
+      "sha256": "76650ccd17b7e6a0431b18a87af6c3d5afc1be64fc3b50512d8e7373e9ba91cb"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s-sends.pvl",
+      "sha256": "db939eac15c5b94c3b6329d7dd0a2c223f7548f2708d6e665cad07cc4c7689b8"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s-ungated-sends.pvl",
+      "sha256": "49590cb746a4e68409716d02273d67ccb10b3bf71b4c2ec669e972bf01c4f7ab"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s-ungated.pv",
+      "sha256": "c2fc2ad632cfddd9ee9030fc4809d8f43e9942bffdaa1051c71faed479d33129"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s.pv",
+      "sha256": "089388fb6af7ab301f1386a1eb29d0ecb5412820967238e925f8c9dc79e5281f"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-b2s.pvl",
+      "sha256": "fbca435e6a043916c2b030a385ba852934bfda9dbcc4c0088bc28891337c153c"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-models.py",
+      "sha256": "e402bf1ac0fb96678687b3254e7a1e786da4be520c8761cf04a1bebae5f87bd9"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-registration.pvl",
+      "sha256": "c2d1b6232d694e520f7135b9d3d841ea16ce68d030afacf6b0a8159de9c98dbf"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b-auxiliary.pvl",
+      "sha256": "8fd715849e5fa8ce7b9e407b81fd3d71d828b67f30555770a1c2304a8843132c"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b-control-receive.pvl",
+      "sha256": "68e93ead8c4813b9fbac47848c28fafa84ab44d0a5dfeebf159d05f5d15136b4"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b-leak-sends.pvl",
+      "sha256": "08bfd0e801b48ded5eeaa4e1979e0e52dca60062e44591962009721e5faac659"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b-leak.pv",
+      "sha256": "7d76e2000193e4140272f0de096551d45685ed6292fec918874e65fcff056c80"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b-origin-receive.pvl",
+      "sha256": "b5f4a7d120aaa4f215f64330c930c6ee143121c6c5738effa44d202d9f32e281"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b-origin-sends.pvl",
+      "sha256": "d14b9ff4585ef155a897fb3e6d8a5a2825110afe8d04a0585e96ab43267354ae"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b-origin.pv",
+      "sha256": "e355a81a855973b58dbe9e54ad490b6ff86dcb5448526fad36391652e014e8ae"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b-origin.pvl",
+      "sha256": "8aadbce9d6e962ae51551841535afefa0cd1f1619df527a24721b163ffe43c00"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b-receive.pvl",
+      "sha256": "da0cca305d2eba4e3a106adbc7dc951b2135551051b73687ef824d61f5799249"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b-sends.pvl",
+      "sha256": "da6e28953dbf5d38a057cdc735418362cce84961a39f6001748db2f996aee00b"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b-ungated-sends.pvl",
+      "sha256": "0f9aff4dd2290d65b63d1f2d8fc55be5906b699cc5e32fa2fe8dd3928ec76c6a"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b-ungated.pv",
+      "sha256": "7d76e2000193e4140272f0de096551d45685ed6292fec918874e65fcff056c80"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b.pv",
+      "sha256": "daf071083c261f994541e272bc7a0e6beba5b072954862b4a8d534e9828586b1"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/exact-interface-strong-s2b.pvl",
+      "sha256": "07cb46e95d7439cd99abaea2e720e31d6bb1cd639af12019ca5f1ed800e4319c"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/test-exact-interface-strong-checker.py",
+      "sha256": "e99055182ebcdc5728398dacb59820db9fffc8e2ecfa32f7a614f6781b5bc9a9"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/test-verdict-classes.py",
+      "sha256": "a6bd8d0b7546a5cc3dfd7b1c4a08ff166ce3004ae985f726f3deb53c80c0df85"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/verdict-classes.tsv",
+      "sha256": "04ab560b81798a1ecb3f9977e09e53d52ba87d5772db14d3e66f4e0bda603a06"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/verdict-inventory.py",
+      "sha256": "fa5bf35d767db123d83a458e663b773ea15224c5ef40db6b5beb98ffd5b59233"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/reviewed-inventory.txt",
+      "sha256": "50a0b5701992d96ce14f267cfc69269f5bc14a225014df38d19ba65f5d662e1e"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/trusted-boundary.md",
+      "sha256": "cf6b8514f1eca1b0ed75f13bc6678e19f2b0926f37a1ced7928e4b93d93133fa"
+    },
+    {
+      "path": "beaconcrypt-core/tests/proverif_transcript_fidelity.rs",
+      "sha256": "26be76d939275a41b3244974240097fad9b5fe46394062df11cf3bf083beba21"
+    },
+    {
+      "path": "doc/formal-verification-analysis.md",
+      "sha256": "49574750078a6fb4dccc7b4cc30fe891d660ed553ef4c7aa415dafae9e6df5b5"
+    },
+    {
+      "path": "doc/impl/proverif-exact-interface-other-pin.md",
+      "sha256": "d6e6b9c43329cc7a23f9320fdcf510e2f4e68076b49bb1b54cbe43e5474d8fcd"
+    },
+    {
+      "path": "doc/impl/proverif-exact-interface-strong-secrecy.md",
+      "sha256": "2c30cd147be0286e2b71ea8b07a2152e6ba57a3a086b9d7f697114fd017e1c94"
+    },
+    {
+      "path": "doc/impl/proverif-serial-ci.md",
+      "sha256": "ee88821a489578bd85fd4742e3774336374c8ea0887c78d94f4c169fbaf21a06"
+    }
+  ]
+}

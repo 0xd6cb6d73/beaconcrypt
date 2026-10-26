@@ -1,0 +1,234 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Registration response frames are logical decoded values. CBOR transports
+   only their C || T || U payload; production reconstructs sequence one and
+   the pinned Server ID. The extra frame metadata in this generic algebra is
+   not an attacker-controlled CBOR field. See cbor-registration.pvl for the
+   fixed-metadata boundary and its nonvacuous rejection controls. *)
+
+(**************************************************************************)
+(* Free-schedule (fs) family: shared vocabulary                           *)
+(**************************************************************************)
+
+(* Load order: production-transcript-interface.pvl, crypto.pvl,
+   extraction/lib.pvl, this file, then the fs process libraries.  This file
+   does not load environment.pvl.  The five declarations below that are
+   marked "copied from environment.pvl" are compact-text identical to their
+   source; the transcript-fidelity test checks that.
+
+   Every fs result is a symbolic result (Dolev-Yao attacker, free
+   constructors, ideal hash, KDF and AEAD) for a bounded process.  It is never
+   a computational bound.  Messages are abstract byte strings that each side
+   can decode; Cap'n Proto is out of scope.  libsodium is a black-box
+   functional contract, persistence is out of scope, and the proof Server is
+   an idealisation with perfect key management and no backup or restore
+   (owner decision OD2).  doc/impl/proverif-free-schedule-registration.md
+   and doc/impl/proverif-free-schedule-records.md explain the scenarios and
+   their bounds, and doc/proverif-fs-event-meaning.md fixes the meaning
+   of every event as a Rust API outcome. *)
+
+(* Bridges.  fs_kid(n) stands for server_kid + n with n >= 1: the Rust
+   peer-ID counter starts at server_kid and every successful build returns
+   last + 1 without wrapping.  Distinct n give distinct IDs, and no fs_kid(n)
+   equals the Server's own ID SERVER_KEY_ID.  fs_seq(t) is the u64 frame
+   sequence t, so sequence_le64(fs_seq(t)) is the CTX sequence field. *)
+(* @beaconcrypt-fs-fidelity key=common.kid_counter_start src=beaconcrypt/src/server.rs:224-224 anchor=control: verified_pqxdh::ServerState::new(server_kid), *)
+(* @beaconcrypt-fs-fidelity key=common.kid_next src=beaconcrypt-core/src/pqxdh.rs:845-851 anchor=pub const fn server_next_key_id(state: ServerState) -> Result<u64, RegistrationError> { *)
+fun fs_kid(nat): key_id [data].
+fun fs_seq(nat): sequence [data].
+
+(* Copied from environment.pvl: the single honest Server identity (OD2) and
+   the Server's own key ID. *)
+free SERVER_IDENTITY_SECRET: bitstring [private].
+free SERVER_KEY_ID: key_id.
+
+(* Copied from environment.pvl: abstract decodable messages.  signed_init_kex
+   is the phase-1 InitKex (tagged identity, then the signed prekey, one-time
+   and ML-KEM keys), registration_payload is the 8-byte assigned-ID binding
+   followed by the application payload, and kex_response is the phase-2
+   response (Server identity, ephemeral key, KEM ciphertext, sequence-one
+   frame, assigned key ID). *)
+fun signed_init_kex(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+): bitstring [data].
+
+fun registration_payload(
+  beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+  bitstring
+): bitstring [data].
+
+fun kex_response(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  key_id
+): bitstring [data].
+
+(* An empty consumed-set slot: a data constant that differs from every
+   beaconcrypt_core__pqxdh__RegistrationId(...) term. *)
+fun fs_no_rid(): beaconcrypt_core__pqxdh__t_RegistrationId [data].
+
+(* The application's choice after an accept: build the response, or drop the
+   one-use RegistrationOutput token.  Any other input is a drop. *)
+fun fs_build(): bitstring [data].
+
+(**************************************************************************)
+(* Events                                                                 *)
+(**************************************************************************)
+
+(* Each event is a predicate on one Rust public call on one object: which
+   call, which value it returned and which state change it committed.  Events
+   are emitted in call order; inside one call the model emits the event and
+   then outputs the returned public value.
+
+   Common fields.  S is the Server identity: on the Server side the object's
+   identity key, on the Beacon side the Beacon's pinned Server key; in the
+   model it is ed_public(SERVER_IDENTITY_SECRET), except for the pins that the
+   attacker chooses in FsRecordsB2sMainAnyPin.  B is the Beacon's Ed25519
+   identity.  obj labels one live Server object.  init is the verified key
+   tuple VerifiedInitKex(identity, prekey, one_time, pq) returned by
+   validate_init_kex, never the raw signed blobs.  rid is the 64-byte
+   RegistrationId identity || one_time.  kid is an assigned peer key ID.  root
+   is the 32-byte derived secret, ad the 153-byte associated data, payload the
+   registration application plaintext, dir a direction, t a frame sequence and
+   m a record plaintext.
+
+   Fields that the call does not return.  root on FsServerCommitted is a
+   field of the opaque token, and on every record event it is a ghost (the
+   root from which that ratchet was initialised; Rust drops it after
+   deriving the chains); init on FsServerCommitted is a ghost (the init of
+   the accept that produced the token); rid on FsBeaconStarted is derived
+   (the Beacon never computes it); kid on Beacon receives is the Beacon's
+   stored assigned ID, which the receive does not return.  A claim that
+   mentions such a field quantifies over it as a function of the run
+   history; no Rust caller observes it at that event.
+
+   Failure-cause events (FsServerReplayRejected, FsServerAcceptFailed,
+   FsBeaconFinishOpenedLater, FsReceiveRejected) are finer than the Rust
+   outcome, which is the same None for every failure.  They, and the
+   frame-carrying twin FsReceivedFrame of FsReceived, are used only by
+   witnesses, definitional checks and negative controls, never by security
+   results. *)
+
+(* get_registration_bundle returned Some(bundle): the Beacon signed its
+   tagged keys once and moved to InitSent.  rid is derived. *)
+event FsBeaconStarted(
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+  beaconcrypt_core__pqxdh__t_RegistrationId
+).
+
+(* get_shared_secret on obj returned Some(RegistrationOutput): every check
+   passed, the root was derived and rid was inserted into the object's
+   consumed set.  No peer is installed and the counter is unchanged. *)
+event FsServerAccepted(
+  bitstring,
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+  beaconcrypt_core__pqxdh__t_RegistrationId,
+  bitstring
+).
+
+(* get_shared_secret on obj returned None because rid was already consumed
+   (witness and definitional use only). *)
+event FsServerReplayRejected(
+  bitstring,
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_RegistrationId
+).
+
+(* get_shared_secret on obj returned None at a failure after the consumed
+   check and before the insertion; the set is unchanged (witness use only).
+   Under crypto.pvl the event arises only when the prekey or the one-time key
+   is not an X25519 public key (DH1 and DH3, or DH4, fail).  The identity
+   conversion and DH2 cannot fail, because the identity verified the
+   signatures and is therefore an Ed25519 public key. *)
+event FsServerAcceptFailed(
+  bitstring,
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_RegistrationId
+).
+
+(* build_registration_response on obj returned Some(response): the peer
+   (B, ratchet) was installed under kid and the counter advanced.  init is a
+   ghost and root a token field, both from the accept that produced the
+   token. *)
+event FsServerCommitted(
+  bitstring,
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+  key_id,
+  bitstring,
+  bitstring,
+  bitstring
+).
+
+(* finish_registration returned Some(payload): the sequence-one frame opened,
+   the assigned-ID binding and the pin checks passed and the Beacon moved to
+   Established.  init is the Beacon's own key tuple. *)
+event FsBeaconEstablished(
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+  key_id,
+  bitstring,
+  bitstring,
+  bitstring
+).
+
+(* Witness only (record scenarios): inside finish_registration the general
+   receive opened a frame with sequence t != 1, after which the sequence-one
+   gate aborted the Beacon. *)
+event FsBeaconFinishOpenedLater(bitstring, bitstring, nat).
+
+(* FsSent(dir, S, B, kid, root, t, m) means the allocation of sequence t for
+   plaintext m by an encrypt call (or by the seal inside a successful build
+   for t = 1), not the Some return: after allocation the counter stays
+   advanced even when the seal or the snapshot capture fails.  The model
+   then outputs a frame Rust never released, which only strengthens the
+   attacker.  On the Server side B is the identity installed under kid. *)
+event FsSent(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).
+
+(* A decrypt call accepted the frame with sequence t <= T_max and returned
+   plaintext m (for t = 1 at the finish: emitted when the finish commits). *)
+event FsReceived(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).
+
+(* Witnesses only (record scenarios): emitted together with every FsReceived,
+   with the same fields except that the last one is the accepted frame (the
+   call argument) instead of the plaintext.  It lets a witness say which
+   frame was accepted. *)
+event FsReceivedFrame(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).
+
+(* Record scenarios only: the far-target branch (t > T_max) opened a frame;
+   the receive worker stops afterwards. *)
+event FsFarAccepted(direction, bitstring, bitstring, key_id, bitstring, nat).
+
+(* Witnesses and controls only (record scenarios): a parsed frame with the
+   expected sender whose receive attempt returned None with the entry state
+   preserved; the last field is that frame (the call argument).  A record
+   scenario may emit it only in some rejection branches; its documentation
+   names them. *)
+event FsReceiveRejected(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).
+
+(**************************************************************************)
+(* Resolution heuristic                                                   *)
+(**************************************************************************)
+
+(* Selection heuristic nx (reviewed allowlist entry; see the section "The fs
+   selection heuristic nx" in doc/formal-verification-analysis.md).  It tells
+   ProVerif not to select hypotheses attacker(x25519_public(y)) during
+   saturation.  It is not an axiom, restriction or assumption: it changes only
+   the order of resolution, so a TRUE or FALSE verdict means the same with or
+   without it.  Without it, saturation unfolds an attacker-supplied X25519
+   point into another Server object's ephemeral public key, whose bundle
+   again needs such a point, and the runs exhaust memory. *)
+nounif y: bitstring; attacker(x25519_public(y)).

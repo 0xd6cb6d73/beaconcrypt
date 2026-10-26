@@ -1,0 +1,221 @@
+{
+  "local_artifacts": [
+    {
+      "module": "PqxdhRegistrationR1Restriction",
+      "local_path": "/tmp/beaconcrypt-registration-r1-restriction-check/olean/BeaconcryptCore/Computational/PqxdhRegistrationR1Restriction.olean",
+      "bytes": 2614616,
+      "status": "regular focused checked artifact from the final guarded check; not committed; byte-identical to the pause artifact because guards add no declarations; rechecked by the 2026-10-03 review-fix check and still byte-identical",
+      "pause_sha256": "f62e7caa1c34ae871c4af79e835ef732aeeac044011da5bbef158a0355bfe22f",
+      "sha256": "f62e7caa1c34ae871c4af79e835ef732aeeac044011da5bbef158a0355bfe22f"
+    },
+    {
+      "module": "PqxdhRegistrationR1Audit",
+      "local_path": "/tmp/beaconcrypt-registration-r1-restriction-check/olean/BeaconcryptCore/Computational/PqxdhRegistrationR1Audit.olean",
+      "bytes": 530832,
+      "status": "regular focused checked artifact from the final guarded check; not committed; byte-identical to the pause artifact because guards add no declarations; rechecked by the 2026-10-03 review-fix check and still byte-identical",
+      "pause_sha256": "0e30eba75eeca0427e4a45cde5c0927514d7075f3bc2fa9ec9a0ea1883ed7d16",
+      "sha256": "0e30eba75eeca0427e4a45cde5c0927514d7075f3bc2fa9ec9a0ea1883ed7d16"
+    },
+    {
+      "module": "PqxdhRegistrationR1Initial",
+      "local_path": "/tmp/beaconcrypt-registration-r1-restriction-check/olean/BeaconcryptCore/Computational/PqxdhRegistrationR1Initial.olean",
+      "bytes": 409000,
+      "status": "regular focused checked artifact from the 2026-10-03 review-fix check; not committed; replaces the fdb3169 artifact because the source changed",
+      "pause_sha256": "9a0cef6f3befcbf13ba7f4cfc50adeb0aed3a36071446c76e1308069d7d4e5b1",
+      "sha256": "deb821a3b4b794876ed7463ff6e602a3e824e32856b3734965e7a8c5b8a8f755",
+      "fdb3169_sha256": "9a0cef6f3befcbf13ba7f4cfc50adeb0aed3a36071446c76e1308069d7d4e5b1"
+    },
+    {
+      "module": "PqxdhRegistrationR1Surface",
+      "local_path": "/tmp/beaconcrypt-registration-r1-restriction-check/olean/BeaconcryptCore/Computational/PqxdhRegistrationR1Surface.olean",
+      "bytes": 637408,
+      "status": "regular focused checked artifact from the 2026-10-03 review-fix check; not committed; replaces the fdb3169 artifact because the source changed",
+      "pause_sha256": "b36148472530be7b2fcfe39e8012de94e7dc8701792c1a352234d87b05c9890f",
+      "sha256": "5325058c33ab6761fcc2bd8bebb6d32effb5a92565a1bb3a39c41dc173b880a9",
+      "fdb3169_sha256": "0954b521bb2f29f0d553aacd9ae17c900354249413f3e5f940c840db530bcc6d"
+    },
+    {
+      "module": "PqxdhRegistrationR1Journal",
+      "local_path": "/tmp/beaconcrypt-registration-r1-restriction-check/olean/BeaconcryptCore/Computational/PqxdhRegistrationR1Journal.olean",
+      "bytes": 564024,
+      "status": "regular focused checked artifact from the 2026-10-03 review-fix check; not committed; replaces the fdb3169 artifact because the source changed",
+      "pause_sha256": null,
+      "sha256": "5b7a49d0ef1a5d05618d1f7b653376bd93414ae7bd5ec769faf6dc348e0c5272",
+      "fdb3169_sha256": "cb0eb6038e26bb6ac476aab23082ff1e79d6d25075b48b361291fdd82b738978"
+    }
+  ],
+  "latest_exit_code": 0,
+  "active_processes_in_this_lane": [],
+  "no_new_proof_check_after_pause": false,
+  "pause_logs": [
+    {
+      "path": "logs/normalized-program-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "recorded_exit_code": 0,
+      "exit_code_provenance": "recorded execution result in this lane; this pause receipt summarizes that result, not a newly rerun check",
+      "scope": "complete unchanged current module"
+    },
+    {
+      "path": "logs/audit-singleton-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "recorded_exit_code": 0,
+      "exit_code_provenance": "recorded execution result in this lane; this pause receipt summarizes that result, not a newly rerun check",
+      "scope": "complete unchanged current module"
+    },
+    {
+      "path": "logs/initial-audit-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "recorded_exit_code": 0,
+      "exit_code_provenance": "recorded execution result in this lane; this pause receipt summarizes that result, not a newly rerun check",
+      "scope": "complete unchanged current module"
+    },
+    {
+      "path": "logs/surface-initial-14.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "recorded_exit_code": 0,
+      "exit_code_provenance": "recorded execution result in this lane; this pause receipt summarizes that result, not a newly rerun check",
+      "scope": "earlier Surface prefix through initial_audit, before experiment_audit was added"
+    },
+    {
+      "path": "logs/surface-experiment-05.log",
+      "sha256": "f01fbb84666a8149cfe051b22d590f6e7f3f32fbce5dbfdc6d828c382e54628f",
+      "recorded_exit_code": 1,
+      "exit_code_provenance": "recorded execution result in this lane; this pause receipt summarizes that result, not a newly rerun check",
+      "scope": "complete unfinished Surface file at the pause; superseded by the resumed checks"
+    }
+  ],
+  "resume_checks": [
+    {
+      "path": "logs/surface-experiment-06.log",
+      "sha256": "18ee271c638e031c9a0d3217728d6f86ac0cfb23856edaa7c3473eb121286409",
+      "observed_exit_code": 1,
+      "exit_code_provenance": "observed in the resumed 2026-10-02 session; exit code captured by the invoking shell immediately after the check",
+      "command": "bash evidence/check-machine-local.sh PqxdhRegistrationR1Surface (flock /tmp/bc-arc-scratch/lean.lock, timeout 180, Lean 4.34.0, -j1 -M8000, private overlay output)",
+      "scope": "intermediate Surface check after consuming construct_origin on the supported pair; shows the literal initialized constructor goal"
+    },
+    {
+      "path": "logs/surface-experiment-08.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the resumed 2026-10-02 session; exit code captured by the invoking shell immediately after the check",
+      "command": "bash evidence/check-machine-local.sh PqxdhRegistrationR1Surface (flock /tmp/bc-arc-scratch/lean.lock, timeout 180, Lean 4.34.0, -j1 -M8000, private overlay output)",
+      "scope": "complete Surface file with finished experiment_audit, before guards were appended"
+    },
+    {
+      "path": "logs/guarded-Restriction.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the resumed 2026-10-02 session; exit code captured by the invoking shell immediately after the check",
+      "command": "bash evidence/check-machine-local.sh PqxdhRegistrationR1Restriction (flock /tmp/bc-arc-scratch/lean.lock, timeout 180, Lean 4.34.0, -j1 -M8000, private overlay output)",
+      "scope": "final complete guarded PqxdhRegistrationR1Restriction module, checked in dependency order"
+    },
+    {
+      "path": "logs/guarded-Audit.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the resumed 2026-10-02 session; exit code captured by the invoking shell immediately after the check",
+      "command": "bash evidence/check-machine-local.sh PqxdhRegistrationR1Audit (flock /tmp/bc-arc-scratch/lean.lock, timeout 180, Lean 4.34.0, -j1 -M8000, private overlay output)",
+      "scope": "final complete guarded PqxdhRegistrationR1Audit module, checked in dependency order"
+    },
+    {
+      "path": "logs/guarded-Initial.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the resumed 2026-10-02 session; exit code captured by the invoking shell immediately after the check",
+      "command": "bash evidence/check-machine-local.sh PqxdhRegistrationR1Initial (flock /tmp/bc-arc-scratch/lean.lock, timeout 180, Lean 4.34.0, -j1 -M8000, private overlay output)",
+      "scope": "final complete guarded PqxdhRegistrationR1Initial module, checked in dependency order"
+    },
+    {
+      "path": "logs/guarded-Surface.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the resumed 2026-10-02 session; exit code captured by the invoking shell immediately after the check",
+      "command": "bash evidence/check-machine-local.sh PqxdhRegistrationR1Surface (flock /tmp/bc-arc-scratch/lean.lock, timeout 180, Lean 4.34.0, -j1 -M8000, private overlay output)",
+      "scope": "final complete guarded PqxdhRegistrationR1Surface module, checked in dependency order"
+    },
+    {
+      "path": "logs/axiom-probe.log",
+      "sha256": "95d6a6b1dcf71d9494bb9a3832f45709af18be542521bc39e33b8ee61aacc206",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the resumed 2026-10-02 session; exit code captured by the invoking shell immediately after the check",
+      "command": "flock /tmp/bc-arc-scratch/lean.lock timeout 180 lean -j1 -M8000 <private scratch file> with the archived LEAN_PATH and no -o output",
+      "scope": "private print of the axioms of all 38 public theorems from evidence/axiom-probe.lean.txt; every entry is exactly propext, Classical.choice, Quot.sound"
+    },
+    {
+      "path": "logs/guard-negative-control.log",
+      "sha256": "b4a938f60dc74d9303cfc93bf126bb8831405155707d6ffe91f979b787bb4f6c",
+      "observed_exit_code": 1,
+      "exit_code_provenance": "observed in the resumed 2026-10-02 session; exit code captured by the invoking shell immediately after the check",
+      "command": "flock /tmp/bc-arc-scratch/lean.lock timeout 180 lean -j1 -M8000 <private scratch file> with the archived LEAN_PATH and no -o output",
+      "scope": "private negative control from evidence/guard-negative-control.lean.txt; a deliberately wrong expected axiom list is rejected, showing the guards are live"
+    },
+    {
+      "path": "logs/guarded-Journal.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the resumed 2026-10-02 session; exit code captured by the invoking shell immediately after the check",
+      "command": "bash evidence/check-machine-local.sh PqxdhRegistrationR1Journal (flock /tmp/bc-arc-scratch/lean.lock, timeout 180, Lean 4.34.0, -j1 -M8000, private overlay output)",
+      "scope": "final complete guarded PqxdhRegistrationR1Journal module (step 3), checked after the four earlier modules"
+    },
+    {
+      "path": "logs/journal-axiom-probe.log",
+      "sha256": "0f2a2833ce44c201b14c5089e4d07abcb3cecb5a073e52f2a719393f67916a72",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the resumed 2026-10-02 session; exit code captured by the invoking shell immediately after the check",
+      "command": "flock /tmp/bc-arc-scratch/lean.lock timeout 180 lean -j1 -M8000 <private scratch file> with the archived LEAN_PATH and no -o output",
+      "scope": "private print of the axioms of all 11 public Journal statements from evidence/journal-axiom-probe.lean.txt; every entry is exactly propext, Classical.choice, Quot.sound"
+    }
+  ],
+  "resumed": "2026-10-02, explicit owner instruction",
+  "review_fix_checks": [
+    {
+      "path": "logs/review-fix-Restriction.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the 2026-10-03 review-fix session; exit code captured by the invoking shell immediately after the check",
+      "command": "bash evidence/check-machine-local.sh PqxdhRegistrationR1Restriction (flock /tmp/bc-arc-scratch/lean.lock, timeout 180, Lean 4.34.0, -j1 -M8000, private overlay output)",
+      "scope": "complete guarded PqxdhRegistrationR1Restriction module after the review fixes, checked in dependency order (Restriction, Audit, Initial, Surface, Journal)"
+    },
+    {
+      "path": "logs/review-fix-Audit.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the 2026-10-03 review-fix session; exit code captured by the invoking shell immediately after the check",
+      "command": "bash evidence/check-machine-local.sh PqxdhRegistrationR1Audit (flock /tmp/bc-arc-scratch/lean.lock, timeout 180, Lean 4.34.0, -j1 -M8000, private overlay output)",
+      "scope": "complete guarded PqxdhRegistrationR1Audit module after the review fixes, checked in dependency order (Restriction, Audit, Initial, Surface, Journal)"
+    },
+    {
+      "path": "logs/review-fix-Initial.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the 2026-10-03 review-fix session; exit code captured by the invoking shell immediately after the check",
+      "command": "bash evidence/check-machine-local.sh PqxdhRegistrationR1Initial (flock /tmp/bc-arc-scratch/lean.lock, timeout 180, Lean 4.34.0, -j1 -M8000, private overlay output)",
+      "scope": "complete guarded PqxdhRegistrationR1Initial module after the review fixes, checked in dependency order (Restriction, Audit, Initial, Surface, Journal)"
+    },
+    {
+      "path": "logs/review-fix-Surface.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the 2026-10-03 review-fix session; exit code captured by the invoking shell immediately after the check",
+      "command": "bash evidence/check-machine-local.sh PqxdhRegistrationR1Surface (flock /tmp/bc-arc-scratch/lean.lock, timeout 180, Lean 4.34.0, -j1 -M8000, private overlay output)",
+      "scope": "complete guarded PqxdhRegistrationR1Surface module after the review fixes, checked in dependency order (Restriction, Audit, Initial, Surface, Journal)"
+    },
+    {
+      "path": "logs/review-fix-Journal.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the 2026-10-03 review-fix session; exit code captured by the invoking shell immediately after the check",
+      "command": "bash evidence/check-machine-local.sh PqxdhRegistrationR1Journal (flock /tmp/bc-arc-scratch/lean.lock, timeout 180, Lean 4.34.0, -j1 -M8000, private overlay output)",
+      "scope": "complete guarded PqxdhRegistrationR1Journal module after the review fixes, checked in dependency order (Restriction, Audit, Initial, Surface, Journal)"
+    },
+    {
+      "path": "logs/review-fix-signature-probe.log",
+      "sha256": "52b579fa8df40ca6fc39c6dd71ce9d79d8d75798c63f00c6b82221257d6a0c5f",
+      "observed_exit_code": 0,
+      "exit_code_provenance": "observed in the 2026-10-03 review-fix session; exit code captured by the invoking shell immediately after the check",
+      "command": "flock /tmp/bc-arc-scratch/lean.lock timeout 180 lean -j1 -M8000 <private scratch file> with the archived LEAN_PATH and no -o output",
+      "scope": "private #check of the strengthened bundle_initial (no pool binder) and #print axioms, from evidence/review-fix-signature-probe.lean.txt; axioms are exactly propext, Classical.choice, Quot.sound"
+    }
+  ],
+  "review_fixes": "2026-10-03, fixes for the two read-only reviews of fdb3169"
+}

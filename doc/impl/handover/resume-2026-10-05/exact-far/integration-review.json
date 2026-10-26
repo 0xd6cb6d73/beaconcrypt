@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-06T01:30:19.066117+00:00",
+  "decision": "APPROVE_SCOPED_INTEGRATION",
+  "manifest_sha256": "50ac653315d358543c4ce25743747d62195949a58a481292093c0e9504650435",
+  "files": {
+    "beaconcrypt-core/Makefile": "903c99860fe5db1c9bb4c4cf675d38455871717b3b572b42a3e358ed54487f29",
+    "beaconcrypt-core/proofs/check-inventory.sh": "cb522b3d38dfd9e3e392ff511d6f83aad29b74177b4d44682dd7027059e7f55c",
+    "beaconcrypt-core/proofs/pro-verif/check-verdict-classes.py": "e4996c40f7a11c2010da5296004542d0b76b07ad4fb401d7fb6be0ad7fe71923",
+    "beaconcrypt-core/proofs/pro-verif/test-verdict-classes.py": "fb2e1da23b61efa70513e7e7ce3bd037df6c7433086cc49edb591fdd94f39b4d",
+    "beaconcrypt-core/proofs/pro-verif/verdict-classes.tsv": "4381d522be0029a316135a3c8413586cc4607e2c7fb42f3b33b840423ac050b0",
+    "beaconcrypt-core/proofs/pro-verif/verdict-inventory.py": "c6b333557594face9de1ca5b8d4bb1e57c712ced5c7d08d6738d41e3931d6aed",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "ed72162bddbf0556b1414fb3c01e810e0aa8726bbd039e1f84014aafab0a72e6",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "6d57d4c0877c431919c7eedec3749a8241d0f9e551c3f805dd3402d9b070931d",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "08f1dfdffb91a5394695ad789fa9538cf30a41b637c36bda3d36a4cbbbd34ddf",
+    "doc/formal-verification-analysis.md": "761f186626741e9205a63252d486262ae10e1913b429e273bf828d5bb19bc5af",
+    "doc/impl/proverif-free-schedule-records-b2s.md": "f0e56b731bb9b3b0a71da1475b8c5c29b62ab980605c20ae96f80173cd042265",
+    "doc/impl/proverif-free-schedule-records.md": "c0cecd61203e099d83e7ecb89aa8c49d33ea2d0f20d18c148413e676e7a84798",
+    "doc/impl/proverif-fs-source-abstraction.md": "9f447e4f42a6fe132f996c5e5c79652f836c79ae6222e28a07f07e0b3cc1c83c",
+    "doc/impl/proverif-serial-ci.md": "a4fcc539e63078290534f465a19a853945901a2c1e879167c52767a45a5095b3",
+    "beaconcrypt-core/proofs/pro-verif/check-exact-far.py": "85eb30ba9a02bcb665971252e8faf9a4bdfd1a39e97ccfb1acf784ba059bff9d",
+    "beaconcrypt-core/proofs/pro-verif/exact-far-b2s-c4.pv": "50e3448fc764b8e6c8ebd6c0a6bdb749336313500723c2f198952a14c4bae2a2",
+    "beaconcrypt-core/proofs/pro-verif/exact-far-b2s-control.pv": "335f48b7f9039f93ad4b1dadffc0b10b6f015b4ce13a5f66ba71e674879ae3ec",
+    "beaconcrypt-core/proofs/pro-verif/exact-far-b2s-witness.pv": "0279c0070efc69e39a4a376839091fffb20a6149b14793a0478b1ef9b0f00753",
+    "beaconcrypt-core/proofs/pro-verif/exact-far-s2b-c4.pv": "590f59dab09b31cd6c43ca81f4a70bbc1c9eafa79dd0ca23c3b5dabc55654f6e",
+    "beaconcrypt-core/proofs/pro-verif/exact-far-s2b-control.pv": "590f59dab09b31cd6c43ca81f4a70bbc1c9eafa79dd0ca23c3b5dabc55654f6e",
+    "beaconcrypt-core/proofs/pro-verif/test-exact-far-checker.py": "16a4fba5f97d5bdda3ad19c6efbf750975fc527eef634a8e4fc4e490c0116c1c",
+    "doc/impl/proverif-exact-far-material.md": "870854738fa9e51453a44bfc96a6548a831866f524b344bd3f5f3ba089720119"
+  },
+  "scope": "Local T0 first-far material and hidden-reply event/knowledge trace projection; 5 separate extension targets, 2 security TRUE and 3 confirmed FALSE controls/witness. No full source/API/computational closure.",
+  "reviewed": [
+    "Full maintained argument and exact source capacity/material/chain references",
+    "Independent 51-case parser and generator, both endpoint/depth/projection/domain checks",
+    "Exact target roster, process scopes, positive fresh-identity b2s control distinction and diagnostic treatment",
+    "Make serial extension and FT omission/regression wiring; no prior gate removal",
+    "Classification of all five new rows; 3172 prior TSV bytes retained",
+    "All22 frozen source hashes; all5 generated input hash maps, log hashes and final strict result/trace replay"
+  ],
+  "checks": [
+    "10 dedicated Python regressions pass independently",
+    "Classification checker passes3177 total",
+    "No new solver, Lean build, cargo run or aggregate gate executed by reviewer"
+  ],
+  "remaining": "Portable archive plus final focused inventory receipt still belongs to publisher validation.",
+  "editorial_nit": "The maintained b2s control opening comment still says Scratch; harmless to tokens or scope but may be renamed Maintained before archiving with updated hashes."
+}

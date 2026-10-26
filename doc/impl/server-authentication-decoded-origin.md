@@ -1,0 +1,19 @@
+# Exact decoded-record origin for registration
+
+`PqxdhServerAuthDecodedOrigin` retains the complete decoded record in the existing selected registration receipt. Its three guarded statements concern the actual `PqxdhServerAuthFinishMaterial.program`, including the ordinary challenger's optional plaintext and the source registration acceptance gates. The source computation, its private state and all earlier security statements are unchanged.
+
+| Statement | Established fact |
+| --- | --- |
+| `matched_frame` | A local target matching an issued complete CTX tuple decodes to the actual opened sequence and sender and that issued record's complete protected payload. |
+| `program_or_origin` | Every successful complete selected finish either wins the existing ordinary forgery observer or has an earlier component seal matching the exact decoded frame and actual returned plaintext. It retains the application bytes, local target, reached kernel, acceptance result and prior-history membership. |
+| `source_origin` | The matched component receipt additionally retains its actual earlier Server source index, root-input touch, source seal context and source log membership, with the same accepted fields, decoded frame and plaintext. |
+
+The protected payload is the existing `CtxRomRecord.encode`, containing the ciphertext body, retained AEAD tag and commitment. The decoded frame adds sequence and sender. The statements concern these decoded fields, not equality of outer response or frame serialization bytes. `matched_frame` and `program_or_origin` need no writer-totality or decoder-injectivity premise. `source_origin` uses the existing abstract `ReadWritable` law only to exclude an inner frame-writer failure for the particular record that actually matched an accepted decoded target. It does not infer success of the later outer response writer.
+
+`Good` is the existing inductive correctness invariant of the ordinary interpreter and its successful-seal/opening history. `Origins` is the existing source-indexed receipt invariant, retaining actual touches and source log updates; it does not identify a source occurrence by equal key bytes. The complete source client already establishes these invariants in `PqxdhServerAuthCtxObserverHistory`. The new local consumer uses them at the reached callback. It introduces no primitive security contract or protocol-authentication assumption.
+
+These are logical consequences of the unchanged execution, so they add no sampler, oracle query, selected-record choice or reduction loss. All source and primitive work stays in the existing executable and its resource ledger. No zero-runtime claim is made. In particular, the output is the challenger's actual optional plaintext; the proof does not insert a recovered plaintext into an adversary-supplied request.
+
+The original R1 event compares root-input partnership and accepted ID/application/AD fields. Its negation alone does not imply this stronger exact-frame correspondence. A full computational bound for a new frame/publication event must still transport that event through the actual key-schedule hybrids. The unpublished-response lane can use the retained entry and decoded-frame witnesses on the matching branch, and must separately charge its withheld-output alternative. Successful outer publication, eleven-field symbolic session origin, global injectivity and arbitrary later-record security remain separate consumers. Snapshots, persistence and serialization implementations remain excluded.
+
+The focused module check passes with guards permitting only `propext`, `Classical.choice` and `Quot.sound`. No Rust, ProVerif, primitive interface or existing theorem changes in this package. The enclosing aggregate candidate remains separate and unchanged while these receipt results are reviewed.

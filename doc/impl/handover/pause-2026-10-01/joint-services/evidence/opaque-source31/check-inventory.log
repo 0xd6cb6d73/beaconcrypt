@@ -1,0 +1,30 @@
+make: Entering directory '/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core'
+bash proofs/check-inventory.sh
+comm: file 1 is not in sorted order
+comm: file 2 is not in sorted order
+comm: input is not in sorted order
+reviewed handwritten-proverif file set changed:
+--- /tmp/nix-shell.w1Bkwk/tmp.hMFgYzhcZC/expected-handwritten-proverif	2026-10-06 11:14:44.439000000 +0200
++++ /tmp/nix-shell.w1Bkwk/tmp.hMFgYzhcZC/handwritten-proverif	2026-10-06 11:14:44.440040060 +0200
+@@ -86,6 +86,17 @@
+ proofs/pro-verif/quantum-mlkem-recovery.pvl
+ proofs/pro-verif/queries.pvl
+ proofs/pro-verif/reachability-queries.pvl
++proofs/pro-verif/registration-beacon-admission.pvl
++proofs/pro-verif/registration-build-lookup.pvl
++proofs/pro-verif/registration-joint-operational-queries.pvl
++proofs/pro-verif/registration-joint-schedule-queries.pvl
++proofs/pro-verif/registration-joint-schedule.pv
++proofs/pro-verif/registration-joint-schedule.pvl
++proofs/pro-verif/registration-process-control-callback.pvl
++proofs/pro-verif/registration-process-control-fixture.pv
++proofs/pro-verif/registration-process-control-fixture.pvl
++proofs/pro-verif/registration-process-dispatch.pvl
++proofs/pro-verif/registration-process-return.pvl
+ proofs/pro-verif/registration-set-admission-queries.pvl
+ proofs/pro-verif/registration-set-admission-reachability.pvl
+ proofs/pro-verif/registration-set-admission.pv
+formal-verification inventory check failed: unreviewed handwritten-proverif file-set drift
+make: *** [Makefile:180: check-inventory] Error 1
+make: Leaving directory '/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core'
+exit 2

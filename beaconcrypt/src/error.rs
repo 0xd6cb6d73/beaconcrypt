@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: 0BSD
 
-use std::{error::Error, fmt};
+use core::{error::Error, fmt};
 
 #[derive(Debug, Clone)]
 pub struct KeyGenError;

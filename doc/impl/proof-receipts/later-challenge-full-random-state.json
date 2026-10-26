@@ -1,0 +1,273 @@
+{
+  "cohort": "full-random-state50",
+  "source_base": "ba60526c141e98808285106da56b3a2fb8ccb6dd",
+  "fetched_origin_vcvio": "8330cdef4f4659931b6764a026cd90c4caf833a4",
+  "source_manifest_sha256": "cc106a7ea967cf8553c5a5fff8b84016a5310d9d4674790f4db8f8ee23885f7c",
+  "source_files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSharedPrefixBackend.lean": "bf72986476b13efd441f2801762932170ba76a6765b278e230ab3c41c5a34e8a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBackendPrefix.lean": "6c7ad7dc5cb0974aaadc231b9835052dfbbd4bb429bbcd8cb48fbea93acec105",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBackendCollector.lean": "eb2c983e96424fb941f77eb9b7db106a9637470edc6f7844edb6c1defdd88822",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBackendPreparation.lean": "d9d979b958162938e0a6e414b20be1bcde8c34ea78fafecb2288dea800603ec7",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBackendGenerated.lean": "6b73b66284dbbcdf0a0657642adf5dde3170d33d0acb16d22d7868ef04d7e5b7",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomBackend.lean": "468ef1594e09ff755fb009566b07a64c0b2cecd56e92f991b234beb44bb1174e",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomSampler.lean": "1b86ddb9756f5ebd0f4c50d944a26da9e42036bfdb4bf6182cab75c767243804",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomProjection.lean": "cb0a171b1c7d95115d9931740568a476a69daef951ee85222cf21808686aa8e4",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBackendCollectorBefore.lean": "7698464027edff23bd9a854059d78a7f0414920b55f9e6cf9d9455077e6cfb88",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomBefore.lean": "adf6a2efc920b9659954dd32fde064eef7652f6416cff96fd64de4fc2d24496a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomConsumer.lean": "3de1eca94195ca952972f94a8fa91d3a2c9c5c8e0b142fa1ff6277fbdab407cc",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomCompiled.lean": "0219730ee20fa0910a68b28af03b045e989178c244874f1cbde52a98530d31a7",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforePrivacy.lean": "de1e247e57ac4fabc6a16063315af86267c7234777973343d595491628a65475",
+    "doc/impl/later-challenge-full-random-state.md": "c4652a6409a86bf7f1db509321896316527692a4fffcdd5bdf8bd2ee835d3dab",
+    "doc/formal-verification-analysis.md": "d0d63b239e81bc772f10941ae44bc8abf1c2533a2661fa36e9c8667dd3d36feb"
+  },
+  "unchanged_published_files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedBefore.lean",
+      "head_sha256": "8e4d8c729e1609aab98fd0217fc09d70b4da63546ee2a3a6cd5fc905a9378ab6",
+      "worktree_sha256": "8e4d8c729e1609aab98fd0217fc09d70b4da63546ee2a3a6cd5fc905a9378ab6",
+      "equal": true
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSourceSharedRom.lean",
+      "head_sha256": "ecf6b8785f4c7d7f5cf4e42cee9ea27d0f75e4d633565b3ea1a58e516d20a32f",
+      "worktree_sha256": "ecf6b8785f4c7d7f5cf4e42cee9ea27d0f75e4d633565b3ea1a58e516d20a32f",
+      "equal": true
+    }
+  ],
+  "direct_checks": [
+    {
+      "module": "RawCtxSharedPrefixBackend",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/RawCtxSharedPrefixBackend-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh RawCtxSharedPrefixBackend"
+    },
+    {
+      "module": "PqxdhLaterChallengeBackendPrefix",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeBackendPrefix-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeBackendPrefix"
+    },
+    {
+      "module": "PqxdhLaterChallengeBackendCollector",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeBackendCollector-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeBackendCollector"
+    },
+    {
+      "module": "PqxdhLaterChallengeBackendPreparation",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeBackendPreparation-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeBackendPreparation"
+    },
+    {
+      "module": "PqxdhLaterChallengeBackendGenerated",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeBackendGenerated-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeBackendGenerated"
+    },
+    {
+      "module": "PqxdhLaterChallengeRandomBackend",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeRandomBackend-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeRandomBackend"
+    },
+    {
+      "module": "PqxdhLaterChallengeRandomSampler",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeRandomSampler-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeRandomSampler"
+    },
+    {
+      "module": "PqxdhLaterChallengeRandomProjection",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeRandomProjection-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeRandomProjection"
+    },
+    {
+      "module": "PqxdhLaterChallengeBackendCollectorBefore",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeBackendCollectorBefore-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeBackendCollectorBefore"
+    },
+    {
+      "module": "PqxdhLaterChallengeRandomBefore",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeRandomBefore-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeRandomBefore"
+    },
+    {
+      "module": "PqxdhLaterChallengeRandomConsumer",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeRandomConsumer-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeRandomConsumer"
+    },
+    {
+      "module": "PqxdhLaterChallengeRandomCompiled",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeRandomCompiled-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeRandomCompiled"
+    },
+    {
+      "module": "PqxdhLaterChallengeBeforePrivacy",
+      "exit_code": 0,
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeBeforePrivacy-final.log",
+      "bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeBeforePrivacy"
+    }
+  ],
+  "review": {
+    "sha256": "53e4408c994630b3c10778d55d9c2c631ada0c46f77252fe6dc64b177ce99607",
+    "content": {
+      "reviewer": "/root/r1_scheduler_closure",
+      "timestamp": "2026-10-06T02:26:40.045385+00:00",
+      "decision": "APPROVE_SCOPED_FULL_STATE_GUARDED_COMPARISON",
+      "manifest": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/full-random-state50-manifest.json",
+      "manifest_sha256": "cc106a7ea967cf8553c5a5fff8b84016a5310d9d4674790f4db8f8ee23885f7c",
+      "worktree": "/tmp/beaconcrypt-evolving-record-composition",
+      "inspected_files": [
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSharedPrefixBackend.lean",
+          "sha256": "bf72986476b13efd441f2801762932170ba76a6765b278e230ab3c41c5a34e8a",
+          "bytes": 3869
+        },
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBackendPrefix.lean",
+          "sha256": "6c7ad7dc5cb0974aaadc231b9835052dfbbd4bb429bbcd8cb48fbea93acec105",
+          "bytes": 7208
+        },
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBackendCollector.lean",
+          "sha256": "eb2c983e96424fb941f77eb9b7db106a9637470edc6f7844edb6c1defdd88822",
+          "bytes": 21920
+        },
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBackendPreparation.lean",
+          "sha256": "d9d979b958162938e0a6e414b20be1bcde8c34ea78fafecb2288dea800603ec7",
+          "bytes": 8080
+        },
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBackendGenerated.lean",
+          "sha256": "6b73b66284dbbcdf0a0657642adf5dde3170d33d0acb16d22d7868ef04d7e5b7",
+          "bytes": 8251
+        },
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomBackend.lean",
+          "sha256": "468ef1594e09ff755fb009566b07a64c0b2cecd56e92f991b234beb44bb1174e",
+          "bytes": 3997
+        },
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomSampler.lean",
+          "sha256": "1b86ddb9756f5ebd0f4c50d944a26da9e42036bfdb4bf6182cab75c767243804",
+          "bytes": 15821
+        },
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomProjection.lean",
+          "sha256": "cb0a171b1c7d95115d9931740568a476a69daef951ee85222cf21808686aa8e4",
+          "bytes": 4974
+        },
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBackendCollectorBefore.lean",
+          "sha256": "7698464027edff23bd9a854059d78a7f0414920b55f9e6cf9d9455077e6cfb88",
+          "bytes": 11786
+        },
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomBefore.lean",
+          "sha256": "adf6a2efc920b9659954dd32fde064eef7652f6416cff96fd64de4fc2d24496a",
+          "bytes": 15857
+        },
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomConsumer.lean",
+          "sha256": "3de1eca94195ca952972f94a8fa91d3a2c9c5c8e0b142fa1ff6277fbdab407cc",
+          "bytes": 11347
+        },
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomCompiled.lean",
+          "sha256": "0219730ee20fa0910a68b28af03b045e989178c244874f1cbde52a98530d31a7",
+          "bytes": 12648
+        },
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforePrivacy.lean",
+          "sha256": "de1e247e57ac4fabc6a16063315af86267c7234777973343d595491628a65475",
+          "bytes": 10986
+        },
+        {
+          "path": "doc/impl/later-challenge-full-random-state.md",
+          "sha256": "c4652a6409a86bf7f1db509321896316527692a4fffcdd5bdf8bd2ee835d3dab",
+          "bytes": 10429
+        },
+        {
+          "path": "doc/formal-verification-analysis.md",
+          "sha256": "d0d63b239e81bc772f10941ae44bc8abf1c2533a2661fa36e9c8667dd3d36feb",
+          "bytes": 964850
+        }
+      ],
+      "validation_review": {
+        "frozen_hashes": 15,
+        "theorem_statements": 50,
+        "exact_guards": 50,
+        "empty_direct_logs": 13,
+        "forbidden_scan": "clear",
+        "reviewer_builds": "none; inspected supplied final logs"
+      },
+      "semantic_review": [
+        "Read all 13 complete module definitions, theorem statements and proofs, full guide and appended analysis; independently checked BeforeConsumer Fits/client/generated_random and existing privacyLoss/source_random endpoints.",
+        "SharedPrefixBackend.evaluated quantifies over actual stateful backend and complete source continuation; no marginal-key/state interchange. Prefix/collector/preparation relations retain both evaluated margins and all complementary completed/cached/inside/used outcomes.",
+        "General backend preparation retains stateful coin effects; actual RandomBackend.coin/coins separately proves literal forwarded uniform queries preserve entire RandomState. RandomProjection is only a dictionary projection used for source support, not a reconstruction of the backend.",
+        "RandomSampler keeps original generator order, actual selected continuation/private KEM packet, initial64 output, common parent76 with correlated projections, and subsequent nonce12/next32 samples. Full backend is carried in each actual margin.",
+        "Before observation equates complete saved callback/native/material/backend payload on the before branch; all other mass maps to unconditioned None. No success conditioning or equality claim about distinct completed decisions.",
+        "RandomConsumer.reached uses actual source-support projection and the same complete reached RandomState; same_prefix and same_continuation are adjacent evaluated distribution/probability results.",
+        "RandomCompiled.client has no backend-state input. cache_irrelevant and resume_blind prove the empty observation dictionary is unread by the client; evaluated uses one ordinary interpreter from randomInitial through prefix and suffix without reset.",
+        "BeforePrivacy.pair uses two concrete complete-client privacyLoss instances; each retains two IND$ reductions, twice indexed INT-CTXT sum over qRaw attempts, qHash/2^128 and qRaw/2^512. No session selection factor is implicitly discharged.",
+        "Caps are selected seal/raw <=1+qPost and hash<=qHashPre+1+qPost under full prefix hash/uniform premises and 1+qPost<2^96. qUniformPre is expressly not a full continuation/native bill."
+      ],
+      "scope_limits": [
+        "Fits is still a noncomputable all-reply whole-wrapper resource guard; no efficient executable protocol reduction is certified until global source budgets discharge it.",
+        "Parent/target separation remains explicit; source target event, initial-builder/completed branches, freshness/reveals, nonce refusals, alias probability and global native/query/selection ledger remain open.",
+        "No primitive implementation or snapshot/persistence experiment, altered cryptographic assumption, or end-to-end secrecy completion is asserted."
+      ],
+      "findings": []
+    }
+  },
+  "scope": "Complete backend/source sampler coupling, exact random-state/source-cache projection, actual generated before consumer in one state-blind interpreter, and explicit paired CTX source-game loss. Fits remains a noncomputable guard; full source event, freshness, aliases, refusal and uniform/native budget joins remain.",
+  "guards": 50,
+  "forbidden_scan": "PASS",
+  "verification_scope": "Focused single-file Lean4.34 checks under shared lock (-j1 -M8000); no full build or Rust/ProVerif/mutation suite in this proof-only lane checkpoint. Root imports and trust inventory are regenerated at central integration."
+}

@@ -1,0 +1,223 @@
+-- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.PqxdhRegistrationR1Restriction
+
+/-! The actual singleton scheduler never consults its inherited proof histories. This module relates the complete operational projection of the unmodified scheduler to explicit per-callback normalization, retaining both primitive caches and every public reply. -/
+
+open OracleComp OracleSpec CoreModels Aeneas
+open Aeneas.Std hiding namespace core alloc
+open RustM beaconcrypt_core PqxdhRefinement
+set_option autoImplicit false
+namespace BeaconcryptCore.Computational.PqxdhRegistrationR1Audit
+open PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment PqxdhServerAuthNative
+open PqxdhRegistrationR1Restriction
+variable {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι}
+
+/-- Every actual concrete owner callback ignores the inherited audit histories and retains both real caches. No owner or parser success condition is required. -/
+theorem callback_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (query : (PqxdhBeaconPhase2Publication.NativeSpec IdentitySeed ScalarBytes
+      (PqxdhKemIndCca.MlKem768PublicKey × KemSK) IdentitySeed Response).Domain)
+    (state : NativeState KemSK) :
+    Prod.map id eraseObservers <$>
+        (PqxdhRegistrationSchedule.callbacks setup codec query).run state =
+      (PqxdhRegistrationSchedule.callbacks setup codec query).run (eraseObservers state) := by
+  rcases query with query | (query | (input | request | response))
+  all_goals simp only [PqxdhRegistrationSchedule.callbacks, sourceBeaconTail,
+    PqxdhPhase2DhRootConsumer.withRoot, nativeCoins, nativeCtx, sourceRoot,
+    eraseObservers, StateT.run, Functor.map_map]
+  all_goals rfl
+
+/-- Complete owner callback execution commutes with audit erasure for arbitrary adaptive callback programs and optional results. -/
+theorem program_audit {Result : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (work : OracleComp (PqxdhBeaconPhase2Publication.NativeSpec IdentitySeed ScalarBytes
+      (PqxdhKemIndCca.MlKem768PublicKey × KemSK) IdentitySeed Response) Result)
+    (state : NativeState KemSK) :
+    Prod.map id eraseObservers <$>
+        (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec) work).run state =
+      (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec) work).run (eraseObservers state) :=
+  map_run_simulateQ_eq_of_query_map_eq _ _ eraseObservers
+    (callback_audit setup codec) work state
+
+/-- Actual owner lookup, complete finish and reinstallation commute with the same operational projection, including missing owners and every optional failure. -/
+theorem finish_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (index : Nat) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.State KemSK) :
+    Prod.map id eraseShared <$> PqxdhRegistrationSchedule.finish setup codec index raw state =
+      PqxdhRegistrationSchedule.finish setup codec index raw (eraseShared state) := by
+  cases found : state.owners[index]? with
+  | none =>
+    change Prod.map id eraseShared <$> (PqxdhRegistrationSchedule.finish setup codec index raw).run state =
+      (PqxdhRegistrationSchedule.finish setup codec index raw).run (eraseShared state)
+    simp only [PqxdhRegistrationSchedule.finish_missing setup codec index raw state found,
+      PqxdhRegistrationSchedule.finish_missing setup codec index raw (eraseShared state) found, map_pure]
+    rfl
+  | some owner =>
+    rw [PqxdhRegistrationSchedule.finish_source setup codec index raw state owner found,
+      PqxdhRegistrationSchedule.finish_source setup codec index raw (eraseShared state) owner found]
+    simp only [eraseShared, ← program_audit setup codec _ state.shared, Functor.map_map]
+    rfl
+
+/-- The complete literal accept operation does not read its inherited analysis histories. Optional preparation, allocation, actual root/consume and pending installation are all retained. -/
+theorem accept_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (seed : IdentitySeed) (selected : ScalarBytes) (raw : Pqxdh.Bytes) (state : NativeState KemSK) :
+    Prod.map id eraseObservers <$> nativeAccept setup codec checks seed selected raw state =
+      Prod.map id eraseObservers <$>
+        nativeAccept setup codec checks seed selected raw (eraseObservers state) := by
+  simp only [nativeAccept, native_bind_run, nativeCoins, map_bind, bind_map_left,
+    nativeGet, nativeSet, localState, pure_bind, eraseObservers]
+  refine bind_congr fun collected => ?_
+  rcases collected with ⟨_ | input, consumed⟩
+  all_goals simp only [nativeClient, binding, challenge, native_bind_run, native_pure_run,
+    map_pure, map_bind]
+  all_goals first
+    | rfl
+    | cases accepted : PqxdhServerRelatedRootInput.accept state.2.server.control
+        (binding setup (challenge setup.joint setup.dh seed selected)) input
+  all_goals simp_all only [binding, challenge, native_pure_run, pure_bind, map_pure]
+  all_goals first | rfl | rename_i value
+  rcases value with ⟨⟨control, original⟩⟩ | error
+  all_goals simp only [loggedRoot, romRoot, romRootBytes, nativeTouch, nativeConsume,
+    nativeModify, localState, native_bind_run, native_pure_run, bind_map_left,
+    pure_bind, map_pure, bind_assoc]
+  all_goals rfl
+
+/-- Full native build ignores inherited audit histories while retaining native optional rejection, cache work, token disposal and actual Server settlement. -/
+theorem build_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (index : Nat) (payload : Option Pqxdh.Bytes) (state : NativeState KemSK) :
+    Prod.map id eraseObservers <$> nativeBuild setup codec checks index payload state =
+      Prod.map id eraseObservers <$>
+        nativeBuild setup codec checks index payload (eraseObservers state) := by
+  simp only [nativeBuild, native_bind_run, nativeGet, localState, pure_bind, eraseObservers]
+  cases pending : state.2.pending index
+  all_goals simp only [native_bind_run, nativeCoins, nativeSet, localState,
+    native_pure_run, pure_bind, map_bind, bind_map_left, map_pure]
+  all_goals rfl
+
+/-- Public HMAC's real outside-domain branch and restricted Extract table branch both ignore inherited proof histories. -/
+theorem hmac_audit (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (selected : ScalarBytes)
+    (key : PqxdhSecretInputKdf.HmacBlock) (message : Pqxdh.Bytes) (state : NativeState KemSK) :
+    Prod.map id eraseObservers <$> nativeHmac setup seed selected key message state =
+      Prod.map id eraseObservers <$>
+        nativeHmac setup seed selected key message (eraseObservers state) := by
+  simp only [nativeHmac]
+  split_ifs with slice
+  all_goals simp only [nativeTouch, localState, native_bind_run,
+    PqxdhServerRelatedRootConsumer.familyImpl, QueryImpl.compose,
+    PqxdhJointDhExtractRoot.reduction, simulateQ_spec_query,
+    PqxdhExtractRomFamily.romImpl, slice, ite_false, StateT.run,
+    eraseObservers, pure_bind, and_self, ite_true, map_bind, map_pure]
+  all_goals rfl
+
+/-- Lifting a complete native operation preserves its audit non-read property without changing any owner. -/
+theorem shared_audit {Result : Type} (work : NativeGame KemSK Result)
+    (unchanged : ∀ state, Prod.map id eraseObservers <$> work state =
+      Prod.map id eraseObservers <$> work (eraseObservers state))
+    (state : PqxdhRegistrationSchedule.State KemSK) :
+    Prod.map id eraseShared <$> (PqxdhRegistrationSchedule.onShared work).run state =
+      Prod.map id eraseShared <$> (PqxdhRegistrationSchedule.onShared work).run (eraseShared state) := by
+  simpa only [PqxdhRegistrationSchedule.onShared_run, eraseShared, Functor.map_map, Prod.map] using
+    congrArg (fun program : ProbComp (Result × NativeState KemSK) =>
+      (fun result => (result.1, { state with shared := result.2 })) <$> program) (unchanged state.shared)
+
+/-- Each complete unmodified scheduler callback has precisely the normalized operational projection. This holds for all owner lists and protocol states, with no origin, success or secret-independence premise. -/
+theorem handler_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (seed : IdentitySeed) (query : ServerAuthSpec.Domain) (state : PqxdhRegistrationSchedule.State KemSK) :
+    Prod.map id eraseShared <$>
+        (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed) (route query)).run state =
+      (normalized setup codec checks seed query).run (eraseShared state) := by
+  rcases query with coin | (raw | ⟨index, payload⟩ | raw | ⟨key, message⟩ | bytes | keyId)
+  all_goals simp only [normalized, route, simulateQ_spec_query, PqxdhRegistrationSchedule.handler, StateT.run]
+  case inr.accept =>
+    simpa only [StateT.run] using shared_audit _ (accept_audit setup codec checks seed _ raw) state
+  all_goals first
+    | simpa only [StateT.run] using shared_audit _ (build_audit setup codec checks _ _) state
+    | simpa only [StateT.run] using shared_audit _ (hmac_audit setup seed _ _ _) state
+    | skip
+  case inr.finish =>
+    rw [finish_audit setup codec 0 raw state, finish_audit setup codec 0 raw (eraseShared state)]
+    rfl
+  all_goals simp only [PqxdhRegistrationSchedule.onShared, nativeHash, localState,
+    StateT.lift, revealKernel, eraseShared, eraseObservers, map_bind, map_pure, Functor.map_map]
+  all_goals rfl
+
+/-- The actual complete restricted scheduler has the normalized operational law. Every original query and reply remains in the same adaptive continuation; neither private audit history is supplied to it. -/
+theorem run_audit {Result : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (checks : Checks) (seed : IdentitySeed) (work : OracleComp ServerAuthSpec Result)
+    (state : PqxdhRegistrationSchedule.State KemSK) :
+    Prod.map id eraseShared <$>
+        (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
+          (simulateQ route work)).run state =
+      (simulateQ (normalized setup codec checks seed) work).run (eraseShared state) := by
+  simpa only [QueryImpl.simulateQ_compose] using
+    map_run_simulateQ_eq_of_query_map_eq
+      (PqxdhRegistrationSchedule.handler setup codec checks seed ∘ₛ route)
+      (normalized setup codec checks seed) eraseShared (handler_audit setup codec checks seed) work state
+
+/-- The full unmodified scheduler, restricted to the actual singleton owner, is the original native R1 execution after operational projection. This preserves arbitrary public results, both caches and every source operational field; the original audit remains available in the right-hand execution. -/
+theorem singleton_program {Result : Type}
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (checks : Checks) (seed identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (work : OracleComp ServerAuthSpec Result) (state : NativeState KemSK)
+    (invariant : GameInv Reader Response setup (challenge setup.joint setup.dh seed selected) state.2)
+    (handles : Handles state.2.beacon) :
+    Prod.map id eraseShared <$>
+      (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
+        (simulateQ route work)).run
+        (singleton identity selected publicKey beacon (eraseObservers state)) =
+      (Prod.map id (singleton identity selected publicKey beacon ∘ eraseObservers)) <$>
+        (simulateQ (nativeHandler setup codec checks seed selected identity) work).run state := by
+  rw [run_audit]
+  exact normalized_program setup codec checks seed identity selected publicKey beacon work state invariant handles
+
+end BeaconcryptCore.Computational.PqxdhRegistrationR1Audit
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.callback_audit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.callback_audit
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.program_audit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.program_audit
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.finish_audit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.finish_audit
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.accept_audit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.accept_audit
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.build_audit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.build_audit
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.hmac_audit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.hmac_audit
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.shared_audit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.shared_audit
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.handler_audit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.handler_audit
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.run_audit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.run_audit
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.singleton_program' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.singleton_program

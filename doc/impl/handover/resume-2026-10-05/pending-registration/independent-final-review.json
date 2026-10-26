@@ -1,0 +1,22 @@
+{
+  "reviewer": "root",
+  "time": "2026-10-05T21:59:17.213911+00:00",
+  "decision": "APPROVE_SCOPED_INTEGRATION",
+  "manifest_sha256": "cff99d15d1d5141a6de236620901d0cd4e16c1b601367e4faf30288a787aa933",
+  "files_verified": 19,
+  "scope": "Finite operational cross-object/reverse-order witnesses and one-use structural property/control, plus explicitly conditional serial managed-handle scheduling argument. Zero new protocol security claims.",
+  "resolved_findings": [
+    "Guide now distinguishes design and current integration bases.",
+    "Exact target tuple pins all runtime roster fields; drop-LINEAR and replacement-witness regressions added."
+  ],
+  "semantic_checks": [
+    "Read complete scheduler/private token service, full response-tail derivative, finite fixtures and three queries, full local guide, checker, tests and all Make/inventory/FT/allowlist diffs.",
+    "Checked by-value source token entry, counter/exhaustion and actual delayed publisher against Rust Server::build_registration_response. No accepting consumed-set read is inserted into the current builder.",
+    "A private linear initial input consumes a globally unique handle before every builder guard. The spent responder returns associated None while source binding, counter, identity, payload and complete writer behavior remain real; one extra service use is isolated to the deliberate control.",
+    "Numeric attempt handles preserve failure holes and absent-handle refusal. Distinct object maps/current builder counters, private root/archive fields and caller labels are retained. Replicated arbitrary-state claim is not inferred from finite fixtures.",
+    "Conditional paper relation states its byte/primitive interpretation prerequisite and serial-only scope; it assumes no authentication, secrecy, independent root or honest candidate. It does not lift the older adjacent-call correspondences.",
+    "Source/request bills remain distinct: all logical attempts counted, primitive and global bills not claimed. Symbolic DH/KEM idealizations and abstract codec boundary remain explicit.",
+    "All earlier gates preserved; only test metadata changed in Rust. Existing groups retain exact inventories and counts."
+  ],
+  "validation": "Verified nineteen frozen hashes and independently reran twenty-five checker regressions. Source-model direct four-verdict record and sibling semantic receipt inspected. Final queued focused Make receipt remains to be appended; no fresh aggregate pass or production mutation run is claimed."
+}

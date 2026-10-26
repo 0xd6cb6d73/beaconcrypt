@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-10-05T23:46:52.322109+00:00",
+  "reviewer": "/root/fs_source_abstraction",
+  "decision": "APPROVE_SCOPED_SYMBOLIC_TRACE_ARGUMENT",
+  "document": "/tmp/bc-arc-scratch/resume-2026-10-05-codex/failstop/proverif-failstop-trace-simulation.md",
+  "document_sha256": "2064d590354259d1942850ca875e554f978e0771f3d91e713768d7ef2953a91a",
+  "source_hashes": {
+    "fs-records-b2s-receive.pvl": "381a01966faeffcc6881c0d1347554685c6a35cb58ee535985c65ff7e328b8c6",
+    "fs-records-b2s-window.pvl": "825377e4ad96ad1cdc5ede6f9ce2a8f144f9d44e2d9b10d4d9cefbbbe05653d1",
+    "fs-records-b2s-kr3.pvl": "8e5fa47d572cc133980b4028e2ab5ca96c0fa16260c9140720e34b271ae3259a",
+    "fs-records-b2s-kr3-failstop.pvl": "c7c8618eb3b6e768b851486b3078ca132016b7696c40cc9d8d136637e1c6c518",
+    "fs-records-b2s-c2.pv": "f0ac62d3f28fbbde58b32870a2ab40513dbabb938f5044f7eae4dbcc0c6b7620",
+    "fs-records-b2s-c4.pv": "8b1a9c7f190d4dd074627181c0d6d5fbe79e05cde6681969cdc735288c55b304",
+    "check-free-schedule.py": "4384a9b91a906ec11c4715c41f9f254b0d15512e9ffbe363b9b6352818f4f759"
+  },
+  "checks": [
+    "Read exact C2/C4 queries, chosen-send/failstop target configuration, both kr3 expansions, complete receive macro and real window hooks.",
+    "All four failed-open continuations keep all ten worker parameters, emit at most the erased rejection event and allocate no fresh name, public output, private synchronization or shared-state update.",
+    "Deletion/reindexing retains at most three inputs per worker; every retained action uses identical state and pure branch; interleaving and offered-term derivability preserved.",
+    "Projection explicitly omits input-consumption/call labels and retains honest outputs, knowledge and non-rejection event order/arguments/multiplicity. Original overbroad public-message wording corrected before approval.",
+    "Injective C2 event-matching violations and C4 event/attacker-key violations reflect with no changed attacker knowledge. Sends are retained, so no failed-send state deletion occurs.",
+    "No raw optional-plaintext/result-bit observational equivalence, Rust source correspondence, computational distribution/resource result or global security closure is inferred."
+  ],
+  "findings": [],
+  "new_builds_or_solver_runs": false
+}

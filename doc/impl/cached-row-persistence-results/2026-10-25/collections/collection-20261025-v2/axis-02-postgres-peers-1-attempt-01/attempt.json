@@ -1,0 +1,26 @@
+{
+  "axis_index": 1,
+  "axis": {
+    "backend": "postgres",
+    "peers": 1
+  },
+  "attempt": 1,
+  "started_utc": "2026-10-25T12:47:53.814981+00:00",
+  "scope": "coord-00002815-hybrid-persistence-benchmark-please-no-lean.scope",
+  "status": "retained",
+  "directory": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025-v2/axis-02-postgres-peers-1-attempt-01",
+  "plan_sha256": "9bc49b4c0ac309368998e71f58c13c4e9520bf0c72c96991f5404403abe2c997",
+  "binary_sha256": "985d56867fad436512aaff69878aa3e1c91793cc9dc00288b587c19144713b66",
+  "measurement_start_utc": "2026-10-25T12:48:55.741085+00:00",
+  "measurement_finish_utc": "2026-10-25T12:51:14.486921+00:00",
+  "report_sha256": "760110c89a89a1b5cd2fa9a90ba4c7c300bb3f78d4fd238b0062627daf5cff30",
+  "summary_sha256": "b915d9b328a887c85373f6d39959741a35c4c4a8046a35b7733b52e9ed505b34",
+  "trials": 3,
+  "arms": [
+    "snapshot",
+    "row",
+    "cached_row"
+  ],
+  "interrupted_schema_policy": "Preserved; no SQL schema cleanup by the guard",
+  "finished_utc": "2026-10-25T12:51:14.683566+00:00"
+}

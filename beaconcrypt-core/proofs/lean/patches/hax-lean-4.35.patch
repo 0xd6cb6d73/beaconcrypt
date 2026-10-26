@@ -1,0 +1,147 @@
+diff --git a/CoreModels/RustPrimitives/Funs.lean b/CoreModels/RustPrimitives/Funs.lean
+index e2a443599f49da7ef726229eacaba8c52a87a710..005f9f013284770cb1b9553a8ec1b6219fb95834 100644
+--- a/CoreModels/RustPrimitives/Funs.lean
++++ b/CoreModels/RustPrimitives/Funs.lean
+@@ -680,43 +680,53 @@ def rust_primitives.arithmetic.from_le_bytes_usize : Array Std.U8 8#usize → Ru
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_be_bytes_i8 : Array Std.U8 1#usize → RustM Std.I8 :=
+-  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_le_bytes_i8 : Array Std.U8 1#usize → RustM Std.I8 :=
+-  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_be_bytes_i16 : Array Std.U8 2#usize → RustM Std.I16 :=
+-  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_le_bytes_i16 : Array Std.U8 2#usize → RustM Std.I16 :=
+-  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_be_bytes_i32 : Array Std.U8 4#usize → RustM Std.I32 :=
+-  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_le_bytes_i32 : Array Std.U8 4#usize → RustM Std.I32 :=
+-  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_be_bytes_i64 : Array Std.U8 8#usize → RustM Std.I64 :=
+-  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_le_bytes_i64 : Array Std.U8 8#usize → RustM Std.I64 :=
+-  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_be_bytes_i128 : Array Std.U8 16#usize → RustM Std.I128 :=
+-  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_le_bytes_i128 : Array Std.U8 16#usize → RustM Std.I128 :=
+-  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_be_bytes_isize : Array Std.U8 8#usize → RustM Std.Isize :=
+diff --git a/CoreModels/Spec/RustPrimitives/Slice.lean b/CoreModels/Spec/RustPrimitives/Slice.lean
+index b743d7993e93b7e04bb0976c0fc6625b431190ea..8c2876c982eb523018f493bb0078c5758c75b6de 100644
+--- a/CoreModels/Spec/RustPrimitives/Slice.lean
++++ b/CoreModels/Spec/RustPrimitives/Slice.lean
+@@ -71,7 +71,8 @@ theorem rust_primitives.slice.array_from_fn_spec
+   mvcgen [rust_primitives.slice.array_from_fn, hpure']
+   · -- then-branch
+     rename_i r hlen hconj
+-    obtain ⟨_, _, hpost⟩ := hconj
++    intro _ hworker
++    obtain ⟨_, hpost⟩ := hworker
+     intro i hi
+     have hp := hpost i hi
+     mvcgen [hp]
+diff --git a/Hax/Tactic/HaxMvcgenAt.lean b/Hax/Tactic/HaxMvcgenAt.lean
+index f0a3d2a47ca6f81278799ed92935d8716fef934c..2992fc9591f1841f15953ec88ce2a192dc3027f4 100644
+--- a/Hax/Tactic/HaxMvcgenAt.lean
++++ b/Hax/Tactic/HaxMvcgenAt.lean
+@@ -17,7 +17,7 @@ open Lean Std.Do Elab Parser Tactic Meta Aeneas Std
+ 
+ theorem Triple.of_pure_postcondition {f : RustM α} (h : ⦃⌜True⌝⦄ f ⦃PostCond.noThrow fun _ => ⌜p⌝⦄) : p := by
+   match f with
+-  | .ok _ | .fail _ | .div => simp [Triple, WP.wp, PredTrans.apply] at h <;> exact h
++  | .ok _ | .fail _ | .div => simp [Triple, Std.Do.WP.wp, PredTrans.apply] at h <;> exact h
+ 
+ theorem triple_in_hypothesis {f : RustM α} {Q : α → Assertion _} (p : Prop)
+     (h : ⦃ ⌜ True ⌝ ⦄ f ⦃ ⇓ r => Q r ⦄)
+@@ -48,7 +48,7 @@ register_option hax_mvcgen.warnings : Bool := {
+ for, leaving a goal that mentions `wp⟦f a₁ ... aₙ⟧`. Returns `none` when the head of that program
+ is not a constant, or is mere monadic plumbing, which says nothing about the missing spec. -/
+ private def missingSpecCandidate? (e : Expr) : Option Name := Id.run do
+-  let some wpApp := e.find? (·.isAppOfArity' ``WP.wp 5) | return none
++  let some wpApp := e.find? (·.isAppOfArity' ``Std.Do.WP.wp 5) | return none
+   -- Look through `bind`s: the missing specification is the one of the program bound first,
+   -- i.e. the second-to-last argument of `Bind.bind .. x f`.
+   let mut prog := wpApp.appArg!
+diff --git a/Tests/Hax/Tactic/ForLoopWithInvariantSpec.lean b/Tests/Hax/Tactic/ForLoopWithInvariantSpec.lean
+index d277b38084052892c81fe025873c8a0f26a4fc84..171959e4aa6e7f993da68292d43e8ea1174734a9 100644
+--- a/Tests/Hax/Tactic/ForLoopWithInvariantSpec.lean
++++ b/Tests/Hax/Tactic/ForLoopWithInvariantSpec.lean
+@@ -28,11 +28,11 @@ example :
+     (fun _ acc => ok acc) (0#i32) (0#i32) (5#i32)
+     (fun _ acc => ok (acc.val = 0)) (by scalar_tac) ?_ ?_
+   · -- h_init : `(inv 0 0).holds`, i.e. `(0 : I32).val = 0`
+-    simp [RustM.holds, Triple, WP.wp, PredTrans.apply]
++    simp [RustM.holds, Triple, Std.Do.WP.wp, PredTrans.apply]
+   · -- h_step : the identity body preserves `acc.val = 0`
+     intro acc i _ _ hinv
+     have hacc : acc.val = 0 := by
+-      simpa [RustM.holds, Triple, WP.wp, PredTrans.apply] using hinv
+-    simp [Triple, WP.wp, PredTrans.apply, RustM.holds, hacc]
++      simpa [RustM.holds, Triple, Std.Do.WP.wp, PredTrans.apply] using hinv
++    simp [Triple, Std.Do.WP.wp, PredTrans.apply, RustM.holds, hacc]
+ 
+ end Hax.Tests
+diff --git a/Tests/Hax/Tactic/HaxMvcgenAt.lean b/Tests/Hax/Tactic/HaxMvcgenAt.lean
+index 94b74cdc491b48d03a6c1bdef5524b57183e004f..d2666bba1cc719d4b4299178125a6e59b71f7f4e 100644
+--- a/Tests/Hax/Tactic/HaxMvcgenAt.lean
++++ b/Tests/Hax/Tactic/HaxMvcgenAt.lean
+@@ -21,7 +21,7 @@ private def wrapped (x : U32) : RustM U32 := ok x
+ @[local spec]
+ private theorem wrapped_spec (x : U32) :
+     ⦃ ⌜ True ⌝ ⦄ wrapped x ⦃ ⇓ r => ⌜ r = x ⌝ ⦄ := by
+-  simp [wrapped, Triple, WP.wp, PredTrans.apply]
++  simp [wrapped, Triple, Std.Do.WP.wp, PredTrans.apply]
+ 
+ example (h : ⦃ ⌜ True ⌝ ⦄ (do let x ← wrapped 1#u32; ok x) ⦃ ⇓ r => ⌜ r.val = 1 ⌝ ⦄) :
+     (1#u32 : U32).val = 1 := by
+@@ -36,6 +36,10 @@ end Hax.Tests
+ private opaque unspecced : U32 → RustM U32
+ 
+ /--
++warning: syntax 'Lean.Parser.Tactic.mvcgen' has been deprecated: use `vcgen` instead
++
++Note: This linter can be disabled with `set_option linter.deprecated.syntax false`
++---
+ error: Tactic `hax_mvcgen` failed: Failed to process hypothesis h. Usually this error is due to missing specs for functions contained in the program. This is likely because unspecced is missing a @[spec] lemma.
+ 
+ Remaining goal:

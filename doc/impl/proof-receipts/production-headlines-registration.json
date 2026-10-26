@@ -1,0 +1,1163 @@
+{
+ "kind": "items 3+7 production composition, second follow-up: production forms of the registration-authentication and replay claims of item 3 over the CE experiment (PqxdhDeploymentProductionRegistration)",
+ "author": "Claude (item 7 lane adopted from Codex, owner decision #503; item 3 is Claude's)",
+ "provenance": "new work; no Codex WIP exists for this module (nothing adapted from Codex WIP)",
+ "trigger": "CE-13 semantic review: the registration claims (ce_a1, ce_a1_billed, ce_a1_injective, CE-A2pub, CE-R1') had no production form; the published selection covered CE-12 headlines only",
+ "sibling_of": "doc/impl/proof-receipts/production-headlines.json",
+ "branch": "codex/deployment-boundary-production",
+ "basis_central": "fc27fded9bdef0ab05248b9431f4840d4a098d86",
+ "basis_central_build": "a266567005a8fc84833d64cbcfb0bbe09228eaf5",
+ "basis_note": "built at central a2665670 (the requested merge was then a no-op); central moved to fc27fded (the CE-13 documents, coordination message 533; git diff --name-only a2665670 fc27fded lists no .lean file; the published fc27fded LEAN_PATH is byte-identical to the a2665670 one); the review fix pass merged it into the branch (merge e6b8ef37564e2fedc212f80f8b4fb8c9483a9365); fetched; origin/codex/full-proof-composition, git ls-remote, the central worktree and coord.sh leanpath current at fc27fded during the fix pass",
+ "state": "built (Lean 59e08934, documents c7f8b210); reviewed (three independent reviews of c7f8b210: no Lean error; ten entries, three major, three minor, four nits, none owner-level); fixed (merge e6b8ef37 of central fc27fded; Lean 3d397233, three docstring lines; documents d4737c62); confirmed (confirming review of c7f8b210..d4737c62: all ten findings resolved, no statement weaker; its residual CE-13 production cell s2b-C1 and two optional nits taken by the commit that adds this version of the receipt); not integrated at that commit",
+ "lean_commit": "59e08934ef2272359a17b26cc418b13a383c4d8a",
+ "documents_commit": "c7f8b210b2c6df08afc7f3aa8d1340b46664f6c4",
+ "merge_commit": "e6b8ef37564e2fedc212f80f8b4fb8c9483a9365",
+ "lean_fix_commit": "3d3972337ce49321e4b82794c6be18f3cb61b084",
+ "fix_pass_documents_commit": "d4737c62cebaedaa6852363184676bf56a35bde2",
+ "statements_changed": [],
+ "statements_check": "the module with comments and docstrings removed equals that of 59e08934, and its 13 guards are identical; the three changed lines are docstrings (module header; replay_game; record_replay_game), so every statement is exactly as strong as before",
+ "module": {
+  "name": "BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration",
+  "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionRegistration.lean",
+  "sha256": "2bb40c01d51f71df12c2aa70c99572d93b1ad314c236a437cf559a1541f26eef",
+  "lines": 716,
+  "theorems": 13,
+  "guards": 13,
+  "theorem_names": [
+   "support_zero",
+   "a1_bound",
+   "a1_sum",
+   "ce_a1",
+   "ce_a1_billed",
+   "injective_bound",
+   "ce_a1_injective",
+   "a2pub_owner_bound",
+   "a2pub_bound",
+   "r1prime_owner_bound",
+   "r1prime_bound",
+   "replay_game",
+   "record_replay_game"
+  ],
+  "imports": [
+   "BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer",
+   "BeaconcryptCore.Computational.PqxdhDeploymentServerAuth",
+   "BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills",
+   "BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame",
+   "BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple",
+   "BeaconcryptCore.Computational.PqxdhDeploymentReplay",
+   "BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay"
+  ],
+  "open_classical_in": 0,
+  "letI_statements": 4,
+  "commit": "3d3972337ce49321e4b82794c6be18f3cb61b084"
+ },
+ "production_forms": {
+  "total": 12,
+  "by_frozen_module": {
+   "PqxdhDeploymentServerAuth": [
+    "a1_bound",
+    "a1_sum",
+    "ce_a1"
+   ],
+   "PqxdhDeploymentServerAuthBills": [
+    "ce_a1_billed"
+   ],
+   "PqxdhDeploymentServerAuthInjectiveGame": [
+    "injective_bound",
+    "ce_a1_injective"
+   ],
+   "PqxdhDeploymentPublishedTuple": [
+    "a2pub_owner_bound",
+    "a2pub_bound",
+    "r1prime_owner_bound",
+    "r1prime_bound"
+   ],
+   "PqxdhDeploymentReplay": [
+    "replay_game"
+   ],
+   "PqxdhDeploymentRecordReplay": [
+    "record_replay_game"
+   ]
+  },
+  "probability_forms": [
+   "a1_bound",
+   "a1_sum",
+   "ce_a1",
+   "ce_a1_billed",
+   "injective_bound",
+   "ce_a1_injective",
+   "a2pub_owner_bound",
+   "a2pub_bound",
+   "r1prime_owner_bound",
+   "r1prime_bound"
+  ],
+  "deterministic_support_forms": [
+   "replay_game",
+   "record_replay_game"
+  ],
+  "identity_index_fixed_at_0": [
+   "a1_bound",
+   "a1_sum",
+   "ce_a1",
+   "ce_a1_billed",
+   "replay_game",
+   "record_replay_game"
+  ],
+  "dropped_frozen_prefix_set_option_linter_deprecated": [
+   "a1_bound",
+   "a1_sum",
+   "ce_a1",
+   "ce_a1_billed",
+   "injective_bound",
+   "ce_a1_injective"
+  ],
+  "generic_lemma": "support_zero (from PqxdhDeploymentProductionTransfer.observe_zero with observation id)",
+  "classical_source_game_occurrences": 26,
+  "ce_game_occurrences_in_statements": "only in support_zero (its conclusion) by design; checked by the production-side split scan"
+ },
+ "selection": {
+  "file": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/docs/selection-reg.txt",
+  "sha256": "651f8c47779ed413da8ac0dc524230d808a7a775842cb8e976281f80e66d503e",
+  "file_note": "copy of item7/prod-reg/docs/selection-reg.txt (identical)",
+  "plan": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/docs/plan-snapshot.md",
+  "plan_sha256": "fcf884c562606c96e2594938da0a6a682995e7b6d9e19ac3512912e012265ee7",
+  "plan_note": "frozen copy of the working plan item7/prod-reg/plan.md (sections 1 to 7) taken when this receipt was written; the working plan may grow",
+  "survey": "/tmp/bc-arc-scratch/item7/prod-reg/docs/survey.json",
+  "survey_sha256": "999d8e2f54ec2cd138781a564438d56c0d3b1b551f35cf7ab0c3a0af04762646"
+ },
+ "not_restated": {
+  "not_over_the_ce_game": {
+   "PqxdhDeploymentProvenance.a2_bound, a2_generated_bound (CE-A2)": "stated over the report-instrumented initialized execution PqxdhJointPhase1Reports.run (initialized (compileFull ...)); events NativeForgery/GeneratedForgery read stopped report runs, report snapshots, pool references and signing transcripts, which the CE outcome does not carry; the published bridge report_game equates only the projection (created Server, output, ledger), so it does not carry them; a2_generated_bound is the at-least-as-strong form over the same run, not a bridge; the CE-game reading of CE-A2 is CE-A2pub (restated)",
+   "a2_service_bound, a2_client_uniform, a2_reduction_uniform, a2_game_uniform, a2_bills": "bills of the A2 reductions, not about the CE game",
+   "report_generated, generated_lt, owner_published_failure, published_failure": "report-run lemmas",
+   "replay_owner, game_owner, double_owner, published_owner": "outcome-level containments; no game in the statement (hold verbatim at codec prime for unwrap of every source outcome)",
+   "PqxdhDeploymentServerAuthJournal.*, PqxdhDeploymentServerAuthOutcome.*": "about the Server-authentication game PqxdhServerAuthRootExecution.game"
+  },
+  "intermediate_over_the_ce_game": [
+   "a1_le_ordered (chain step)",
+   "a1_range",
+   "build_pin",
+   "matched_pinned",
+   "noPinnedMatch_noFailure",
+   "session_unique",
+   "shared_collision",
+   "replay_owner_published",
+   "replay_published",
+   "registered_game",
+   "tracked_game",
+   "game_report_holds",
+   "game_report",
+   "PqxdhDeploymentProvenance.report_game",
+   "PqxdhDeploymentHeadlineInjective.replay_never (CE-12 P2 support fact for C3 at index 0, outside the surveyed modules: a direct corollary of record_replay_game, whose production form covers its content at index 0; its PeerReplay/OwnerReplay event form is not restated)"
+  ],
+  "already_restated": "CE-12 P2 registration-side gap bounds (server_gap_bound, beacon_gap_le, ce_a1_linked, sym_gap, identity_collision_game) and the D-ct closures ce_a1_linked_dct and sym_gap_dct (PqxdhDeploymentProductionHeadlinesDct; server_gap_bound, beacon_gap_le and identity_collision_game have no _dct form), in the published production modules"
+ },
+ "guard_profile": "every theorem exactly one #guard_msgs over #print axioms listing propext, Classical.choice, Quot.sound",
+ "hygiene": {
+  "sha256": "2bb40c01d51f71df12c2aa70c99572d93b1ad314c236a437cf559a1541f26eef",
+  "lines": 716,
+  "theorems": 13,
+  "print_axioms": 13,
+  "guards": 13,
+  "names_match": true,
+  "bad_guards": 0,
+  "forbidden_tokens": [],
+  "bad_set_options": [],
+  "open_classical_in": 0,
+  "long_code_lines": [],
+  "defs": 0,
+  "ok": true,
+  "record": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/docs/hygiene.json",
+  "record_sha256": "a66b03a5f84116f0bd672ff4cec00fd6f18f2cc43cb1ad3bf197f8bfc7b9225f"
+ },
+ "development_check": {
+  "log": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/dev/PqxdhDeploymentProductionRegistration-1.log",
+  "sha256": "c37c8d371a13462b14c34c4d331b7752ee6b581db613d12d3706cd292cc38dd7",
+  "meta": "f55e55226c4295272b8457c174d08c8559ed038a088b8bb9590718a6cec22583  /tmp/bc-arc-scratch/item7/prod-reg/fix1/gen/PqxdhDeploymentProductionRegistration.lean\nexit 0 seconds 15",
+  "axiom_messages": 13,
+  "other_messages": 0,
+  "source": "unguarded output of fix1/scripts/genreg.py (fix1/gen); guards refilled from this log by fix1/scripts/guards.py"
+ },
+ "module_checks": {
+  "run1_before_commit": {
+   "start": "2026-10-10T22:42:53.332599719Z",
+   "end": "2026-10-10T22:43:08.664176962Z",
+   "exit": 0,
+   "head": "e6b8ef37564e2fedc212f80f8b4fb8c9483a9365",
+   "dirty_paths": 1,
+   "source_sha256": "2bb40c01d51f71df12c2aa70c99572d93b1ad314c236a437cf559a1541f26eef",
+   "log_bytes": 0,
+   "artifact_sha256": "83af2d91342860ee6556666abf055d8227fed029c43f9d1aadcd636d43689673",
+   "leanpath_sha256": "ff93800da2380d13cfdb7df316175a782b49f69765ab935d0cf0f437734da61c",
+   "record": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/PqxdhDeploymentProductionRegistration-1.json"
+  },
+  "run2_at_lean_fix_commit": {
+   "start": "2026-10-10T22:43:54.310861174Z",
+   "end": "2026-10-10T22:44:09.520279789Z",
+   "exit": 0,
+   "head": "3d3972337ce49321e4b82794c6be18f3cb61b084",
+   "dirty_paths": 0,
+   "source_sha256": "2bb40c01d51f71df12c2aa70c99572d93b1ad314c236a437cf559a1541f26eef",
+   "log_bytes": 0,
+   "artifact_sha256": "83af2d91342860ee6556666abf055d8227fed029c43f9d1aadcd636d43689673",
+   "leanpath_sha256": "ff93800da2380d13cfdb7df316175a782b49f69765ab935d0cf0f437734da61c",
+   "record": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/PqxdhDeploymentProductionRegistration-2.json"
+  }
+ },
+ "root_import": {
+  "run1_before_commit": {
+   "start": "2026-10-10T22:43:11.479198376Z",
+   "end": "2026-10-10T22:43:14.703980295Z",
+   "exit": 0,
+   "head": "e6b8ef37564e2fedc212f80f8b4fb8c9483a9365",
+   "dirty_paths": 1,
+   "source_sha256": "45690bba239bb7bb9abc9a14ba0e375abc0593258960d9ce1fbe464b30242510",
+   "log_bytes": 0,
+   "artifact_sha256": "f2ca5e926c083c0bfd473d2e1c6dbdfb0599fc22a92dc22ee9672730e192dbdd",
+   "leanpath_sha256": "ff93800da2380d13cfdb7df316175a782b49f69765ab935d0cf0f437734da61c",
+   "record": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/root-1.json"
+  },
+  "run2_at_lean_fix_commit": {
+   "start": "2026-10-10T22:44:09.558395953Z",
+   "end": "2026-10-10T22:44:12.451122918Z",
+   "exit": 0,
+   "head": "3d3972337ce49321e4b82794c6be18f3cb61b084",
+   "dirty_paths": 0,
+   "source_sha256": "45690bba239bb7bb9abc9a14ba0e375abc0593258960d9ce1fbe464b30242510",
+   "log_bytes": 0,
+   "artifact_sha256": "f2ca5e926c083c0bfd473d2e1c6dbdfb0599fc22a92dc22ee9672730e192dbdd",
+   "leanpath_sha256": "ff93800da2380d13cfdb7df316175a782b49f69765ab935d0cf0f437734da61c",
+   "record": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/root-2.json"
+  }
+ },
+ "olean_prefix": {
+  "path": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/olean",
+  "leanpath": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/leanpath",
+  "leanpath_sha256": "ff93800da2380d13cfdb7df316175a782b49f69765ab935d0cf0f437734da61c",
+  "mirror": "resolved symlink mirror of the BeaconcryptCore part of the published fc27fded first prefix /tmp/bc-arc-scratch/item7/prod-dct/int/olean (6436 links, 1 to a regular file, root skipped, 0 broken), plus the recompiled module and root",
+  "published_leanpath": "/tmp/bc-coord/leanpaths/fc27fded9bdef0ab05248b9431f4840d4a098d86.leanpath"
+ },
+ "lean_command": "coord.sh lean claude <label> -- timeout 180 lean -j1 -M8000 [--root=<worktree lean dir> -o <olean>] <file>, one check in flight",
+ "inventory": {
+  "merge": "coord.sh inv recount claude <core> (1978, unchanged) then coord.sh inv rehash (default set: unchanged) after resolving the two adjacent rows (this branch's check-inventory.sh 1edae88c, central's trusted-boundary.md 346f1f0f); all 2398 digests match their files",
+  "recount": "coord.sh inv recount claude <core>: [handwritten-lean] 1978, unchanged, before inv rehash",
+  "rehash": "coord.sh inv rehash claude <core> <module relpath> plus the default set: module row 3ad3dbcd -> 2bb40c01, BeaconcryptCore.lean, trusted-boundary.md and check-inventory.sh unchanged (the default set does not include the module row); a second pass changed nothing; 2398 digests match",
+  "focused_check_inventory": {
+   "module-commit": {
+    "label": "item7-prodregfix-inventory-module-commit",
+    "start": "2026-10-10T22:43:49Z",
+    "end": "2026-10-10T22:45:45Z",
+    "commit": "3d3972337ce49321e4b82794c6be18f3cb61b084",
+    "status": 0,
+    "dirt_lines": 0,
+    "dirt_after_lines": 0,
+    "log": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/inventory-module-commit.log",
+    "log_sha256": "f0575187b42047aa7481451d37b21c184b4a96f9041a51352c573543f95ab940",
+    "last_line": "Formal-verification inventory matches the reviewed boundary."
+   },
+   "staged-docs": {
+    "label": "item7-prodregfix-inventory-staged-docs",
+    "start": "2026-10-10T22:53:53Z",
+    "end": "2026-10-10T22:55:46Z",
+    "commit": "3d3972337ce49321e4b82794c6be18f3cb61b084",
+    "status": 0,
+    "dirt_lines": 8,
+    "dirt_after_lines": 8,
+    "dirt": [
+     "M  doc/formal-verification-analysis.md",
+     "M  doc/impl/deployment-experiment.md",
+     "M  doc/impl/production-boundary-ledger.md",
+     "M  doc/impl/production-headlines.md",
+     "M  doc/impl/proof-receipts/common-deployment-experiment-ce13.json",
+     "M  doc/impl/proof-receipts/production-headlines-registration.json",
+     "M  doc/impl/proof-receipts/production-headlines.json",
+     "M  doc/proverif-source-scope.md"
+    ],
+    "log": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/inventory-staged-docs.log",
+    "log_sha256": "13e8078f89e8785694f22da3163598d91bf1178fa2c1d7f666cae028da9ccc18",
+    "last_line": "Formal-verification inventory matches the reviewed boundary.",
+    "note": "head 3d397233 with the fix pass's 8 documents staged (dirt lists them); the documents commit d4737c62 is this staged tree"
+   },
+   "docs-commit": {
+    "label": "item7-prodregfix-inventory-docs-commit",
+    "start": "2026-10-10T22:56:03Z",
+    "end": "2026-10-10T22:58:00Z",
+    "commit": "d4737c62cebaedaa6852363184676bf56a35bde2",
+    "status": 0,
+    "dirt_lines": 0,
+    "dirt_after_lines": 0,
+    "dirt": [],
+    "log": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/inventory-docs-commit.log",
+    "log_sha256": "5046f74a8736d0c4a52b6d9878f8f1b513cabd5eb31027e1850e50ec32305a19",
+    "last_line": "Formal-verification inventory matches the reviewed boundary."
+   }
+  },
+  "command": "coord.sh lease mem claude @nix <label> --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C <worktree>/beaconcrypt-core check-inventory SHELL=bash",
+  "focused_check_inventory_note": "the staged-docs and docs-commit runs were added after the confirming review (its optional nit 3); the first version of this receipt recorded only the module-commit run"
+ },
+ "git_diff_check": "clean (staged merge before the merge commit; staged Lean fix before 3d397233; documents before the commit that adds this receipt)",
+ "generator": {
+  "script": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/scripts/genreg.py",
+  "sha256": "a8c230af522be63c7f4bd1c2fa1572f9c66eaf007a2a5729b2490c219f1e9ec3",
+  "base": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/scripts/gen3.py",
+  "base_sha256": "5e3908b79934091a389329afa6c36057ab05c643850c33feae00ecd937e697de",
+  "base_note": "copy of item7/prod-reg/scripts/gen3.py with one header comment line added (code unchanged)",
+  "changes": "FIX1 (marked in the script): the bound sentence of the module header and the tail of the two deterministic docstrings; regenerated output differs from the first build only in these three docstring lines",
+  "rederivation": "fix1/gen (genreg.py) + guards.py with the fix-pass development log = the committed module byte for byte; premise table fix1/docs/premises-gen.json identical to the first build's"
+ },
+ "frozen_inputs_sha256": {
+  "PqxdhDeploymentServerAuth": "082acd91f9045847f33ab7819a920227c69fdbe58c81b52ae64c931da825fdc8",
+  "PqxdhDeploymentServerAuthBills": "e6226e1d935e92d862ca5d7ffa59c8511b3606aebdfc5e90fd2d97403e394462",
+  "PqxdhDeploymentServerAuthInjectiveGame": "be9545f5c3ea84eaaa41ce2547bbe9dbd84c8cace6e203def8afc629392096e0",
+  "PqxdhDeploymentPublishedTuple": "416e37345a18350a30485e90c96416251de3046fc22e90cce6033500c81e51e7",
+  "PqxdhDeploymentReplay": "f32ff9776d6b848b4cf4d1f668be270001896bc920d4a960ef679a2774fef0a2",
+  "PqxdhDeploymentRecordReplay": "0a973f5e473e051c2b54a00abe905ddb4fef7f53e94b0c768c624ff34730acf5",
+  "PqxdhDeploymentProvenance": "15fe819488118c904cad62ecf570ecca400e192b425a855fccd40a89acd295de",
+  "PqxdhDeploymentProductionTransfer": "46ef566033afeb628655685dd7316201c98daeceb9ed7135ddc1ad4847332ec2",
+  "PqxdhBoundaryDeployment": "c806497c4c23f0dba0927fbfb9422c39c984c6f1067b609f7e859ab72d8c727f"
+ },
+ "frozen_inputs_note": "unchanged between central a2665670, central fc27fded and HEAD (git diff --quiet)",
+ "premises": {
+  "table": "/tmp/bc-arc-scratch/item7/prod-reg/docs/premises-production.json",
+  "sha256": "1adcacb8c6cc38d9a733db8f752ab372d1a80c320189876c2fe590dbc3f4a379",
+  "totals": {
+   "Phase1ReadBack codec": 10,
+   "Phase2ReadBack codec": 10,
+   "FrameReadBack codec'": 5,
+   "ReadWritable codec'": 5,
+   "KemBound setup caps": 5,
+   "X25519ClassLaw": 5,
+   "X25519ScalarSpread": 5,
+   "SourceFullCorrect": 5,
+   "HasAttachedVerificationAdapter": 5,
+   "shortRejects": 4,
+   "budget.Respects adversary": 9,
+   "ReductionCaps (query caps of R_c)": 3,
+   "DecoderAgreement": 0,
+   "FunctionalDecapsulation": 0
+  },
+  "generator_scan": {
+   "table": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/docs/premises-gen.json",
+   "sha256": "ade6da469f9933b73b689914e94aaf380ff3208cc373fa87916360f2397e5e11",
+   "codec_route_dependent": {
+    "Phase1ReadBack": 10,
+    "Phase2ReadBack": 10,
+    "FrameReadBack": 5,
+    "ReadWritable": 5,
+    "ReductionCaps": 3
+   },
+   "other_codec_route_premises": 0,
+   "owner_level_stop": false
+  },
+  "other_binders_mentioning_codec_reader_erased": "only the parameters codec, reader, erased and the support binders over the source game (support_zero, replay_game, record_replay_game)",
+  "note": "statements unchanged in the fix pass: the table of the committed statements (first build) still applies"
+ },
+ "scans": {
+  "spec": {
+   "file": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/scans/scan-spec-v7.json",
+   "sha256": "34b96e5c6cb22ca89e8a3639cb21d86c913cac54f005778382e5289388d71e7e",
+   "version": 7,
+   "crypto_allowance_extended": false
+  },
+  "statement": {
+   "clean": {
+    "record": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/scans/PqxdhDeploymentProductionRegistration-statement-clean-v7.json",
+    "sha256": "8690da78081c71ed395b8214e71dad5b31c9c0729f14b5e7f357ca2237084527",
+    "declarations": 13,
+    "hits": 0,
+    "exit": 0
+   },
+   "live": {
+    "record": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/scans/PqxdhDeploymentProductionRegistration-statement-live-v7.json",
+    "sha256": "fc434d5d3c97469aaecde2e21328338dd3870724d8b9ca9cb22c4f24b26c6a81",
+    "live_classes": 11,
+    "dead_classes": 0,
+    "allowance_control_ok": true,
+    "exit": 1,
+    "exit_meaning": "all classes live (as intended)"
+   }
+  },
+  "production_side_split": {
+   "clean": {
+    "record": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/scans/PqxdhDeploymentProductionRegistration-split-clean.json",
+    "sha256": "b5d2886918c12924e8240f795eb758bd32717e6b6814153a2f2cf94fae2b2b27",
+    "module_failures": 0,
+    "production_side_hits": 0,
+    "rest_hits": 0,
+    "exit": 0
+   },
+   "live": {
+    "record": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/scans/PqxdhDeploymentProductionRegistration-split-live.json",
+    "sha256": "ceed258becfc73f8ce3a9b758d4ba72e2ecb855d00d565ca135afa61a54c10cc",
+    "live_ok": true,
+    "support_side_control": [
+     [
+      "splitLiveSupportSide",
+      "production-side hit PqxdhDeploymentIdealSteps.idealGame ['pb_full_prefix']"
+     ]
+    ],
+    "exit": 0
+   }
+  },
+  "direct_reference_v7": {
+   "clean": {
+    "log": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/dev/PqxdhDeploymentProductionRegistration-scan-clean-v7-1.log",
+    "sha256": "630d0147110f48c8cbab18edea61f075d65a8464bc44fd8647f89833bd451990",
+    "lean_exit": 1,
+    "tool_verdict": "NOT AS EXPECTED (recorded: restated statements must fail)",
+    "forbidden_references": {
+     "BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto (pb_namespace)": 10
+    },
+    "declarations_with_references": 10,
+    "crypto_sites": 41,
+    "site_kinds_all_on_Setup.source": [
+     "Pqxdh.Crypto.verify/0",
+     "X25519ClassLaw/0",
+     "X25519ScalarSpread/0",
+     "PqxdhDeploymentReplay.entryRegistration/2",
+     "PqxdhDeploymentReplay.acceptIds/2"
+    ],
+    "site_table": "none for this module (allowance not extended)"
+   },
+   "live": {
+    "log": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/dev/PqxdhDeploymentProductionRegistration-scan-live-v7-1.log",
+    "sha256": "2db32cfa5da4dd94266c1ea0c5ea4dad5fedb8ed65f873519ed22ebf09687e59",
+    "result": "the site gate throws before the liveness part (as for the published production modules)"
+   },
+   "gate_bypass_probe": {
+    "log": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/dev/PqxdhDeploymentProductionRegistration-scan-livegateprobe-v7-1.log",
+    "sha256": "f2ec5fc787c192331fb84466267d7824ae0f6eedc3eafbbed62a6e12db3d0a71",
+    "result": "all 11 rule classes live; all 21 witness targets hit their own class; allowance control ok; site gate controls ok; negative control clean; one error (forbidden direct reference); 10 module references, 64 with the witnesses"
+   }
+  },
+  "differential": {
+   "clean": {
+    "log": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/dev/PqxdhDeploymentProductionRegistration-diff-clean-1.log",
+    "sha256": "8ca8e0682a2eba6bbeafb18b67e2cc1b4baf11820194bf44e6487a428a91228a",
+    "declarations_checked": 13,
+    "failures": 0,
+    "exit": 0
+   },
+   "live": {
+    "log": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/dev/PqxdhDeploymentProductionRegistration-diff-live-1.log",
+    "sha256": "6ab26565c83e9e55194bf30c8a9b5e38b5b6b402af5a03a4befa8c2892e40161",
+    "intended_failures": 9,
+    "as_expected": true
+   }
+  },
+  "text": {
+   "source_sha256": "2bb40c01d51f71df12c2aa70c99572d93b1ad314c236a437cf559a1541f26eef",
+   "scope": "code (comments and docstrings removed)",
+   "PqxdhDeploymentProvenance": [
+    "PqxdhDeploymentProvenance.reduction"
+   ],
+   "PqxdhDeploymentProvenance_count": 4,
+   "authenticated_": [],
+   "authenticated__count": 0,
+   "PqxdhRegistrationJointAuthenticatedSelectedKem": [],
+   "PqxdhRegistrationJointAuthenticatedSelectedKem_count": 0,
+   "PqxdhRegistrationJointKemKeyTransfer": [],
+   "PqxdhRegistrationJointKemKeyTransfer_count": 0,
+   "theorems_with_Provenance": {
+    "a2pub_owner_bound": 1,
+    "a2pub_bound": 1,
+    "r1prime_owner_bound": 1,
+    "r1prime_bound": 1
+   },
+   "record": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/scans/text-scan.json",
+   "record_sha256": "f43344e036fbe5396b18bd1a8a11a6595b98e738a67889a3db52b4834868fb3c",
+   "note": "PqxdhDeploymentProvenance.reduction is the A2 client reduction of the frozen CE-A2pub/CE-R1prime bounds (inherited); the no-Provenance text rule concerns later-quantum forms (no A2/T5/T8 on the later compiled program)"
+  },
+  "tool_adaptations": "stmt_scan.py REG5, stmt_split.py REG1-REG5, diff_scan.py REG1-REG3 (headers of the copies); REG5 (statement cut skipping a top-level letI :=) was needed for the four CE-A2pub/CE-R1prime statements; fix pass: copies in fix1/scripts with code-line paths moved to fix1 (labels item7-prodregfix-), logic unchanged; text_scan.py new (reproduces text-scan.json)",
+  "fix_pass_comparison": "statement and split records differ from the first build only in source_sha256 (and the spec path); the direct-reference (clean, live, gate-bypass probe) and differential (clean, live) Lean logs are byte-identical to the first build's after replacing the scratch path; the text-scan record differs only in source_sha256 (fix1/scripts/text_scan.py reproduces its fields)"
+ },
+ "review": {
+  "findings": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/docs/review-findings.json",
+  "findings_sha256": "f7b9eb54d0ca1d49b33f3828f85535c2a66cb421624c2210e514824808ff9851",
+  "reviewed_commit": "c7f8b210b2c6df08afc7f3aa8d1340b46664f6c4",
+  "reviews": [
+   "semantic",
+   "composition",
+   "hygiene"
+  ],
+  "result": "no error in any Lean statement or proof; ten entries (three major, three minor, four nits; several report the same point); none owner-level; the task text was cut inside the tenth entry, rebuilt from the hygiene review's receipt check",
+  "fixes": {
+   "F1, F6 (CE-A2pub/CE-R1' condition)": "analysis paragraph 1: both events for a created Beacon without a rejected bundle call in Fresh, the no-published-tuple case, other Beacons' failures irrelevant per owner, the all-Beacon forms need none, nothing claimed for a Beacon with one; guide table rows CE-A2pub and CE-R1' (distinct positions and the condition)",
+   "F2, F4, F9 (central fc27fded)": "merge e6b8ef37 (analysis: the three paragraphs end the production section before the CE-13 section; inventory union, recount then rehash); CE-13 sentences updated in deployment-experiment.md (section Production forms, name index row and note, status sentence), proverif-source-scope.md (paragraph Production; A1-delayed, A2-provenance, R1, R1', C3 cells) and the analysis CE-13 paragraph For the production code; record sections and the CE plan snapshot left historical; CE-13 receipt follow_ups; basis/status wording of the guide section, open points, ledger paragraph, analysis Checks and status, this receipt; module recompiled at the merged basis",
+   "F2, F5 (replay_never)": "listed as intermediate (corollary of record_replay_game, content covered by the production form at index 0) in the guide, this receipt (not_restated) and the CE-13 documents",
+   "F3 (epsilon_inj, B^coll_t)": "module docstring (Lean 3d397233), ledger paragraph, guide table and paragraph What the forms say, analysis: fixed collider advantage at qCreate, independent of codec, route and adversary; no signing/static-DH query, at most 32*qCreate uniform queries",
+   "F7 (D-ct closures)": "guide and scratch plan name ce_a1_linked_dct and sym_gap_dct",
+   "F8 (deterministic docstrings)": "replay_game and record_replay_game docstrings (Lean 3d397233) cite classical_normal and unwrap_okMap",
+   "F10 (plan hash)": "selection.plan now a frozen snapshot with its hash; first_pass.note_plan_sha256; every hash of this receipt checked against the files (fix1/scripts/receipt_check.py)"
+  },
+  "confirming_review": {
+   "kind": "confirming review of the review fix pass (fresh-context Claude sub-agent, read only)",
+   "reviewed_range": "c7f8b210b2c6df08afc7f3aa8d1340b46664f6c4..d4737c62cebaedaa6852363184676bf56a35bde2",
+   "scratch": "/tmp/bc-arc-scratch/item7/prod-reg/confirm",
+   "result": "all ten findings of the reviews of c7f8b210 are resolved at d4737c62; no statement is weaker; the guards match the theorems; the scans are clean; the receipt matches HEAD; the committed module recompiled against the published fc27fded LEAN_PATH (exit 0, empty log); one residual: the s2b-C1 (VC 615) production cell of doc/proverif-source-scope.md and rows 615 and 3184 of the CE-13 receipt follow-up",
+   "record": "/tmp/bc-arc-scratch/item7/prod-reg/int/docs/confirming-review-relayed.json",
+   "record_sha256": "7047a28e175b4aee8a424e2e55136444cfdd5a8e7bbb2953885052fb8cdeb8ab",
+   "record_note": "no verdict file was written; the result and nits were relayed by the workflow orchestrator and are transcribed verbatim",
+   "notes": "/tmp/bc-arc-scratch/item7/prod-reg/confirm/NOTES.txt",
+   "notes_sha256": "bb3397c5fe21df5e20fed8f2b6ce48f38229b891795946d43bee44698c354d78",
+   "nits": [
+    {
+     "n": 1,
+     "title": "one CE-13 production cell still says CE-A1 has no production form (s2b-C1, VC 615); the CE-13 receipt follow-up skips rows 615 and 3184",
+     "disposition": "taken: the cell replaced by the suggested sentence; rows_production_after gains 615 s2b-C1 and 3184 S2b-initial; the guide's fix-pass bullet and (found in this pass) the CE-13 guide's status sentence name the s2b-C1 cell; documents.sha256_after here and documents_sha256_after in the CE-13 follow-up recomputed (fix-pass values kept)"
+    },
+    {
+     "n": 2,
+     "title": "optional: \"two module docstrings\" undercounts the docstrings that changed",
+     "disposition": "taken: \"the module docstring and two theorem docstrings\" in the guide's fix-pass status paragraph and the analysis paragraph Checks and status"
+    },
+    {
+     "n": 3,
+     "title": "optional: the receipt records only the module-commit run of check-inventory",
+     "disposition": "taken: inventory.focused_check_inventory gains staged-docs and docs-commit (label, commit, status, dirt, log, log sha256); module-commit gains its label"
+    },
+    {
+     "n": 4,
+     "title": "outside this branch: the CE-12 section of the analysis still calls B^coll_t zero-query",
+     "disposition": "not taken (no action needed for this branch, as the review says; the CE-12 section belongs to the item 3 lane's published record)"
+    },
+    {
+     "n": 5,
+     "title": "confirmation (no action)",
+     "disposition": "none"
+    }
+   ]
+  }
+ },
+ "documents": {
+  "sha256_after": {
+   "doc/impl/production-headlines.md": "8349b32aec3a06824cd344f47eab586f388dbf8f6d03a40c3b8696e72b4cba36",
+   "doc/impl/production-boundary-ledger.md": "b462e978a9b7567c11de9f5969026e1315ce51288abea03b8a256f5630d683af",
+   "doc/formal-verification-analysis.md": "58c79f8c694b9ccc2838bcdc63c966b6362c11c994e3014448c0870ace13086a",
+   "doc/impl/deployment-experiment.md": "0f40fe128c095716568d3a3e8d0babf5e44a38671c33ae84e336554965093442",
+   "doc/proverif-source-scope.md": "3c685fa49cc98d7ecc3c39b0702c9931721dbfbe37edae5590eec30370917547",
+   "doc/impl/proof-receipts/common-deployment-experiment-ce13.json": "43a38a11321d842f4c45e9ebe339c4ab6821ff66239e6aea7e1ae3e123fedcee",
+   "doc/impl/proof-receipts/production-headlines.json": "7d8117c7ca9b46afb84f4e0201002353fe1338da92e329ec808feccbd3e814cf"
+  },
+  "sha256_fix_pass": {
+   "doc/impl/production-headlines.md": "b382650c06fc87c6ebecae3230bf42b7027b2f13d49cbd3b49e206f69e073268",
+   "doc/impl/production-boundary-ledger.md": "c316e369f7c275f7bb3fa92996ea73fa595ede2e74435a493357c447431916aa",
+   "doc/formal-verification-analysis.md": "83d5e915ff8cf508ec83bd26795ade7c59f4c7f7753a50489f559e39cef72c47",
+   "doc/impl/deployment-experiment.md": "27d804014911e36103d2a8de563ef53f9bb04511e942b48445fbd84103bc0ddc",
+   "doc/proverif-source-scope.md": "4df51a1a0704248c2eea11785dba039d2a5d99ad0c18d191ba3c0b34bd3aa433",
+   "doc/impl/proof-receipts/common-deployment-experiment-ce13.json": "72d5fbcb3301cf38f1ee77778a99e030654866585d75e17a5500e2384f34945a",
+   "doc/impl/proof-receipts/production-headlines.json": "5839b7f2b4b1d62cd9730ff356b29b8f910259cca107bb41d9484734405f3a2a"
+  },
+  "sha256_before_fix_pass": {
+   "doc/impl/production-headlines.md": "512942d20ba7060b54e1516935d42a763b6cc08bd1462698b2cd4e81c49d8558",
+   "doc/impl/production-boundary-ledger.md": "943b6e108e730c34db462df649572720538d58e27f248758c597586d1d5ece16",
+   "doc/formal-verification-analysis.md": "fe794fbcd8d155fa6ca777f8d75e2d0969d9cf294b71d5c7ceddba1ee771ce5a",
+   "doc/impl/deployment-experiment.md": "6452088961959ecb02b4a1fc8eb5c61d708e2af6db9b42eb2387c68332ef0a96",
+   "doc/proverif-source-scope.md": "0a4ebb3469aba752356b748bbf287be267fcf203488572be03da83a671e05624",
+   "doc/impl/proof-receipts/common-deployment-experiment-ce13.json": "f7829699fb4674d42b5d2466af3610fe56587c91ba3db560b6a597348704f00f",
+   "doc/impl/proof-receipts/production-headlines.json": "cd5127fce2bb571e67149a9dcd962ea19a89c4b85049a2f827dd03ed291508c0",
+   "doc/impl/proof-receipts/production-headlines-registration.json": "0551011b33f610d05085c547c4f256a74bd77223b9c92c878c5cf214e234bc33"
+  },
+  "guide_sections": [
+   "Registration follow-up: production forms of the registration-authentication and replay claims",
+   "Registration follow-up: review fix pass",
+   "Registration follow-up: confirming review"
+  ],
+  "edits": {
+   "script": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/scripts/fix_docs.py",
+   "script_sha256": "b602d1f26e2b074358996156122db59f5e6b3e60d47eac83bfbc08074e67a50a",
+   "guide_section_source": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/docs/guide-fix-section.md",
+   "guide_section_source_sha256": "8f03051095e2bd174f41727d46fcd4e3e98d9c27eb6c6839925be1c6c198358f",
+   "guide": "top status sentence, open points bullet, section status, frozen-source basis, three table rows, What the forms say (epsilon_inj), Not restated (replay_never, D-ct closures); new section Registration follow-up: review fix pass",
+   "ledger": "the registration paragraph: status, docstring commit, epsilon_inj wording, both guide sections",
+   "analysis": "paragraph 1 (CE-A2pub/CE-R1' condition, collision attackers), paragraph 3 (bases, review status), CE-13 paragraph For the production code",
+   "deployment_experiment": "section Production forms, name index row and note, status sentence",
+   "proverif_source_scope": "paragraph Production; production cells of A1-delayed, A2-provenance, R1, R1', C3",
+   "receipts": "CE-13 receipt follow_ups record; published receipt registration record (lean_docstring_commit, review_fix_pass); this receipt rewritten (first build under first_pass)"
+  },
+  "edits_confirming_review": {
+   "script": "/tmp/bc-arc-scratch/item7/prod-reg/int/scripts/nits_edits.py",
+   "script_sha256": "e50792dd4ada5d57a09aa8dd4fb91722ffd90711f4df68a3bec5ae77be6f23a8",
+   "proverif_source_scope": "s2b-C1 (VC 615) production cell: position 1 now names PqxdhDeploymentProductionRegistration.ce_a1 and ce_a1_injective (identity index 0) beside ce_a1_linked",
+   "guide": "top Second follow-up sentence and open points bullet (status), section status, fix-pass status paragraph (the module docstring and two theorem docstrings), fix-pass bullet (s2b-C1 cell), new section Registration follow-up: confirming review",
+   "ledger": "status note of the registration paragraph, its guide sections",
+   "analysis": "paragraph Checks and status of the registration follow-up (docstring count, confirming review, guide sections)",
+   "deployment_experiment": "status sentence: the list of corrected cells names s2b-C1 (position 1); found in this pass",
+   "receipts": "CE-13 receipt follow_ups[0] (rows 615 and 3184, edits, hashes, confirming_review_update); published receipt registration record (confirming_review); this receipt (receipt_confirm.py)"
+  }
+ },
+ "scripts_sha256": {
+  "check.sh": "20a65a81db05ddc95d89e5ea65f19cb245e85fd2cd0ebba52878f273dea1e31e",
+  "devcheck.sh": "b3c59310f5d28e850c7015625570abd3866915893aa2af8dd58c2f9b5129e551",
+  "diff_scan.py": "f6c66baf5f7e7d472238aa15815b908bd82d7e40efb9ca0891b7e94f6fef2649",
+  "direct_scan.py": "fb69a2af67384c4844117b7723e4143f9eefba61cad2da4303df7e587794e851",
+  "direct_scan_gateprobe.py": "d1c01e3b600f9af8dea308739d1002c60d7f7b9be74b75c69b947e73c2e10462",
+  "fix_docs.py": "b602d1f26e2b074358996156122db59f5e6b3e60d47eac83bfbc08074e67a50a",
+  "gen3.py": "5e3908b79934091a389329afa6c36057ab05c643850c33feae00ecd937e697de",
+  "genreg.py": "a8c230af522be63c7f4bd1c2fa1572f9c66eaf007a2a5729b2490c219f1e9ec3",
+  "guards.py": "5cb961b67960a847c89d6ae9a86eced3cd13dc3d546ae6ae517b16f277fa1f20",
+  "hygiene.py": "34e0f5e6c90f27cc94c4db52fb38da50d115ef42b01f5e3aef837dbc4d1518a8",
+  "invblock.py": "82240ed49c834b65fa997231d7ea674fa3194a39f1528e0d95bc13cf4cb982e8",
+  "inventory.sh": "a2e47b81be9cc9b4b6e8fcaa94ba28a3f7d03e6fb9e459f9f652b3625b0b96c7",
+  "mirror.py": "db1d86f4dda84a452a953e3e64115d7fff8163a2bbdf09063eddd5aba51f110c",
+  "receipt_check.py": "8aa2d1f11ac3a055f511b1997ec8e5076e8872a1eb7515911ee7c2c073f4848a",
+  "receipt_fix.py": "5f200ffc1a53f3cd13b2c14015100953e0a1431489242bf14ed1d9d4a71c80ed",
+  "stmt_scan.py": "6707334b90dbefdc74d2dc494e9f98d571393a24c1f917006e7c3d8251d7863d",
+  "stmt_split.py": "8899dd7c066af5bee6fb86b5f28da795e1115cb2a814d347909cf622495687b4",
+  "text_scan.py": "87fcf6f7bed721975967c623942bdd652a59de1f8e9a8c69f6c4e7a9b190a044"
+ },
+ "not_claimed": [
+  "the persistence-wrapped Server surface of the C, Go and Python bindings",
+  "any later-quantum authentication or replay statement (later mode confidentiality only)",
+  "other Server identity indices than 0 (although several frozen forms hold at every index)",
+  "a varying checks",
+  "replay across Server objects, copies, restoration or persistence",
+  "CE-A2 itself (not over the CE game)",
+  "the Rust code beyond the reviewed transcription (RT and E entries unchanged)"
+ ],
+ "remaining": [
+  "integration into central (PROTOCOL section 6)",
+  "item 8 (owner)"
+ ],
+ "protocol": {
+  "mail": "peeked only (0 unread, cursor 502)",
+  "registrations_before_creation": [
+   "item7/prod-reg/fix1 and scripts, docs, gen, build, build/dev, scans, probe",
+   "olean item7/prod-reg/fix1/olean",
+   "leanpath item7/prod-reg/fix1/leanpath"
+  ],
+  "notes": [
+   "the default coord.sh inv rehash set does not include the module row; it was rehashed by naming its path",
+   "a first gate-probe call with the kind argument livegateprobe stopped in Python before any Lean run (the kind is live)"
+  ],
+  "no": "no deletion, no make verify, no full lake build, no mutation testing, no nix-collect-garbage",
+  "confirming_review_nits_and_integration": "item7/prod-reg/int and its subdirectories scripts, logs, logs/dev, docs, scans, its olean prefix item7/prod-reg/int/olean and leanpath item7/prod-reg/int/leanpath registered before creation; mail peeked only (0 unread, cursor 502)"
+ },
+ "receipt_scripts_confirm": {
+  "write_relayed": "/tmp/bc-arc-scratch/item7/prod-reg/int/scripts/write_relayed.py",
+  "write_relayed_sha256": "78140843d6f839711133a97429ca3dfc5aacba1f34d47741e6e72301e572d254",
+  "nits_edits": "/tmp/bc-arc-scratch/item7/prod-reg/int/scripts/nits_edits.py",
+  "nits_edits_sha256": "e50792dd4ada5d57a09aa8dd4fb91722ffd90711f4df68a3bec5ae77be6f23a8",
+  "receipt_confirm": "/tmp/bc-arc-scratch/item7/prod-reg/int/scripts/receipt_confirm.py",
+  "receipt_confirm_sha256": "5dba2591d80ae49967563207f37a998116b7198196d408cea82a7b83d7c384fe",
+  "befores": {
+   "common-deployment-experiment-ce13.json.before-nits": "72d5fbcb3301cf38f1ee77778a99e030654866585d75e17a5500e2384f34945a",
+   "deployment-experiment.md.before-nits": "27d804014911e36103d2a8de563ef53f9bb04511e942b48445fbd84103bc0ddc",
+   "formal-verification-analysis.md.before-nits": "83d5e915ff8cf508ec83bd26795ade7c59f4c7f7753a50489f559e39cef72c47",
+   "production-boundary-ledger.md.before-nits": "c316e369f7c275f7bb3fa92996ea73fa595ede2e74435a493357c447431916aa",
+   "production-headlines-registration.json.before-nits": "5965e1e9a2ff2b096c69d5ff89a29603c539cc1a1a5337e23e1a09cdd9e720c3",
+   "production-headlines.json.before-nits": "5839b7f2b4b1d62cd9730ff356b29b8f910259cca107bb41d9484734405f3a2a",
+   "production-headlines.md.before-nits": "b382650c06fc87c6ebecae3230bf42b7027b2f13d49cbd3b49e206f69e073268",
+   "proverif-source-scope.md.before-nits": "4df51a1a0704248c2eea11785dba039d2a5d99ad0c18d191ba3c0b34bd3aa433"
+  }
+ },
+ "first_pass": {
+  "kind": "items 3+7 production composition, second follow-up: production forms of the registration-authentication and replay claims of item 3 over the CE experiment (PqxdhDeploymentProductionRegistration)",
+  "author": "Claude (item 7 lane adopted from Codex, owner decision #503; item 3 is Claude's)",
+  "provenance": "new work; no Codex WIP exists for this module (nothing adapted from Codex WIP)",
+  "trigger": "CE-13 semantic review: the registration claims (ce_a1, ce_a1_billed, ce_a1_injective, CE-A2pub, CE-R1') had no production form; the published selection covered CE-12 headlines only",
+  "sibling_of": "doc/impl/proof-receipts/production-headlines.json",
+  "branch": "codex/deployment-boundary-production",
+  "basis_central": "a266567005a8fc84833d64cbcfb0bbe09228eaf5",
+  "basis_note": "fetched; origin/codex/full-proof-composition, git ls-remote, the central worktree and coord.sh leanpath current all at a2665670, which is the branch tip before this step; the requested merge of central was a no-op (no merge commit)",
+  "state": "built (Lean commit 59e08934; documents in the commit that adds this receipt); not reviewed; not integrated",
+  "lean_commit": "59e08934ef2272359a17b26cc418b13a383c4d8a",
+  "documents_commit": "the commit that adds this receipt (child of the Lean commit)",
+  "module": {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionRegistration.lean",
+   "sha256": "3ad3dbcd6a9440199cd60266fbf1a96ecf9ced0b91eb9c94eaef3ea7f30eeccc",
+   "lines": 716,
+   "theorems": 13,
+   "guards": 13,
+   "theorem_names": [
+    "support_zero",
+    "a1_bound",
+    "a1_sum",
+    "ce_a1",
+    "ce_a1_billed",
+    "injective_bound",
+    "ce_a1_injective",
+    "a2pub_owner_bound",
+    "a2pub_bound",
+    "r1prime_owner_bound",
+    "r1prime_bound",
+    "replay_game",
+    "record_replay_game"
+   ],
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer",
+    "BeaconcryptCore.Computational.PqxdhDeploymentServerAuth",
+    "BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills",
+    "BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame",
+    "BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple",
+    "BeaconcryptCore.Computational.PqxdhDeploymentReplay",
+    "BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay"
+   ],
+   "open_classical_in": 0,
+   "letI_statements": 4
+  },
+  "production_forms": {
+   "total": 12,
+   "by_frozen_module": {
+    "PqxdhDeploymentServerAuth": [
+     "a1_bound",
+     "a1_sum",
+     "ce_a1"
+    ],
+    "PqxdhDeploymentServerAuthBills": [
+     "ce_a1_billed"
+    ],
+    "PqxdhDeploymentServerAuthInjectiveGame": [
+     "injective_bound",
+     "ce_a1_injective"
+    ],
+    "PqxdhDeploymentPublishedTuple": [
+     "a2pub_owner_bound",
+     "a2pub_bound",
+     "r1prime_owner_bound",
+     "r1prime_bound"
+    ],
+    "PqxdhDeploymentReplay": [
+     "replay_game"
+    ],
+    "PqxdhDeploymentRecordReplay": [
+     "record_replay_game"
+    ]
+   },
+   "probability_forms": [
+    "a1_bound",
+    "a1_sum",
+    "ce_a1",
+    "ce_a1_billed",
+    "injective_bound",
+    "ce_a1_injective",
+    "a2pub_owner_bound",
+    "a2pub_bound",
+    "r1prime_owner_bound",
+    "r1prime_bound"
+   ],
+   "deterministic_support_forms": [
+    "replay_game",
+    "record_replay_game"
+   ],
+   "identity_index_fixed_at_0": [
+    "a1_bound",
+    "a1_sum",
+    "ce_a1",
+    "ce_a1_billed",
+    "replay_game",
+    "record_replay_game"
+   ],
+   "dropped_frozen_prefix_set_option_linter_deprecated": [
+    "a1_bound",
+    "a1_sum",
+    "ce_a1",
+    "ce_a1_billed",
+    "injective_bound",
+    "ce_a1_injective"
+   ],
+   "generic_lemma": "support_zero (from PqxdhDeploymentProductionTransfer.observe_zero with observation id)",
+   "classical_source_game_occurrences": 26,
+   "ce_game_occurrences_in_statements": "only in support_zero (its conclusion) by design; checked by the production-side split scan"
+  },
+  "selection": {
+   "file": "/tmp/bc-arc-scratch/item7/prod-reg/docs/selection-reg.txt",
+   "sha256": "651f8c47779ed413da8ac0dc524230d808a7a775842cb8e976281f80e66d503e",
+   "plan": "/tmp/bc-arc-scratch/item7/prod-reg/plan.md",
+   "plan_sha256": "d00bee1f9a3291fce6d40d613f28b8da9b56b29a58fe25a218240d5ddf493550",
+   "survey": "/tmp/bc-arc-scratch/item7/prod-reg/docs/survey.json",
+   "survey_sha256": "999d8e2f54ec2cd138781a564438d56c0d3b1b551f35cf7ab0c3a0af04762646"
+  },
+  "not_restated": {
+   "not_over_the_ce_game": {
+    "PqxdhDeploymentProvenance.a2_bound, a2_generated_bound (CE-A2)": "stated over the report-instrumented initialized execution PqxdhJointPhase1Reports.run (initialized (compileFull ...)); events NativeForgery/GeneratedForgery read stopped report runs, report snapshots, pool references and signing transcripts, which the CE outcome does not carry; the published bridge report_game equates only the projection (created Server, output, ledger), so it does not carry them; a2_generated_bound is the at-least-as-strong form over the same run, not a bridge; the CE-game reading of CE-A2 is CE-A2pub (restated)",
+    "a2_service_bound, a2_client_uniform, a2_reduction_uniform, a2_game_uniform, a2_bills": "bills of the A2 reductions, not about the CE game",
+    "report_generated, generated_lt, owner_published_failure, published_failure": "report-run lemmas",
+    "replay_owner, game_owner, double_owner, published_owner": "outcome-level containments; no game in the statement (hold verbatim at codec prime for unwrap of every source outcome)",
+    "PqxdhDeploymentServerAuthJournal.*, PqxdhDeploymentServerAuthOutcome.*": "about the Server-authentication game PqxdhServerAuthRootExecution.game"
+   },
+   "intermediate_over_the_ce_game": [
+    "a1_le_ordered (chain step)",
+    "a1_range",
+    "build_pin",
+    "matched_pinned",
+    "noPinnedMatch_noFailure",
+    "session_unique",
+    "shared_collision",
+    "replay_owner_published",
+    "replay_published",
+    "registered_game",
+    "tracked_game",
+    "game_report_holds",
+    "game_report",
+    "PqxdhDeploymentProvenance.report_game"
+   ],
+   "already_restated": "CE-12 P2 registration-side gap bounds (server_gap_bound, beacon_gap_le, ce_a1_linked, sym_gap, identity_collision_game) and their D-ct closures, in the published production modules"
+  },
+  "guard_profile": "every theorem exactly one #guard_msgs over #print axioms listing propext, Classical.choice, Quot.sound",
+  "hygiene": {
+   "sha256": "3ad3dbcd6a9440199cd60266fbf1a96ecf9ced0b91eb9c94eaef3ea7f30eeccc",
+   "lines": 716,
+   "theorems": 13,
+   "print_axioms": 13,
+   "guards": 13,
+   "names_match": true,
+   "bad_guards": 0,
+   "forbidden_tokens": [],
+   "bad_set_options": [],
+   "open_classical_in": 0,
+   "long_code_lines": [],
+   "defs": 0,
+   "ok": true,
+   "record": "/tmp/bc-arc-scratch/item7/prod-reg/docs/hygiene.json",
+   "record_sha256": "1dc69e17e070d46782e9c384ddd0193e9139e0d6a36b2e242052d6aa755fdd47"
+  },
+  "development_check": {
+   "log": "/tmp/bc-arc-scratch/item7/prod-reg/build/dev/PqxdhDeploymentProductionRegistration-1.log",
+   "sha256": "c37c8d371a13462b14c34c4d331b7752ee6b581db613d12d3706cd292cc38dd7",
+   "meta": "08b8d017f74150580affd3eeeb16adf6825406c5b0216b3e7bf46d8f81a482e8  /tmp/bc-arc-scratch/item7/prod-reg/build/dev/PqxdhDeploymentProductionRegistration.lean\nexit 0 seconds 14",
+   "axiom_messages": 13,
+   "other_messages": 0,
+   "source": "item7/prod-reg/build/dev copy of the unguarded generator output item7/prod-reg/gen"
+  },
+  "module_checks": {
+   "run1_before_commit": {
+    "start": "2026-10-10T21:57:56.642602035Z",
+    "end": "2026-10-10T21:58:10.357984339Z",
+    "exit": 0,
+    "head": "a266567005a8fc84833d64cbcfb0bbe09228eaf5",
+    "dirty_paths": 1,
+    "source_sha256": "3ad3dbcd6a9440199cd60266fbf1a96ecf9ced0b91eb9c94eaef3ea7f30eeccc",
+    "log_bytes": 0,
+    "artifact_sha256": "825ee8b11564cc04e5797ff51378b7f9af3cc75a76dbb902013cc5a4fc000eae",
+    "leanpath_sha256": "47b93073ef10550407de9de8709dee82149466187b8f1474952ff96ca3849ce4",
+    "record": "/tmp/bc-arc-scratch/item7/prod-reg/build/PqxdhDeploymentProductionRegistration-1.json"
+   },
+   "run2_at_lean_commit": {
+    "start": "2026-10-10T22:00:45.982536324Z",
+    "end": "2026-10-10T22:01:00.873560919Z",
+    "exit": 0,
+    "head": "59e08934ef2272359a17b26cc418b13a383c4d8a",
+    "dirty_paths": 0,
+    "source_sha256": "3ad3dbcd6a9440199cd60266fbf1a96ecf9ced0b91eb9c94eaef3ea7f30eeccc",
+    "log_bytes": 0,
+    "artifact_sha256": "825ee8b11564cc04e5797ff51378b7f9af3cc75a76dbb902013cc5a4fc000eae",
+    "leanpath_sha256": "47b93073ef10550407de9de8709dee82149466187b8f1474952ff96ca3849ce4",
+    "record": "/tmp/bc-arc-scratch/item7/prod-reg/build/PqxdhDeploymentProductionRegistration-2.json"
+   }
+  },
+  "root_import": {
+   "run1_before_commit": {
+    "start": "2026-10-10T21:58:25.656615008Z",
+    "end": "2026-10-10T21:58:28.560514054Z",
+    "exit": 0,
+    "head": "a266567005a8fc84833d64cbcfb0bbe09228eaf5",
+    "dirty_paths": 4,
+    "source_sha256": "45690bba239bb7bb9abc9a14ba0e375abc0593258960d9ce1fbe464b30242510",
+    "log_bytes": 0,
+    "artifact_sha256": "f2ca5e926c083c0bfd473d2e1c6dbdfb0599fc22a92dc22ee9672730e192dbdd",
+    "leanpath_sha256": "47b93073ef10550407de9de8709dee82149466187b8f1474952ff96ca3849ce4",
+    "record": "/tmp/bc-arc-scratch/item7/prod-reg/build/root-1.json"
+   },
+   "run2_at_lean_commit": {
+    "start": "2026-10-10T22:01:00.913712070Z",
+    "end": "2026-10-10T22:01:03.775139777Z",
+    "exit": 0,
+    "head": "59e08934ef2272359a17b26cc418b13a383c4d8a",
+    "dirty_paths": 0,
+    "source_sha256": "45690bba239bb7bb9abc9a14ba0e375abc0593258960d9ce1fbe464b30242510",
+    "log_bytes": 0,
+    "artifact_sha256": "f2ca5e926c083c0bfd473d2e1c6dbdfb0599fc22a92dc22ee9672730e192dbdd",
+    "leanpath_sha256": "47b93073ef10550407de9de8709dee82149466187b8f1474952ff96ca3849ce4",
+    "record": "/tmp/bc-arc-scratch/item7/prod-reg/build/root-2.json"
+   }
+  },
+  "olean_prefix": {
+   "path": "/tmp/bc-arc-scratch/item7/prod-reg/olean",
+   "leanpath": "/tmp/bc-arc-scratch/item7/prod-reg/leanpath",
+   "leanpath_sha256": "47b93073ef10550407de9de8709dee82149466187b8f1474952ff96ca3849ce4",
+   "mirror": "resolved symlink mirror of the BeaconcryptCore part of the published a2665670 first prefix /tmp/bc-arc-scratch/item7/prod-dct/int/olean (6436 links, 1 to a regular file, root skipped, 0 broken)",
+   "published_leanpath": "/tmp/bc-coord/leanpaths/a266567005a8fc84833d64cbcfb0bbe09228eaf5.leanpath"
+  },
+  "lean_command": "coord.sh lean claude <label> -- timeout 180 lean -j1 -M8000 [--root=<worktree lean dir> -o <olean>] <file>, one check in flight",
+  "inventory": {
+   "recount": "coord.sh inv recount claude <core>: [handwritten-lean] 1977 -> 1978, before inv rehash",
+   "rehash": "coord.sh inv rehash claude <core> (default set): BeaconcryptCore.lean c11262b6 -> 45690bba, check-inventory.sh 1014297e -> 1edae88c, trusted-boundary.md unchanged; the module row added by invblock.py with the module sha256; a second recount/rehash pass changed nothing",
+   "focused_check_inventory": {
+    "staged-module": {
+     "start": "2026-10-10T21:58:37Z",
+     "end": "2026-10-10T22:00:31Z",
+     "commit": "a266567005a8fc84833d64cbcfb0bbe09228eaf5",
+     "status": 0,
+     "dirt_lines": 4,
+     "dirt_after_lines": 4,
+     "log": "/tmp/bc-arc-scratch/item7/prod-reg/build/inventory-staged-module.log",
+     "log_sha256": "43dca2148191f8e2e6aaa1be172f54fd5db9554547a3780bf161c195d4e73ca1",
+     "last_line": "Formal-verification inventory matches the reviewed boundary.",
+     "note": "run on the staged tree before the Lean commit (the four staged paths are the dirt)"
+    },
+    "module-commit": {
+     "start": "2026-10-10T22:01:07Z",
+     "end": "2026-10-10T22:03:03Z",
+     "commit": "59e08934ef2272359a17b26cc418b13a383c4d8a",
+     "status": 0,
+     "dirt_lines": 0,
+     "dirt_after_lines": 0,
+     "log": "/tmp/bc-arc-scratch/item7/prod-reg/build/inventory-module-commit.log",
+     "log_sha256": "7f44af1879ee0464648e2236d10275e5e514b1ca084e93c494b232fcc4778886",
+     "last_line": "Formal-verification inventory matches the reviewed boundary."
+    }
+   },
+   "command": "coord.sh lease mem claude @nix <label> --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C <worktree>/beaconcrypt-core check-inventory SHELL=bash"
+  },
+  "git_diff_check": "clean (staged Lean change before the Lean commit; documents before the documents commit)",
+  "generator": {
+   "script": "/tmp/bc-arc-scratch/item7/prod-reg/scripts/genreg.py",
+   "sha256": "0760cc1a181d919a7b2f938bdb4908585452a84b57d247e11175b7201d7f3b18",
+   "base": "/tmp/bc-arc-scratch/item7/prod-reg/scripts/gen3.py",
+   "base_sha256": "90c074e4300f1e2de4b1576275ace6f35a63f334a378896a789a97f96e241743",
+   "base_note": "unchanged copy of item7/prod-dct/fix1/scripts/gen3.py (the published generator)",
+   "rederivation": "genreg.py re-run reproduces gen byte for byte (item7/prod-reg/probe/rederive); with guards.py and the development log it reproduces the committed module byte for byte; the premise table is identical"
+  },
+  "frozen_inputs_sha256": {
+   "PqxdhDeploymentServerAuth": "082acd91f9045847f33ab7819a920227c69fdbe58c81b52ae64c931da825fdc8",
+   "PqxdhDeploymentServerAuthBills": "e6226e1d935e92d862ca5d7ffa59c8511b3606aebdfc5e90fd2d97403e394462",
+   "PqxdhDeploymentServerAuthInjectiveGame": "be9545f5c3ea84eaaa41ce2547bbe9dbd84c8cace6e203def8afc629392096e0",
+   "PqxdhDeploymentPublishedTuple": "416e37345a18350a30485e90c96416251de3046fc22e90cce6033500c81e51e7",
+   "PqxdhDeploymentReplay": "f32ff9776d6b848b4cf4d1f668be270001896bc920d4a960ef679a2774fef0a2",
+   "PqxdhDeploymentRecordReplay": "0a973f5e473e051c2b54a00abe905ddb4fef7f53e94b0c768c624ff34730acf5",
+   "PqxdhDeploymentProvenance": "15fe819488118c904cad62ecf570ecca400e192b425a855fccd40a89acd295de",
+   "PqxdhDeploymentProductionTransfer": "46ef566033afeb628655685dd7316201c98daeceb9ed7135ddc1ad4847332ec2",
+   "PqxdhBoundaryDeployment": "c806497c4c23f0dba0927fbfb9422c39c984c6f1067b609f7e859ab72d8c727f"
+  },
+  "frozen_inputs_note": "unchanged between central a2665670 and HEAD (git diff --quiet)",
+  "premises": {
+   "table": "/tmp/bc-arc-scratch/item7/prod-reg/docs/premises-production.json",
+   "sha256": "1adcacb8c6cc38d9a733db8f752ab372d1a80c320189876c2fe590dbc3f4a379",
+   "totals": {
+    "Phase1ReadBack codec": 10,
+    "Phase2ReadBack codec": 10,
+    "FrameReadBack codec'": 5,
+    "ReadWritable codec'": 5,
+    "KemBound setup caps": 5,
+    "X25519ClassLaw": 5,
+    "X25519ScalarSpread": 5,
+    "SourceFullCorrect": 5,
+    "HasAttachedVerificationAdapter": 5,
+    "shortRejects": 4,
+    "budget.Respects adversary": 9,
+    "ReductionCaps (query caps of R_c)": 3,
+    "DecoderAgreement": 0,
+    "FunctionalDecapsulation": 0
+   },
+   "generator_scan": {
+    "table": "/tmp/bc-arc-scratch/item7/prod-reg/docs/premises-gen.json",
+    "sha256": "ade6da469f9933b73b689914e94aaf380ff3208cc373fa87916360f2397e5e11",
+    "codec_route_dependent": {
+     "Phase1ReadBack": 10,
+     "Phase2ReadBack": 10,
+     "FrameReadBack": 5,
+     "ReadWritable": 5,
+     "ReductionCaps": 3
+    },
+    "other_codec_route_premises": 0,
+    "owner_level_stop": false
+   },
+   "other_binders_mentioning_codec_reader_erased": "only the parameters codec, reader, erased and the support binders over the source game (support_zero, replay_game, record_replay_game)"
+  },
+  "scans": {
+   "spec": {
+    "file": "/tmp/bc-arc-scratch/item7/prod-reg/scans/scan-spec-v7.json",
+    "sha256": "34b96e5c6cb22ca89e8a3639cb21d86c913cac54f005778382e5289388d71e7e",
+    "version": 7,
+    "crypto_allowance_extended": false
+   },
+   "statement": {
+    "clean": {
+     "record": "/tmp/bc-arc-scratch/item7/prod-reg/scans/PqxdhDeploymentProductionRegistration-statement-clean-v7.json",
+     "sha256": "07240eeb442d1f91d07a751935e9d3d88035ea6a10579a8cf9956614bfef1f53",
+     "declarations": 13,
+     "hits": 0,
+     "exit": 0
+    },
+    "live": {
+     "record": "/tmp/bc-arc-scratch/item7/prod-reg/scans/PqxdhDeploymentProductionRegistration-statement-live-v7.json",
+     "sha256": "e63e4d648faa923833d35da3e626e13ba4b73e82c3b4c7d77ea3840accc2c21e",
+     "live_classes": 11,
+     "dead_classes": 0,
+     "allowance_control_ok": true,
+     "exit": 1,
+     "exit_meaning": "all classes live (as intended)"
+    }
+   },
+   "production_side_split": {
+    "clean": {
+     "record": "/tmp/bc-arc-scratch/item7/prod-reg/scans/PqxdhDeploymentProductionRegistration-split-clean.json",
+     "sha256": "a17d13e3d0dc2767f33ba940da08319ab63fb852494ff75004a810a8cf68dfdb",
+     "module_failures": 0,
+     "production_side_hits": 0,
+     "rest_hits": 0,
+     "exit": 0
+    },
+    "live": {
+     "record": "/tmp/bc-arc-scratch/item7/prod-reg/scans/PqxdhDeploymentProductionRegistration-split-live.json",
+     "sha256": "7bae0c46e77e2e61a9198e0f484ffd9bc21ba1a695363a7b560da300be1a238e",
+     "live_ok": true,
+     "support_side_control": [
+      [
+       "splitLiveSupportSide",
+       "production-side hit PqxdhDeploymentIdealSteps.idealGame ['pb_full_prefix']"
+      ]
+     ],
+     "exit": 0
+    }
+   },
+   "direct_reference_v7": {
+    "clean": {
+     "log": "/tmp/bc-arc-scratch/item7/prod-reg/build/dev/PqxdhDeploymentProductionRegistration-scan-clean-v7-1.log",
+     "sha256": "61d72b5a15889ee97b1cd1783968420ca8f44fc07889d0c87a231627ff86af9b",
+     "lean_exit": 1,
+     "tool_verdict": "NOT AS EXPECTED (recorded: restated statements must fail)",
+     "forbidden_references": {
+      "BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto (pb_namespace)": 10
+     },
+     "declarations_with_references": 10,
+     "crypto_sites": 41,
+     "site_kinds_all_on_Setup.source": [
+      "Pqxdh.Crypto.verify/0",
+      "X25519ClassLaw/0",
+      "X25519ScalarSpread/0",
+      "PqxdhDeploymentReplay.entryRegistration/2",
+      "PqxdhDeploymentReplay.acceptIds/2"
+     ],
+     "site_table": "none for this module (allowance not extended)"
+    },
+    "live": {
+     "log": "/tmp/bc-arc-scratch/item7/prod-reg/build/dev/PqxdhDeploymentProductionRegistration-scan-live-v7-1.log",
+     "sha256": "0a41cfcf27c433490578520bd3d9cf5ab906b421924722eabfd02eee9f3e87b2",
+     "result": "the site gate throws before the liveness part (as for the published production modules)"
+    },
+    "gate_bypass_probe": {
+     "log": "/tmp/bc-arc-scratch/item7/prod-reg/build/dev/PqxdhDeploymentProductionRegistration-scan-livegateprobe-v7-1.log",
+     "sha256": "29193efac130a9cad5307926df0130fb7ab4909b6a4a093a3a8a0fb7759a0d1c",
+     "result": "all 11 rule classes live; all 21 witness targets hit their own class; allowance control ok; site gate controls ok; negative control clean; one error (forbidden direct reference); 10 module references, 64 with the witnesses"
+    }
+   },
+   "differential": {
+    "clean": {
+     "log": "/tmp/bc-arc-scratch/item7/prod-reg/build/dev/PqxdhDeploymentProductionRegistration-diff-clean-1.log",
+     "sha256": "8ca8e0682a2eba6bbeafb18b67e2cc1b4baf11820194bf44e6487a428a91228a",
+     "declarations_checked": 13,
+     "failures": 0,
+     "exit": 0
+    },
+    "live": {
+     "log": "/tmp/bc-arc-scratch/item7/prod-reg/build/dev/PqxdhDeploymentProductionRegistration-diff-live-1.log",
+     "sha256": "38a29d74c29277fec8a4959e8f5b3917970b3f140868578cc41bee794f72cc4b",
+     "intended_failures": 9,
+     "as_expected": true
+    }
+   },
+   "text": {
+    "source_sha256": "3ad3dbcd6a9440199cd60266fbf1a96ecf9ced0b91eb9c94eaef3ea7f30eeccc",
+    "scope": "code (comments and docstrings removed)",
+    "PqxdhDeploymentProvenance": [
+     "PqxdhDeploymentProvenance.reduction"
+    ],
+    "PqxdhDeploymentProvenance_count": 4,
+    "authenticated_": [],
+    "authenticated__count": 0,
+    "PqxdhRegistrationJointAuthenticatedSelectedKem": [],
+    "PqxdhRegistrationJointAuthenticatedSelectedKem_count": 0,
+    "PqxdhRegistrationJointKemKeyTransfer": [],
+    "PqxdhRegistrationJointKemKeyTransfer_count": 0,
+    "theorems_with_Provenance": {
+     "a2pub_owner_bound": 1,
+     "a2pub_bound": 1,
+     "r1prime_owner_bound": 1,
+     "r1prime_bound": 1
+    },
+    "record": "/tmp/bc-arc-scratch/item7/prod-reg/scans/text-scan.json",
+    "record_sha256": "f2baa6fdaafbda45f6c79c58e1d942deda6ba1b10113eee13b6c3e50ec5bebac",
+    "note": "PqxdhDeploymentProvenance.reduction is the A2 client reduction of the frozen CE-A2pub/CE-R1prime bounds (inherited); the no-Provenance text rule concerns later-quantum forms (no A2/T5/T8 on the later compiled program)"
+   },
+   "tool_adaptations": "stmt_scan.py REG5, stmt_split.py REG1-REG5, diff_scan.py REG1-REG3 (headers of the copies); REG5 (statement cut skipping a top-level letI :=) was needed for the four CE-A2pub/CE-R1prime statements"
+  },
+  "documents": {
+   "sha256_after": {
+    "doc/impl/production-headlines.md": "512942d20ba7060b54e1516935d42a763b6cc08bd1462698b2cd4e81c49d8558",
+    "doc/impl/production-boundary-ledger.md": "943b6e108e730c34db462df649572720538d58e27f248758c597586d1d5ece16",
+    "doc/formal-verification-analysis.md": "1a4269802a2a2e45d869d33bfd3c5d6483b18861aa3b49f8536aea572173d91b"
+   },
+   "sha256_before": {
+    "doc/impl/production-headlines.md": "ce6d7a60367bdd89b9da6eaddf4d5efdb8595126cb79b90b81cfcd004210f98a",
+    "doc/impl/production-boundary-ledger.md": "5c5d9ac5a61db9ea886ad126b6787956eab24e2568bc756cb05557949f23dbab",
+    "doc/formal-verification-analysis.md": "038460ea3adaec5f536517682a48ea57b30d232d4e3017fce35f900897ea0f32",
+    "doc/impl/proof-receipts/production-headlines.json": "3c7685918139c343fc1499ade6fe53e96354592e8b0cf70fc3f08f9b8e5a0dd3"
+   },
+   "guide_section": "Registration follow-up: production forms of the registration-authentication and replay claims",
+   "guide_corrections": [
+    "status paragraph: coverage sentence (selection covered CE-12 only; the registration claims had no production form)",
+    "\"Not restated\" paragraph: the same sentence",
+    "open points: done bullet for the second follow-up"
+   ],
+   "ledger": "one new paragraph after the D-ct paragraph of \"What item 8 must carry\" (existing text unchanged)",
+   "analysis": "three paragraphs appended at the end of the production composition section (Claude anchor, no new heading, as the D-ct follow-up)",
+   "published_receipt": "one follow_ups record added to doc/impl/proof-receipts/production-headlines.json"
+  },
+  "scripts_sha256": {
+   "genreg.py": "0760cc1a181d919a7b2f938bdb4908585452a84b57d247e11175b7201d7f3b18",
+   "gen3.py": "90c074e4300f1e2de4b1576275ace6f35a63f334a378896a789a97f96e241743",
+   "guards.py": "d30c436051c0fe8682169157e8c30e9ab9b4f9ba6896316286c5ed78734bc373",
+   "hygiene.py": "3117518faef56e8ff0707265509d086fdf141c6a369e178290055d0b9d757304",
+   "check.sh": "251208851d4ad9af2175503807a66ef664d503f5518f9ec6941183706760f913",
+   "devcheck.sh": "37cb1c4c9700f7bec142ee2a97007e057c547f8a104a6a6319367051454a627d",
+   "mirror.py": "15e6b93e3fa7a713e4161ced0476c88b370d848c30dc30e23dc45aeedd7a3521",
+   "inventory.sh": "2623f9880ceca4fcad839b799a3f396ab4df2f6164a812f8208af9e318c8dff2",
+   "invblock.py": "584c1be0f0bad1e1f5d125140a5f1f3e5b5ecf3f65a723b1c252004fdbe5bf1f",
+   "survey.py": "ee051b949e6940f94fe7b91ef320790f2498a3be8c270dc2d781275428fa910f",
+   "stmt_scan.py": "34be316e75c8c1ff51fb084d226df00980f3184a55aa74143c2638e06d88feb6",
+   "stmt_split.py": "71f4a1eee735585701562e2037b9ef9e376274f545e5b7f6332b44ac6d07e7dd",
+   "direct_scan.py": "3356bdf411e20e36eb0fa2cd3338cfa783f71241d58c4fd7362b407aa40011c4",
+   "direct_scan_gateprobe.py": "fd3463c9c2a5008842cdc390c99abbcd3068ad9ba894c8d6462dfc36606158da",
+   "diff_scan.py": "ff0ad90fc3a33f216da22968e617aa501f92342675c98637372f1b06cb3a97ce",
+   "guide_edits.py": "a4038f14a03e37c1c299ba6b375e331628c06f90f12be7b1dcb215bb31684c8e",
+   "ledger_edits.py": "257c2f8922688d5551c257d49d672db00c75e56174610e1b5284637d11f1057b",
+   "analysis_edits.py": "4830aa8cbcda670dc5627f5d809ed324dd4acba52e51a37ff5b2f02ae64a9d94",
+   "receipt_reg.py": "d279c5b832e27cbbac429a1412eba105d1efe9beeb236f86c3dcdc58513b8058"
+  },
+  "not_claimed": [
+   "the persistence-wrapped Server surface of the C, Go and Python bindings",
+   "any later-quantum authentication or replay statement (later mode confidentiality only)",
+   "other Server identity indices than 0 (although several frozen forms hold at every index)",
+   "a varying checks",
+   "replay across Server objects, copies, restoration or persistence",
+   "CE-A2 itself (not over the CE game)",
+   "the Rust code beyond the reviewed transcription (RT and E entries unchanged)"
+  ],
+  "remaining": [
+   "independent reviews (semantic, composition, hygiene)",
+   "fix pass if needed",
+   "confirming review",
+   "integration into central (not in this session)"
+  ],
+  "protocol": {
+   "mail": "peeked only (0 unread, cursor 502)",
+   "registrations_before_creation": [
+    "item7/prod-reg and scripts, docs, gen, scans, build, build/dev, probe",
+    "item7/prod-reg/probe/rederive",
+    "olean item7/prod-reg/olean",
+    "leanpath item7/prod-reg/leanpath",
+    "module PqxdhDeploymentProductionRegistration"
+   ],
+   "slips": [
+    "a pkill -f pattern meant for a runaway scan process also killed the calling shell (exit 144); the scan processes were then stopped by PID; nothing else affected",
+    "one command contained a stray no-op `mkdir -p /dev/null` (nothing created or changed)"
+   ],
+   "no": "no deletion, no make verify, no full lake build, no mutation testing, no nix-collect-garbage"
+  },
+  "note_plan_sha256": "selection.plan_sha256 (d00bee1f...) is the scratch plan when this first receipt was written; its status section was appended afterwards and no copy of that version was kept (finding 10 of the reviews); the selection itself is fixed by selection-reg.txt (651f8c47...), unchanged",
+  "documents_commit_sha": "c7f8b210b2c6df08afc7f3aa8d1340b46664f6c4"
+ }
+}

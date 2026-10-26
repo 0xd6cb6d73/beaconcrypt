@@ -1,0 +1,9 @@
+# Review of the 11 initially unclassified outcomes
+
+All 11 failures are ordinary mutation-induced Rust compile errors, with Build exit 101 and source locations at the mutated expressions. Six mutants introduce `Vec` and `vec!` in `no_std` crates without these names in scope. Three replace addition with subtraction in PQXDH size expressions, causing compile-time `usize` underflow. Two replace `>=` with `<` immediately following an `as usize` cast, which Rust parses as generic arguments unless the cast is parenthesized. None shows a disk, memory, compiler crash, tool, or network failure.
+
+The classifier now recognizes only the three exact unnumbered diagnostic headers observed in these logs; its infrastructure precedence and required source-location/process-status checks remain unchanged. Forty synthetic examples cover the accepted headers, missing locations, wrong exit codes, wrong phases, unknown extra diagnostics, close but unrecognized headers, and disk/OOM/compiler ICE/compiler panic/build signal/linker/network failures overriding a valid source diagnostic. These checks invoke no compiler or repository test suite.
+
+The original failed receipt remains unchanged in `../native-final-receipt`. `manual-review.json` identifies every reviewed mutation, records its log hash and reason, and preserves the original receipt's file hashes. The prior and reviewed classifier sources plus synthetic examples are archived here. The expected catalog and raw native outcomes were not modified. The parent separately regenerated the final source catalog and confirmed exact equality with the initial 1,672-entry catalog.
+
+The reviewed reconciliation passed with 1,672 unique outcomes: 1,206 caught and 466 verified uncompilable mutations, zero missed, timed-out, uncovered, duplicate, infrastructure, or unclassified cases. Baseline validation and source stability remain separately documented evidence because the native mutation command used `--baseline=skip`.

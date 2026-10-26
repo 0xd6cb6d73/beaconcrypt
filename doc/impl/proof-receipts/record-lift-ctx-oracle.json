@@ -1,0 +1,287 @@
+{
+  "stage": "Actual selected-key CTX interpreter and complete local adaptive stopped source continuation",
+  "status": "Independent semantic and publication hygiene reviews approved; all26 exact guards and focused gates passed",
+  "base_commit": "f20cb4b02bc5dc94b0055cffa67918ff32845414",
+  "contains_central": "f20cb4b02bc5dc94b0055cffa67918ff32845414",
+  "author": "/root/record_lazy_table",
+  "branch": "codex/record-lift-ctx-oracle",
+  "worktree": "/tmp/beaconcrypt-record-lift-ctx-oracle",
+  "modules": {
+    "PqxdhRecordLiftCtxOracle": {
+      "theorems": [
+        "resume_aimed",
+        "begin_aimed",
+        "receive_queries",
+        "admitted_receive_queries",
+        "coin_step",
+        "coin_program",
+        "store_realization",
+        "output_key_invariant",
+        "lookup_native_erasure",
+        "keyLookup_source",
+        "source_nonces",
+        "no_seal_nonces",
+        "opening_with_nonces",
+        "sealing_nonces",
+        "keyLookup_native",
+        "interpreter_source",
+        "except_bind",
+        "schedule_source",
+        "nativeLookup_realization",
+        "keyLookup_total",
+        "keyLookup_uniform",
+        "interpreter_total",
+        "allowed_admitted",
+        "receive_admitted",
+        "send_admitted",
+        "reduction_source"
+      ],
+      "guard_count": 26,
+      "source_sha256": "5cebf975610e242039feef8495a254e0e16a7c5b6c9c7aff16d444c7f1194e6c",
+      "artifact_sha256": "5ccb15481ed4f41dd7e06ea8d29c7b2f8ddc0ca6e3d2889e9a08fd44fab2c7ef"
+    }
+  },
+  "scope": [
+    "Actual source begin/resume opening admission and context/sequence discipline, applicable to arbitrary typed kernels after outer parser checks.",
+    "Complete selected-message-key-free persistent lookup, actual real fixed-HKDF input invariance and proof-side native table realization.",
+    "All three opaque services and arbitrary adaptive local continuation interpreted by actual ordinary selected-key CTX, with actual optional plaintext/cipher output, full mask/cache/frames and derived nonce-history ghost.",
+    "Explicit repeated-selected-nonce stopped source comparator, preserving writer failure as a separate logged source outcome and allowing known-key aliases."
+  ],
+  "operational_premises": [
+    "Actual outer raw checks supply Admitted; local receive/send derive the remaining emitted-query discipline.",
+    "Literal source table realization needs selected coordinate already ideal; actual cut/context independence/key distribution is not inferred from arbitrary masks.",
+    "Existing total native crypto and classical shared CTX ROM interfaces remain unchanged; no primitive implementation proof/new assumption.",
+    "Native analysis counters and irrelevant component histories are explicitly projected; actual source and reduction bounds must still account for their work."
+  ],
+  "query_accounting": [
+    "keyLookup_total: component total\u226476; keyLookup_uniform: only ordinary uniform queries, from at most one full76 ideal miss.",
+    "interpreter_total: lookup\u226476, opening\u22641, sealing\u22641; existing CtxServices route-specific caps remain authoritative; refused seal still a component attempt.",
+    "ChainOracle actual source retains one KDF ledger charge per logical lookup including retries/hits; counter-erasure equality does not discard global source or reduction query bills."
+  ],
+  "not_established": [
+    "Global Protocol ten-service framing and opening admission, global source no-repeat/nonce-stop discharge.",
+    "Actual selected uniform-key cut and full context independence, aliases, record/session selection, full later E continuation and final integrity/privacy advantage bounds."
+  ],
+  "validation": {
+    "module": {
+      "start": "2026-10-08T01:33:05.445058+00:00",
+      "end": "2026-10-08T01:33:25.601863+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "ctx-oracle-013305",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-ctx-oracle/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/ctx-oracle/publication/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxOracle.olean",
+        "/tmp/beaconcrypt-record-lift-ctx-oracle/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxOracle.lean"
+      ],
+      "source_sha256": "5cebf975610e242039feef8495a254e0e16a7c5b6c9c7aff16d444c7f1194e6c",
+      "artifact_sha256": "5ccb15481ed4f41dd7e06ea8d29c7b2f8ddc0ca6e3d2889e9a08fd44fab2c7ef",
+      "leanpath_sha256": "2c93dc84e7087e85ebf3e45f2b4ca6bb666968653aea94d8fb1c9f4c159182f0",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log": "/tmp/bc-arc-scratch/record-lift/ctx-oracle/publication/logs/ctx-oracle-013305.log"
+    },
+    "root": {
+      "start": "2026-10-08T01:34:50.668583+00:00",
+      "end": "2026-10-08T01:34:53.877131+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "ctx-oracle-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-ctx-oracle/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/ctx-oracle/publication/olean/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-ctx-oracle/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null,
+      "source_sha256": "576981a6663516ac516871b1ad7a8cccc469afa8f5a513ec6435e75ffbfcdbbb",
+      "artifact_sha256": "31213831410c544eee28bd65bf7a1af97265e6a9ca59f2f38d5b40a6333a531a",
+      "leanpath_sha256": "2c93dc84e7087e85ebf3e45f2b4ca6bb666968653aea94d8fb1c9f4c159182f0",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log": "/tmp/bc-arc-scratch/record-lift/ctx-oracle/publication/logs/publication-root.log"
+    },
+    "inventory": {
+      "start": "2026-10-08T01:34:50.667970+00:00",
+      "end": "2026-10-08T01:36:10.723555+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "ctx-oracle-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-ctx-oracle/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/ctx-oracle/publication/target",
+      "source_sha256": "576981a6663516ac516871b1ad7a8cccc469afa8f5a513ec6435e75ffbfcdbbb",
+      "artifact_sha256": null,
+      "leanpath_sha256": "2c93dc84e7087e85ebf3e45f2b4ca6bb666968653aea94d8fb1c9f4c159182f0",
+      "log_sha256": "d2ba880a78e6d4e4ca2ac687937e1d53537e47ecf45ee113eebcc108915393ff",
+      "log": "/tmp/bc-arc-scratch/record-lift/ctx-oracle/publication/logs/publication-inventory.log"
+    },
+    "fidelity": {
+      "start": "2026-10-08T01:34:50.668775+00:00",
+      "end": "2026-10-08T01:35:15.433566+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "ctx-oracle-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-ctx-oracle/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/ctx-oracle/publication/target",
+      "source_sha256": "576981a6663516ac516871b1ad7a8cccc469afa8f5a513ec6435e75ffbfcdbbb",
+      "artifact_sha256": null,
+      "leanpath_sha256": "2c93dc84e7087e85ebf3e45f2b4ca6bb666968653aea94d8fb1c9f4c159182f0",
+      "log_sha256": "00273c87cf7fadbda37f2fe3233b32f4b5678bd58f9a8ae31d26174b1e0b8c72",
+      "log": "/tmp/bc-arc-scratch/record-lift/ctx-oracle/publication/logs/publication-fidelity.log"
+    }
+  },
+  "validation_summary": {
+    "handwritten_lean": 1597,
+    "manifest_rows": 2017,
+    "transcript_python": 20,
+    "transcript_rust": 30,
+    "rust_changes": false,
+    "mutation_testing": "Not run: no Rust changes, per owner instruction.",
+    "full_verify": "Not run: excluded from current lane scope."
+  },
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxOracle.lean": "5cebf975610e242039feef8495a254e0e16a7c5b6c9c7aff16d444c7f1194e6c",
+    "doc/impl/record-lift-ctx-oracle.md": "b04bacb4c007f5a91b77e4a67b1d83bbf2057d35470b0fc4231fb895142e056f",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "576981a6663516ac516871b1ad7a8cccc469afa8f5a513ec6435e75ffbfcdbbb",
+    "beaconcrypt-core/proofs/check-inventory.sh": "7b5f8e328973d9ec68dac9a6d7f2d52422f20f20fa609cce4bbf71e6cf13ce60",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "8454059303ae96bc781f485de35e48ed29b2e88a176df7466a36ae9f9fa97211",
+    "doc/formal-verification-analysis.md": "9490d0f1e4c30a2f789771158664aea8b40c8de9eef57f5c1960a8d831106ecc"
+  },
+  "semantic_review": {
+    "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/ctx-oracle-semantic-2026-10-08.json",
+    "sha256": "5c7ccfae25eea409580d63d3276e710f0163c1d7b5a185ef853e6a0878aa01f5",
+    "review": {
+      "reviewer": "/root",
+      "author": "/root/record_lazy_table",
+      "decision": "APPROVE",
+      "findings": [],
+      "date_utc": "2026-10-08T01:35:15.641072+00:00",
+      "candidate": "/tmp/bc-arc-scratch/record-lift/ctx-oracle/semantic-candidate.json",
+      "candidate_sha256": "8418296de39175f53931aeab7b628726371d8095aec5bd77523cc6670009ced0",
+      "files_sha256": {
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxOracle.lean": "5cebf975610e242039feef8495a254e0e16a7c5b6c9c7aff16d444c7f1194e6c",
+        "doc/impl/record-lift-ctx-oracle.md": "3f559c2f694b0c3989a81865be6d82de48070e066e5840fcb2b9dc4e65cf58ca"
+      },
+      "scope": [
+        "Read all26 theorem statements and proof bodies against exact frozen source; followed native/source and ordinary DynamicKnownKeys endpoints.",
+        "Actual begin/resume prepared-sequence and original raw context are derived through source recursion for arbitrary kernels. Parser premises explicitly remain outer caller obligations. Source ratchet opens through prepared material after parse/validation; success/failure returned directly.",
+        "Complete stopped local interpreter equality retains table mask, next32/nonce12, pending native writer frames, shared ROM and derived selected nonce ghost. Reduction receives no selected key; private native counters and other component histories are explicitly projected rather than reconstructed from optional plaintext.",
+        "Selected valid-width repeated nonce is an explicit outer stop; writer None remains distinct and consumes attempted nonce. Other-key routes remain actual known-key work without a byte-separation or fresh-nonce assumption.",
+        "Concrete lookup preserves actual real fixed-HKDF and persistent ideal full76 cells. Literal native table realization requires parentIdeal; actual selected miss/distribution independence remains open.",
+        "Local component caps76/1/1 count all reached service requests; source native KDF still separately billed on every logical call. No global query total or reduction advantage is claimed.",
+        "Final key-free reduction is actual DynamicKnownKeys.wrapped followed by ordinary selected CTX interpreter; schedule equation preserves original adaptive optional replies and complete retained poststate. No secretly recovered plaintext is inserted into a raw target.",
+        "Verified exact26 guards, source/artifact/log/receipt hashes, no forbidden H7 references or placeholders. No reviewer source edits/build; publication metadata and final hygiene review remain separate."
+      ],
+      "limitations": [
+        "Global Protocol framing/admission/nonce history/key cut/alias/selection and event bounds remain required.",
+        "No proof of primitive implementation, new contract, persistence or snapshot behavior."
+      ]
+    }
+  },
+  "leanpath": "/tmp/bc-arc-scratch/record-lift/ctx-oracle/publication/leanpath",
+  "leanpath_sha256": "2c93dc84e7087e85ebf3e45f2b4ca6bb666968653aea94d8fb1c9f4c159182f0",
+  "notes": [
+    "Guide changed only final validation paragraph after source/guide semantic approval; theorem source unchanged.",
+    "No reviewer source edits or builds; independent semantic and final publication hygiene approvals are recorded."
+  ],
+  "publication_hygiene_review": {
+    "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/ctx-oracle-publication-hygiene-2026-10-08.json",
+    "sha256": "b408b87d6e32376e5318797e83ee6bbc6adf7197def47ecb7ef2921022ecfcc8",
+    "review": {
+      "reviewer": "/root",
+      "author": "/root/record_lazy_table",
+      "decision": "APPROVE",
+      "findings": [],
+      "date_utc": "2026-10-08T01:37:59.664289+00:00",
+      "candidate_receipt": "/tmp/beaconcrypt-record-lift-ctx-oracle/doc/impl/proof-receipts/record-lift-ctx-oracle.json",
+      "candidate_receipt_sha256": "d5311384ec4a0addb26a75dbf1ddcc79e9368844f8351a4f694d5564ddbbf6ff",
+      "files_sha256": {
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxOracle.lean": "5cebf975610e242039feef8495a254e0e16a7c5b6c9c7aff16d444c7f1194e6c",
+        "doc/impl/record-lift-ctx-oracle.md": "b04bacb4c007f5a91b77e4a67b1d83bbf2057d35470b0fc4231fb895142e056f",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "576981a6663516ac516871b1ad7a8cccc469afa8f5a513ec6435e75ffbfcdbbb",
+        "beaconcrypt-core/proofs/check-inventory.sh": "7b5f8e328973d9ec68dac9a6d7f2d52422f20f20fa609cce4bbf71e6cf13ce60",
+        "beaconcrypt-core/proofs/reviewed-inventory.txt": "8454059303ae96bc781f485de35e48ed29b2e88a176df7466a36ae9f9fa97211",
+        "doc/formal-verification-analysis.md": "9490d0f1e4c30a2f789771158664aea8b40c8de9eef57f5c1960a8d831106ecc"
+      },
+      "checks": [
+        "Read all new source and guide/analysis; semantic review5c7ccfa remains valid, source unchanged, guide validation-only update.",
+        "Exact26 guard names and checker theorem/guard gates match; no disabled gate or circular new assumption.",
+        "Verified all2017 inventory row hashes and count1597, root import, all4 final validation exits/artifacts/logs/LP hashes, own Cargo target/jobs2, source same as checked module.",
+        "Git diff --check clean; complete existing root/checker/analysis bytes preserved with additive insertions and one handwritten count increment.",
+        "Per-callback component76/1/1 limits and erased-counter interpretation clearly scoped; global budgets, actual key sampler, nonce-stop/alias and final event joins expressly remain."
+      ],
+      "parent_preservation": [
+        {
+          "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+          "complete_parent_preserved": true,
+          "insertion_lines": 2
+        },
+        {
+          "path": "beaconcrypt-core/proofs/check-inventory.sh",
+          "complete_parent_preserved": true,
+          "insertion_lines": 58
+        },
+        {
+          "path": "doc/formal-verification-analysis.md",
+          "complete_parent_preserved": true,
+          "insertion_lines": 8
+        }
+      ],
+      "allowed_post_review_change": "Receipt status and hygiene citation only; preserve exact reviewed source/guide/metadata."
+    }
+  }
+}

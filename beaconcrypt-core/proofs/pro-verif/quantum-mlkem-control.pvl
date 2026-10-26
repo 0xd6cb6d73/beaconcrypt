@@ -1,0 +1,27 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+channel c.
+
+free QUANTUM_MLKEM_CONTROL_SECRET: bitstring [private].
+free QUANTUM_MLKEM_CONTROL_AD: bitstring.
+free QUANTUM_MLKEM_CONTROL_SENDER: key_id.
+
+(* A bounded transcript whose record key is the ML-KEM shared secret. It isolates the post-quantum contribution from the classical DH terms. *)
+let QuantumMlkemControl() =
+  new mlkem_secret_key: bitstring;
+  new mlkem_coins: bitstring;
+  let public_key = mlkem_public(mlkem_secret_key) in
+  let ciphertext = mlkem_ciphertext(public_key, mlkem_coins) in
+  let shared_secret = mlkem_shared_secret(public_key, mlkem_coins) in
+  out(c, public_key);
+  out(c, ciphertext);
+  out(
+    c,
+    seal_frame(
+      ratchet_material(shared_secret),
+      QUANTUM_MLKEM_CONTROL_AD,
+      first_sequence(),
+      QUANTUM_MLKEM_CONTROL_SENDER,
+      QUANTUM_MLKEM_CONTROL_SECRET
+    )
+  ).

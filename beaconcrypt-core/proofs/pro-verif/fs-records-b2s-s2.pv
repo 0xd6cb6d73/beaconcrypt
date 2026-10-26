@@ -1,0 +1,12 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s S2, security result, (K_s, K_r, T_max) = (2, 3, 2), any
+   Beacon pins: record secrecy.  The attacker never learns a fresh record
+   plaintext that a Beacon pinning the honest Server key allocated, also in
+   runs where the attacker chooses the pinned Server key and Server ID of
+   every other Beacon. *)
+query b: bitstring, kid: key_id, root: bitstring, t: nat, m: bitstring;
+  event(FsSent(beacon_to_server(), ed_public(SERVER_IDENTITY_SECRET), b, kid, root, t, m))
+  && attacker(m).
+
+process FsRecordsB2sMainAnyPin()

@@ -1,0 +1,21 @@
+{
+  "command": [
+    "nix",
+    "develop",
+    "--no-update-lock-file",
+    "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+    "-c",
+    "env",
+    "CARGO_TARGET_DIR=/tmp/beaconcrypt-primitive-fidelity-cargo-target",
+    "make",
+    "-C",
+    "beaconcrypt-core",
+    "SHELL=/run/current-system/sw/bin/bash",
+    "check-proverif-transcript-fidelity",
+    "check-inventory"
+  ],
+  "start": "2026-10-06T00:09:04.735958+00:00",
+  "end": "2026-10-06T00:10:29.184792+00:00",
+  "exit": 0,
+  "log_sha256": "a50c69c670963497d3b0aa7bf1a59a2b2a3f8dce96597ba177ac1268f5149c93"
+}

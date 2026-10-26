@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: 0BSD
 
+#[cfg(not(hax_compilation))]
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 mod concrete;
@@ -63,7 +64,7 @@ pub const RATCHET_KDF_OUTPUT_SIZE: usize =
 const _: () = assert!(RATCHET_KDF_OUTPUT_SIZE == 76);
 
 /// Fixed-width symmetric-ratchet chain bytes owned by the extracted boundary.
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct RatchetChain {
 	bytes: [u8; RATCHET_CHAIN_SIZE],
 }
@@ -83,7 +84,7 @@ impl RatchetChain {
 }
 
 /// Fixed-width symmetric-ratchet message-key bytes owned by the extracted boundary.
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct RatchetKey {
 	bytes: [u8; crate::commitment::AEAD_KEY_SIZE],
 }
@@ -103,7 +104,7 @@ impl RatchetKey {
 }
 
 /// Fixed-width symmetric-ratchet AEAD nonce bytes owned by the extracted boundary.
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct RatchetNonce {
 	bytes: [u8; crate::commitment::AEAD_NONCE_SIZE],
 }
@@ -123,7 +124,7 @@ impl RatchetNonce {
 }
 
 /// Fixed-width key and nonce produced by one symmetric-ratchet step.
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct RatchetMaterial {
 	key: RatchetKey,
 	nonce: RatchetNonce,
@@ -157,7 +158,7 @@ impl RatchetMaterial {
 ///
 /// Both fields are private so an executor can read but cannot alter the exact
 /// input or protocol label selected by the core transition that created it.
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct SymmetricRatchetKdfRequest {
 	input: [u8; RATCHET_CHAIN_SIZE],
 	info: [u8; SYM_RATCHET_INFO_SIZE],
@@ -186,7 +187,7 @@ impl SymmetricRatchetKdfRequest {
 /// cross-phase width confusion. The type does not prove which pending request
 /// produced the bytes; request/response provenance and cryptographic correctness
 /// remain obligations of the external interpreter.
-#[derive(Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct RatchetKdfResponse {
 	bytes: [u8; RATCHET_KDF_OUTPUT_SIZE],
 }

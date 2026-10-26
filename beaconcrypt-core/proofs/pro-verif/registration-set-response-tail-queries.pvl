@@ -1,0 +1,13 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Concrete supplied-root component controls only; not the unbounded service. *)
+free CONTROL_ID:bitstring.
+free CONTROL_EPHEMERAL:bitstring.
+free CONTROL_CT:bitstring.
+free CONTROL_ROOT:bitstring.
+free CONTROL_PAYLOAD:bitstring.
+query owner:bitstring,token:bitstring,before:nat,next:nat,assigned:key_id,plaintext:bitstring,frame:bitstring,response:bitstring;
+ event(RegistrationResponsePublished(owner,token,before,next,assigned,plaintext,frame,response)).
+query owner:bitstring,token:bitstring,assigned:key_id,plaintext:bitstring,frame:bitstring;
+ event(RegistrationResponseInnerWritten(owner,token,assigned,plaintext,frame)).
+query owner:bitstring,token:bitstring,before:nat,after:nat;
+ event(RegistrationResponseCompleted(owner,token,before,after,false)).

@@ -1,0 +1,146 @@
+{
+  "timestamp": "2026-10-06T01:06:24.715240+00:00",
+  "base": "603decc65b678cb18bccf58bb12d756e97b61059",
+  "fetched_vcvio": "8330cdef4f4659931b6764a026cd90c4caf833a4",
+  "cohort": "complete-generated-sampler23",
+  "modules": 4,
+  "guarded_statements": 23,
+  "source_files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCollectorCoupling.lean": "db2bda68f4879b47b0447b6cba023374936beba57f914f2ea10fe1fcf80a1663",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengePreparationCoupling.lean": "149861208b280107fb9dbd5823f204327590156075ef1fa680a55f8366865a87",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedCoupling.lean": "f646abaffa5fef906cb595d2543a4cf07591853a2566eeb738f5333a7c700e7e",
+    "doc/impl/later-challenge-collector-preparation-coupling.md": "600a4ce1607d7609f388a02eafd59aa00ac5b09b6a6c907d2a0be95ff1ecd6a1",
+    "doc/formal-verification-analysis.md": "50a3250d1adc24d063683ae923c31fca8208a4dd2d8456dd92f29bc6b7daaa78",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedSamplerCoupling.lean": "1ba8b80bbed1099aa7e3983c1de893719ded333da4c02669d425cf9a8d518854",
+    "doc/impl/later-challenge-generated-sampler-coupling.md": "167cb10beae03144bd3bbabc68f5f5d38d6b23f22029feafb8abf4f65738a66e"
+  },
+  "reviews_and_direct_checks": [
+    {
+      "manifest": {
+        "timestamp": "2026-10-06T00:54:13.009425+00:00",
+        "name": "collector-preparation18",
+        "worktree": "/tmp/beaconcrypt-evolving-record-composition",
+        "base": "603decc65b678cb18bccf58bb12d756e97b61059",
+        "files": {
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCollectorCoupling.lean": "db2bda68f4879b47b0447b6cba023374936beba57f914f2ea10fe1fcf80a1663",
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengePreparationCoupling.lean": "149861208b280107fb9dbd5823f204327590156075ef1fa680a55f8366865a87",
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedCoupling.lean": "f646abaffa5fef906cb595d2543a4cf07591853a2566eeb738f5333a7c700e7e",
+          "doc/impl/later-challenge-collector-preparation-coupling.md": "600a4ce1607d7609f388a02eafd59aa00ac5b09b6a6c907d2a0be95ff1ecd6a1",
+          "doc/formal-verification-analysis.md": "5862441d9e362911bbb55f447fe4a33db69a135c437870a3d3ff0cbec946c0de"
+        },
+        "checks": [
+          {
+            "module": "PqxdhLaterChallengeCollectorCoupling",
+            "exit": 0,
+            "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/collector-coupling-final.log",
+            "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "guards": 11
+          },
+          {
+            "module": "PqxdhLaterChallengePreparationCoupling",
+            "exit": 0,
+            "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/preparation-coupling-final.log",
+            "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "guards": 4
+          },
+          {
+            "module": "PqxdhLaterChallengeGeneratedCoupling",
+            "exit": 0,
+            "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/generated-coupling-final.log",
+            "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "guards": 3
+          }
+        ],
+        "guards": 18,
+        "scope": "Complete actual prepared collector, actual full KEM/source preparation, and stored prepared source-input carrier coupling. Whole generated sampler bind, subsequent material draws and global secrecy consumer remain next."
+      },
+      "manifest_sha256": "6fa37f3014d47b8b1d06861193c4b8f6c05ea3baca5ebba01e9b6df3a15cc4ad",
+      "independent_review": {
+        "reviewer": "/root",
+        "time": "2026-10-06T00:55:21.152489+00:00",
+        "decision": "APPROVE_SCOPED_OPERATIONAL_COUPLING",
+        "manifest_sha256": "6fa37f3014d47b8b1d06861193c4b8f6c05ea3baca5ebba01e9b6df3a15cc4ad",
+        "files": {
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCollectorCoupling.lean": "db2bda68f4879b47b0447b6cba023374936beba57f914f2ea10fe1fcf80a1663",
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengePreparationCoupling.lean": "149861208b280107fb9dbd5823f204327590156075ef1fa680a55f8366865a87",
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedCoupling.lean": "f646abaffa5fef906cb595d2543a4cf07591853a2566eeb738f5333a7c700e7e",
+          "doc/impl/later-challenge-collector-preparation-coupling.md": "600a4ce1607d7609f388a02eafd59aa00ac5b09b6a6c907d2a0be95ff1ecd6a1",
+          "doc/formal-verification-analysis.md": "5862441d9e362911bbb55f447fe4a33db69a135c437870a3d3ff0cbec946c0de"
+        },
+        "checked_statements": 18,
+        "findings": [],
+        "evidence": [
+          "Read all three theorem modules, complete collector, preparation and generated carrier definitions, source preparation/dispatch and existing sampler consumers.",
+          "Checked inverse native/local-cache representations and exact same-address decision; cached/completed cases retain both evaluated marginals via explicit product coupling rather than equality.",
+          "Preparation distinguishes literal pending packet/cache equality from arbitrary completed outcomes, retaining source generator order and interpreter-private KEM packet. No honest-target or callback-security premise is introduced.",
+          "Stored-input map keeps actual world wrapper and original source input; full sampler/material draw bind explicitly remains unproved.",
+          "All five source hashes, three empty direct-check logs,18 theorem/axiom guards and forbidden-placeholder/custom-axiom scan checked. Only standard axioms in guarded messages.",
+          "Guide states exact residual scope and retained original budget references, without claiming numerical global bounds or secrecy from the product relation."
+        ],
+        "remaining_obligations": [
+          "Full original generated sampler and material draw join",
+          "Same-source before/inside/used exclusion plus nonce-stopped resume",
+          "Freshness, alias/nonce refusal terms, source/global compiler and target/session/record losses"
+        ],
+        "reruns": "No Lean compile rerun; reviewed exact successful direct-module receipts and theorem statements."
+      },
+      "independent_review_sha256": "e9e4966051608e54ca397c5bdbf90c449c4c651b6b12c77723e3b54cb01d673d"
+    },
+    {
+      "manifest": {
+        "timestamp": "2026-10-06T01:02:23.990266+00:00",
+        "name": "generated-sampler5",
+        "worktree": "/tmp/beaconcrypt-evolving-record-composition",
+        "files": {
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedSamplerCoupling.lean": "1ba8b80bbed1099aa7e3983c1de893719ded333da4c02669d425cf9a8d518854",
+          "doc/impl/later-challenge-generated-sampler-coupling.md": "167cb10beae03144bd3bbabc68f5f5d38d6b23f22029feafb8abf4f65738a66e",
+          "doc/formal-verification-analysis.md": "50a3250d1adc24d063683ae923c31fca8208a4dd2d8456dd92f29bc6b7daaa78"
+        },
+        "checks": [
+          {
+            "module": "PqxdhLaterChallengeGeneratedSamplerCoupling",
+            "exit": 0,
+            "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/generated-sampler-final.log",
+            "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "guards": 5
+          }
+        ],
+        "prior_reviewed_cohort": "collector-preparation18-manifest.json",
+        "prior_delta": "Only formal-verification-analysis.md has a new appended section; all three reviewed Lean modules and prior guide stay byte-identical.",
+        "scope": "Complete actual Sampler.run and selection-retaining GeneratedContinuation.run coupling with actual packet/selector and all original material draws. Residual mass retained; same-source event/monitor/global secrecy join remains."
+      },
+      "manifest_sha256": "b158aa90d5b7a61a9dab0362dd92c8576298fa7ad4e1ab5d6d6ab2f9a8db6a0e",
+      "independent_review": {
+        "reviewer": "/root",
+        "time": "2026-10-06T01:04:53.667668+00:00",
+        "decision": "APPROVE_SCOPED_FULL_SAMPLER_COUPLING",
+        "manifest_sha256": "b158aa90d5b7a61a9dab0362dd92c8576298fa7ad4e1ab5d6d6ab2f9a8db6a0e",
+        "files": {
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedSamplerCoupling.lean": "1ba8b80bbed1099aa7e3983c1de893719ded333da4c02669d425cf9a8d518854",
+          "doc/impl/later-challenge-generated-sampler-coupling.md": "167cb10beae03144bd3bbabc68f5f5d38d6b23f22029feafb8abf4f65738a66e",
+          "doc/formal-verification-analysis.md": "50a3250d1adc24d063683ae923c31fca8208a4dd2d8456dd92f29bc6b7daaa78"
+        },
+        "guarded_statements": 5,
+        "findings": [],
+        "evidence": [
+          "Read complete generated-sampler module and guide; the operands are the literal Sampler.run and selection-retaining GeneratedContinuation.run.",
+          "Pending input identity preserves actual source-selected continuation. Both completed preparation distributions and reached caches remain explicit.",
+          "Relational bind joins actual KEM preparation to initial64, collector, parent76, nonce12 and next32 source-hybrid draws in original order; parent projections remain correlated.",
+          "Relation retains incoming packets/results and exact representation maps without equating arbitrary completed/cached decisions or discarding probability.",
+          "Prior18cohort modules/guide unchanged; previous analysis is exact959451-byte prefix (two separator newlines then new appendix). All supplement hashes/five standard guards/empty successful direct log verified.",
+          "No primitive assumption, honest-target premise, publicHKDF/randomtable interpretation or global secrecy conclusion added."
+        ],
+        "remaining_obligations": [
+          "Same-source before/inside/used event exclusions in monitor comparison",
+          "Nonce refusal and alias probability",
+          "Global freshness, record/session selection, raw receiver and quantitative consumer"
+        ],
+        "reruns": "No Lean compile rerun; exact successful receipt and theorem statements reviewed."
+      },
+      "independent_review_sha256": "4685db5423bbf87f58b1fde6c5912988cba60d58edfb720e27340ce7b1aff7ba"
+    }
+  ],
+  "source_delta_between_reviews": "The second review covers an append to formal-verification-analysis.md; all prior three Lean modules and guide remain exact. The supplement is one new five-guard module and guide.",
+  "scope": "Complete operational coupling of the actual preparation, collector and full generated sampler including actual selected continuation and source-ordered material draws. Both residual marginals retained. Global source-event/monitor/freshness/alias/refusal and cryptographic reduction closure remain open.",
+  "verification": "Four direct module checks completed with exit0 and empty guarded logs before publication. Content hashes bind source bytes; no unchanged postcommit rerun is claimed. No Rust/primitive implementation changed. Integration branch performs root/inventory/full validation."
+}

@@ -1,0 +1,12 @@
+{
+  "branch": "codex/full-proof-composition",
+  "previous": "ac096ede255ab7e6961e957fb0d4b538167edda2",
+  "local": "e410d32ad25d6db40255beefd1e372827055d4db",
+  "tracking": "e410d32ad25d6db40255beefd1e372827055d4db",
+  "direct": "e410d32ad25d6db40255beefd1e372827055d4db",
+  "method": "normal fast-forward",
+  "preserved_existing_submodule_state": true,
+  "validated_proof_commit": "edc701e73d167b885bade97233bf16a69975a17a",
+  "only_post_validation_change": "doc/impl/staged-verification-record.md",
+  "vcvio": "8330cdef4f4659931b6764a026cd90c4caf833a4"
+}

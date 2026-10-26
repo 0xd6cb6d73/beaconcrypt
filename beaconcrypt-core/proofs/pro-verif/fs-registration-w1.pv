@@ -1,0 +1,10 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration W1, witness, K_reg = 1 (expected reachable): an honest
+   Beacon completes registration with the first assigned key ID, so A1 and
+   the Beacon form of S3 are not vacuous. *)
+query s: bitstring, b: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex, root: bitstring,
+      ad: bitstring, p: bitstring;
+  event(FsBeaconEstablished(s, b, init, fs_kid(1), root, ad, p)).
+
+process FsRegistrationMain()

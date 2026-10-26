@@ -1,0 +1,18 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* The first three queries prove the multi-epoch path, old-key compromise,
+   and exact substitution attempt are non-vacuous in both theories.  The
+   strong theory must block the following attack/disclosure events and retain
+   secrecy and exact-transcript agreement; the weak theory must expose all
+   four failures.  The ordinary one-shot path is reachable in both. *)
+
+query event(KemMultiEpochPathReached(KEM_MULTI_EPOCH_PATH_WITNESS)).
+query event(KemOldKeyCompromised(KEM_OLD_KEY_COMPROMISE_WITNESS)).
+query event(KemCiphertextSubstitutionAttempted(KEM_SUBSTITUTION_ATTEMPT_WITNESS)).
+query event(KemWeakReencapsulationSucceeded(KEM_WEAK_ATTACK_WITNESS)).
+query event(KemAcceptedRootDisclosed(KEM_ROOT_DISCLOSURE_WITNESS)).
+query event(KemOrdinaryOneShotCompleted(KEM_ORDINARY_ONE_SHOT_WITNESS)).
+query attacker(KEM_NEW_SESSION_CANARY).
+query transcript: bitstring;
+  inj-event(KemControlBeaconCommitted(transcript)) ==>
+  inj-event(KemControlServerCommitted(transcript)).

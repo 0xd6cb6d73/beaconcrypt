@@ -1,0 +1,226 @@
+{
+  "stage": "Global selected-parent interpretation and deferred child sampling",
+  "status": "Independent semantic and final hygiene reviews approved; all focused checks pass; ready for topic publication and central integration",
+  "date_utc": "2026-10-08T01:27:49.121457+00:00",
+  "basis": "62c5f4b77323ed30f63c685f7d023dd26b0919ea",
+  "branch": "codex/record-lift-deferred-child",
+  "exact_guard_count": 6,
+  "modules": {
+    "PqxdhRecordLiftGlobalMask": 4,
+    "PqxdhRecordLiftDeferredChild": 2
+  },
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftGlobalMask.lean": "8a3228d3e0b2ff7ebbe02d038a293dffe390303ddf581f22182b21d0c7d1036e",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftDeferredChild.lean": "86022a367c585127d1a4241859693d1886849d543ae4b545abfaf4508cb971cd",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "98a2f8f847a0e8d4592447a236af7d1d99278dbcb411b099db0205bb97e90e23",
+    "beaconcrypt-core/proofs/check-inventory.sh": "d10d07f885d9e48c9ebe81cbc9647995c2c64982b01cebe5c3f93456cccd9d01",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "7a473562ec1c9bcecc8629a6db2f594fbb0970f0d7979d974025fd4ba74c5600",
+    "doc/formal-verification-analysis.md": "7e24f2c4cfb9616adce91fe9b0d48fa5daff1a8ac377a7f0f5c61f42846c99d0",
+    "doc/impl/record-lift-global-mask.md": "2bf95a8a22aca5cdf3f18fa14c7ec24c11fef395a724925efc2fb34b399c73c1"
+  },
+  "scope": [
+    "Complete source-shaped global ServiceSpec simulation with full primitive counters, cache, lazy seed cache and attempted frame logs retained.",
+    "Complete adaptive persistent-cell deferred sampling law under every continuation; final cell stays empty on an unused draw."
+  ],
+  "not_established": [
+    "Actual first-miss sampler independence and uniform-child conditional-cost join.",
+    "Initial directional seed cuts, global mixed query bounds, ordered advantages and alias/refusal terms.",
+    "Global CTX and final integrity/privacy/later reveal events."
+  ],
+  "primitive_contracts": "No new primitive contract or security assumption; operational equations and probability laws only.",
+  "query_accounting": "Global realization preserves all original counters literally. Deferred-cell law alone asserts no numerical bound; conditional source and unconditional reduction draws remain distinct.",
+  "checks": {
+    "global": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/logs/global-012202.json",
+      "sha256": "dd74ace3b84adca96ec2288821cbfd53f03f5a58b84882343fb97f9f97cf6787",
+      "result": {
+        "start": "2026-10-08T01:21:57.816345+00:00",
+        "end": "2026-10-08T01:22:02.572443+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "deferred-child-global",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-deferred-child/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/olean/BeaconcryptCore/Computational/PqxdhRecordLiftGlobalMask.olean",
+          "/tmp/beaconcrypt-record-lift-deferred-child/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftGlobalMask.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/logs/global-012202.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "leanpath_sha256": "b004c3b5286dc034069422a0c17de9a227477c1e46cad77b55803edd9e71429e",
+        "source_sha256": "8a3228d3e0b2ff7ebbe02d038a293dffe390303ddf581f22182b21d0c7d1036e",
+        "artifact_sha256": "03a06a26df6cad1145aa6c12f340ac9341fc0d48571aeb54ce9570df6474d3fc",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    },
+    "cell": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/logs/cell-012204.json",
+      "sha256": "a201140def6bb9c055d2eb534a1ff785c4b412a4457d690be365c6ca47406686",
+      "result": {
+        "start": "2026-10-08T01:21:58.987808+00:00",
+        "end": "2026-10-08T01:22:04.995074+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "deferred-child-cell",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-deferred-child/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/olean/BeaconcryptCore/Computational/PqxdhRecordLiftDeferredChild.olean",
+          "/tmp/beaconcrypt-record-lift-deferred-child/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftDeferredChild.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/logs/cell-012204.log",
+        "log_sha256": "6efce4e469f825063c4d793f663b2533989d21d9c8a42ed1e806dfbe07da480e",
+        "leanpath_sha256": "b004c3b5286dc034069422a0c17de9a227477c1e46cad77b55803edd9e71429e",
+        "source_sha256": "86022a367c585127d1a4241859693d1886849d543ae4b545abfaf4508cb971cd",
+        "artifact_sha256": "f0dd26b16f01e6dd531d451023d71c4056767ff502bfc30495e46bce8fe5fb51",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    },
+    "root": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/logs/root-012312.json",
+      "sha256": "16e7b67063626b9e7c7420a850e5b4d14f3c46f33d28938dc91fc72262034e0b",
+      "result": {
+        "start": "2026-10-08T01:22:54.455118+00:00",
+        "end": "2026-10-08T01:23:12.290588+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "deferred-child-root",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-deferred-child/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/olean/BeaconcryptCore.olean",
+          "/tmp/beaconcrypt-record-lift-deferred-child/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/logs/root-012312.log",
+        "log_sha256": "f5dd686a6f5e4088987b7361b321f25b2a1f6a320e2894e07da7f85d1203fbe6",
+        "leanpath_sha256": "b004c3b5286dc034069422a0c17de9a227477c1e46cad77b55803edd9e71429e",
+        "source_sha256": "98a2f8f847a0e8d4592447a236af7d1d99278dbcb411b099db0205bb97e90e23",
+        "artifact_sha256": "d7e9c1975d96a311392183a251f18ad32a09a5bde50475448f51dba49afab5f1",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    },
+    "inventory": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/logs/inventory-012337.json",
+      "sha256": "a34b16dd71da1ef5268ef076db9d9ee0feaf6f9b78aa5cf4b51892cd22f4f481",
+      "result": {
+        "start": "2026-10-08T01:22:16.961589+00:00",
+        "end": "2026-10-08T01:23:37.003846+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@nix",
+          "deferred-child-inventory",
+          "--eta",
+          "20m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-deferred-child/beaconcrypt-core",
+          "check-inventory",
+          "SHELL=bash"
+        ],
+        "log": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/logs/inventory-012337.log",
+        "log_sha256": "ffda69cad059fbebcc20812afe65849779443a6903ac8866ef2d62a3d94f0516",
+        "leanpath_sha256": "b004c3b5286dc034069422a0c17de9a227477c1e46cad77b55803edd9e71429e",
+        "source_sha256": null,
+        "artifact_sha256": null,
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/target"
+      }
+    },
+    "fidelity": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/logs/fidelity-012240.json",
+      "sha256": "356c3c50ed25bb82a590b362b5befc13c8896139fae7a57645c8c34dbbcbdb4a",
+      "result": {
+        "start": "2026-10-08T01:22:16.960296+00:00",
+        "end": "2026-10-08T01:22:40.596603+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@cargo",
+          "deferred-child-fidelity",
+          "--eta",
+          "20m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-deferred-child/beaconcrypt-core",
+          "check-proverif-transcript-fidelity",
+          "SHELL=bash"
+        ],
+        "log": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/logs/fidelity-012240.log",
+        "log_sha256": "46a00be60220e3ce0681e96f185b9a312442a9c99549edb7d1a965dbc2e048e4",
+        "leanpath_sha256": "b004c3b5286dc034069422a0c17de9a227477c1e46cad77b55803edd9e71429e",
+        "source_sha256": null,
+        "artifact_sha256": null,
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/target"
+      }
+    }
+  },
+  "leanpath": "/tmp/bc-arc-scratch/record-lift/deferred-child/publication/leanpath",
+  "leanpath_sha256": "b004c3b5286dc034069422a0c17de9a227477c1e46cad77b55803edd9e71429e",
+  "inventory_handwritten_lean": 1596,
+  "expected_inventory_rows": 2016,
+  "transcript_fidelity": {
+    "python": 20,
+    "rust": 30
+  },
+  "semantic_review": {
+    "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/global-mask-semantic-2026-10-08.json",
+    "sha256": "9397d29b8c00bf9f4a5634ce51dfced4f09ae9db92f7ed8e43ba4b0aec8bb3cf",
+    "result": "APPROVE; no findings",
+    "post_review_change": "Guide final validation paragraph only; exact reviewed Lean sources unchanged."
+  },
+  "hygiene_review": {
+    "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/global-mask-publication-hygiene-2026-10-08.json",
+    "sha256": "c14add7ecaca4b64576773362bbe2a1b341e2f95a8ed15e6f134054470a6c0e4",
+    "result": "APPROVE; no findings",
+    "allowed_post_review_change": "Only receipt status and this review citation updated; all reviewed source, metadata and guide bytes unchanged."
+  },
+  "forbidden_scan": "No placeholders, custom axioms, disabled gates or direct forbidden H7 references in the two new modules.",
+  "verification_scope": "Focused checks only; no production Rust changes, full matrix, mutation run, ProVerif or Nix garbage collection."
+}

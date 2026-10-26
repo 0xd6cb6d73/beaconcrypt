@@ -1,0 +1,6 @@
+{
+  "path": "doc/impl/registration-encapsulation-source-suffix.md",
+  "before_sha256": "0370e59c5ded0754957c8b55097f03981b586100ce49dbc2455e8139ff104f39",
+  "after_sha256": "7443c5ae545be5cb02910f3da09ce32c53da6b12e317a65d0c226af1e7aef7d6",
+  "change": "Only review status; no theorem or scope change."
+}

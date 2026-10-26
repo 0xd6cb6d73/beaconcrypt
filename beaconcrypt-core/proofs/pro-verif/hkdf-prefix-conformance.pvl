@@ -1,0 +1,26 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+(* Shared symmetric-HKDF prefix conformance controls                     *)
+(**************************************************************************)
+
+(* Production initialization and record expansion use one HKDF stream for an equal symmetric input, so the two 32-byte initialization halves must be the key and next-chain prefixes of the 76-byte record step. *)
+free HKDF_PREFIX_LEFT_WITNESS: bitstring [private].
+free HKDF_PREFIX_RIGHT_WITNESS: bitstring [private].
+
+event HkdfInitialLeftEqualsStepKey(bitstring).
+event HkdfInitialRightEqualsStepNext(bitstring).
+
+let HkdfPrefixConformanceControls() =
+  new symmetric_input: bitstring;
+  (
+    let initial_left = server_to_beacon_chain(symmetric_input) in
+    let step_key = material_key(ratchet_material(symmetric_input)) in
+    if initial_left = step_key then
+      event HkdfInitialLeftEqualsStepKey(HKDF_PREFIX_LEFT_WITNESS)
+  |
+    let initial_right = beacon_to_server_chain(symmetric_input) in
+    let step_next = ratchet_next(symmetric_input) in
+    if initial_right = step_next then
+      event HkdfInitialRightEqualsStepNext(HKDF_PREFIX_RIGHT_WITNESS)
+  ).

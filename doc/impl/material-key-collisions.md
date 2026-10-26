@@ -1,0 +1,37 @@
+# Key collisions in the joint material tapes (HB-84)
+
+`PqxdhMaterialKeyCollisions` proves a tight collision bound for the exact two material tapes used by the published initialized bidirectional comparison. With L left positions and R right positions, the probability of repeated 32-byte key coordinates is at most `choose(L+R,2) / 2^256`. This includes pairs within either direction and pairs across directions. The same original key/nonce lists remain beside the complete continued observer result; no independent key table replaces them.
+
+This follows `7baf2d591c8e3aa961feb08d8c4aa020f58ca2fc`. It supplies an explicit key-alias bound for the finite independent-material comparison. It does not yet transfer that bound to the actual source-chain experiment, establish native key-handle routing, prevent repeated use of one material position, prove per-key nonce freshness or close the multi-key CTX reduction.
+
+## Exact sampler and collision event
+
+`KeyCollision records` means that the list of key coordinates is not duplicate-free. It compares key bytes at distinct original positions; it does not count equal nonces under unrelated keys. Repeated use of the same original position is a separate ownership/consumption question.
+
+`material_key_eq` measures a fixed key-coordinate event in the unchanged full material sampler. Its probability is the inverse cardinality of the 32-byte key space. Projecting that one event does not change the key/nonce sample subsequently retained by the main games. `material_key_mem` applies a union bound to a fixed prior list, charging every entry even if the list repeats. Here that lemma is used for the actual earlier sampled positions; it does not assert exclusion of arbitrary context-dependent or external keys.
+
+`sampleMaterials_length` derives the exact number of positions in every supported original sample. `keyCollision_append` proves that a new final position either inherits an earlier collision or matches an earlier key. `sampleMaterials_collision_bound` follows this exact append sampler and charges n possible earlier matches for the next position. Summing those costs gives the unordered pair count `choose(N,2)` rather than a further schedule or direction selection factor.
+
+`sampleMaterials_append` is an exact OracleComp equality: sampling the left list, then the right list, and joining them has the same original material draw order as the single combined list. `sampleTapes` still returns the two lists separately. `sampleTapes_collision_bound` uses the join only to measure the collision event on those original lists. `sampleTapes_lengths` retains their distinct original lengths.
+
+`observedTapes` samples the context before both tapes, invokes an arbitrary continued observation and retains the context, exact tapes and complete result together. `observedTapes_collision_bound` proves that this unconditioned event cannot be amplified by that later computation or adaptive stopping. It does not assume that the context sampler or observer is lossless, nor condition the result on successful completion. The generic internal observer may inspect the full tapes; the bound still holds. Retaining them beside the result is analysis bookkeeping, not a new public protocol reveal operation.
+
+`material_key_card` proves that the key space has cardinality `2^256`. `observedTapes_collision_bound256` supplies that concrete denominator. No cryptographic hardness assumption or primitive implementation fact is used: the comparison sampler already makes independent uniform material draws. There is no claim here that the real chain outputs themselves have this distribution without their existing reductions.
+
+## Connection to the adaptive comparison
+
+`observedEager` instantiates the retained computation with the exact existing tape client. It keeps the client's original result, both derivation counters and final Boolean decision. The client obtains material through the original private next-material interface; it is not handed an unused suffix. `observedEager_projection` proves exact OracleComp equality between its decision projection and the published `eagerGame`, before probabilistic interpretation. `observedEager_collision_bound` applies the concrete birthday bound to the same retained tapes and complete observation.
+
+`keyPositions_injective` states the useful good-event consequence: when the charged collision event is absent, equal key bytes at two positions imply equality of those original positions. `observedTapes_lengths` preserves the exact valid position ranges after arbitrary later observation. These are sampled-position facts, not native pointer/slot identities, a global byte-owner map, or proof that an attacker cannot request the same key twice.
+
+The collision statement concerns only these material key coordinates. It gives no bound for equality with an earlier root, static identity secret, external key, attacker import or context-dependent candidate set. Such exclusions need their own exact joint sampling and event argument. It likewise does not make nonce equality across different keys a security failure. A source proof must establish which positions are installed and consumed and how every raw attempt selects their actual key, nonce and full context before this good-event consequence can justify routing.
+
+## Resources and remaining composition
+
+`observedTapes_uniform_bound` charges context randomness S, all `44L + 44R` byte-valued material draws and the complete observer budget O. `observedEager_uniform_bound` specializes this to `S + 44L + 44R + C + F`, where C bounds every client continuation's explicit randomness and F bounds every possible final observer. All reserved positions remain charged, including unused suffixes after stopping. Context/client requests may have arbitrary finite ranges, so the aggregate unit is uniform-oracle calls. Retaining lists adds no oracle call; their construction, copies, equality scans and all supplied local computation still have actual runtime cost.
+
+The bounds introduce no extra primitive query, loss family or cryptographic assumption. The next multi-key composition must retain actual source ownership, correlated material selection, repeated failed-query cache effects, shared hash queries, nonce discipline, reveals and application-plaintext declassification in one experiment. Actual-root linkage, native consuming send/receive schedules, snapshots, codecs, compiler/runtime correctness, storage/CAS and deployment freshness remain explicit later or external boundaries. No custom axiom, primitive algorithm proof or public-HKDF/random-table interpretation is introduced.
+
+## Focused validation
+
+The new module and all seventeen persistent guarded dependency reports pass direct Lean checks; the final root passes directly. The full `lake build` passes all 3,174 jobs, and the reviewed inventory passes with 126 handwritten Lean modules and 275 unique entries. Formatting, forbidden-placeholder/custom-axiom and diff-whitespace scans pass. Independent review includes the exact paired sampler, continued event, eager projection, lengths, position consequence, complete uniform ledgers and final metadata; all 275 entries were independently rehashed without mismatch. The private integration reference was freshly fetched and remains an ancestor of this topic. Production Rust, schemas, bindings, symbolic models, native tests and mutation inputs are unchanged. This is focused component validation, not the final complete matrix on a global `vcvio` integration.

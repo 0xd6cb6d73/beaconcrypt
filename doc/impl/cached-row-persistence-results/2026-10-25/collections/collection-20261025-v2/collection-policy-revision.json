@@ -1,0 +1,16 @@
+{
+  "recorded_utc": "2026-10-25T12:19:34.625483+00:00",
+  "old_collection": "/tmp/bc-arc-scratch/row-persistence-20261025/hybrid/collection-20261025",
+  "old_plan_sha256": "96dd9c282257a7fa83f7cbafa4cea47ed5bbde8cb8099ad29f2cff940af7e9c5",
+  "old_watcher_stopped_passive": true,
+  "old_watcher_exit": 130,
+  "reason": "Owner clarified only this task is active on the VM, while physical host has an active Kubernetes cluster. Old guard rejected own Codex control activity. Replace with predeclared quiet-VM policy before timing inspection, record host noise, rerun all six axes under one policy.",
+  "timing_values_inspected": false,
+  "old_attempts_preserved": true,
+  "old_retained_report_for_comparison": false,
+  "old_statuses": {
+    "axis-01-sqlite-peers-1-attempt-01": "retained under old guard; superseded from final comparison",
+    "axis-02-postgres-peers-1-attempt-01": "discarded interference before measurement",
+    "axis-02-postgres-peers-1-attempt-02": "passive wait interrupted"
+  }
+}

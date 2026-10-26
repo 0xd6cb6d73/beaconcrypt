@@ -1,0 +1,583 @@
+{
+ "date": "2026-10-08T07:05:49.622691+00:00",
+ "scope": "Items 4 and 5 (record-layer lift), stage S1 of the takeover plan: PqxdhRecordLiftIdeal, the ideal worlds (chain hybrid family chains/realChains/idealChains on the compiled key-free protocol; the per-coordinate CTX-mode world ctxRun with real, replay and random one-key modes; idealAuth, idealRecords, randomRecords), the permitted decision view, and the H-5 targets of the record-lift brief as Prop-valued definitions (ChainLiftStatement, CtxAuthLiftStatement, CtxPrivLiftStatement, RecordLiftStatement, OriginStatement, HidingStatement, plus the decision-D3 Target abbreviations), with 28 guarded well-formedness theorems after the fix pass of the independent design review (CtxLiftStatement, RecordAuthLiftStatement, BindingStatement, FreshGuessStatement and LorStatement added; the origin term made purely statistical). No target is proved.",
+ "basis": "80560f9285c9577da71dfcfa676571432283b0c1",
+ "topic": {
+  "branch": "codex/deployment-record-ideal",
+  "worktree": "/tmp/beaconcrypt-deployment-record-ideal",
+  "registry": "worktree, branch, scratch /tmp/bc-arc-scratch/items45/ideal and module PqxdhRecordLiftIdeal registered to claude before creation"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/items45-takeover/takeover-plan.md",
+  "sha256": "0a0e176b89a98082d35efecef888d91c4d79b4667ca3d22b9588b47a0b9d10f8",
+  "sections": "2 (S1, decisions D1-D5), 3 (V1 mechanics), 6"
+ },
+ "brief": {
+  "path": "/tmp/bc-coord/tasks/codex-items-4-5.md",
+  "sha256": "c947e27514ecf3b8041a1d61ef78b158c2c732d1f7bb8782b94c1e796a92b99e",
+  "sections": "H-1 to H-7, 7"
+ },
+ "ce_plan": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+  "sha256": "c6c379d4b242b86b24eaa0677b8aa1059f9b7d77d3e991c38b6564f8293cebd6",
+  "sections": "9.6-9.7, 10 (CE-KT, CE-OR, CE-UKS, CE-APP, CE-LOR), 13, 16 inputs 9 and 13",
+  "note": "sha256 above is the plan the S1 module and its documentation commit read (c6c379d4). The plan changed after S1 (last modified 2026-10-08 09:42 +0200, before the fix pass started at about 10:20 +0200), so the fix pass read fix_pass.sha256. That version only appends sections 43 to 45 to c6c379d4: its first 826 lines are byte-identical to c6c379d4 (checked at the nit fix), so every cited section (9.6-9.7, 10, 13, 16 inputs 9 and 13) is unchanged; section 45 records the design-review findings that the fix pass fixed.",
+  "fix_pass": {
+   "sha256": "e65fa6c5d6d9386c0026ca07cbbb683b51b77c8b518f27acd47b6a638842ddb5",
+   "sections": "the same sections; unchanged against c6c379d4 (sections 43-45 appended)",
+   "recorded_by": "confirming-review nit fix (nit 3: the ce_plan hash was already stale when the fix pass ran)"
+  }
+ },
+ "design_panel": {
+  "path": "/tmp/bc-arc-scratch/items45/ideal/design.md",
+  "sha256": "ba4f2f879902c959dbb0041e861fd1ad6b1ff4aea79379c5e9f3a8031248afc9",
+  "note": "Updated in place by the fix pass and again by the confirming-review nit fix (row KeyMode of section 2, lens items A1 and S4, D3 path made absolute, new section 8). The version before the nit fix is kept byte for byte as /tmp/bc-arc-scratch/items45/ideal/nits/design-before-nits.md (sha256 bda34c18b9100fe82d74e3d38ecfa088c475923a0c8fbe7af0a4b9698cb1efbd, the fix-pass version); the version the design review read is fix1/design-reviewed-3ff717df.md.",
+  "s1": {
+   "path": "/tmp/bc-arc-scratch/items45/ideal/design.md",
+   "sha256": "879642f0f8d14ae04353f39c0a2b57059749490332656c8e73156ce5284425dc",
+   "note": "Written before the module was finalized; explains every definition with its CE-12 consumer and records a three-lens critique (CE-12 consumer, proof feasibility, fidelity and scope). Two of its findings changed the module before the Lean commit: the privacy half is stated for both observation modes against randomRecords (B1), and OriginStatement takes Frame (B2)."
+  },
+  "fix_pass": {
+   "sha256": "bda34c18b9100fe82d74e3d38ecfa088c475923a0c8fbe7af0a4b9698cb1efbd",
+   "note": "Updated in place by the fix pass (rows of section 2, D1-D4 and H-7 of section 3, lens items A1-A3, new section 7). The version the design review read is kept byte for byte as /tmp/bc-arc-scratch/items45/ideal/fix1/design-reviewed-3ff717df.md (sha256 879642f0f8d14ae04353f39c0a2b57059749490332656c8e73156ce5284425dc)."
+  }
+ },
+ "provenance": "New Claude work. The module imports only central modules (PqxdhRecordLiftMixedWorld, PqxdhRecordLiftCtxServices, PqxdhRecordLiftCtxModeBounds) and adapts nothing from Codex WIP W1-W6.",
+ "commits": [
+  {
+   "commit": "cfdddc252e21300b4fc45915fc237340e20fac3e",
+   "subject": "Define the record-lift ideal worlds and target statements (S1)"
+  },
+  {
+   "commit": "7277807f3c9036201d4d12dbcc4f5dffca553a18",
+   "subject": "Fix the S1 design-review findings in the record-lift targets"
+  }
+ ],
+ "commits_note": "The S1 documentation commit 3ff717df followed the S1 Lean commit; the fix-pass documentation commit (guide, analysis section and this receipt) follows the fix-pass Lean commit 7277807f. The confirming-review nit fix is one documentation-only commit after 077610c8 (fix-pass documentation commit); it rewords the module docstring and changes no definition, statement or guard.",
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.lean": "58804c73dd7ddc9e11d3a131ce09447f0c1e6b4205cdfe38e3fe40bc5e81c9fc",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "6f503092afaf3a18698675ff879d5883dd1077805c1a707e49f2c1c40b822361",
+  "beaconcrypt-core/proofs/check-inventory.sh": "1cb5bdf03a172f3b6e6892b0bfda72ac243f1fd15ecec1c287e36ea076250570",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "79584370e3795ec07d8eafe0c95aa19ea8e28c13ad8c309d6a5f9343fd62d13a",
+  "doc/impl/record-lift-ideal.md": "789c750ac14885f45adaec5b95417dcf3cff28d02a979765574343c29dad078b",
+  "doc/formal-verification-analysis.md": "52e4a1dcc525149f7c00c3e9f88e85d21f4ec29959d250a8f37fc64b3002b333"
+ },
+ "modules": [
+  {
+   "name": "PqxdhRecordLiftIdeal",
+   "plan_stage": "S1 (fixed targets)",
+   "statements": [
+    "positions_derivations",
+    "analysis_chainView",
+    "realChains_analysis",
+    "chains_selected_zero",
+    "realChains_game",
+    "idealRecords_O",
+    "idealRecords_P",
+    "keyImpl_modes",
+    "randomImpl_other",
+    "materialAt_native",
+    "ctxInterpreter_base",
+    "hiddenOpening_malformed",
+    "hiddenSealing_narrow",
+    "guessTerm_le",
+    "publicHiding_hidingView",
+    "admittedTest_view",
+    "pure_advantage",
+    "chainLiftStatement_of_bool",
+    "ctxAuthLiftStatement_of_bool",
+    "ctxPrivLiftStatement_of_bool",
+    "recordLiftStatement_of_bool",
+    "recordLiftBool_of_parts",
+    "ctxLiftStatement_of_bool",
+    "ctxLiftBool_of_parts",
+    "recordAuthLiftStatement_of_bool",
+    "recordAuthLiftBool_of_parts",
+    "hiding_advantage",
+    "hiding_event"
+   ],
+   "statement_count": 28,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 26,
+    "propext": 1,
+    "none": 1
+   },
+   "definitions": [
+    "Client",
+    "peerSlot",
+    "ownerSlot",
+    "handleSlot",
+    "View",
+    "viewOf",
+    "View.analysis",
+    "chains",
+    "realChains",
+    "idealChains",
+    "chainView",
+    "chainCache",
+    "KeyMode",
+    "recordMode",
+    "KeyEntry",
+    "HashSpec",
+    "randomSeal",
+    "randomImpl",
+    "keyImpl",
+    "KeyedSpec",
+    "fallbackOutput",
+    "materialAt",
+    "hiddenOpening",
+    "replaceContext",
+    "hiddenSealing",
+    "CtxPrivate",
+    "CtxPrivate.initial",
+    "keyed",
+    "onBase",
+    "idealPolicy",
+    "ctxInterpreter",
+    "ctxRun",
+    "ctxView",
+    "idealAuth",
+    "idealRecords",
+    "randomRecords",
+    "positions",
+    "hops",
+    "BillInput",
+    "hopLoss",
+    "integrityLoss",
+    "privacyLoss",
+    "guessTerm",
+    "ChainReduction",
+    "CtxReduction",
+    "ChainBills",
+    "CtxBills",
+    "CtxBounded",
+    "noTerm",
+    "receivingHandle",
+    "Counterpart",
+    "PublishedBefore",
+    "ForgedAt",
+    "UnpublishedAccept",
+    "UnproducedAccept",
+    "unpublishedEvent",
+    "unproducedEvent",
+    "HidingView",
+    "hidingView",
+    "ChainLiftBool",
+    "ChainLiftEvent",
+    "ChainLiftStatement",
+    "CtxAuthLiftBool",
+    "CtxAuthLiftEvent",
+    "CtxAuthLiftStatement",
+    "CtxPrivLiftBool",
+    "CtxPrivLiftEvent",
+    "CtxPrivLiftStatement",
+    "recordLoss",
+    "RecordBounded",
+    "RecordLiftBool",
+    "RecordLiftEvent",
+    "RecordLiftStatement",
+    "publicationTerm",
+    "OriginStatement",
+    "HidingStatement",
+    "ChainLiftTarget",
+    "CtxAuthLiftTarget",
+    "RecordLiftTarget",
+    "sharedHashTotal",
+    "bindingTerm",
+    "Partners",
+    "CrossAccept",
+    "crossEvent",
+    "PublicHiding",
+    "eraseSecrets",
+    "publicHiding",
+    "testBit",
+    "admissibleTest",
+    "firstTest",
+    "AdmittedTest",
+    "TestsHidden",
+    "FreshHit",
+    "freshEvent",
+    "lorEligible",
+    "lorGuess",
+    "ctxLoss",
+    "CtxLiftBounded",
+    "CtxLiftBool",
+    "CtxLiftEvent",
+    "CtxLiftStatement",
+    "recordAuthLoss",
+    "RecordAuthBounded",
+    "RecordAuthLiftBool",
+    "RecordAuthLiftEvent",
+    "RecordAuthLiftStatement",
+    "BindingStatement",
+    "FreshGuessStatement",
+    "LorStatement",
+    "CtxLiftTarget",
+    "RecordAuthLiftTarget",
+    "BindingTarget"
+   ],
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T08:34:09.130345967Z",
+    "end": "2026-10-08T08:34:15.516073835Z",
+    "source_sha256": "4af6f25e37c7c5fdc254919d8afd1564efd03cb1e4f690fdd20d66a38d8306be",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "7e514764d46b06e60ab8140ea370e9b4352e8dd2d5f3423cc327869af3676748",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-ideal/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/ideal/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.olean",
+     "/tmp/beaconcrypt-deployment-record-ideal/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.lean"
+    ]
+   },
+   "earlier_checks": {
+    "m1": {
+     "exit": 0,
+     "source_sha256": "d690087c80665acd6fcde6dd4c3b6df0fda518fcd0a95d6827e925cd56817bfe",
+     "note": "Same module before the docstring rewording that removed the word flagged by the inventory escape-hatch scan (see focused_inventory)."
+    },
+    "s1-final": {
+     "exit": 0,
+     "start": "2026-10-08T07:01:41.343006507Z",
+     "end": "2026-10-08T07:01:47.082028406Z",
+     "source_sha256": "09a637c104a88377fb8e63812ae733408fb29d4a80c3dc890ba4ae0c45ec99d4",
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "log_bytes": 0,
+     "artifact_sha256": "070d23dae9238243da621a7bf5f63ecf92109492bca9f55fc2cdd8c2c92aec9a",
+     "command": [
+      "coord.sh",
+      "lean",
+      "claude",
+      "<label>",
+      "--",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-deployment-record-ideal/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/items45/ideal/olean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.olean",
+      "/tmp/beaconcrypt-deployment-record-ideal/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.lean"
+     ],
+     "note": "The S1 module check (Lean commit cfdddc25)."
+    },
+    "fix1-d1": {
+     "exit": 1,
+     "source_sha256": "5678cfe5c295c09ea27bf83d63e0976b7fe74a026df288fa1ac5bac0f20840a9",
+     "log_bytes": 2632,
+     "log_sha256": "e2b6430ff6a335b959110f2356022e57daaadd0bdb68016b665cb35678055510",
+     "note": "First compile of the fix pass: a reserved token as a binder name and two proof errors in guessTerm_le."
+    },
+    "fix1-d2": {
+     "exit": 1,
+     "source_sha256": "0b8e419eaa4624b35b8af43c0566cc3c3bfbae2250d99c47e1a9bc3b88edde3b",
+     "log_bytes": 1669,
+     "log_sha256": "1fd8eea4dd79c45762170ed77c3e21e0ae00e2d3be7f63d6ae3a26672169f3c8",
+     "note": "zero_le arity; actual guard of publicHiding_hidingView is propext only."
+    },
+    "fix1-d3": {
+     "exit": 0,
+     "source_sha256": "de47904c63a35732f6603b8bc6c992b4b4a93433eb28f03eaa164a9a374e5331",
+     "log_bytes": 299,
+     "log_sha256": "bf300ec7ed67a102013a4cb22f721aa12aa275249241f96d0ad6df7e903aaef9",
+     "note": "Exit 0 with an exponent-threshold warning from a Nat-level power; d4 and d5 moved the power comparison to ENNReal, d6 removed the last warning; d7 rechecked docstring rewording."
+    },
+    "fix1-d4": {
+     "exit": 0,
+     "source_sha256": "c971a2ea41c24ab08bc6254a88344bae49447cdf5efe193283f1ecb606c71eff",
+     "log_bytes": 299,
+     "log_sha256": "d4f558aa014e76a2bd25c410ffc8db298e874bc2e18fa567df66aaf3656cd39b"
+    },
+    "fix1-d5": {
+     "exit": 0,
+     "source_sha256": "c3c708a848be7afca32c290d3d39e3f039c7c81856e0b9f1c1554a53ff2ebb05",
+     "log_bytes": 298,
+     "log_sha256": "c3d532f10ba2b8ff986c9f58a8fe98ee2f335310ad8dd6c19029f3ba5d26518c"
+    },
+    "fix1-d6": {
+     "exit": 0,
+     "source_sha256": "9189e3f556dc4ea5bb75402fe7b5680a35c5c9e684445327e87e470fccb4129f",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fix1-d7": {
+     "exit": 0,
+     "source_sha256": "a9d1969a97752e34f9a3be74b4334b80b291289fa1b1eb62aa920517f38f1505",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+   },
+   "definitions_added_in_fix_pass": [
+    "sharedHashTotal",
+    "bindingTerm",
+    "Partners",
+    "CrossAccept",
+    "crossEvent",
+    "PublicHiding",
+    "eraseSecrets",
+    "publicHiding",
+    "testBit",
+    "admissibleTest",
+    "firstTest",
+    "AdmittedTest",
+    "TestsHidden",
+    "FreshHit",
+    "freshEvent",
+    "lorEligible",
+    "lorGuess",
+    "ctxLoss",
+    "CtxLiftBounded",
+    "CtxLiftBool",
+    "CtxLiftEvent",
+    "CtxLiftStatement",
+    "recordAuthLoss",
+    "RecordAuthBounded",
+    "RecordAuthLiftBool",
+    "RecordAuthLiftEvent",
+    "RecordAuthLiftStatement",
+    "BindingStatement",
+    "FreshGuessStatement",
+    "LorStatement",
+    "CtxLiftTarget",
+    "RecordAuthLiftTarget",
+    "BindingTarget"
+   ]
+  }
+ ],
+ "statements": 28,
+ "allowed_axioms": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "axiom_profile_from_guards": {
+  "Classical.choice, Quot.sound, propext": 26,
+  "propext (publicHiding_hidingView)": 1,
+  "none (positions_derivations)": 1
+ },
+ "leanpath": {
+  "manifest": "/tmp/bc-arc-scratch/items45/ideal/fix1/leanpath",
+  "sha256": "5ec26d0332708188cf1fc0cbdc7250e45bcaf4099a314688e823c84a4258a121",
+  "mirror_script": "/tmp/bc-arc-scratch/items45/ideal/fix1/mirror.py",
+  "mirror_log": "source /tmp/bc-arc-scratch/common-experiment/ce9b/int/olean links 1673 skipped 1 broken 0",
+  "note": "Fix pass: items45/ideal/fix1/olean is a fresh resolved symlink mirror of the first prefix of the published LEAN_PATH of central 80560f92 (the same source as the S1 prefix), without its root olean, in front of that published LEAN_PATH; fix1/check.sh never unlinks (Lean overwrites its own artifact and the script refuses a symlinked artifact path).",
+  "s1": {
+   "manifest": "/tmp/bc-arc-scratch/items45/ideal/leanpath",
+   "sha256": "05b8fcda154b809b12e4f4ebf60c5e360a42397bd0818b4576e26fda66bff10e",
+   "mirror_script": "/tmp/bc-arc-scratch/items45/ideal/mirror.py",
+   "mirror_log": "source /tmp/bc-arc-scratch/common-experiment/ce9b/int/olean links 1673 skipped 1 broken 0",
+   "note": "items45/ideal/olean is a resolved symlink mirror of the first prefix of the published LEAN_PATH of central 80560f92 (/tmp/bc-coord/leanpaths/80560f9285c9577da71dfcfa676571432283b0c1.leanpath, first prefix /tmp/bc-arc-scratch/common-experiment/ce9b/int/olean), without its root olean, in front of that published LEAN_PATH; check.sh unlinks an artifact before writing it, so only the new module olean and the root olean were written, into this prefix."
+  }
+ },
+ "root_checks": {
+  "root-r1": {
+   "exit": 0,
+   "start": "2026-10-08T07:01:04.303176500Z",
+   "end": "2026-10-08T07:01:07.553595108Z",
+   "source_sha256": "6f503092afaf3a18698675ff879d5883dd1077805c1a707e49f2c1c40b822361",
+   "artifact_sha256": "00fe61718aad0ca99f5ca85e0b07f9d9b2bdc36aea7f8c9a853df6827ba71358",
+   "log_bytes": 0
+  },
+  "root-r2": {
+   "exit": 0,
+   "start": "2026-10-08T07:01:47.238279219Z",
+   "end": "2026-10-08T07:01:50.940326438Z",
+   "source_sha256": "6f503092afaf3a18698675ff879d5883dd1077805c1a707e49f2c1c40b822361",
+   "artifact_sha256": "00fe61718aad0ca99f5ca85e0b07f9d9b2bdc36aea7f8c9a853df6827ba71358",
+   "log_bytes": 0
+  },
+  "fix1-r1": {
+   "exit": 0,
+   "start": "2026-10-08T08:34:15.550733277Z",
+   "end": "2026-10-08T08:34:18.882412822Z",
+   "source_sha256": "6f503092afaf3a18698675ff879d5883dd1077805c1a707e49f2c1c40b822361",
+   "artifact_sha256": "00fe61718aad0ca99f5ca85e0b07f9d9b2bdc36aea7f8c9a853df6827ba71358",
+   "log_bytes": 0
+  }
+ },
+ "inventory": {
+  "recount": "coord.sh inv recount claude (fix pass): handwritten-lean count unchanged (1641)",
+  "rehash": "coord.sh inv rehash claude (fix pass): proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.lean: 09a637c104a8 -> 4af6f25e37c7; proofs/lean/BeaconcryptCore.lean: unchanged; proofs/trusted-boundary.md: unchanged; proofs/check-inventory.sh: 68767fe3edb0 -> 1cb5bdf03a17",
+  "gate_block": "The PqxdhRecordLiftIdeal block of check-inventory.sh requires 28 theorems and 28 guards and names the seven new theorems.",
+  "s1": {
+   "recount": "coord.sh inv recount claude: handwritten-lean 1640 -> 1641 (before rehash)",
+   "rehash": "coord.sh inv rehash claude for the new module path (placeholder -> digest), then the default set (BeaconcryptCore.lean, trusted-boundary.md unchanged, check-inventory.sh last)"
+  }
+ },
+ "focused_inventory": {
+  "inventory-m1": {
+   "exit": 2,
+   "log_sha256": "e9a8f3596f0e53091992fa6651d4cb957cb37025afcaef5e90260a2110e46407",
+   "note": "Failed: the escape-hatch scan of check-inventory.sh rejects the word axiom anywhere in handwritten Lean, and the module docstring said that no axiom is added. The docstring was reworded; no definition or statement changed."
+  },
+  "inventory-m2": {
+   "exit": 0,
+   "start": "2026-10-08T07:01:55Z",
+   "end": "2026-10-08T07:03:16Z",
+   "log_sha256": "3eb5fbbebf49eba0544bbed3a2ca30d5cf4e74c38056cacb77bc15b1b4bad4f6",
+   "note": "coord.sh lease mem claude @nix, nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make check-inventory, with the new module staged (git ls-files lists it); no comm warning."
+  },
+  "fix1-i1": {
+   "exit": 0,
+   "start": "2026-10-08T08:34:41Z",
+   "end": "2026-10-08T08:36:01Z",
+   "log_sha256": "d22c44f136acc61fb31c4a96da45104d164a8987be02fdd74cfe1c4a6bd755fc",
+   "head": "3ff717df75fdda2106c2f3b8cba6a2edec6bb08e",
+   "note": "coord.sh lease mem claude @nix, nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make check-inventory, on the fix-pass tree (HEAD 3ff717df with the module, check-inventory.sh and reviewed-inventory.txt modified, then committed unchanged as 7277807f); no warning."
+  }
+ },
+ "diff_check": "git diff --check clean on the S1 Lean and documentation commits and on the fix-pass Lean and documentation commits",
+ "forbidden_scan": "No sorry, admit, axiom declaration, native_decide, implemented_by, extern, unsafe or opaque in the module; options: autoImplicit false only; the inventory escape-hatch pattern \\b(?:sorry|admit|axiom)\\b|sorryAx finds nothing (S1 and fix pass).",
+ "h7_scan": {
+  "s1": "Source scan: none of PqxdhCorrelatedExtractFamily, jointKdfView, fixedHkdfSha512JointStream, productionHiddenRoot, rootResponse, PqxdhDeploymentIdealKeys, PqxdhDeploymentHeadlines. setup.source (a FixedHkdfSha512NoSaltSource) is used only through PqxdhRecordLiftMixedWorld.policy for real HKDF, with SourceFullCorrect as the chain contract, as on central.",
+  "fix1": {
+   "tool": "/tmp/bc-arc-scratch/items45/ideal/fix1/h7scan.py (version 2 of increment A, case-insensitive, extended list)",
+   "output": "/tmp/bc-arc-scratch/items45/ideal/fix1/h7scan-final.json",
+   "output_sha256": "ea569a0bdf459f1b2d8950bc86367959f824bf85e48f40c60a2b7512fe098d42",
+   "result": "no forbidden and no informational hits"
+  }
+ },
+ "meta_check": {
+  "s1": {
+   "probe": "/tmp/bc-arc-scratch/items45/ideal/probe/ForbiddenUse.lean",
+   "log": "/tmp/bc-arc-scratch/items45/ideal/logs/forbidden-use2.log",
+   "result": "declarations checked: 232; forbidden direct uses: 0 []",
+   "note": "Every constant used directly in the type or value of each declaration of the namespace PqxdhRecordLiftIdeal (232 declarations, including auxiliary match and projection declarations); a direct-use check, as brief H-7 asks (PqxdhDeploymentNative imports the forbidden family transitively)."
+  },
+  "fix1": {
+   "probe": "/tmp/bc-arc-scratch/items45/ideal/fix1/probe/H7Closure.lean",
+   "log": "/tmp/bc-arc-scratch/items45/ideal/fix1/logs/dev-h7closure-final-103426.log",
+   "result": "H-7 guard: modules 1; declared constants 277; closure 24807; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+   "note": "Adapted from items45/A/fix1/tools/H7Closure.lean: transitive constant closure of every declaration of the module; stronger than the S1 direct-use check."
+  }
+ },
+ "decisions": {
+  "D1": "CtxAuthLiftStatement (idealChains to idealAuth) and CtxPrivLiftStatement (idealAuth to randomRecords; idealRecords in mode P), composed as CtxLiftStatement (ctxLiftBool_of_parts); RecordAuthLiftStatement (realChains to idealAuth, recordAuthLiftBool_of_parts) for CE-OR and CE-UKS without the privacy half; recordLiftBool_of_parts composes the full record lift.",
+  "D2": "publicationTerm = guessTerm = 2*R*S/2^512 (private 64-byte commitment, writer-bit factor 2) in idealAuth, idealRecords and randomRecords, both modes; no IND$ step; guessTerm_le: at most the S1 term R*S/2^128.",
+  "D3": "aliasing and refusal term parameters; ChainLiftTarget, CtxAuthLiftTarget, CtxLiftTarget, RecordAuthLiftTarget and RecordLiftTarget fix them to noTerm (zero); reasons confirmed by the design review and recorded in the guide; CTX refusal zero is an S4 obligation (one seal per material label in ctxRun).",
+  "D4": "chain decisions read View and the final shared cache; CTX, record, origin, binding and hiding decisions are cache-free (necessary: the cache holds key-bearing commitment preimages in idealChains); recordLoss and recordAuthLoss use the chain reductions at the cache-ignoring decision.",
+  "D5": "root import after PqxdhDeploymentLaterKemTwoSided (end of the import block), inventory row at end of file, check-inventory block before # Separate primitive-fidelity profile, analysis section at end of file."
+ },
+ "contracts_used": "Named in the targets only, all from brief H-7: SourceFullCorrect (ChainLiftStatement, RecordAuthLiftStatement, RecordLiftStatement), FrameReadBack and DecoderAgreement (OriginStatement), FrameReadBack (BindingStatement); CtxAuthLift, CtxPrivLift, CtxLift, HidingStatement, FreshGuessStatement and LorStatement name none. IND$, INT-CTXT, HMAC-PRF and Extract-on-uniform32 appear only as advantages of explicit reductions; the BLAKE2b ROM is the lazily sampled shared cache of the world. The 28 theorems use no contract. No assumption or contract is added.",
+ "deviations_from_plan": [
+  "CtxPrivLiftStatement is stated for both observation modes against randomRecords (equal to idealRecords in mode P by idealRecords_P); since the fix pass its mode-O instance has no consumer and is kept because the per-key privacy hop is uniform in the mode.",
+  "OriginStatement and BindingStatement are one-world event bounds, HidingStatement an exact law equality with derived Boolean and event forms, FreshGuessStatement a one-world bound and LorStatement an exact one-half equality; none is a two-sided comparison of two worlds, which is not their natural form.",
+  "The targets take their reductions and bill functions as parameters; closed-form bills and the concrete simulator-built reductions are fixed by the delivering stages. A target with artificial reductions is satisfiable trivially and is not a deliverable (guide, design panel section 1).",
+  "The view adds the environment state and the handle-to-slot map to the CE-12 analysis projection (needed by R6 and the origin event); this strengthens the targets.",
+  "R6 forms are not part of S1 (stage S6).",
+  "The bills include the decision coin cost (BillInput.decision), since reductions run the decision.",
+  "BindingStatement takes its cross-handle term as an explicit parameter (intended bindingTerm, fixed by BindingTarget), like the D3 terms.",
+  "LorStatement puts TestsHidden inside both events instead of the review proposal's premise that eligibility imply a public TestHidden; this holds for every eligibility, implies the premise form, and needs no public recomputation function (admission depends only on the mode-P view, admittedTest_view).",
+  "guessTerm omits the review's S^2/2^512 term: commitments of distinct seals are independent, and without it the term is at most the S1 term for every budget (guessTerm_le)."
+ ],
+ "not_proved": [
+  "Every target: chain_lift, ctx_lift (both halves and their composition), the integrity record lift, record_lift, idealRecords_origin (OriginStatement, BindingStatement), idealRecords_hiding (HidingStatement, FreshGuessStatement, LorStatement).",
+  "The all-real source equality of ctxRun with idealChains and one seal per material label in ctxRun (stage S4).",
+  "R6 forms (stage S6).",
+  "CE-12 obligations listed in the guide: frame-level CE-OR and CE-UKS events through codec.frameRead, and C5 as a support invariant of the client program with env_g for every interpreter (idealAuth, idealRecords), plus the C5 maps for CE-APP and CE-LOR."
+ ],
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in S1, the fix pass or the nit fix; no production Rust or ProVerif change. Transcript fidelity and the integration into central run after the nit fix on the merged tip (nit_fix.integration_checks).",
+ "review": {
+  "s1_gate": "Independent design review of 3ff717df by Claude reviewers that did not write the module; 9 findings (3 major, 3 minor, 3 nit), all fixed in 7277807f and the fix-pass documentation commit.",
+  "findings": "/tmp/bc-arc-scratch/items45/ideal/fix1/review-findings.json",
+  "findings_sha256": "60e865c7e34c989a68f8741d4897044e6f932d159b317344ebbcd32ff6be8570",
+  "confirming_review": {
+   "reviewed_commit": "077610c808316980d1682fcb176d325d1330d055",
+   "reviewed_range": "3ff717df..077610c8 (fix-pass Lean commit 7277807f and documentation commit 077610c8)",
+   "reviewer": "independent Claude confirming review of the fix pass (reviewers that did not write the module)",
+   "outcome": "four documentation nits; no finding against the Lean definitions or statements",
+   "evidence": [
+    "/tmp/bc-arc-scratch/items45/ideal/confirm/module-check.exit, module-check.log, module-src.sha: module check exit 0, empty log, source 4af6f25e",
+    "/tmp/bc-arc-scratch/items45/ideal/confirm/thms.txt, guards.txt, thms-old.txt: 28 theorems, 28 exact guards, the 21 S1 theorems kept",
+    "/tmp/bc-arc-scratch/items45/ideal/confirm/h7scan-confirm.json: H-7 source scan version 2, no forbidden and no informational name",
+    "/tmp/bc-arc-scratch/items45/ideal/confirm/lean.diff: the fix-pass Lean diff cfdddc25..7277807f"
+   ],
+   "findings": [
+    {
+     "severity": "nit",
+     "title": "Earlier prose claim still unsupported: the module docstring and the analysis say random mode is a proven endpoint of the existing CTX bounds",
+     "response": "Module docstring line 9 and the analysis sentence reworded: real and replay are exactly the endpoints of selected_integrity (keyImpl_modes), and random mode agrees with replay except on sealing (randomImpl_other). The docstring worlds paragraph, the guide worlds section and CtxPrivLiftStatement paragraph say the IND$ correspondence is not proved; the guide open points list the correspondence of randomImpl with the IND$ random experiment behind replay_random_advantage as an explicit S4 obligation; design panel row KeyMode and lens item S4 updated.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "CE-12 obligation (ii) states only the forward direction of C5, which the containments need alongside 'slot_g is held only by the designated handles'",
+     "response": "Extended in the guide consumer paragraph, the open points and design A1: C5 must also give that only the designated handles hold slot_g on the support of every interpreter, from per-role slot uniqueness via PqxdhRecordLiftProtocol.Unused/markUsed plus C5 for both designated handles, or from the converse of C5. The analysis sentence on the two remaining CE-12 steps says the same in plain English.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "The receipt's ce_plan sha256 was already stale when the fix pass ran",
+     "response": "ce_plan.fix_pass records the plan the fix pass read (e65fa6c5) and ce_plan.note records that it only appends sections 43-45 to c6c379d4 (first 826 lines byte-identical), so the cited sections were rechecked and are unchanged.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "The guide cites a scratch path without its root",
+     "response": "The D3 row now cites /tmp/bc-arc-scratch/coord-replies/r1-audit/reply-final.md (also in the design panel D3 item).",
+     "outcome": "fixed"
+    }
+   ]
+  },
+  "s1": "Not reviewed. The S1 gate is an independent design review of the statements by a reviewer that did not write them; its questions are in the design panel section 6."
+ },
+ "files_sha256_s1": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.lean": "09a637c104a88377fb8e63812ae733408fb29d4a80c3dc890ba4ae0c45ec99d4",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "6f503092afaf3a18698675ff879d5883dd1077805c1a707e49f2c1c40b822361",
+  "beaconcrypt-core/proofs/check-inventory.sh": "68767fe3edb0668b91205ead711352ea2f50d4a28ad7630e4d572bf256d95557",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "842be3ceadde3fde426502765f2604d9f84688466a8d1e058875bef99306b805",
+  "doc/impl/record-lift-ideal.md": "28c759a31ec266fd9a795defb74d48bc40314ff97363e63891d8b24e1069e0de",
+  "doc/formal-verification-analysis.md": "60927570ec5db9144634ceb6b584a21fa7ada06f1d28ddf3f5e5eb7379613597"
+ },
+ "files_sha256_fix1": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.lean": "4af6f25e37c7c5fdc254919d8afd1564efd03cb1e4f690fdd20d66a38d8306be",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "6f503092afaf3a18698675ff879d5883dd1077805c1a707e49f2c1c40b822361",
+  "beaconcrypt-core/proofs/check-inventory.sh": "1cb5bdf03a172f3b6e6892b0bfda72ac243f1fd15ecec1c287e36ea076250570",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "e018afb8f860d7be71495b1975ee181eaf575270efce1d0752aea19cd73bcc66",
+  "doc/impl/record-lift-ideal.md": "fedb56d166c56e3e7abb95030936e877bd8cf99f7f03893e9938459d63d4c0c7",
+  "doc/formal-verification-analysis.md": "91e2bd82b9244074e2c8ec4d5ac2a9ed1d70164125d3c9a4099405abe00c16fb"
+ },
+ "fix_pass": {
+  "date": "2026-10-08",
+  "lean_commit": "7277807f3c9036201d4d12dbcc4f5dffca553a18",
+  "changed_definitions": {
+   "guessTerm": "before R*S/2^128; after 2*R*S/2^512 (guessTerm_le: after <= before)",
+   "publicationTerm": "before (n privacy env mode adversary budget), guessTerm + (mode O) IND$ sum of the privacy reductions; after (budget), guessTerm in both modes (<= before for every choice of reductions)",
+   "OriginStatement": "before (n privacy bills): produced form 0 in idealAuth and idealRecords; published form <= guessTerm in randomRecords and <= publicationTerm in idealRecords; mode-O reductions CtxBounded. After (n): the same produced conjuncts; published form <= publicationTerm in idealAuth, idealRecords and randomRecords; no reduction or bill. The probability conjuncts imply the old ones; the dropped bill conjunct only constrained the removed reductions."
+  },
+  "unchanged": "Every other existing definition and all 21 S1 theorems are unchanged in statement; docstrings of randomRecords and CtxPrivLiftBool were updated."
+ },
+ "nit_fix": {
+  "date": "2026-10-08",
+  "base": "077610c808316980d1682fcb176d325d1330d055",
+  "scope": "Documentation only: module docstring (two sentences of the module doc comment), guide, analysis section, this receipt; reviewed-inventory.txt digest of the module. No definition, statement, guard, import or check-inventory.sh line changes.",
+  "module_source_sha256": "58804c73dd7ddc9e11d3a131ce09447f0c1e6b4205cdfe38e3fe40bc5e81c9fc",
+  "module_check": {
+   "command": "items45/ideal/nits/dev.sh (coord.sh lean claude, timeout 180, lean -j1 -M8000, no -o) against items45/ideal/fix1/leanpath",
+   "log": "/tmp/bc-arc-scratch/items45/ideal/nits/logs/dev-docstring-105906.log",
+   "exit": 0,
+   "log_bytes": 0
+  },
+  "inventory": {
+   "recount": "coord.sh inv recount claude: handwritten-lean count unchanged (1641)",
+   "rehash": "coord.sh inv rehash claude: proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.lean 4af6f25e37c7 -> 58804c73dd7d; BeaconcryptCore.lean, trusted-boundary.md and check-inventory.sh unchanged"
+  },
+  "h7_scan": {
+   "v2": "/tmp/bc-arc-scratch/items45/ideal/nits/h7scan.json: no forbidden and no informational name",
+   "v3": "/tmp/bc-arc-scratch/items45/ideal/nits/h7scan-v3.json (version 3 of items45/A/int2/tools/h7scan.py, adds JointKdfRO): no forbidden and no informational name"
+  },
+  "integration_checks": "/tmp/bc-arc-scratch/items45/ideal/int/checks-receipt.json (module and root checks into a fresh prefix, inv recount/rehash, focused check-inventory, transcript fidelity and git diff --check on the merged tip)"
+ }
+}

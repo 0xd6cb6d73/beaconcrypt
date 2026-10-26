@@ -1,0 +1,74 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Concrete active-tail controls: the source InitSent guard has already
+   succeeded. The exact preparation writes its real private final state, which
+   the second finite call consumes. The replicated main process is unchanged. *)
+free BEACON_CONTROL_SERVER: bitstring.
+free BEACON_CONTROL_OTHER: bitstring.
+free BEACON_CONTROL_PAYLOAD: bitstring.
+let RegistrationBeaconControlRetry(owner: channel, token: channel, retry_reply: channel,
+  retry_raw: bitstring, pinned: bitstring, server_id: key_id, identity_secret: bitstring,
+  prekey_secret: bitstring, pq_secret: bitstring, one_time_secret: bitstring) =
+  ((in(token, private_state: bitstring) [precise];
+    new retry_attempt: bitstring;
+    if private_state = registration_beacon_init_sent() then (
+      event RegistrationBeaconAttempt(owner, retry_attempt, retry_raw);
+      RegistrationBeaconPrepare(owner, token, retry_reply, retry_attempt, retry_raw,
+        pinned, server_id, identity_secret, prekey_secret, one_time_secret, pq_secret, 0)
+    ) else (
+      event RegistrationBeaconClosedRejected(owner, retry_attempt);
+      out(retry_reply, registration_beacon_failure())
+    ))
+  | in(retry_reply, retry: bitstring);
+    if retry = registration_beacon_success(BEACON_CONTROL_PAYLOAD) then
+      event RegistrationBeaconControlRetrySuccess()
+    else if retry = registration_beacon_failure() then
+      event RegistrationBeaconControlRetryFailure()).
+process
+  new identity_secret: bitstring;
+  new prekey_secret: bitstring;
+  new pq_secret: bitstring;
+  new one_time_secret: bitstring;
+  new ephemeral_secret: bitstring;
+  new coins: bitstring;
+  new owner: channel;
+  new token: channel;
+  new attempt: bitstring;
+  new first_reply: channel;
+  new retry_reply: channel;
+  let identity = ed_public(identity_secret) in
+  let server = ed_public(BEACON_CONTROL_SERVER) in
+  let pinned = server in
+  let server_id = registration_response_identifier(0) in
+  let assigned = registration_response_identifier(1) in
+  let ciphertext = mlkem_ciphertext(mlkem_public(pq_secret), coins) in
+  let kem = mlkem_shared_secret(mlkem_public(pq_secret), coins) in
+  let dh1 = x25519_server_dh(BEACON_CONTROL_SERVER, x25519_public(prekey_secret)) in
+  let dh2 = x25519_server_dh(ephemeral_secret, x25519_public_from_ed(identity)) in
+  let dh3 = x25519_server_dh(ephemeral_secret, x25519_public(prekey_secret)) in
+  let dh4 = x25519_server_dh(ephemeral_secret, x25519_public(one_time_secret)) in
+  let shared = beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1, dh2, dh3, dh4, kem) in
+  let input = beaconcrypt_core__pqxdh__build_root_key_input(shared) in
+  let root = pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(input)) in
+  let chain = server_to_beacon_chain(root) in
+  let associated_data = beaconcrypt_core__pqxdh__build_associated_data(server, identity) in
+  let target = first_sequence() in
+  let general_plan(material, next, skipped) = general_prefix_1(chain) in
+  let binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(key_id_encoding(assigned)) in
+  let correct_plaintext = registration_payload(binding, registration_response_nonempty(BEACON_CONTROL_PAYLOAD)) in
+  let plaintext = correct_plaintext in
+  let first_frame = seal_frame(material, associated_data, target, server_id, plaintext) in
+  let retry_frame = seal_frame(ratchet_material(chain), associated_data, first_sequence(), server_id, correct_plaintext) in
+  let first_raw = kex_response(server, x25519_public(ephemeral_secret), ciphertext, first_frame, assigned) in
+  let retry_raw = kex_response(server, x25519_public(ephemeral_secret), ciphertext, retry_frame, assigned) in
+  (event RegistrationBeaconAttempt(owner, attempt, first_raw);
+    RegistrationBeaconPrepare(owner, token, first_reply, attempt, first_raw,
+      pinned, server_id, identity_secret, prekey_secret, one_time_secret, pq_secret, 0)
+  | in(first_reply, first: bitstring);
+    if first = registration_beacon_success(BEACON_CONTROL_PAYLOAD) then (
+      event RegistrationBeaconControlFirstSuccess();
+      RegistrationBeaconControlRetry(owner, token, retry_reply, retry_raw, pinned,
+        server_id, identity_secret, prekey_secret, pq_secret, one_time_secret)
+    ) else if first = registration_beacon_failure() then (
+      event RegistrationBeaconControlFirstFailure();
+      RegistrationBeaconControlRetry(owner, token, retry_reply, retry_raw, pinned,
+        server_id, identity_secret, prekey_secret, pq_secret, one_time_secret)))

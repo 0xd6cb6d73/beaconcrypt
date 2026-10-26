@@ -1,0 +1,65 @@
+# RustCrypto and no_std migration
+
+## Scope and baseline
+
+Start from `codex/mldsa65-transcript` at `278204b921ae31a3e900cf21f690184173e531f5` in the isolated `codex/no-std-rustcrypto` worktree. Replace production libsodium calls with RustCrypto and Dalek, enable `no_std + alloc` for the Rust protocol library, and preserve the existing transport, persistence and binding behavior. Proof sources and generated proof artifacts are explicitly out of scope at the user's request. Allocator-free APIs are a subsequent project.
+
+## Cross-backend check planned before implementation
+
+Keep the pinned libsodium implementation available only as a development/test oracle. Before replacing production calls, record the baseline release artifacts and identify the exact primitive inputs and encodings. Add differential integration tests comparing the RustCrypto/Dalek backend with libsodium for deterministic Ed25519 key generation and signed-message encoding, Ed25519-to-X25519 public and secret conversion, X25519 results and invalid-input rejection, ML-KEM-768 seeded keys and bidirectional encapsulation/decapsulation, HKDF-SHA-512 salt/info/output boundaries, configured-length BLAKE2b, and ChaCha20-Poly1305 IETF ciphertext/tag/AD behavior. Include malformed keys, small-order/all-zero DH, invalid signatures and authentication failures. Use the same encoded key material across backends rather than comparing independently generated random outputs.
+
+At protocol level, exercise registration and records with a test-only libsodium oracle or independently composed legacy transcript/record operations, in both directions. Preserve mandatory ML-DSA-65 signatures, exact domain/context/transcript bytes, signature-prefix bundle encodings, AD281, CTX357, CBOR versions, registration replay consumption, send-key consumption after failed sealing, receive rollback on rejection, and canonical snapshot/CAS behavior. Existing Wycheproof and Rooterberg vector tests must exercise the new production backend. Never silently regenerate vectors or known-answer artifacts.
+
+## Release size measurement
+
+Use `cargo build -p beaconcrypt --release --features gobinds --locked` before and after the implementation on the same host/toolchain and release profile. Record the exact command, commit, compiler, target, feature set, artifact byte counts and hashes for `libbeaconcrypt.a`, `libbeaconcrypt.so` and `libbeaconcrypt.rlib`. Use separate baseline and migrated target directories and retain the measurements here or in a companion report. Report raw archive/file sizes; these are not equivalent to final application size or resident memory. Any additional portable rlib measurement will be labeled separately.
+
+## Implementation sequence
+
+1. Capture baseline release sizes and establish the cross-backend test harness before replacing cryptographic calls.
+2. Implement a RustCrypto/Dalek primitive adapter with crate-owned key types, fixed algorithm parameters, explicit fallible entropy, and preserved rejection behavior.
+3. Port role/wire/error/persistence modules to `core` and `alloc`, select portable collections with fallible capacity reservation, and add caller-supplied RNG entry points while retaining hosted convenience APIs.
+4. Separate portable rlib packaging from native ABI builds and remove native libsodium dependencies from the production dependency graph.
+5. Run differential/vector/protocol/binding tests, real no_std-target checks, formatting, all-feature Clippy and the complete mutation catalog; fix viable missed or timed-out mutants. Do not run or update proofs.
+6. Rebuild with the identical release command, record after sizes and deltas, and document compatibility decisions and any remaining limitations.
+
+## Validation and results
+
+The plan above was written before implementation. Production now uses the new `beaconcrypt-crypto` RustCrypto/Dalek crate; libsodium remains a pinned development-only compatibility oracle. The adapter supports `no_std + alloc`, explicit caller-supplied `TryCryptoRng` operations, identity-secret-keyed portable hash tables, alloc-only JSON/persistence and unchanged hosted binding entry points. See [portable Rust builds](../no-std.md) for feature combinations and API migration details. The Rust `beaconcrypt` package builds only an `rlib`; the separate `beaconcrypt-ffi` package compiles the exact same adapter source into native ABI artifacts. Final review found that Cargo also built the old static/shared crate types for downstream dependencies, so explicit `--crate-type=rlib` checks had concealed a packaging failure. An actual downstream Thumb consumer reproduced missing-allocator/panic-handler failures before the manifest separation; normal downstream Cargo builds are checked after the fix. Only the FFI package owns C-header generation.
+
+The owner subsequently requested resource coordination through `/tmp/bc-coord` and the footer `Co-authored-by: Codex <codex@openai.com>` on every commit. Every topic commit must include that footer. Existing mutation campaigns were interrupted cleanly with reports preserved, then resumed with `--iterate` under `coord.sh lease mem`; the remaining native campaign requests 6,144 MiB with four workers, while the focused backend campaign requests 3,072 MiB with two workers. Both set `CARGO_BUILD_JOBS=2` and explicit jobserver limits. No proof or Nix verification is included.
+
+### Artifact sizes
+
+All sizes are raw file bytes on `x86_64-unknown-linux-gnu`. Ordinary builds use Rust 1.96.0 and the existing release profile. Release-workflow builds use `nightly-2026-08-18` (`rustc 1.100.0-nightly 8fa1c96cf`) and the repository's `-Z build-std=std,panic_abort --crate-type=staticlib` command. Every before/after build uses `RUSTFLAGS='-C linker-features=-lld'` because the installed toolchain's LLD wrapper references a garbage-collected Nix path. The baseline was built from an isolated checkout of the exact starting commit. Exact commands, feature notes and SHA-256 hashes are recorded in [the machine-readable measurements](no-std-rustcrypto-sizes.json).
+
+| Build / artifact | Before | After | Change |
+| --- | ---: | ---: | ---: |
+| Ordinary Go-binding release, `.a` | 27,426,196 | 8,738,698 | -68.14% |
+| Ordinary Go-binding release, `.so` | 1,127,776 | 1,089,968 | -3.35% |
+| Ordinary Go-binding release, `.rlib` | 2,498,312 | 2,083,458 | -16.61% |
+| Release-workflow Go-binding static library | 2,932,612 | 2,021,706 | -31.06% |
+| Release-workflow hosted beacon static library | 2,073,588 | 908,898 | -56.17% |
+
+Native build commands select `-p beaconcrypt-ffi` after the packaging split; all compiler, target, release-profile, binding-feature and build-std settings remain identical. The Rust metadata archive is measured separately with `cargo build -p beaconcrypt --release --features gobinds --locked`. Native filenames remain unchanged. The hosted beacon command explicitly adds `std` after the migration: the old `beacon` feature obtained hosted runtime support implicitly through libsodium. The ordinary-build changes include splitting Rust metadata from native outputs, which changes Cargo/rustc artifact construction as well as the cryptographic backend. The release-workflow comparison still selects only `staticlib` before and after. An `rlib` contains Rust metadata and is not a final linked application; none of these measurements establishes resident memory usage.
+
+### Compatibility and runtime checks
+
+- Fourteen differential tests pass, including independently composed libsodium registration/record peers in both directions, exact primitive/encoding comparisons, malformed input, implicit rejection, secret-width/redaction/erasure contracts and entropy failures.
+- Rooterberg and Wycheproof tests now exercise the production backend and pass with their original acceptance categories.
+- All 432 native runtime tests pass with five explicitly deferred proof-source guards omitted. Those guards pin the previous libsodium call text and line citations: `free_schedule_rust_fidelity_annotations_are_exact`, `mldsa_transcript_source_and_model_mutations_are_rejected`, `production_manifest_symbolic_model_and_adapters_are_exact`, `proverif_verdict_classes_cover_every_checker_and_profile`, and `registration_lifecycle_mutation_matrix_is_complete_and_rejected`. Their assertions and all proof files remain unchanged, as requested. An unfiltered workspace test run still reports those five failures.
+- Actual `thumbv7em-none-eabihf` builds pass with `std` disabled, including beacon-only, server-only, both roles and no-role configurations. The regression check uses an independent `#![no_std]` downstream library and ordinary `cargo build`, without a crate-type override; [the downstream receipt](no-std-rustcrypto-downstream.json) records the failing and passing manifests and commands. No production libsodium or operating-system RNG appears in the portable dependency graph.
+- Native Go race tests, all 138 C-binding unit tests, the C persistence harness and all 79 Python tests pass. The C header remains unchanged; the rebuilt shared library exports the same 31 C ABI function names.
+- All 27 actual WASI guest tests and the isolated allocation-failure probe pass, and both `CGO_ENABLED=0` and `beaconcrypt_wazero` Go modes pass. Wasm release construction and all eight packaging tests work without Zig. The guest is 805,073 bytes; [the WASI receipt](no-std-rustcrypto-wasm.json) records commands, hashes and the separate mutation partition.
+- Formatting and all-feature workspace Clippy complete; the untouched core retains its existing warnings. The adapter and new backend also pass all-target/all-feature Clippy with warnings denied.
+- The full WASI mutation partition passes: 159 tested, 147 caught, 12 unviable, zero missed and zero timed out. The full native catalog covers 1,600 unique mutations: 1,137 caught, 463 unviable, zero missed and zero timed out. The catalog includes 543 adapter, 916 core, 83 backend and 58 parser mutations. The native package compiles the same adapter source and is excluded only to avoid mutating that exact source twice. Exact catalog identity and report hashes are preserved in [the mutation receipt](no-std-rustcrypto-mutations.json). The initial keyed-hasher gap is caught by the added regression in both the focused six-mutation check and the resumed native campaign.
+
+An exploratory focused backend mutation run forwarded the test-harness skip options incorrectly and its caught classifications are discarded. Its corrected replacement uses an actual unmutated baseline and a literal Cargo test-harness separator before the five skips; all 83 backend mutations complete with 37 genuine assertion failures and 46 unviable replacements, zero missed and zero timed out. The main native campaign's arguments were correct throughout. The earlier focused RNG check (13 mutations) and keyed-hasher check (six mutations) used no skip options and remain valid.
+
+Imported malformed local secret keys now receive stricter validation: an Ed25519 keypair whose public half disagrees with its seed cannot sign, and malformed expanded ML-KEM key material cannot decapsulate. Generated keys and protocol messages interoperate with the oracle. Wire versions, mandatory ML-DSA authentication, transcript bytes, canonical snapshots and rollback/CAS rules remain covered by runtime checks; no new proof claim is made.
+
+The final native campaign used cargo-nextest 0.9.149 after an exact test-identity comparison against Cargo: 432 runtime tests, no ignored tests or doctests, and only the five explicitly named proof-source guards deferred. A real mutation probe confirmed assertion failure detection before the remaining catalog ran. The [saved nextest profile](no-std-rustcrypto-nextest.toml) preserves the exclusions and test priorities. Interrupted native campaigns and the final 582-outcome campaign are joined by exact mutation IDs; four previously validated field deletions were rerun and counted once. Current and packaging-adjusted mutation IDs and full mutation diffs match exactly. No current-catalog mutation is omitted from the union.
+
+The source-archive check also caught that Maturin's Cargo generator removes the native package's parent-relative library target and omits its shared sources. Python source distributions now use the [Git generator](https://www.maturin.rs/config), preserving the manifest and tracked shared sources while excluding proof/reference documentation and pinned test-vector submodules. Native Python development tests passed independently; the archive check separately builds a wheel from the unpacked distribution, and the Python release workflow repeats that check before uploading an archive.
+
+The [native validation receipt](no-std-rustcrypto-validation.json) records all final commands and test counts, and the [Python source-distribution receipt](no-std-rustcrypto-python-sdist.json) records the corrected archive and successful wheel build. All five measured libraries were restored after the Python wheel build, matched their original recorded hashes exactly, and were copied into retained measurement storage.

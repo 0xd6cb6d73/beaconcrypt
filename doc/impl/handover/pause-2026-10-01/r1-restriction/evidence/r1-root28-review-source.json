@@ -1,0 +1,23 @@
+{
+  "reviewer": "/root/fs_source_abstraction",
+  "date": "2026-10-05T20:36:28.713683+00:00",
+  "manifest": "/tmp/beaconcrypt-registration-r1-root-authentication-manifest.json",
+  "manifest_sha256": "37ea8b886340a204baa3560f183befc82cc77c0b6a707d8fbbbbaa1c30a16f4a",
+  "verdict": "APPROVE",
+  "scope": "Six new Root28 modules, guide, imported common-authentication theorem and exact manifest/109 source port checks. No proof build rerun.",
+  "findings": [],
+  "checks": [
+    "RootAudit retains caller result, full RootExecution outcome, local samples, shared primitive state and chronological occurrence journal. Source invariant discharged from actual optional Phase1 support.",
+    "RootJournal program_journal quantifies arbitrary preexisting journal and complete client continuation. recorded_surface attaches the actual public log to the same private outcome, not a second marginal run.",
+    "RootSurface preserves both initialization outcomes and runtime, missing-owner tail on refused Beacon construction, generated/supplied constructor operational cases.",
+    "Probability transport applies only to generated seed and a suffix ignoring create reply. Gates removed by unconditional pointwise probability domination; no conditional uniformity or accepted-target premise.",
+    "Authentication reuses identical common-authentication reduction expressions and ReductionBills, including coefficient-one joint identity term, Q+1 sum, record and schedule losses, all-attempt budgets and actual finish cap. No new assumptions beyond imported endpoint.",
+    "Resources separately bills source constructor and both initializations, four source draws, declared KEM keygen/encapsulation/decapsulation work, and full suffix. Source ledger bounds all attempts, consumed uniqueness, session count and allocation counter; no assigned-ID agreement.",
+    "Guide accurately separates supplied-seed operational equality, generated singleton authentication, primitive ROM/joint-use/source/codec contracts and open multi-owner symbolic integration.",
+    "Manifest SHA matches requested; all 10 changed file hashes, 5 old module hashes, 109 port file hashes match; all 109 ports equal exact adabe9af29a9793400e1465e62989770482bde9d bytes."
+  ],
+  "limits": [
+    "No global replicated schedule, cross-owner pending-token or final symbolic event theorem is established by this cohort.",
+    "Build/artifact receipts were not reproduced by this semantic review."
+  ]
+}

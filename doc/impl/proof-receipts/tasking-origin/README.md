@@ -1,0 +1,7 @@
+# Selected Server-to-Beacon tasking-origin validation
+
+The exact source freeze and five maintained target receipts bind the scoped ordinary near-origin, same-process initial-origin and auxiliary identity results, chain disclosure negative control and selected cache witness. `reviewed-source-manifest.json` identifies all maintained source/gate/doc bytes. `focused-make.log.gz` records the 18 classification regressions, 30 transcript-fidelity tests and inventory success; dedicated checker regressions were also run. The record is focused validation, not an aggregate proof run.
+
+`maintained-results.json` and the five compressed logs are final solver evidence. The earlier reviewed probes support the independent source-paper receipt but are not additional theorem counts. Every compressed blob has its raw and compressed hash and length in `archive-blobs.json`. `preservation.json` checks every prior Lean file, production Rust source and ProVerif model plus the unchanged 3,181-row classification prefix against the integration base.
+
+The diagnostic folder retains the unannotated ordinary-origin unknown and optional direct injective timeout with their exact input files. The former's attempted traces explicitly rely on assumed hypotheses and are not confirmed attacks. The latter supplies no solver injectivity result. Injectivity is supplied only by the separately reviewed single-selected-receiver argument in the maintained guide. No unrestricted public-plaintext secrecy, native byte or global computational claim is made.

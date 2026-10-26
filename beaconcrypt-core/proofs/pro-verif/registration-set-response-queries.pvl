@@ -1,0 +1,22 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* maxHyp removes Horn-clause premises and therefore overapproximates the same
+   unbounded process; it is not a session/counter bound or a trusted assumption.
+   These exact causal/projection queries are checked despite that abstraction. *)
+set preciseActions = false.
+set maxHyp = 2.
+query owner:bitstring, token:bitstring, rid:beaconcrypt_core__pqxdh__t_RegistrationId;
+  event(RegistrationResponseConsumed(owner,token)) ==> event(RegistrationSetConsumed(owner,token,rid)).
+query owner:bitstring, token:bitstring, before:nat, next:nat, assigned:key_id, plaintext:bitstring, frame:bitstring, response:bitstring;
+  event(RegistrationResponsePublished(owner,token,before,next,assigned,plaintext,frame,response)) ==> next = before + 1.
+query owner:bitstring, token:bitstring, before:nat, next:nat, assigned:key_id, plaintext:bitstring, frame:bitstring, response:bitstring;
+  event(RegistrationResponsePublished(owner,token,before,next,assigned,plaintext,frame,response)) ==> event(RegistrationResponseInnerWritten(owner,token,assigned,plaintext,frame)).
+query owner:bitstring, token:bitstring, before:nat, next:nat, assigned:key_id, plaintext:bitstring, frame:bitstring, response:bitstring;
+ event(RegistrationResponsePublished(owner,token,before,next,assigned,plaintext,frame,response)) ==> assigned = registration_response_identifier(next).
+query owner:bitstring, token:bitstring, before:nat, after:nat;
+ event(RegistrationResponseCompleted(owner,token,before,after,false)) ==> after = before.
+query owner:bitstring, token:bitstring, before:nat, after:nat;
+ event(RegistrationResponseCompleted(owner,token,before,after,true)) ==> after = before+1.
+query owner:bitstring, token:bitstring, assigned:key_id, ad:bitstring, send:bitstring, receive:bitstring, next:nat, root:bitstring;
+ event(RegistrationResponseInstalled(owner,token,assigned,ad,send,receive)) ==> event(RegistrationResponsePrepared(owner,token,next,root,hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())),hkdf_second_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())))) && assigned=registration_response_identifier(next) && send=hkdf_second_32(hkdf_sha512_no_salt(hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())),symmetric_ratchet_domain())) && receive=hkdf_second_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).
+query owner:bitstring, token:bitstring, before:nat, next:nat, assigned:key_id, plaintext:bitstring, frame:bitstring, response:bitstring, suffix:bitstring;
+ event(RegistrationResponsePublished(owner,token,before,next,assigned,plaintext,frame,response)) ==> plaintext=registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(assigned)),registration_response_nonempty(suffix)).

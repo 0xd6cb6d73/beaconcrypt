@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-10-05T21:57:07.151275+00:00",
+  "basis": "76a47a4ff5182e395e1a3faa362f523d8e8625d3",
+  "files": {
+    "beaconcrypt-core/Makefile": "ca9dd0b5f00465503c33bc81136303fee15a5b769f639acad5b3af5e32c38d2d",
+    "beaconcrypt-core/proofs/check-inventory.sh": "db4a74f6a7b3ff787fa07e3da6800d9842704009b75f3d06a0338b7ce5cdcf38",
+    "beaconcrypt-core/proofs/pro-verif/declaration-allowlist.tsv": "8ed127e49e230a0c8b7798d6ebc2429bcc3ffa287cc6fa613b21827dd6c6c848",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "b17520347100d9951a8280da21106a68df1381ad9d9e459e5081d58ae6b963bb",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "08f2b3a367251275e7e4ae4221e5e7e35db3733219930a3f9b22ead074e34b50",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "df378965ac1f14cef1b99c9d9968a96699c061796704cda2aa36d0017628c41b",
+    "doc/formal-verification-analysis.md": "8c38c7fe144d930a9bea75e3162f218b4ef9dd130bacb210f96bfec0bcee55fe",
+    "doc/impl/proverif-fs-source-abstraction.md": "fcc02c2d79feee18fd82cbe4105736b255a0bea99016dcedd14af2a6904633f2",
+    "beaconcrypt-core/proofs/pro-verif/check-pending-registration.py": "5cca3a1973ecdf405fc2e9220cb03f051845ce7256f50974525e9d91aa00fac6",
+    "beaconcrypt-core/proofs/pro-verif/fs-control-pending-reuse.pvl": "7c599a2eaab90d25a0d61dda68ab1a7ab23594b76c5a4e9ea9711632a14a9120",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-cross-object.pv": "cfadfc68c1c16bbd207c873aba8b47f7b486700a73c0c3082b3db851346ecff9",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-fixtures.pvl": "68c4680911be1f2ba7fab457e9e0aaaa7e59ec95594229d0ec2586b5354b211f",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-registration.pvl": "b9a61bd2a03540bbee428489672c11b1767b4733ce86ea9fda107c6ff00f9a6e",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-reverse-builds.pv": "d514f7faa0fa98937e6812e90cda442f48bbcf810ad5491e58a58b982661653e",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-single-use.pv": "64dafcbcebd057932c19b03a342943562de6e7551b86a97ac13671c80d36d393",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-use.pvl": "ebb7db7d04a5cb57d55a5ea2251f39ca5c33579b0d4b72084ad4e062bdfb8057",
+    "beaconcrypt-core/proofs/pro-verif/test-pending-registration-checker.py": "28339d4d7dc2eca041e6abd97e560a7a5b599313791b331769479c8f363db3bb",
+    "doc/impl/proverif-pending-registration-schedule.md": "b6852819a79b22927616ae36b1e30491bf0f37b82146da2c72ce51f90b97daff"
+  },
+  "scope": "Four finite operational targets; conditional serial scheduling relation; zero new security claims.",
+  "checks": {
+    "checker_regressions": 25,
+    "inventory_make": "PASS before checker exact-roster strengthening; changed rows refreshed",
+    "proverif": "Four exact maintained direct verdicts rechecked with corrected checker; model bytes unchanged",
+    "transcript": "25/25 PASS; test-only metadata updated",
+    "fmt": "PASS"
+  }
+}

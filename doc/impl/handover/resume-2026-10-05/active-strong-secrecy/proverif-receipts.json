@@ -1,0 +1,197 @@
+[
+  {
+    "name": "SS-b2s",
+    "class": "security",
+    "direction": "b2s",
+    "receive_attempts_per_peer": 1,
+    "start": "2026-10-05T23:00:52.188766+00:00",
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-strong-common.pvl": "12a0d5e758883c273c82e879e4036834350fc06c093ef4fc4249ecf1336a3882",
+      "fs-records-b2s-window.pvl": "825377e4ad96ad1cdc5ede6f9ce2a8f144f9d44e2d9b10d4d9cefbbbe05653d1",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "fs-strong-b2s-sends.pvl": "858dfc49ffcfc2e3ac2629dd844ca0bf2d0d2e8fa843b5bd573ef2b83e933d35",
+      "fs-strong-b2s-receive.pvl": "f41c0422bd968153838f451c7f54777291f78f0db401bdd07b8c979bc39161a1",
+      "fs-records-b2s-kr1.pvl": "cd1551529d99ae23f9c6279f341985ef9f732ea47a82c42b8cc978f4748c3e98",
+      "fs-strong-b2s.pvl": "d34d2f92809c0e084eca0402a6c02d7d28f3dc50fe755a568612fa2f2a7e11c1",
+      "fs-strong-b2s.pv": "6ed64f389414cf97a08ed23413b3a6d2936dd4c8ee6320039badbbda47d4f5c1"
+    },
+    "seconds": 1426.4451911619399,
+    "peak_rss_kib": 2078204,
+    "exit": 0,
+    "timed_out": false,
+    "end": "2026-10-05T23:24:38.634679+00:00",
+    "log_sha256": "da60891c4c32b994fbaab150c26e195a3edab7a984ecb70fe8a0ec4f19d6bc4e",
+    "checked": true
+  },
+  {
+    "name": "SS-s2b",
+    "class": "security",
+    "direction": "s2b",
+    "receive_attempts_per_peer": 1,
+    "start": "2026-10-05T23:24:38.638274+00:00",
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-strong-common.pvl": "12a0d5e758883c273c82e879e4036834350fc06c093ef4fc4249ecf1336a3882",
+      "fs-strong-s2b-interface.pvl": "9ac59132e8b40749da7206880980e1e21785a167efc91b6a0c69716f20cd2186",
+      "fs-records-s2b-window.pvl": "6e81670b1baf7497140cc170eec7a7f2f4de002ac8fbaf4dcbb18addcfcdb15d",
+      "fs-records-s2b-gate.pvl": "21dbd5a092bab3ffcdd9006abe0ff5fab5568074025152fe48e2aa8bc585d70f",
+      "fs-strong-s2b-taskings.pvl": "a146c380a7c84a93094f8ce7825d5284c5f31a1881e0da743f1c7fa1c202fcae",
+      "fs-strong-s2b-receive.pvl": "73075500b88f896d9e6a188709f8596c3ab3e83451848820ab0844eafa635a00",
+      "fs-records-s2b-kr1.pvl": "43a708103f02d6a7adb56da09249b1f83576bc57b4dc3b86c08821d15d0f4f97",
+      "fs-strong-s2b.pvl": "c5f500d1e25a3c5d846b2e322888e9afca6a3ac1bfa23d3855803c06f9b23c46",
+      "fs-strong-s2b.pv": "7bb2c677861d3122fd7d6b09dab701c7eabab71c0226b692561bef796e4ae303"
+    },
+    "seconds": 16.63914138986729,
+    "peak_rss_kib": 123004,
+    "exit": 0,
+    "timed_out": false,
+    "end": "2026-10-05T23:24:55.277984+00:00",
+    "log_sha256": "63400df8af2fb0676acf79d7df5e8bd361dcbe1468275d4fcfe12eac397023f8",
+    "checked": true
+  },
+  {
+    "name": "SS-b2s-leak",
+    "class": "control",
+    "direction": "b2s",
+    "receive_attempts_per_peer": 1,
+    "start": "2026-10-05T23:24:55.279952+00:00",
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-strong-control-common.pvl": "ba9a8410ae55c30de1a139b66291b6318213e4a5c9886f2ed432bcb184523295",
+      "fs-records-b2s-window.pvl": "825377e4ad96ad1cdc5ede6f9ce2a8f144f9d44e2d9b10d4d9cefbbbe05653d1",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "fs-strong-control-b2s-leak.pvl": "f70e00f26d630ec422dbbd3f4ec2f7e07399c8775fed264a8851496a50fd7bb3",
+      "fs-strong-b2s-receive.pvl": "f41c0422bd968153838f451c7f54777291f78f0db401bdd07b8c979bc39161a1",
+      "fs-records-b2s-kr1.pvl": "cd1551529d99ae23f9c6279f341985ef9f732ea47a82c42b8cc978f4748c3e98",
+      "fs-strong-b2s.pvl": "d34d2f92809c0e084eca0402a6c02d7d28f3dc50fe755a568612fa2f2a7e11c1",
+      "fs-strong-control-b2s.pv": "94ed2d1067a444388e56d5dfa8698912d02f646e66da8b18cb50a20707f65baa"
+    },
+    "seconds": 2.3432649860624224,
+    "peak_rss_kib": 172164,
+    "exit": 0,
+    "timed_out": false,
+    "end": "2026-10-05T23:24:57.623785+00:00",
+    "log_sha256": "d18e6f54a372686279c6a16942913533aaf00502f1182cd8d13631832112fb93",
+    "checked": true
+  },
+  {
+    "name": "SS-b2s-ungated",
+    "class": "control",
+    "direction": "b2s",
+    "receive_attempts_per_peer": 1,
+    "start": "2026-10-05T23:24:57.627865+00:00",
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-strong-control-common.pvl": "ba9a8410ae55c30de1a139b66291b6318213e4a5c9886f2ed432bcb184523295",
+      "fs-records-b2s-window.pvl": "825377e4ad96ad1cdc5ede6f9ce2a8f144f9d44e2d9b10d4d9cefbbbe05653d1",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "fs-strong-control-b2s-ungated.pvl": "891be3db43c8b7ebee61f7e1a306872dfc4f31ebb34c44167494624ad5aab75b",
+      "fs-strong-b2s-receive.pvl": "f41c0422bd968153838f451c7f54777291f78f0db401bdd07b8c979bc39161a1",
+      "fs-records-b2s-kr1.pvl": "cd1551529d99ae23f9c6279f341985ef9f732ea47a82c42b8cc978f4748c3e98",
+      "fs-strong-b2s.pvl": "d34d2f92809c0e084eca0402a6c02d7d28f3dc50fe755a568612fa2f2a7e11c1",
+      "fs-strong-control-b2s.pv": "94ed2d1067a444388e56d5dfa8698912d02f646e66da8b18cb50a20707f65baa"
+    },
+    "seconds": 1.9712696219794452,
+    "peak_rss_kib": 140548,
+    "exit": 0,
+    "timed_out": false,
+    "end": "2026-10-05T23:24:59.599763+00:00",
+    "log_sha256": "c8af3b7b6d01e8457c11c03685e17155bdcd40105b1fd2e5202d24b02c159b16",
+    "checked": true
+  },
+  {
+    "name": "SS-s2b-leak",
+    "class": "control",
+    "direction": "s2b",
+    "receive_attempts_per_peer": 1,
+    "start": "2026-10-05T23:24:59.604285+00:00",
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-strong-control-common.pvl": "ba9a8410ae55c30de1a139b66291b6318213e4a5c9886f2ed432bcb184523295",
+      "fs-strong-s2b-interface.pvl": "9ac59132e8b40749da7206880980e1e21785a167efc91b6a0c69716f20cd2186",
+      "fs-records-s2b-window.pvl": "6e81670b1baf7497140cc170eec7a7f2f4de002ac8fbaf4dcbb18addcfcdb15d",
+      "fs-records-s2b-gate.pvl": "21dbd5a092bab3ffcdd9006abe0ff5fab5568074025152fe48e2aa8bc585d70f",
+      "fs-strong-control-s2b-leak.pvl": "10d52c27d93a6c7bcc62d3c9e6a6fc77748ed5fd578bfcd790b0429591edcc41",
+      "fs-strong-s2b-receive.pvl": "73075500b88f896d9e6a188709f8596c3ab3e83451848820ab0844eafa635a00",
+      "fs-records-s2b-kr1.pvl": "43a708103f02d6a7adb56da09249b1f83576bc57b4dc3b86c08821d15d0f4f97",
+      "fs-strong-s2b.pvl": "c5f500d1e25a3c5d846b2e322888e9afca6a3ac1bfa23d3855803c06f9b23c46",
+      "fs-strong-control-s2b.pv": "d4cf18e20d306f4dff04bc6af969b576d7077fbe9ba7d53e6cdcb6360c24c8fb"
+    },
+    "seconds": 0.4738395451568067,
+    "peak_rss_kib": 56324,
+    "exit": 0,
+    "timed_out": false,
+    "end": "2026-10-05T23:25:00.078582+00:00",
+    "log_sha256": "65ac305bacbd1dd3712b3007cae18de03064f73db81445b3f6571eedd506e844",
+    "checked": true
+  },
+  {
+    "name": "SS-s2b-ungated",
+    "class": "control",
+    "direction": "s2b",
+    "receive_attempts_per_peer": 1,
+    "start": "2026-10-05T23:25:00.083835+00:00",
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-strong-control-common.pvl": "ba9a8410ae55c30de1a139b66291b6318213e4a5c9886f2ed432bcb184523295",
+      "fs-strong-s2b-interface.pvl": "9ac59132e8b40749da7206880980e1e21785a167efc91b6a0c69716f20cd2186",
+      "fs-records-s2b-window.pvl": "6e81670b1baf7497140cc170eec7a7f2f4de002ac8fbaf4dcbb18addcfcdb15d",
+      "fs-records-s2b-gate.pvl": "21dbd5a092bab3ffcdd9006abe0ff5fab5568074025152fe48e2aa8bc585d70f",
+      "fs-strong-control-s2b-ungated.pvl": "d4c7150b3e6bda3fd46c33d6bf38fcd060c503185bd589333942b32f4bb33932",
+      "fs-strong-s2b-receive.pvl": "73075500b88f896d9e6a188709f8596c3ab3e83451848820ab0844eafa635a00",
+      "fs-records-s2b-kr1.pvl": "43a708103f02d6a7adb56da09249b1f83576bc57b4dc3b86c08821d15d0f4f97",
+      "fs-strong-s2b.pvl": "c5f500d1e25a3c5d846b2e322888e9afca6a3ac1bfa23d3855803c06f9b23c46",
+      "fs-strong-control-s2b.pv": "d4cf18e20d306f4dff04bc6af969b576d7077fbe9ba7d53e6cdcb6360c24c8fb"
+    },
+    "seconds": 0.10419680015183985,
+    "peak_rss_kib": 28676,
+    "exit": 0,
+    "timed_out": false,
+    "end": "2026-10-05T23:25:00.188537+00:00",
+    "log_sha256": "2b0065a99e397442fe2008a361867ec6b4ebcf7281102d5ca6eece23102719b1",
+    "checked": true
+  }
+]

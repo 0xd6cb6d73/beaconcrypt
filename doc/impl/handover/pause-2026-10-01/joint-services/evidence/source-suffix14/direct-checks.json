@@ -1,0 +1,29 @@
+[
+  {
+    "module": "PqxdhRegistrationJointKemCollected",
+    "sha256": "74439aad5721d31837a0e87ae45c7644d1643a0e7138c5b8c86c4ae4b85a6ecd",
+    "start": "2026-10-06T05:15:35.360931+00:00",
+    "end": "2026-10-06T05:15:41.098542+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/source-suffix14/PqxdhRegistrationJointKemCollected-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemRootBytes",
+    "sha256": "54da6ff697362600a5d5651c5571c0df8f73685fbb300459f1fbd15103e9ee97",
+    "start": "2026-10-06T05:15:41.098780+00:00",
+    "end": "2026-10-06T05:15:44.180525+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/source-suffix14/PqxdhRegistrationJointKemRootBytes-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemSourceSuffix",
+    "sha256": "3eaee131c18f7d3999eb0bfc6e9ebd009bb1720d2861c6b852556426d520c358",
+    "start": "2026-10-06T05:15:44.180848+00:00",
+    "end": "2026-10-06T05:15:47.606937+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/source-suffix14/PqxdhRegistrationJointKemSourceSuffix-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

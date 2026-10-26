@@ -1,0 +1,16 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b A1 (record form), security result, (K_s, K_r, T_max) =
+   (2, 3, 3): injective registration agreement in runs where Server objects
+   also send later taskings, with adversary-chosen plaintexts, to the new
+   peer before or after the Beacon finishes.  Every Beacon that finished
+   registration with the pinned Server key is matched by its own, distinct
+   Server build with the same identities, verified key tuple, assigned key
+   ID, root, associated data and payload.  Also the target of the control
+   C-NOGATE. *)
+query obj: bitstring, s: bitstring, b: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+      kid: key_id, root: bitstring, ad: bitstring, p: bitstring;
+  inj-event(FsBeaconEstablished(s, b, init, kid, root, ad, p))
+  ==> inj-event(FsServerCommitted(obj, s, b, init, kid, root, ad, p)).
+
+process FsRecordsS2bMain()

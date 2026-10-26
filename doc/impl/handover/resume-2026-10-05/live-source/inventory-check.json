@@ -1,0 +1,19 @@
+{
+  "command": [
+    "nix",
+    "develop",
+    "--no-update-lock-file",
+    "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+    "-c",
+    "make",
+    "-C",
+    "beaconcrypt-core",
+    "SHELL=/run/current-system/sw/bin/bash",
+    "check-inventory"
+  ],
+  "start": "2026-10-06T01:04:37.576720",
+  "end": "2026-10-06T01:05:39.678420",
+  "exit": 0,
+  "log_sha256": "3fb8f1d6060a1688d907b8ace76c667c4efb00f2e557a71b546aab8de84cce3d",
+  "inventory_sha256": "ca936f010f5a78485ecb761b82e7bb8e8b5f2a5d56a7166ecde0f0811da546cc"
+}

@@ -1,0 +1,13 @@
+# Selected record role compiler
+
+`RawCtxSelectedRoleCompiler` wraps the checked mixed native owner in the original Server and Beacon record frontends. The executable source calls use opaque selected-message material and never receive the selected message key. These are full evaluated source equations for concrete role operations, with both the entire role state and original shared primitive state retained.
+
+`beacon_source` covers all established and inactive Beacon phases. Established dispatch selects the source pinned server ID, associated data, kernel and raw-attempt count; it reinstalls exactly the returned owner after successful or failed ordinary operations. Inactive send rejection keeps the same role, while inactive raw rejection increments the original attempt count. The extra stopping predicate follows the actual established owner and can hold only when its original nonempty send reaches an already-used selected nonce.
+
+`server_raw_source` follows the exact source raw header routing, identity-derived associated-data lookup, repeated peer lookup, selected owner and publication into the same peer slot. All lookup failures and malformed raw messages retain the correct rejection and attempt count. It returns the optional plaintext supplied by the real CTX interpreter. `server_send_source` preserves associated-data lookup, metadata-derived sender ID, peer selection, empty-send gate, advanced kernel and optional writer reply. `server_source` covers the complete original Server record API, with no selected-peer honesty or nonce-freshness assumption.
+
+The additional nonce stop remains distinct from ordinary source failure and is present only at the reached selected pending seal. It never publishes a fabricated optional writer failure. The original role and source state are recovered before that event; its global probability and source occurrence attribution remain composition obligations. Equal identities or byte aliases are permitted because the equations use actual indexed peer lookup and the already checked noninjective material interpretation.
+
+`beacon_queries` and `server_queries` give at most one dynamic component request per complete role API operation, including rejected attempts. The source private derivation allowance stays separately bounded by 51 retained lookups for receive and one for send. Routing, peer lookup, parser, metadata copying and publication remain explicit source operations, not zero-cost ambient work.
+
+The finite-family dispatcher, public cryptographic services, adaptive reveal history, original `Gate`/`Fresh` decision and source-selected reduction losses are the next composition boundary. No Rust source, protocol gate, primitive contract or wire format changes in this module.

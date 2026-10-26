@@ -1,0 +1,12 @@
+[
+  {
+    "path": "beaconcrypt-core/proofs/check-inventory.sh",
+    "old": "1ee10703b5bf0bf7d5b6db9e23c331567f72f889dccdb2bf0674a414206b90b0",
+    "new": "6de17355cb5fd9e6de860f0d1c62ac52e07f174d02de0b9d912c658906e69348"
+  },
+  {
+    "path": "beaconcrypt-core/proofs/reviewed-inventory.txt",
+    "old": "a87f9a53e15dce042d5317d4678143dd61c465920cf28778e3a691bb1ee3844b",
+    "new": "50a0b5701992d96ce14f267cfc69269f5bc14a225014df38d19ba65f5d662e1e"
+  }
+]

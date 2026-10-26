@@ -1,0 +1,7 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+process
+  (
+    WeakAlgorithmTagConfusionControl()
+  | WeakX25519RoleConfusionControl()
+  )

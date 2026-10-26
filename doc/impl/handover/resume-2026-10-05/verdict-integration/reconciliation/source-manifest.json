@@ -1,0 +1,21 @@
+{
+  "worktree": "/tmp/beaconcrypt-proverif-verdict-integration",
+  "parents": [
+    "f61ef7df6b1d1a62ef6aaa0a47dff6e50fb29775",
+    "e79d66c4ee0814c081ec03a6e6c4ff58a60da877"
+  ],
+  "resolution_files": {
+    "beaconcrypt-core/proofs/check-inventory.sh": "d53799aea4ca8cd6d6c7e77da73c5cb853679c470b7d6109680b96844f9cc4e5",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "a9b1388d3c390ceeceda0d6135f178f2504af2318d4a9818c3768b82f09ab85a",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "5c0bac404e0ce1cdcbc3026d6f7f2280a1297945b74a580a4fa47f9e9349b7cc",
+    "doc/formal-verification-analysis.md": "0026ccdc69d2a5ea2c9cdc2f9ef41e0fc28695ab5670c19a67c0e9b1a22b2f9f"
+  },
+  "source_equal_counts": {
+    "beaconcrypt-core/proofs/lean": 1342,
+    "beaconcrypt-core/proofs/pro-verif": 215
+  },
+  "root_identical_to_central": true,
+  "all_prior_gates_retained": true,
+  "transcript_test_count": 27,
+  "scope": "Normal merge; additive current-field/retained executor Lean sources and root match central exactly; all ProVerif models/checkers and classification files match reviewed published topic exactly. Only four metadata/doc conflicts resolved by retaining both sides and refreshing hashes; the already reviewed transcript count remains27."
+}

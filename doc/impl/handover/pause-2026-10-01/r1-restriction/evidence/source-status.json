@@ -1,0 +1,88 @@
+[
+  {
+    "module": "PqxdhRegistrationR1Restriction",
+    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Restriction.lean",
+    "live_sha256": "f56d224a0b642ed3185a272cca3c67adfaaf8236a3d1745fb87a76b40aebbe6c",
+    "public_theorem_count": 16,
+    "guard_count": 16,
+    "guarded_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "pause_snapshot": "sources/PqxdhRegistrationR1Restriction.lean.txt",
+    "pause_snapshot_sha256": "6f177782f2e376da2ae00ef457d27cde51d9a9e319dea9bb2878585eed6fa69c",
+    "pause_status": "direct check passed; no final axiom guards or independent semantic review yet",
+    "status": "resumed 2026-10-02: complete module checked directly with exit 0 including its exact axiom guards; two read-only reviews of fdb3169 found no statement defect; unchanged by the 2026-10-03 review fixes and rechecked with exit 0; 2026-10-03 pin-width alignment (merge d5a6ffd, commit 2708919): source unchanged; complete module rechecked against the merged dependencies with exit 0 and no Lean message by the new lane helper"
+  },
+  {
+    "module": "PqxdhRegistrationR1Audit",
+    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Audit.lean",
+    "live_sha256": "b661fa9db81a7a20302723d501aed8bc1b0ef851f65ca40cb3237fd964c66482",
+    "public_theorem_count": 10,
+    "guard_count": 10,
+    "guarded_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "pause_snapshot": "sources/PqxdhRegistrationR1Audit.lean.txt",
+    "pause_snapshot_sha256": "b589c8f3e85203039ef47bb4468f53db803a7d6468015970c6f4340293148b1d",
+    "pause_status": "direct check passed; no final axiom guards or independent semantic review yet",
+    "status": "resumed 2026-10-02: complete module checked directly with exit 0 including its exact axiom guards; two read-only reviews of fdb3169 found no statement defect; unchanged by the 2026-10-03 review fixes and rechecked with exit 0; 2026-10-03 pin-width alignment (merge d5a6ffd, commit 2708919): source unchanged; complete module rechecked against the merged dependencies with exit 0 and no Lean message by the new lane helper"
+  },
+  {
+    "module": "PqxdhRegistrationR1Initial",
+    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Initial.lean",
+    "live_sha256": "5472c77648f2f1adbc82c308e7a3fb980695267e3897815200f195da41c37c6b",
+    "public_theorem_count": 6,
+    "guard_count": 6,
+    "guarded_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "pause_snapshot": "sources/PqxdhRegistrationR1Initial.lean.txt",
+    "pause_snapshot_sha256": "752f339540f9220b61bda256c910389acf55f7d140256199e7138656cff13c7e",
+    "pause_status": "direct check passed; no final axiom guards or independent semantic review yet",
+    "status": "resumed 2026-10-02: complete module checked directly with exit 0 including its exact axiom guards; two read-only reviews of fdb3169 found no statement defect; 2026-10-03 review fix strengthens bundle_initial by removing its unused pool binder (guard text unchanged); complete module rechecked with exit 0; the fix was re-reviewed on 2026-10-03 with prose findings only; 2026-10-03 pin-width alignment (merge d5a6ffd, commit 2708919): source unchanged; complete module rechecked against the merged dependencies with exit 0 and no Lean message by the new lane helper",
+    "fdb3169_sha256": "3ebc3ff7f1fdbb90f466e4f56eb428ba047e5819fa3f86364fe26124ba02b8c0"
+  },
+  {
+    "module": "PqxdhRegistrationR1Surface",
+    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Surface.lean",
+    "live_sha256": "69a923f7f6f0e85ed14bb7e2a59e2487a25279609b3a606941ae6d5b516e93d0",
+    "public_theorem_count": 6,
+    "guard_count": 6,
+    "guarded_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "pause_snapshot": "sources/PqxdhRegistrationR1Surface.lean.txt",
+    "pause_snapshot_sha256": "6fabbcb219b5059813505699772f516888832a00a6005385e62f5ec64d894e6b",
+    "pause_status": "unfinished: experiment_audit has one unsolved Some-created branch",
+    "status": "resumed 2026-10-02: complete module checked directly with exit 0 including its exact axiom guards; two read-only reviews of fdb3169 found no statement defect; 2026-10-03 review fixes change docstrings only; complete module rechecked with exit 0; the fixes were re-reviewed on 2026-10-03 with prose findings only (three docstring nits deferred to the R1 pin-width commit); 2026-10-03 pin-width alignment (merge d5a6ffd, commit 2708919): pin branch realigned and three deferred docstring nits applied (see the README resolved fidelity item); complete module rechecked with exit 0 and no Lean message by the new lane helper, guard text unchanged; 2026-10-04 RG3 follow-up: observePrefix docstring only (the shared compatibility Beacon slot is the supplied compatibility argument, not a native-state value); complete module rechecked with exit 0 and no Lean message by the lane helper, guard text unchanged",
+    "fdb3169_sha256": "65daed74a6b259537534249a95f13a7a92655ba96b0a47e7a8ef9c39eb207ce9",
+    "b9acda2_sha256": "2be4ae3eb16f7201294f10a5aa9dba30a80e9d69eb43daf33042c19d0890ae60",
+    "db60df8_sha256": "03847e4fe66b8e30b1f125d5bded9cb0ef8e2b41095b5e1f2fb9f252e5a8185b"
+  },
+  {
+    "module": "PqxdhRegistrationR1Journal",
+    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Journal.lean",
+    "live_sha256": "8bb77ca33d60b6dc8eacad413f51206b2e21487913cc5cab1fb2ae763b859470",
+    "public_theorem_count": 11,
+    "guard_count": 11,
+    "guarded_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "pause_snapshot": null,
+    "pause_snapshot_sha256": null,
+    "pause_status": "not present at pause; added on 2026-10-02 as step 3 of the plan",
+    "status": "resumed 2026-10-02: complete module checked directly with exit 0 including its exact axiom guards; two read-only reviews of fdb3169 found no statement defect; 2026-10-03 review fix changes one docstring only; complete module rechecked with exit 0; the fix was re-reviewed on 2026-10-03 with prose findings only; 2026-10-03 pin-width alignment (merge d5a6ffd, commit 2708919): prefixAuditWith pin branch removed and its docstring updated; initialWith_audit proof simplified (see the README resolved fidelity item); complete module rechecked with exit 0 and no Lean message by the new lane helper, guard text unchanged; 2026-10-04 RG3 follow-up: source unchanged; rechecked after the R1Surface docstring change with exit 0 and no Lean message by the lane helper",
+    "fdb3169_sha256": "7abdc9f55e9a8fbe3f2bc4f964593a51e16db3c7e983c37d6a316934b9d1495c",
+    "b9acda2_sha256": "28231d75db2706452647232abcb2829672aeb3aeb3d62e70caa55ff55015bc1c"
+  }
+]

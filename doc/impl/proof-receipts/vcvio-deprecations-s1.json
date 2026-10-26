@@ -1,0 +1,636 @@
+{
+ "date": "2026-10-20",
+ "scope": "VCVio deprecation migration, stage S1 (plan doc/impl/vcvio-deprecation-migration-plan.md section 7, the pilot): restatement of the four VCVioFeasibility binding bounds and of the bodies of 18 advantage and probability definitions of CtxReduction, CtxTransitionReduction, CtxRetainedTagProjection and CtxAuthClassification in VCVio's forward event vocabulary, with out-of-build certificates; phase B proof rewrites in these files; three _native bridge theorems; Lean-only validation.",
+ "basis": "1da1ebf49f2850a531984ad407a48a834c27fcca",
+ "topic": {
+  "branch": "codex/vcvio-migration-S1",
+  "clone": "/home/user/bc-vmig-S1"
+ },
+ "commits": {
+  "e77a141c": "Migrate VCVio stage S1 to the forward probability vocabulary",
+  "docs": "the commit that adds this receipt"
+ },
+ "owner_decisions": {
+  "item 4 (decision 2026-10-19)": "D1-D5 and D8-D11 as recommended in plan section 11; D6 phase B included",
+  "item 5 (decision 2026-10-19, revising D7)": "Lean-only validation per stage: make check-lean, make check-inventory, the step 7 scans and the certificates; no verify-in-shell, ProVerif, transcript fidelity, cargo, Go or Python checks",
+  "amendments": "A1 and A1.1 (/tmp/bc-arc-scratch/vcvio-migration/AMENDMENTS.md, recorded in the plan copy)"
+ },
+ "restated": {
+  "theorems": [
+   "VCVioFeasibility.ctx_binding_bound_tight",
+   "VCVioFeasibility.ctx_binding_bound_tight_512",
+   "VCVioFeasibility.ctx_binding_bound",
+   "VCVioFeasibility.ctx_binding_bound_512"
+  ],
+  "wrapper_definitions": [
+   "CtxReduction.ctxMisattributionAdvantage",
+   "CtxReduction.ctxFullCommitmentAdvantage",
+   "CtxReduction.ctxRelabelAdvantage",
+   "CtxReduction.ctxWrongSequenceAdvantage",
+   "CtxReduction.ctxWrongSenderAdvantage",
+   "CtxReduction.ctxCrossSessionAdvantage",
+   "CtxTransitionReduction.beaconWrongSequenceAdvantage",
+   "CtxTransitionReduction.beaconWrongSenderAdvantage",
+   "CtxTransitionReduction.beaconCrossSessionAdvantage",
+   "CtxRetainedTagProjection.fixedMaterialContextCtxFreshOpeningProbability",
+   "CtxRetainedTagProjection.sameViewBaseFreshOpeningProbability",
+   "CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability",
+   "CtxAuthClassification.ctxFreshAcceptedBaseProjectionProbability",
+   "CtxAuthClassification.ctxContextAliasReplayProbability",
+   "CtxAuthClassification.ctxNonceConsistentAliasReplayProbability",
+   "CtxAuthClassification.ctxFreshTargetOuterHashAliasReplayProbability",
+   "CtxAuthClassification.ctxNonceConsistentFreshAcceptedBaseProjectionProbability",
+   "CtxAuthClassification.ctxNonceConsistentAcceptedFullFreshForgeryProbability"
+  ],
+  "wrapper_reached_theorems_unchanged": 14,
+  "twins": 0,
+  "cross_stage_consumers": 0
+ },
+ "lean_changes": {
+  "VCVioFeasibility": "four statements restated; ctx_binding_bound_tight and ctx_binding_bound proved by rw [<- VCVioLegacy.oracleComp_probEvent_eq_prEvent_native] and binding_bound / binding_bound_via_cr_chain; imports VCVioLegacyBridge; module doc paragraph",
+  "CtxReduction": "six wrapper bodies; three proofs rewritten (phase B)",
+  "CtxTransitionReduction": "three wrapper bodies; four proofs rewritten (phase B)",
+  "CtxRetainedTagProjection": "two wrapper bodies; one proof rewritten (phase B); imports VCVioForwardOracleComp (native measure semantics for ProbComp); module doc note",
+  "CtxAuthClassification": "seven wrapper bodies; three proofs rewritten (phase B); adds the import VCVioForwardOracleComp (native measure semantics for ProbComp); module doc note",
+  "VCVioLegacyBridge": "oracleComp_probOutput_eq_prEvent_native, oracleComp_probEvent_eq_prEvent_native, oracleComp_evalSPMF_eq_iff_evalDistEq_native (each under set_option linter.deprecated false in, guarded [propext, Classical.choice, Quot.sound]); module and section docs; 14 -> 17 theorems",
+  "phase_b_lemmas_replaced": [
+   "probOutput_bind_mono",
+   "probOutput_pure_bool_le",
+   "probEvent_mono''",
+   "probEvent_or_le",
+   "probOutput_eq_zero_iff",
+   "evalDist_apply_singleton (simp bridge)",
+   "a full simp over the deprecated body"
+  ],
+  "phase_b_laws_used": [
+   "prEvent_map",
+   "prEvent_mono",
+   "prEvent_eq_zero_of_forall_not",
+   "prEvent_eq_evalDist_singleton",
+   "prEvent_or_le (S0 backport)",
+   "bind_pure_comp",
+   "Functor.map_map"
+  ],
+  "codemod": "pin-filtered upstream codemod on the five files; output identical to S0's dry run; 20 reported hand sites (the phase B lemmas)"
+ },
+ "finding_semantics_instance": "At the pin, Pr{...} on ProbComp elaborates with PFunctor.FreeM.instEvalDistSemanticsFreeM where the measurable structure of unifSpec's answers is imported, and with the SPMF adapter instEvalDistSemanticsOfMonadLiftTSPMF otherwise; the first certificate run rejected the nine wrappers of CtxRetainedTagProjection and CtxAuthClassification for this reason; both now import VCVioForwardOracleComp; adapter users after the stage: BeaconcryptCore.Computational.VCVioLegacyBridge",
+ "build": {
+  "command": "make -C beaconcrypt-core check-lean SHELL=bash (proof shell, two-file flake copy of central's flake.nix/flake.lock)",
+  "base_build": {
+   "lease": "00000773",
+   "window": "2026-10-20T01:47:27+02:00..02:09:51+02:00",
+   "rc": 0,
+   "jobs": 5535,
+   "log_sha256": "a3ea12ed76eb307f925754ed32299511bb554b05519fc44e333d3fe855fb6103"
+  },
+  "first_s1_build": {
+   "lease": "00000775",
+   "window": "2026-10-20T02:10:24+02:00..02:31:19+02:00",
+   "rc": 0,
+   "note": "before the VCVioForwardOracleComp import fix"
+  },
+  "final": {
+   "lease": "00000776",
+   "window": "2026-10-20T02:36:32+02:00..02:57:18+02:00",
+   "rc": 0,
+   "jobs": 5535,
+   "rebuilt_project_modules": 1856,
+   "errors": 0,
+   "log_sha256": "31ee5f3bc7265ce52f950718d4965400f776248ea4bc00d7bb4d8817f9536337"
+  },
+  "committed_tree_check": "make check-lean on e77a141c (lease 00000778, ..2026-10-20T03:07:56+02:00): rc 0, Build completed successfully (5535 jobs), no project module rebuilt"
+ },
+ "gates": {
+  "G1": {
+   "base_unique": 1338,
+   "stage_unique": 1316,
+   "expected_stage_unique": 1316,
+   "decreased_file_name_counts": {
+    "BeaconcryptCore/Computational/CtxAuthClassification.lean|probEvent": 7,
+    "BeaconcryptCore/Computational/CtxReduction.lean|probOutput": 6,
+    "BeaconcryptCore/Computational/CtxRetainedTagProjection.lean|probOutput": 2,
+    "BeaconcryptCore/Computational/CtxTransitionReduction.lean|probOutput": 3,
+    "BeaconcryptCore/Computational/VCVioFeasibility.lean|probEvent": 4
+   },
+   "increased_file_name_counts": {},
+   "decrease_outside_stage_files": [],
+   "removed_by_name": {
+    "probOutput": 11,
+    "probEvent": 11
+   },
+   "pass": true
+  },
+  "G2": {
+   "base_sites": 1724,
+   "stage_sites": 1702,
+   "base_warned": 1338,
+   "stage_warned": 1316,
+   "base_suppressed": 386,
+   "stage_suppressed": 386,
+   "removed_sites": 22,
+   "added_sites": [],
+   "suppression_lines_stage_outside_bridge": 182,
+   "suppression_lines_base": 182,
+   "stage_new_modules_sites": [],
+   "twin_sites_exempt": 0,
+   "twin_lines": [],
+   "twin_names_expected": [],
+   "pass": true
+  },
+  "G3": {
+   "base": 756,
+   "stage": 734,
+   "stage_in_new_modules": [],
+   "stage_in_stage_modules": [],
+   "pass": true
+  },
+  "G4": {
+   "count_base": 95198,
+   "count_stage": 95214,
+   "removed": [
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSenderAdvantage_eq_zero._simp_1_1",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSenderAdvantage_eq_zero._simp_1_2",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSequenceAdvantage.eq_1"
+   ],
+   "added_by_module": {
+    "BeaconcryptCore.Computational.CtxAuthClassification": 1,
+    "BeaconcryptCore.Computational.CtxReduction": 7,
+    "BeaconcryptCore.Computational.CtxRetainedTagProjection": 3,
+    "BeaconcryptCore.Computational.CtxTransitionReduction": 5,
+    "BeaconcryptCore.Computational.VCVioLegacyBridge": 3
+   },
+   "kind_changed": [],
+   "module_changed": [],
+   "levels_changed": [],
+   "fingerprints_compared": true,
+   "type_binder_only_changes": [],
+   "type_changed_allowed": [
+    "BeaconcryptCore.Computational.CtxReduction.ctxCrossSessionAdvantage.eq_1",
+    "BeaconcryptCore.Computational.CtxReduction.ctxRelabelAdvantage.eq_1",
+    "BeaconcryptCore.Computational.CtxReduction.ctxWrongSenderAdvantage.eq_1",
+    "BeaconcryptCore.Computational.CtxReduction.ctxWrongSequenceAdvantage.eq_1",
+    "BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound",
+    "BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_512",
+    "BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight",
+    "BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight_512"
+   ],
+   "type_changed_unexpected": [],
+   "instance_flag_changed": [],
+   "opaque_value_changed": [],
+   "def_value_binder_only_changes": [],
+   "def_value_changed_allowed": [
+    "BeaconcryptCore.Computational.CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability",
+    "BeaconcryptCore.Computational.CtxAuthClassification.ctxContextAliasReplayProbability",
+    "BeaconcryptCore.Computational.CtxAuthClassification.ctxFreshAcceptedBaseProjectionProbability",
+    "BeaconcryptCore.Computational.CtxAuthClassification.ctxFreshTargetOuterHashAliasReplayProbability",
+    "BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentAcceptedFullFreshForgeryProbability",
+    "BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentAliasReplayProbability",
+    "BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentFreshAcceptedBaseProjectionProbability",
+    "BeaconcryptCore.Computational.CtxReduction.ctxCrossSessionAdvantage",
+    "BeaconcryptCore.Computational.CtxReduction.ctxFullCommitmentAdvantage",
+    "BeaconcryptCore.Computational.CtxReduction.ctxMisattributionAdvantage",
+    "BeaconcryptCore.Computational.CtxReduction.ctxRelabelAdvantage",
+    "BeaconcryptCore.Computational.CtxReduction.ctxWrongSenderAdvantage",
+    "BeaconcryptCore.Computational.CtxReduction.ctxWrongSequenceAdvantage",
+    "BeaconcryptCore.Computational.CtxRetainedTagProjection.fixedMaterialContextCtxFreshOpeningProbability",
+    "BeaconcryptCore.Computational.CtxRetainedTagProjection.sameViewBaseFreshOpeningProbability",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconCrossSessionAdvantage",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSenderAdvantage",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSequenceAdvantage"
+   ],
+   "def_value_changed_unexpected": [],
+   "theorem_value_changed": [
+    "BeaconcryptCore.Computational.CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_le_projection_add_alias",
+    "BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentAcceptedFullFreshForgeryProbability_le_nonceConsistentProjection_add_freshAlias",
+    "BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentAliasReplayProbability_le_freshTargetOuterHashAliasReplay",
+    "BeaconcryptCore.Computational.CtxReduction.ctxFullCommitmentAdvantage_le_blake2b_cr",
+    "BeaconcryptCore.Computational.CtxReduction.ctxMisattributionAdvantage_le_blake2b_cr",
+    "BeaconcryptCore.Computational.CtxReduction.ctxRelabelAdvantage_le_blake2b_cr",
+    "BeaconcryptCore.Computational.CtxRetainedTagProjection.fixedMaterialContext_ctxFreshOpeningProbability_le_sameViewBaseFreshOpeningProbability",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconCrossSessionAdvantage_le_blake2b_cr",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSenderAdvantage_eq_zero",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSequenceAdvantage_eq_zero",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSequenceAdvantage_le_blake2b_cr",
+    "BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound",
+    "BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_512",
+    "BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight",
+    "BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight_512",
+    "BeaconcryptCore.Computational.VCVioFeasibility.instFiniteU8_beaconcryptCore"
+   ],
+   "added_outside_new_modules": [
+    "BeaconcryptCore.Computational.CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability._proof_1",
+    "BeaconcryptCore.Computational.CtxReduction.ctxCollisionReduction.eq_1",
+    "BeaconcryptCore.Computational.CtxReduction.ctxFullCommitmentCollisionReduction.eq_1",
+    "BeaconcryptCore.Computational.CtxReduction.ctxFullCommitmentExp.eq_1",
+    "BeaconcryptCore.Computational.CtxReduction.ctxMisattributionAdvantage._proof_1",
+    "BeaconcryptCore.Computational.CtxReduction.ctxMisattributionExp.eq_1",
+    "BeaconcryptCore.Computational.CtxReduction.ctxRelabelExp.eq_1",
+    "BeaconcryptCore.Computational.CtxRetainedTagProjection.fixedMaterialContextCtxFreshOpeningExp.eq_1",
+    "BeaconcryptCore.Computational.CtxRetainedTagProjection.fixedMaterialContextCtxFreshOpeningProbability._proof_1",
+    "BeaconcryptCore.Computational.CtxRetainedTagProjection.sameViewBaseFreshOpeningExp.eq_1",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconCrossSessionCollisionReduction.eq_1",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconCrossSessionExp.eq_1",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSenderExp.eq_1",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSequenceAdvantage._proof_1",
+    "BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSequenceCollisionReduction.eq_1",
+    "CollisionResistance.crExp.eq_1"
+   ],
+   "unexplained_removed": [],
+   "unexplained_added_outside_new_modules": [],
+   "unexplained_type_changes": [],
+   "unexplained_levels_changes": [],
+   "theorem_value_changed_outside_edited": [],
+   "pass": true
+  },
+  "G5": {
+   "residual_pairs_base": 3210,
+   "residual_pairs_stage": 3186,
+   "residual_pairs_stage_excluding_exempt": 3177,
+   "residual_new_pairs": [],
+   "residual_removed_pairs": [
+    [
+     "BeaconcryptCore.Computational.CtxAuthClassification",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxAuthClassification",
+     "probEvent"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxAuthClassification",
+     "probEvent_mono''"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxAuthClassification",
+     "probEvent_or_le"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxReduction",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxReduction",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxReduction",
+     "probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxReduction",
+     "probOutput_bind_mono"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxReduction",
+     "probOutput_pure_bool_le"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxRetainedTagProjection",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxRetainedTagProjection",
+     "probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxRetainedTagProjection",
+     "probOutput_bind_mono"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxRetainedTagProjection",
+     "probOutput_pure_bool_le"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxTransitionReduction",
+     "CollisionResistance.crExp.match_1"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxTransitionReduction",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxTransitionReduction",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxTransitionReduction",
+     "probFailure"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxTransitionReduction",
+     "probFailure_of_liftM_PMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxTransitionReduction",
+     "probOutput"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxTransitionReduction",
+     "probOutput_bind_mono"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxTransitionReduction",
+     "probOutput_eq_zero_iff"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxTransitionReduction",
+     "probOutput_map_const"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxTransitionReduction",
+     "probOutput_pure"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxTransitionReduction",
+     "probOutput_pure_bool_le"
+    ]
+   ],
+   "forbidden_new_pairs": [],
+   "forbidden_in_stage_modules": [],
+   "absent_upstream_in_new_modules": [
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "DiscreteEvalDistCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "OracleSpec.IsUniformSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalDist_apply_setOf"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalSPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalSPMF_ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "probEvent"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "probOutput"
+    ]
+   ],
+   "forbidden_new_outside_bridge": [],
+   "forbidden_in_stage_modules_new": [],
+   "pass": true
+  }
+ },
+ "warning_categories": {
+  "base": "check-lean-0 (base tree)",
+  "stage": "check-lean-2",
+  "checks": {
+   "vcvio_decrease_exact": true,
+   "growth": [],
+   "no_category_grows": true,
+   "new_kinds": [],
+   "no_new_kind": true,
+   "no_errors": true
+  }
+ },
+ "declaration_dumps": {
+  "base": {
+   "declarations": 95198,
+   "sha256": "68a20f04698ee21d8e76b65672fe4c664124862480bc1f44e316a34aac3b22fa",
+   "note": "taken against the published LEAN_PATH of 1da1ebf4; byte-identical to S0/review-fix/decls/decls-all-c385-fp.tsv"
+  },
+  "stage": {
+   "declarations": 95214,
+   "sha256": "2d797790f663dfec32ef6914a21c824e9dcd987e5254324a76599e977c10eb20"
+  }
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "01da0e00e6f136e5172dcc734e25dcc64c143066d8a815f9ce96c9344da12cad",
+   "imports": "Lean, VCVio.EvalDist.ProbabilityNotation (no project module)",
+   "olean_sha256": "fef8669ce359bda1e2e7566644ed2591a11304749bad93385796d9ba02669325",
+   "olean_equal_to_shared_build": true
+  },
+  "pre_stage_dump": {
+   "entries": 22,
+   "sha256": "d9c2e07f78d5774d8569f651b5b6464f4a05ed3971bfc5a75733a455171a2f87",
+   "program_sha256": "91d62c1a4b1ccd67740322b901317b9d9245fdc73f4813e79982c7a1d8636f9d"
+  },
+  "stage_file": {
+   "entries": 22,
+   "sha256": "8e09fe82f54981254849ccd4c377bdf6c5d05e0ae58ac020d1f9813367af33e9",
+   "result": "rc 0, 22 PASS, no error, no warning",
+   "log_sha256": "aa3a6ee6cc6ae081c145ba1df1ed0dad0b55baf3d6d9a3e1051c4ef8a4be5fb7",
+   "output": [
+    "certificate PASS BeaconcryptCore.Computational.CtxReduction.ctxMisattributionAdvantage against BeaconcryptCore.Computational.CtxReduction.ctxMisattributionAdvantage: type unchanged; event mask 0 of 1; old body hash 2683253796 and pp.all text equal; BeaconcryptCore.Computational.CtxReduction.ctxMisattributionAdvantage = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxReduction.ctxFullCommitmentAdvantage against BeaconcryptCore.Computational.CtxReduction.ctxFullCommitmentAdvantage: type unchanged; event mask 0 of 1; old body hash 64597241 and pp.all text equal; BeaconcryptCore.Computational.CtxReduction.ctxFullCommitmentAdvantage = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxReduction.ctxRelabelAdvantage against BeaconcryptCore.Computational.CtxReduction.ctxRelabelAdvantage: type unchanged; event mask 0 of 1; old body hash 461613594 and pp.all text equal; BeaconcryptCore.Computational.CtxReduction.ctxRelabelAdvantage = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxReduction.ctxWrongSequenceAdvantage against BeaconcryptCore.Computational.CtxReduction.ctxWrongSequenceAdvantage: type unchanged; event mask 0 of 1; old body hash 2211336435 and pp.all text equal; BeaconcryptCore.Computational.CtxReduction.ctxWrongSequenceAdvantage = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxReduction.ctxWrongSenderAdvantage against BeaconcryptCore.Computational.CtxReduction.ctxWrongSenderAdvantage: type unchanged; event mask 0 of 1; old body hash 409774296 and pp.all text equal; BeaconcryptCore.Computational.CtxReduction.ctxWrongSenderAdvantage = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxReduction.ctxCrossSessionAdvantage against BeaconcryptCore.Computational.CtxReduction.ctxCrossSessionAdvantage: type unchanged; event mask 0 of 1; old body hash 3361184371 and pp.all text equal; BeaconcryptCore.Computational.CtxReduction.ctxCrossSessionAdvantage = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSequenceAdvantage against BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSequenceAdvantage: type unchanged; event mask 0 of 1; old body hash 4018190997 and pp.all text equal; BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSequenceAdvantage = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSenderAdvantage against BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSenderAdvantage: type unchanged; event mask 0 of 1; old body hash 3466442485 and pp.all text equal; BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSenderAdvantage = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxTransitionReduction.beaconCrossSessionAdvantage against BeaconcryptCore.Computational.CtxTransitionReduction.beaconCrossSessionAdvantage: type unchanged; event mask 0 of 1; old body hash 4141479805 and pp.all text equal; BeaconcryptCore.Computational.CtxTransitionReduction.beaconCrossSessionAdvantage = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxRetainedTagProjection.fixedMaterialContextCtxFreshOpeningProbability against BeaconcryptCore.Computational.CtxRetainedTagProjection.fixedMaterialContextCtxFreshOpeningProbability: type unchanged; event mask 0 of 1; old body hash 1021808511 and pp.all text equal; BeaconcryptCore.Computational.CtxRetainedTagProjection.fixedMaterialContextCtxFreshOpeningProbability = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxRetainedTagProjection.sameViewBaseFreshOpeningProbability against BeaconcryptCore.Computational.CtxRetainedTagProjection.sameViewBaseFreshOpeningProbability: type unchanged; event mask 0 of 1; old body hash 2364264579 and pp.all text equal; BeaconcryptCore.Computational.CtxRetainedTagProjection.sameViewBaseFreshOpeningProbability = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability against BeaconcryptCore.Computational.CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability: type unchanged; event mask 0 of 1; old body hash 603213692 and pp.all text equal; BeaconcryptCore.Computational.CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxAuthClassification.ctxFreshAcceptedBaseProjectionProbability against BeaconcryptCore.Computational.CtxAuthClassification.ctxFreshAcceptedBaseProjectionProbability: type unchanged; event mask 0 of 1; old body hash 183442039 and pp.all text equal; BeaconcryptCore.Computational.CtxAuthClassification.ctxFreshAcceptedBaseProjectionProbability = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxAuthClassification.ctxContextAliasReplayProbability against BeaconcryptCore.Computational.CtxAuthClassification.ctxContextAliasReplayProbability: type unchanged; event mask 0 of 1; old body hash 4140738301 and pp.all text equal; BeaconcryptCore.Computational.CtxAuthClassification.ctxContextAliasReplayProbability = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentAliasReplayProbability against BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentAliasReplayProbability: type unchanged; event mask 0 of 0; old body hash 837661025 and pp.all text equal; BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentAliasReplayProbability = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxAuthClassification.ctxFreshTargetOuterHashAliasReplayProbability against BeaconcryptCore.Computational.CtxAuthClassification.ctxFreshTargetOuterHashAliasReplayProbability: type unchanged; event mask 0 of 1; old body hash 3701527714 and pp.all text equal; BeaconcryptCore.Computational.CtxAuthClassification.ctxFreshTargetOuterHashAliasReplayProbability = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentFreshAcceptedBaseProjectionProbability against BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentFreshAcceptedBaseProjectionProbability: type unchanged; event mask 0 of 1; old body hash 1657843219 and pp.all text equal; BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentFreshAcceptedBaseProjectionProbability = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentAcceptedFullFreshForgeryProbability against BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentAcceptedFullFreshForgeryProbability: type unchanged; event mask 0 of 1; old body hash 1987665443 and pp.all text equal; BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentAcceptedFullFreshForgeryProbability = old body proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight against BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight: event mask 0 of 0 ambiguous nodes; old statement hash 1395186899 and pp.all text equal; BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight_512 against BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight_512: event mask 0 of 0 ambiguous nodes; old statement hash 4000065516 and pp.all text equal; BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight_512 ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound against BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound: event mask 0 of 0 ambiguous nodes; old statement hash 2099811069 and pp.all text equal; BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound]",
+    "certificate PASS BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_512 against BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_512: event mask 0 of 0 ambiguous nodes; old statement hash 551662987 and pp.all text equal; BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_512 ↔ old statement proved and kernel-checked, axioms [propext, Classical.choice, Quot.sound] Command being timed: \"/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 certificates/S1Certificates.lean\" User time (seconds): 1.93 System time (seconds): 0.81 Percent of CPU this job got: 97% Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.79 Average shared text size (kbytes): 0 Average unshared data size (kbytes): 0 Average stack size (kbytes): 0 Average total size (kbytes): 0 Maximum resident set size (kbytes): 4950680 Average resident set size (kbytes): 0 Major (requiring I/O) page faults: 57 Minor (reclaiming a frame) page faults: 106394 Voluntary context switches: 495 Involuntary context switches: 19 Swaps: 0 File system inputs: 11776 File system outputs: 16 Socket messages sent: 0 Socket messages received: 0 Signals delivered: 0 Page size (bytes): 4096 Exit status: 0"
+   ]
+  },
+  "negative_control": {
+   "file_sha256": "dc2b206e3d9162eb88b251b3610ca35b1a772b54d550afcf83fb28cda0a7f937",
+   "doctored_dump_sha256": "897b5786741da8a5092d3be2170e428ca5578291fd80680c84ebaea9e132c323",
+   "cases": [
+    "N1 ctx_binding_bound against ctx_binding_bound_tight",
+    "N2 ctxFullCommitmentAdvantage against ctxMisattributionAdvantage (other type)",
+    "N3 ctxNonceConsistentAliasReplayProbability against ctxFreshTargetOuterHashAliasReplayProbability (same type, other body)",
+    "N4 ctx_binding_bound_tight against a dump entry with doctored pp.all text",
+    "N5 ctx_binding_bound_512 against a dump entry with doctored type hash"
+   ],
+   "output": [
+    "certificate FAIL BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound against BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 2099811069 vs 1395186899",
+    "certificate FAIL BeaconcryptCore.Computational.CtxReduction.ctxFullCommitmentAdvantage: type changed (1060987672 vs 999145744)",
+    "certificate FAIL BeaconcryptCore.Computational.CtxAuthClassification.ctxNonceConsistentAliasReplayProbability against BeaconcryptCore.Computational.CtxAuthClassification.ctxFreshTargetOuterHashAliasReplayProbability: no event mask reproduces the old body; mask 0 gives hash 837661025",
+    "certificate FAIL BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight against BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 1395186899 vs 1395186899",
+    "certificate FAIL BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_512 against BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_512: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 551662987 vs 551662988"
+   ]
+  },
+  "log_checker": "tools/check_certificates.py: RESULT PASS"
+ },
+ "phase_b": {
+  "facade_probe": "S0 equivalence review's FacadeProbe over the five modules (and the bridge, excluded); version 1, which counts only constants of the module roots VCVio and ToMathlib; vcvio-deprecations-s1-review.json gives version 2 over every module root",
+  "base": {
+   "rows_outside_bridge": 172,
+   "declarations_outside_bridge": 38,
+   "by_module": {
+    "CtxReduction": 58,
+    "CtxAuthClassification": 35,
+    "CtxTransitionReduction": 47,
+    "VCVioFeasibility": 18,
+    "CtxRetainedTagProjection": 14
+   },
+   "constants": {
+    "SPMF.instAlternativeMonad": 7,
+    "SPMF.instMonadLiftPMF": 40,
+    "probOutput": 24,
+    "SPMF": 40,
+    "probEvent": 16,
+    "OracleComp.instEvalDistCompatible": 8,
+    "SPMF.instLawfulMonadLiftPMF": 7,
+    "probOutput_bind_mono": 6,
+    "probEvent_mono''": 3,
+    "probOutput_pure_bool_le": 6,
+    "evalDist_apply_singleton": 4,
+    "probOutput_pure": 1,
+    "probFailure_of_liftM_PMF": 1,
+    "probEvent_or_le": 2,
+    "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible": 4,
+    "probFailure": 1,
+    "probOutput_map_const": 1,
+    "probOutput_eq_zero_iff": 1
+   }
+  },
+  "stage": {
+   "rows_outside_bridge": 6,
+   "declarations_outside_bridge": 2,
+   "by_module": {
+    "VCVioFeasibility": 6
+   },
+   "constants": {
+    "probEvent": 2,
+    "SPMF.instMonadLiftPMF": 2,
+    "SPMF": 2
+   }
+  },
+  "remaining": [
+   [
+    "VCVioFeasibility",
+    "VCVioFeasibility.ctx_binding_bound",
+    "value",
+    "SPMF",
+    "1",
+    "0"
+   ],
+   [
+    "VCVioFeasibility",
+    "VCVioFeasibility.ctx_binding_bound",
+    "value",
+    "SPMF.instMonadLiftPMF",
+    "0",
+    "1"
+   ],
+   [
+    "VCVioFeasibility",
+    "VCVioFeasibility.ctx_binding_bound",
+    "value",
+    "probEvent",
+    "1",
+    "1"
+   ],
+   [
+    "VCVioFeasibility",
+    "VCVioFeasibility.ctx_binding_bound_tight",
+    "value",
+    "SPMF",
+    "1",
+    "0"
+   ],
+   [
+    "VCVioFeasibility",
+    "VCVioFeasibility.ctx_binding_bound_tight",
+    "value",
+    "SPMF.instMonadLiftPMF",
+    "0",
+    "1"
+   ],
+   [
+    "VCVioFeasibility",
+    "VCVioFeasibility.ctx_binding_bound_tight",
+    "value",
+    "probEvent",
+    "1",
+    "1"
+   ]
+  ],
+  "remaining_reason": "ctx_binding_bound_tight and ctx_binding_bound consume VCVio's binding_bound and binding_bound_via_cr_chain, stated with the deprecated event form at the pin, through the bridge (plan section 5.2)"
+ },
+ "step7": {
+  "axiom_walk": [
+   "AXIOM-WALK roots 95214 reached 122205 unresolved 0",
+   "AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]",
+   "SERVER-DOMAIN PqxdhDeploymentKemTwoSided.kem_transfer_two_sided true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealCompile.ideal_compile true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealHandoff.ideal_world_view true",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss false",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared false",
+   "SERVER-DOMAIN PqxdhRegistrationJointBeaconFinishOnce.slotGame_two false"
+  ],
+  "axiom_walk_file_sha256": "f93cd6e6da2ccc6b3cfd51c1cd4a095731f3d87ca22bb5046f2f2987335b11ba",
+  "source_scan": [
+   "LEAN-SCAN files 1994 hits 0"
+  ],
+  "lean_scan_sha256": "61deb5fdff698e45c7fc3180820c214aa4d6f22e6c96ace03f87a040f1248880"
+ },
+ "inventory": {
+  "recount": "handwritten-lean unchanged (1987)",
+  "rehash": [
+   "CtxAuthClassification.lean",
+   "CtxReduction.lean",
+   "CtxRetainedTagProjection.lean",
+   "CtxTransitionReduction.lean",
+   "VCVioFeasibility.lean",
+   "VCVioLegacyBridge.lean",
+   "check-inventory.sh",
+   "lean/README.md",
+   "trusted-boundary.md"
+  ],
+  "pins": "VCVioLegacyBridge theorem, guard and suppression counts 14 -> 17; #print axioms and ^theorem pins of the three _native theorems",
+  "check_inventory": "Formal-verification inventory matches the reviewed boundary (logs/check-inventory-1.log)"
+ },
+ "axiom_guards": {
+  "new_theorems": 3,
+  "propext_classical_choice_quot_sound": 3,
+  "changed_guards": 0
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "tool_sha256": {
+  "tools/gates.py": "24a66d2cace5ffc718d05c0b2f0728e105ac64d81df377b398b91c8c1fae730e",
+  "tools/gates.s0.py": "35f184bfd39809889f83c8c94c5989fcfdb437fc47ef0f713e5f9696208664e0",
+  "tools/gen_certificates.py": "e84431c2b6400f09ef2915e1a84d2d6b20425e991fa659ee883c263e4b5b4acd",
+  "tools/DeclsAll.lean.in": "0bc796a2a45c79394ecc9904f90ae45ac4066b0bfec9df80d9503f0539497f1b",
+  "tools/DumpPpAll.lean.in": "1fa038548e58f7d91a70fd732a5952e05757a3966b1c85ae6d25e00acf05c284",
+  "tools/FacadeProbe.lean.in": "af84e97fd53c5bc8313e79b15a56bf22162baccb96c9e7ab22b7f09c05542b46",
+  "tools/phaseb.py": "63c0d00a143589ab7ba627e8da3cbbe818816cdd46cdd9482c673b0f11ec132f",
+  "tools/check_certificates.py": "1adf9cb8789a4f23c520d51d01517ece21167bdc0afecf8bf1659da769a5ed27",
+  "tools/scan_sources.py": "ae67c92d4ab3acc921e4582f78cc62f127ed97f10e12d54624dd03c559ed170a",
+  "tools/warn_categories.py": "160cb0a9791c5bacfad1856f16d4c9c98eb8c361306f6fd6a9fd6cd395739703",
+  "tools/codemod/pin_codemod.py": "33dbd76e2af2eea28ddce9408243f8b5f508046229c037158c043dd56a089a61",
+  "tools/s1-postbuild.sh": "1ae6cc29a3f8ad0f438193ee84f2f4b519148662bcb76e226e8b07dc7d8ef4b7",
+  "tools/base-measure.sh": "9f990eb17c1862ef84f19d1a28ccf46626c14b3fdbd34bf64af2a3f66c04b6f4",
+  "stage/gates-config.json": "1fdf1f24ab5fff0641d202e76bd79995180be187e6d8b9b00d91a44b79bde02c"
+ },
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S1/logs/ (check-lean-0..3, certificates-2, certificates-negative, stage-*-2, check-inventory-1, warn-categories)",
+ "reviews": "two independent reviews at c8637a5a (2026-10-20, statement equivalence and hygiene, both APPROVE_WITH_NITS); their fixes and reruns are recorded in vcvio-deprecations-s1-review.json"
+}

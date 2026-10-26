@@ -1,0 +1,68 @@
+{
+  "reviewer": "/root",
+  "date": "2026-10-06T02:50:18.174359+00:00",
+  "decision": "APPROVE_SCOPED_EXACT_ID_NEAR_ORIGIN",
+  "source_manifest_sha256": "f3b063b5119ebbc61a22762533c9d55c443e04c8450d1b0d5c2287910bc83786",
+  "inspected_files": {
+    "beaconcrypt-core/Makefile": "e0ed8e92f4c5050e9fdb6e3992bcfaa317c3bf058127e9d3e0ed54109b5b1171",
+    "beaconcrypt-core/proofs/check-inventory.sh": "b23e13f58d37b521a9187415afbbef9d72d2ad2ff67407a16f17f1dfecf582a5",
+    "beaconcrypt-core/proofs/pro-verif/check-record-origin.py": "c2f6e981dd8c71c04e147e692069f32fd59cbb14d324fedac354b7d2e8af15d9",
+    "beaconcrypt-core/proofs/pro-verif/check-verdict-classes.py": "b0f6e992529e425a7b506b9c5fe316f31008c5ba92522ce5ade8a33847a0d9e8",
+    "beaconcrypt-core/proofs/pro-verif/declaration-allowlist.tsv": "1978578b35148bdecc637aa54b4f792163478f70d01b619bcd67540dcb208f0c",
+    "beaconcrypt-core/proofs/pro-verif/record-origin-auth.pv": "a5be44f4ad6a04dcce73be75a27634892f9b3396fed6e68f2f8aad422bff5b40",
+    "beaconcrypt-core/proofs/pro-verif/record-origin-cache-receive.pvl": "23cfdf4f300d6ab8ec48464f055a5ffb45925f94609a0223a5b9158f26f183b8",
+    "beaconcrypt-core/proofs/pro-verif/record-origin-cache-sends.pvl": "7aa29dcefbdfea05fdbe5962b2b775d8dbe7c369a4a0e247f5075f0f92981866",
+    "beaconcrypt-core/proofs/pro-verif/record-origin-cache-witness.pv": "cc811c64c8da409d915c396863d4f569f22699def93a9a11d627c18405ca5fe6",
+    "beaconcrypt-core/proofs/pro-verif/record-origin-cache.pvl": "9d153de8282fba57ee956294ab13bd68c325dcd306d90a584e86567ea46d36fd",
+    "beaconcrypt-core/proofs/pro-verif/record-origin-identity.pv": "3289a86910c2fbe459bcf21a50725e5184363bfbb313eb057dcbedea92295d30",
+    "beaconcrypt-core/proofs/pro-verif/record-origin-kr2.pvl": "9e6abd0ea46a542466b85701cc369449d23edae0cce05459c9cd93ae2f6f4209",
+    "beaconcrypt-core/proofs/pro-verif/record-origin-kr3.pvl": "248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209",
+    "beaconcrypt-core/proofs/pro-verif/record-origin-leak-control.pv": "ba35334fa9f84e34014bdd6dde2d4dadf096725404d8834d0c2398b71319c738",
+    "beaconcrypt-core/proofs/pro-verif/record-origin-models.py": "d013982bec00db87fd32f493742c6ecd2ecf2e35094751c0c58667ec40d1e6cc",
+    "beaconcrypt-core/proofs/pro-verif/record-origin-receive.pvl": "395c36bcdf1d8192ee5e8ed88a3c67a15d36d985854affc1fa34549308f31d93",
+    "beaconcrypt-core/proofs/pro-verif/record-origin-sends.pvl": "e3023bd89136cac74bf83389c7f1b2921fecd89dfd813acdea8ba8e433ebd145",
+    "beaconcrypt-core/proofs/pro-verif/record-origin.pvl": "fbca435e6a043916c2b030a385ba852934bfda9dbcc4c0088bc28891337c153c",
+    "beaconcrypt-core/proofs/pro-verif/test-record-origin-checker.py": "274c7e737ca279c769d85d2af4ef4674d5a1633de559b7a7a6052cf666e678a2",
+    "beaconcrypt-core/proofs/pro-verif/test-verdict-classes.py": "9b543ca71bc9237e1dd24f05fd3e2b3c73c45a9b8379ee195a8001e2773e8085",
+    "beaconcrypt-core/proofs/pro-verif/verdict-classes.tsv": "64b27ee9434cb71d6ce3b5c253e6a6ecf96d78cfb6399af8a26d88af8365cae1",
+    "beaconcrypt-core/proofs/pro-verif/verdict-inventory.py": "35175d027ce761981f52d20909c42095be8fa2ce460e972c0ac2be061b868c43",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "01d0c8a617b0d3999786ba87a4c30f1663d489b1d2c5795ee57f08ed78c3ca89",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "0bb7cb467f3cf7908a9a659003902ce830be6a0eb54edf92e97ea0ea3a418736",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "5cafa89d2860ef6f626ba6297f1017bdd2faef3d339b79e336ca7a217808e279",
+    "doc/formal-verification-analysis.md": "c31f085e0a7fcd2d5c152c86410ec650a6c206bdcef3d4aeb74a15a6a695029a",
+    "doc/impl/proverif-free-schedule-records-b2s.md": "2819d13530d4ab7e5baf26a6cf055ae415556959e49173e7d9f4d14e2c1a20a7",
+    "doc/impl/proverif-fs-source-abstraction.md": "320ae0ff4c7d45c9f46c7721946a06ff2f7949704f18f878a74a3f89eafe15b1",
+    "doc/impl/proverif-record-origin.md": "485b6ff5f58fac7b8bf53263dc444d169525a311b96ef1a482544d8a534720df",
+    "doc/impl/proverif-serial-ci.md": "508ec5c1a948e0cc0c0074c95f8eb5f06e2aba59529afdbe690830a78e0e6098"
+  },
+  "semantic_review": [
+    "Read full retained registration/finish derivative, actual sends/near receiver, all four queries and bound expansions, ghost derivative comparator, strict checker/regressions and complete source/replay/cache guide. Prior source-knowledge and replay peer reviews remain separate evidence.",
+    "Every actual candidate remains admitted through exact signed-field verification; A2 source classification selects the unknown Ed identity before target selection. Target-key reflection uses separate A2 related-DH service reasoning and the same-process auxiliary identity query, not a circular origin premise.",
+    "Exact own/assigned IDs, private moved one-use pending continuations, assigned-peer route/AD and successful publication provenance retained. Chosen send failures consume allocations without inventing publications. Actual optional opening plaintext is returned; no adversary target is overwritten with recovered plaintext.",
+    "Source projection is selected-event/deduction preservation, including reflection of every matching publication, not whole API equivalence. Far results are computed from actual chain3 and original input recipes, with all original source attempts explicitly still charged.",
+    "Kr3 ordinary-origin verdict plus independently reviewed same-process C3 replay proof gives injectivity. Replay proof explicitly relies on T0 HKDF/KEM constructor injectivity and one-use pending worker creation; no zero computational collision or generic IND-CCA consequence claimed. Finite64 transition cases match four reachable states and strictly remove successful targets.",
+    "Kr2 cache witness requires selected fresh identity and honest Server context. Its ghost event is reached after successful cached-one opening, and the next ordinary success event/output can occur immediately. Exact two-step prefix embeds in Kr3 by leaving third input unscheduled; annotation and ghost erasure do not alter security process.",
+    "Precise annotations occur only at eight existing witness host-input sites; new allowlist includes their exact files/counts and three comparator literal occurrences. Original security processes/equations and old3177 classified rows unchanged.",
+    "Read all Make/checker/inventory/FT/classification/doc changes. The new four-target gate is present in all three existing aggregate recipes including authorized separate serial extension group; exact runner and omitted-gate regressions preserve previous checks."
+  ],
+  "validation_review": {
+    "frozen_files_verified": 30,
+    "maintained_receipts": "All4 source hashes, exact primary/summary verdicts, exit0/no timeout, trace counts and log hashes verified; actual selected sequence2/cache trace inspected.",
+    "source_preservation": {
+      "all_old_lean": 1404,
+      "all_old_pv_pvl": 225,
+      "production_rust": 22,
+      "prior_verdict_rows": 3177
+    },
+    "inventory_digests": 1739,
+    "reviewer_tests": "13 dedicated checker regressions passed; six touched Python files pass Black --check individually; no solver or Lean rebuild.",
+    "existing_guards": "All previous require_ lines retained except explicit converter occurrence counts +2 for the two exact registration derivatives."
+  },
+  "scope_limits": [
+    "Positions1/2, two selected send allocations and at mostthree retained near attempts before firstfar success; explicit private-slot/root/material protection through target cut.",
+    "T0 symbolic/abstract-message result; full native adapter/computational/global joins, total ambient costs/selection and actual s2b/message-secrecy interfaces remain open. Codec internals remain outside scope.",
+    "No added primitive security contract, snapshot/persistence model, assigned-ID equality or whole-protocol completion."
+  ],
+  "findings": [],
+  "remaining_publication_work": "Review final portable evidence manifest/hashes before publication. Status-only heading/result-record edits may be separately recorded without rerunning unchanged solver inputs."
+}

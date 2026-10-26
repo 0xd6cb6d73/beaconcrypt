@@ -1,0 +1,8 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Local operational abstraction: callers choose each configured pin and ID.
+   The honest public identity is available too. No Server-origin conclusion is
+   inferred here; the separate Server admission/response gates are unchanged. *)
+process
+  (out(c, ed_public(SERVER_IDENTITY_SECRET))
+  | !in(c, (configured_identity: bitstring, configured_id: key_id));
+      RegistrationBeaconOwner(configured_identity, configured_id))

@@ -1,0 +1,18 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b: the finish after it opened a later frame (sequence
+   2..T_max).  The sequence-one gate aborts the Beacon for good, so nothing
+   follows.  Exactly one of this file and the negative control
+   fs-control-nogate.pvl is loaded. *)
+(* @beaconcrypt-fs-fidelity key=gate.sequence_one src=beaconcrypt-core/src/registration.rs:835-841 anchor=let effect = records::begin_record_receive( *)
+(* @beaconcrypt-fs-fidelity key=gate.abort src=beaconcrypt/src/beacon.rs:575-582 anchor=let completed = match pending.finish(plaintext.as_deref()) { *)
+let FsS2bFinishLater(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+  assigned_key_id: key_id,
+  root: bitstring,
+  associated_data: bitstring,
+  expected_binding: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+  later_plaintext: bitstring
+) = 0.

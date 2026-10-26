@@ -1,0 +1,23 @@
+{
+  "date_utc": "2026-10-06T01:37:02.636574+00:00",
+  "after_review_changes": [
+    {
+      "file": "doc/impl/registration-joint-open-services.md",
+      "old_sha256": "eb490aba6fb0d0c5ecff7b62af8faa9a1e83bcba59a61eb448f8a14dc642abb4",
+      "new_sha256": "e55845bf0966fcbb074b331f1d8d62e4b934d5683e320d795982bd670274a0ba",
+      "scope": "Review status only; proof and scope unchanged."
+    },
+    {
+      "file": "doc/impl/registration-joint-identity-simulation.md",
+      "old_sha256": "5cfd2153ca0c549b45c7fe286f9f6bd16ec36dc8e5d9aaa87c23bfba2af70097",
+      "new_sha256": "059c3f32330e50ffd1e91a6e7b8449d8e81190cd8a8f011055f3286191153411",
+      "scope": "Review status only; proof and scope unchanged."
+    }
+  ],
+  "fetched_origin_vcvio": "8330cdef4f4659931b6764a026cd90c4caf833a4",
+  "prior_topic": "d90be005b812aa39a6ab269214e76422a70b7d70",
+  "scope": "Seven source modules, 60 guarded statements. Actual open initialized service client and ordinary joint-identity simulation. Source-correspondence and query accounting; no accepted-signature security hop yet.",
+  "integration_status": "Reviewed topic checkpoint; central semantic port and aggregate verification pending.",
+  "validation": "Seven exact reviewed modules retain successful direct guarded checks; empty checked logs verified. No unchanged rebuild or broad build claimed.",
+  "excluded_wip": "PqxdhRegistrationJointRawSignatures.lean remains untracked and excluded."
+}

@@ -1,0 +1,33 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Open differential control for the symbolic CTX binding equation.
+   Both contexts and the complete raw frame are attacker supplied. The weak
+   opening interface is the existing deliberate multi-opening fixture.
+   Neither result is a protocol security theorem. *)
+free c: channel.
+free fs_aead_public_sender: key_id.
+event FsAeadDifferentContextsOpened().
+
+let FsAeadWithCtx() =
+  !in(c, (left_key: bitstring, left_nonce: bitstring, left_ad: bitstring,
+          right_key: bitstring, right_nonce: bitstring, right_ad: bitstring,
+          frame: bitstring));
+  let crypto_frame(ciphertext: bitstring, tag: bitstring, commitment: bitstring,
+                   frame_sequence: sequence, sender: key_id) = frame in
+  if commitment = ctx_commitment(left_key, left_nonce, left_ad, tag, frame_sequence, sender) then
+  if commitment = ctx_commitment(right_key, right_nonce, right_ad, tag, frame_sequence, sender) then
+  let left_plaintext = weak_aead_open(left_key, left_nonce, left_ad, ciphertext, tag) in
+  let right_plaintext = weak_aead_open(right_key, right_nonce, right_ad, ciphertext, tag) in
+  if (left_key, left_nonce, left_ad) <> (right_key, right_nonce, right_ad) then
+  event FsAeadDifferentContextsOpened().
+
+let FsAeadWithoutCtx() =
+  !in(c, (left_key: bitstring, left_nonce: bitstring, left_ad: bitstring,
+          right_key: bitstring, right_nonce: bitstring, right_ad: bitstring,
+          frame: bitstring));
+  let crypto_frame(ciphertext: bitstring, tag: bitstring, commitment: bitstring,
+                   frame_sequence: sequence, sender: key_id) = frame in
+  let left_plaintext = weak_aead_open(left_key, left_nonce, left_ad, ciphertext, tag) in
+  let right_plaintext = weak_aead_open(right_key, right_nonce, right_ad, ciphertext, tag) in
+  if (left_key, left_nonce, left_ad) <> (right_key, right_nonce, right_ad) then
+  event FsAeadDifferentContextsOpened().

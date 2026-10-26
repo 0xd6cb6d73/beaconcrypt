@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-10-05T21:47:44.490381+00:00",
+  "reviewer": "/root/evolving_source_join",
+  "decision": "APPROVE_LOCAL_CONDITIONAL_SCOPE",
+  "hashes": {
+    "doc/impl/proverif-pending-registration-schedule.md": "33bd2c0c53eba874e0deb0b656e5ccc82fec9613a4db2288222b4996f55f54e5",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-registration.pvl": "b9a61bd2a03540bbee428489672c11b1767b4733ce86ea9fda107c6ff00f9a6e",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-fixtures.pvl": "68c4680911be1f2ba7fab457e9e0aaaa7e59ec95594229d0ec2586b5354b211f",
+    "beaconcrypt-core/proofs/pro-verif/check-pending-registration.py": "ec095051b3c4428d362a3e74df21c03cbeb3980bbbb8e1f8d919e2a9f95829d2",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-use.pvl": "ebb7db7d04a5cb57d55a5ea2251f39ca5c33579b0d4b72084ad4e062bdfb8057",
+    "beaconcrypt-core/proofs/pro-verif/fs-control-pending-reuse.pvl": "7c599a2eaab90d25a0d61dda68ab1a7ab23594b76c5a4e9ea9711632a14a9120"
+  },
+  "findings": [
+    "Re-reviewed private token service after earlier spent-table encoding. Exactly one private lease per archived token routes to a nonreplicated initial input.",
+    "The actual SchedConsume event and moved ownership precede every build guard. SchedSpent returns associated None replies without re-running the builder or blocking subsequent serial requests.",
+    "Global dispatcher lock and current builder state/counters are carried through the private lease, and only SchedReturn releases them. Forking the spent responder introduces no extra overlapping source call in the stated serial interface.",
+    "Default hook is false; the true negative-control hook adds exactly one second consumption and then a spent responder. No lemma or security premise encodes linearity.",
+    "Conditional paper relation uses first-use service phase as a ghost set, not a table-absence or authentication assumption. Source byte/primitive interpretation and global replicated security remain explicitly open.",
+    "Read the updated checker lifetime, routing, reply and publication anchors. No build or ProVerif verdict re-run/review in this receipt."
+  ],
+  "limitations": [
+    "Local structural scheduling and finite lifetime scope only.",
+    "Separate recorded PV verdicts and input manifests remain required for publication."
+  ]
+}

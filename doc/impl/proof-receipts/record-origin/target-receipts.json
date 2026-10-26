@@ -1,0 +1,442 @@
+[
+  {
+    "name": "L2-origin",
+    "class": "security",
+    "start": "2026-10-06T02:34:07.996288+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "record-origin-receive.pvl": "395c36bcdf1d8192ee5e8ed88a3c67a15d36d985854affc1fa34549308f31d93",
+      "record-origin-kr3.pvl": "248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209",
+      "record-origin-sends.pvl": "e3023bd89136cac74bf83389c7f1b2921fecd89dfd813acdea8ba8e433ebd145",
+      "record-origin.pvl": "fbca435e6a043916c2b030a385ba852934bfda9dbcc4c0088bc28891337c153c",
+      "record-origin-auth.pv": "a5be44f4ad6a04dcce73be75a27634892f9b3396fed6e68f2f8aad422bff5b40"
+    },
+    "limits": {
+      "seconds": 180,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T02:34:10.847329+00:00",
+    "seconds": 2.850975695066154,
+    "peak_rss_kib": 197236,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "388e20f3bad1ca92dce788e111c08b352547d763e52a6b21f7b75da9b6e6298c",
+    "checked": true,
+    "portable_log": {
+      "file": "targets/L2-origin.log.gz",
+      "sha256": "710ac38f51cf988be042e9b11b75ba0c8d36f4c9538b56127b15ef55f1148680",
+      "raw_sha256": "388e20f3bad1ca92dce788e111c08b352547d763e52a6b21f7b75da9b6e6298c",
+      "bytes": 1311672
+    },
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "record-origin-receive.pvl": {
+        "file": "inputs/395c36bcdf1d8192ee5e8ed88a3c67a15d36d985854affc1fa34549308f31d93.gz",
+        "sha256": "0bbab06b4f1d1cf9a5221d3421d1193b744584e1ea8029ade221f65c7c69a92b",
+        "raw_sha256": "395c36bcdf1d8192ee5e8ed88a3c67a15d36d985854affc1fa34549308f31d93",
+        "bytes": 2587
+      },
+      "record-origin-kr3.pvl": {
+        "file": "inputs/248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209.gz",
+        "sha256": "c62cd390ed2a82b0cd20420723d1935f0aee3b3b87e7af00db6fe357dbb54519",
+        "raw_sha256": "248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209",
+        "bytes": 153
+      },
+      "record-origin-sends.pvl": {
+        "file": "inputs/e3023bd89136cac74bf83389c7f1b2921fecd89dfd813acdea8ba8e433ebd145.gz",
+        "sha256": "f01be74e54342c7322ec6f7f6af39ffd602730fa01ba8df23f75c59dfa4195e6",
+        "raw_sha256": "e3023bd89136cac74bf83389c7f1b2921fecd89dfd813acdea8ba8e433ebd145",
+        "bytes": 1902
+      },
+      "record-origin.pvl": {
+        "file": "inputs/fbca435e6a043916c2b030a385ba852934bfda9dbcc4c0088bc28891337c153c.gz",
+        "sha256": "b75447d116645a83b41719c24f796abf286606a664b4c277bcc8a37ac3fa62b9",
+        "raw_sha256": "fbca435e6a043916c2b030a385ba852934bfda9dbcc4c0088bc28891337c153c",
+        "bytes": 11308
+      },
+      "record-origin-auth.pv": {
+        "file": "inputs/a5be44f4ad6a04dcce73be75a27634892f9b3396fed6e68f2f8aad422bff5b40.gz",
+        "sha256": "ff92451739f1f2ee488f78269956034c5a9b2b236cf78cb1b3ba0564ee486c97",
+        "raw_sha256": "a5be44f4ad6a04dcce73be75a27634892f9b3396fed6e68f2f8aad422bff5b40",
+        "bytes": 305
+      }
+    }
+  },
+  {
+    "name": "L2-identity",
+    "class": "security",
+    "start": "2026-10-06T02:34:10.866169+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "record-origin-receive.pvl": "395c36bcdf1d8192ee5e8ed88a3c67a15d36d985854affc1fa34549308f31d93",
+      "record-origin-kr3.pvl": "248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209",
+      "record-origin-sends.pvl": "e3023bd89136cac74bf83389c7f1b2921fecd89dfd813acdea8ba8e433ebd145",
+      "record-origin.pvl": "fbca435e6a043916c2b030a385ba852934bfda9dbcc4c0088bc28891337c153c",
+      "record-origin-identity.pv": "3289a86910c2fbe459bcf21a50725e5184363bfbb313eb057dcbedea92295d30"
+    },
+    "limits": {
+      "seconds": 180,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T02:34:12.800263+00:00",
+    "seconds": 1.9340276350267231,
+    "peak_rss_kib": 170640,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "4810d1d9c14c71129510066ed2e7a112ee109de6d14ae63a2af64cb8f312e36b",
+    "checked": true,
+    "portable_log": {
+      "file": "targets/L2-identity.log.gz",
+      "sha256": "8ba27458ee9b4195bcce6eff69bb8c2f000c3d0f0f0426b7eb95733f84ac64d3",
+      "raw_sha256": "4810d1d9c14c71129510066ed2e7a112ee109de6d14ae63a2af64cb8f312e36b",
+      "bytes": 1293488
+    },
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "record-origin-receive.pvl": {
+        "file": "inputs/395c36bcdf1d8192ee5e8ed88a3c67a15d36d985854affc1fa34549308f31d93.gz",
+        "sha256": "0bbab06b4f1d1cf9a5221d3421d1193b744584e1ea8029ade221f65c7c69a92b",
+        "raw_sha256": "395c36bcdf1d8192ee5e8ed88a3c67a15d36d985854affc1fa34549308f31d93",
+        "bytes": 2587
+      },
+      "record-origin-kr3.pvl": {
+        "file": "inputs/248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209.gz",
+        "sha256": "c62cd390ed2a82b0cd20420723d1935f0aee3b3b87e7af00db6fe357dbb54519",
+        "raw_sha256": "248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209",
+        "bytes": 153
+      },
+      "record-origin-sends.pvl": {
+        "file": "inputs/e3023bd89136cac74bf83389c7f1b2921fecd89dfd813acdea8ba8e433ebd145.gz",
+        "sha256": "f01be74e54342c7322ec6f7f6af39ffd602730fa01ba8df23f75c59dfa4195e6",
+        "raw_sha256": "e3023bd89136cac74bf83389c7f1b2921fecd89dfd813acdea8ba8e433ebd145",
+        "bytes": 1902
+      },
+      "record-origin.pvl": {
+        "file": "inputs/fbca435e6a043916c2b030a385ba852934bfda9dbcc4c0088bc28891337c153c.gz",
+        "sha256": "b75447d116645a83b41719c24f796abf286606a664b4c277bcc8a37ac3fa62b9",
+        "raw_sha256": "fbca435e6a043916c2b030a385ba852934bfda9dbcc4c0088bc28891337c153c",
+        "bytes": 11308
+      },
+      "record-origin-identity.pv": {
+        "file": "inputs/3289a86910c2fbe459bcf21a50725e5184363bfbb313eb057dcbedea92295d30.gz",
+        "sha256": "d7d23b178fb3c631a4968621b6273e54bc14549a7adf198242053ee556f37af9",
+        "raw_sha256": "3289a86910c2fbe459bcf21a50725e5184363bfbb313eb057dcbedea92295d30",
+        "bytes": 122
+      }
+    }
+  },
+  {
+    "name": "L2-C-chain",
+    "class": "negative-control",
+    "start": "2026-10-06T02:34:12.817113+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "record-origin-receive.pvl": "395c36bcdf1d8192ee5e8ed88a3c67a15d36d985854affc1fa34549308f31d93",
+      "record-origin-kr3.pvl": "248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209",
+      "record-origin-sends.pvl": "e3023bd89136cac74bf83389c7f1b2921fecd89dfd813acdea8ba8e433ebd145",
+      "record-origin.pvl": "fbca435e6a043916c2b030a385ba852934bfda9dbcc4c0088bc28891337c153c",
+      "record-origin-leak-control.pv": "ba35334fa9f84e34014bdd6dde2d4dadf096725404d8834d0c2398b71319c738"
+    },
+    "limits": {
+      "seconds": 180,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T02:34:17.061789+00:00",
+    "seconds": 4.244616630952805,
+    "peak_rss_kib": 871216,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "33e45081acf34e1e9bc863464e9152574ebef7abacc78cbf455ad90e1ced571e",
+    "checked": true,
+    "portable_log": {
+      "file": "targets/L2-C-chain.log.gz",
+      "sha256": "1c94b8a9a7c4d7f81acb6394e615a72606fe066f6d5e1a5e59e844b8132ae49e",
+      "raw_sha256": "33e45081acf34e1e9bc863464e9152574ebef7abacc78cbf455ad90e1ced571e",
+      "bytes": 1417720
+    },
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "record-origin-receive.pvl": {
+        "file": "inputs/395c36bcdf1d8192ee5e8ed88a3c67a15d36d985854affc1fa34549308f31d93.gz",
+        "sha256": "0bbab06b4f1d1cf9a5221d3421d1193b744584e1ea8029ade221f65c7c69a92b",
+        "raw_sha256": "395c36bcdf1d8192ee5e8ed88a3c67a15d36d985854affc1fa34549308f31d93",
+        "bytes": 2587
+      },
+      "record-origin-kr3.pvl": {
+        "file": "inputs/248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209.gz",
+        "sha256": "c62cd390ed2a82b0cd20420723d1935f0aee3b3b87e7af00db6fe357dbb54519",
+        "raw_sha256": "248e0427346c9a71d82c2345cb2ac4c6c57cc449e720c48f6aab5aa25f003209",
+        "bytes": 153
+      },
+      "record-origin-sends.pvl": {
+        "file": "inputs/e3023bd89136cac74bf83389c7f1b2921fecd89dfd813acdea8ba8e433ebd145.gz",
+        "sha256": "f01be74e54342c7322ec6f7f6af39ffd602730fa01ba8df23f75c59dfa4195e6",
+        "raw_sha256": "e3023bd89136cac74bf83389c7f1b2921fecd89dfd813acdea8ba8e433ebd145",
+        "bytes": 1902
+      },
+      "record-origin.pvl": {
+        "file": "inputs/fbca435e6a043916c2b030a385ba852934bfda9dbcc4c0088bc28891337c153c.gz",
+        "sha256": "b75447d116645a83b41719c24f796abf286606a664b4c277bcc8a37ac3fa62b9",
+        "raw_sha256": "fbca435e6a043916c2b030a385ba852934bfda9dbcc4c0088bc28891337c153c",
+        "bytes": 11308
+      },
+      "record-origin-leak-control.pv": {
+        "file": "inputs/ba35334fa9f84e34014bdd6dde2d4dadf096725404d8834d0c2398b71319c738.gz",
+        "sha256": "6a2f4de55890454ff3087ebbf2c19bd8aff25af825d83db468ebf1c380fc6b17",
+        "raw_sha256": "ba35334fa9f84e34014bdd6dde2d4dadf096725404d8834d0c2398b71319c738",
+        "bytes": 304
+      }
+    }
+  },
+  {
+    "name": "L2-cache",
+    "class": "witness",
+    "start": "2026-10-06T02:34:17.080460+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "record-origin-cache-receive.pvl": "23cfdf4f300d6ab8ec48464f055a5ffb45925f94609a0223a5b9158f26f183b8",
+      "record-origin-kr2.pvl": "9e6abd0ea46a542466b85701cc369449d23edae0cce05459c9cd93ae2f6f4209",
+      "record-origin-cache-sends.pvl": "7aa29dcefbdfea05fdbe5962b2b775d8dbe7c369a4a0e247f5075f0f92981866",
+      "record-origin-cache.pvl": "9d153de8282fba57ee956294ab13bd68c325dcd306d90a584e86567ea46d36fd",
+      "record-origin-cache-witness.pv": "cc811c64c8da409d915c396863d4f569f22699def93a9a11d627c18405ca5fe6"
+    },
+    "limits": {
+      "seconds": 180,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-06T02:34:48.381799+00:00",
+    "seconds": 31.301284143934026,
+    "peak_rss_kib": 674264,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "e32f1d0991600798a2c413a0b97108f76394fc19082e4bc2a8a2038b0dc8a37f",
+    "checked": true,
+    "portable_log": {
+      "file": "targets/L2-cache.log.gz",
+      "sha256": "19879a6fee4c996e758860891ddeae7b3b9659bf57de5ef20af611d043d11ef4",
+      "raw_sha256": "e32f1d0991600798a2c413a0b97108f76394fc19082e4bc2a8a2038b0dc8a37f",
+      "bytes": 703404
+    },
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "record-origin-cache-receive.pvl": {
+        "file": "inputs/23cfdf4f300d6ab8ec48464f055a5ffb45925f94609a0223a5b9158f26f183b8.gz",
+        "sha256": "6330f1017c2dcd0ad503cf014fb8c3aadfe0bddffe3d1ba9e354f3f827d5c4b6",
+        "raw_sha256": "23cfdf4f300d6ab8ec48464f055a5ffb45925f94609a0223a5b9158f26f183b8",
+        "bytes": 2718
+      },
+      "record-origin-kr2.pvl": {
+        "file": "inputs/9e6abd0ea46a542466b85701cc369449d23edae0cce05459c9cd93ae2f6f4209.gz",
+        "sha256": "70f6cf9816227c3cebff756b790a87e18597f6523f2931bf6321b933edb18e96",
+        "raw_sha256": "9e6abd0ea46a542466b85701cc369449d23edae0cce05459c9cd93ae2f6f4209",
+        "bytes": 115
+      },
+      "record-origin-cache-sends.pvl": {
+        "file": "inputs/7aa29dcefbdfea05fdbe5962b2b775d8dbe7c369a4a0e247f5075f0f92981866.gz",
+        "sha256": "3082f64480814e38bbc9fefc170e86bee0694585630cb98aa0d5d0244008f314",
+        "raw_sha256": "7aa29dcefbdfea05fdbe5962b2b775d8dbe7c369a4a0e247f5075f0f92981866",
+        "bytes": 1922
+      },
+      "record-origin-cache.pvl": {
+        "file": "inputs/9d153de8282fba57ee956294ab13bd68c325dcd306d90a584e86567ea46d36fd.gz",
+        "sha256": "3554dc69a7a3471ad59179d77a5f4a6e0d1adefab3fca03e9fa4d2f05c7198a6",
+        "raw_sha256": "9d153de8282fba57ee956294ab13bd68c325dcd306d90a584e86567ea46d36fd",
+        "bytes": 11358
+      },
+      "record-origin-cache-witness.pv": {
+        "file": "inputs/cc811c64c8da409d915c396863d4f569f22699def93a9a11d627c18405ca5fe6.gz",
+        "sha256": "4f257aefce0ad7a82cf5985163b2e837bda1af7f922b07a3b8e650ef4e693e25",
+        "raw_sha256": "cc811c64c8da409d915c396863d4f569f22699def93a9a11d627c18405ca5fe6",
+        "bytes": 212
+      }
+    }
+  }
+]

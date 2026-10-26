@@ -1,0 +1,27 @@
+{
+  "review": "APPROVE_WITH_NITS",
+  "reviewer": "root",
+  "time": "2026-10-05T22:33:37.323389",
+  "manifest_sha256": "37ea8b886340a204baa3560f183befc82cc77c0b6a707d8fbbbbaa1c30a16f4a",
+  "kind": "semantic review plus exact dependency/hash validation, not an independent Lean build",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1RootAudit.lean": "8aa751c37495a887a1972259cefc87b17213584ddda9bfee5cf47d9666c79348",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1RootJournal.lean": "9dca14cb0412f7cf37501fbc397bf235ca440f14b1358baecbecbe9d703da91b",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1RootSurface.lean": "d504e46440620fd78dd3c855ed95d6f7f6a05b0a48cf76a2acf88b9de536f53a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1RootProbability.lean": "3011cbd1463fbeba731b7f0776a43149686a4086e8d4aea5f747cd806bd59dae",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Authentication.lean": "2bafe48ccf974ddfc7eeb305c990b8b6e88d7faccacf4cd0796a3bc24a61b731",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationR1Resources.lean": "d7549687431f52abf265106411fc4a6f25bd31baf7caa76e57a8f0b50f77b66b",
+    "doc/impl/registration-r1-restriction.md": "88f33db44378b055d7b8fc8ff27933f3c689e0269ba45e4672875d2c34b6b524",
+    "doc/formal-verification-analysis.md": "e875095b4e62ee4f60b7387ff26f8b907efc0a4e576ceb319f4b4a6c667057b2",
+    "doc/impl/handover/pause-2026-10-01/r1-restriction/README.md": "821813c8666a110a7dfd0a89621b7fe472a2580b03026fc7ad973c3ac2ffd61f",
+    "doc/impl/handover/pause-2026-10-01/r1-restriction/evidence/common-authentication-port.json": "5e1f2d149b00a44042799dc2e09895ef8d2028aa9625ac7b9c1e839c72d85814"
+  },
+  "scope": "Full same-run callback receipt/public journal join, native source order, actual both initialization gates and refused missing-owner tail, unconditional probability transport for generated Server only, singleton seven-capability suffix, exact existing CommonAuthentication reductions and ReductionBills, separate complete source uniform and state ledger. No honest-target assumption, no conditional uniformity, no new crypto assumption. 109 dependency ports exactly match published adabe9a. Global multi-owner/reveal/symbolic closure remains outside this cohort.",
+  "findings": [
+    {
+      "severity": "nit",
+      "file": "doc/formal-verification-analysis.md",
+      "detail": "Earlier Singleton registration restriction proof paragraph still says audited common11/decoded-record event and generated-target consumer remain unfinished. Mark that as historical pre-R1Root28 status and point to new section, so maintained prose does not contradict current result."
+    }
+  ]
+}

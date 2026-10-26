@@ -1,0 +1,9 @@
+{
+  "python_ast_identical": true,
+  "proverif_noncomment_tokens_identical": true,
+  "changed_inventory_digests": [
+    "proofs/pro-verif/check-free-schedule.py",
+    "proofs/pro-verif/fs-records-b2s-kr3-failstop.pvl"
+  ],
+  "base": "c5f3fdd741aa487ebf8f07aef20a3809cf02ab5d"
+}

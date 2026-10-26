@@ -281,6 +281,10 @@ pub(crate) fn refined_advance_receive<SendChain, ReceiveChain, Material>(
 	Some(sequence)
 }
 
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))
+)]
 pub(super) fn refined_receive_slots_are_empty<SendChain, ReceiveChain, Material>(
 	state: &RefinedRatchet<SendChain, ReceiveChain, Material>,
 	first_slot: u8,
@@ -290,6 +294,9 @@ pub(super) fn refined_receive_slots_are_empty<SendChain, ReceiveChain, Material>
 	let mut left = remaining;
 
 	while left > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(left as usize);
+
 		let slot_index = slot as usize;
 		if slot_index >= RECEIVE_CACHE_CAPACITY {
 			return false;
@@ -374,6 +381,10 @@ pub(super) fn prepare_cached_receive<SendChain, ReceiveChain, Material>(
 	})
 }
 
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))
+)]
 #[cfg(test)]
 /// Derive a future target into a private delta without assigning any live
 /// chain, slot, or logical control field.
@@ -403,6 +414,9 @@ fn prepare_future_receive_steps<ReceiveChain, Material>(
 	let mut skipped_count = skipped;
 
 	while left > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(left as usize);
+
 		if left == 1 {
 			let advanced = advance_receive_target(current_control);
 			let sequence = match advanced.sequence {
@@ -474,6 +488,10 @@ fn prepare_future_receive_steps<ReceiveChain, Material>(
 	None
 }
 
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))
+)]
 pub(super) fn receive_control_prefix_matches(
 	entry: RatchetState,
 	committed: RatchetState,
@@ -484,6 +502,9 @@ pub(super) fn receive_control_prefix_matches(
 	let mut left = remaining;
 
 	while left > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(left as usize);
+
 		if current_slot as usize >= RECEIVE_CACHE_CAPACITY {
 			return false;
 		}
@@ -498,6 +519,10 @@ pub(super) fn receive_control_prefix_matches(
 	true
 }
 
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))
+)]
 pub(super) fn pending_receive_slots_are_valid<SendChain, ReceiveChain, Material>(
 	state: &RefinedRatchet<SendChain, ReceiveChain, Material>,
 	pending: &PendingReceive<ReceiveChain, Material>,
@@ -510,6 +535,9 @@ pub(super) fn pending_receive_slots_are_valid<SendChain, ReceiveChain, Material>
 	let mut left = remaining;
 
 	while left > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(left as usize);
+
 		let slot_index = current_slot as usize;
 		if slot_index >= RECEIVE_CACHE_CAPACITY {
 			return false;
@@ -692,6 +720,10 @@ pub(super) fn publish_cached_receive<SendChain, ReceiveChain, Material>(
 	state.control = prepared.committed_control;
 }
 
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))
+)]
 pub(super) fn publish_future_receive_slots<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	staged_slots: &mut [Option<CachedReceiveKey<Material>>; RECEIVE_CACHE_CAPACITY],
@@ -702,6 +734,9 @@ pub(super) fn publish_future_receive_slots<SendChain, ReceiveChain, Material>(
 	let mut left = remaining;
 
 	while left > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(left as usize);
+
 		let slot_index = current_slot as usize;
 		if slot_index >= RECEIVE_CACHE_CAPACITY {
 			return;
@@ -742,6 +777,10 @@ pub(super) fn publish_future_receive<SendChain, ReceiveChain, Material>(
 	state.control = pending.committed_control;
 }
 
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))
+)]
 /// Commit an already-preflighted suffix of receive steps.
 ///
 /// Admission bounds the counter and cache.
@@ -758,6 +797,9 @@ fn refined_execute_receive_steps<SendChain, ReceiveChain, Material>(
 	let mut left = remaining;
 
 	while left > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(left as usize);
+
 		let _ = refined_advance_receive(state, step);
 		left -= 1;
 	}

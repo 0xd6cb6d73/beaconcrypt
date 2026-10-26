@@ -1,0 +1,25 @@
+# Preserve the actual adaptive later-record challenge
+
+`PqxdhLaterChallengeMonitor.random_client` proves equal restricted target probability for the two plaintext choices in the existing ordinary CTX random view. The client executes the complete adaptive adversary using the original later-record challenge wrapper. The adversary may choose its equal-length pair after arbitrary earlier requests, and may issue further requests after the challenge. Both Server and Beacon sends are covered. This is a random-world endpoint; the final sampled source confidentiality inequality is still a separate consumer.
+
+The private annotation records whether the literal selected input condition holds at the admitted challenge's exact pre-request state. It does not infer that condition from a later marker, a matching sequence number or equal key bytes. The full original callback executes before the annotation is returned. A false annotation does not reject the request, skip work or replace its reply. The original empty, phase, peer, associated-data, nonce, writer and optional-result branches remain in the computation.
+
+## Exact source and cost preservation
+
+`query_source` and `program_source` erase only the added annotation and recover the complete original callback and adaptive program as literal `OracleComp` equalities. They preserve the original wrapper state, private source state and poststate on an outer component refusal. `recorded_program` shows that the annotation cannot be overwritten. `admitted_query` and `admitted_program` identify the annotation through the actual challenge and its complete reply-dependent suffix.
+
+`ordinary_query` and `ordinary_normal` retain the same ordinary callbacks before the challenge and preserve its unset pair and annotation. `unequal_query` retains the original immediate rejection of a malformed unequal-length pair. `client_budget` consequently preserves every original complete query budget, including arbitrary weighted budgets and work executed before refusal or a terminally excluded event. This is query-tree preservation, not a claim that local state inspection or computation has zero runtime cost. It does not supply new primitive or challenger bounds in place of the existing resource ledgers.
+
+## Adaptive random-world equality
+
+`admitted_pre` consumes the retained-parent both-direction challenge and full suffix theorem from [the twin-continuation package](later-challenge-twin-continuation.md). When the actual request is designated, this gives the existing equal-length twin relation. When it is not designated, the annotation is false through the same fully executed suffix. `program_pre` lifts this relation through the entire adaptive prefix, without a caller-selected request or a condition on successful replies. The marker is private analysis state and the adversary still receives only its original API replies.
+
+The terminal observation is the original `PqxdhRecordConfidentialityChallenge.output` restricted by two explicit events: the request annotation is false, or the existing source instrumentation records a selected raw opening inside an unscreened finish. Ordinary raw-reply screening and the original competing-target-publication check are unchanged. `random_client` uses that precise terminal restriction with the existing `randomView_pre` theorem. It retains the explicit target-versus-parent address inequality; the published same-sampler alias bound must discharge that event in the enclosing probability proof.
+
+## Remaining source join and scope
+
+The actual sampled source consumer must now show that an original winning execution supplies the true request annotation, using the reached request witness from `PqxdhLaterChallengeAddress` and a same-execution source/compiler transport. It must also handle the actual selected finish-opening and nonce-refusal events, preserve original common and cached decisions, and combine the existing real/random component losses and source resource ledgers. A support witness is not substituted for equality of those complete probability experiments. This checkpoint does not yet remove these event restrictions or prove the final two-world secrecy bound.
+
+The original full lineage freshness checker remains unchanged, including its target message-key membership test at zero remaining depth. No new target-key secrecy, nonce uniqueness, address separation, honest target, key injectivity or scheduling assumption is introduced. The inherited restricted Extract and shared programmable classical CTX/BLAKE2b ROM scope and the actual source primitive/message contracts remain unchanged. Arbitrary target/session/record selection factors, initial Server sequence-one construction, wider capabilities, primitive and serialization implementation correctness, snapshots and persistence are not added by this theorem.
+
+All twelve statements have focused checks and explicit axiom guards. Central imports, inventory updates and aggregate verification belong to the enclosing integration.

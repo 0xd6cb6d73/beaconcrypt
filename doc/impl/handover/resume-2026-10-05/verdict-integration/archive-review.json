@@ -1,0 +1,16 @@
+{
+  "reviewer": "/root/r1_scheduler_closure",
+  "timestamp": "2026-10-05T23:11:39.200743+00:00",
+  "decision": "APPROVE_PUBLICATION_ARCHIVE",
+  "manifest_sha256": "774a667c3eb1510ad5ec95215f5abb95a08dc33af7101407ac3c0e94257492f9",
+  "files_verified": 13,
+  "gzip_roundtrips_verified": 8,
+  "source_manifest_sha256": "d229da4d42600aed54403358887c5abaa25d0c6f9cb66bf116ce89c72b415c78",
+  "checks": [
+    "13 frozen archive hashes,8 gzip/compressed and decompressed log hashes verified",
+    "Exact approved source manifest and independent semantic receipt preserved",
+    "Focused27FT/inventory receipt and final prose-only inventory correction inspected; all recorded exits0",
+    "README/validation scope accurately says no new prover search, Lean build or aggregate pass; pending central additive reconciliation explicitly separate"
+  ],
+  "findings": []
+}

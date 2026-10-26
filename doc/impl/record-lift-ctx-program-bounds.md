@@ -1,0 +1,27 @@
+# Per-operation CTX component bills for record sends and receives
+
+`PqxdhRecordLiftCtxProgramBounds` charges every hidden or caller-known record send and receive of the actual `PqxdhRecordLiftProtocol` against the four query ledgers of the ordinary CTX component, the `CtxProtocolBounds.BudgetKind` values `uniform`, `hash`, `seal` and `raw`. The per-service charges are the existing `CtxProtocolBounds.categoryCost`. The bounds are syntactic: they hold along every path of the adaptive computation and for every typed reply, including exhaustion, writer failure, rejection, cached and future keys and failed openings. They are not probability statements.
+
+## Weighted query bounds
+
+`Weighted cost client bound` is the existing `CtxProtocolBounds.CostBound`, generalized from the record service signature to any oracle signature: along every path, the summed cost of the issued queries stays within `bound`. Six generic statements make it composable. `weighted_bind` adds the bounds of a computation and of every continuation. `weighted_indicator` turns a selective count (`IsQueryBoundP`) into a bill with a constant weight, charging zero outside the selected category. `weighted_mono` enlarges a bound, `weighted_add` adds two cost functions pointwise, `weighted_simulate` transports a bound through literal query replacement when each replaced query stays within its source cost, and `weighted_run` does the same for stateful simulation, keeping the whole state and every reply branch.
+
+## Local opaque services
+
+The opaque record drivers of `PqxdhRecordLiftOpaqueDrivers` issue three kinds of private service: coordinate lookups, openings and sealings. `local_weighted` combines the three existing category counts into one weighted bill with arbitrary weights. `local_lift` shows that the literal inclusion `Protocol.localLift` of these services into the record services has exactly the per-kind charges `lookupCost`, `openingCost` and `sealingCost`. A lookup costs 76 in the uniform ledger (one full 76-byte output) and nothing elsewhere; an opening costs one in the hash and raw ledgers; a sealing costs one in the hash and seal ledgers.
+
+## Per-operation bills
+
+`operationBill kind .send` is `lookupCost kind + sealingCost kind`, and `operationBill kind .raw` is `51 * lookupCost kind + openingCost kind`. The name keeps these per-ledger bills apart from `PqxdhRecordLiftBudget.recordCost`, which counts the record operations of each full-interface command and is also in scope here. In numbers, a send costs 76 uniform, one hash, one seal and no raw query, and a receive costs 3876 = 51 · 76 uniform, one hash, no seal and one raw query. `opaque_send` and `opaque_receive` charge the admitted opaque send and receive programs, using the published `OpaqueBounds` caps: an admitted send makes at most one lookup, no opening and one sealing, and an admitted receive at most 51 lookups, one opening and no sealing. `kernel_send` and `kernel_receive` extend the bills to every stored kernel. A hidden kernel runs the opaque program; a caller-known kernel issues a single `knownSend` or `knownReceive` service, which costs one in the hash ledger and nothing elsewhere and so stays within the same bill.
+
+## Scope
+
+These bills count only the private services that one record operation issues. The source's own native KDF work stays in the separate native ledger of the world budget. The module does not transport the bills through the owner wrappers (parsing, rejection before CTX, the `test` and `fresh` sends), through the complete adaptive `Protocol.program`, or into `Budget` fields such as `sends` and `receives`; that transport is a later stage of the CTX lift. It adds no cryptographic contract and no assumption. All twelve statements are operational query bounds.
+
+## Provenance
+
+Adapted from Codex WIP `879a91bdf51208e3308bc6a6f9d3f52994553fdb4549d18f15ac82b545a178fd`. Codex wrote the first nine statements; its last check of these bytes failed at `opaque_send` with the unknown identifier `PqxdhRecordLiftChainCompiler.Kernel`. That name does not exist; the module `PqxdhRecordLiftChainCompiler` is already in the import closure, so no import was missing. Claude took over handoff items 4 and 5 by the owner's decision of 2026-10-08 and, for record-lift increment A, stated `opaque_send` over `PqxdhRecordLiftWorldCompiler.LabeledKernel n`, the kernel type that `Protocol.kernelSend` stores, added `opaque_receive`, `kernel_send` and `kernel_receive`, rewrote the module docstring to say exactly what is covered, added the twelve exact guards and wrote this guide. In the review fix pass Claude renamed Codex's bill definition `recordCost` to `operationBill` and gave it a docstring, because the module opens `PqxdhRecordLiftBudget`, whose `recordCost` has a different type and meaning; the definition's body is unchanged, and every statement and proof changed only by this rename.
+
+## Validation status
+
+All twelve statements have exact `#print axioms` guards; the six generic statements depend only on `propext` and `Quot.sound`, the other six on `propext`, `Classical.choice` and `Quot.sound`. The module passes the focused single-module check against the published `LEAN_PATH` of central `80560f92`, as recorded in `doc/impl/proof-receipts/record-lift-increment-a.json`; independent semantic review, the increment's publication checks and the central integration are recorded in that receipt when they complete.
