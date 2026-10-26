@@ -1,0 +1,42 @@
+{
+  "plan_path": "/tmp/bc-arc-scratch/merge-postgres-20261026/collection/collection-plan.json",
+  "plan_sha256": "bbffe7afcaa7814d95f24cfeb31789aa50ad03572476d5cb9a1e3a10e48c5687",
+  "retained_manifest_path": "/tmp/bc-arc-scratch/merge-postgres-20261026/collection/collection-retained.json",
+  "retained_manifest_sha256": "3e0c65128a07bf0c09617042e063a9778e5a9df174681426c840a3da024119c4",
+  "collection_events_path": "/tmp/bc-arc-scratch/merge-postgres-20261026/collection/collection-events.jsonl",
+  "collection_events_sha256": "7c2e9dfadd3805411ced6a5a8e365e381220cfe53b64c3304ebe7969d5c32d6e",
+  "summarizer_path": "/tmp/bc-arc-scratch/merge-postgres-20261026/collection/summarize.py",
+  "summarizer_sha256": "b603a0fbea9e4550fcde9512b2ddfe201400569146fa0f37533b19e7a01527cb",
+  "binary_sha256": "774b1a86945b4a865d842659faf0f046d3cce3a011a005a3397eaadd4d76f20e",
+  "inputs": [
+    {
+      "backend": "postgres",
+      "registered_peers": 1,
+      "report_path": "/tmp/bc-arc-scratch/merge-postgres-20261026/collection/axis-01-postgres-peers-1-attempt-01/report.json",
+      "report_sha256": "119aae70b12613c629e60a6af73d591820732d490a8639a1985f349b5656ac2c",
+      "attempt_path": "/tmp/bc-arc-scratch/merge-postgres-20261026/collection/axis-01-postgres-peers-1-attempt-01/attempt.json",
+      "attempt_sha256": "886a199c718e50c680fc5a238fde2d18235439078bfba154a9b28275e98c576f",
+      "summary_sha256": "ca372a0e8bf185be2721255f7c8465015d014233d018abc18e6944eb8d799a8a"
+    },
+    {
+      "backend": "postgres",
+      "registered_peers": 100,
+      "report_path": "/tmp/bc-arc-scratch/merge-postgres-20261026/collection/axis-02-postgres-peers-100-attempt-01/report.json",
+      "report_sha256": "705c04f6a0f3a472fb1c2e12b73cfaad449c9b88295647ebd923ca5bafcf3bfc",
+      "attempt_path": "/tmp/bc-arc-scratch/merge-postgres-20261026/collection/axis-02-postgres-peers-100-attempt-01/attempt.json",
+      "attempt_sha256": "899e45f2a9bf7cf035fb74b11aa6e946c78942f53e600dc4fb4e077dd83115b6",
+      "summary_sha256": "8147729055f0c0d68b71edbdda8bc9c1c871a66fd3a3c5cb860b2e0c46e4578a"
+    },
+    {
+      "backend": "postgres",
+      "registered_peers": 1000,
+      "report_path": "/tmp/bc-arc-scratch/merge-postgres-20261026/collection/axis-03-postgres-peers-1000-attempt-01/report.json",
+      "report_sha256": "d6c9168fb23191c1120a956b3335ee51785d43484aa18a3ab2e0800e15caa58e",
+      "attempt_path": "/tmp/bc-arc-scratch/merge-postgres-20261026/collection/axis-03-postgres-peers-1000-attempt-01/attempt.json",
+      "attempt_sha256": "92af4158b28f431fde212bfebc428d6d1a32d0123f2786363b85e5943952d4a4",
+      "summary_sha256": "b46018d4095c6c0b0da12d041b173da61e23110e9efe7d2e7d74bc19db919253"
+    }
+  ],
+  "exporter_path": "/tmp/bc-arc-scratch/merge-postgres-20261026/analyze-results.py",
+  "exporter_sha256": "66616ea6ef6005ea315fd4df7043e229e40e7f5276463d4a1cfe350f6518a054"
+}
