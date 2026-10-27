@@ -16,12 +16,17 @@ dynamic = ["version"]
 [tool.maturin]
 bindings = "pyo3"
 features = ["pybinds"]
-include = [
-    "beaconcrypt.pyi",
-    { path = "LICENSE", format = "sdist" },
-    { path = "beaconcrypt-parse/**", format = "sdist" },
+# Git preserves the native wrapper's parent-relative shared-source lib path.
+# Cargo's package generator strips that target because its source is outside the crate.
+sdist-generator = "git"
+include = ["beaconcrypt.pyi"]
+exclude = [
+    { path = "rooterberg", format = "sdist" },
+    { path = "wycheproof", format = "sdist" },
+    { path = "beaconcrypt-core/proofs/**/*", format = "sdist" },
+    { path = "doc/**/*", format = "sdist" },
 ]
-manifest-path = "beaconcrypt/Cargo.toml"
+manifest-path = "beaconcrypt-ffi/Cargo.toml"
 
 [tool.uv]
 # `maturin develop` owns the native extension installed in the development

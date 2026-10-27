@@ -1,8 +1,8 @@
 use std::{fs, path::Path};
 
-use libsodium_rs::{
+use beaconcrypt_crypto::{
 	crypto_aead::chacha20poly1305_ietf, crypto_generichash, crypto_kdf, crypto_scalarmult,
-	crypto_sign, ensure_init,
+	crypto_sign,
 };
 use serde::Deserialize;
 
@@ -219,31 +219,8 @@ fn case_label(tc_id: usize, comment: &str, flags: &[String]) -> String {
 	format!("tcId {tc_id} ({comment}; flags: {})", flags.join(","))
 }
 
-fn initialize_test_runtime() {
-	ensure_init().expect("initialize libsodium");
-
-	// Direct libsodium use would otherwise let Cargo omit Beaconcrypt's Windows
-	// GNU compatibility symbols from this integration-test executable.
-	#[cfg(all(windows, target_env = "gnu"))]
-	{
-		std::hint::black_box(
-			beaconcrypt::memset_explicit
-				as unsafe extern "C" fn(
-					*mut std::ffi::c_void,
-					std::ffi::c_int,
-					usize,
-				) -> *mut std::ffi::c_void,
-		);
-		std::hint::black_box(
-			beaconcrypt::SystemFunction036
-				as unsafe extern "system" fn(*mut std::ffi::c_void, u32) -> u8,
-		);
-	}
-}
-
 #[test]
 fn x25519_rooterberg() {
-	initialize_test_runtime();
 	let json = load_vector(X25519_VECTOR);
 	let set: TestSet<X25519Algorithm, X25519Test> = parse_set(&json, "Xdh");
 	assert_eq!(
@@ -274,7 +251,6 @@ fn x25519_rooterberg() {
 
 #[test]
 fn ed25519_verification_rooterberg() {
-	initialize_test_runtime();
 	let json = load_vector(ED25519_VERIFY_VECTOR);
 	let set: TestSet<Ed25519Algorithm, Ed25519VerifyTest> = parse_set(&json, "EddsaVerify");
 	assert_eq!(
@@ -302,7 +278,6 @@ fn ed25519_verification_rooterberg() {
 
 #[test]
 fn ed25519_signing_rooterberg() {
-	initialize_test_runtime();
 	let json = load_vector(ED25519_SIGN_VECTOR);
 	let set: TestSet<Ed25519Algorithm, Ed25519SignTest> = parse_set(&json, "EddsaSign");
 	assert_eq!(
@@ -328,7 +303,6 @@ fn ed25519_signing_rooterberg() {
 
 #[test]
 fn chacha20_poly1305_rooterberg() {
-	initialize_test_runtime();
 	let json = load_vector(CHACHA20_POLY1305_VECTOR);
 	let set: TestSet<AeadAlgorithm, AeadTest> = parse_set(&json, "Aead");
 	assert_eq!(
@@ -372,7 +346,6 @@ fn chacha20_poly1305_rooterberg() {
 
 #[test]
 fn hkdf_sha512_rooterberg() {
-	initialize_test_runtime();
 	let json = load_vector(HKDF_SHA512_VECTOR);
 	let set: TestSet<HkdfAlgorithm, HkdfTest> = parse_set(&json, "Hkdf");
 	assert_eq!(
@@ -401,7 +374,6 @@ fn hkdf_sha512_rooterberg() {
 
 #[test]
 fn blake2b_rooterberg() {
-	initialize_test_runtime();
 	let json = load_vector(BLAKE2B_VECTOR);
 	let set: TestSet<HashAlgorithm, HashTest> = parse_set(&json, "Hash");
 	assert_eq!(

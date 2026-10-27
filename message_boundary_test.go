@@ -58,7 +58,7 @@ func TestMessageLimitIncludesWiderSequenceMetadata(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			beacon := newBeacon(t, publicKey)
+			beacon := newBeacon(t, server, publicKey)
 			registration := registerBeacon(t, server, beacon)
 			sender, sequence := uint64(0), uint64(2)
 			encrypt := func(message []byte) ([]byte, error) {

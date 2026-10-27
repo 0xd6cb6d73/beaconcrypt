@@ -50,12 +50,14 @@ class Store:
 def create(store=None):
     if store is None:
         store = Store()
-    server = BeaconCryptServer.create_with_store(19, b"s" * 32, store, b"l" * 32)
+    server = BeaconCryptServer.create_with_store(
+        19, b"s" * 32, b"m" * 32, store, b"l" * 32
+    )
     return server, store
 
 
 def register(server):
-    beacon = BeaconCryptBeacon(19, server.id_pk())
+    beacon = BeaconCryptBeacon(19, server.id_pk(), server.mldsa_public_key())
     registration = beacon.generate_registration()
     response = server.register_beacon(registration, b"registered")
     assert response is not None
@@ -83,6 +85,7 @@ def test_creation_and_activation_commit_before_returning():
     assert restored.head().generation == 1
     assert restored.head() == store.current_head
     assert restored.id_pk() == server.id_pk()
+    assert restored.mldsa_public_key() == server.mldsa_public_key()
     assert restored.export_state() == store.snapshot
     assert_error("stale_generation", server.export_state)
 
@@ -269,10 +272,12 @@ def test_missing_malformed_and_noncanonical_snapshots_raise_typed_errors():
     store.snapshot = b"bad"
     assert_error("invalid_snapshot", lambda: BeaconCryptServer.restore(store))
     server, good = create()
-    corrupted = bytearray(good.snapshot)
-    corrupted[16:18] = (1).to_bytes(2, "little")
-    store.snapshot = bytes(corrupted)
-    assert_error("invalid_snapshot", lambda: BeaconCryptServer.restore(store))
+    assert int.from_bytes(good.snapshot[16:18], "little") == 3
+    for version in [1, 2]:
+        corrupted = bytearray(good.snapshot)
+        corrupted[16:18] = version.to_bytes(2, "little")
+        store.snapshot = bytes(corrupted)
+        assert_error("invalid_snapshot", lambda: BeaconCryptServer.restore(store))
     store.snapshot = good.snapshot + b"extra"
     assert_error("invalid_snapshot", lambda: BeaconCryptServer.restore(store))
     noncanonical = bytearray(good.snapshot + b" ")
@@ -384,7 +389,7 @@ def test_failed_nonreceive_operation_still_commits_generation():
 @pytest.mark.parametrize("failing_commit", [1, 2])
 def test_registration_commit_failure_never_exposes_response(failing_commit):
     server, store = create()
-    beacon = BeaconCryptBeacon(19, server.id_pk())
+    beacon = BeaconCryptBeacon(19, server.id_pk(), server.mldsa_public_key())
     registration = beacon.generate_registration()
     previous_calls = len(store.cas_calls)
 

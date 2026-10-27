@@ -1,6 +1,6 @@
-use libsodium_rs::{
+use beaconcrypt_crypto::{
 	crypto_aead::chacha20poly1305_ietf, crypto_kdf, crypto_kem::mlkem768, crypto_scalarmult,
-	crypto_sign, ensure_init,
+	crypto_sign,
 };
 use serde::Deserialize;
 
@@ -207,31 +207,8 @@ fn case_label(tc_id: usize, comment: &str, flags: &[String]) -> String {
 	format!("tcId {tc_id} ({comment}; flags: {})", flags.join(","))
 }
 
-fn initialize_test_runtime() {
-	ensure_init().expect("initialize libsodium");
-
-	// Direct libsodium use would otherwise let Cargo omit Beaconcrypt's Windows
-	// GNU compatibility symbols from this integration-test executable.
-	#[cfg(all(windows, target_env = "gnu"))]
-	{
-		std::hint::black_box(
-			beaconcrypt::memset_explicit
-				as unsafe extern "C" fn(
-					*mut std::ffi::c_void,
-					std::ffi::c_int,
-					usize,
-				) -> *mut std::ffi::c_void,
-		);
-		std::hint::black_box(
-			beaconcrypt::SystemFunction036
-				as unsafe extern "system" fn(*mut std::ffi::c_void, u32) -> u8,
-		);
-	}
-}
-
 #[test]
 fn x25519_wycheproof() {
-	initialize_test_runtime();
 	let set: TestSet<X25519Group> = parse_set(X25519_VECTORS, "XDH", "xdh_comp_schema_v1.json");
 	let actual_count = set.test_groups.iter().map(|group| group.tests.len()).sum();
 	assert_test_count(set.number_of_tests, actual_count);
@@ -264,7 +241,6 @@ fn x25519_wycheproof() {
 
 #[test]
 fn ed25519_wycheproof() {
-	initialize_test_runtime();
 	let set: TestSet<Ed25519Group> =
 		parse_set(ED25519_VECTORS, "EDDSA", "eddsa_verify_schema_v1.json");
 	let actual_count = set.test_groups.iter().map(|group| group.tests.len()).sum();
@@ -296,7 +272,6 @@ fn ed25519_wycheproof() {
 
 #[test]
 fn chacha20_poly1305_wycheproof() {
-	initialize_test_runtime();
 	let set: TestSet<AeadGroup> = parse_set(
 		CHACHA20_POLY1305_VECTORS,
 		"CHACHA20-POLY1305",
@@ -349,7 +324,6 @@ fn chacha20_poly1305_wycheproof() {
 
 #[test]
 fn hkdf_sha512_wycheproof() {
-	initialize_test_runtime();
 	let set: TestSet<HkdfGroup> = parse_set(
 		HKDF_SHA512_VECTORS,
 		"HKDF-SHA-512",
@@ -381,7 +355,6 @@ fn hkdf_sha512_wycheproof() {
 
 #[test]
 fn mlkem768_keygen_and_decapsulation_wycheproof() {
-	initialize_test_runtime();
 	let set: TestSet<MlKemGroup<MlKemDecapsTest>> =
 		parse_set(MLKEM768_VECTORS, "ML-KEM", "mlkem_test_schema.json");
 	let actual_count = set.test_groups.iter().map(|group| group.tests.len()).sum();
@@ -426,7 +399,6 @@ fn mlkem768_keygen_and_decapsulation_wycheproof() {
 
 #[test]
 fn mlkem768_encapsulation_wycheproof() {
-	initialize_test_runtime();
 	let set: TestSet<MlKemGroup<MlKemEncapsTest>> = parse_set(
 		MLKEM768_ENCAPS_VECTORS,
 		"ML-KEM",

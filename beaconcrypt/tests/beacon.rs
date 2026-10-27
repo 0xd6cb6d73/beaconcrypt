@@ -13,10 +13,10 @@ fn test_register_pqxdh_beacon(server: &mut Server, beacon: &mut Beacon) -> Vec<u
 
 #[test]
 fn beacon_can_catch_up() {
-	let mut server = Server::new(0, None);
+	let mut server = Server::new(0, None, None);
 	let server_id = server.identity_pk().to_owned();
 
-	let mut b1 = Beacon::new(0, server_id.as_bytes());
+	let mut b1 = Beacon::new(0, server_id.as_bytes(), &server.mldsa_public_key());
 	let _ = test_register_pqxdh_beacon(&mut server, &mut b1);
 	assert!(server.pk_by_kid(1).is_some());
 

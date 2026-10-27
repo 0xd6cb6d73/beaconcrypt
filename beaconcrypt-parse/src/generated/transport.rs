@@ -1064,7 +1064,7 @@ pub fn validate_kexresponse(c: crate::cbordetveraux::cbor_raw) -> bool
                             crate::cbordetver::cbor_det_view::Int64 { value: res, .. } => res,
                             _ => panic!("Incomplete pattern matching")
                         };
-                    i2 == 1u64
+                    i2 == 2u64
                 }
                 else
                 { false }
@@ -1241,14 +1241,68 @@ pub fn validate_kexresponse(c: crate::cbordetveraux::cbor_raw) -> bool
                                         (&pi)[0];
                                     let is_done5: bool =
                                         crate::cbordetver::cbor_det_array_iterator_is_empty(i15);
-                                    if is_done5
-                                    { false }
-                                    else
+                                    let test16: bool =
+                                        if is_done5
+                                        { false }
+                                        else
+                                        {
+                                            let c1: crate::cbordetveraux::cbor_raw =
+                                                crate::cbordetver::cbor_det_array_iterator_next(
+                                                    &mut pi
+                                                );
+                                            validate_uint(c1)
+                                        };
+                                    if test16
                                     {
-                                        let c1: crate::cbordetveraux::cbor_raw =
-                                            crate::cbordetver::cbor_det_array_iterator_next(&mut pi);
-                                        validate_uint(c1)
+                                        let
+                                        i16:
+                                        crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw
+                                        =
+                                            (&pi)[0];
+                                        let is_done6: bool =
+                                            crate::cbordetver::cbor_det_array_iterator_is_empty(i16);
+                                        if is_done6
+                                        { false }
+                                        else
+                                        {
+                                            let c1: crate::cbordetveraux::cbor_raw =
+                                                crate::cbordetver::cbor_det_array_iterator_next(
+                                                    &mut pi
+                                                );
+                                            let mt: u8 = crate::cbordetver::cbor_det_major_type(c1);
+                                            if mt == 2u8
+                                            {
+                                                let v10: crate::cbordetver::cbor_det_view =
+                                                    crate::cbordetver::cbor_det_destruct(c1);
+                                                let _letpattern0: crate::cbordetver::cbor_det_view =
+                                                    v10;
+                                                let str: &[u8] =
+                                                    match _letpattern0
+                                                    {
+                                                        crate::cbordetver::cbor_det_view::String
+                                                        { payload: a, .. }
+                                                        => a,
+                                                        _ => panic!("Incomplete pattern matching")
+                                                    };
+                                                let len: usize = str.len();
+                                                let lo_ok: bool =
+                                                    crate::cbordetveraux::u64_lte_sizet(
+                                                        3309u64,
+                                                        len
+                                                    );
+                                                let hi_ok: bool =
+                                                    crate::cbordetveraux::sizet_lte_u64(
+                                                        len,
+                                                        3309u64
+                                                    );
+                                                lo_ok && hi_ok
+                                            }
+                                            else
+                                            { false }
+                                        }
                                     }
+                                    else
+                                    { false }
                                 }
                                 else
                                 { false }
@@ -1287,7 +1341,8 @@ pub struct kexresponse <'a>
     pub ephemeral_key: &'a [u8],
     pub kem_cipher_text: &'a [u8],
     pub app_cipher_text: &'a [u8],
-    pub key_id: u64
+    pub key_id: u64,
+    pub signature: &'a [u8]
 }
 
 pub fn uu___is_Mkkexresponse0(projectee: kexresponse) -> bool
@@ -1296,33 +1351,37 @@ pub fn uu___is_Mkkexresponse0(projectee: kexresponse) -> bool
     true
 }
 
-fn kexresponse_right <'a>(x7: ((), ((), (&'a [u8], (&'a [u8], (&'a [u8], (&'a [u8], u64))))))) ->
+fn kexresponse_right <'a>(
+    x8: ((), ((), (&'a [u8], (&'a [u8], (&'a [u8], (&'a [u8], (u64, &'a [u8])))))))
+) ->
     kexresponse
     <'a>
 {
-    match x7
+    match x8
     {
-        (_x8,(_x9,(x10,(x11,(x12,(x13,x14)))))) =>
+        (_x9,(_x10,(x11,(x12,(x13,(x14,(x15,x16))))))) =>
           kexresponse
           {
-              identity_key: x10,
-              ephemeral_key: x11,
-              kem_cipher_text: x12,
-              app_cipher_text: x13,
-              key_id: x14
+              identity_key: x11,
+              ephemeral_key: x12,
+              kem_cipher_text: x13,
+              app_cipher_text: x14,
+              key_id: x15,
+              signature: x16
           }
     }
 }
 
-fn kexresponse_left <'a>(x15: kexresponse <'a>) ->
-    ((), ((), (&'a [u8], (&'a [u8], (&'a [u8], (&'a [u8], u64))))))
+fn kexresponse_left <'a>(x17: kexresponse <'a>) ->
+    ((), ((), (&'a [u8], (&'a [u8], (&'a [u8], (&'a [u8], (u64, &'a [u8])))))))
 {
-    let x26: &[u8] = x15.identity_key;
-    let x27: &[u8] = x15.ephemeral_key;
-    let x28: &[u8] = x15.kem_cipher_text;
-    let x29: &[u8] = x15.app_cipher_text;
-    let x30: u64 = x15.key_id;
-    ((),((),(x26,(x27,(x28,(x29,x30))))))
+    let x29: &[u8] = x17.identity_key;
+    let x30: &[u8] = x17.ephemeral_key;
+    let x31: &[u8] = x17.kem_cipher_text;
+    let x32: &[u8] = x17.app_cipher_text;
+    let x33: u64 = x17.key_id;
+    let x34: &[u8] = x17.signature;
+    ((),((),(x29,(x30,(x31,(x32,(x33,x34)))))))
 }
 
 /**
@@ -1368,7 +1427,7 @@ parse_kexresponse
                         crate::cbordetver::cbor_det_view::Int64 { value: res, .. } => res,
                         _ => panic!("Incomplete pattern matching")
                     };
-                i1 == 1u64
+                i1 == 2u64
             }
             else
             { false }
@@ -1597,17 +1656,50 @@ parse_kexresponse
     let x4: crate::cbordetveraux::cbor_raw =
         crate::cbordetver::cbor_det_array_iterator_next(&mut pc6);
     let w15: &[u8] = parse_bstr(x4);
+    let rlen06: u64 = crate::cbordetver::cbor_det_array_iterator_length(c15);
     let mut pc60: [crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw; 1] =
         [c15; 1usize];
+    let i5: crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw = (&pc60)[0];
+    let is_done5: bool = crate::cbordetver::cbor_det_array_iterator_is_empty(i5);
+    let _tmp6: bool =
+        if is_done5
+        { false }
+        else
+        {
+            let c2: crate::cbordetveraux::cbor_raw =
+                crate::cbordetver::cbor_det_array_iterator_next(&mut pc60);
+            validate_uint(c2)
+        };
+    crate::lowstar::ignore::ignore::<bool>(_tmp6);
+    let c16: crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw = (&pc60)[0];
+    let rlen16: u64 = crate::cbordetver::cbor_det_array_iterator_length(c16);
+    let c0·6: crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw =
+        crate::cbordetver::cbor_det_array_iterator_truncate(c15, rlen06.wrapping_sub(rlen16));
+    let mut pc7: [crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw; 1] =
+        [c0·6; 1usize];
     let x5: crate::cbordetveraux::cbor_raw =
-        crate::cbordetver::cbor_det_array_iterator_next(&mut pc60);
-    let w2: u64 = parse_uint(x5);
-    let w20: (&[u8], u64) = (w15,w2);
-    let w21: (&[u8], (&[u8], u64)) = (w14,w20);
-    let w22: (&[u8], (&[u8], (&[u8], u64))) = (w13,w21);
-    let w23: (&[u8], (&[u8], (&[u8], (&[u8], u64)))) = (w12,w22);
-    let w24: ((), (&[u8], (&[u8], (&[u8], (&[u8], u64))))) = ((),w23);
-    let res1: ((), ((), (&[u8], (&[u8], (&[u8], (&[u8], u64)))))) = ((),w24);
+        crate::cbordetver::cbor_det_array_iterator_next(&mut pc7);
+    let w16: u64 = parse_uint(x5);
+    let mut pc70: [crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw; 1] =
+        [c16; 1usize];
+    let x6: crate::cbordetveraux::cbor_raw =
+        crate::cbordetver::cbor_det_array_iterator_next(&mut pc70);
+    let v13: crate::cbordetver::cbor_det_view = crate::cbordetver::cbor_det_destruct(x6);
+    let _letpattern3: crate::cbordetver::cbor_det_view = v13;
+    let s2: &[u8] =
+        match _letpattern3
+        {
+            crate::cbordetver::cbor_det_view::String { payload: a, .. } => a,
+            _ => panic!("Incomplete pattern matching")
+        };
+    let w2: &[u8] = s2;
+    let w20: (u64, &[u8]) = (w16,w2);
+    let w21: (&[u8], (u64, &[u8])) = (w15,w20);
+    let w22: (&[u8], (&[u8], (u64, &[u8]))) = (w14,w21);
+    let w23: (&[u8], (&[u8], (&[u8], (u64, &[u8])))) = (w13,w22);
+    let w24: (&[u8], (&[u8], (&[u8], (&[u8], (u64, &[u8]))))) = (w12,w23);
+    let w25: ((), (&[u8], (&[u8], (&[u8], (&[u8], (u64, &[u8])))))) = ((),w24);
+    let res1: ((), ((), (&[u8], (&[u8], (&[u8], (&[u8], (u64, &[u8]))))))) = ((),w25);
     kexresponse_right(res1)
 }
 
@@ -1620,11 +1712,12 @@ serialize_kexresponse(c: kexresponse, out: &mut [u8]) ->
 {
     let mut pcount: [u64; 1] = [0u64; 1usize];
     let mut psize: [usize; 1] = [0usize; 1usize];
-    let _letpattern: ((), ((), (&[u8], (&[u8], (&[u8], (&[u8], u64)))))) = kexresponse_left(c);
+    let _letpattern: ((), ((), (&[u8], (&[u8], (&[u8], (&[u8], (u64, &[u8]))))))) =
+        kexresponse_left(c);
     let res: bool =
         {
             _letpattern.0;
-            let c2: ((), (&[u8], (&[u8], (&[u8], (&[u8], u64))))) = _letpattern.1;
+            let c2: ((), (&[u8], (&[u8], (&[u8], (&[u8], (u64, &[u8])))))) = _letpattern.1;
             let count: u64 = (&pcount)[0];
             let res1: bool =
                 if count < 18446744073709551615u64
@@ -1636,7 +1729,7 @@ serialize_kexresponse(c: kexresponse, out: &mut [u8]) ->
                     let mty: crate::cbordetver::cbor_det_int_kind =
                         crate::cbordetver::cbor_det_int_kind::UInt64;
                     let c3: crate::cbordetveraux::cbor_raw =
-                        crate::cbordetver::cbor_det_mk_int64(mty, 1u64);
+                        crate::cbordetver::cbor_det_mk_int64(mty, 2u64);
                     let res: crate::cbordetver::option__size_t =
                         crate::cbordetver::cbor_det_serialize(c3, out1);
                     let size1: usize =
@@ -1659,9 +1752,9 @@ serialize_kexresponse(c: kexresponse, out: &mut [u8]) ->
                 { false };
             if res1
             {
-                let _letpattern1: ((), (&[u8], (&[u8], (&[u8], (&[u8], u64))))) = c2;
+                let _letpattern1: ((), (&[u8], (&[u8], (&[u8], (&[u8], (u64, &[u8])))))) = c2;
                 _letpattern1.0;
-                let c21: (&[u8], (&[u8], (&[u8], (&[u8], u64)))) = _letpattern1.1;
+                let c21: (&[u8], (&[u8], (&[u8], (&[u8], (u64, &[u8]))))) = _letpattern1.1;
                 let count0: u64 = (&pcount)[0];
                 let res11: bool =
                     if count0 < 18446744073709551615u64
@@ -1696,9 +1789,9 @@ serialize_kexresponse(c: kexresponse, out: &mut [u8]) ->
                     { false };
                 if res11
                 {
-                    let _letpattern2: (&[u8], (&[u8], (&[u8], (&[u8], u64)))) = c21;
+                    let _letpattern2: (&[u8], (&[u8], (&[u8], (&[u8], (u64, &[u8]))))) = c21;
                     let c12: &[u8] = _letpattern2.0;
-                    let c22: (&[u8], (&[u8], (&[u8], u64))) = _letpattern2.1;
+                    let c22: (&[u8], (&[u8], (&[u8], (u64, &[u8])))) = _letpattern2.1;
                     let count1: u64 = (&pcount)[0];
                     let res12: bool =
                         if count1 < 18446744073709551615u64
@@ -1834,9 +1927,9 @@ serialize_kexresponse(c: kexresponse, out: &mut [u8]) ->
                         { false };
                     if res12
                     {
-                        let _letpattern3: (&[u8], (&[u8], (&[u8], u64))) = c22;
+                        let _letpattern3: (&[u8], (&[u8], (&[u8], (u64, &[u8])))) = c22;
                         let c13: &[u8] = _letpattern3.0;
-                        let c23: (&[u8], (&[u8], u64)) = _letpattern3.1;
+                        let c23: (&[u8], (&[u8], (u64, &[u8]))) = _letpattern3.1;
                         let count2: u64 = (&pcount)[0];
                         let res13: bool =
                             if count2 < 18446744073709551615u64
@@ -1983,9 +2076,9 @@ serialize_kexresponse(c: kexresponse, out: &mut [u8]) ->
                             { false };
                         if res13
                         {
-                            let _letpattern4: (&[u8], (&[u8], u64)) = c23;
+                            let _letpattern4: (&[u8], (&[u8], (u64, &[u8]))) = c23;
                             let c14: &[u8] = _letpattern4.0;
-                            let c24: (&[u8], u64) = _letpattern4.1;
+                            let c24: (&[u8], (u64, &[u8])) = _letpattern4.1;
                             let count3: u64 = (&pcount)[0];
                             let res14: bool =
                                 if count3 < 18446744073709551615u64
@@ -2150,9 +2243,9 @@ serialize_kexresponse(c: kexresponse, out: &mut [u8]) ->
                                 { false };
                             if res14
                             {
-                                let _letpattern5: (&[u8], u64) = c24;
+                                let _letpattern5: (&[u8], (u64, &[u8])) = c24;
                                 let c15: &[u8] = _letpattern5.0;
-                                let c25: u64 = _letpattern5.1;
+                                let c25: (u64, &[u8]) = _letpattern5.1;
                                 let count4: u64 = (&pcount)[0];
                                 let res15: bool =
                                     if count4 < 18446744073709551615u64
@@ -2176,23 +2269,211 @@ serialize_kexresponse(c: kexresponse, out: &mut [u8]) ->
                                     { false };
                                 if res15
                                 {
+                                    let _letpattern6: (u64, &[u8]) = c25;
+                                    let c16: u64 = _letpattern6.0;
+                                    let c26: &[u8] = _letpattern6.1;
                                     let count5: u64 = (&pcount)[0];
-                                    if count5 < 18446744073709551615u64
-                                    {
-                                        let size: usize = (&psize)[0];
-                                        let _letpattern6: (&mut [u8], &mut [u8]) =
-                                            out.split_at_mut(size);
-                                        let _out0: &[u8] = _letpattern6.0;
-                                        let out1: &mut [u8] = _letpattern6.1;
-                                        let size1: usize = serialize_uint(c25, out1);
-                                        if size1 == 0usize
-                                        { false }
-                                        else
+                                    let res16: bool =
+                                        if count5 < 18446744073709551615u64
                                         {
-                                            (&mut pcount)[0] = count5.wrapping_add(1u64);
-                                            (&mut psize)[0] = size.wrapping_add(size1);
-                                            true
+                                            let size: usize = (&psize)[0];
+                                            let _letpattern7: (&mut [u8], &mut [u8]) =
+                                                out.split_at_mut(size);
+                                            let _out0: &[u8] = _letpattern7.0;
+                                            let out1: &mut [u8] = _letpattern7.1;
+                                            let size1: usize = serialize_uint(c16, out1);
+                                            if size1 == 0usize
+                                            { false }
+                                            else
+                                            {
+                                                (&mut pcount)[0] = count5.wrapping_add(1u64);
+                                                (&mut psize)[0] = size.wrapping_add(size1);
+                                                true
+                                            }
                                         }
+                                        else
+                                        { false };
+                                    if res16
+                                    {
+                                        let count6: u64 = (&pcount)[0];
+                                        if count6 < 18446744073709551615u64
+                                        {
+                                            let size: usize = (&psize)[0];
+                                            let _letpattern7: (&mut [u8], &mut [u8]) =
+                                                out.split_at_mut(size);
+                                            let _out0: &[u8] = _letpattern7.0;
+                                            let out1: &mut [u8] = _letpattern7.1;
+                                            let len: usize = c26.len();
+                                            let lo_ok: bool =
+                                                crate::cbordetveraux::u64_lte_sizet(3309u64, len);
+                                            let hi_ok: bool =
+                                                crate::cbordetveraux::sizet_lte_u64(len, 3309u64);
+                                            let size1: usize =
+                                                if lo_ok && hi_ok
+                                                {
+                                                    if
+                                                    2u8
+                                                    ==
+                                                    crate::cbordetveraux::cbor_major_type_byte_string
+                                                    {
+                                                        let len1: usize = c26.len();
+                                                        let __anf0: bool =
+                                                            crate::cbordetveraux::sizet_lte_u64(
+                                                                len1,
+                                                                18446744073709551615u64
+                                                            );
+                                                        if __anf0
+                                                        {
+                                                            let
+                                                            mty:
+                                                            crate::cbordetver::cbor_det_string_kind
+                                                            =
+                                                                crate::cbordetver::cbor_det_string_kind::ByteString;
+                                                            let
+                                                            res:
+                                                            crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                            =
+                                                                crate::cbordetver::cbor_det_mk_string(
+                                                                    mty,
+                                                                    c26
+                                                                );
+                                                            let
+                                                            _letpattern8:
+                                                            crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                            =
+                                                                res;
+                                                            let x: crate::cbordetveraux::cbor_raw =
+                                                                match _letpattern8
+                                                                {
+                                                                    crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw::Some
+                                                                    { v: c3 }
+                                                                    => c3,
+                                                                    _ =>
+                                                                      panic!(
+                                                                          "Incomplete pattern matching"
+                                                                      )
+                                                                };
+                                                            let
+                                                            ser: crate::cbordetver::option__size_t
+                                                            =
+                                                                crate::cbordetver::cbor_det_serialize(
+                                                                    x,
+                                                                    out1
+                                                                );
+                                                            match ser
+                                                            {
+                                                                crate::cbordetver::option__size_t::None
+                                                                => 0usize,
+                                                                crate::cbordetver::option__size_t::Some
+                                                                { v: sz }
+                                                                => sz,
+                                                                _ =>
+                                                                  panic!(
+                                                                      "Incomplete pattern matching"
+                                                                  )
+                                                            }
+                                                        }
+                                                        else
+                                                        { 0usize }
+                                                    }
+                                                    else
+                                                    {
+                                                        let len1: usize = c26.len();
+                                                        let __anf0: bool =
+                                                            crate::cbordetveraux::sizet_lte_u64(
+                                                                len1,
+                                                                18446744073709551615u64
+                                                            );
+                                                        if __anf0
+                                                        {
+                                                            let correct: bool =
+                                                                crate::cbordetver::cbor_impl_utf8_correct(
+                                                                    c26
+                                                                );
+                                                            if correct
+                                                            {
+                                                                let
+                                                                mty:
+                                                                crate::cbordetver::cbor_det_string_kind
+                                                                =
+                                                                    if
+                                                                    crate::cbordetveraux::cbor_major_type_text_string
+                                                                    ==
+                                                                    crate::cbordetveraux::cbor_major_type_byte_string
+                                                                    {
+                                                                        crate::cbordetver::cbor_det_string_kind::ByteString
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        crate::cbordetver::cbor_det_string_kind::TextString
+                                                                    };
+                                                                let
+                                                                res:
+                                                                crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                                =
+                                                                    crate::cbordetver::cbor_det_mk_string(
+                                                                        mty,
+                                                                        c26
+                                                                    );
+                                                                let
+                                                                _letpattern8:
+                                                                crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                                =
+                                                                    res;
+                                                                let
+                                                                x: crate::cbordetveraux::cbor_raw
+                                                                =
+                                                                    match _letpattern8
+                                                                    {
+                                                                        crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw::Some
+                                                                        { v: c3 }
+                                                                        => c3,
+                                                                        _ =>
+                                                                          panic!(
+                                                                              "Incomplete pattern matching"
+                                                                          )
+                                                                    };
+                                                                let
+                                                                ser:
+                                                                crate::cbordetver::option__size_t
+                                                                =
+                                                                    crate::cbordetver::cbor_det_serialize(
+                                                                        x,
+                                                                        out1
+                                                                    );
+                                                                match ser
+                                                                {
+                                                                    crate::cbordetver::option__size_t::None
+                                                                    => 0usize,
+                                                                    crate::cbordetver::option__size_t::Some
+                                                                    { v: sz }
+                                                                    => sz,
+                                                                    _ =>
+                                                                      panic!(
+                                                                          "Incomplete pattern matching"
+                                                                      )
+                                                                }
+                                                            }
+                                                            else
+                                                            { 0usize }
+                                                        }
+                                                        else
+                                                        { 0usize }
+                                                    }
+                                                }
+                                                else
+                                                { 0usize };
+                                            if size1 == 0usize
+                                            { false }
+                                            else
+                                            {
+                                                (&mut pcount)[0] = count6.wrapping_add(1u64);
+                                                (&mut psize)[0] = size.wrapping_add(size1);
+                                                true
+                                            }
+                                        }
+                                        else
+                                        { false }
                                     }
                                     else
                                     { false }
@@ -2304,7 +2585,7 @@ pub fn validate_initkex(c: crate::cbordetveraux::cbor_raw) -> bool
                             crate::cbordetver::cbor_det_view::Int64 { value: res, .. } => res,
                             _ => panic!("Incomplete pattern matching")
                         };
-                    i2 == 1u64
+                    i2 == 2u64
                 }
                 else
                 { false }
@@ -2463,36 +2744,141 @@ pub fn validate_initkex(c: crate::cbordetveraux::cbor_raw) -> bool
                                     (&pi)[0];
                                 let is_done4: bool =
                                     crate::cbordetver::cbor_det_array_iterator_is_empty(i14);
-                                if is_done4
-                                { false }
-                                else
-                                {
-                                    let c1: crate::cbordetveraux::cbor_raw =
-                                        crate::cbordetver::cbor_det_array_iterator_next(&mut pi);
-                                    let mt: u8 = crate::cbordetver::cbor_det_major_type(c1);
-                                    if mt == 2u8
+                                let test15: bool =
+                                    if is_done4
+                                    { false }
+                                    else
                                     {
-                                        let v10: crate::cbordetver::cbor_det_view =
-                                            crate::cbordetver::cbor_det_destruct(c1);
-                                        let _letpattern0: crate::cbordetver::cbor_det_view = v10;
-                                        let str: &[u8] =
-                                            match _letpattern0
+                                        let c1: crate::cbordetveraux::cbor_raw =
+                                            crate::cbordetver::cbor_det_array_iterator_next(&mut pi);
+                                        let mt: u8 = crate::cbordetver::cbor_det_major_type(c1);
+                                        if mt == 2u8
+                                        {
+                                            let v10: crate::cbordetver::cbor_det_view =
+                                                crate::cbordetver::cbor_det_destruct(c1);
+                                            let _letpattern0: crate::cbordetver::cbor_det_view =
+                                                v10;
+                                            let str: &[u8] =
+                                                match _letpattern0
+                                                {
+                                                    crate::cbordetver::cbor_det_view::String
+                                                    { payload: a, .. }
+                                                    => a,
+                                                    _ => panic!("Incomplete pattern matching")
+                                                };
+                                            let len: usize = str.len();
+                                            let lo_ok: bool =
+                                                crate::cbordetveraux::u64_lte_sizet(1249u64, len);
+                                            let hi_ok: bool =
+                                                crate::cbordetveraux::sizet_lte_u64(len, 1249u64);
+                                            lo_ok && hi_ok
+                                        }
+                                        else
+                                        { false }
+                                    };
+                                if test15
+                                {
+                                    let
+                                    i15:
+                                    crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw
+                                    =
+                                        (&pi)[0];
+                                    let is_done5: bool =
+                                        crate::cbordetver::cbor_det_array_iterator_is_empty(i15);
+                                    let test16: bool =
+                                        if is_done5
+                                        { false }
+                                        else
+                                        {
+                                            let c1: crate::cbordetveraux::cbor_raw =
+                                                crate::cbordetver::cbor_det_array_iterator_next(
+                                                    &mut pi
+                                                );
+                                            let mt: u8 = crate::cbordetver::cbor_det_major_type(c1);
+                                            if mt == 2u8
                                             {
-                                                crate::cbordetver::cbor_det_view::String
-                                                { payload: a, .. }
-                                                => a,
-                                                _ => panic!("Incomplete pattern matching")
-                                            };
-                                        let len: usize = str.len();
-                                        let lo_ok: bool =
-                                            crate::cbordetveraux::u64_lte_sizet(1249u64, len);
-                                        let hi_ok: bool =
-                                            crate::cbordetveraux::sizet_lte_u64(len, 1249u64);
-                                        lo_ok && hi_ok
+                                                let v10: crate::cbordetver::cbor_det_view =
+                                                    crate::cbordetver::cbor_det_destruct(c1);
+                                                let _letpattern0: crate::cbordetver::cbor_det_view =
+                                                    v10;
+                                                let str: &[u8] =
+                                                    match _letpattern0
+                                                    {
+                                                        crate::cbordetver::cbor_det_view::String
+                                                        { payload: a, .. }
+                                                        => a,
+                                                        _ => panic!("Incomplete pattern matching")
+                                                    };
+                                                let len: usize = str.len();
+                                                let lo_ok: bool =
+                                                    crate::cbordetveraux::u64_lte_sizet(
+                                                        1952u64,
+                                                        len
+                                                    );
+                                                let hi_ok: bool =
+                                                    crate::cbordetveraux::sizet_lte_u64(
+                                                        len,
+                                                        1952u64
+                                                    );
+                                                lo_ok && hi_ok
+                                            }
+                                            else
+                                            { false }
+                                        };
+                                    if test16
+                                    {
+                                        let
+                                        i16:
+                                        crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw
+                                        =
+                                            (&pi)[0];
+                                        let is_done6: bool =
+                                            crate::cbordetver::cbor_det_array_iterator_is_empty(i16);
+                                        if is_done6
+                                        { false }
+                                        else
+                                        {
+                                            let c1: crate::cbordetveraux::cbor_raw =
+                                                crate::cbordetver::cbor_det_array_iterator_next(
+                                                    &mut pi
+                                                );
+                                            let mt: u8 = crate::cbordetver::cbor_det_major_type(c1);
+                                            if mt == 2u8
+                                            {
+                                                let v10: crate::cbordetver::cbor_det_view =
+                                                    crate::cbordetver::cbor_det_destruct(c1);
+                                                let _letpattern0: crate::cbordetver::cbor_det_view =
+                                                    v10;
+                                                let str: &[u8] =
+                                                    match _letpattern0
+                                                    {
+                                                        crate::cbordetver::cbor_det_view::String
+                                                        { payload: a, .. }
+                                                        => a,
+                                                        _ => panic!("Incomplete pattern matching")
+                                                    };
+                                                let len: usize = str.len();
+                                                let lo_ok: bool =
+                                                    crate::cbordetveraux::u64_lte_sizet(
+                                                        3309u64,
+                                                        len
+                                                    );
+                                                let hi_ok: bool =
+                                                    crate::cbordetveraux::sizet_lte_u64(
+                                                        len,
+                                                        3309u64
+                                                    );
+                                                lo_ok && hi_ok
+                                            }
+                                            else
+                                            { false }
+                                        }
                                     }
                                     else
                                     { false }
                                 }
+                                else
+                                { false }
                             }
                             else
                             { false }
@@ -2527,7 +2913,9 @@ pub struct initkex <'a>
     pub identity_key: &'a [u8],
     pub pre_key: &'a [u8],
     pub one_time_key: &'a [u8],
-    pub pq_key: &'a [u8]
+    pub pq_key: &'a [u8],
+    pub mldsa_public_key: &'a [u8],
+    pub signature: &'a [u8]
 }
 
 pub fn uu___is_Mkinitkex0(projectee: initkex) -> bool
@@ -2536,25 +2924,37 @@ pub fn uu___is_Mkinitkex0(projectee: initkex) -> bool
     true
 }
 
-fn initkex_right <'a>(x6: ((), ((), (&'a [u8], (&'a [u8], (&'a [u8], &'a [u8])))))) ->
+fn initkex_right <'a>(
+    x8: ((), ((), (&'a [u8], (&'a [u8], (&'a [u8], (&'a [u8], (&'a [u8], &'a [u8])))))))
+) ->
     initkex
     <'a>
 {
-    match x6
+    match x8
     {
-        (_x7,(_x8,(x9,(x10,(x11,x12))))) =>
-          initkex { identity_key: x9, pre_key: x10, one_time_key: x11, pq_key: x12 }
+        (_x9,(_x10,(x11,(x12,(x13,(x14,(x15,x16))))))) =>
+          initkex
+          {
+              identity_key: x11,
+              pre_key: x12,
+              one_time_key: x13,
+              pq_key: x14,
+              mldsa_public_key: x15,
+              signature: x16
+          }
     }
 }
 
-fn initkex_left <'a>(x13: initkex <'a>) ->
-    ((), ((), (&'a [u8], (&'a [u8], (&'a [u8], &'a [u8])))))
+fn initkex_left <'a>(x17: initkex <'a>) ->
+    ((), ((), (&'a [u8], (&'a [u8], (&'a [u8], (&'a [u8], (&'a [u8], &'a [u8])))))))
 {
-    let x23: &[u8] = x13.identity_key;
-    let x24: &[u8] = x13.pre_key;
-    let x25: &[u8] = x13.one_time_key;
-    let x26: &[u8] = x13.pq_key;
-    ((),((),(x23,(x24,(x25,x26)))))
+    let x29: &[u8] = x17.identity_key;
+    let x30: &[u8] = x17.pre_key;
+    let x31: &[u8] = x17.one_time_key;
+    let x32: &[u8] = x17.pq_key;
+    let x33: &[u8] = x17.mldsa_public_key;
+    let x34: &[u8] = x17.signature;
+    ((),((),(x29,(x30,(x31,(x32,(x33,x34)))))))
 }
 
 /**
@@ -2600,7 +3000,7 @@ parse_initkex
                         crate::cbordetver::cbor_det_view::Int64 { value: res, .. } => res,
                         _ => panic!("Incomplete pattern matching")
                     };
-                i1 == 1u64
+                i1 == 2u64
             }
             else
             { false }
@@ -2805,10 +3205,47 @@ parse_initkex
             _ => panic!("Incomplete pattern matching")
         };
     let w14: &[u8] = s1;
+    let rlen05: u64 = crate::cbordetver::cbor_det_array_iterator_length(c14);
     let mut pc50: [crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw; 1] =
         [c14; 1usize];
+    let i4: crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw = (&pc50)[0];
+    let is_done4: bool = crate::cbordetver::cbor_det_array_iterator_is_empty(i4);
+    let _tmp5: bool =
+        if is_done4
+        { false }
+        else
+        {
+            let c2: crate::cbordetveraux::cbor_raw =
+                crate::cbordetver::cbor_det_array_iterator_next(&mut pc50);
+            let mt: u8 = crate::cbordetver::cbor_det_major_type(c2);
+            if mt == 2u8
+            {
+                let v13: crate::cbordetver::cbor_det_view =
+                    crate::cbordetver::cbor_det_destruct(c2);
+                let _letpattern3: crate::cbordetver::cbor_det_view = v13;
+                let str: &[u8] =
+                    match _letpattern3
+                    {
+                        crate::cbordetver::cbor_det_view::String { payload: a, .. } => a,
+                        _ => panic!("Incomplete pattern matching")
+                    };
+                let len: usize = str.len();
+                let lo_ok: bool = crate::cbordetveraux::u64_lte_sizet(1249u64, len);
+                let hi_ok: bool = crate::cbordetveraux::sizet_lte_u64(len, 1249u64);
+                lo_ok && hi_ok
+            }
+            else
+            { false }
+        };
+    crate::lowstar::ignore::ignore::<bool>(_tmp5);
+    let c15: crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw = (&pc50)[0];
+    let rlen15: u64 = crate::cbordetver::cbor_det_array_iterator_length(c15);
+    let c0·5: crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw =
+        crate::cbordetver::cbor_det_array_iterator_truncate(c14, rlen05.wrapping_sub(rlen15));
+    let mut pc6: [crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw; 1] =
+        [c0·5; 1usize];
     let x4: crate::cbordetveraux::cbor_raw =
-        crate::cbordetver::cbor_det_array_iterator_next(&mut pc50);
+        crate::cbordetver::cbor_det_array_iterator_next(&mut pc6);
     let v13: crate::cbordetver::cbor_det_view = crate::cbordetver::cbor_det_destruct(x4);
     let _letpattern3: crate::cbordetver::cbor_det_view = v13;
     let s2: &[u8] =
@@ -2817,12 +3254,77 @@ parse_initkex
             crate::cbordetver::cbor_det_view::String { payload: a, .. } => a,
             _ => panic!("Incomplete pattern matching")
         };
-    let w2: &[u8] = s2;
-    let w20: (&[u8], &[u8]) = (w14,w2);
-    let w21: (&[u8], (&[u8], &[u8])) = (w13,w20);
-    let w22: (&[u8], (&[u8], (&[u8], &[u8]))) = (w12,w21);
-    let w23: ((), (&[u8], (&[u8], (&[u8], &[u8])))) = ((),w22);
-    let res1: ((), ((), (&[u8], (&[u8], (&[u8], &[u8]))))) = ((),w23);
+    let w15: &[u8] = s2;
+    let rlen06: u64 = crate::cbordetver::cbor_det_array_iterator_length(c15);
+    let mut pc60: [crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw; 1] =
+        [c15; 1usize];
+    let i5: crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw = (&pc60)[0];
+    let is_done5: bool = crate::cbordetver::cbor_det_array_iterator_is_empty(i5);
+    let _tmp6: bool =
+        if is_done5
+        { false }
+        else
+        {
+            let c2: crate::cbordetveraux::cbor_raw =
+                crate::cbordetver::cbor_det_array_iterator_next(&mut pc60);
+            let mt: u8 = crate::cbordetver::cbor_det_major_type(c2);
+            if mt == 2u8
+            {
+                let v14: crate::cbordetver::cbor_det_view =
+                    crate::cbordetver::cbor_det_destruct(c2);
+                let _letpattern4: crate::cbordetver::cbor_det_view = v14;
+                let str: &[u8] =
+                    match _letpattern4
+                    {
+                        crate::cbordetver::cbor_det_view::String { payload: a, .. } => a,
+                        _ => panic!("Incomplete pattern matching")
+                    };
+                let len: usize = str.len();
+                let lo_ok: bool = crate::cbordetveraux::u64_lte_sizet(1952u64, len);
+                let hi_ok: bool = crate::cbordetveraux::sizet_lte_u64(len, 1952u64);
+                lo_ok && hi_ok
+            }
+            else
+            { false }
+        };
+    crate::lowstar::ignore::ignore::<bool>(_tmp6);
+    let c16: crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw = (&pc60)[0];
+    let rlen16: u64 = crate::cbordetver::cbor_det_array_iterator_length(c16);
+    let c0·6: crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw =
+        crate::cbordetver::cbor_det_array_iterator_truncate(c15, rlen06.wrapping_sub(rlen16));
+    let mut pc7: [crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw; 1] =
+        [c0·6; 1usize];
+    let x5: crate::cbordetveraux::cbor_raw =
+        crate::cbordetver::cbor_det_array_iterator_next(&mut pc7);
+    let v14: crate::cbordetver::cbor_det_view = crate::cbordetver::cbor_det_destruct(x5);
+    let _letpattern4: crate::cbordetver::cbor_det_view = v14;
+    let s3: &[u8] =
+        match _letpattern4
+        {
+            crate::cbordetver::cbor_det_view::String { payload: a, .. } => a,
+            _ => panic!("Incomplete pattern matching")
+        };
+    let w16: &[u8] = s3;
+    let mut pc70: [crate::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw; 1] =
+        [c16; 1usize];
+    let x6: crate::cbordetveraux::cbor_raw =
+        crate::cbordetver::cbor_det_array_iterator_next(&mut pc70);
+    let v15: crate::cbordetver::cbor_det_view = crate::cbordetver::cbor_det_destruct(x6);
+    let _letpattern5: crate::cbordetver::cbor_det_view = v15;
+    let s4: &[u8] =
+        match _letpattern5
+        {
+            crate::cbordetver::cbor_det_view::String { payload: a, .. } => a,
+            _ => panic!("Incomplete pattern matching")
+        };
+    let w2: &[u8] = s4;
+    let w20: (&[u8], &[u8]) = (w16,w2);
+    let w21: (&[u8], (&[u8], &[u8])) = (w15,w20);
+    let w22: (&[u8], (&[u8], (&[u8], &[u8]))) = (w14,w21);
+    let w23: (&[u8], (&[u8], (&[u8], (&[u8], &[u8])))) = (w13,w22);
+    let w24: (&[u8], (&[u8], (&[u8], (&[u8], (&[u8], &[u8]))))) = (w12,w23);
+    let w25: ((), (&[u8], (&[u8], (&[u8], (&[u8], (&[u8], &[u8])))))) = ((),w24);
+    let res1: ((), ((), (&[u8], (&[u8], (&[u8], (&[u8], (&[u8], &[u8]))))))) = ((),w25);
     initkex_right(res1)
 }
 
@@ -2835,11 +3337,12 @@ serialize_initkex(c: initkex, out: &mut [u8]) ->
 {
     let mut pcount: [u64; 1] = [0u64; 1usize];
     let mut psize: [usize; 1] = [0usize; 1usize];
-    let _letpattern: ((), ((), (&[u8], (&[u8], (&[u8], &[u8]))))) = initkex_left(c);
+    let _letpattern: ((), ((), (&[u8], (&[u8], (&[u8], (&[u8], (&[u8], &[u8]))))))) =
+        initkex_left(c);
     let res: bool =
         {
             _letpattern.0;
-            let c2: ((), (&[u8], (&[u8], (&[u8], &[u8])))) = _letpattern.1;
+            let c2: ((), (&[u8], (&[u8], (&[u8], (&[u8], (&[u8], &[u8])))))) = _letpattern.1;
             let count: u64 = (&pcount)[0];
             let res1: bool =
                 if count < 18446744073709551615u64
@@ -2851,7 +3354,7 @@ serialize_initkex(c: initkex, out: &mut [u8]) ->
                     let mty: crate::cbordetver::cbor_det_int_kind =
                         crate::cbordetver::cbor_det_int_kind::UInt64;
                     let c3: crate::cbordetveraux::cbor_raw =
-                        crate::cbordetver::cbor_det_mk_int64(mty, 1u64);
+                        crate::cbordetver::cbor_det_mk_int64(mty, 2u64);
                     let res: crate::cbordetver::option__size_t =
                         crate::cbordetver::cbor_det_serialize(c3, out1);
                     let size1: usize =
@@ -2874,9 +3377,9 @@ serialize_initkex(c: initkex, out: &mut [u8]) ->
                 { false };
             if res1
             {
-                let _letpattern1: ((), (&[u8], (&[u8], (&[u8], &[u8])))) = c2;
+                let _letpattern1: ((), (&[u8], (&[u8], (&[u8], (&[u8], (&[u8], &[u8])))))) = c2;
                 _letpattern1.0;
-                let c21: (&[u8], (&[u8], (&[u8], &[u8]))) = _letpattern1.1;
+                let c21: (&[u8], (&[u8], (&[u8], (&[u8], (&[u8], &[u8]))))) = _letpattern1.1;
                 let count0: u64 = (&pcount)[0];
                 let res11: bool =
                     if count0 < 18446744073709551615u64
@@ -2911,9 +3414,9 @@ serialize_initkex(c: initkex, out: &mut [u8]) ->
                     { false };
                 if res11
                 {
-                    let _letpattern2: (&[u8], (&[u8], (&[u8], &[u8]))) = c21;
+                    let _letpattern2: (&[u8], (&[u8], (&[u8], (&[u8], (&[u8], &[u8]))))) = c21;
                     let c12: &[u8] = _letpattern2.0;
-                    let c22: (&[u8], (&[u8], &[u8])) = _letpattern2.1;
+                    let c22: (&[u8], (&[u8], (&[u8], (&[u8], &[u8])))) = _letpattern2.1;
                     let count1: u64 = (&pcount)[0];
                     let res12: bool =
                         if count1 < 18446744073709551615u64
@@ -3049,9 +3552,9 @@ serialize_initkex(c: initkex, out: &mut [u8]) ->
                         { false };
                     if res12
                     {
-                        let _letpattern3: (&[u8], (&[u8], &[u8])) = c22;
+                        let _letpattern3: (&[u8], (&[u8], (&[u8], (&[u8], &[u8])))) = c22;
                         let c13: &[u8] = _letpattern3.0;
-                        let c23: (&[u8], &[u8]) = _letpattern3.1;
+                        let c23: (&[u8], (&[u8], (&[u8], &[u8]))) = _letpattern3.1;
                         let count2: u64 = (&pcount)[0];
                         let res13: bool =
                             if count2 < 18446744073709551615u64
@@ -3198,9 +3701,9 @@ serialize_initkex(c: initkex, out: &mut [u8]) ->
                             { false };
                         if res13
                         {
-                            let _letpattern4: (&[u8], &[u8]) = c23;
+                            let _letpattern4: (&[u8], (&[u8], (&[u8], &[u8]))) = c23;
                             let c14: &[u8] = _letpattern4.0;
-                            let c24: &[u8] = _letpattern4.1;
+                            let c24: (&[u8], (&[u8], &[u8])) = _letpattern4.1;
                             let count3: u64 = (&pcount)[0];
                             let res14: bool =
                                 if count3 < 18446744073709551615u64
@@ -3365,122 +3868,58 @@ serialize_initkex(c: initkex, out: &mut [u8]) ->
                                 { false };
                             if res14
                             {
+                                let _letpattern5: (&[u8], (&[u8], &[u8])) = c24;
+                                let c15: &[u8] = _letpattern5.0;
+                                let c25: (&[u8], &[u8]) = _letpattern5.1;
                                 let count4: u64 = (&pcount)[0];
-                                if count4 < 18446744073709551615u64
-                                {
-                                    let size: usize = (&psize)[0];
-                                    let _letpattern5: (&mut [u8], &mut [u8]) =
-                                        out.split_at_mut(size);
-                                    let _out0: &[u8] = _letpattern5.0;
-                                    let out1: &mut [u8] = _letpattern5.1;
-                                    let len: usize = c24.len();
-                                    let lo_ok: bool =
-                                        crate::cbordetveraux::u64_lte_sizet(1249u64, len);
-                                    let hi_ok: bool =
-                                        crate::cbordetveraux::sizet_lte_u64(len, 1249u64);
-                                    let size1: usize =
-                                        if lo_ok && hi_ok
-                                        {
-                                            if
-                                            2u8 == crate::cbordetveraux::cbor_major_type_byte_string
+                                let res15: bool =
+                                    if count4 < 18446744073709551615u64
+                                    {
+                                        let size: usize = (&psize)[0];
+                                        let _letpattern6: (&mut [u8], &mut [u8]) =
+                                            out.split_at_mut(size);
+                                        let _out0: &[u8] = _letpattern6.0;
+                                        let out1: &mut [u8] = _letpattern6.1;
+                                        let len: usize = c15.len();
+                                        let lo_ok: bool =
+                                            crate::cbordetveraux::u64_lte_sizet(1249u64, len);
+                                        let hi_ok: bool =
+                                            crate::cbordetveraux::sizet_lte_u64(len, 1249u64);
+                                        let size1: usize =
+                                            if lo_ok && hi_ok
                                             {
-                                                let len1: usize = c24.len();
-                                                let __anf0: bool =
-                                                    crate::cbordetveraux::sizet_lte_u64(
-                                                        len1,
-                                                        18446744073709551615u64
-                                                    );
-                                                if __anf0
+                                                if
+                                                2u8
+                                                ==
+                                                crate::cbordetveraux::cbor_major_type_byte_string
                                                 {
-                                                    let
-                                                    mty: crate::cbordetver::cbor_det_string_kind
-                                                    =
-                                                        crate::cbordetver::cbor_det_string_kind::ByteString;
-                                                    let
-                                                    res:
-                                                    crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
-                                                    =
-                                                        crate::cbordetver::cbor_det_mk_string(
-                                                            mty,
-                                                            c24
+                                                    let len1: usize = c15.len();
+                                                    let __anf0: bool =
+                                                        crate::cbordetveraux::sizet_lte_u64(
+                                                            len1,
+                                                            18446744073709551615u64
                                                         );
-                                                    let
-                                                    _letpattern6:
-                                                    crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
-                                                    =
-                                                        res;
-                                                    let x: crate::cbordetveraux::cbor_raw =
-                                                        match _letpattern6
-                                                        {
-                                                            crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw::Some
-                                                            { v: c3 }
-                                                            => c3,
-                                                            _ =>
-                                                              panic!("Incomplete pattern matching")
-                                                        };
-                                                    let ser: crate::cbordetver::option__size_t =
-                                                        crate::cbordetver::cbor_det_serialize(
-                                                            x,
-                                                            out1
-                                                        );
-                                                    match ser
-                                                    {
-                                                        crate::cbordetver::option__size_t::None =>
-                                                          0usize,
-                                                        crate::cbordetver::option__size_t::Some
-                                                        { v: sz }
-                                                        => sz,
-                                                        _ => panic!("Incomplete pattern matching")
-                                                    }
-                                                }
-                                                else
-                                                { 0usize }
-                                            }
-                                            else
-                                            {
-                                                let len1: usize = c24.len();
-                                                let __anf0: bool =
-                                                    crate::cbordetveraux::sizet_lte_u64(
-                                                        len1,
-                                                        18446744073709551615u64
-                                                    );
-                                                if __anf0
-                                                {
-                                                    let correct: bool =
-                                                        crate::cbordetver::cbor_impl_utf8_correct(
-                                                            c24
-                                                        );
-                                                    if correct
+                                                    if __anf0
                                                     {
                                                         let
                                                         mty: crate::cbordetver::cbor_det_string_kind
                                                         =
-                                                            if
-                                                            crate::cbordetveraux::cbor_major_type_text_string
-                                                            ==
-                                                            crate::cbordetveraux::cbor_major_type_byte_string
-                                                            {
-                                                                crate::cbordetver::cbor_det_string_kind::ByteString
-                                                            }
-                                                            else
-                                                            {
-                                                                crate::cbordetver::cbor_det_string_kind::TextString
-                                                            };
+                                                            crate::cbordetver::cbor_det_string_kind::ByteString;
                                                         let
                                                         res:
                                                         crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
                                                         =
                                                             crate::cbordetver::cbor_det_mk_string(
                                                                 mty,
-                                                                c24
+                                                                c15
                                                             );
                                                         let
-                                                        _letpattern6:
+                                                        _letpattern7:
                                                         crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
                                                         =
                                                             res;
                                                         let x: crate::cbordetveraux::cbor_raw =
-                                                            match _letpattern6
+                                                            match _letpattern7
                                                             {
                                                                 crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw::Some
                                                                 { v: c3 }
@@ -3510,19 +3949,469 @@ serialize_initkex(c: initkex, out: &mut [u8]) ->
                                                     { 0usize }
                                                 }
                                                 else
-                                                { 0usize }
+                                                {
+                                                    let len1: usize = c15.len();
+                                                    let __anf0: bool =
+                                                        crate::cbordetveraux::sizet_lte_u64(
+                                                            len1,
+                                                            18446744073709551615u64
+                                                        );
+                                                    if __anf0
+                                                    {
+                                                        let correct: bool =
+                                                            crate::cbordetver::cbor_impl_utf8_correct(
+                                                                c15
+                                                            );
+                                                        if correct
+                                                        {
+                                                            let
+                                                            mty:
+                                                            crate::cbordetver::cbor_det_string_kind
+                                                            =
+                                                                if
+                                                                crate::cbordetveraux::cbor_major_type_text_string
+                                                                ==
+                                                                crate::cbordetveraux::cbor_major_type_byte_string
+                                                                {
+                                                                    crate::cbordetver::cbor_det_string_kind::ByteString
+                                                                }
+                                                                else
+                                                                {
+                                                                    crate::cbordetver::cbor_det_string_kind::TextString
+                                                                };
+                                                            let
+                                                            res:
+                                                            crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                            =
+                                                                crate::cbordetver::cbor_det_mk_string(
+                                                                    mty,
+                                                                    c15
+                                                                );
+                                                            let
+                                                            _letpattern7:
+                                                            crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                            =
+                                                                res;
+                                                            let x: crate::cbordetveraux::cbor_raw =
+                                                                match _letpattern7
+                                                                {
+                                                                    crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw::Some
+                                                                    { v: c3 }
+                                                                    => c3,
+                                                                    _ =>
+                                                                      panic!(
+                                                                          "Incomplete pattern matching"
+                                                                      )
+                                                                };
+                                                            let
+                                                            ser: crate::cbordetver::option__size_t
+                                                            =
+                                                                crate::cbordetver::cbor_det_serialize(
+                                                                    x,
+                                                                    out1
+                                                                );
+                                                            match ser
+                                                            {
+                                                                crate::cbordetver::option__size_t::None
+                                                                => 0usize,
+                                                                crate::cbordetver::option__size_t::Some
+                                                                { v: sz }
+                                                                => sz,
+                                                                _ =>
+                                                                  panic!(
+                                                                      "Incomplete pattern matching"
+                                                                  )
+                                                            }
+                                                        }
+                                                        else
+                                                        { 0usize }
+                                                    }
+                                                    else
+                                                    { 0usize }
+                                                }
+                                            }
+                                            else
+                                            { 0usize };
+                                        if size1 == 0usize
+                                        { false }
+                                        else
+                                        {
+                                            (&mut pcount)[0] = count4.wrapping_add(1u64);
+                                            (&mut psize)[0] = size.wrapping_add(size1);
+                                            true
+                                        }
+                                    }
+                                    else
+                                    { false };
+                                if res15
+                                {
+                                    let _letpattern6: (&[u8], &[u8]) = c25;
+                                    let c16: &[u8] = _letpattern6.0;
+                                    let c26: &[u8] = _letpattern6.1;
+                                    let count5: u64 = (&pcount)[0];
+                                    let res16: bool =
+                                        if count5 < 18446744073709551615u64
+                                        {
+                                            let size: usize = (&psize)[0];
+                                            let _letpattern7: (&mut [u8], &mut [u8]) =
+                                                out.split_at_mut(size);
+                                            let _out0: &[u8] = _letpattern7.0;
+                                            let out1: &mut [u8] = _letpattern7.1;
+                                            let len: usize = c16.len();
+                                            let lo_ok: bool =
+                                                crate::cbordetveraux::u64_lte_sizet(1952u64, len);
+                                            let hi_ok: bool =
+                                                crate::cbordetveraux::sizet_lte_u64(len, 1952u64);
+                                            let size1: usize =
+                                                if lo_ok && hi_ok
+                                                {
+                                                    if
+                                                    2u8
+                                                    ==
+                                                    crate::cbordetveraux::cbor_major_type_byte_string
+                                                    {
+                                                        let len1: usize = c16.len();
+                                                        let __anf0: bool =
+                                                            crate::cbordetveraux::sizet_lte_u64(
+                                                                len1,
+                                                                18446744073709551615u64
+                                                            );
+                                                        if __anf0
+                                                        {
+                                                            let
+                                                            mty:
+                                                            crate::cbordetver::cbor_det_string_kind
+                                                            =
+                                                                crate::cbordetver::cbor_det_string_kind::ByteString;
+                                                            let
+                                                            res:
+                                                            crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                            =
+                                                                crate::cbordetver::cbor_det_mk_string(
+                                                                    mty,
+                                                                    c16
+                                                                );
+                                                            let
+                                                            _letpattern8:
+                                                            crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                            =
+                                                                res;
+                                                            let x: crate::cbordetveraux::cbor_raw =
+                                                                match _letpattern8
+                                                                {
+                                                                    crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw::Some
+                                                                    { v: c3 }
+                                                                    => c3,
+                                                                    _ =>
+                                                                      panic!(
+                                                                          "Incomplete pattern matching"
+                                                                      )
+                                                                };
+                                                            let
+                                                            ser: crate::cbordetver::option__size_t
+                                                            =
+                                                                crate::cbordetver::cbor_det_serialize(
+                                                                    x,
+                                                                    out1
+                                                                );
+                                                            match ser
+                                                            {
+                                                                crate::cbordetver::option__size_t::None
+                                                                => 0usize,
+                                                                crate::cbordetver::option__size_t::Some
+                                                                { v: sz }
+                                                                => sz,
+                                                                _ =>
+                                                                  panic!(
+                                                                      "Incomplete pattern matching"
+                                                                  )
+                                                            }
+                                                        }
+                                                        else
+                                                        { 0usize }
+                                                    }
+                                                    else
+                                                    {
+                                                        let len1: usize = c16.len();
+                                                        let __anf0: bool =
+                                                            crate::cbordetveraux::sizet_lte_u64(
+                                                                len1,
+                                                                18446744073709551615u64
+                                                            );
+                                                        if __anf0
+                                                        {
+                                                            let correct: bool =
+                                                                crate::cbordetver::cbor_impl_utf8_correct(
+                                                                    c16
+                                                                );
+                                                            if correct
+                                                            {
+                                                                let
+                                                                mty:
+                                                                crate::cbordetver::cbor_det_string_kind
+                                                                =
+                                                                    if
+                                                                    crate::cbordetveraux::cbor_major_type_text_string
+                                                                    ==
+                                                                    crate::cbordetveraux::cbor_major_type_byte_string
+                                                                    {
+                                                                        crate::cbordetver::cbor_det_string_kind::ByteString
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        crate::cbordetver::cbor_det_string_kind::TextString
+                                                                    };
+                                                                let
+                                                                res:
+                                                                crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                                =
+                                                                    crate::cbordetver::cbor_det_mk_string(
+                                                                        mty,
+                                                                        c16
+                                                                    );
+                                                                let
+                                                                _letpattern8:
+                                                                crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                                =
+                                                                    res;
+                                                                let
+                                                                x: crate::cbordetveraux::cbor_raw
+                                                                =
+                                                                    match _letpattern8
+                                                                    {
+                                                                        crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw::Some
+                                                                        { v: c3 }
+                                                                        => c3,
+                                                                        _ =>
+                                                                          panic!(
+                                                                              "Incomplete pattern matching"
+                                                                          )
+                                                                    };
+                                                                let
+                                                                ser:
+                                                                crate::cbordetver::option__size_t
+                                                                =
+                                                                    crate::cbordetver::cbor_det_serialize(
+                                                                        x,
+                                                                        out1
+                                                                    );
+                                                                match ser
+                                                                {
+                                                                    crate::cbordetver::option__size_t::None
+                                                                    => 0usize,
+                                                                    crate::cbordetver::option__size_t::Some
+                                                                    { v: sz }
+                                                                    => sz,
+                                                                    _ =>
+                                                                      panic!(
+                                                                          "Incomplete pattern matching"
+                                                                      )
+                                                                }
+                                                            }
+                                                            else
+                                                            { 0usize }
+                                                        }
+                                                        else
+                                                        { 0usize }
+                                                    }
+                                                }
+                                                else
+                                                { 0usize };
+                                            if size1 == 0usize
+                                            { false }
+                                            else
+                                            {
+                                                (&mut pcount)[0] = count5.wrapping_add(1u64);
+                                                (&mut psize)[0] = size.wrapping_add(size1);
+                                                true
                                             }
                                         }
                                         else
-                                        { 0usize };
-                                    if size1 == 0usize
-                                    { false }
-                                    else
+                                        { false };
+                                    if res16
                                     {
-                                        (&mut pcount)[0] = count4.wrapping_add(1u64);
-                                        (&mut psize)[0] = size.wrapping_add(size1);
-                                        true
+                                        let count6: u64 = (&pcount)[0];
+                                        if count6 < 18446744073709551615u64
+                                        {
+                                            let size: usize = (&psize)[0];
+                                            let _letpattern7: (&mut [u8], &mut [u8]) =
+                                                out.split_at_mut(size);
+                                            let _out0: &[u8] = _letpattern7.0;
+                                            let out1: &mut [u8] = _letpattern7.1;
+                                            let len: usize = c26.len();
+                                            let lo_ok: bool =
+                                                crate::cbordetveraux::u64_lte_sizet(3309u64, len);
+                                            let hi_ok: bool =
+                                                crate::cbordetveraux::sizet_lte_u64(len, 3309u64);
+                                            let size1: usize =
+                                                if lo_ok && hi_ok
+                                                {
+                                                    if
+                                                    2u8
+                                                    ==
+                                                    crate::cbordetveraux::cbor_major_type_byte_string
+                                                    {
+                                                        let len1: usize = c26.len();
+                                                        let __anf0: bool =
+                                                            crate::cbordetveraux::sizet_lte_u64(
+                                                                len1,
+                                                                18446744073709551615u64
+                                                            );
+                                                        if __anf0
+                                                        {
+                                                            let
+                                                            mty:
+                                                            crate::cbordetver::cbor_det_string_kind
+                                                            =
+                                                                crate::cbordetver::cbor_det_string_kind::ByteString;
+                                                            let
+                                                            res:
+                                                            crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                            =
+                                                                crate::cbordetver::cbor_det_mk_string(
+                                                                    mty,
+                                                                    c26
+                                                                );
+                                                            let
+                                                            _letpattern8:
+                                                            crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                            =
+                                                                res;
+                                                            let x: crate::cbordetveraux::cbor_raw =
+                                                                match _letpattern8
+                                                                {
+                                                                    crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw::Some
+                                                                    { v: c3 }
+                                                                    => c3,
+                                                                    _ =>
+                                                                      panic!(
+                                                                          "Incomplete pattern matching"
+                                                                      )
+                                                                };
+                                                            let
+                                                            ser: crate::cbordetver::option__size_t
+                                                            =
+                                                                crate::cbordetver::cbor_det_serialize(
+                                                                    x,
+                                                                    out1
+                                                                );
+                                                            match ser
+                                                            {
+                                                                crate::cbordetver::option__size_t::None
+                                                                => 0usize,
+                                                                crate::cbordetver::option__size_t::Some
+                                                                { v: sz }
+                                                                => sz,
+                                                                _ =>
+                                                                  panic!(
+                                                                      "Incomplete pattern matching"
+                                                                  )
+                                                            }
+                                                        }
+                                                        else
+                                                        { 0usize }
+                                                    }
+                                                    else
+                                                    {
+                                                        let len1: usize = c26.len();
+                                                        let __anf0: bool =
+                                                            crate::cbordetveraux::sizet_lte_u64(
+                                                                len1,
+                                                                18446744073709551615u64
+                                                            );
+                                                        if __anf0
+                                                        {
+                                                            let correct: bool =
+                                                                crate::cbordetver::cbor_impl_utf8_correct(
+                                                                    c26
+                                                                );
+                                                            if correct
+                                                            {
+                                                                let
+                                                                mty:
+                                                                crate::cbordetver::cbor_det_string_kind
+                                                                =
+                                                                    if
+                                                                    crate::cbordetveraux::cbor_major_type_text_string
+                                                                    ==
+                                                                    crate::cbordetveraux::cbor_major_type_byte_string
+                                                                    {
+                                                                        crate::cbordetver::cbor_det_string_kind::ByteString
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        crate::cbordetver::cbor_det_string_kind::TextString
+                                                                    };
+                                                                let
+                                                                res:
+                                                                crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                                =
+                                                                    crate::cbordetver::cbor_det_mk_string(
+                                                                        mty,
+                                                                        c26
+                                                                    );
+                                                                let
+                                                                _letpattern8:
+                                                                crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw
+                                                                =
+                                                                    res;
+                                                                let
+                                                                x: crate::cbordetveraux::cbor_raw
+                                                                =
+                                                                    match _letpattern8
+                                                                    {
+                                                                        crate::cbordetver::option__CBOR_Pulse_Raw_Type_cbor_raw::Some
+                                                                        { v: c3 }
+                                                                        => c3,
+                                                                        _ =>
+                                                                          panic!(
+                                                                              "Incomplete pattern matching"
+                                                                          )
+                                                                    };
+                                                                let
+                                                                ser:
+                                                                crate::cbordetver::option__size_t
+                                                                =
+                                                                    crate::cbordetver::cbor_det_serialize(
+                                                                        x,
+                                                                        out1
+                                                                    );
+                                                                match ser
+                                                                {
+                                                                    crate::cbordetver::option__size_t::None
+                                                                    => 0usize,
+                                                                    crate::cbordetver::option__size_t::Some
+                                                                    { v: sz }
+                                                                    => sz,
+                                                                    _ =>
+                                                                      panic!(
+                                                                          "Incomplete pattern matching"
+                                                                      )
+                                                                }
+                                                            }
+                                                            else
+                                                            { 0usize }
+                                                        }
+                                                        else
+                                                        { 0usize }
+                                                    }
+                                                }
+                                                else
+                                                { 0usize };
+                                            if size1 == 0usize
+                                            { false }
+                                            else
+                                            {
+                                                (&mut pcount)[0] = count6.wrapping_add(1u64);
+                                                (&mut psize)[0] = size.wrapping_add(size1);
+                                                true
+                                            }
+                                        }
+                                        else
+                                        { false }
                                     }
+                                    else
+                                    { false }
                                 }
                                 else
                                 { false }

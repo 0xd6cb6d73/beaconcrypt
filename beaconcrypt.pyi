@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Final, Literal, Protocol, final
+from typing import Callable, Final, Literal, Protocol, final
 
 MAX_MESSAGE_SIZE: Final[int]
 """Maximum complete encoded transport message in bytes; snapshots and JSON state are uncapped."""
@@ -52,9 +52,12 @@ def validate_snapshot_successor(
 
 @final
 class BeaconCryptBeacon:
-    def __new__(cls, /, server_kid: int, server_id_pk: bytes) -> BeaconCryptBeacon:
+    def __new__(
+        cls, /, server_kid: int, server_id_pk: bytes, server_mldsa_pk: bytes
+    ) -> BeaconCryptBeacon:
         """Raise ValueError on a bad key length or reported initialization/key-generation failure."""
 
+    def mldsa_public_key(self, /) -> bytes: ...
     def decrypt_server_message(self, /, data: Sequence[int]) -> bytes | None: ...
     def encrypt_message_to_server(self, /, data: Sequence[int]) -> bytes | None: ...
     def generate_registration(self, /) -> bytes | None:
@@ -72,13 +75,16 @@ class BeaconCryptBeacon:
 class BeaconCryptServer:
     """Protocol rejection returns None; persistence failures raise PersistenceError and failed commits poison the owner."""
 
-    def __new__(cls, /, kid: int, id_seed: bytes | None) -> BeaconCryptServer:
+    def __new__(
+        cls, /, kid: int, id_seed: bytes | None, mldsa_seed: bytes | None
+    ) -> BeaconCryptServer:
         """Create an in-memory checkpoint owner; persistence failures raise PersistenceError."""
 
     @staticmethod
     def create_with_store(
         kid: int,
         id_seed: bytes | None,
+        mldsa_seed: bytes | None,
         store: _SnapshotStore,
         lineage: bytes | None = None,
     ) -> BeaconCryptServer:
@@ -114,6 +120,7 @@ class BeaconCryptServer:
         """
 
     def id_pk(self, /) -> bytes: ...
+    def mldsa_public_key(self, /) -> bytes: ...
     def register_beacon(
         self, /, reg_buffer: bytes, initial_message: bytes | None
     ) -> RegResponse | None: ...
@@ -134,3 +141,134 @@ class EncryptState:
 class RegResponse:
     def key_id(self, /) -> int: ...
     def serialized(self, /) -> bytes: ...
+
+class RowPersistenceError(ValueError):
+    """A database row failure; callback exceptions are retained as __cause__."""
+
+    code: Literal[
+        "storage",
+        "conflict",
+        "missing_identity",
+        "invalid_row",
+        "invalid_session",
+        "generation_exhausted",
+        "initialization",
+        "encoding",
+    ]
+
+class _RowStore(Protocol):
+    """Serializable durable database transactions; raise on failure. Load locks selected rows or provides equivalent isolation, including absent-key races. Commit must finish the outer transaction. Rollback must safely end a failed transaction. Callbacks cannot reenter their server."""
+
+    def begin(self) -> None: ...
+    def load(self, key: bytes) -> bytes | None: ...
+    def store(self, key: bytes, value: bytes) -> None: ...
+    def commit(self) -> None: ...
+    def rollback(self) -> None: ...
+
+@final
+class RowMessage:
+    """Message bytes with authenticated peer and consumed-sequence metadata; session callback results remain pending until the outer call succeeds."""
+
+    @property
+    def data(self) -> bytes: ...
+    @property
+    def key_id(self) -> int: ...
+    @property
+    def seq(self) -> int: ...
+
+class RowRegistrationError(RowPersistenceError):
+    """A failed registration phase; completion means acceptance definitely committed."""
+
+    phase: Literal["acceptance", "completion"]
+
+@final
+class RowTransition:
+    """Pending native effect inside a trusted transaction callback."""
+
+    @property
+    def message(self) -> RowMessage | None: ...
+    @property
+    def changed(self) -> bool: ...
+
+@final
+class RowRegistrationDecision:
+    @staticmethod
+    def return_result(data: bytes) -> RowRegistrationDecision: ...
+    @staticmethod
+    def continue_registration(data: bytes) -> RowRegistrationDecision: ...
+
+@final
+class RowSession:
+    """Callback-scoped access to isolated application rows and zero or one native attempt. Do not publish pending outputs before the outer call succeeds, or reenter the owning server. Methods reject use after callback return."""
+
+    def load(self, key: bytes) -> bytes | None: ...
+    def store(self, key: bytes, value: bytes) -> None: ...
+    def encrypt_to_beacon(self, data: bytes, kid: int) -> RowTransition: ...
+    def decrypt_beacon_message(self, data: bytes) -> RowTransition: ...
+    def accept_registration(self, data: bytes) -> bool: ...
+    def complete_registration(
+        self, initial_message: bytes | None = None
+    ) -> RowTransition: ...
+
+class BeaconCryptRowServer:
+    """A database-backed server with independent peer records; no full-state checkpoint is loaded or written for messages."""
+
+    @staticmethod
+    def create(
+        kid: int,
+        id_seed: bytes | None,
+        mldsa_seed: bytes | None,
+        store: _RowStore,
+        lineage_bytes: bytes,
+    ) -> BeaconCryptRowServer: ...
+    @staticmethod
+    def open(store: _RowStore, lineage_bytes: bytes) -> BeaconCryptRowServer: ...
+    def close(self) -> None: ...
+    def cache_capacity(self) -> int: ...
+    def cached_peer_count(self) -> int: ...
+    def clear_cache(self) -> None: ...
+    def lineage(self) -> bytes: ...
+    def id_pk(self) -> bytes: ...
+    def mldsa_public_key(self) -> bytes: ...
+    def register_beacon(
+        self,
+        reg_buffer: bytes,
+        initial_message: bytes | None = None,
+    ) -> RegResponse | None: ...
+    def encrypt_to_beacon(self, data: Sequence[int], kid: int) -> bytes | None: ...
+    def decrypt_beacon_message(self, data: Sequence[int]) -> bytes | None: ...
+    def encrypt_to_beacon_with_metadata(
+        self, data: Sequence[int], kid: int
+    ) -> RowMessage | None: ...
+    def decrypt_beacon_message_with_metadata(
+        self, data: Sequence[int]
+    ) -> RowMessage | None: ...
+    def transaction(self, callback: Callable[[RowSession], bytes]) -> bytes: ...
+    def registration_transaction(
+        self,
+        accept: Callable[[RowSession], RowRegistrationDecision],
+        complete: Callable[[RowSession, bytes], bytes],
+    ) -> bytes: ...
+
+class _CachedRowStore(_RowStore, Protocol):
+    """Optional exact-value expectation support. Protect expected bytes or absence through commit; return False for conflict, None or True for staged/satisfied, and raise for storage failure."""
+
+    def expect(self, key: bytes, expected: bytes | None) -> bool | None: ...
+
+@final
+class BeaconCryptCachedRowServer(BeaconCryptRowServer):
+    """Bounded decoded-peer caching with authoritative database validation. Missing store.expect falls back to load and compare. Capacity zero disables caching."""
+
+    @staticmethod
+    def create(
+        kid: int,
+        id_seed: bytes | None,
+        mldsa_seed: bytes | None,
+        store: _RowStore,
+        lineage_bytes: bytes,
+        cache_capacity: int,
+    ) -> BeaconCryptCachedRowServer: ...
+    @staticmethod
+    def open(
+        store: _RowStore, lineage_bytes: bytes, cache_capacity: int
+    ) -> BeaconCryptCachedRowServer: ...

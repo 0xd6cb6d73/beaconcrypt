@@ -3,11 +3,18 @@
 #![no_std]
 #![forbid(unsafe_code)]
 
+pub mod agreement;
+pub mod authentication;
 pub mod commitment;
 pub mod constants;
+pub mod peer;
 pub mod pqxdh;
 pub mod ratchet;
 pub mod record;
+pub mod record_effects;
+pub mod registration;
+pub mod session;
+pub mod transport;
 
 pub use ratchet::{
 	CachedReceiveKey, ConcreteRatchetKernel, ConcreteRatchetRestore, PeerRatchetState,

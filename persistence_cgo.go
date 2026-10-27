@@ -53,39 +53,41 @@ func (context *snapshotStoreContext) takeError() error {
 }
 
 // NewServerWithStore creates and commits generation zero before returning.
-// An empty seed selects a random identity; a nonempty seed must be 32 bytes.
-func NewServerWithStore(serverKID uint64, seed []byte, store SnapshotStore) (*Server, error) {
-	return newServerWithStore(serverKID, seed, store, nil)
+// Each empty seed generates its corresponding identity key; supplied seeds must be 32 bytes.
+func NewServerWithStore(serverKID uint64, seed, mldsaSeed []byte, store SnapshotStore) (*Server, error) {
+	return newServerWithStore(serverKID, seed, mldsaSeed, store, nil)
 }
 
 // NewServerWithStoreAndLineage uses an externally allocated lineage.
 // Each lineage must belong to exactly one authoritative storage domain.
-func NewServerWithStoreAndLineage(serverKID uint64, seed []byte, store SnapshotStore, lineage [32]byte) (*Server, error) {
-	return newServerWithStore(serverKID, seed, store, &lineage)
+func NewServerWithStoreAndLineage(serverKID uint64, seed, mldsaSeed []byte, store SnapshotStore, lineage [32]byte) (*Server, error) {
+	return newServerWithStore(serverKID, seed, mldsaSeed, store, &lineage)
 }
 
-func newServerWithStore(serverKID uint64, seed []byte, store SnapshotStore, lineage *[32]byte) (*Server, error) {
+func newServerWithStore(serverKID uint64, seed, mldsaSeed []byte, store SnapshotStore, lineage *[32]byte) (*Server, error) {
 	if store == nil {
 		return nil, &PersistenceError{Code: StatusInvalidArgument}
 	}
-	if len(seed) != 0 && len(seed) != 32 {
+	if (len(seed) != 0 && len(seed) != 32) || (len(mldsaSeed) != 0 && len(mldsaSeed) != 32) {
 		return nil, ErrSeedSize
 	}
 	context := newSnapshotStoreContext(store)
-	return createServerWithStoreContext(serverKID, seed, context, lineage)
+	return createServerWithStoreContext(serverKID, seed, mldsaSeed, context, lineage)
 }
 
-func createServerWithStoreContext(serverKID uint64, seed []byte, context *snapshotStoreContext, lineage *[32]byte) (*Server, error) {
+func createServerWithStoreContext(serverKID uint64, seed, mldsaSeed []byte, context *snapshotStoreContext, lineage *[32]byte) (*Server, error) {
 	seedPtr, freeSeed := cBytes(seed)
 	defer freeSeed()
+	mldsaPtr, freeMLDSA := cBytes(mldsaSeed)
+	defer freeMLDSA()
 	var status C.uint32_t
 	var handle *C.beaconcrypt_Server
 	if lineage == nil {
-		handle = C.beaconcrypt_go_server_create_with_store(C.uint64_t(serverKID), seedPtr, C.uintptr_t(len(seed)), C.uintptr_t(context.handle), &status)
+		handle = C.beaconcrypt_go_server_create_with_store(C.uint64_t(serverKID), seedPtr, C.uintptr_t(len(seed)), mldsaPtr, C.uintptr_t(len(mldsaSeed)), C.uintptr_t(context.handle), &status)
 	} else {
 		lineagePtr, freeLineage := cBytes(lineage[:])
 		defer freeLineage()
-		handle = C.beaconcrypt_go_server_create_with_store_and_lineage(C.uint64_t(serverKID), seedPtr, C.uintptr_t(len(seed)), C.uintptr_t(context.handle), lineagePtr, 32, &status)
+		handle = C.beaconcrypt_go_server_create_with_store_and_lineage(C.uint64_t(serverKID), seedPtr, C.uintptr_t(len(seed)), mldsaPtr, C.uintptr_t(len(mldsaSeed)), C.uintptr_t(context.handle), lineagePtr, 32, &status)
 	}
 	if handle == nil {
 		return nil, &PersistenceError{Code: PersistenceStatus(status), Cause: context.takeError()}
@@ -219,7 +221,11 @@ func callbackBytes(ptr *C.uint8_t, length C.uintptr_t) ([]byte, error) {
 	if uint64(length) > uint64(^uint(0)>>1) || (ptr == nil && length != 0) {
 		return nil, errors.New("invalid snapshot callback buffer")
 	}
-	return append([]byte(nil), unsafe.Slice((*byte)(unsafe.Pointer(ptr)), int(length))...), nil
+	// A successfully delivered empty value is present. Row absence is signalled
+	// separately by the load callback, so do not collapse empty bytes to nil.
+	value := make([]byte, int(length))
+	copy(value, unsafe.Slice((*byte)(unsafe.Pointer(ptr)), int(length)))
+	return value, nil
 }
 
 //export beaconcryptGoStoreLoad

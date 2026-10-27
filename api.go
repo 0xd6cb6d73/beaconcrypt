@@ -7,10 +7,13 @@ import "errors"
 // MaxMessageSize is the maximum complete encoded transport message in bytes, including framing, authentication tags, and commitments. It does not limit snapshots or JSON state.
 const MaxMessageSize int = 32 * 1024 * 1024
 
+// MLDSA65PublicKeySize is the size of a pinned ML-DSA-65 public key.
+const MLDSA65PublicKeySize = 1952
+
 var (
 	ErrClosed    = errors.New("beaconcrypt: handle is closed")
 	ErrCrypto    = errors.New("beaconcrypt: cryptographic operation failed")
-	ErrSeedSize  = errors.New("beaconcrypt: server seed must be 32 bytes")
+	ErrSeedSize  = errors.New("beaconcrypt: identity seeds must each be 32 bytes")
 	ErrEmptyData = errors.New("beaconcrypt: input must not be empty")
 )
 

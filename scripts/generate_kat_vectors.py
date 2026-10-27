@@ -16,7 +16,7 @@ from Crypto.Protocol.KDF import HKDF
 AEAD_KEY_LEN = 32
 AEAD_NONCE_LEN = 12
 AEAD_TAG_LEN = 16
-AD_SIZE = 153
+AD_SIZE = 281
 KDF_STATE_LEN = 32
 KDF_OUTPUT_LEN = AEAD_KEY_LEN + KDF_STATE_LEN + AEAD_NONCE_LEN
 
@@ -152,7 +152,7 @@ def rfc8439_and_commitment_known_answer() -> None:
         "3ff4def08e4b7a9de576d26586cec64b"
         "6116"
     )
-    expected_tag = bytes.fromhex("88a5fc9f4d18b9c9d83fefd4f24e5fc4")
+    expected_tag = bytes.fromhex("6a4ebb0cb2dd9643a193f35050a66886")
     ciphertext, tag = chacha20poly1305_encrypt(key, nonce, associated_data, plaintext)
     assert ciphertext == expected_ciphertext
     assert tag == expected_tag
@@ -175,20 +175,20 @@ def chacha20poly1305_multi_opening_fixture() -> None:
     """Validate two fixed, distinct openings of one ciphertext and tag."""
 
     # Retain the construction metadata emitted by the derivation script.
-    attempt = 1
-    carry = 2
+    attempt = 3
+    carry = 1
     key_one = bytes(range(AEAD_KEY_LEN))
     key_two = SHA256.new(
         b"beaconcrypt-ctx-fixture-" + attempt.to_bytes(4, "little")
     ).digest()
     nonce = bytes(range(AEAD_NONCE_LEN))
-    associated_data_one = bytes(range(AD_SIZE))
+    associated_data_one = bytes(index % 256 for index in range(AD_SIZE))
     associated_data_two = (
-        bytes.fromhex("d62e8ca42f6f6e6eb114ca6035df7b24") + associated_data_one[16:]
+        bytes.fromhex("d0ab0bfa3600d9d715b82befab62d160") + associated_data_one[16:]
     )
     plaintext_one = bytes.fromhex("89ea2a336d42c3373f1a954854c0e09c")
     expected_ciphertext = bytes.fromhex("00112233445566778899aabbccddeeff")
-    expected_tag = bytes.fromhex("a21c712bf7f8d516c2d0126087060814")
+    expected_tag = bytes.fromhex("39996c6c0e78fdfb0bbf29d428aaed4d")
 
     ciphertext, tag = chacha20poly1305_encrypt(
         key_one, nonce, associated_data_one, plaintext_one

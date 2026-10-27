@@ -42,7 +42,7 @@ impl InitialRatchetKdfPending {
 /// to one particular pending request; provenance remains an interpreter
 /// obligation.
 #[must_use = "the initial ratchet KDF response must resume its pending phase"]
-#[derive(zeroize::Zeroize, zeroize::ZeroizeOnDrop)]
+#[cfg_attr(not(hax_compilation), derive(zeroize::Zeroize, zeroize::ZeroizeOnDrop))]
 pub struct InitialRatchetKdfResponse {
 	bytes: [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE],
 }

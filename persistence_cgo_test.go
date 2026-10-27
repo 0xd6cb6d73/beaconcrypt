@@ -20,7 +20,7 @@ func handleIsReleased(handle cgo.Handle) (released bool) {
 
 func TestSnapshotCallbackLifetimeAndFailedConstructors(t *testing.T) {
 	store := &testSnapshotStore{}
-	server, err := NewServerWithStore(0, nil, store)
+	server, err := NewServerWithStore(0, nil, nil, store)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +66,7 @@ func TestSnapshotCallbackLifetimeAndFailedConstructors(t *testing.T) {
 				if scenario == "invalid-seed" {
 					seed = []byte{1}
 				}
-				failed, err = createServerWithStoreContext(0, seed, context, nil)
+				failed, err = createServerWithStoreContext(0, seed, nil, context, nil)
 			}
 			requirePersistenceStatus(t, err, code)
 			if failed != nil || !handleIsReleased(context.handle) {

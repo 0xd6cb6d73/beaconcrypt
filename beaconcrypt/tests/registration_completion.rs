@@ -1,13 +1,18 @@
 use beaconcrypt::*;
-use beaconcrypt_parse::{KexResponse, decode_frame, decode_response};
+use beaconcrypt_parse::{KexResponse, decode_frame};
 
 mod common;
+use common::decode_response;
 
 const SERVER_KID: u64 = 0;
 
 fn pending() -> (Server, Beacon, RegResponse) {
-	let mut server = Server::new(SERVER_KID, None);
-	let mut beacon = Beacon::new(SERVER_KID, server.identity_pk().as_bytes());
+	let mut server = Server::new(SERVER_KID, None, None);
+	let mut beacon = Beacon::new(
+		SERVER_KID,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let init = beacon.get_registration_bundle().unwrap();
 	let accepted = server.get_shared_secret(&init).unwrap();
 	let response = server
@@ -24,6 +29,7 @@ fn response_with_ciphertext(response: &RegResponse, ciphertext: &[u8], assigned:
 		kem_cipher_text: original.kem_cipher_text,
 		key_id: assigned,
 		app_cipher_text: ciphertext,
+		signature: original.signature,
 	})
 }
 
@@ -139,7 +145,11 @@ fn registration_rejects_later_invalid_completions_and_aborts() {
 #[test]
 fn registration_rejects_a_genuine_later_record_from_another_session() {
 	let (mut server, mut beacon, original) = pending();
-	let mut other = Beacon::new(SERVER_KID, server.identity_pk().as_bytes());
+	let mut other = Beacon::new(
+		SERVER_KID,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let other_init = other.get_registration_bundle().unwrap();
 	let accepted = server.get_shared_secret(&other_init).unwrap();
 	let other_response = server.build_registration_response(accepted, None).unwrap();

@@ -91,10 +91,12 @@ static beaconcrypt_SnapshotStoreCallbacks callbacks(Store *store) {
 int main(void) {
   Store store = {0};
   uint8_t seed[32] = {7};
+  uint8_t mldsa_seed[32] = {8};
   uint8_t lineage[32] = {9};
   uint32_t status = UINT32_MAX;
   beaconcrypt_Server *server = beaconcrypt_server_create_with_store_and_lineage(
-      19, seed, sizeof(seed), callbacks(&store), lineage, sizeof(lineage), &status);
+      19, seed, sizeof(seed), mldsa_seed, sizeof(mldsa_seed), callbacks(&store),
+      lineage, sizeof(lineage), &status);
   assert(server != NULL && status == beaconcrypt_STATUS_OK);
   assert(store.attempts == 1 && store.head.generation == 0);
   beaconcrypt_SnapshotHeadInfo head;
@@ -103,9 +105,13 @@ int main(void) {
   assert(memcmp(head.lineage, lineage, sizeof(lineage)) == 0);
 
   beaconcrypt_Buffer pk = beaconcrypt_server_identity_pk(server);
-  beaconcrypt_Beacon *beacon = beaconcrypt_beacon_new(19, pk.ptr, pk.len);
+  beaconcrypt_Buffer mldsa_pk = beaconcrypt_server_mldsa_public_key(server);
+  assert(pk.len == 32 && mldsa_pk.len == beaconcrypt_MLDSA_PUBLIC_KEY_LEN);
+  beaconcrypt_Beacon *beacon =
+      beaconcrypt_beacon_new(19, pk.ptr, pk.len, mldsa_pk.ptr, mldsa_pk.len);
   assert(beacon != NULL);
   beaconcrypt_free_buffer(pk);
+  beaconcrypt_free_buffer(mldsa_pk);
   beaconcrypt_Buffer registration = beaconcrypt_generate_registration(beacon);
   beaconcrypt_RegistrationResponse response = beaconcrypt_register_beacon(
       server, registration.ptr, registration.len, NULL, 0);

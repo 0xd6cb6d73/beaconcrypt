@@ -9,13 +9,19 @@ description = "Protocol state transitions for beaconcrypt"
 repository = "https://github.com/0xd6cb6d73/beaconcrypt"
 keywords = ["cryptography", "protocol", "state-machine", "no-std"]
 categories = ["cryptography", "no-std"]
+exclude = ["Makefile", "proofs/**", "tests/proverif_transcript_fidelity.rs", "tests/fidelity/**"]
 
 [features]
+proverif = ["dep:hax-lib"]
 test-utils = []
 
 [dependencies]
+hax-lib = { version = "=0.4.2", optional = true }
 zeroize = { version = "1.9", default-features = false, features = ["zeroize_derive"] }
 
 [lib]
 name = "beaconcrypt_core"
 path = "src/lib.rs"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(hax_compilation)'] }

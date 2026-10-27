@@ -1,7 +1,7 @@
 use beaconcrypt::*;
 use beaconcrypt_parse::{CryptoFrame, decode_frame};
 
-use libsodium_rs::crypto_sign;
+use beaconcrypt_crypto::crypto_sign;
 use std::sync::{Arc, Barrier, Mutex};
 use std::thread;
 
@@ -19,7 +19,7 @@ fn boxed_snapshot_store_preserves_commits_and_trusted_snapshot_reads() {
 	let lineage = SnapshotLineage::from_bytes([0x67; 32]);
 	let boxed: Box<dyn SnapshotStore + Send> = Box::new(store.clone());
 	let server =
-		PersistentServer::create_with_lineage(19, Some(&[0x68; 32]), boxed, lineage).unwrap();
+		PersistentServer::create_with_lineage(19, Some(&[0x68; 32]), None, boxed, lineage).unwrap();
 	let head = server.head();
 	assert_eq!(head.lineage(), lineage);
 	assert_eq!(head.generation(), 0);
@@ -65,7 +65,7 @@ fn boxed_snapshot_store_preserves_commits_and_trusted_snapshot_reads() {
 
 	let boxed: Box<dyn SnapshotStore + Send> = Box::new(store.clone());
 	assert_eq!(
-		PersistentServer::create(19, None, boxed).err(),
+		PersistentServer::create(19, None, None, boxed).err(),
 		Some(PersistenceError::StaleGeneration)
 	);
 	assert_eq!(store.trusted_head(), Some(active.head()));
@@ -315,7 +315,7 @@ fn accept_through(
 fn server_from_seed() {
 	let empty = [0u8; ED25519_SEED_SIZE];
 	let seeded = crypto_sign::KeyPair::from_seed(&empty).unwrap();
-	let server = Server::new(0, Some(&empty));
+	let server = Server::new(0, Some(&empty), None);
 	assert_eq!(
 		seeded.secret_key.as_bytes(),
 		server.identity_sk().as_bytes()
@@ -328,29 +328,31 @@ fn server_from_seed() {
 
 #[test]
 fn server_can_register_multiple() {
-	let mut server = Server::new(0, None);
+	let mut server = Server::new(0, None, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut first = Beacon::new(0, server_id.as_bytes());
+	let mut first = Beacon::new(0, server_id.as_bytes(), &server.mldsa_public_key());
 	let first_message = test_register_pqxdh_beacon(&mut server, &mut first);
-	let mut second = Beacon::new(0, server_id.as_bytes());
+	let mut second = Beacon::new(0, server_id.as_bytes(), &server.mldsa_public_key());
 	let second_message = test_register_pqxdh_beacon(&mut server, &mut second);
 	assert_eq!(first_message, second_message);
 }
 
 #[test]
-fn snapshots_are_plain_canonical_v2_envelopes_without_a_trailing_tag() {
+fn snapshots_are_plain_canonical_v3_envelopes_without_a_trailing_tag() {
 	let store = MemoryStore::default();
 	let server = PersistentServer::create_with_lineage(
 		0,
 		Some(&[0x31; ED25519_SEED_SIZE]),
+		Some(&[0x32; 32]),
 		store.clone(),
 		SnapshotLineage::from_bytes([0x42; 32]),
 	)
 	.unwrap();
 	let original_head = server.head();
 	let original_identity = server.identity_pk().clone();
+	let original_mldsa_identity = server.mldsa_public_key();
 	let bytes = store.snapshot_bytes();
-	assert_eq!(u16::from_le_bytes(bytes[16..18].try_into().unwrap()), 2);
+	assert_eq!(u16::from_le_bytes(bytes[16..18].try_into().unwrap()), 3);
 	let payload_len = u64::from_le_bytes(
 		bytes[SNAPSHOT_PAYLOAD_LENGTH_OFFSET..SNAPSHOT_HEADER_SIZE]
 			.try_into()
@@ -362,17 +364,24 @@ fn snapshots_are_plain_canonical_v2_envelopes_without_a_trailing_tag() {
 	assert!(payload_json.get("identity_key").is_some());
 	assert!(payload_json.get("known_ids").is_some());
 	assert!(payload_json.get("consumed_registrations").is_some());
-	let mut legacy_v1 = bytes.clone();
-	legacy_v1[16..18].copy_from_slice(&1u16.to_le_bytes());
-	assert!(matches!(
-		ServerSnapshot::from_bytes(legacy_v1).head(),
-		Err(PersistenceError::InvalidSnapshot)
-	));
+	assert_eq!(
+		payload_json["mldsa_identity_seed"],
+		serde_json::json!(vec![0x32; 32])
+	);
+	for version in [1u16, 2] {
+		let mut legacy = bytes.clone();
+		legacy[16..18].copy_from_slice(&version.to_le_bytes());
+		assert!(matches!(
+			ServerSnapshot::from_bytes(legacy).head(),
+			Err(PersistenceError::InvalidSnapshot)
+		));
+	}
 	assert_eq!(store.cas_attempts(), 1);
 	assert_eq!(store.trusted_head(), Some(original_head));
 
 	let restored = PersistentServer::restore(store.clone()).unwrap();
 	assert_eq!(restored.identity_pk(), &original_identity);
+	assert_eq!(restored.mldsa_public_key(), original_mldsa_identity);
 	assert_eq!(restored.head().lineage(), original_head.lineage());
 	assert_eq!(restored.head().generation(), 1);
 	let activated = store.snapshot_bytes();
@@ -388,6 +397,7 @@ fn trusted_snapshots_must_use_the_canonical_payload_encoding() {
 	let _server = PersistentServer::create_with_lineage(
 		0,
 		Some(&[0x37; ED25519_SEED_SIZE]),
+		None,
 		store.clone(),
 		SnapshotLineage::from_bytes([0x43; 32]),
 	)
@@ -415,6 +425,17 @@ fn trusted_snapshots_must_use_the_canonical_payload_encoding() {
 		PersistentServer::restore(MemoryStore::from_snapshot(malformed)),
 		Err(PersistenceError::InvalidSnapshot)
 	));
+
+	let mut legacy_payload: serde_json::Value = serde_json::from_slice(payload).unwrap();
+	legacy_payload
+		.as_object_mut()
+		.unwrap()
+		.remove("mldsa_identity_seed");
+	let legacy = snapshot_with_payload(&canonical, legacy_payload.to_string().as_bytes());
+	assert!(matches!(
+		PersistentServer::restore(MemoryStore::from_snapshot(legacy)),
+		Err(PersistenceError::InvalidSnapshot)
+	));
 }
 
 #[test]
@@ -423,11 +444,17 @@ fn persistent_restore_preserves_cached_receive_keys_and_continues_the_session() 
 	let mut server = PersistentServer::create_with_lineage(
 		0,
 		Some(&[0x3D; ED25519_SEED_SIZE]),
+		None,
 		store.clone(),
 		SnapshotLineage::from_bytes([0x48; 32]),
 	)
 	.unwrap();
-	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let mut beacon = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
+	let mldsa_identity = server.mldsa_public_key();
 	let kid = test_register_persistent(&mut server, &mut beacon);
 	let first = beacon.encrypt_message(b"first").unwrap();
 	let second = beacon.encrypt_message(b"second").unwrap();
@@ -440,6 +467,7 @@ fn persistent_restore_preserves_cached_receive_keys_and_continues_the_session() 
 	drop(server);
 
 	let mut restored = PersistentServer::restore(store).unwrap();
+	assert_eq!(restored.mldsa_public_key(), mldsa_identity);
 	assert_eq!(
 		restored.decrypt_message(&first).unwrap().unwrap().plaintext,
 		b"first"
@@ -460,6 +488,21 @@ fn persistent_restore_preserves_cached_receive_keys_and_continues_the_session() 
 		beacon.decrypt_message(&reply).unwrap().plaintext,
 		b"after restore"
 	);
+
+	let mut new_beacon = Beacon::new(0, restored.identity_pk().as_bytes(), &mldsa_identity);
+	let new_kid = test_register_persistent(&mut restored, &mut new_beacon);
+	assert_ne!(new_kid, kid);
+	let new_frame = new_beacon
+		.encrypt_message(b"authenticated after restore")
+		.unwrap();
+	assert_eq!(
+		restored
+			.decrypt_message(&new_frame)
+			.unwrap()
+			.unwrap()
+			.plaintext,
+		b"authenticated after restore"
+	);
 }
 
 #[test]
@@ -468,11 +511,16 @@ fn failed_future_receive_is_state_neutral_and_not_persisted() {
 	let mut server = PersistentServer::create_with_lineage(
 		0,
 		Some(&[0x3F; ED25519_SEED_SIZE]),
+		None,
 		store.clone(),
 		SnapshotLineage::from_bytes([0x4A; 32]),
 	)
 	.unwrap();
-	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let mut beacon = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let kid = test_register_persistent(&mut server, &mut beacon);
 	let first = beacon.encrypt_message(b"first").unwrap();
 	let second = beacon.encrypt_message(b"second").unwrap();
@@ -535,11 +583,16 @@ fn every_persistent_receive_api_skips_persistence_for_rejections() {
 	let mut server = PersistentServer::create_with_lineage(
 		0,
 		Some(&[0x40; ED25519_SEED_SIZE]),
+		None,
 		store.clone(),
 		SnapshotLineage::from_bytes([0x4C; 32]),
 	)
 	.unwrap();
-	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let mut beacon = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let kid = test_register_persistent(&mut server, &mut beacon);
 
 	for (api, plaintext) in [
@@ -585,11 +638,16 @@ fn rejected_receive_does_not_consume_an_armed_cas_failure() {
 	let mut server = PersistentServer::create_with_lineage(
 		0,
 		Some(&[0x4D; ED25519_SEED_SIZE]),
+		None,
 		store.clone(),
 		SnapshotLineage::from_bytes([0x4E; 32]),
 	)
 	.unwrap();
-	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let mut beacon = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let kid = test_register_persistent(&mut server, &mut beacon);
 	let authentic = beacon.encrypt_message(b"must remain withheld").unwrap();
 	let corrupted = corrupt_crypto_frame_ciphertext(&authentic);
@@ -614,11 +672,12 @@ fn stale_owner_rejection_is_neutral_until_an_accepted_receive_loses_cas() {
 	let mut stale = PersistentServer::create_with_lineage(
 		0,
 		Some(&[0x4F; ED25519_SEED_SIZE]),
+		None,
 		store.clone(),
 		SnapshotLineage::from_bytes([0x50; 32]),
 	)
 	.unwrap();
-	let mut beacon = Beacon::new(0, stale.identity_pk().as_bytes());
+	let mut beacon = Beacon::new(0, stale.identity_pk().as_bytes(), &stale.mldsa_public_key());
 	let kid = test_register_persistent(&mut stale, &mut beacon);
 	let authentic = beacon.encrypt_message(b"stale plaintext").unwrap();
 	let corrupted = corrupt_crypto_frame_ciphertext(&authentic);
@@ -656,6 +715,7 @@ fn trusted_head_rejects_a_stale_snapshot() {
 	let original = PersistentServer::create_with_lineage(
 		0,
 		Some(&[0x41; ED25519_SEED_SIZE]),
+		None,
 		store.clone(),
 		SnapshotLineage::from_bytes([0x44; 32]),
 	)
@@ -680,6 +740,7 @@ fn only_one_racing_restorer_can_activate_a_snapshot_head() {
 	let original = PersistentServer::create_with_lineage(
 		0,
 		Some(&[0x47; ED25519_SEED_SIZE]),
+		None,
 		store.clone(),
 		SnapshotLineage::from_bytes([0x45; 32]),
 	)
@@ -713,11 +774,16 @@ fn cas_failure_withholds_the_result_and_poisons_the_live_instance() {
 	let mut server = PersistentServer::create_with_lineage(
 		0,
 		Some(&[0x51; ED25519_SEED_SIZE]),
+		None,
 		store.clone(),
 		SnapshotLineage::from_bytes([0x46; 32]),
 	)
 	.unwrap();
-	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let mut beacon = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let kid = test_register_persistent(&mut server, &mut beacon);
 	let committed_head = server.head();
 	let expected_sequence = server.ratchet_status(kid).unwrap().send_sequence() + 1;
@@ -753,11 +819,16 @@ fn failed_registration_response_keeps_consumption_committed() {
 	let mut server = PersistentServer::create_with_lineage(
 		0,
 		Some(&[0x59; ED25519_SEED_SIZE]),
+		None,
 		store.clone(),
 		SnapshotLineage::from_bytes([0x49; 32]),
 	)
 	.unwrap();
-	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let mut beacon = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let phase_1 = beacon.get_registration_bundle().unwrap();
 	let registration = server.get_shared_secret(&phase_1).unwrap().unwrap();
 	let consumption_head = server.head();
@@ -783,11 +854,16 @@ fn a_peer_becomes_operational_only_after_pqxdh_establishment() {
 	let mut server = PersistentServer::create_with_lineage(
 		0,
 		Some(&[0x61; ED25519_SEED_SIZE]),
+		None,
 		store,
 		SnapshotLineage::from_bytes([0x47; 32]),
 	)
 	.unwrap();
-	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let mut beacon = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 
 	assert!(server.pk_by_kid(1).is_none());
 	assert!(server.ratchet_status(1).is_none());
@@ -817,11 +893,16 @@ fn persistent_structured_updates_return_committed_outputs() {
 	let mut server = PersistentServer::create_with_lineage(
 		9,
 		Some(&[0x63; ED25519_SEED_SIZE]),
+		None,
 		store.clone(),
 		SnapshotLineage::from_bytes([0x4B; 32]),
 	)
 	.unwrap();
-	let mut beacon = Beacon::new(9, server.identity_pk().as_bytes());
+	let mut beacon = Beacon::new(
+		9,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let kid = test_register_persistent(&mut server, &mut beacon);
 
 	let send = server
