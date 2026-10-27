@@ -3,8 +3,7 @@
 //
 // Cryptographic operations are delegated to Go's crypto packages. ChaCha20-
 // Poly1305, BLAKE2b, and HKDF come from the Go team's golang.org/x/crypto
-// module because the repository supports Go 1.23, where they are not all
-// available in the standard library. The multi-opening values are derived by
+// module. The multi-opening values are derived by
 // scripts/derive_multi_opening.py and documented in
 // doc/multi-opening-fixture.md.
 package main

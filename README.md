@@ -93,11 +93,11 @@ On the host target, build C or Go artifacts with `cargo build -p beaconcrypt-ffi
 
 ### Mutation testing
 
-Install `cargo-mutants` 27.1.0 and `cargo-nextest` 0.9.149, then run both native and WASI mutation campaigns:
+Install `cargo-mutants` 27.1.0 and `cargo-nextest` 0.9.150, then run both native and WASI mutation campaigns:
 
 ```bash
 cargo install --locked cargo-mutants@27.1.0
-cargo install --locked cargo-nextest@0.9.149
+cargo install --locked cargo-nextest@0.9.150
 PROPTEST_RNG_SEED=104729 cargo mutants --workspace --test-tool nextest \
   --cargo-arg=--profile=mutants --jobs 4
 bash scripts/test-wasm.sh --mutants --jobs 4 --output .build/wasm-mutations
