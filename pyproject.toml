@@ -1,5 +1,5 @@
 [build-system]
-requires = ["maturin>=1.14,<2.0" ,"pip"]
+requires = ["maturin>=1.15,<2.0" ,"pip"]
 build-backend = "maturin"
 
 [project]
@@ -36,10 +36,10 @@ package = false
 
 [dependency-groups]
 dev = [
-    "black>=26.5.1",
+    "black>=26.10.1",
     "pytest>=9.1.1",
-    "maturin>=1.14,<2.0",
-    "pycryptodome>=3.23.0",
+    "maturin>=1.15,<2.0",
+    "pycryptodome>=4.2.0",
 ]
 
 [tool.cibuildwheel]

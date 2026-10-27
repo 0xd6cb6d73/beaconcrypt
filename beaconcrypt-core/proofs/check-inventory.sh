@@ -54,7 +54,7 @@ declare -A expected_category_counts=(
 	[generated-proverif]=1
 	[handwritten-lean]=2063
 	[handwritten-proverif]=298
-	[inventory]=2
+	[inventory]=3
 	[lean-control]=13
 	[lean-dependency-overlay]=4
 	[validation]=82
@@ -110,6 +110,7 @@ printf '%s\n' \
 compare_set control "$tmp_dir/control"
 
 printf '%s\n' proofs/check-inventory.sh proofs/trusted-boundary.md \
+	proofs/computational-security-proof.md \
 	> "$tmp_dir/inventory"
 compare_set inventory "$tmp_dir/inventory"
 
