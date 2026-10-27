@@ -133,7 +133,7 @@ SOURCE_SHA256 = {
     "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
     "beaconcrypt/src/ratchet.rs": "139e564ba54731bce5417144fe438f519429c44684be80de53935a6d790973c7",
     "beaconcrypt/src/beacon.rs": "5778900307c39a5aeb82411150d5aa50e6d76467bcb89e478081a829407fcce7",
-    "beaconcrypt/src/server.rs": "c47d482bfd41e9d93623acf94319a36cadb8e2ab413df07ea7678e64209e67dc",
+    "beaconcrypt/src/server.rs": "eb27dcb90e26db87ab095fda9105742caa184d16a017ad57c3373d682d3af1b8",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetControl.lean": "467e40094bfde41c7ebeed24761788c263d5ba12e21d3dfd86e981917b60565c",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetRefinement.lean": "813d26cedc7a82a9c19f795fdc8599809aac8d0626608000a626a2986be2c915",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/RatchetFuturePublication.lean": "b87aff9e49e929786c8e7a158e6e470d84a4f07f9fbbe9b5e65837a4065162f8",

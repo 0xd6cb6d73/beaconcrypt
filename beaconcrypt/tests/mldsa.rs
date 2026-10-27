@@ -65,23 +65,24 @@ fn legacy_response(response: KexResponse<'_>) -> Vec<u8> {
 struct MemoryStore(Option<ServerSnapshot>);
 
 impl SnapshotStore for MemoryStore {
-	fn load(&self) -> Option<ServerSnapshot> {
-		self.0
+	fn load(&self) -> Result<Option<ServerSnapshot>, beaconcrypt::PersistenceError> {
+		Ok(self
+			.0
 			.as_ref()
-			.map(|snapshot| ServerSnapshot::from_bytes(snapshot.as_bytes().to_vec()))
+			.map(|snapshot| ServerSnapshot::from_bytes(snapshot.as_bytes().to_vec())))
 	}
 
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
+	) -> Result<bool, beaconcrypt::PersistenceError> {
 		let current = self.0.as_ref().map(|snapshot| snapshot.head().unwrap());
 		if current.as_ref() != expected || replacement.validate_successor(expected).is_err() {
-			return false;
+			return Ok(false);
 		}
 		self.0 = Some(ServerSnapshot::from_bytes(replacement.as_bytes().to_vec()));
-		true
+		Ok(true)
 	}
 }
 
@@ -99,15 +100,9 @@ fn assert_rejected_commit_preserves_protocol_state(
 	before: &ServerSnapshot,
 	after: &ServerSnapshot,
 ) {
-	// Version 3 has a 100-byte envelope followed by the complete canonical server-state JSON.
-	const HEADER_SIZE: usize = 100;
-	for snapshot in [before, after] {
-		assert_eq!(&snapshot.as_bytes()[16..18], &3u16.to_le_bytes());
-	}
-	assert!(before.as_bytes()[HEADER_SIZE..] == after.as_bytes()[HEADER_SIZE..]);
-	let before_head = before.head().unwrap();
-	let after_head = after.validate_successor(Some(&before_head)).unwrap();
-	assert_eq!(after_head.generation(), before_head.generation() + 1);
+	// Rejected authentication is an exact-state transition and does not create a generation.
+	assert_eq!(before.as_bytes(), after.as_bytes());
+	assert_eq!(before.head().unwrap(), after.head().unwrap());
 }
 
 #[test]

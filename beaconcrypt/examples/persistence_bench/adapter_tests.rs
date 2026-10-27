@@ -287,17 +287,21 @@ fn concurrent_conflict(f: &Factory) {
 
 struct Capture(Rc<RefCell<Option<Vec<u8>>>>);
 impl SnapshotStore for Capture {
-	fn load(&self) -> Option<ServerSnapshot> {
-		self.0.borrow().clone().map(ServerSnapshot::from_bytes)
+	fn load(&self) -> Result<Option<ServerSnapshot>, beaconcrypt::PersistenceError> {
+		Ok(self.0.borrow().clone().map(ServerSnapshot::from_bytes))
 	}
-	fn compare_and_swap(&mut self, _: Option<&SnapshotHead>, replacement: &ServerSnapshot) -> bool {
+	fn compare_and_swap(
+		&mut self,
+		_: Option<&SnapshotHead>,
+		replacement: &ServerSnapshot,
+	) -> Result<bool, beaconcrypt::PersistenceError> {
 		*self.0.borrow_mut() = Some(replacement.as_bytes().to_vec());
-		true
+		Ok(true)
 	}
 }
 fn concurrent_snapshot_cas(f: &Factory) {
 	let saved = Rc::new(RefCell::new(None));
-	let mut server = PersistentServer::create(
+	let server = PersistentServer::create(
 		19,
 		Some(&[82; 32]),
 		Some(&[83; 32]),
@@ -306,9 +310,10 @@ fn concurrent_snapshot_cas(f: &Factory) {
 	.unwrap();
 	let initial = ServerSnapshot::from_bytes(saved.borrow().clone().unwrap());
 	let head = initial.head().unwrap();
-	server.get_shared_secret(b"invalid registration").unwrap();
+	drop(server);
+	let _server = PersistentServer::restore(Capture(Rc::clone(&saved))).unwrap();
 	let next = saved.borrow().clone().unwrap();
-	assert!(f.snapshot().compare_and_swap(None, &initial));
+	assert!(f.snapshot().compare_and_swap(None, &initial).unwrap());
 	let barrier = Arc::new(Barrier::new(2));
 	let workers = (0..2)
 		.map(|_| {
@@ -325,12 +330,12 @@ fn concurrent_snapshot_cas(f: &Factory) {
 	assert_eq!(
 		workers
 			.into_iter()
-			.map(|worker| worker.join().unwrap())
+			.map(|worker| worker.join().unwrap().unwrap())
 			.filter(|won| *won)
 			.count(),
 		1
 	);
-	assert_eq!(f.snapshot().load().unwrap().as_bytes(), next);
+	assert_eq!(f.snapshot().load().unwrap().unwrap().as_bytes(), next);
 }
 
 fn expected_counts(nonzero: &[(&str, u64)]) -> Value {
@@ -515,7 +520,7 @@ fn row_counters_distinguish_callbacks_fetches_validation_and_committed_values(f:
 fn snapshot_counters_cover_empty_repeated_loads_success_and_stale_cas(f: &Factory) {
 	let pg = matches!(f, Factory::Postgres(_));
 	let saved = Rc::new(RefCell::new(None));
-	let mut server = PersistentServer::create(
+	let server = PersistentServer::create(
 		19,
 		Some(&[82; 32]),
 		Some(&[83; 32]),
@@ -524,7 +529,8 @@ fn snapshot_counters_cover_empty_repeated_loads_success_and_stale_cas(f: &Factor
 	.unwrap();
 	let initial = ServerSnapshot::from_bytes(saved.borrow().clone().unwrap());
 	let initial_head = initial.head().unwrap();
-	server.get_shared_secret(b"invalid registration").unwrap();
+	drop(server);
+	let _server = PersistentServer::restore(Capture(Rc::clone(&saved))).unwrap();
 	let next = ServerSnapshot::from_bytes(saved.borrow().clone().unwrap());
 	let next_head = next.head().unwrap();
 	assert_eq!(next_head.generation(), initial_head.generation() + 1);
@@ -534,7 +540,7 @@ fn snapshot_counters_cover_empty_repeated_loads_success_and_stale_cas(f: &Factor
 	for _ in 0..2 {
 		let epoch = Instant::now();
 		counts.enable_trace(epoch, 4);
-		assert!(store.load().is_none());
+		assert!(store.load().unwrap().is_none());
 		assert_counts_and_reset(
 			&counts,
 			expected_counts(&[
@@ -547,9 +553,9 @@ fn snapshot_counters_cover_empty_repeated_loads_success_and_stale_cas(f: &Factor
 	}
 	let epoch = Instant::now();
 	counts.enable_trace(epoch, 8);
-	assert!(store.compare_and_swap(None, &initial));
+	assert!(store.compare_and_swap(None, &initial).unwrap());
 	for _ in 0..2 {
-		let loaded = store.load().unwrap();
+		let loaded = store.load().unwrap().unwrap();
 		assert_eq!(loaded.as_bytes(), initial.as_bytes());
 		assert_eq!(loaded.head().unwrap(), initial_head);
 	}
@@ -573,10 +579,10 @@ fn snapshot_counters_cover_empty_repeated_loads_success_and_stale_cas(f: &Factor
 	);
 	let epoch = Instant::now();
 	counts.enable_trace(epoch, 8);
-	assert!(store.compare_and_swap(Some(&initial_head), &next));
-	assert!(!store.compare_and_swap(Some(&initial_head), &next));
+	assert!(store.compare_and_swap(Some(&initial_head), &next).unwrap());
+	assert!(!store.compare_and_swap(Some(&initial_head), &next).unwrap());
 	for _ in 0..2 {
-		let loaded = store.load().unwrap();
+		let loaded = store.load().unwrap().unwrap();
 		assert_eq!(loaded.as_bytes(), next.as_bytes());
 		assert_eq!(loaded.head().unwrap(), next_head);
 	}
@@ -606,10 +612,10 @@ fn snapshot_counters_cover_empty_repeated_loads_success_and_stale_cas(f: &Factor
 			"snapshot_load",
 		],
 	);
-	let reopened = f.snapshot().load().unwrap();
+	let reopened = f.snapshot().load().unwrap().unwrap();
 	assert_eq!(reopened.as_bytes(), next.as_bytes());
 	assert_eq!(reopened.head().unwrap(), next_head);
-	assert_eq!(store.load().unwrap().as_bytes(), next.as_bytes());
+	assert_eq!(store.load().unwrap().unwrap().as_bytes(), next.as_bytes());
 	assert!(counts.take_trace().is_empty());
 }
 

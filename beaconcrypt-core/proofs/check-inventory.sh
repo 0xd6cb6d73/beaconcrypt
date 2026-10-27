@@ -1525,7 +1525,7 @@ expected_counts = {'ADDITIONAL': 58,
  'SERVER_LIFECYCLE': 5,
  'DH_REQUESTS': 8,
  'NATIVE_AGREEMENT': 7,
- 'ENTROPY_DELEGATES': 5,
+ 'ENTROPY_DELEGATES': 6,
  'ENTROPY_REQUESTS': 4}
 tables = {}
 for name, count in expected_counts.items():
@@ -1733,6 +1733,10 @@ reviewed = {'AUTHENTICATION': [("impl<'a> InitPacket",
                       'crypto_kdf::hkdf::sha512::expand(32,Some(request.info),&prk)',
                       'pending.resume(root)']}
 reviewed.update({'ENTROPY_DELEGATES': [('server',
+                        '',
+                        'get_shared_secret_with_rng',
+                        'letlookup=self.authenticate_registration_lookup(buffer)?;self.get_shared_secret_from_lookup_with_rng(lookup,rng)'),
+                       ('server',
                         'impl ProviderServer for Server',
                         'get_shared_secret',
                         'self.get_shared_secret_with_rng(buffer,&mutbeaconcrypt_crypto::OsRng)'),
@@ -1754,7 +1758,7 @@ reviewed.update({'ENTROPY_DELEGATES': [('server',
                         'execute_agreement(effect,keys,&mutNoEntropy)')],
  'ENTROPY_REQUESTS': [('server',
                        '',
-                       'get_shared_secret_with_rng',
+                       'get_shared_secret_from_lookup_with_rng',
                        'crate::pqxdh::execute_agreement(effect,crate::pqxdh::RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:None,beacon_one_time:None,beacon_kem:None,},rng,)'),
                       ('pqxdh',
                        '',
@@ -1777,12 +1781,12 @@ selected_additional = [('core-pqxdh',
   'registration consumed root transcript is cleared'),
  ('server',
   '',
-  'get_shared_secret_with_rng',
+  'get_shared_secret_from_lookup_with_rng',
   'lookup.resume(consumed)',
   'registration Server replay-status gate'),
  ('server',
   '',
-  'get_shared_secret_with_rng',
+  'get_shared_secret_from_lookup_with_rng',
   'self.consumed_registrations.try_reserve(1).ok()?;',
   'registration Server consumed-set reservation'),
  ('beacon',
@@ -1912,12 +1916,12 @@ selected_additional = [('core-pqxdh',
   'registration Beacon secret handles belong to pending request'),
  ('server',
   '',
-  'get_shared_secret_with_rng',
+  'authenticate_registration_lookup',
   'InitPacket::from_slices(registration.identity_key,registration.pre_key,registration.one_time_key,registration.pq_key,registration.mldsa_public_key,registration.signature,)',
   'registration complete fixed-width init parser mapping'),
  ('server',
   '',
-  'get_shared_secret_with_rng',
+  'get_shared_secret_from_lookup_with_rng',
   'RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:None,beacon_one_time:None,beacon_kem:None,}',
   'registration Server local secret handles'),
  ('server',
@@ -2032,9 +2036,9 @@ for statement in [
     "replace_contract(&mutchanged,name,scope,function,expected,&replacement);",
     "lifecycle(&changed).is_err()",
     "checked+=1;",
-    "assert_eq!(checked,27);",
+    "assert_eq!(checked,30);",
 ]:
-    once(entropy_matrix, statement, f"27 entropy omission/duplication/substitution controls: {statement}")
+    once(entropy_matrix, statement, f"30 entropy omission/duplication/substitution controls: {statement}")
 
 # Actual core-owned record continuations supersede the complete-record callback seam.
 # Pin every reviewed body/field/mutation tuple, plus execution of all validators and controls.
@@ -2081,8 +2085,8 @@ for name, count in [("BODY_MUTATION_COUNT", 116), ("DECLARATION_MUTATION_COUNT",
 
 # Core peer owners bind actual replay and vacant-insertion replies to one-use continuations.
 # The native collection implementation remains an explicit boundary; retain exact handoffs.
-peer_pins = {'BODIES': {'count': 30,
-            'sha256': 'f0c954ed895ae3f9b745d1fd4412018920831608ac820e168a717f1686bf5462'},
+peer_pins = {'BODIES': {'count': 32,
+            'sha256': '158e5db7244444a7dcab7bb7b8b70f92c687a5454cb96cac428aad9b9eeaee7f'},
  'DECLARATIONS': {'count': 10,
                   'sha256': '71e963f60474583e8e15c930b5af95ba8098f8b59df559cb34a458dc0647e4bb'}}
 for name, pin in peer_pins.items():
@@ -2105,8 +2109,8 @@ for statement in ["inBODIES{", "actual.matches(expected).count()==1", "actual==e
 once(function(peers, "selected_body"), "rust_body(raw,function)", "peer validator inspects actual Rust bodies")
 once(function(peers, "replace_once"), "raw.replace_range(", "peer mutations change actual source")
 peer_bodies = function(peers, "peer_controller_and_interpreter_omission_duplication_and_bypass_are_rejected")
-for statement in ["validate(&baseline).unwrap();", "inBODIES{", "String::new()", 'format!("{expected}{expected}")', '"panic!(\\"peerbypass\\")".to_owned()', "replace_once(&mutchanged,name,scope,expected,&replacement);", "validate(&changed).is_err()", "assert_eq!(checked,90);"]:
-    once(peer_bodies, statement, f"90 peer omission/duplication/body controls: {statement}")
+for statement in ["validate(&baseline).unwrap();", "inBODIES{", "String::new()", 'format!("{expected}{expected}")', '"panic!(\\"peerbypass\\")".to_owned()', "replace_once(&mutchanged,name,scope,expected,&replacement);", "validate(&changed).is_err()", "assert_eq!(checked,96);"]:
+    once(peer_bodies, statement, f"96 peer omission/duplication/body controls: {statement}")
 peer_declarations = function(peers, "peer_tokens_and_stored_metadata_cannot_expose_mutable_public_fields")
 for statement in ["validate(&baseline).unwrap();", "inDECLARATIONS{", 'format!("{}pub{}",&declaration[..start],&declaration[start..])', 'replace_once(&mutchanged,name,"",declaration,&altered);', "assert_eq!(checked,10);", '"#[derive(Clone)]"', '"#[derive(Copy)]"', '"usealloc::vec::Vec;"', '"usestd::collections::HashMap;"', "changed.core_peer.insert_str(0,prefix);"]:
     once(peer_declarations, statement, f"peer private-field/escape control: {statement}")
@@ -2144,7 +2148,7 @@ for statement in ["if!declaration{breakstart;}", "b';'ifparentheses==0&&brackets
     once(function(transport, "replace_body"), statement, f"transport source mutation skips trait declarations: {statement}")
 once(function(transport, "replace_body"), "source.replace_range(open+1..end-1,body);", "transport mutations replace the actual Rust body")
 
-print("Registration/record/peer/transport fidelity inventory: 56 synchronized inputs, 32+5+3+2+1 tests, 620 registration plus 214 record plus 104 peer plus 61 transport negative controls; 87 old names retained")
+print("Registration/record/peer/transport fidelity inventory: 56 synchronized inputs, 32+5+3+2+1 tests, 623 registration plus 214 record plus 110 peer plus 61 transport negative controls; 87 old names retained")
 PY_REGISTRATION_FIDELITY
 
 require_line_count 1 \

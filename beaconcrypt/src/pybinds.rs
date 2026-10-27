@@ -13,6 +13,7 @@ use pyo3::class::{PyTraverseError, PyVisit};
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
+use zeroize::Zeroizing;
 
 pyo3::create_exception!(beaconcrypt, PersistenceError, PyValueError);
 
@@ -32,6 +33,8 @@ fn persistence_error(py: Python<'_>, error: NativePersistenceError, cause: Optio
 		NativePersistenceError::Initialization => "initialization",
 		NativePersistenceError::Digest => "digest",
 		NativePersistenceError::Poisoned => "poisoned",
+		NativePersistenceError::Storage => "storage",
+		NativePersistenceError::CommitUnknown => "commit_unknown",
 	};
 	let exception = PersistenceError::new_err(error.to_string());
 	if let Err(attribute_error) = exception.value(py).setattr("code", code) {
@@ -163,7 +166,7 @@ impl PySnapshotStore {
 }
 
 impl SnapshotStore for PySnapshotStore {
-	fn load(&self) -> Option<ServerSnapshot> {
+	fn load(&self) -> Result<Option<ServerSnapshot>, NativePersistenceError> {
 		self.capture(|py| {
 			let result = self.object(py)?.bind(py).call_method0("load")?;
 			if result.is_none() {
@@ -174,14 +177,14 @@ impl SnapshotStore for PySnapshotStore {
 				)))
 			}
 		})
-		.flatten()
+		.ok_or(NativePersistenceError::Storage)
 	}
 
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
+	) -> Result<bool, NativePersistenceError> {
 		self.capture(|py| {
 			let expected = expected
 				.map(|inner| Py::new(py, SnapshotHeadPy { inner: *inner }))
@@ -194,7 +197,7 @@ impl SnapshotStore for PySnapshotStore {
 				)?
 				.extract::<bool>()
 		})
-		.unwrap_or(false)
+		.ok_or(NativePersistenceError::CommitUnknown)
 	}
 }
 
@@ -222,8 +225,8 @@ impl From<RegResponse> for RegResponsePy {
 
 #[pyclass(name = "EncryptState")]
 pub struct EncryptStatePy {
-	data: Vec<u8>,
-	state: String,
+	data: Zeroizing<Vec<u8>>,
+	state: Zeroizing<String>,
 	kid: u64,
 	seq: u64,
 }
@@ -251,9 +254,9 @@ impl EncryptStatePy {
 
 impl From<SendState> for EncryptStatePy {
 	fn from(value: SendState) -> Self {
-		let state = value.state.as_str().to_owned();
+		let state = Zeroizing::new(value.state.as_str().to_owned());
 		Self {
-			data: value.data,
+			data: Zeroizing::new(value.data),
 			state,
 			kid: value.kid,
 			seq: value.seq,
@@ -263,9 +266,9 @@ impl From<SendState> for EncryptStatePy {
 
 impl From<RecvState> for EncryptStatePy {
 	fn from(value: RecvState) -> Self {
-		let state = value.state.as_str().to_owned();
+		let state = Zeroizing::new(value.state.as_str().to_owned());
 		Self {
-			data: value.data,
+			data: Zeroizing::new(value.data),
 			state,
 			kid: value.kid,
 			seq: value.seq,
@@ -369,6 +372,7 @@ impl Server {
 
 	/// Create a server whose results are released only after the store durably commits them.
 	/// The store supplies load() -> bytes | None and compare_and_swap(expected, replacement) -> bool.
+	/// Read exceptions produce `storage`; commit exceptions produce `commit_unknown` because the store may already have committed. The original exception remains the cause.
 	/// Callbacks must atomically validate and compare the complete trusted head, preserve rollback resistance, and never reenter this server.
 	#[staticmethod]
 	#[pyo3(signature = (kid, id_seed, mldsa_seed, store, lineage=None))]

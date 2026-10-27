@@ -305,11 +305,30 @@ def check_source_order():
         [
             "R: TryCryptoRng + ?Sized",
             "rng: &mut R",
+            "let lookup = self.authenticate_registration_lookup(buffer)?;",
+            "self.get_shared_secret_from_lookup_with_rng(lookup, rng)",
+        ],
+    )
+    source_order(
+        root,
+        "beaconcrypt/src/server.rs",
+        "pub(crate) fn authenticate_registration_lookup(",
+        [
             "let control = self.control;",
             "let registration = decode_init(buffer)?;",
             "InitPacket::from_slices(registration.identity_key, registration.pre_key, registration.one_time_key, registration.pq_key, registration.mldsa_public_key, registration.signature,)",
             "auth::authenticate_init(self.authentication_pin()?, packet)?",
-            "let lookup = beaconcrypt_core::peer::begin_registration_lookup(control, authenticated); let registration_id = *lookup.request().as_bytes();",
+            "Some(beaconcrypt_core::peer::begin_registration_lookup(control, authenticated,))",
+        ],
+    )
+    source_order(
+        root,
+        "beaconcrypt/src/server.rs",
+        "pub(crate) fn get_shared_secret_from_lookup_with_rng<",
+        [
+            "R: TryCryptoRng + ?Sized",
+            "rng: &mut R",
+            "let registration_id = *lookup.request().as_bytes();",
             "let consumed = self.consumed_registrations.contains(&registration_id);",
             "let effect = lookup.resume(consumed);",
             "if matches!(effect, AgreementEffect::Rejected(_)) { return None; }",

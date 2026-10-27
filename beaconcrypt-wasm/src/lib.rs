@@ -7,7 +7,7 @@
 //! `(ptr << 32) | len`. Reply bytes are little endian:
 //! `[status:u32, handle:u32, key_id:u64, seq:u64, data_len:u32, state_len:u32]`,
 //! followed by data and optional observational ratchet JSON. Status values
-//! match the production PersistenceStatus enum (0..12). Failures carry no data.
+//! match the production PersistenceStatus enum (0..13 and 15; 14 is reserved for row sessions). Failures carry no data.
 //! Inputs must describe entire allocations returned by bc_alloc, or (0,0).
 //! Hosts copy reply data before bc_free, which wipes the complete allocation.
 //! A zero packed reply indicates allocation failure and invalidates the guest.

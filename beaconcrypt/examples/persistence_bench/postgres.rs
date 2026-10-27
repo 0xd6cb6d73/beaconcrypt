@@ -10,8 +10,8 @@ use std::{
 };
 
 use beaconcrypt::{
-	RowError, RowStore, RowTransaction, ServerSnapshot, SnapshotHead, SnapshotLineage,
-	SnapshotStore,
+	PersistenceError, RowError, RowStore, RowTransaction, ServerSnapshot, SnapshotHead,
+	SnapshotLineage, SnapshotStore,
 };
 use postgres::{Client, Config, NoTls, Statement, config::Host};
 use serde_json::{Value, json};
@@ -351,30 +351,31 @@ impl PgSnapshotStore {
 }
 
 impl SnapshotStore for PgSnapshotStore {
-	fn load(&self) -> Option<ServerSnapshot> {
+	fn load(&self) -> core::result::Result<Option<ServerSnapshot>, PersistenceError> {
 		let _call = self.counts.call("snapshot_load");
 		request(&self.counts);
 		self.counts.reads.set(self.counts.reads.get() + 1);
-		self.client
+		Ok(self
+			.client
 			.borrow_mut()
 			.query_opt(&self.load, &[])
-			.expect("benchmark snapshot load failed")
+			.map_err(|_| PersistenceError::Storage)?
 			.map(|row| {
 				let value: Vec<u8> = row.get(0);
 				self.counts
 					.value_bytes_read
 					.set(self.counts.value_bytes_read.get() + value.len() as u64);
 				ServerSnapshot::from_bytes(value)
-			})
+			}))
 	}
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
-		let next = replacement
-			.validate_successor(expected)
-			.expect("valid snapshot successor");
+	) -> core::result::Result<bool, PersistenceError> {
+		let Ok(next) = replacement.validate_successor(expected) else {
+			return Ok(false);
+		};
 		request(&self.counts);
 		self.counts
 			.transactions
@@ -412,7 +413,13 @@ impl SnapshotStore for PgSnapshotStore {
 				)
 			}
 		}
-		.expect("benchmark snapshot commit failed");
+		.map_err(|error| {
+			if error.as_db_error().is_some() {
+				PersistenceError::Storage
+			} else {
+				PersistenceError::CommitUnknown
+			}
+		})?;
 		drop(call);
 		if changed == 1 {
 			self.counts.writes.set(self.counts.writes.get() + 1);
@@ -420,7 +427,7 @@ impl SnapshotStore for PgSnapshotStore {
 				.value_bytes_written
 				.set(self.counts.value_bytes_written.get() + replacement.as_bytes().len() as u64);
 		}
-		changed == 1
+		Ok(changed == 1)
 	}
 }
 

@@ -30,6 +30,9 @@ pub const STATUS_OUTPUT_ENCODING: u32 = 9;
 pub const STATUS_INITIALIZATION: u32 = 10;
 pub const STATUS_DIGEST: u32 = 11;
 pub const STATUS_POISONED: u32 = 12;
+pub const STATUS_STORAGE: u32 = 13;
+// Status 14 belongs to invalid row transaction sessions.
+pub const STATUS_COMMIT_UNKNOWN: u32 = 15;
 
 /// Non-secret identity of one complete server snapshot. Its digest is not an authenticator.
 #[repr(C)]
@@ -65,6 +68,8 @@ impl From<SnapshotHeadInfo> for SnapshotHead {
 /// `load` returns false without calling `sink` for an empty store. Otherwise it calls `sink` synchronously exactly once with nonempty borrowed snapshot bytes and returns true; Rust copies the bytes before `sink` returns. `compare_and_swap` compares the complete current head against `expected` (null means an empty store), validates the successor, and durably stores the exact replacement bytes and head before returning true. The store must protect integrity, provenance and freshness; snapshot bytes and digests do not authenticate themselves.
 ///
 /// Constructors take ownership of `context` immediately, including on failure. `destroy`, when supplied, runs exactly once after the final callback; otherwise the caller manages the context lifetime. All callbacks and borrowed arguments remain valid until they return, must not unwind, retain borrowed pointers, call the sink after `load` returns, or reenter the owning handle. The caller serializes access to the handle and store.
+///
+/// This original callback layout preserves the legacy C ABI. Use `SnapshotStoreCallbacksV2` and the constructors ending in `_v2` to report storage failures separately from absence and comparison rejection.
 #[repr(C)]
 pub struct SnapshotStoreCallbacks {
 	pub context: *mut c_void,
@@ -86,12 +91,37 @@ pub struct SnapshotStoreCallbacks {
 	pub destroy: Option<unsafe extern "C" fn(context: *mut c_void)>,
 }
 
-struct CallbackStore(SnapshotStoreCallbacks);
+/// Versioned snapshot callbacks with storage-error reporting.
+///
+/// `last_error` reports the result of the immediately preceding load or CAS callback: STATUS_OK, STATUS_STORAGE for a definite failure without a commit, or STATUS_COMMIT_UNKNOWN if a CAS may have committed. Reset this status when beginning each callback. A null `last_error` retains the legacy empty-store or conflict interpretation of false. Context ownership and callback lifetime rules are the same as `SnapshotStoreCallbacks`.
+#[repr(C)]
+pub struct SnapshotStoreCallbacksV2 {
+	pub callbacks: SnapshotStoreCallbacks,
+	pub last_error: Option<unsafe extern "C" fn(context: *mut c_void) -> u32>,
+}
+
+struct CallbackStore {
+	callbacks: SnapshotStoreCallbacks,
+	last_error: Option<unsafe extern "C" fn(context: *mut c_void) -> u32>,
+}
+
+impl CallbackStore {
+	fn check_error(&self) -> Result<(), PersistenceError> {
+		let status = self.last_error.map_or(STATUS_OK, |callback| unsafe {
+			callback(self.callbacks.context)
+		});
+		match status {
+			STATUS_OK => Ok(()),
+			STATUS_COMMIT_UNKNOWN => Err(PersistenceError::CommitUnknown),
+			_ => Err(PersistenceError::Storage),
+		}
+	}
+}
 
 impl Drop for CallbackStore {
 	fn drop(&mut self) {
-		if let Some(destroy) = self.0.destroy {
-			unsafe { destroy(self.0.context) };
+		if let Some(destroy) = self.callbacks.destroy {
+			unsafe { destroy(self.callbacks.context) };
 		}
 	}
 }
@@ -119,42 +149,48 @@ unsafe extern "C" fn snapshot_load_sink(context: *mut c_void, bytes: *const u8, 
 }
 
 impl SnapshotStore for CallbackStore {
-	fn load(&self) -> Option<ServerSnapshot> {
+	fn load(&self) -> Result<Option<ServerSnapshot>, PersistenceError> {
 		let mut loaded = SnapshotLoad::default();
 		let present = unsafe {
-			(self.0.load?)(
-				self.0.context,
+			(self.callbacks.load.ok_or(PersistenceError::Storage)?)(
+				self.callbacks.context,
 				(&mut loaded as *mut SnapshotLoad).cast(),
 				snapshot_load_sink,
 			)
 		};
+		self.check_error()?;
 		if !present && loaded.bytes.is_none() && !loaded.invalid {
-			return None;
+			return Ok(None);
 		}
 		if !present || loaded.invalid || loaded.bytes.is_none() {
-			return Some(ServerSnapshot::from_bytes(Vec::new()));
+			return Ok(Some(ServerSnapshot::from_bytes(Vec::new())));
 		}
-		loaded
+		Ok(loaded
 			.bytes
-			.map(|mut bytes| ServerSnapshot::from_bytes(mem::take(&mut *bytes)))
+			.map(|mut bytes| ServerSnapshot::from_bytes(mem::take(&mut *bytes))))
 	}
 
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
+	) -> Result<bool, PersistenceError> {
 		let expected = expected.copied().map(SnapshotHeadInfo::from);
-		unsafe {
-			(self.0.compare_and_swap.expect("validated store callback"))(
-				self.0.context,
+		let committed = unsafe {
+			(self
+				.callbacks
+				.compare_and_swap
+				.expect("validated store callback"))(
+				self.callbacks.context,
 				expected
 					.as_ref()
 					.map_or(std::ptr::null(), std::ptr::from_ref),
 				replacement.as_bytes().as_ptr(),
 				replacement.as_bytes().len(),
 			)
-		}
+		};
+		self.check_error()?;
+		Ok(committed)
 	}
 }
 
@@ -170,6 +206,8 @@ fn error_status(error: PersistenceError) -> u32 {
 		PersistenceError::Initialization => STATUS_INITIALIZATION,
 		PersistenceError::Digest => STATUS_DIGEST,
 		PersistenceError::Poisoned => STATUS_POISONED,
+		PersistenceError::Storage => STATUS_STORAGE,
+		PersistenceError::CommitUnknown => STATUS_COMMIT_UNKNOWN,
 	}
 }
 
@@ -220,11 +258,14 @@ fn server_result(
 }
 
 fn callback_store(
-	callbacks: SnapshotStoreCallbacks,
+	callbacks: SnapshotStoreCallbacksV2,
 	status_out: *mut u32,
 ) -> Option<Box<dyn SnapshotStore>> {
-	let store = CallbackStore(callbacks);
-	if store.0.load.is_none() || store.0.compare_and_swap.is_none() {
+	let store = CallbackStore {
+		callbacks: callbacks.callbacks,
+		last_error: callbacks.last_error,
+	};
+	if store.callbacks.load.is_none() || store.callbacks.compare_and_swap.is_none() {
 		set_status_out(status_out, STATUS_INVALID_ARGUMENT);
 		return None;
 	}
@@ -389,6 +430,33 @@ pub extern "C" fn beaconcrypt_server_create_with_store(
 	callbacks: SnapshotStoreCallbacks,
 	status_out: *mut u32,
 ) -> *mut Server {
+	beaconcrypt_server_create_with_store_v2(
+		server_kid,
+		seed_ptr,
+		seed_len,
+		mldsa_seed_ptr,
+		mldsa_seed_len,
+		SnapshotStoreCallbacksV2 {
+			callbacks,
+			last_error: None,
+		},
+		status_out,
+	)
+}
+
+/// Versioned durable constructor with explicit callback storage-error reporting.
+///
+/// Context ownership and callback lifetime rules match the corresponding legacy constructor.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_create_with_store_v2(
+	server_kid: u64,
+	seed_ptr: *const u8,
+	seed_len: usize,
+	mldsa_seed_ptr: *const u8,
+	mldsa_seed_len: usize,
+	callbacks: SnapshotStoreCallbacksV2,
+	status_out: *mut u32,
+) -> *mut Server {
 	let Some(store) = callback_store(callbacks, status_out) else {
 		return std::ptr::null_mut();
 	};
@@ -411,6 +479,37 @@ pub extern "C" fn beaconcrypt_server_create_with_store_and_lineage(
 	mldsa_seed_ptr: *const u8,
 	mldsa_seed_len: usize,
 	callbacks: SnapshotStoreCallbacks,
+	lineage_ptr: *const u8,
+	lineage_len: usize,
+	status_out: *mut u32,
+) -> *mut Server {
+	beaconcrypt_server_create_with_store_and_lineage_v2(
+		server_kid,
+		seed_ptr,
+		seed_len,
+		mldsa_seed_ptr,
+		mldsa_seed_len,
+		SnapshotStoreCallbacksV2 {
+			callbacks,
+			last_error: None,
+		},
+		lineage_ptr,
+		lineage_len,
+		status_out,
+	)
+}
+
+/// Versioned durable constructor with explicit callback storage-error reporting.
+///
+/// Context ownership and callback lifetime rules match the corresponding legacy constructor.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_create_with_store_and_lineage_v2(
+	server_kid: u64,
+	seed_ptr: *const u8,
+	seed_len: usize,
+	mldsa_seed_ptr: *const u8,
+	mldsa_seed_len: usize,
+	callbacks: SnapshotStoreCallbacksV2,
 	lineage_ptr: *const u8,
 	lineage_len: usize,
 	status_out: *mut u32,
@@ -444,6 +543,23 @@ pub extern "C" fn beaconcrypt_server_create_with_store_and_lineage(
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_restore_with_store(
 	callbacks: SnapshotStoreCallbacks,
+	status_out: *mut u32,
+) -> *mut Server {
+	beaconcrypt_server_restore_with_store_v2(
+		SnapshotStoreCallbacksV2 {
+			callbacks,
+			last_error: None,
+		},
+		status_out,
+	)
+}
+
+/// Versioned durable constructor with explicit callback storage-error reporting.
+///
+/// Context ownership and callback lifetime rules match the corresponding legacy constructor.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_restore_with_store_v2(
+	callbacks: SnapshotStoreCallbacksV2,
 	status_out: *mut u32,
 ) -> *mut Server {
 	let Some(store) = callback_store(callbacks, status_out) else {
@@ -944,6 +1060,8 @@ mod tests {
 		head: Option<SnapshotHeadInfo>,
 		attempts: usize,
 		fail_next: bool,
+		error_status: u32,
+		post_commit_status: u32,
 	}
 
 	#[derive(Clone, Copy, Default)]
@@ -971,6 +1089,9 @@ mod tests {
 		sink: unsafe extern "C" fn(*mut c_void, *const u8, usize),
 	) -> bool {
 		let context = unsafe { &*context.cast::<StoreContext>() };
+		if context.state.lock().unwrap().error_status != STATUS_OK {
+			return false;
+		}
 		let bytes = context.state.lock().unwrap().bytes.clone();
 		if let Some(barrier) = &context.load_barrier {
 			barrier.wait();
@@ -1007,6 +1128,9 @@ mod tests {
 		let context = unsafe { &*context.cast::<StoreContext>() };
 		let mut store = context.state.lock().unwrap();
 		store.attempts += 1;
+		if store.error_status != STATUS_OK {
+			return false;
+		}
 		if store.fail_next {
 			store.fail_next = false;
 			return false;
@@ -1029,12 +1153,21 @@ mod tests {
 		}
 		store.bytes = Some(unsafe { slice::from_raw_parts(bytes, len) }.to_vec());
 		store.head = Some(head);
+		if store.post_commit_status != STATUS_OK {
+			store.error_status = mem::take(&mut store.post_commit_status);
+			return false;
+		}
 		true
 	}
 
 	unsafe extern "C" fn destroy_callback(context: *mut c_void) {
 		let context = unsafe { Box::from_raw(context.cast::<StoreContext>()) };
 		context.destroyed.fetch_add(1, Ordering::SeqCst);
+	}
+
+	unsafe extern "C" fn last_error_callback(context: *mut c_void) -> u32 {
+		let context = unsafe { &*context.cast::<StoreContext>() };
+		context.state.lock().unwrap().error_status
 	}
 
 	fn callbacks(
@@ -1057,6 +1190,115 @@ mod tests {
 			compare_and_swap: Some(cas_callback),
 			destroy: Some(destroy_callback),
 		}
+	}
+
+	fn callbacks_v2(
+		state: &Arc<Mutex<StoreState>>,
+		destroyed: &Arc<AtomicUsize>,
+	) -> SnapshotStoreCallbacksV2 {
+		SnapshotStoreCallbacksV2 {
+			callbacks: callbacks(state, destroyed, LoadMode::Normal),
+			last_error: Some(last_error_callback),
+		}
+	}
+
+	#[test]
+	fn legacy_snapshot_callback_layout_remains_four_pointers() {
+		let pointer = mem::size_of::<*mut c_void>();
+		assert_eq!(mem::size_of::<SnapshotStoreCallbacks>(), pointer * 4);
+		assert_eq!(
+			mem::align_of::<SnapshotStoreCallbacks>(),
+			mem::align_of::<*mut c_void>()
+		);
+		assert_eq!(mem::offset_of!(SnapshotStoreCallbacks, context), 0);
+		assert_eq!(mem::offset_of!(SnapshotStoreCallbacks, load), pointer);
+		assert_eq!(
+			mem::offset_of!(SnapshotStoreCallbacks, compare_and_swap),
+			pointer * 2
+		);
+		assert_eq!(
+			mem::offset_of!(SnapshotStoreCallbacks, destroy),
+			pointer * 3
+		);
+		assert_eq!(mem::offset_of!(SnapshotStoreCallbacksV2, callbacks), 0);
+		assert_eq!(
+			mem::offset_of!(SnapshotStoreCallbacksV2, last_error),
+			pointer * 4
+		);
+	}
+
+	#[test]
+	fn versioned_callbacks_report_constructor_errors_and_release_contexts() {
+		for error in [STATUS_STORAGE, STATUS_COMMIT_UNKNOWN] {
+			let state = Arc::new(Mutex::new(StoreState {
+				error_status: error,
+				..StoreState::default()
+			}));
+			let destroyed = Arc::new(AtomicUsize::new(0));
+			let mut status = u32::MAX;
+			let server = beaconcrypt_server_create_with_store_v2(
+				19,
+				[7; 32].as_ptr(),
+				32,
+				[8; 32].as_ptr(),
+				32,
+				callbacks_v2(&state, &destroyed),
+				&mut status,
+			);
+			assert!(server.is_null());
+			assert_eq!(status, error);
+			assert_eq!(destroyed.load(Ordering::SeqCst), 1);
+			let server = beaconcrypt_server_create_with_store_and_lineage_v2(
+				19,
+				[7; 32].as_ptr(),
+				32,
+				[8; 32].as_ptr(),
+				32,
+				callbacks_v2(&state, &destroyed),
+				[9; 32].as_ptr(),
+				32,
+				&mut status,
+			);
+			assert!(server.is_null());
+			assert_eq!(status, error);
+			assert_eq!(destroyed.load(Ordering::SeqCst), 2);
+			let server = beaconcrypt_server_restore_with_store_v2(
+				callbacks_v2(&state, &destroyed),
+				&mut status,
+			);
+			assert!(server.is_null());
+			assert_eq!(status, error);
+			assert_eq!(destroyed.load(Ordering::SeqCst), 3);
+		}
+	}
+
+	#[test]
+	fn callback_errors_are_distinct_from_absence_and_conflict() {
+		let state = Arc::new(Mutex::new(StoreState::default()));
+		let destroyed = Arc::new(AtomicUsize::new(0));
+		let callbacks = callbacks(&state, &destroyed, LoadMode::Normal);
+		let mut store = CallbackStore {
+			callbacks,
+			last_error: Some(last_error_callback),
+		};
+		assert!(store.load().unwrap().is_none());
+		let invalid = ServerSnapshot::from_bytes(Vec::new());
+		assert!(!store.compare_and_swap(None, &invalid).unwrap());
+		state.lock().unwrap().error_status = STATUS_STORAGE;
+		assert!(matches!(store.load(), Err(PersistenceError::Storage)));
+		assert_eq!(
+			store.compare_and_swap(None, &invalid),
+			Err(PersistenceError::Storage)
+		);
+		state.lock().unwrap().error_status = STATUS_COMMIT_UNKNOWN;
+		assert_eq!(
+			store.compare_and_swap(None, &invalid),
+			Err(PersistenceError::CommitUnknown)
+		);
+		state.lock().unwrap().error_status = STATUS_OK;
+		assert!(store.load().unwrap().is_none());
+		drop(store);
+		assert_eq!(destroyed.load(Ordering::SeqCst), 1);
 	}
 
 	struct OwnedServer(*mut Server);
@@ -1120,6 +1362,75 @@ mod tests {
 		let bytes = copy_buffer(response.response);
 		assert_eq!(beacon.finish_registration(&bytes).unwrap(), b"hello");
 		(beacon, response.key_id)
+	}
+
+	#[test]
+	fn versioned_callbacks_fence_failed_receives_and_restore_confirmed_consumption() {
+		for (error, published) in [
+			(STATUS_STORAGE, false),
+			(STATUS_COMMIT_UNKNOWN, false),
+			(STATUS_COMMIT_UNKNOWN, true),
+		] {
+			let state = Arc::new(Mutex::new(StoreState::default()));
+			let destroyed = Arc::new(AtomicUsize::new(0));
+			let mut status = u32::MAX;
+			let handle = beaconcrypt_server_create_with_store_and_lineage_v2(
+				19,
+				[7; 32].as_ptr(),
+				32,
+				[8; 32].as_ptr(),
+				32,
+				callbacks_v2(&state, &destroyed),
+				[9; 32].as_ptr(),
+				32,
+				&mut status,
+			);
+			assert_eq!(status, STATUS_OK);
+			assert!(!handle.is_null());
+			let server = OwnedServer(handle);
+			let (mut beacon, _) = register(&server);
+			let before = server.head();
+			let frame = beacon.encrypt_message(b"withheld plaintext").unwrap();
+			{
+				let mut stored = state.lock().unwrap();
+				if published {
+					stored.post_commit_status = error;
+				} else {
+					stored.error_status = error;
+				}
+			}
+			let output = beaconcrypt_decrypt_beacon_message(server.0, frame.as_ptr(), frame.len());
+			assert!(output.ptr.is_null());
+			assert_eq!(output.len, 0);
+			assert_eq!(beaconcrypt_server_last_status(server.0), error);
+			assert!(beaconcrypt_server_is_poisoned(server.0));
+			assert_eq!(server.head(), before);
+			assert_eq!(
+				state.lock().unwrap().head.unwrap().generation,
+				before.generation + u64::from(published)
+			);
+			drop(server);
+			assert_eq!(destroyed.load(Ordering::SeqCst), 1);
+			state.lock().unwrap().error_status = STATUS_OK;
+			let restored = beaconcrypt_server_restore_with_store_v2(
+				callbacks_v2(&state, &destroyed),
+				&mut status,
+			);
+			assert_eq!(status, STATUS_OK);
+			assert!(!restored.is_null());
+			let restored = OwnedServer(restored);
+			let output =
+				beaconcrypt_decrypt_beacon_message(restored.0, frame.as_ptr(), frame.len());
+			if published {
+				assert!(output.ptr.is_null());
+				assert_eq!(beaconcrypt_server_last_status(restored.0), STATUS_REJECTED);
+			} else {
+				assert_eq!(copy_buffer(output), b"withheld plaintext");
+				assert_eq!(beaconcrypt_server_last_status(restored.0), STATUS_OK);
+			}
+			drop(restored);
+			assert_eq!(destroyed.load(Ordering::SeqCst), 2);
+		}
 	}
 
 	#[test]

@@ -311,10 +311,10 @@ def test_callback_exceptions_are_chained_and_fail_closed(callback):
     store = FailingStore()
     if callback == "load":
         error = assert_error(
-            "missing_snapshot", lambda: BeaconCryptServer.restore(store)
+            "storage", lambda: BeaconCryptServer.restore(store)
         )
     else:
-        error = assert_error("stale_generation", lambda: create(store))
+        error = assert_error("commit_unknown", lambda: create(store))
     assert isinstance(error.__cause__, CallbackFailure)
     assert str(error.__cause__) in {"load failed", "CAS failed"}
 
@@ -328,7 +328,7 @@ def test_live_callback_exception_poisons_and_preserves_original_exception():
 
     store.callback = raise_io
     error = assert_error(
-        "stale_generation", lambda: server.encrypt_to_beacon(b"task", kid)
+        "commit_unknown", lambda: server.encrypt_to_beacon(b"task", kid)
     )
     assert isinstance(error.__cause__, OSError)
     assert str(error.__cause__) == "disk unavailable"
@@ -347,7 +347,7 @@ def test_wrong_callback_return_type_raises_persistence_error_with_type_error_cau
             return "JSON is not a checkpoint"
 
     error = assert_error(
-        "missing_snapshot", lambda: BeaconCryptServer.restore(WrongLoad())
+        "storage", lambda: BeaconCryptServer.restore(WrongLoad())
     )
     assert isinstance(error.__cause__, TypeError)
 
@@ -357,7 +357,7 @@ def test_reentrant_callback_fails_safely_and_poisons():
     _, kid = register(server)
     store.callback = lambda: server.head()
     error = assert_error(
-        "stale_generation", lambda: server.encrypt_to_beacon(b"task", kid)
+        "commit_unknown", lambda: server.encrypt_to_beacon(b"task", kid)
     )
     assert isinstance(error.__cause__, RuntimeError)
     assert "borrow" in str(error.__cause__).lower()
@@ -378,12 +378,29 @@ def test_server_retains_store_until_its_own_release():
     assert weak_store() is None
 
 
-def test_failed_nonreceive_operation_still_commits_generation():
+def test_unknown_peer_send_preserves_generation_without_storage_access():
     server, store = create()
     head = server.head()
+    loads, commits = store.load_calls, len(store.cas_calls)
     assert server.encrypt_to_beacon(b"task", 2**64 - 1) is None
-    assert server.head().generation == head.generation + 1
+    assert server.head() == head
     assert server.head() == store.current_head
+    assert store.load_calls == loads
+    assert len(store.cas_calls) == commits
+
+
+def test_rejected_registration_preserves_generation_without_storage_access():
+    server, store = create()
+    beacon = BeaconCryptBeacon(19, server.id_pk(), server.mldsa_public_key())
+    registration = beacon.generate_registration()
+    assert server.register_beacon(registration, b"registered") is not None
+    head = server.head()
+    loads, commits = store.load_calls, len(store.cas_calls)
+    for rejected in [b"\x00", registration]:
+        assert server.register_beacon(rejected, b"registered") is None
+        assert server.head() == head
+        assert store.load_calls == loads
+        assert len(store.cas_calls) == commits
 
 
 @pytest.mark.parametrize("failing_commit", [1, 2])
@@ -418,7 +435,7 @@ def test_live_load_exception_is_typed_without_poisoning_owner():
         raise OSError("read failed")
 
     store.load = failed_load
-    error = assert_error("missing_snapshot", server.export_state)
+    error = assert_error("storage", server.export_state)
     assert isinstance(error.__cause__, OSError)
     assert not server.is_poisoned()
 
@@ -428,8 +445,33 @@ def test_wrong_cas_return_type_fails_closed():
         def compare_and_swap(self, expected, replacement):
             return "yes"
 
-    error = assert_error("stale_generation", lambda: create(WrongCas()))
+    error = assert_error("commit_unknown", lambda: create(WrongCas()))
     assert isinstance(error.__cause__, TypeError)
+
+
+def test_uncertain_receive_commit_withholds_output_and_survives_restore():
+    server, store = create()
+    beacon, _ = register(server)
+    ciphertext = beacon.encrypt_message_to_server(b"must remain withheld")
+    head = server.head()
+    commit = store.compare_and_swap
+
+    def commit_then_fail(expected, replacement):
+        assert commit(expected, replacement)
+        raise OSError("connection lost after durable commit")
+
+    store.compare_and_swap = commit_then_fail
+    error = assert_error(
+        "commit_unknown", lambda: server.decrypt_beacon_message(ciphertext)
+    )
+    assert isinstance(error.__cause__, OSError)
+    assert str(error.__cause__) == "connection lost after durable commit"
+    assert server.is_poisoned()
+    assert store.current_head.generation == head.generation + 1
+    assert_error("poisoned", lambda: server.decrypt_beacon_message(ciphertext))
+    store.compare_and_swap = commit
+    restored = BeaconCryptServer.restore(store)
+    assert restored.decrypt_beacon_message(ciphertext) is None
 
 
 def test_store_server_reference_cycle_is_collected():

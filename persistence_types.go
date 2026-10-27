@@ -45,6 +45,9 @@ const (
 	StatusPoisoned
 )
 
+// StatusCommitUnknown reports a failed callback whose durable commit outcome is unknown.
+const StatusCommitUnknown PersistenceStatus = 15
+
 // PersistenceError reports a persistence failure, including an underlying store
 // error when a callback supplied one. A failed commit suppresses operation output.
 type PersistenceError struct {
@@ -66,7 +69,8 @@ func (e *PersistenceError) Error() string {
 		StatusInitialization:       "initialization failed",
 		StatusDigest:               "snapshot digest failed",
 		StatusPoisoned:             "persistent server is poisoned",
-		StatusStorage:              "database transaction failed",
+		StatusStorage:              "storage operation failed",
+		StatusCommitUnknown:        "snapshot commit outcome is unknown",
 		StatusInvalidSession:       "invalid transaction session operation",
 	}[e.Code]
 	if message == "" {

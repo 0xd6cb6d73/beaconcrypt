@@ -22,6 +22,8 @@ pub(crate) fn error_status(error: PersistenceError) -> u32 {
 		PersistenceError::Initialization => INITIALIZATION,
 		PersistenceError::Digest => 11,
 		PersistenceError::Poisoned => 12,
+		PersistenceError::Storage => 13,
+		PersistenceError::CommitUnknown => 15,
 	}
 }
 

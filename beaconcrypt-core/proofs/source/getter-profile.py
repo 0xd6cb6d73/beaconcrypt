@@ -31,11 +31,11 @@ FIELDS = {
 # visibility. Any change requires re-review, even outside a getter body.
 SOURCE_SHA256 = {
     "beaconcrypt/src/beacon.rs": "5778900307c39a5aeb82411150d5aa50e6d76467bcb89e478081a829407fcce7",
-    "beaconcrypt/src/server.rs": "c47d482bfd41e9d93623acf94319a36cadb8e2ab413df07ea7678e64209e67dc",
+    "beaconcrypt/src/server.rs": "eb27dcb90e26db87ab095fda9105742caa184d16a017ad57c3373d682d3af1b8",
     "beaconcrypt/src/ratchet.rs": "139e564ba54731bce5417144fe438f519429c44684be80de53935a6d790973c7",
     "beaconcrypt/src/shared.rs": "2a1531e83277646ee47da116db0f2cf28af046342b846d3bcfb2a02b36ab855e",
-    "beaconcrypt/src/cbinds.rs": "0a0872c7586414e5cdbbbda18c7856639fc5627388b719b0cb4c0456d7c00aff",
-    "beaconcrypt/src/pybinds.rs": "6dc9a248f6eba84f6bbc6cfdf16d741b45a61ea1428caacf3a4d1302a8b19dce",
+    "beaconcrypt/src/cbinds.rs": "84c0d2fd7cbf199a19bab69aae46534afe344c07158261e1b3ebf69bd2be4489",
+    "beaconcrypt/src/pybinds.rs": "a8d4b5ebbef3514d20cd88ec08552fdbae641e5165afe5dbfa8dc10f90f15cdb",
     "beaconcrypt/src/lib.rs": "df6cac5a7de0938f7b7f77a03d46320ad88617b48c9bf7f7904aa7551b14bfa4",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointLiveRead.lean": "c3866a86f826c1fdc57bf605f7f47832ce6f88344c747819aaa53af3915b76fb",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOwnership.lean": "b802789bbb7ff115b50464900a759b1405db75e0c2212d5105021043971ceaec",

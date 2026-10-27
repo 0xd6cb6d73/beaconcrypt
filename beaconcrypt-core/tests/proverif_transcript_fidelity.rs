@@ -17886,7 +17886,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration-consumed.pvl",
 		"consumed.contains",
-		"beaconcrypt/src/server.rs:509-513",
+		"beaconcrypt/src/server.rs:529-533",
 	),
 	(
 		"fs-common.pvl",
@@ -17911,7 +17911,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:489-506",
+		"beaconcrypt/src/server.rs:499-514",
 	),
 	(
 		"fs-registration.pvl",
@@ -17936,7 +17936,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:508-509",
+		"beaconcrypt/src/server.rs:528-529",
 	),
 	(
 		"fs-registration.pvl",
@@ -17951,7 +17951,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:509-513",
+		"beaconcrypt/src/server.rs:529-533",
 	),
 	(
 		"fs-registration.pvl",
@@ -17991,17 +17991,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:531-535",
+		"beaconcrypt/src/server.rs:551-555",
 	),
 	(
 		"fs-registration.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:535-538",
+		"beaconcrypt/src/server.rs:555-558",
 	),
 	(
 		"fs-registration.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:548-553",
+		"beaconcrypt/src/server.rs:568-573",
 	),
 	(
 		"fs-registration.pvl",
@@ -18036,7 +18036,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:554-555",
+		"beaconcrypt/src/server.rs:574-575",
 	),
 	(
 		"fs-registration.pvl",
@@ -18046,7 +18046,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:576-583",
+		"beaconcrypt/src/server.rs:596-603",
 	),
 	(
 		"fs-registration.pvl",
@@ -18056,7 +18056,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:614-617",
+		"beaconcrypt/src/server.rs:634-637",
 	),
 	(
 		"fs-registration.pvl",
@@ -18226,7 +18226,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:620-630",
+		"beaconcrypt/src/server.rs:640-650",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
@@ -18256,7 +18256,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:620-630",
+		"beaconcrypt/src/server.rs:640-650",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
@@ -18346,7 +18346,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:489-506",
+		"beaconcrypt/src/server.rs:499-514",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18371,7 +18371,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:508-509",
+		"beaconcrypt/src/server.rs:528-529",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18381,7 +18381,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:509-513",
+		"beaconcrypt/src/server.rs:529-533",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18411,17 +18411,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:531-535",
+		"beaconcrypt/src/server.rs:551-555",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:535-538",
+		"beaconcrypt/src/server.rs:555-558",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:548-553",
+		"beaconcrypt/src/server.rs:568-573",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18456,7 +18456,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:554-555",
+		"beaconcrypt/src/server.rs:574-575",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18466,7 +18466,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:576-583",
+		"beaconcrypt/src/server.rs:596-603",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18476,7 +18476,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:614-617",
+		"beaconcrypt/src/server.rs:634-637",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18766,7 +18766,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:489-506",
+		"beaconcrypt/src/server.rs:499-514",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18791,7 +18791,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:508-509",
+		"beaconcrypt/src/server.rs:528-529",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18801,7 +18801,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:509-513",
+		"beaconcrypt/src/server.rs:529-533",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18826,17 +18826,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:531-535",
+		"beaconcrypt/src/server.rs:551-555",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:535-538",
+		"beaconcrypt/src/server.rs:555-558",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:548-553",
+		"beaconcrypt/src/server.rs:568-573",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18871,7 +18871,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:554-555",
+		"beaconcrypt/src/server.rs:574-575",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18881,7 +18881,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:576-583",
+		"beaconcrypt/src/server.rs:596-603",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18891,7 +18891,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:614-617",
+		"beaconcrypt/src/server.rs:634-637",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -21297,7 +21297,7 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 			Box::new(|files: &mut FsFiles| {
 				replace_once(
 					&mut files.registration,
-					"src=beaconcrypt/src/server.rs:531-535",
+					"src=beaconcrypt/src/server.rs:551-555",
 					"src=beaconcrypt/src/server.rs:1-1",
 				)
 			}) as Box<dyn Fn(&mut FsFiles)>,
@@ -21354,13 +21354,13 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 		);
 	}
 	assert_eq!(
-		check_fs_citation("beaconcrypt/src/server.rs:531-535", "let inserted"),
+		check_fs_citation("beaconcrypt/src/server.rs:551-555", "let inserted"),
 		Ok(())
 	);
 	assert!(check_fs_citation("beaconcrypt/src/server.rs:416-415", "let inserted").is_err());
 	assert!(check_fs_citation("beaconcrypt/src/server.rs:1-415", "let inserted").is_err());
 	assert!(check_fs_citation("beaconcrypt/src/other.rs:415-416", "let inserted").is_err());
-	assert!(check_fs_citation("beaconcrypt/src/server.rs:531-535", "let").is_err());
+	assert!(check_fs_citation("beaconcrypt/src/server.rs:551-555", "let").is_err());
 }
 
 #[test]

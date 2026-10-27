@@ -163,7 +163,7 @@ TOKEN_SHA256 = {
 # Full authentication/AD lifting is not inferred from these whole-file tripwires.
 SOURCE_SHA256 = {
     "beaconcrypt/src/beacon.rs": "5778900307c39a5aeb82411150d5aa50e6d76467bcb89e478081a829407fcce7",
-    "beaconcrypt/src/server.rs": "c47d482bfd41e9d93623acf94319a36cadb8e2ab413df07ea7678e64209e67dc",
+    "beaconcrypt/src/server.rs": "eb27dcb90e26db87ab095fda9105742caa184d16a017ad57c3373d682d3af1b8",
     "beaconcrypt/src/ratchet.rs": "139e564ba54731bce5417144fe438f519429c44684be80de53935a6d790973c7",
     "beaconcrypt/src/shared.rs": "2a1531e83277646ee47da116db0f2cf28af046342b846d3bcfb2a02b36ab855e",
     "beaconcrypt/src/pqxdh.rs": "f3b880ec118bebfd49851156588e681da40f50761470fbacc6940fd69cabc319",

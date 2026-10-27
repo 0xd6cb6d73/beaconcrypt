@@ -306,19 +306,21 @@ struct FailingStore {
 }
 
 impl SnapshotStore for FailingStore {
-	fn load(&self) -> Option<ServerSnapshot> {
+	fn load(&self) -> Result<Option<ServerSnapshot>, PersistenceError> {
 		self.inner.borrow().load()
 	}
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&beaconcrypt::SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
-		!self.fail.get()
-			&& self
-				.inner
+	) -> Result<bool, PersistenceError> {
+		if self.fail.get() {
+			Ok(false)
+		} else {
+			self.inner
 				.borrow_mut()
 				.compare_and_swap(expected, replacement)
+		}
 	}
 }
 
@@ -433,15 +435,19 @@ fn host_store_constructors_validate_exact_context_length_and_restore_input() {
 	);
 	assert_eq!(
 		dispatch(13, 0, 0, &[], &[]).status,
-		abi::error_status(PersistenceError::MissingSnapshot)
+		abi::error_status(if cfg!(target_arch = "wasm32") {
+			PersistenceError::MissingSnapshot
+		} else {
+			PersistenceError::Storage
+		})
 	);
 }
 
 #[test]
-fn host_load_failures_match_native_missing_snapshot_status() {
+fn host_load_failures_distinguish_missing_snapshots_and_storage_errors() {
 	struct LoadResult(i64);
 	impl SnapshotStore for LoadResult {
-		fn load(&self) -> Option<ServerSnapshot> {
+		fn load(&self) -> Result<Option<ServerSnapshot>, PersistenceError> {
 			let mut calls = 0;
 			let snapshot = store::load_snapshot(|ptr, len| {
 				calls += 1;
@@ -455,11 +461,11 @@ fn host_load_failures_match_native_missing_snapshot_status() {
 			&mut self,
 			_: Option<&beaconcrypt::SnapshotHead>,
 			_: &ServerSnapshot,
-		) -> bool {
+		) -> Result<bool, PersistenceError> {
 			panic!("missing/invalid snapshots must not reach activation CAS")
 		}
 	}
-	for (host_result, expected_status) in [(-1, 3), (-2, 3), (-3, 4), (0, 4)] {
+	for (host_result, expected_status) in [(-1, 3), (-2, 13), (-3, 4), (0, 4)] {
 		let restored =
 			PersistentServer::restore(Box::new(LoadResult(host_result)) as Box<dyn SnapshotStore>);
 		assert_eq!(abi::error_status(restored.err().unwrap()), expected_status);

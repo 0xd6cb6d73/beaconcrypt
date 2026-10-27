@@ -129,31 +129,33 @@ impl MemoryStore {
 }
 
 impl SnapshotStore for MemoryStore {
-	fn load(&self) -> Option<ServerSnapshot> {
-		let bytes = self
-			.load_override
-			.as_deref()
-			.map(|bytes| bytes.as_slice().to_vec())
-			.or_else(|| self.state.lock().unwrap().snapshot.clone());
-		if let Some(barrier) = &self.load_barrier {
-			barrier.wait();
-		}
-		bytes.map(ServerSnapshot::from_bytes)
+	fn load(&self) -> Result<Option<ServerSnapshot>, beaconcrypt::PersistenceError> {
+		Ok({
+			let bytes = self
+				.load_override
+				.as_deref()
+				.map(|bytes| bytes.as_slice().to_vec())
+				.or_else(|| self.state.lock().unwrap().snapshot.clone());
+			if let Some(barrier) = &self.load_barrier {
+				barrier.wait();
+			}
+			bytes.map(ServerSnapshot::from_bytes)
+		})
 	}
 
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
+	) -> Result<bool, beaconcrypt::PersistenceError> {
 		let replacement_head = match replacement.head() {
 			Ok(head) => head,
-			Err(_) => return false,
+			Err(_) => return Ok(false),
 		};
 		let mut state = self.state.lock().unwrap();
 		state.cas_attempts += 1;
 		if std::mem::take(&mut state.fail_next_cas) || state.trusted_head.as_ref() != expected {
-			return false;
+			return Ok(false);
 		}
 		match expected {
 			Some(previous)
@@ -161,14 +163,14 @@ impl SnapshotStore for MemoryStore {
 					|| previous.generation().checked_add(1)
 						!= Some(replacement_head.generation()) =>
 			{
-				return false;
+				return Ok(false);
 			}
-			None if replacement_head.generation() != 0 => return false,
+			None if replacement_head.generation() != 0 => return Ok(false),
 			_ => {}
 		}
 		state.snapshot = Some(replacement.as_bytes().to_vec());
 		state.trusted_head = Some(replacement_head);
-		true
+		Ok(true)
 	}
 }
 
@@ -838,10 +840,7 @@ fn failed_registration_response_keeps_consumption_committed() {
 			.unwrap()
 			.is_none()
 	);
-	assert_eq!(
-		server.head().generation(),
-		consumption_head.generation() + 1
-	);
+	assert_eq!(server.head().generation(), consumption_head.generation());
 	drop(server);
 
 	let mut restored = PersistentServer::restore(store).unwrap();

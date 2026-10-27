@@ -3,7 +3,10 @@
 #![cfg(all(feature = "std", feature = "server", feature = "beacon"))]
 
 use beaconcrypt::crypto::{CryptoError, OsRng, TryCryptoRng, TryRng};
-use beaconcrypt::{Beacon, CachedRowServer, ProviderBeacon, RowError, RowServer, SnapshotLineage};
+use beaconcrypt::{
+	Beacon, CachedRowServer, ProviderBeacon, RowError, RowRegistrationDecision, RowServer,
+	SnapshotLineage,
+};
 use proptest::{prelude::*, test_runner::FileFailurePersistence};
 use std::{collections::BTreeMap, path::Path};
 
@@ -37,6 +40,37 @@ impl TryRng for FailAfter {
 	}
 }
 impl TryCryptoRng for FailAfter {}
+
+struct ObservedEntropy {
+	calls: usize,
+	fail: bool,
+}
+
+impl TryRng for ObservedEntropy {
+	type Error = CryptoError;
+
+	fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
+		let mut bytes = [0; 4];
+		self.try_fill_bytes(&mut bytes)?;
+		Ok(u32::from_le_bytes(bytes))
+	}
+
+	fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+		let mut bytes = [0; 8];
+		self.try_fill_bytes(&mut bytes)?;
+		Ok(u64::from_le_bytes(bytes))
+	}
+
+	fn try_fill_bytes(&mut self, bytes: &mut [u8]) -> Result<(), Self::Error> {
+		self.calls += 1;
+		if self.fail {
+			return Err(CryptoError);
+		}
+		OsRng.try_fill_bytes(bytes).map_err(|_| CryptoError)
+	}
+}
+
+impl TryCryptoRng for ObservedEntropy {}
 
 fn rows(path: &Path) -> BTreeMap<Vec<u8>, Vec<u8>> {
 	let conn = rusqlite::Connection::open(path).unwrap();
@@ -77,6 +111,131 @@ fn failed_identity_entropy_never_creates_partial_rows() {
 			assert_eq!(rows(&path).len(), 2);
 		}
 	}
+}
+
+#[test]
+fn durable_registration_replays_do_not_request_agreement_entropy() {
+	for capacity in [0, 4] {
+		let directory = tempfile::tempdir().unwrap();
+		let path = directory.path().join("replays.sqlite");
+		let mut server = CachedRowServer::create_with_rng(
+			7,
+			None,
+			None,
+			SqliteRowStore::open(&path).unwrap(),
+			LINEAGE,
+			capacity,
+			&mut OsRng,
+		)
+		.unwrap();
+		let mut beacon = Beacon::try_new_with_rng(
+			7,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+			&mut OsRng,
+		)
+		.unwrap();
+		let request = beacon.get_registration_bundle_with_rng(&mut OsRng).unwrap();
+		let mut healthy = ObservedEntropy {
+			calls: 0,
+			fail: false,
+		};
+		assert!(
+			server
+				.register_beacon_with_rng(&request, None, &mut healthy)
+				.unwrap()
+				.is_some()
+		);
+		assert!(healthy.calls > 0);
+		let before = rows(&path);
+		let mut unavailable = ObservedEntropy {
+			calls: 0,
+			fail: true,
+		};
+		assert!(
+			server
+				.register_beacon_with_rng(&request, None, &mut unavailable)
+				.unwrap()
+				.is_none()
+		);
+		assert_eq!(unavailable.calls, 0);
+		assert_eq!(rows(&path), before);
+	}
+}
+
+#[test]
+fn composed_registration_checks_replays_before_entropy_and_keeps_failures_retryable() {
+	let directory = tempfile::tempdir().unwrap();
+	let path = directory.path().join("composed-replays.sqlite");
+	let mut server = RowServer::create_with_rng(
+		7,
+		None,
+		None,
+		SqliteRowStore::open(&path).unwrap(),
+		LINEAGE,
+		&mut OsRng,
+	)
+	.unwrap();
+	let mut beacon = Beacon::try_new_with_rng(
+		7,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+		&mut OsRng,
+	)
+	.unwrap();
+	let request = beacon.get_registration_bundle_with_rng(&mut OsRng).unwrap();
+	let before = rows(&path);
+	let mut unavailable = ObservedEntropy {
+		calls: 0,
+		fail: true,
+	};
+	assert!(
+		!server
+			.registration_transaction(
+				|session| {
+					let accepted =
+						session.accept_registration_with_rng(&request, &mut unavailable)?;
+					Ok(RowRegistrationDecision::<(), bool>::Return(accepted))
+				},
+				|_, ()| panic!("terminal acceptance does not run completion"),
+			)
+			.unwrap()
+	);
+	assert_eq!(unavailable.calls, 1);
+	assert_eq!(rows(&path), before);
+	let mut healthy = ObservedEntropy {
+		calls: 0,
+		fail: false,
+	};
+	assert!(
+		server
+			.registration_transaction(
+				|session| {
+					let accepted = session.accept_registration_with_rng(&request, &mut healthy)?;
+					Ok(RowRegistrationDecision::<(), bool>::Return(accepted))
+				},
+				|_, ()| panic!("terminal acceptance does not run completion"),
+			)
+			.unwrap()
+	);
+	assert!(healthy.calls > 0);
+	let accepted = rows(&path);
+	assert_eq!(accepted.len(), before.len() + 1);
+	unavailable.calls = 0;
+	assert!(
+		!server
+			.registration_transaction(
+				|session| {
+					let accepted =
+						session.accept_registration_with_rng(&request, &mut unavailable)?;
+					Ok(RowRegistrationDecision::<(), bool>::Return(accepted))
+				},
+				|_, ()| panic!("replay does not run completion"),
+			)
+			.unwrap()
+	);
+	assert_eq!(unavailable.calls, 0);
+	assert_eq!(rows(&path), accepted);
 }
 
 proptest! {

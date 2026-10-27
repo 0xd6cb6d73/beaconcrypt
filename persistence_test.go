@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -14,18 +15,20 @@ import (
 // This store models one trusted storage domain. Production stores must provide
 // the same atomicity and additionally make successful writes crash durable.
 type testSnapshotStore struct {
-	mu          sync.Mutex
-	snapshot    []byte
-	head        *SnapshotHead
-	casCalls    int
-	rejectCAS   bool
-	casError    error
-	loadError   error
-	panicCAS    bool
-	panicLoad   bool
-	staleLoad   []byte
-	loadStarted chan struct{}
-	loadRelease chan struct{}
+	mu               sync.Mutex
+	snapshot         []byte
+	head             *SnapshotHead
+	casCalls         int
+	rejectCAS        bool
+	casError         error
+	loadError        error
+	panicCAS         bool
+	panicLoad        bool
+	postCommitError  error
+	panicAfterCommit bool
+	staleLoad        []byte
+	loadStarted      chan struct{}
+	loadRelease      chan struct{}
 }
 
 func (store *testSnapshotStore) Load() ([]byte, error) {
@@ -67,6 +70,12 @@ func (store *testSnapshotStore) CompareAndSwap(expected *SnapshotHead, replaceme
 	// Callback inputs are copied to Go memory and may safely be retained.
 	store.snapshot = replacement
 	store.head = &head
+	if store.panicAfterCommit {
+		panic("connection lost after durable commit")
+	}
+	if store.postCommitError != nil {
+		return false, store.postCommitError
+	}
 	return true, nil
 }
 
@@ -236,7 +245,7 @@ func TestPersistentServerCASFailureSuppressesEveryOutputAndPoisons(t *testing.T)
 					t.Fatal("receive JSON escaped failed CAS")
 				}
 			}
-			requirePersistenceStatus(t, err, StatusStaleGeneration)
+			requirePersistenceStatus(t, err, StatusCommitUnknown)
 			if !errors.Is(err, storeError) || !server.IsPoisoned() {
 				t.Fatalf("store error or poison lost: %v", err)
 			}
@@ -276,6 +285,166 @@ func TestPersistentReceiveRejectionDoesNotCallStoreOrAdvanceHead(t *testing.T) {
 	}
 	if output, err := server.DecryptBeaconMessage(frame); err != nil || string(output) != "retry me" {
 		t.Fatalf("rejected receive was not retryable: %q %v", output, err)
+	}
+}
+
+func TestPersistentReceiveUncertainCommitWithholdsOutputAndFencesReplay(t *testing.T) {
+	for _, operation := range []string{"receive", "receive-state", "receive-json"} {
+		for _, failure := range []string{"error", "panic"} {
+			t.Run(operation+"/"+failure, func(t *testing.T) {
+				server, beacon, _, store := newPersistentPair(t)
+				_, before, _ := store.current()
+				frame, err := beacon.EncryptToServer([]byte("committed plaintext must stay private"))
+				if err != nil {
+					t.Fatal(err)
+				}
+				sentinel := errors.New("connection lost after durable commit")
+				store.mu.Lock()
+				store.postCommitError = sentinel
+				store.panicAfterCommit = failure == "panic"
+				store.mu.Unlock()
+				switch operation {
+				case "receive":
+					var output []byte
+					output, err = server.DecryptBeaconMessage(frame)
+					if output != nil {
+						t.Fatal("plaintext escaped uncertain commit")
+					}
+				case "receive-state":
+					var output *EncryptState
+					output, err = server.DecryptAndUpdate(frame)
+					if output != nil {
+						t.Fatal("receive update escaped uncertain commit")
+					}
+				case "receive-json":
+					var output string
+					output, err = server.DecryptAndUpdateJSON(frame)
+					if output != "" {
+						t.Fatal("receive JSON escaped uncertain commit")
+					}
+				}
+				persistenceErr := requirePersistenceStatus(t, err, StatusCommitUnknown)
+				if failure == "error" && !errors.Is(err, sentinel) {
+					t.Fatalf("callback error cause lost: %v", err)
+				}
+				if persistenceErr.Cause == nil || !strings.Contains(persistenceErr.Cause.Error(), sentinel.Error()) {
+					t.Fatalf("callback cause lost: %v", err)
+				}
+				if !server.IsPoisoned() {
+					t.Fatal("uncertain commit did not poison owner")
+				}
+				owner, err := server.Head()
+				if err != nil || owner != before {
+					t.Fatalf("uncertain commit changed claimed head: %v %v", owner, err)
+				}
+				_, committed, _ := store.current()
+				if committed.Generation != before.Generation+1 {
+					t.Fatal("test store did not commit before failing")
+				}
+				output, err := server.DecryptBeaconMessage(frame)
+				requirePersistenceStatus(t, err, StatusPoisoned)
+				if output != nil {
+					t.Fatal("poisoned owner released output")
+				}
+				store.mu.Lock()
+				store.postCommitError = nil
+				store.panicAfterCommit = false
+				store.mu.Unlock()
+				restored, err := RestoreServer(store)
+				if err != nil {
+					t.Fatal(err)
+				}
+				t.Cleanup(restored.Close)
+				_, activated, calls := store.current()
+				if activated.Generation != committed.Generation+1 {
+					t.Fatal("restore did not claim committed generation")
+				}
+				output, err = restored.DecryptBeaconMessage(frame)
+				if output != nil || !errors.Is(err, ErrCrypto) {
+					t.Fatalf("committed receive replay was accepted: %q %v", output, err)
+				}
+				_, after, afterCalls := store.current()
+				if after != activated || afterCalls != calls || restored.IsPoisoned() {
+					t.Fatal("replay rejection changed committed state")
+				}
+			})
+		}
+	}
+}
+
+func TestPersistentRegistrationRejectionDoesNotWriteSnapshot(t *testing.T) {
+	server, _, _, store := newPersistentPair(t)
+	pk, err := server.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	beacon := newBeacon(t, server, pk)
+	registration, err := beacon.GenerateRegistration()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response, err := server.RegisterBeacon(registration, []byte("registered")); err != nil || response == nil {
+		t.Fatalf("valid registration failed: %v", err)
+	}
+	beforeBytes, before, calls := store.current()
+	for _, rejected := range [][]byte{{0}, registration} {
+		response, err := server.RegisterBeacon(rejected, []byte("registered"))
+		if response != nil || !errors.Is(err, ErrCrypto) {
+			t.Fatalf("registration was not rejected: %+v %v", response, err)
+		}
+		afterBytes, after, afterCalls := store.current()
+		if before != after || !bytes.Equal(beforeBytes, afterBytes) || afterCalls != calls || server.IsPoisoned() {
+			t.Fatal("rejected registration touched durable state")
+		}
+	}
+}
+
+func TestPersistentUnknownPeerSendDoesNotWriteSnapshot(t *testing.T) {
+	server, _, _, store := newPersistentPair(t)
+	beforeBytes, before, calls := store.current()
+	for _, send := range []func() error{
+		func() error { _, err := server.EncryptToBeacon(^uint64(0), []byte("unknown peer")); return err },
+		func() error { _, err := server.EncryptAndUpdate(^uint64(0), []byte("unknown peer")); return err },
+		func() error { _, err := server.EncryptAndUpdateJSON(^uint64(0), []byte("unknown peer")); return err },
+	} {
+		if err := send(); !errors.Is(err, ErrCrypto) {
+			t.Fatalf("unknown-peer send was not rejected: %v", err)
+		}
+		afterBytes, after, afterCalls := store.current()
+		if before != after || !bytes.Equal(beforeBytes, afterBytes) || afterCalls != calls || server.IsPoisoned() {
+			t.Fatal("unknown-peer send touched durable state")
+		}
+	}
+}
+
+func TestPersistentSnapshotLoadFailurePreservesCauseWithoutPoisoning(t *testing.T) {
+	for _, failure := range []string{"error", "panic"} {
+		t.Run(failure, func(t *testing.T) {
+			server, _, _, store := newPersistentPair(t)
+			sentinel := errors.New("snapshot read unavailable")
+			store.mu.Lock()
+			store.loadError = sentinel
+			store.panicLoad = failure == "panic"
+			store.mu.Unlock()
+			output, err := server.ExportState()
+			persistenceErr := requirePersistenceStatus(t, err, StatusStorage)
+			if output != nil || persistenceErr.Cause == nil || server.IsPoisoned() {
+				t.Fatalf("read error lost its cause or affected owner: %v", err)
+			}
+			if failure == "error" && !errors.Is(err, sentinel) {
+				t.Fatalf("read error identity lost: %v", err)
+			}
+			if failure == "panic" && !strings.Contains(persistenceErr.Cause.Error(), "injected load panic") {
+				t.Fatalf("read panic lost its cause: %v", err)
+			}
+			store.mu.Lock()
+			store.loadError = nil
+			store.panicLoad = false
+			store.mu.Unlock()
+			if _, err := server.ExportState(); err != nil {
+				t.Fatalf("read error prevented later export: %v", err)
+			}
+		})
 	}
 }
 

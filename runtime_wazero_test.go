@@ -6,10 +6,14 @@ package beaconcrypt
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/tetratelabs/wazero/api"
 )
 
 func testWasmEngine(t *testing.T, entropy io.Reader) *wasmEngine {
@@ -26,6 +30,53 @@ type failedWasmEntropy struct{}
 
 func (failedWasmEntropy) Read([]byte) (int, error) {
 	return 0, errors.New("injected entropy failure")
+}
+
+type statusWasmFunction struct {
+	api.Function
+	module api.Module
+	status uint32
+}
+
+func (function statusWasmFunction) Call(ctx context.Context, parameters ...uint64) ([]uint64, error) {
+	result, err := function.Function.Call(ctx, parameters...)
+	if err != nil {
+		return nil, err
+	}
+	if len(result) != 1 || !function.module.Memory().WriteUint32Le(uint32(result[0]>>32), function.status) {
+		return nil, errors.New("cannot inject response status")
+	}
+	return result, nil
+}
+
+func TestWasmResponseStatusRejectsReservedAndUnknownCodes(t *testing.T) {
+	engine, err := sharedWasmEngine()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, status := range []PersistenceStatus{StatusStorage, StatusCommitUnknown, StatusInvalidSession, 16, ^PersistenceStatus(0)} {
+		t.Run(fmt.Sprintf("status=%d", status), func(t *testing.T) {
+			instance, err := engine.construct(1, 19, nil, []byte{0}, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer instance.close()
+			instance.dispatch = statusWasmFunction{instance.dispatch, instance.module, uint32(status)}
+			// An unknown operation normally returns a valid, payload-free error reply.
+			output, err := instance.call(99, 0, nil, nil)
+			if len(output.data) != 0 || len(output.state) != 0 {
+				t.Fatal("error response released output")
+			}
+			if status == StatusStorage || status == StatusCommitUnknown {
+				requirePersistenceStatus(t, err, status)
+				if instance.closed || instance.module.IsClosed() {
+					t.Fatal("known persistence status invalidated guest")
+				}
+			} else if !errors.Is(err, ErrCrypto) || !instance.closed || !instance.module.IsClosed() {
+				t.Fatalf("reserved or unknown status did not invalidate guest: %v", err)
+			}
+		})
+	}
 }
 
 func TestWasmInitializationRejectsInvalidModuleAndEntropy(t *testing.T) {
@@ -123,10 +174,12 @@ func TestWasmFailedConstructorsReleaseStoreAndPreserveCause(t *testing.T) {
 			switch scenario {
 			case "load-error":
 				store.loadError = sentinel
+				status = StatusStorage
 			case "load-panic":
 				store.panicLoad = true
+				status = StatusStorage
 			case "cas-error", "cas-panic":
-				op, arg, extra, status = 12, 19, []byte{1, 0, 0, 0, 0}, StatusStaleGeneration
+				op, arg, extra, status = 12, 19, []byte{1, 0, 0, 0, 0}, StatusCommitUnknown
 				store.casError = sentinel
 				store.panicCAS = scenario == "cas-panic"
 			}

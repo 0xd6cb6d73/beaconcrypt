@@ -8,8 +8,8 @@ use std::{
 };
 
 use beaconcrypt::{
-	RowError, RowStore, RowTransaction, ServerSnapshot, SnapshotHead, SnapshotLineage,
-	SnapshotStore,
+	PersistenceError, RowError, RowStore, RowTransaction, ServerSnapshot, SnapshotHead,
+	SnapshotLineage, SnapshotStore,
 };
 use rusqlite::{Connection, OptionalExtension, TransactionBehavior};
 
@@ -168,12 +168,13 @@ impl SqlSnapshotStore {
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> rusqlite::Result<bool> {
+	) -> Result<bool, PersistenceError> {
 		let _call = self.counts.call("snapshot_commit");
 		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
 		let tx = self
 			.connection
-			.transaction_with_behavior(TransactionBehavior::Immediate)?;
+			.transaction_with_behavior(TransactionBehavior::Immediate)
+			.map_err(|_| PersistenceError::Storage)?;
 		self.counts
 			.transactions
 			.set(self.counts.transactions.get() + 1);
@@ -185,23 +186,36 @@ impl SqlSnapshotStore {
 				[],
 				|row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
 			)
-			.optional()?;
-		let current = stored.map(|(lineage, generation, digest)| {
-			self.counts
-				.head_bytes_read
-				.set(self.counts.head_bytes_read.get() + 72);
-			SnapshotHead::from_parts(
-				SnapshotLineage::from_bytes(lineage.try_into().expect("stored lineage length")),
-				u64::from_le_bytes(generation.try_into().expect("stored generation length")),
-				digest.try_into().expect("stored digest length"),
-			)
-		});
+			.optional()
+			.map_err(|_| PersistenceError::Storage)?;
+		let current = stored
+			.map(|(lineage, generation, digest)| {
+				self.counts
+					.head_bytes_read
+					.set(self.counts.head_bytes_read.get() + 72);
+				Ok::<_, PersistenceError>(SnapshotHead::from_parts(
+					SnapshotLineage::from_bytes(
+						lineage
+							.try_into()
+							.map_err(|_| PersistenceError::InvalidSnapshot)?,
+					),
+					u64::from_le_bytes(
+						generation
+							.try_into()
+							.map_err(|_| PersistenceError::InvalidSnapshot)?,
+					),
+					digest
+						.try_into()
+						.map_err(|_| PersistenceError::InvalidSnapshot)?,
+				))
+			})
+			.transpose()?;
 		if current.as_ref() != expected {
 			return Ok(false);
 		}
-		let next = replacement
-			.validate_successor(expected)
-			.expect("valid snapshot successor");
+		let Ok(next) = replacement.validate_successor(expected) else {
+			return Ok(false);
+		};
 		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
 		tx.execute(
 			"INSERT INTO snapshot (id,lineage,generation,digest,value) VALUES (1,?1,?2,?3,?4)
@@ -213,19 +227,20 @@ impl SqlSnapshotStore {
 				next.digest().as_slice(),
 				replacement.as_bytes(),
 			],
-		)?;
+		)
+		.map_err(|_| PersistenceError::Storage)?;
 		self.counts.writes.set(self.counts.writes.get() + 1);
 		self.counts
 			.value_bytes_written
 			.set(self.counts.value_bytes_written.get() + replacement.as_bytes().len() as u64);
 		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
-		tx.commit()?;
+		tx.commit().map_err(|_| PersistenceError::CommitUnknown)?;
 		Ok(true)
 	}
 }
 
 impl SnapshotStore for SqlSnapshotStore {
-	fn load(&self) -> Option<ServerSnapshot> {
+	fn load(&self) -> Result<Option<ServerSnapshot>, PersistenceError> {
 		let _call = self.counts.call("snapshot_load");
 		self.counts.sql_calls.set(self.counts.sql_calls.get() + 1);
 		self.counts.reads.set(self.counts.reads.get() + 1);
@@ -235,23 +250,21 @@ impl SnapshotStore for SqlSnapshotStore {
 				row.get(0)
 			})
 			.optional()
-			.expect("benchmark snapshot read must succeed");
-		bytes.map(|bytes| {
+			.map_err(|_| PersistenceError::Storage)?;
+		Ok(bytes.map(|bytes| {
 			self.counts
 				.value_bytes_read
 				.set(self.counts.value_bytes_read.get() + bytes.len() as u64);
 			ServerSnapshot::from_bytes(bytes)
-		})
+		}))
 	}
 
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
-		// The benchmark fails rather than converting a database error into a misleading rejection.
+	) -> Result<bool, PersistenceError> {
 		self.commit(expected, replacement)
-			.expect("benchmark snapshot commit must succeed")
 	}
 }
 

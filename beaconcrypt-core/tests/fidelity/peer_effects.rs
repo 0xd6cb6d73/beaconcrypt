@@ -181,12 +181,24 @@ const BODIES: &[(&str, &str, &str, &str)] = &[
 		"server",
 		"impl Server",
 		"get_shared_secret_with_rng",
-		"letlookup=beaconcrypt_core::peer::begin_registration_lookup(control,authenticated);letregistration_id=*lookup.request().as_bytes();letconsumed=self.consumed_registrations.contains(&registration_id);leteffect=lookup.resume(consumed);ifmatches!(effect,AgreementEffect::Rejected(_)){returnNone;}self.consumed_registrations.try_reserve(1).ok()?;",
+		"letlookup=self.authenticate_registration_lookup(buffer)?;self.get_shared_secret_from_lookup_with_rng(lookup,rng)",
 	),
 	(
 		"server",
 		"impl Server",
-		"get_shared_secret_with_rng",
+		"authenticate_registration_lookup",
+		"Some(beaconcrypt_core::peer::begin_registration_lookup(control,authenticated,))",
+	),
+	(
+		"server",
+		"impl Server",
+		"get_shared_secret_from_lookup_with_rng",
+		"letregistration_id=*lookup.request().as_bytes();letconsumed=self.consumed_registrations.contains(&registration_id);leteffect=lookup.resume(consumed);ifmatches!(effect,AgreementEffect::Rejected(_)){returnNone;}self.consumed_registrations.try_reserve(1).ok()?;",
+	),
+	(
+		"server",
+		"impl Server",
+		"get_shared_secret_from_lookup_with_rng",
 		"letpending=beaconcrypt_core::peer::begin_registration_insert(agreement);letregistration_id=*pending.request().as_bytes();letinserted=self.consumed_registrations.insert(*pending.request().as_bytes());letregistration=pending.resume(inserted)?;Some(RegistrationOutput{registration,registration_id,})",
 	),
 	(
@@ -326,7 +338,7 @@ fn peer_controller_and_interpreter_omission_duplication_and_bypass_are_rejected(
 			checked += 1;
 		}
 	}
-	assert_eq!(checked, 90);
+	assert_eq!(checked, 96);
 }
 
 #[test]

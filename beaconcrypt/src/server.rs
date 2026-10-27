@@ -491,7 +491,15 @@ impl Server {
 		buffer: &[u8],
 		rng: &mut R,
 	) -> Option<RegistrationOutput> {
-		use beaconcrypt_core::agreement::AgreementEffect;
+		let lookup = self.authenticate_registration_lookup(buffer)?;
+		self.get_shared_secret_from_lookup_with_rng(lookup, rng)
+	}
+
+	/// Authenticate the exact replay lookup before preparing any shared-secret material.
+	pub(crate) fn authenticate_registration_lookup(
+		&self,
+		buffer: &[u8],
+	) -> Option<beaconcrypt_core::peer::RegistrationLookup> {
 		use beaconcrypt_core::registration::InitPacket;
 		let control = self.control;
 		let registration = decode_init(buffer)?;
@@ -504,7 +512,19 @@ impl Server {
 			registration.signature,
 		)?;
 		let authenticated = auth::authenticate_init(self.authentication_pin()?, packet)?;
-		let lookup = beaconcrypt_core::peer::begin_registration_lookup(control, authenticated);
+		Some(beaconcrypt_core::peer::begin_registration_lookup(
+			control,
+			authenticated,
+		))
+	}
+
+	/// Finish a lookup after its owner has checked any external replay history.
+	pub(crate) fn get_shared_secret_from_lookup_with_rng<R: TryCryptoRng + ?Sized>(
+		&mut self,
+		lookup: beaconcrypt_core::peer::RegistrationLookup,
+		rng: &mut R,
+	) -> Option<RegistrationOutput> {
+		use beaconcrypt_core::agreement::AgreementEffect;
 		let registration_id = *lookup.request().as_bytes();
 		let consumed = self.consumed_registrations.contains(&registration_id);
 		let effect = lookup.resume(consumed);

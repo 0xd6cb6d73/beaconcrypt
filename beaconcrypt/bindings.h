@@ -81,6 +81,10 @@
 
 #define beaconcrypt_STATUS_POISONED 12
 
+#define beaconcrypt_STATUS_STORAGE 13
+
+#define beaconcrypt_STATUS_COMMIT_UNKNOWN 15
+
 /**
  * A storage failure, including an uncertain commit outcome. No operation output is released.
  */
@@ -152,6 +156,8 @@ typedef struct beaconcrypt_SnapshotHeadInfo {
  * `load` returns false without calling `sink` for an empty store. Otherwise it calls `sink` synchronously exactly once with nonempty borrowed snapshot bytes and returns true; Rust copies the bytes before `sink` returns. `compare_and_swap` compares the complete current head against `expected` (null means an empty store), validates the successor, and durably stores the exact replacement bytes and head before returning true. The store must protect integrity, provenance and freshness; snapshot bytes and digests do not authenticate themselves.
  *
  * Constructors take ownership of `context` immediately, including on failure. `destroy`, when supplied, runs exactly once after the final callback; otherwise the caller manages the context lifetime. All callbacks and borrowed arguments remain valid until they return, must not unwind, retain borrowed pointers, call the sink after `load` returns, or reenter the owning handle. The caller serializes access to the handle and store.
+ *
+ * This original callback layout preserves the legacy C ABI. Use `SnapshotStoreCallbacksV2` and the constructors ending in `_v2` to report storage failures separately from absence and comparison rejection.
  */
 typedef struct beaconcrypt_SnapshotStoreCallbacks {
   void *context;
@@ -162,6 +168,16 @@ typedef struct beaconcrypt_SnapshotStoreCallbacks {
                            uintptr_t replacement_len);
   void (*destroy)(void *context);
 } beaconcrypt_SnapshotStoreCallbacks;
+
+/**
+ * Versioned snapshot callbacks with storage-error reporting.
+ *
+ * `last_error` reports the result of the immediately preceding load or CAS callback: STATUS_OK, STATUS_STORAGE for a definite failure without a commit, or STATUS_COMMIT_UNKNOWN if a CAS may have committed. Reset this status when beginning each callback. A null `last_error` retains the legacy empty-store or conflict interpretation of false. Context ownership and callback lifetime rules are the same as `SnapshotStoreCallbacks`.
+ */
+typedef struct beaconcrypt_SnapshotStoreCallbacksV2 {
+  struct beaconcrypt_SnapshotStoreCallbacks callbacks;
+  uint32_t (*last_error)(void *context);
+} beaconcrypt_SnapshotStoreCallbacksV2;
 
 /**
  * Result returned after a successful server-side beacon registration.
@@ -284,6 +300,19 @@ struct beaconcrypt_Server *beaconcrypt_server_create_with_store(uint64_t server_
                                                                 uint32_t *status_out);
 
 /**
+ * Versioned durable constructor with explicit callback storage-error reporting.
+ *
+ * Context ownership and callback lifetime rules match the corresponding legacy constructor.
+ */
+struct beaconcrypt_Server *beaconcrypt_server_create_with_store_v2(uint64_t server_kid,
+                                                                   const uint8_t *seed_ptr,
+                                                                   uintptr_t seed_len,
+                                                                   const uint8_t *mldsa_seed_ptr,
+                                                                   uintptr_t mldsa_seed_len,
+                                                                   struct beaconcrypt_SnapshotStoreCallbacksV2 callbacks,
+                                                                   uint32_t *status_out);
+
+/**
  * Create a durable server under a caller-provisioned 32-byte lineage.
  *
  * Allocate each lineage to exactly one rollback-resistant authoritative store head. Callback context ownership and `status_out` follow `beaconcrypt_server_create_with_store`.
@@ -299,12 +328,35 @@ struct beaconcrypt_Server *beaconcrypt_server_create_with_store_and_lineage(uint
                                                                             uint32_t *status_out);
 
 /**
+ * Versioned durable constructor with explicit callback storage-error reporting.
+ *
+ * Context ownership and callback lifetime rules match the corresponding legacy constructor.
+ */
+struct beaconcrypt_Server *beaconcrypt_server_create_with_store_and_lineage_v2(uint64_t server_kid,
+                                                                               const uint8_t *seed_ptr,
+                                                                               uintptr_t seed_len,
+                                                                               const uint8_t *mldsa_seed_ptr,
+                                                                               uintptr_t mldsa_seed_len,
+                                                                               struct beaconcrypt_SnapshotStoreCallbacksV2 callbacks,
+                                                                               const uint8_t *lineage_ptr,
+                                                                               uintptr_t lineage_len,
+                                                                               uint32_t *status_out);
+
+/**
  * Restore the trusted current snapshot and durably claim its next generation before returning a live owner.
  *
  * Callback context ownership and `status_out` follow `beaconcrypt_server_create_with_store`. The store must protect snapshot integrity, provenance and freshness and coordinate concurrent owners.
  */
 struct beaconcrypt_Server *beaconcrypt_server_restore_with_store(struct beaconcrypt_SnapshotStoreCallbacks callbacks,
                                                                  uint32_t *status_out);
+
+/**
+ * Versioned durable constructor with explicit callback storage-error reporting.
+ *
+ * Context ownership and callback lifetime rules match the corresponding legacy constructor.
+ */
+struct beaconcrypt_Server *beaconcrypt_server_restore_with_store_v2(struct beaconcrypt_SnapshotStoreCallbacksV2 callbacks,
+                                                                    uint32_t *status_out);
 
 /**
  * Read the owner's current non-secret snapshot head. Returns a status code without changing the last operation's status.
