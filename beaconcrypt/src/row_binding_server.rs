@@ -3,8 +3,8 @@
 //! Shared dispatch for cached and uncached foreign-language row handles.
 
 use crate::{
-	CachedRowServer, Decrypted, Encrypted, RegResponse, RowError, RowRegistrationDecision,
-	RowRegistrationError, RowServer, RowSession, RowStore,
+	CachedRowServer, Decrypted, Encrypted, RegResponse, RowError, RowMessage,
+	RowRegistrationDecision, RowRegistrationError, RowServer, RowSession, RowStore, SendOutcome,
 };
 
 pub(crate) enum BindingRowServer<S: RowStore> {
@@ -45,6 +45,13 @@ impl<S: RowStore> BindingRowServer<S> {
 		kid: u64,
 	) -> Result<Option<Encrypted>, RowError> {
 		dispatch!(self, encrypt_message(bytes, kid))
+	}
+	pub(crate) fn encrypt_message_outcome(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> Result<SendOutcome<RowMessage>, RowError> {
+		dispatch!(self, encrypt_message_outcome(bytes, kid))
 	}
 	pub(crate) fn decrypt_message(&mut self, bytes: &[u8]) -> Result<Option<Decrypted>, RowError> {
 		dispatch!(self, decrypt_message(bytes))

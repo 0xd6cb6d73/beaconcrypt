@@ -256,6 +256,25 @@ func (i *wasmInstance) call(op uint32, arg uint64, input, extra []byte) (out was
 	if status != StatusOK {
 		return out, &PersistenceError{Code: status, Cause: i.state.err}
 	}
+	if op == 25 || op == 26 || op == 27 {
+		if stateLen == 0 {
+			return out, i.invalidABI("missing send outcome")
+		}
+		kind := SendOutcome(view[32+dataLen])
+		keyID, sequence := binary.LittleEndian.Uint64(view[8:]), binary.LittleEndian.Uint64(view[16:])
+		switch kind {
+		case SendRejected, SendConsumedWithoutOutput:
+			if dataLen != 0 || stateLen != 1 || keyID != 0 || sequence != 0 {
+				return out, i.invalidABI("invalid empty send outcome")
+			}
+		case SendSent:
+			if dataLen == 0 || sequence == 0 || (op == 26 && stateLen == 1) || (op != 26 && stateLen != 1) {
+				return out, i.invalidABI("invalid sent outcome")
+			}
+		default:
+			return out, i.invalidABI("unknown send outcome")
+		}
+	}
 	if (op == 14 || op == 16 || op == 19) && (dataLen != 72 || stateLen != 0) {
 		return out, i.invalidABI("invalid snapshot head response")
 	}

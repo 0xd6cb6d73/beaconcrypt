@@ -83,6 +83,37 @@ pub fn encode_frame(frame: CryptoFrame<'_>, output: &mut [u8]) -> usize {
 	transport::serialize_cryptoframe(frame, output)
 }
 
+/// Encode borrowed ciphertext parts directly into the final frame buffer. Rejection leaves the output untouched.
+pub fn encode_frame_parts(sequence: u64, key_id: u64, parts: &[&[u8]], output: &mut [u8]) -> usize {
+	let Some(ciphertext_length) = parts
+		.iter()
+		.try_fold(0usize, |length, part| length.checked_add(part.len()))
+	else {
+		return 0;
+	};
+	let Some(length) = encoded_frame_len(sequence, key_id, ciphertext_length) else {
+		return 0;
+	};
+	let Some(output) = output.get_mut(..length) else {
+		return 0;
+	};
+	// Reuse the generated primitive encoders without its append-and-rotate array assembly.
+	let mut offset = cbordetver::cbor_det_serialize_array(5, output, 0);
+	for value in [1, 2, sequence, key_id] {
+		offset += transport::serialize_uint(value, &mut output[offset..]);
+	}
+	let header = offset;
+	offset += transport::serialize_uint(ciphertext_length as u64, &mut output[offset..]);
+	// A canonical byte-string header differs from the same unsigned length only in its major type.
+	output[header] |= cbordetveraux::cbor_major_type_byte_string << 5;
+	for part in parts {
+		let end = offset + part.len();
+		output[offset..end].copy_from_slice(part);
+		offset = end;
+	}
+	length
+}
+
 /// Encode a registration request, returning zero if its complete encoding exceeds the limit.
 pub fn encode_init(init: InitKex<'_>, output: &mut [u8]) -> usize {
 	if encoded_init_len([

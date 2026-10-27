@@ -4,6 +4,7 @@
 
 use alloc::vec::Vec;
 
+#[cfg(test)]
 use beaconcrypt_parse::CryptoFrame;
 #[cfg(any(feature = "beacon", test))]
 use beaconcrypt_parse::InitKex;
@@ -22,11 +23,22 @@ fn encode_record(capacity: usize, serialize: impl FnOnce(&mut [u8]) -> usize) ->
 	Some(output)
 }
 
+#[cfg(test)]
 pub(crate) fn encode_frame(frame: CryptoFrame<'_>) -> Option<Vec<u8>> {
 	let capacity =
 		beaconcrypt_parse::encoded_frame_len(frame.seq, frame.key_id, frame.cipher_text.len())?;
 	encode_record(capacity, |output| {
 		beaconcrypt_parse::encode_frame(frame, output)
+	})
+}
+
+pub(crate) fn encode_frame_parts(sequence: u64, sender: u64, parts: &[&[u8]]) -> Option<Vec<u8>> {
+	let ciphertext_length = parts
+		.iter()
+		.try_fold(0usize, |length, part| length.checked_add(part.len()))?;
+	let capacity = beaconcrypt_parse::encoded_frame_len(sequence, sender, ciphertext_length)?;
+	encode_record(capacity, |output| {
+		beaconcrypt_parse::encode_frame_parts(sequence, sender, parts, output)
 	})
 }
 

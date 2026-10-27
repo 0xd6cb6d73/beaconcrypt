@@ -10,7 +10,7 @@ use crate::server::{
 	ProviderServer, ReceiveTransition, RecvState, RegResponse, RegistrationOutput, SendState,
 	Server,
 };
-use crate::{Decrypted, Encrypted};
+use crate::{Decrypted, Encrypted, SendOutcome};
 
 const SNAPSHOT_MAGIC: &[u8; 16] = b"beaconcrypt-snap";
 const SNAPSHOT_VERSION: u16 = 3;
@@ -567,7 +567,18 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<Encrypted>, PersistenceError> {
-		self.commit_send(kid, |server| server.encrypt_message(bytes, kid))
+		self.encrypt_message_outcome(bytes, kid)
+			.map(SendOutcome::into_option)
+	}
+
+	/// Report the send's effect only after its changed state commits durably.
+	/// Storage or uncertain-commit errors release no outcome and poison this owner.
+	pub fn encrypt_message_outcome(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> Result<SendOutcome<Encrypted>, PersistenceError> {
+		self.commit_send(|server| server.encrypt_message_outcome(bytes, kid))
 	}
 
 	pub fn decrypt_message(&mut self, bytes: &[u8]) -> Result<Option<Decrypted>, PersistenceError> {
@@ -586,7 +597,17 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<SendState>, PersistenceError> {
-		self.commit_send(kid, |server| server.encrypt_and_update(bytes, kid))
+		self.encrypt_and_update_outcome(bytes, kid)
+			.map(SendOutcome::into_option)
+	}
+
+	/// Commit send-key consumption before releasing its outcome or observational update.
+	pub fn encrypt_and_update_outcome(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> Result<SendOutcome<SendState>, PersistenceError> {
+		self.commit_send(|server| server.encrypt_and_update_outcome(bytes, kid))
 	}
 
 	pub fn decrypt_and_update(
@@ -603,7 +624,22 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<String>, PersistenceError> {
-		self.commit_send(kid, |server| server.encrypt_and_update_json(bytes, kid))
+		self.encrypt_and_update_json_outcome(bytes, kid)
+			.map(SendOutcome::into_option)
+	}
+
+	/// Commit send-key consumption before releasing its outcome or JSON update.
+	pub fn encrypt_and_update_json_outcome(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> Result<SendOutcome<String>, PersistenceError> {
+		self.commit_send(|server| {
+			server
+				.encrypt_and_update_json_outcome(bytes, kid)
+				.map(Zeroizing::new)
+		})
+		.map(|outcome| outcome.map(|mut json| core::mem::take(&mut *json)))
 	}
 
 	fn reject_oversized<T>(&self) -> Result<Option<T>, PersistenceError> {
@@ -665,18 +701,12 @@ impl<S: SnapshotStore> PersistentServer<S> {
 
 	fn commit_send<T>(
 		&mut self,
-		kid: u64,
-		operation: impl FnOnce(&mut Server) -> T,
-	) -> Result<T, PersistenceError> {
+		operation: impl FnOnce(&mut Server) -> SendOutcome<T>,
+	) -> Result<SendOutcome<T>, PersistenceError> {
 		self.commit_transition(|server| {
-			let before = server
-				.ratchet_status(kid)
-				.map(|status| status.send_sequence());
 			let output = operation(server);
-			let after = server
-				.ratchet_status(kid)
-				.map(|status| status.send_sequence());
-			(output, before != after)
+			let changed = output.changed();
+			(output, changed)
 		})
 	}
 
@@ -1140,13 +1170,13 @@ mod tests {
 			.unwrap()
 			.send_sequence();
 		let withheld = persistent
-			.commit_send(response.kid, |server| {
+			.commit_send(|server| {
 				// Model an operation whose consumed key yields no caller-visible output.
 				let _output = server.encrypt_message(b"withheld", response.kid).unwrap();
-				None::<Encrypted>
+				SendOutcome::<Encrypted>::ConsumedWithoutOutput
 			})
 			.unwrap();
-		assert!(withheld.is_none());
+		assert!(matches!(withheld, SendOutcome::ConsumedWithoutOutput));
 		assert_eq!(persistent.head().generation(), head.generation() + 1);
 		let PersistentServer { store, .. } = persistent;
 		let mut restored = PersistentServer::restore(store).unwrap();

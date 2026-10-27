@@ -1314,6 +1314,9 @@ fn source_mut<'a>(snapshot: &'a mut Snapshot, name: &str) -> &'a mut String {
 		"records" => &mut snapshot.core_record_effects,
 		"peer" => &mut snapshot.core_peer,
 		"ratchet" => &mut snapshot.adapter_ratchet,
+		"wire" => &mut snapshot.adapter_wire,
+		"parser" => &mut snapshot.transport_parser,
+		"portable-hkdf" => &mut snapshot.portable_hkdf,
 		"core-pqxdh" => &mut snapshot.core_pqxdh,
 		"agreement" => &mut snapshot.core_agreement,
 		"auth" => &mut snapshot.adapter_auth,
@@ -1347,6 +1350,14 @@ pub(super) fn replace_contract(
 			+ source[search_start..]
 				.find(&marker)
 				.expect("missing mutation function");
+		if source
+			.as_bytes()
+			.get(start + marker.len())
+			.is_some_and(|byte| byte.is_ascii_alphanumeric() || *byte == b'_')
+		{
+			search_start = start + marker.len();
+			continue;
+		}
 		let mut parentheses = 0usize;
 		let mut brackets = 0usize;
 		let mut declaration = false;

@@ -86,6 +86,21 @@
 #define beaconcrypt_STATUS_COMMIT_UNKNOWN 15
 
 /**
+ * No send key was consumed and no output is available.
+ */
+#define beaconcrypt_SEND_OUTCOME_REJECTED 0
+
+/**
+ * A send key was consumed and the message contains the successful output.
+ */
+#define beaconcrypt_SEND_OUTCOME_SENT 1
+
+/**
+ * A send key was consumed, but no output could be constructed.
+ */
+#define beaconcrypt_SEND_OUTCOME_CONSUMED_WITHOUT_OUTPUT 2
+
+/**
  * A storage failure, including an uncertain commit outcome. No operation output is released.
  */
 #define beaconcrypt_ROW_STATUS_STORAGE 13
@@ -215,6 +230,15 @@ typedef struct beaconcrypt_EncryptState {
    */
   uint64_t seq;
 } beaconcrypt_EncryptState;
+
+/**
+ * Explicit send effect. Inspect `status` first; `outcome` is meaningful only for STATUS_OK. Only SEND_OUTCOME_SENT contains buffers and metadata. Release both message buffers with `beaconcrypt_free_buffer`. A persistent successful outcome is published only after its state commits; persistence errors suppress the outcome and output.
+ */
+typedef struct beaconcrypt_SendResult {
+  uint32_t status;
+  uint32_t outcome;
+  struct beaconcrypt_EncryptState message;
+} beaconcrypt_SendResult;
 
 /**
  * A serializable database transaction interface. `begin`, `store` and `commit` return true on success. `commit` must durably commit the outer transaction before returning true. `rollback` must safely discard any active transaction or do nothing if none exists; it is called after failed begin or commit callbacks. `load` returns 0 for absence, 1 after synchronously calling the sink exactly once, and -1 on error. Protect every read, including absence, with locks or atomic read-set validation at commit. Values are secret, opaque bytes; keys must be stored exactly. Constructors consume context immediately, and invoke destroy exactly once, including on failure. Borrowed pointers and sinks must not escape callbacks. Callbacks must not unwind or reenter the handle. The database must protect integrity, provenance and rollback resistance.
@@ -474,7 +498,7 @@ struct beaconcrypt_Buffer beaconcrypt_generate_registration(struct beaconcrypt_B
 /**
  * Register a beacon and build its initial server response.
  *
- * `msg_ptr` may be null when `msg_len` is zero to omit the initial message. On failure, returns an empty response with key identifier zero.
+ * A null `msg_ptr` with zero length omits the initial message. A non-null pointer with zero length explicitly supplies an empty message: acceptance consumes its replay marker, then response construction rejects it. A null pointer with nonzero length is invalid before acceptance. On failure, returns an empty response with key identifier zero.
  */
 struct beaconcrypt_RegistrationResponse beaconcrypt_register_beacon(struct beaconcrypt_Server *handle,
                                                                     const uint8_t *reg_ptr,
@@ -500,6 +524,37 @@ struct beaconcrypt_Buffer beaconcrypt_encrypt_to_beacon(struct beaconcrypt_Serve
                                                         uint64_t key_id,
                                                         const uint8_t *ptr,
                                                         uintptr_t len);
+
+/**
+ * Encrypt a server-to-beacon message and report its exact send effect. Empty plaintext is an unchanged rejection. Invalid pointers or handles report STATUS_INVALID_ARGUMENT. A storage error reports no outcome; confirmed persistent outcomes are released only after commit.
+ */
+struct beaconcrypt_SendResult beaconcrypt_encrypt_to_beacon_outcome(struct beaconcrypt_Server *handle,
+                                                                    uint64_t key_id,
+                                                                    const uint8_t *ptr,
+                                                                    uintptr_t len);
+
+/**
+ * Encrypt a server-to-beacon message with observational metadata and an explicit send effect. Empty plaintext is an unchanged rejection. Free both successful buffers with `beaconcrypt_free_buffer`.
+ */
+struct beaconcrypt_SendResult beaconcrypt_encrypt_and_update_outcome(struct beaconcrypt_Server *handle,
+                                                                     uint64_t key_id,
+                                                                     const uint8_t *ptr,
+                                                                     uintptr_t len);
+
+/**
+ * Encrypt with an explicit send effect and successful JSON in message.data. message.state is empty; metadata is valid only for SEND_OUTCOME_SENT. Free successful data with `beaconcrypt_free_buffer`.
+ */
+struct beaconcrypt_SendResult beaconcrypt_encrypt_and_update_json_outcome(struct beaconcrypt_Server *handle,
+                                                                          uint64_t key_id,
+                                                                          const uint8_t *ptr,
+                                                                          uintptr_t len);
+
+/**
+ * Encrypt a beacon-to-server message with an explicit send effect. Empty plaintext is an unchanged rejection; invalid pointers or handles report STATUS_INVALID_ARGUMENT. Only SEND_OUTCOME_SENT contains output and metadata.
+ */
+struct beaconcrypt_SendResult beaconcrypt_encrypt_to_server_outcome(struct beaconcrypt_Beacon *handle,
+                                                                    const uint8_t *ptr,
+                                                                    uintptr_t len);
 
 /**
  * Decrypt a beacon-to-server message.
@@ -644,6 +699,14 @@ struct beaconcrypt_RowMessageBuffer beaconcrypt_row_server_encrypt_with_metadata
                                                                                  const uint8_t *data,
                                                                                  uintptr_t len,
                                                                                  uint64_t kid);
+
+/**
+ * Encrypt with a committed, explicit send effect. Empty plaintext is an unchanged rejection. Errors suppress all outcomes and output; inspect result.status before result.outcome. Release successful buffers with beaconcrypt_free_buffer.
+ */
+struct beaconcrypt_SendResult beaconcrypt_row_server_encrypt_outcome(struct beaconcrypt_RowServerHandle *handle,
+                                                                     const uint8_t *data,
+                                                                     uintptr_t len,
+                                                                     uint64_t kid);
 
 struct beaconcrypt_Buffer beaconcrypt_row_server_decrypt(struct beaconcrypt_RowServerHandle *handle,
                                                          const uint8_t *data,

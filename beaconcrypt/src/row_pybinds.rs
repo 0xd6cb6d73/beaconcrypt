@@ -12,7 +12,7 @@ use pyo3::{
 	types::PyBytes,
 };
 
-use crate::pybinds::RegResponsePy;
+use crate::pybinds::{RegResponsePy, SendResultPy};
 use crate::row_binding_server::BindingRowServer;
 use crate::{
 	CachedRowServer, Decrypted, Encrypted, RowError, RowRegistrationDecision, RowRegistrationPhase,
@@ -403,6 +403,17 @@ impl RowServerPy {
 	) -> PyResult<Option<RowMessagePy>> {
 		let output = self.native()?.encrypt_message(&data, kid);
 		result(py, output, &self.errors).map(|output| output.map(RowMessagePy::from))
+	}
+
+	fn encrypt_to_beacon_outcome(
+		&mut self,
+		py: Python<'_>,
+		data: Vec<u8>,
+		kid: u64,
+	) -> PyResult<SendResultPy> {
+		let output = self.native()?.encrypt_message_outcome(&data, kid);
+		result(py, output, &self.errors)
+			.map(|outcome| SendResultPy::encrypted(outcome.map(crate::RowMessage::into_encrypted)))
 	}
 
 	fn decrypt_beacon_message(

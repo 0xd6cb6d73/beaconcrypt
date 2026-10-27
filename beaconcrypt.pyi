@@ -18,6 +18,8 @@ class PersistenceError(ValueError):
         "initialization",
         "digest",
         "poisoned",
+        "storage",
+        "commit_unknown",
     ]
 
 @final
@@ -60,6 +62,9 @@ class BeaconCryptBeacon:
     def mldsa_public_key(self, /) -> bytes: ...
     def decrypt_server_message(self, /, data: Sequence[int]) -> bytes | None: ...
     def encrypt_message_to_server(self, /, data: Sequence[int]) -> bytes | None: ...
+    def encrypt_message_to_server_outcome(
+        self, /, data: Sequence[int]
+    ) -> SendResult: ...
     def generate_registration(self, /) -> bytes | None:
         """
         Begin the beacon registration process. The output buffer should be sent as-is over the network.
@@ -106,6 +111,15 @@ class BeaconCryptServer:
         self, /, data: Sequence[int], kid: int
     ) -> str | None: ...
     def encrypt_to_beacon(self, /, data: Sequence[int], kid: int) -> bytes | None: ...
+    def encrypt_to_beacon_outcome(
+        self, /, data: Sequence[int], kid: int
+    ) -> SendResult: ...
+    def encrypt_and_update_outcome(
+        self, /, data: Sequence[int], kid: int
+    ) -> SendResult: ...
+    def encrypt_and_update_json_outcome(
+        self, /, data: Sequence[int], kid: int
+    ) -> SendResult: ...
     def export_state(self, /) -> bytes:
         """
         Read this owner's committed plaintext checkpoint from its trusted store.
@@ -136,6 +150,21 @@ class EncryptState:
 
         It is secret-bearing, unauthenticated, and not restorable.
         """
+
+@final
+class SendResult:
+    """Exact send effect; changed is true for sent and consumed_without_output. Only sent carries a value and metadata. Persistence failures raise instead of releasing a result."""
+
+    @property
+    def outcome(self) -> Literal["rejected", "sent", "consumed_without_output"]: ...
+    @property
+    def changed(self) -> bool: ...
+    @property
+    def value(self) -> bytes | EncryptState | str | None: ...
+    @property
+    def key_id(self) -> int | None: ...
+    @property
+    def seq(self) -> int | None: ...
 
 @final
 class RegResponse:
@@ -236,6 +265,9 @@ class BeaconCryptRowServer:
         initial_message: bytes | None = None,
     ) -> RegResponse | None: ...
     def encrypt_to_beacon(self, data: Sequence[int], kid: int) -> bytes | None: ...
+    def encrypt_to_beacon_outcome(
+        self, data: Sequence[int], kid: int
+    ) -> SendResult: ...
     def decrypt_beacon_message(self, data: Sequence[int]) -> bytes | None: ...
     def encrypt_to_beacon_with_metadata(
         self, data: Sequence[int], kid: int

@@ -54,7 +54,7 @@ declare -A expected_category_counts=(
 	[generated-proverif]=1
 	[handwritten-lean]=2063
 	[handwritten-proverif]=298
-	[inventory]=2
+	[inventory]=3
 	[lean-control]=13
 	[lean-dependency-overlay]=4
 	[validation]=82
@@ -110,6 +110,7 @@ printf '%s\n' \
 compare_set control "$tmp_dir/control"
 
 printf '%s\n' proofs/check-inventory.sh proofs/trusted-boundary.md \
+	proofs/computational-security-proof.md \
 	> "$tmp_dir/inventory"
 compare_set inventory "$tmp_dir/inventory"
 
@@ -971,6 +972,9 @@ for scenario_process in \
 done
 
 record_fidelity_effects=tests/fidelity/record_effects.rs
+require_line_count 1 '^const PORTABLE_HKDF: &str = include_str!\("\.\./\.\./beaconcrypt-crypto/src/crypto_kdf\.rs"\);$' tests/proverif_transcript_fidelity.rs "portable HKDF source selects the reviewed primitive implementation"
+require_line_count 1 '^[[:space:]]*portable_hkdf: String,$' tests/proverif_transcript_fidelity.rs "mutable portable HKDF source"
+require_line_count 1 '^[[:space:]]*portable_hkdf: PORTABLE_HKDF\.to_owned\(\),$' tests/proverif_transcript_fidelity.rs "production portable HKDF snapshot"
 require_line_count 1 '^#\[path = "fidelity/record_effects\.rs"\]$' tests/proverif_transcript_fidelity.rs "record fidelity module import"
 require_line_count 1 '^mod record_effects;$' tests/proverif_transcript_fidelity.rs "record fidelity module binding"
 require_line_count 1 '^[[:space:]]*core_record_effects: String,$' tests/proverif_transcript_fidelity.rs "mutable core record source"
@@ -990,8 +994,8 @@ require_line_count 1 '^[[:space:]]*transport_sizing: String,$' tests/proverif_tr
 require_line_count 1 '^[[:space:]]*transport_sizing: TRANSPORT_SIZING\.to_owned\(\),$' tests/proverif_transcript_fidelity.rs "production transport source snapshot"
 require_line_count 1 '^#\[test\]$' "$transport_fidelity_effects" "transport fidelity tests"
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 56 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_AUTH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_AUTHENTICATION|CORE_SESSION|CORE_REGISTRATION|CORE_AGREEMENT|CORE_PEER|CORE_RECORD|CORE_RECORD_EFFECTS|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|TRANSPORT_SCHEMA|TRANSPORT_PARSER|TRANSPORT_SIZING|ADAPTER_WIRE|CBOR_REGISTRATION_MODEL|MLDSA_AUTH_MODEL|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLDSA_REGISTRATION_MODEL|MLDSA_REGISTRATION_QUERIES|MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
+require_line_count 57 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_AUTH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_AUTHENTICATION|CORE_SESSION|CORE_REGISTRATION|CORE_AGREEMENT|CORE_PEER|CORE_RECORD|CORE_RECORD_EFFECTS|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|TRANSPORT_SCHEMA|TRANSPORT_PARSER|TRANSPORT_SIZING|ADAPTER_WIRE|PORTABLE_HKDF|CBOR_REGISTRATION_MODEL|MLDSA_AUTH_MODEL|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLDSA_REGISTRATION_MODEL|MLDSA_REGISTRATION_QUERIES|MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 3 '^const (CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA): &str = TRANSPORT_SCHEMA;$' \
 	"$fidelity_test" "shared CBOR schema aliases"
@@ -1350,7 +1354,7 @@ for registration_lifecycle_mutation_family in \
 	require_occurrence_count 1 "$registration_lifecycle_mutation_family" \
 		"registration lifecycle ${registration_lifecycle_mutation_family} mutation family" "$fidelity_test"
 done
-require_line_count 1 '^const INITIAL_RATCHET_MUTATION_COUNT: usize = 192;$' \
+require_line_count 1 '^const INITIAL_RATCHET_MUTATION_COUNT: usize = 194;$' \
 	"$fidelity_test" "initial-ratchet exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn initial_ratchet_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, INITIAL_RATCHET_MUTATION_COUNT\);\s*\}' \
@@ -1369,6 +1373,8 @@ for initial_ratchet_mutation_family in \
 	initial_ratchet_server_candidate_start_return_type_drifts \
 	initial_ratchet_kernel_initial_chains_swap \
 	initial_ratchet_adapter_executor_substitutes_output_bytes \
+	initial_ratchet_adapter_executor_removes_stack_zeroization \
+	initial_ratchet_adapter_executor_removes_fixed_output_bound \
 	initial_ratchet_adapter_response_is_shadowed \
 	initial_ratchet_adapter_pending_parameter_is_shadowed \
 	initial_ratchet_lean_ideal_chain_agreement_anchor_renamed \
@@ -2042,12 +2048,12 @@ for statement in [
 
 # Actual core-owned record continuations supersede the complete-record callback seam.
 # Pin every reviewed body/field/mutation tuple, plus execution of all validators and controls.
-record_pins = {'BODIES': {'count': 58,
-            'sha256': '75c4f4b4291e130dc62b77cdf0c20da99512b326e7968b9a7daf5ab54d1f9fd9'},
+record_pins = {'BODIES': {'count': 64,
+            'sha256': '0bd87efa11a46dd677353df18a46a39c90356655581d27fdb08653f97f274472'},
  'DECLARATIONS': {'count': 11,
                   'sha256': 'd146e391f621db1b6c2ad9794486fd5da41470811b93474bcae8dbbedf0c81b2'},
- 'MIGRATED': {'count': 87,
-              'sha256': 'ffb1d20d8b6799e9a5c2f932c81018bc7acad629015ce9741665b69f277bb142'}}
+ 'MIGRATED': {'count': 107,
+              'sha256': '5bed49160c8b1c0c04d11e8deca2eff733774525d4b5ffaab8066045aeb994d9'}}
 for name, pin in record_pins.items():
     found = re.search(r"^const " + name + r":.*?= &\[(.*?)^\];", records, re.M | re.S)
     require(found is not None, f"reviewed record {name} table")
@@ -2055,6 +2061,18 @@ for name, pin in record_pins.items():
     require(len(rows) == pin["count"], f"reviewed record {name} count")
     digest = hashlib.sha256(json.dumps(rows, separators=(",", ":")).encode()).hexdigest()
     require(digest == pin["sha256"], f"reviewed record {name} operands/order/failure controls")
+for selected, field in [
+    ("records", "core_record_effects"), ("registration", "core_registration"),
+    ("ratchet", "adapter_ratchet"), ("beacon", "adapter_beacon"),
+    ("server", "adapter_server"), ("wire", "adapter_wire"),
+    ("parser", "transport_parser"), ("portable-hkdf", "portable_hkdf"),
+]:
+    once(function(records, "source"), '"' + selected + '"=>&snapshot.' + field + ',', f"record source selects {selected}")
+    once(function(source, "source_mut"), '"' + selected + '"=>&mutsnapshot.' + field + ',', f"record mutation selects {selected}")
+once(function(records, "selected_body"), "source(snapshot,source_name)", "record bodies inspect the selected actual source")
+once(function(records, "selected_body"), "rust_body(raw,function)?", "record bodies inspect the exact selected function")
+for file, name in [(main, "rust_body"), (source, "replace_contract")]:
+    once(function(file, name), "byte.is_ascii_alphanumeric()||*byte==b'_'", f"{name} rejects longer function-name prefixes")
 for name in ["validate_cryptoframe_source", "validate_record_opening_source", "validate_ratchet_effect_driver", "validate_later_registration_fidelity"]:
     once(function(main, name), "record_effects::validate(snapshot)?;", f"{name} delegates actual record continuations")
 once(function(source, "lifecycle"), "super::record_effects::validate(snapshot)?;", "registration lifecycle composes actual record continuations")
@@ -2079,7 +2097,7 @@ once(function(records, "record_request_privacy_and_part_types_cannot_be_weakened
 relocated = function(records, "every_moved_record_operand_failure_and_bypass_control_is_rejected")
 for statement in ["inMIGRATED{", "super::registration_effects::replace_contract(", "super::validate(&changed).unwrap_err()", "error.contains(diagnostic)"]:
     once(relocated, statement, f"relocated record controls execute: {statement}")
-for name, count in [("BODY_MUTATION_COUNT", 116), ("DECLARATION_MUTATION_COUNT", 11), ("MIGRATED_CONTROL_COUNT", 87)]:
+for name, count in [("BODY_MUTATION_COUNT", 128), ("DECLARATION_MUTATION_COUNT", 11), ("MIGRATED_CONTROL_COUNT", 107)]:
     once(records, f"const {name}: usize = {count};", f"reviewed exact record count {name}")
 
 
@@ -2148,7 +2166,7 @@ for statement in ["if!declaration{breakstart;}", "b';'ifparentheses==0&&brackets
     once(function(transport, "replace_body"), statement, f"transport source mutation skips trait declarations: {statement}")
 once(function(transport, "replace_body"), "source.replace_range(open+1..end-1,body);", "transport mutations replace the actual Rust body")
 
-print("Registration/record/peer/transport fidelity inventory: 56 synchronized inputs, 32+5+3+2+1 tests, 623 registration plus 214 record plus 110 peer plus 61 transport negative controls; 87 old names retained")
+print("Registration/record/peer/transport fidelity inventory: 57 synchronized inputs, 32+5+3+2+1 tests, 623 registration plus 246 record plus 110 peer plus 61 transport negative controls; 87 original record control names retained")
 PY_REGISTRATION_FIDELITY
 
 require_line_count 1 \

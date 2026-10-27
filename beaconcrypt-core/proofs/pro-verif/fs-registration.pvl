@@ -47,7 +47,7 @@ let Cur(
   slot_1: beaconcrypt_core__pqxdh__t_RegistrationId,
   slot_2: beaconcrypt_core__pqxdh__t_RegistrationId
 ) =
-  (* @beaconcrypt-fs-fidelity key=server.accept src=beaconcrypt/src/server.rs:499-514 anchor=pub(crate) fn authenticate_registration_lookup( *)
+  (* @beaconcrypt-fs-fidelity key=server.accept src=beaconcrypt/src/server.rs:542-557 anchor=pub(crate) fn authenticate_registration_lookup( *)
   in(c, bundle: bitstring) [precise];
   let server_identity = ed_public(SERVER_IDENTITY_SECRET) in
   (* @beaconcrypt-fs-fidelity key=server.identity_tag src=beaconcrypt-core/src/registration.rs:209-213 anchor=if !verified || self.state.packet.identity_key[0] != SIGN_TYPE_ED25519 { *)
@@ -78,11 +78,11 @@ let Cur(
       one_time,
       pq
     ) in
-    (* @beaconcrypt-fs-fidelity key=server.registration_id src=beaconcrypt/src/server.rs:528-529 anchor=let registration_id = *lookup.request().as_bytes(); *)
+    (* @beaconcrypt-fs-fidelity key=server.registration_id src=beaconcrypt/src/server.rs:571-572 anchor=let registration_id = *lookup.request().as_bytes(); *)
     (* @beaconcrypt-fs-fidelity key=core.registration_id src=beaconcrypt-core/src/pqxdh.rs:195-204 anchor=pub fn registration_id(&self) -> RegistrationId { *)
     (* @beaconcrypt-fs-fidelity key=core.registration_id_replacement src=beaconcrypt-core/src/pqxdh.rs:218-220 anchor=pub fn registration_id(registration: &VerifiedInitKex) -> RegistrationId { *)
     let registration_id = beaconcrypt_core__pqxdh__registration_id(init) in
-    (* @beaconcrypt-fs-fidelity key=server.consumed_status src=beaconcrypt/src/server.rs:529-533 anchor=let consumed = self.consumed_registrations.contains(&registration_id); *)
+    (* @beaconcrypt-fs-fidelity key=server.consumed_status src=beaconcrypt/src/server.rs:572-576 anchor=let consumed = self.consumed_registrations.contains(&registration_id); *)
     (* @beaconcrypt-fs-fidelity key=core.replay_status src=beaconcrypt-core/src/pqxdh.rs:245-251 anchor=pub fn validate_registration_status( *)
     if fs_reg_consumed(registration_id, slot_1, slot_2) then
     (
@@ -122,14 +122,14 @@ let Cur(
             )
           )
         ) in
-        (* @beaconcrypt-fs-fidelity key=server.insert src=beaconcrypt/src/server.rs:551-555 anchor=let inserted = self *)
+        (* @beaconcrypt-fs-fidelity key=server.insert src=beaconcrypt/src/server.rs:594-598 anchor=let inserted = self *)
         let next_slot_1 =
           if slot_1 = fs_no_rid() then registration_id else slot_1
         in
         let next_slot_2 =
           if slot_1 = fs_no_rid() then slot_2 else registration_id
         in
-        (* @beaconcrypt-fs-fidelity key=server.accept_return src=beaconcrypt/src/server.rs:555-558 anchor=Some(RegistrationOutput { *)
+        (* @beaconcrypt-fs-fidelity key=server.accept_return src=beaconcrypt/src/server.rs:598-601 anchor=Some(RegistrationOutput { *)
         event FsServerAccepted(
           obj,
           server_identity,
@@ -138,7 +138,7 @@ let Cur(
           registration_id,
           root
         );
-        (* @beaconcrypt-fs-fidelity key=server.build src=beaconcrypt/src/server.rs:568-573 anchor=fn build_registration_response( *)
+        (* @beaconcrypt-fs-fidelity key=server.build src=beaconcrypt/src/server.rs:611-616 anchor=fn build_registration_response( *)
         in(c, control: bitstring) [precise];
         if control = fs_build() then
         (
@@ -155,7 +155,7 @@ let Cur(
           in
           (* @beaconcrypt-fs-fidelity key=server.associated_data src=beaconcrypt-core/src/registration.rs:1066-1066 anchor=self.binding.associated_data(), *)
           let associated_data = fs_associated_data(server_identity, identity) in
-          (* @beaconcrypt-fs-fidelity key=server.payload src=beaconcrypt/src/server.rs:574-575 anchor=let application = beaconcrypt_core::transport::normalize_registration_application(data); *)
+          (* @beaconcrypt-fs-fidelity key=server.payload src=beaconcrypt/src/server.rs:617-618 anchor=let application = beaconcrypt_core::transport::normalize_registration_application(data); *)
           new payload: bitstring;
           (* @beaconcrypt-fs-fidelity key=server.binding src=beaconcrypt-core/src/record_effects.rs:61-70 anchor=let prefix = *crate::pqxdh::registration_key_id_binding(assigned_kid).as_bytes(); *)
           let binding =
@@ -163,7 +163,7 @@ let Cur(
               key_id_encoding(assigned_key_id)
             )
           in
-          (* @beaconcrypt-fs-fidelity key=server.seal src=beaconcrypt/src/server.rs:596-603 anchor=let detached = crate::ratchet::execute_seal_request(pending.request()); *)
+          (* @beaconcrypt-fs-fidelity key=server.seal src=beaconcrypt/src/server.rs:639-646 anchor=let detached = crate::ratchet::execute_seal_request(pending.request()); *)
           let initial_frame = seal_frame(
             server_material_1,
             associated_data,
@@ -183,7 +183,7 @@ let Cur(
             payload
           );
           (* The response fields are those serialised at server.rs:480-488. *)
-          (* @beaconcrypt-fs-fidelity key=server.build_return src=beaconcrypt/src/server.rs:634-637 anchor=Some(RegResponse { *)
+          (* @beaconcrypt-fs-fidelity key=server.build_return src=beaconcrypt/src/server.rs:677-680 anchor=Some(RegResponse { *)
           out(
             c,
             kex_response(
@@ -233,7 +233,7 @@ let FsBeacon() =
   new beacon_identity_secret: bitstring;
   new beacon_prekey_secret: bitstring;
   new beacon_pq_secret: bitstring;
-  (* @beaconcrypt-fs-fidelity key=beacon.one_time src=beaconcrypt/src/beacon.rs:360-364 anchor=let mut generated_onetime = if matches!(&self.state, BeaconState::Fresh { .. }) { *)
+  (* @beaconcrypt-fs-fidelity key=beacon.one_time src=beaconcrypt/src/beacon.rs:371-375 anchor=let mut generated_onetime = if matches!(&self.state, BeaconState::Fresh { .. }) { *)
   new beacon_one_time_secret: bitstring;
   let server_identity = ed_public(SERVER_IDENTITY_SECRET) in
   let beacon_identity = ed_public(beacon_identity_secret) in
@@ -247,11 +247,11 @@ let FsBeacon() =
     beacon_pq
   ) in
   let registration_id = beaconcrypt_core__pqxdh__registration_id(init) in
-  (* @beaconcrypt-fs-fidelity key=beacon.start src=beaconcrypt/src/beacon.rs:390-403 anchor=let mut effect = registration::begin_beacon_init( *)
+  (* @beaconcrypt-fs-fidelity key=beacon.start src=beaconcrypt/src/beacon.rs:401-414 anchor=let mut effect = registration::begin_beacon_init( *)
   (* @beaconcrypt-fs-fidelity key=core.beacon_start src=beaconcrypt-core/src/pqxdh.rs:304-321 anchor=pub fn beacon_start( *)
   event FsBeaconStarted(server_identity, beacon_identity, init, registration_id);
   (* @beaconcrypt-fs-fidelity key=beacon.sign src=beaconcrypt-core/src/registration.rs:616-627 anchor=pub fn request(&self) -> Ed25519SigningRequest<'_> { *)
-  (* @beaconcrypt-fs-fidelity key=beacon.bundle_return src=beaconcrypt/src/beacon.rs:482-482 anchor=Some(buffer) *)
+  (* @beaconcrypt-fs-fidelity key=beacon.bundle_return src=beaconcrypt/src/beacon.rs:493-493 anchor=Some(buffer) *)
   out(
     c,
     signed_init_kex(
@@ -261,9 +261,9 @@ let FsBeacon() =
       sign(tag_mlkem768(beacon_pq), beacon_identity_secret)
     )
   );
-  (* @beaconcrypt-fs-fidelity key=beacon.finish src=beaconcrypt/src/beacon.rs:492-498 anchor=fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> { *)
+  (* @beaconcrypt-fs-fidelity key=beacon.finish src=beaconcrypt/src/beacon.rs:503-509 anchor=fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> { *)
   in(c, response: bitstring) [precise];
-  (* @beaconcrypt-fs-fidelity key=beacon.decode src=beaconcrypt/src/beacon.rs:510-520 anchor=let packet = decode_response(bytes).and_then(|response| { *)
+  (* @beaconcrypt-fs-fidelity key=beacon.decode src=beaconcrypt/src/beacon.rs:521-531 anchor=let packet = decode_response(bytes).and_then(|response| { *)
   let kex_response(
     response_server_identity,
     server_ephemeral,
@@ -302,7 +302,7 @@ let FsBeacon() =
   (* @beaconcrypt-fs-fidelity key=beacon.associated_data src=beaconcrypt-core/src/registration.rs:839-840 anchor=self.agreement.binding.associated_data(), *)
   (* @beaconcrypt-fs-fidelity key=core.finish_ad src=beaconcrypt-core/src/pqxdh.rs:559-562 anchor=let associated_data = build_associated_data( *)
   let associated_data = fs_associated_data(server_identity, beacon_identity) in
-  (* @beaconcrypt-fs-fidelity key=beacon.receive src=beaconcrypt/src/beacon.rs:557-579 anchor=registration::BeaconInitialOpen::KdfRequested(pending) => { *)
+  (* @beaconcrypt-fs-fidelity key=beacon.receive src=beaconcrypt/src/beacon.rs:568-590 anchor=registration::BeaconInitialOpen::KdfRequested(pending) => { *)
   let crypto_frame(
     frame_cipher: bitstring,
     frame_tag: bitstring,
@@ -328,7 +328,7 @@ let FsBeacon() =
   (* The adapter pin checks cannot fail after the core pin check: the
      candidate's binding is the expected binding. *)
   (* @beaconcrypt-fs-fidelity key=beacon.pin_checks src=beaconcrypt-core/src/pqxdh.rs:552-556 anchor=if !(state.expected_server_binding.identity_public_key == inputs.response_server_identity) { *)
-  (* @beaconcrypt-fs-fidelity key=beacon.commit src=beaconcrypt/src/beacon.rs:584-591 anchor=self.identity_key_kid = binding.assigned_key_id(); *)
+  (* @beaconcrypt-fs-fidelity key=beacon.commit src=beaconcrypt/src/beacon.rs:595-602 anchor=self.identity_key_kid = binding.assigned_key_id(); *)
   event FsBeaconEstablished(
     server_identity,
     beacon_identity,

@@ -116,9 +116,11 @@ def check_record_effect_source(root):
             "fn symmetric_ratchet_hkdf",
             "",
             [
+                "const { assert!(OUTPUT_SIZE <= 255 * 64) };",
                 "crypto_kdf::hkdf::sha512::extract(None, request.input())",
-                "crypto_kdf::hkdf::sha512::expand(OUTPUT_SIZE, Some(request.info()), &prk)",
-                "output.copy_from_slice(&expanded)",
+                "let mut output = Zeroizing::new([0u8; OUTPUT_SIZE]);",
+                "crypto_kdf::hkdf::sha512::expand_into(&mut output[..], Some(request.info()), &prk)",
+                "*output",
             ],
         ),
         (
@@ -152,8 +154,45 @@ def check_record_effect_source(root):
             [
                 "RecordWriteRequest::Raw { parts } => join_record_parts(parts)",
                 "RecordWriteRequest::Frame { parts, sequence, sender, }",
-                "let ciphertext = join_record_parts(parts)?;",
-                "encode_frame(CryptoFrame { cipher_text: &ciphertext, seq: sequence, key_id: sender, })",
+                "crate::wire::encode_frame_parts(sequence, sender, &parts)",
+            ],
+        ),
+        (
+            "beaconcrypt-crypto/src/crypto_kdf.rs",
+            "pub fn expand_into(",
+            "",
+            [
+                "::hkdf::Hkdf::<Sha512>::from_prk(key.as_bytes())",
+                ".map_err(|_| CryptoError)?",
+                ".expand(info.unwrap_or_default(), output).map_err(|_| CryptoError)",
+            ],
+        ),
+        (
+            "beaconcrypt/src/wire.rs",
+            "pub(crate) fn encode_frame_parts(",
+            "",
+            [
+                "length.checked_add(part.len())",
+                "beaconcrypt_parse::encoded_frame_len(sequence, sender, ciphertext_length)?",
+                "encode_record(capacity, |output|",
+                "beaconcrypt_parse::encode_frame_parts(sequence, sender, parts, output)",
+            ],
+        ),
+        (
+            "beaconcrypt-parse/src/lib.rs",
+            "pub fn encode_frame_parts(",
+            "",
+            [
+                "length.checked_add(part.len())",
+                "encoded_frame_len(sequence, key_id, ciphertext_length)",
+                "output.get_mut(..length)",
+                "cbordetver::cbor_det_serialize_array(5, output, 0)",
+                "for value in [1, 2, sequence, key_id]",
+                "transport::serialize_uint(value, &mut output[offset..])",
+                "transport::serialize_uint(ciphertext_length as u64, &mut output[offset..])",
+                "output[header] |= cbordetveraux::cbor_major_type_byte_string << 5",
+                "output[offset..end].copy_from_slice(part)",
+                "offset = end",
             ],
         ),
         (

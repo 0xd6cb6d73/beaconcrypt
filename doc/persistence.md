@@ -131,6 +131,20 @@ A completion failure retains the first transaction's replay marker and applicati
 
 The [Go composition tests](../row_session_cgo_test.go) and [Python database composition tests](../tests/test_row_transactions.py) demonstrate exact application-result recovery after lost commit acknowledgement, rollback of application and native writes, and registration phase handling. The [integration design](https://github.com/0xd6cb6d73/beaconcrypt/blob/e9f5048b8e27144ef3648aa06b09bd063baa38d7/doc/impl/row-delivery-design.md) explains how an application can build authorization-aware deduplication and result retention around these generic primitives.
 
+## Explicit send outcomes
+
+Rust's `encrypt_message_outcome` returns `SendOutcome<T>`: `Rejected` leaves the ratchet unchanged, `Sent(value)` produces a message and advances the ratchet, and `ConsumedWithoutOutput` advances the ratchet without producing a message. Server state-update and JSON variants use the corresponding `_outcome` methods. Empty plaintext and an unknown peer are ordinary unchanged rejections. A failure after allocating a send key can consume that key; callers must retain the resulting state even without a message.
+
+`PersistentServer`, `RowServer`, and `CachedRowServer` expose the same distinction inside their existing `Result` storage-error boundary. A changed outcome is released only after confirmed durable commit. A conflict, failed write, or unknown commit returns an error without a send outcome or pending message. Snapshot owners follow the poisoning and restoration rules below; row owners reload authoritative state on their next attempt. These APIs do not provide durable delivery of a successfully returned message.
+
+Go provides `EncryptToBeaconOutcome`, `EncryptToServerOutcome`, `EncryptAndUpdateOutcome`, and `EncryptAndUpdateJSONOutcome`, returning `(*SendResult, error)`. `SendResult.Outcome` is `SendRejected`, `SendSent`, or `SendConsumedWithoutOutput`; `Changed()` reports whether the send consumed a key. Python uses matching snake-case `_outcome` methods and a `SendResult` with `outcome`, `changed`, `value`, `key_id`, and `seq`. C adds `_outcome` functions returning `beaconcrypt_SendResult`; `status` reports operational errors and `outcome` uses the `SEND_OUTCOME_*` constants. Only a successful `Sent` result contains data, state observations, or routing metadata. Existing send methods and C layouts remain available with their legacy return conventions.
+
+## Registration payload presence
+
+Omitting the initial application payload selects the protocol witness: Rust `None`, Python `None`, Go `nil`, or a null C pointer with length zero. Supplying an empty payload is distinct: Rust `Some(&[])`, Python `b""`, a non-nil empty Go slice, or a non-null C pointer with length zero. An explicitly empty payload rejects response construction after accepting an otherwise valid registration; its consumed registration marker remains durable, and retrying that registration is rejected. Use a fresh registration attempt after this failure. A null C pointer with a nonzero length is an invalid argument and is rejected before acceptance.
+
+The WASM registration operation retains its legacy payload inference with argument zero and accepts argument one to mark a payload as supplied, including empty bytes. Other presence values are invalid. The Go WASM backend sets this flag from whether the input slice is nil.
+
 ## Snapshot API
 
 Rust, C, Go, and Python can all use an application-supplied snapshot store. Its load operation returns only the trusted current snapshot, or no snapshot when the store is empty. Its compare-and-swap operation atomically compares the complete expected head and durably stores the replacement before reporting success. An absent expected head means that creation must fail if the store is already occupied. The store must provide integrity, provenance, rollback resistance, durability, and coordination between concurrent owners; snapshot parsing and successor validation do not supply these properties.

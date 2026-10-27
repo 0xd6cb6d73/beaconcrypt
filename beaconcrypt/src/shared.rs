@@ -521,6 +521,53 @@ pub struct Encrypted {
 	pub seq: u64,
 }
 
+/// The operational effect of one send attempt.
+///
+/// A consumed key must not be reused, even when no output could be constructed. Persistent owners release either changed outcome only after committing that consumption.
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[must_use = "a changed send outcome may require persistence even without output"]
+pub enum SendOutcome<T> {
+	/// The send preserved its complete entry state.
+	Rejected,
+	/// The send consumed a key and produced its output.
+	Sent(T),
+	/// The send consumed a key but could not produce its requested output.
+	ConsumedWithoutOutput,
+}
+
+impl<T> SendOutcome<T> {
+	/// Whether this attempt consumed a send key.
+	pub const fn changed(&self) -> bool {
+		!matches!(self, Self::Rejected)
+	}
+
+	/// Transform successful output without losing the send's operational effect.
+	pub fn map<U>(self, map: impl FnOnce(T) -> U) -> SendOutcome<U> {
+		match self {
+			Self::Rejected => SendOutcome::Rejected,
+			Self::Sent(output) => SendOutcome::Sent(map(output)),
+			Self::ConsumedWithoutOutput => SendOutcome::ConsumedWithoutOutput,
+		}
+	}
+
+	/// Project the legacy optional output, discarding the consumed-without-output distinction.
+	pub fn into_option(self) -> Option<T> {
+		match self {
+			Self::Sent(output) => Some(output),
+			Self::Rejected | Self::ConsumedWithoutOutput => None,
+		}
+	}
+
+	#[cfg(any(feature = "beacon", feature = "server", test))]
+	pub(crate) fn from_attempt(output: Option<T>, changed: bool) -> Self {
+		match output {
+			Some(output) => Self::Sent(output),
+			None if changed => Self::ConsumedWithoutOutput,
+			None => Self::Rejected,
+		}
+	}
+}
+
 impl core::ops::Deref for Encrypted {
 	type Target = [u8];
 

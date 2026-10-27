@@ -237,7 +237,11 @@ func (b *Beacon) GenerateRegistration() ([]byte, error) {
 }
 
 func (s *Server) RegisterBeacon(registration, initialMessage []byte) (*RegistrationResponse, error) {
-	r, err := s.wasmCall(5, 0, registration, initialMessage)
+	var present uint64
+	if initialMessage != nil {
+		present = 1
+	}
+	r, err := s.wasmCall(5, present, registration, initialMessage)
 	if err != nil {
 		return nil, wasmMutationError(err)
 	}

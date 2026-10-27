@@ -7,6 +7,7 @@ package beaconcrypt
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -222,5 +223,155 @@ func TestWasmSnapshotValidatorRecoversAfterTerminalFailure(t *testing.T) {
 	actual, err := engine.inspect(snapshot, nil, false)
 	if err != nil || actual != expected || engine.helper == failed {
 		t.Fatalf("validator did not recover with a new instance: %v", err)
+	}
+}
+
+// replyWasmFunction injects an owned guest allocation, so malformed ABI bytes
+// exercise the actual host parser and its terminal cleanup path.
+type replyWasmFunction struct {
+	api.Function
+	module   api.Module
+	allocate api.Function
+	reply    []byte
+}
+
+func (function replyWasmFunction) Call(ctx context.Context, parameters ...uint64) ([]uint64, error) {
+	if len(parameters) == 0 || parameters[0] < 25 || parameters[0] > 27 {
+		return function.Function.Call(ctx, parameters...)
+	}
+	allocated, err := function.allocate.Call(ctx, uint64(len(function.reply)))
+	if err != nil || len(allocated) != 1 || allocated[0] == 0 {
+		return nil, fmt.Errorf("allocate injected response: %v", err)
+	}
+	ptr := uint32(allocated[0])
+	if !function.module.Memory().Write(ptr, function.reply) {
+		return nil, errors.New("cannot inject response bytes")
+	}
+	return []uint64{uint64(ptr)<<32 | uint64(len(function.reply))}, nil
+}
+
+func wasmSendReply(data, state []byte, keyID, sequence uint64) []byte {
+	reply := make([]byte, 32+len(data)+len(state))
+	binary.LittleEndian.PutUint32(reply[4:], 41)
+	binary.LittleEndian.PutUint64(reply[8:], keyID)
+	binary.LittleEndian.PutUint64(reply[16:], sequence)
+	binary.LittleEndian.PutUint32(reply[24:], uint32(len(data)))
+	binary.LittleEndian.PutUint32(reply[28:], uint32(len(state)))
+	copy(reply[32:], data)
+	copy(reply[32+len(data):], state)
+	return reply
+}
+
+func TestWasmSendOutcomeParserRejectsMalformedRepliesAndInvalidatesOwner(t *testing.T) {
+	cases := []struct {
+		name  string
+		op    uint32
+		reply []byte
+	}{
+		{"missing-tag", 25, wasmSendReply(nil, nil, 0, 0)},
+		{"unknown-tag", 25, wasmSendReply(nil, []byte{3}, 0, 0)},
+		{"full-byte-unknown-tag", 25, wasmSendReply(nil, []byte{255}, 0, 0)},
+		{"sent-no-payload", 25, wasmSendReply(nil, []byte{1}, 7, 1)},
+		{"sent-zero-sequence", 25, wasmSendReply([]byte{9}, []byte{1}, 7, 0)},
+		{"raw-extra-state", 25, wasmSendReply([]byte{9}, []byte{1, 9}, 7, 1)},
+		{"json-extra-state", 27, wasmSendReply([]byte{9}, []byte{1, 9}, 7, 1)},
+		{"update-missing-state", 26, wasmSendReply([]byte{9}, []byte{1}, 7, 1)},
+	}
+	for _, kind := range []byte{0, 2} {
+		for _, invalid := range []struct {
+			name  string
+			data  []byte
+			state []byte
+			keyID uint64
+			seq   uint64
+		}{
+			{"payload", []byte{9}, []byte{kind}, 0, 0},
+			{"state", nil, []byte{kind, 9}, 0, 0},
+			{"key-id", nil, []byte{kind}, 7, 0},
+			{"sequence", nil, []byte{kind}, 0, 1},
+		} {
+			cases = append(cases, struct {
+				name  string
+				op    uint32
+				reply []byte
+			}{fmt.Sprintf("kind-%d/%s", kind, invalid.name), 26, wasmSendReply(invalid.data, invalid.state, invalid.keyID, invalid.seq)})
+		}
+	}
+	badLength := wasmSendReply([]byte("private output"), []byte{1}, 7, 1)
+	binary.LittleEndian.PutUint32(badLength[24:], ^uint32(0))
+	cases = append(cases, struct {
+		name  string
+		op    uint32
+		reply []byte
+	}{"overflowing-data-length", 25, badLength})
+	for _, scenario := range cases {
+		t.Run(scenario.name, func(t *testing.T) {
+			engine, err := sharedWasmEngine()
+			if err != nil {
+				t.Fatal(err)
+			}
+			instance, err := engine.construct(12, 19, nil, []byte{1, 0, 0, 0, 0}, &testSnapshotStore{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer instance.close()
+			instance.dispatch = replyWasmFunction{instance.dispatch, instance.module, instance.allocate, scenario.reply}
+			output, err := instance.call(scenario.op, 0, nil, nil)
+			if !errors.Is(err, ErrCrypto) || len(output.data) != 0 || len(output.state) != 0 || output.keyID != 0 || output.seq != 0 || output.handle != 0 {
+				t.Fatalf("malformed send outcome released output: %+v, %v", output, err)
+			}
+			if !instance.closed || !instance.module.IsClosed() || instance.state.store != nil || instance.state.loaded != nil {
+				t.Fatal("malformed send outcome retained guest or callback state")
+			}
+			if _, err := instance.call(25, 0, nil, nil); !errors.Is(err, ErrClosed) {
+				t.Fatalf("malformed send outcome owner remained reusable: %v", err)
+			}
+		})
+	}
+}
+
+func TestWasmSendOutcomeParserAcceptsCanonicalRepliesAndDetachesState(t *testing.T) {
+	for _, scenario := range []struct {
+		name  string
+		op    uint32
+		kind  SendOutcome
+		data  []byte
+		state []byte
+		keyID uint64
+		seq   uint64
+	}{
+		{"rejected", 25, SendRejected, nil, []byte{0}, 0, 0},
+		{"consumed", 26, SendConsumedWithoutOutput, nil, []byte{2}, 0, 0},
+		{"raw", 25, SendSent, []byte("ciphertext"), []byte{1}, 7, 1},
+		{"update", 26, SendSent, []byte("ciphertext"), append([]byte{1}, []byte(`{"send_key":"secret"}`)...), 7, 1},
+		{"json", 27, SendSent, []byte(`{"data":[9]}`), []byte{1}, 7, 1},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			engine, err := sharedWasmEngine()
+			if err != nil {
+				t.Fatal(err)
+			}
+			instance, err := engine.construct(1, 19, nil, []byte{0}, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer instance.close()
+			instance.dispatch = replyWasmFunction{instance.dispatch, instance.module, instance.allocate, wasmSendReply(scenario.data, scenario.state, scenario.keyID, scenario.seq)}
+			output, err := instance.call(scenario.op, 0, nil, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if instance.closed || instance.module.IsClosed() {
+				t.Fatal("canonical send outcome invalidated guest")
+			}
+			result, err := decodeWasmSendResult(output)
+			requireSendOutcome(t, result, err, scenario.kind)
+			if !bytes.Equal(result.Data, scenario.data) || result.State != string(scenario.state[1:]) || result.KeyID != scenario.keyID || result.Seq != scenario.seq {
+				t.Fatalf("canonical send outcome changed: %+v", result)
+			}
+			if !bytes.Equal(output.state, make([]byte, len(output.state))) {
+				t.Fatal("decoded send result retained temporary outcome and secret state bytes")
+			}
+		})
 	}
 }

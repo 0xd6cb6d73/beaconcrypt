@@ -153,10 +153,10 @@ TOKEN_SHA256 = {
 # Reviewed classical projection of the ML-DSA source; see doc/impl/mldsa-source-pins.md.
 # Full authentication/AD lifting is not inferred from these whole-file tripwires.
 SOURCE_SHA256 = {
-    "beaconcrypt/src/beacon.rs": "5778900307c39a5aeb82411150d5aa50e6d76467bcb89e478081a829407fcce7",
-    "beaconcrypt/src/server.rs": "eb27dcb90e26db87ab095fda9105742caa184d16a017ad57c3373d682d3af1b8",
-    "beaconcrypt/src/ratchet.rs": "139e564ba54731bce5417144fe438f519429c44684be80de53935a6d790973c7",
-    "beaconcrypt/src/shared.rs": "2a1531e83277646ee47da116db0f2cf28af046342b846d3bcfb2a02b36ab855e",
+    "beaconcrypt/src/beacon.rs": "71fb13a0d12ba7a49377178cdfb2754564350c12912a95c6784efbd1a582823b",
+    "beaconcrypt/src/server.rs": "9bd205117f41c690f5fae2936c2f70de61e751f04caee78de800e2ba51dffb13",
+    "beaconcrypt/src/ratchet.rs": "ff38395eceb8695cabee418be5e20074eee8482bd4f9e6d0bb2f801d368fffda",
+    "beaconcrypt/src/shared.rs": "6457931a67e77c2159bd6c33e366b433f1affe95cab2150f5a3df2dfda30a5b9",
     "beaconcrypt/src/pqxdh.rs": "f3b880ec118bebfd49851156588e681da40f50761470fbacc6940fd69cabc319",
     "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018",
     "beaconcrypt-core/src/pqxdh/concrete.rs": "b3a22f8a7c4adb087e217d58e2d302a057fd5ae224cd8fe2c44777472e469c50",
@@ -173,7 +173,7 @@ SOURCE_SHA256 = {
     "beaconcrypt-core/src/transport.rs": "bc3f347f251cb07e44c47699c6fa3db4c9ae8b73c6d1d54c6f9eb54911a463a9",
     "beaconcrypt-crypto/src/crypto_aead.rs": "1b62a128ed169c81a45825ede6853b32ae715ce9ea96f9d53803e7fb461b9bf1",
     "beaconcrypt-crypto/src/crypto_generichash.rs": "292e806217ff105632f48ac32d89f3e9820b8a2b118810790be06e60104168f3",
-    "beaconcrypt-crypto/src/crypto_kdf.rs": "1a5d147f6de89829b7259d41fd28ec6a206ca27531cc193048c1b3e79dbfac7f",
+    "beaconcrypt-crypto/src/crypto_kdf.rs": "8fc41159cc32f483a89ee4a273b9ebdf32fd75d23591580c991efb8b8c70cdf2",
     "beaconcrypt-crypto/src/crypto_kem.rs": "3c9a4f768a65f0b013c3b4a479d17be07574adc09305456692effc1ded5e2af5",
     "beaconcrypt-crypto/src/crypto_kx.rs": "d91d59ad9bc3e95ab8f8227c870282b039274bba07a5572696bf65deaa49b387",
     "beaconcrypt-crypto/src/crypto_scalarmult.rs": "e5eb492b32357a010c29c6655dc0e2397ab8747225a04b349613f310b570d2ca",
@@ -182,7 +182,7 @@ SOURCE_SHA256 = {
     "beaconcrypt-crypto/Cargo.toml": "dc34ba30e7cfbe1c17e27be5ffe2e49f151c9ba170fed7e42baf5bc09cec4560",
     "Cargo.lock": "fa0bcc041f43039e1f186aa7b596260a5c49180d8bf7010eb2e09d6d4be7d17d",
     "beaconcrypt/src/collections.rs": "2eac87345a8673bad9fe89e705a65eb0f20c6ac67a2516872fedd599576b8334",
-    "beaconcrypt/src/lib.rs": "df6cac5a7de0938f7b7f77a03d46320ad88617b48c9bf7f7904aa7551b14bfa4",
+    "beaconcrypt/src/lib.rs": "59b2239615ff5c4bfa10db7a7162b078db5abdd10f143f9a3624937a6ff4a3ba",
     "beaconcrypt/Cargo.toml": "c7a3237a77de3606618b538cdb19a0e41ab1c9271302488b872a524db49bb50a",
 }
 
