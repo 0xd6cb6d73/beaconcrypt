@@ -15,6 +15,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTUP_TOOLCHAIN: 1.99.1
   GOPROXY: https://proxy.golang.org
   GONOSUMDB: ""
 
@@ -64,9 +65,12 @@ jobs:
         if: runner.os == 'Windows'
         run: '"${{ steps.msys2.outputs.msys2-location }}\ucrt64\bin" >> $env:GITHUB_PATH'
 
+      - name: Install Rust 1.99.1
+        run: rustup toolchain install 1.99.1 --profile minimal
+
       - name: Build native library
         if: runner.os != 'Windows'
-        run: cargo build --verbose -p beaconcrypt --release --features gobinds
+        run: cargo build --verbose -p beaconcrypt-ffi --release --features gobinds
 
       - name: Build native library on Windows
         if: runner.os == 'Windows'
@@ -74,7 +78,7 @@ jobs:
           CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: gcc
         run: |
           rustup target add x86_64-pc-windows-gnu
-          cargo build --verbose -p beaconcrypt --release --target x86_64-pc-windows-gnu --features gobinds
+          cargo build --verbose -p beaconcrypt-ffi --release --target x86_64-pc-windows-gnu --features gobinds
 
       - name: Test Go module
         if: runner.os != 'Windows'

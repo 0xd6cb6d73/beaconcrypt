@@ -9,20 +9,36 @@ gitignore = true
 # These feature-gated adapters are tested through Go and Python rather than cargo test.
 # cargo-mutants does not evaluate cfg predicates, so default-feature runs would otherwise report mutations in these files as missed without compiling them.
 exclude_globs = [
+	# The native package compiles beaconcrypt's exact source with different crate types.
+	# Mutate that shared source once through the tested Rust package above.
+	"beaconcrypt-ffi/**",
+	# Linear-memory pointers and host imports require the actual WASI runner.
+	# Run the complete guest mutation suite with scripts/test-wasm.sh --mutants.
+	"beaconcrypt-wasm/src/**",
 	# Imported EverCDDL output is checked by reproducible generation and codec tests.
 	# Keep all handwritten beaconcrypt-parse adapters in the mutation suite.
 	"beaconcrypt-parse/src/generated/**",
 	"beaconcrypt/src/cbinds.rs",
 	"beaconcrypt/src/pybinds.rs",
+	# Shared dispatch is compiled only by those same language-binding features.
+	"beaconcrypt/src/row_binding_server.rs",
+	"beaconcrypt/src/row_cbinds.rs",
+	"beaconcrypt/src/row_pybinds.rs",
 ]
 
-# These mutations differ only for states that the public constructors and persistence validation cannot create: out-of-range private ratchet offsets, inconsistent results from pure core transitions, or out-of-range private cache indices.
-# The bounded lookup's remaining counter is redundant with its independently advancing, capacity-checked slot.
+# The core mutations below differ only for states that the public constructors and persistence validation cannot create: out-of-range private ratchet offsets, inconsistent results from pure core transitions, or out-of-range private cache indices.
+# The bounded lookup's remaining counter is also redundant at runtime with its independently advancing, capacity-checked slot, but is retained as the extraction backend's explicit termination measure.
 # Keep the full mutant name so source changes force re-evaluation.
 exclude_re = [
-	"^beaconcrypt-core/src/ratchet/control\\.rs:357:18: replace > with >= in lookup_receive_key$",
-	"^beaconcrypt-core/src/ratchet/control\\.rs:370:13: replace -= with \\+= in lookup_receive_key$",
-	"^beaconcrypt-core/src/ratchet/control\\.rs:370:13: replace -= with /= in lookup_receive_key$",
+	# The packed descriptor combines disjoint 32-bit halves, so OR and XOR agree for every pointer and length.
+	"^beaconcrypt-wasm/src/abi\\.rs:161:57: replace \\| with \\^ in encode_result$",
+	# Under wasm32 and the production 256 MiB guest cap, fallible Vec reservation rejects every size at or above i32::MAX; both mutated guards still return zero for these requests.
+	"^beaconcrypt-wasm/src/abi\\.rs:130:21: replace > with == in bc_alloc$",
+	"^beaconcrypt-wasm/src/abi\\.rs:130:21: replace > with >= in bc_alloc$",
+
+	"^beaconcrypt-core/src/ratchet/control\\.rs:369:18: replace > with >= in lookup_receive_key$",
+	"^beaconcrypt-core/src/ratchet/control\\.rs:385:13: replace -= with \\+= in lookup_receive_key$",
+	"^beaconcrypt-core/src/ratchet/control\\.rs:385:13: replace -= with /= in lookup_receive_key$",
 
 	# These guards repeat guarantees from pure transitions and private continuation bookkeeping.
 	"^beaconcrypt-core/src/ratchet/concrete\\.rs:141:50: replace \\|\\| with && in begin_send$",

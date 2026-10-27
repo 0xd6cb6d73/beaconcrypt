@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTUP_TOOLCHAIN: 1.99.1
 
 jobs:
   build:
@@ -20,21 +21,49 @@ jobs:
     - uses: actions/checkout@v7
       with:
         submodules: recursive
+    - name: Install Rust 1.99.1
+      run: rustup toolchain install 1.99.1 --profile minimal
     - name: Build
       run: cargo build --verbose
     - name: Check PQXDH server build
       env:
         RUSTFLAGS: -Dwarnings
-      run: cargo check -p beaconcrypt --no-default-features --features pqxdh,server --lib
+      run: cargo check -p beaconcrypt --no-default-features --features pqxdh,server --lib --locked
     - name: Check PQXDH beacon build
       env:
         RUSTFLAGS: -Dwarnings
-      run: cargo check -p beaconcrypt --no-default-features --features pqxdh,beacon --lib
-    - name: Run tests
-      run: cargo test --verbose --workspace
+      run: cargo check -p beaconcrypt --no-default-features --features pqxdh,beacon --lib --locked
+    - name: Run workspace tests including proof-source guards
+      run: >-
+        cargo test --verbose --workspace --locked
+    - name: Preserve property-test failure seeds
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: property-regressions
+        path: |
+          beaconcrypt/proptest-regressions/*.txt
+          beaconcrypt-parse/proptest-regressions/*.txt
+        if-no-files-found: ignore
     - name: Test C persistence callbacks
       run: |
         cargo test -p beaconcrypt --features cbinds --lib --locked
-        cargo build -p beaconcrypt --features cbinds --locked
+        cargo build -p beaconcrypt-ffi --features cbinds --locked
         cc -std=c11 -Wall -Wextra -Werror -Ibeaconcrypt beaconcrypt/tests/c_persistence.c -Ltarget/debug -lbeaconcrypt -Wl,-rpath,"$PWD/target/debug" -o target/c-persistence
         target/c-persistence
+
+  no-std-downstream:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        target: [thumbv7em-none-eabihf, thumbv6m-none-eabi]
+    env:
+      BEACONCRYPT_NO_STD_TARGET: ${{ matrix.target }}
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v7
+    - name: Install Rust 1.99.1 and portable target
+      run: rustup toolchain install 1.99.1 --profile minimal --target "${{ matrix.target }}"
+    - name: Build independent no_std consumers
+      run: bash scripts/check-no-std.sh

@@ -1,0 +1,161 @@
+name: Formal verification
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  merge_group:
+  workflow_dispatch:
+
+concurrency:
+  group: formal-verification
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  proof_components:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ matrix.timeout || 60 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Lean
+            target: check-generated-lean
+            timeout: 240
+          - name: ProVerif transcript fidelity
+            target: check-proverif-transcript-fidelity
+          - name: ProVerif CTX commitment
+            target: check-generated-proverif-aead-commitment
+          - name: ProVerif no-CTX control
+            target: check-generated-proverif-aead-no-commitment
+          - name: ProVerif baseline
+            target: check-generated-proverif-baseline
+          - name: ProVerif active classical
+            target: check-generated-proverif-active-classical
+          - name: ProVerif passive classical
+            target: check-generated-proverif-passive-classical
+          - name: ProVerif passive classical equivalence
+            target: check-generated-proverif-passive-classical-equivalence
+          - name: ProVerif passive quantum
+            target: check-generated-proverif-passive-quantum
+          - name: ProVerif passive quantum equivalence
+            target: check-generated-proverif-passive-quantum-equivalence
+          - name: ProVerif ML-KEM opacity
+            target: check-generated-proverif-quantum-mlkem-opacity
+          - name: ProVerif ML-KEM recovery control
+            target: check-generated-proverif-quantum-mlkem-recovery
+          - name: ProVerif ML-KEM binding control
+            target: check-generated-proverif-mlkem-reencapsulation-strong
+          - name: ProVerif weak KEM re-encapsulation control
+            target: check-generated-proverif-mlkem-reencapsulation-weak
+          - name: ProVerif HKDF prefix conformance
+            target: check-generated-proverif-hkdf-prefix-conformance
+          - name: ProVerif HKDF endpoint controls
+            target: check-generated-proverif-hkdf-endpoint-controls
+          - name: ProVerif distinct HKDF domains
+            target: check-generated-proverif-hkdf-domain-distinct
+          - name: ProVerif aliased HKDF-domain control
+            target: check-generated-proverif-hkdf-domain-alias
+          - name: ProVerif production key encodings
+            target: check-generated-proverif-public-key-confusion-strong
+          - name: ProVerif weakened key encodings
+            target: check-generated-proverif-public-key-confusion-weak
+          - name: ProVerif Phase 2 response binding
+            target: check-generated-proverif-phase2-response-binding
+          - name: ProVerif CBOR registration implicit metadata
+            target: check-generated-proverif-cbor-registration
+          - name: ProVerif assumed ML-DSA authentication and joint sessions
+            target: verify-proverif-mldsa-joint
+          - name: ProVerif weakened Phase 2 assigned ID binding
+            target: check-generated-proverif-phase2-assigned-id-weak
+          - name: ProVerif native Phase 2 X25519 encoding alias
+            target: check-generated-proverif-phase2-x25519-alias
+          - name: ProVerif complete registration admission boundary
+            target: check-generated-proverif-general-registration-admission
+            timeout: 240
+          - name: ProVerif arbitrary registration-set admission
+            target: check-generated-proverif-registration-set-admission
+          - name: ProVerif arbitrary registration response boundary
+            target: check-generated-proverif-registration-set-response
+          - name: ProVerif arbitrary Beacon registration admission
+            target: check-generated-proverif-registration-beacon-admission
+          - name: ProVerif later-sequence registration
+            target: check-generated-proverif-later-sequence-registration
+          - name: ProVerif main registration controls
+            target: check-generated-proverif-main-registration-controls
+          - name: ProVerif post-registration ratchet
+            target: check-generated-proverif-post-registration-ratchet
+          - name: ProVerif active quantum attack
+            target: check-generated-proverif-active-quantum
+          - name: ProVerif reachability
+            target: check-generated-proverif-reachability
+          - name: ProVerif compromise
+            target: check-generated-proverif-compromise
+          - name: ProVerif failed receive
+            target: check-generated-proverif-failed-receive
+          - name: ProVerif failed-receive reachability
+            target: check-generated-proverif-failed-receive-reachability
+          - name: ProVerif failed-receive compromise
+            target: check-generated-proverif-failed-receive-compromise
+          - name: ProVerif failed-receive compromise reachability
+            target: check-generated-proverif-failed-receive-compromise-reachability
+          - name: ProVerif live material origin and controls
+            target: verify-proverif-live-material
+          - name: ProVerif private application origin and disclosure controls
+            target: verify-proverif-live-private-application
+          - name: ProVerif arbitrary KEM authentication and controls
+            target: verify-proverif-kem-controller-auth
+          - name: ProVerif serial free-schedule group
+            target: verify-proverif-fs
+            timeout: 210
+          - name: ProVerif serial extension group
+            target: verify-proverif-extensions
+            timeout: 180
+          - name: Formal proof inventory
+            target: check-inventory
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Nix
+        uses: DeterminateSystems/determinate-nix-action@61cbfe2efc2d4e7a8a6d56967c3c1058e846c858 # v3.21.9
+        with:
+          kvm: false
+
+      - name: Use read-only proof-tool caches
+        uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
+        with:
+          name: hax
+          skipPush: true
+
+      - name: Regenerate and verify formal proof artifacts
+        run: |
+          if [[ "${{ matrix.target }}" == check-inventory ]]; then
+            nix --extra-experimental-features 'nix-command flakes' \
+              develop --no-update-lock-file 'path:.#proofs' -c \
+              make -C beaconcrypt-core check-inventory
+          else
+            make -C beaconcrypt-core ${{ matrix.target }}
+          fi
+
+  proofs:
+    # Preserve this required-check context; the matrix above also verifies Lean.
+    name: Extract and verify formal proofs
+    if: ${{ always() }}
+    needs: proof_components
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Confirm every proof component passed
+        env:
+          PROOF_COMPONENTS_RESULT: ${{ needs.proof_components.result }}
+        run: test "$PROOF_COMPONENTS_RESULT" = success
