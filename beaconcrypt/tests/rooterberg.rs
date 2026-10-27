@@ -1,9 +1,14 @@
-use std::{fs, path::Path};
+#[cfg(all(windows, target_env = "gnu"))]
+#[path = "common/sodium_oracle.rs"]
+mod sodium_oracle;
+
+use std::{collections::BTreeSet, fs, path::Path};
 
 use beaconcrypt_crypto::{
 	crypto_aead::chacha20poly1305_ietf, crypto_generichash, crypto_kdf, crypto_scalarmult,
 	crypto_sign,
 };
+use libsodium_rs as sodium;
 use serde::Deserialize;
 
 const ROOTERBERG_VERSION: &str = "0.65";
@@ -12,6 +17,7 @@ const ED25519_VERIFY_VECTOR: &str = "eddsa/ed25519.json";
 const ED25519_SIGN_VECTOR: &str = "eddsa/ed25519_sign.json";
 const CHACHA20_POLY1305_VECTOR: &str = "aead/chacha20_poly1305.json";
 const HKDF_SHA512_VECTOR: &str = "kdf/hkdf_sha512.json";
+const HMAC_SHA512_VECTOR: &str = "mac/hmac_sha512_512.json";
 const BLAKE2B_VECTOR: &str = "message_digest/blake2b.json";
 
 #[derive(Debug, Deserialize)]
@@ -58,6 +64,14 @@ struct HkdfAlgorithm {
 	algorithm_type: String,
 	primitive: String,
 	sha: String,
+}
+
+#[derive(Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct HmacAlgorithm {
+	algorithm_type: String,
+	primitive: String,
+	mac_size: usize,
 }
 
 #[derive(Debug, Deserialize, Eq, PartialEq)]
@@ -135,6 +149,19 @@ struct HkdfTest {
 	info: String,
 	out_len: usize,
 	okm: String,
+	#[serde(default)]
+	flags: Vec<String>,
+	#[serde(default)]
+	comment: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct HmacTest {
+	tc_id: usize,
+	key: String,
+	msg: String,
+	mac: String,
 	#[serde(default)]
 	flags: Vec<String>,
 	#[serde(default)]
@@ -250,6 +277,38 @@ fn x25519_rooterberg() {
 }
 
 #[test]
+fn ed25519_fixture_inventory_rooterberg() {
+	let vector_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../rooterberg/test_vectors/eddsa");
+	let actual: BTreeSet<_> = fs::read_dir(vector_dir)
+		.expect("read Rooterberg fixture directory")
+		.map(|entry| {
+			entry
+				.expect("read Rooterberg fixture entry")
+				.file_name()
+				.into_string()
+				.expect("UTF-8 Rooterberg fixture name")
+		})
+		.filter(|name| name.starts_with("ed25519") && name.ends_with(".json"))
+		.collect();
+	// Pure raw signing and verification are consumed. JWK and cofactored files repeat
+	// those raw inputs; ph and BLAKE2b files specify signature algorithms we do not use.
+	let classified = BTreeSet::from([
+		"ed25519.json".to_owned(),
+		"ed25519_sign.json".to_owned(),
+		"ed25519_jwk.json".to_owned(),
+		"ed25519_cofactored.json".to_owned(),
+		"ed25519ph.json".to_owned(),
+		"ed25519ph_sign.json".to_owned(),
+		"ed25519_blake2b.json".to_owned(),
+		"ed25519_blake2b_sign.json".to_owned(),
+	]);
+	assert_eq!(
+		actual, classified,
+		"unclassified Rooterberg Ed25519 fixture"
+	);
+}
+
+#[test]
 fn ed25519_verification_rooterberg() {
 	let json = load_vector(ED25519_VERIFY_VECTOR);
 	let set: TestSet<Ed25519Algorithm, Ed25519VerifyTest> = parse_set(&json, "EddsaVerify");
@@ -263,17 +322,63 @@ fn ed25519_verification_rooterberg() {
 		},
 		"unexpected Rooterberg Ed25519 verification algorithm metadata"
 	);
+	assert_eq!(set.num_tests, 84, "review changed Ed25519 fixture coverage");
 
+	let mut seen_ids = BTreeSet::new();
+	let mut full_width_cases = 0;
+	let mut invalid_width_cases = 0;
 	for test in set.tests {
 		let label = case_label(test.tc_id, &test.comment, &test.flags);
-		let public_key =
-			crypto_sign::PublicKey::from_bytes(&decode_hex(&test.public_key)).expect(&label);
+		assert!(seen_ids.insert(test.tc_id), "duplicate {label}");
+		let public_bytes = decode_hex(&test.public_key);
+		let public_key = crypto_sign::PublicKey::from_bytes(&public_bytes).expect(&label);
+		let native_public =
+			sodium::crypto_sign::PublicKey::from_bytes(&public_bytes).expect(&label);
 		let message = decode_hex(&test.msg);
 		let signature = decode_hex(&test.sig);
 		let verifies = <&[u8; crypto_sign::BYTES]>::try_from(signature.as_slice())
 			.is_ok_and(|signature| crypto_sign::verify_detached(signature, &message, &public_key));
+		let native_verifies = <&[u8; sodium::crypto_sign::BYTES]>::try_from(signature.as_slice())
+			.is_ok_and(|signature| {
+				sodium::crypto_sign::verify_detached(signature, &message, &native_public)
+			});
 		assert_eq!(verifies, test.valid, "{label}");
+		assert_eq!(native_verifies, test.valid, "native oracle: {label}");
+		assert_eq!(
+			crypto_sign::ed25519_pk_to_curve25519(&public_key).ok(),
+			sodium::crypto_sign::ed25519_pk_to_curve25519(&native_public).ok(),
+			"public-key conversion: {label}"
+		);
+
+		if signature.len() != crypto_sign::BYTES {
+			assert!(!test.valid, "{label}");
+			invalid_width_cases += 1;
+			// A detached signature with the wrong width is rejected at admission;
+			// concatenation would change the attached message boundary.
+			continue;
+		}
+		full_width_cases += 1;
+		let mut signed_message = signature;
+		signed_message.extend_from_slice(&message);
+		let expected_opened = test.valid.then_some(message);
+		assert_eq!(
+			crypto_sign::verify(&signed_message, &public_key),
+			expected_opened,
+			"attached verification: {label}"
+		);
+		assert_eq!(
+			sodium::crypto_sign::verify(&signed_message, &native_public),
+			expected_opened,
+			"native attached verification: {label}"
+		);
 	}
+	assert_eq!(
+		seen_ids,
+		(1..=set.num_tests).collect(),
+		"changed Ed25519 case IDs"
+	);
+	assert_eq!(full_width_cases, 80, "review the fixed-width Ed25519 cases");
+	assert_eq!(invalid_width_cases, 4, "review the Ed25519 width cases");
 }
 
 #[test]
@@ -290,15 +395,111 @@ fn ed25519_signing_rooterberg() {
 		},
 		"unexpected Rooterberg Ed25519 signing algorithm metadata"
 	);
+	assert_eq!(
+		set.num_tests, 133,
+		"review changed Ed25519 fixture coverage"
+	);
 
+	let mut seen_ids = BTreeSet::new();
 	for test in set.tests {
 		let label = case_label(test.tc_id, &test.comment, &test.flags);
+		assert!(seen_ids.insert(test.tc_id), "duplicate {label}");
 		let private_key = decode_hex(&test.private_key);
 		let keypair = crypto_sign::KeyPair::from_seed(&private_key).expect(&label);
+		let native_keypair = sodium::crypto_sign::KeyPair::from_seed(&private_key).expect(&label);
+		assert_eq!(
+			keypair.public_key.as_bytes(),
+			native_keypair.public_key.as_bytes(),
+			"public-key encoding: {label}"
+		);
+		assert_eq!(
+			keypair.secret_key.as_bytes(),
+			native_keypair.secret_key.as_bytes(),
+			"secret-key encoding: {label}"
+		);
+		assert_eq!(
+			crypto_sign::secret_key_to_seed(&keypair.secret_key)
+				.expect(&label)
+				.as_slice(),
+			private_key,
+			"seed recovery: {label}"
+		);
+		assert_eq!(
+			sodium::crypto_sign::secret_key_to_seed(&native_keypair.secret_key)
+				.expect(&label)
+				.as_slice(),
+			private_key,
+			"native seed recovery: {label}"
+		);
+		let curve_public =
+			crypto_sign::ed25519_pk_to_curve25519(&keypair.public_key).expect(&label);
+		let curve_secret =
+			crypto_sign::ed25519_sk_to_curve25519(&keypair.secret_key).expect(&label);
+		assert_eq!(
+			curve_public,
+			sodium::crypto_sign::ed25519_pk_to_curve25519(&native_keypair.public_key)
+				.expect(&label),
+			"public-key conversion: {label}"
+		);
+		assert_eq!(
+			curve_secret,
+			sodium::crypto_sign::ed25519_sk_to_curve25519(&native_keypair.secret_key)
+				.expect(&label),
+			"secret-key conversion: {label}"
+		);
+		let mut basepoint = [0; 32];
+		basepoint[0] = 9;
+		assert_eq!(
+			crypto_scalarmult::scalarmult(&curve_secret, &basepoint).expect(&label),
+			curve_public,
+			"converted keypair consistency: {label}"
+		);
 		let message = decode_hex(&test.msg);
+		let expected_signature = decode_hex(&test.sig);
 		let actual = crypto_sign::sign_detached(&message, &keypair.secret_key).expect(&label);
-		assert_eq!(actual.as_slice(), decode_hex(&test.sig), "{label}");
+		let native_signature =
+			sodium::crypto_sign::sign_detached(&message, &native_keypair.secret_key).expect(&label);
+		assert_eq!(actual.as_slice(), expected_signature, "{label}");
+		assert_eq!(
+			native_signature.as_slice(),
+			expected_signature,
+			"native oracle: {label}"
+		);
+		assert!(
+			crypto_sign::verify_detached(&native_signature, &message, &keypair.public_key),
+			"native signature verified by portable backend: {label}"
+		);
+		assert!(
+			sodium::crypto_sign::verify_detached(&actual, &message, &native_keypair.public_key),
+			"portable signature verified by native backend: {label}"
+		);
+
+		let mut expected_signed_message = expected_signature;
+		expected_signed_message.extend_from_slice(&message);
+		let signed_message = crypto_sign::sign(&message, &keypair.secret_key).expect(&label);
+		let native_signed =
+			sodium::crypto_sign::sign(&message, &native_keypair.secret_key).expect(&label);
+		assert_eq!(signed_message, expected_signed_message, "{label}");
+		assert_eq!(
+			native_signed, expected_signed_message,
+			"native oracle: {label}"
+		);
+		assert_eq!(
+			crypto_sign::verify(&native_signed, &keypair.public_key).expect(&label),
+			message,
+			"native attached signature verified by portable backend: {label}"
+		);
+		assert_eq!(
+			sodium::crypto_sign::verify(&signed_message, &native_keypair.public_key).expect(&label),
+			message,
+			"portable attached signature verified by native backend: {label}"
+		);
 	}
+	assert_eq!(
+		seen_ids,
+		(1..=set.num_tests).collect(),
+		"changed Ed25519 case IDs"
+	);
 }
 
 #[test]
@@ -394,5 +595,46 @@ fn blake2b_rooterberg() {
 		assert_eq!(expected.len(), output_len, "{label}");
 		let actual = crypto_generichash::generichash(&message, None, output_len).expect(&label);
 		assert_eq!(actual, expected, "{label}");
+
+		for chunk_size in [1, 7, 127, 128, 129] {
+			let mut state = crypto_generichash::State::new(None, output_len).expect(&label);
+			state.update(&[]);
+			for chunk in message.chunks(chunk_size) {
+				state.update(chunk);
+				state.update(&[]);
+			}
+			state.update(&[]);
+			assert_eq!(
+				state.finalize(),
+				expected,
+				"{label}; chunk size {chunk_size}"
+			);
+		}
+	}
+}
+
+#[test]
+fn hkdf_sha512_extract_hmac_rooterberg() {
+	let json = load_vector(HMAC_SHA512_VECTOR);
+	let set: TestSet<HmacAlgorithm, HmacTest> = parse_set(&json, "Mac");
+	assert_eq!(
+		set.algorithm,
+		HmacAlgorithm {
+			algorithm_type: "Mac".into(),
+			primitive: "HmacSha512".into(),
+			mac_size: 512,
+		},
+		"unexpected Rooterberg HMAC-SHA-512 algorithm metadata"
+	);
+
+	for test in set.tests {
+		let label = case_label(test.tc_id, &test.comment, &test.flags);
+		let key = decode_hex(&test.key);
+		let message = decode_hex(&test.msg);
+		let expected = decode_hex(&test.mac);
+		assert_eq!(expected.len(), set.algorithm.mac_size / 8, "{label}");
+		// HKDF-Extract(salt, IKM) is HMAC-SHA-512(salt, IKM).
+		let actual = crypto_kdf::hkdf::sha512::extract(Some(&key), &message).expect(&label);
+		assert_eq!(actual.as_bytes().as_slice(), expected, "{label}");
 	}
 }
