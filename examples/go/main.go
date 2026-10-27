@@ -31,7 +31,11 @@ func run() error {
 		return err
 	}
 
-	server, err := beaconcrypt.NewServerFromSeed(serverKID, serverSeed)
+	mldsaSeed := make([]byte, 32)
+	if _, err := rand.Read(mldsaSeed); err != nil {
+		return err
+	}
+	server, err := beaconcrypt.NewServerFromSeed(serverKID, serverSeed, mldsaSeed)
 	if err != nil {
 		return err
 	}
@@ -40,12 +44,16 @@ func run() error {
 		return err
 	}
 
-	// It is assumed that the server's public key is compiled into beacons.
+	// Both server public keys are provisioned into beacons through a trusted channel.
 	serverPK, err := server.IdentityPK()
 	if err != nil {
 		return err
 	}
-	beacon, err := beaconcrypt.NewBeacon(serverKID, serverPK)
+	serverMLDSAPK, err := server.MLDSAPublicKey()
+	if err != nil {
+		return err
+	}
+	beacon, err := beaconcrypt.NewBeacon(serverKID, serverPK, serverMLDSAPK)
 	if err != nil {
 		return err
 	}

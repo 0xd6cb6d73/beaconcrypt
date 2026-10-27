@@ -20,10 +20,11 @@ def save_server(server):
 
 def main():
     server_seed = token_bytes(32)
-    server = BeaconCryptServer(SERVER_KID, server_seed)
+    mldsa_seed = token_bytes(32)
+    server = BeaconCryptServer(SERVER_KID, server_seed, mldsa_seed)
     save_server(server)
-    # it is assumed that the server's public key is compiled into beacons
-    beacon = BeaconCryptBeacon(SERVER_KID, server.id_pk())
+    # Provision both server public keys to beacons through a trusted channel.
+    beacon = BeaconCryptBeacon(SERVER_KID, server.id_pk(), server.mldsa_public_key())
 
     # the beacon is run and registers
     b_reg_1 = beacon.generate_registration()
