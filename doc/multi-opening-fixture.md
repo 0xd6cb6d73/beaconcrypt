@@ -20,6 +20,8 @@ The construction follows the ChaCha20-Poly1305 definition in
 2.3, 2.5, and 2.8. The motivation for the outer commitment is described by the
 [CTX construction](https://eprint.iacr.org/2022/1260).
 
+The fixture was re-derived for 281-byte AD after adding both ML-DSA public-key hashes; the reviewed changes are independently validated by the generators below.
+
 ## Fixed starting values
 
 The construction begins with deterministic, non-secret values:
@@ -28,7 +30,7 @@ The construction begins with deterministic, non-secret values:
 | --- | --- |
 | `K1` | `000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f` |
 | `N` | `000102030405060708090a0b` |
-| `A1` | The 153-byte sequence `00 01 ... 98` |
+| `A1` | The 281-byte sequence `00 01 ... ff 00 01 ... 18` |
 | `C` | `00112233445566778899aabbccddeeff` |
 
 The nonce is shared across different keys, which does not violate
@@ -56,25 +58,23 @@ block `B`, define:
 m(B) = LE128(B) + 2^128
 ```
 
-The 153-byte associated data is padded with seven zero bytes and encoded as ten
+The 281-byte associated data is padded with seven zero bytes and encoded as eighteen
 Poly1305 blocks. The 16-byte ciphertext contributes one block, followed by the
 RFC 8439 length block:
 
 ```text
 L = LE64(len(A)) || LE64(len(C))
-  = LE64(153)    || LE64(16)
+  = LE64(281)    || LE64(16)
 ```
 
-Call these twelve blocks `B0 ... B11`, where `B0 ... B9` encode the padded
-associated data, `B10` is the ciphertext, and `B11` is `L`. The accumulator is:
+Call these twenty blocks `B0 ... B19`, where `B0 ... B17` encode the padded associated data, `B18` is the ciphertext, and `B19` is `L`. The accumulator is:
 
 ```text
-acc = sum(m(Bi) * r^(12-i), i=0..11) mod p
+acc = sum(m(Bi) * r^(20-i), i=0..19) mod p
 T   = LE128((acc + s) mod 2^128)
 ```
 
-The construction keeps `B1 ... B11` fixed and solves `B0`, leaving 137 of the
-153 associated-data bytes unchanged.
+The construction keeps `B1 ... B19` fixed and solves `B0`, leaving 265 of the 281 associated-data bytes unchanged.
 
 ## Constructing the second opening
 
@@ -100,12 +100,12 @@ Only candidates below `p` are possible, so checking `carry` values `0..3`
 exhausts the accumulator representatives.
 
 For each candidate accumulator, let `F` be the fixed contribution from blocks
-`B1 ... B11` and solve for the first associated-data block:
+`B1 ... B19` and solve for the first associated-data block:
 
 ```text
 m(B0) =
     (target_acc - F)
-    * inverse(r2^12, p)
+    * inverse(r2^20, p)
     mod p
 ```
 
@@ -121,8 +121,7 @@ In that case, the first 16 bytes of `A2` are:
 A2[0..16] = LE128^-1(m(B0) - 2^128)
 ```
 
-The first candidate key (`attempt = 1`) and third accumulator representative
-(`carry = 2`) satisfy this condition. Finally:
+The third candidate key (`attempt = 3`) and second accumulator representative (`carry = 1`) satisfy this condition. Finally:
 
 ```text
 P2 = C XOR ChaCha20_Stream(K2, N, counter=1)
@@ -133,26 +132,26 @@ rather than their little-endian byte encoding, are:
 
 | Name | Value |
 | --- | --- |
-| `r2` after clamping | `0x0dfd7a580bc3b19401df45ac0f2d360c` |
-| `s2` | `0xc9bc67ea96e7232f597298455a365448` |
-| `target_acc(2)` | `0x24a4b9e9cc92bad92bd6360b1d13ac85a` |
-| `m(B0)` | `0x1247bdf3560ca14b16e6e6f2fa48c2ed6` |
+| `r2` after clamping | `0xc7a2ee80751dc200bae53940fdfea15` |
+| `s2` | `0x122a8dcf2e47fbec059471bf67f74f6c` |
+| `target_acc(1)` | `0x13bc31c59a5e1c31ff669064f047549cd` |
+| `m(B0)` | `0x160d162abef2bb815d7d90036fa0babd0` |
 
 ## Derived fixture
 
 | Name | Value |
 | --- | --- |
-| `attempt` | `1` |
-| `carry` | `2` |
+| `attempt` | `3` |
+| `carry` | `1` |
 | `K1` | `000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f` |
-| `K2` | `967712731b5091e4e42b5fa6241e3b02108fedc55c561d80af04c2095d3edbe7` |
+| `K2` | `9ad90ef720e8fceffcc710361c3c760dbe50bf28bc0e21c67404e2c44399b3ef` |
 | `N` | `000102030405060708090a0b` |
-| `A1` | The 153-byte sequence `00 01 ... 98` |
-| `A2` | `d62e8ca42f6f6e6eb114ca6035df7b24 || 10 11 ... 98` (153 bytes) |
+| `A1` | The 281-byte sequence `00 01 ... ff 00 01 ... 18` |
+| `A2` | `d0ab0bfa3600d9d715b82befab62d160 || 10 11 ... ff 00 01 ... 18` (281 bytes) |
 | `C` | `00112233445566778899aabbccddeeff` |
-| `T` | `a21c712bf7f8d516c2d0126087060814` |
+| `T` | `39996c6c0e78fdfb0bbf29d428aaed4d` |
 | `P1` | `89ea2a336d42c3373f1a954854c0e09c` |
-| `P2` | `3c6ab3eb035de373e2b5d4a81a3cd13f` |
+| `P2` | `d4de696c5b25e8438e777ca060a610b3` |
 
 Both of these statements hold:
 
@@ -174,11 +173,11 @@ CTX = BLAKE2b-512(
 This produces:
 
 ```text
-CTX1 = 9cda090561a1140c1e7fdee457c9057be213b87a65e895078564be7fa13360df
-       fb48bab92db64d3800fd90ba2fc4d8c174add55cbbf0b0bff98eb74b32c1e06e
+CTX1 = 22240e4b6a5dff2b3ffbb4a2ebb6119ce9af9607a6f36e8c15ec5a63c4c3f8d1
+       115dff685176f902f0fdf0c789077981040634d35a69ff311efb56209a10a7e5
 
-CTX2 = f092a14b1da49bad4c64f3bacc67480d7dd367f5ba90fa3f79492aea29cd7707
-       49b0aefdc03fa3736dd11ee3c79038a4a4d10a64959042dd97007690a7506bb2
+CTX2 = 1cf9be23057b32477e24a24931e86b136ecda0fcdcb0bf117247c1c0c72ccae2
+       efb7500568150c94f151c138fa889d8c78a4573189fb5f3204c82ea1792c2dcf
 ```
 
 This is the property under test: the base AEAD has two valid openings, while

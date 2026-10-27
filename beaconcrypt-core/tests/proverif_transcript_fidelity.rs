@@ -17875,7 +17875,7 @@ const FS_REGISTRATION_BOUNDS: [&str; 3] = [
 const FS_CHECKER: &str = include_str!("../proofs/pro-verif/check-free-schedule.py");
 const FS_CHECKER_TESTS: &str = include_str!("../proofs/pro-verif/test-free-schedule-checker.py");
 const DECLARATION_ALLOWLIST: &str = include_str!("../proofs/pro-verif/declaration-allowlist.tsv");
-const FORMAL_ANALYSIS: &str = include_str!("../../doc/formal-verification-analysis.md");
+const FORMAL_ANALYSIS: &str = include_str!("../proofs/trusted-boundary.md");
 
 const FS_SCENARIOS: [&str; 3] = ["fs-registration", "fs-records-s2b", "fs-records-b2s"];
 const FS_FIDELITY_PREFIX: &str = "(* @beaconcrypt-fs-fidelity ";
@@ -21096,7 +21096,7 @@ fn validate_declarations(
 			return Err(format!("unknown allowlist kind: {line}"));
 		}
 		let slug = anchor
-			.strip_prefix("doc/formal-verification-analysis.md#")
+			.strip_prefix("beaconcrypt-core/proofs/trusted-boundary.md#")
 			.ok_or_else(|| format!("allowlist entry lacks a documentation anchor: {line}"))?;
 		if !slugs.contains(slug) {
 			return Err(format!(
@@ -22410,7 +22410,7 @@ fn proverif_declarations_are_allowlisted() {
 		python_template_text("\\1a\\12b\\g<x>c\\nd\\\\e\\.f\\g<g"),
 		"{}a{}b{}c d\\\\e\\.f <g"
 	);
-	let nx = "proofs/pro-verif/fs-common.pvl\tnounif\t1\tnounif y: bitstring; attacker(x25519_public(y)).\tdoc/formal-verification-analysis.md#the-fs-selection-heuristic-nx\n";
+	let nx = "proofs/pro-verif/fs-common.pvl\tnounif\t1\tnounif y: bitstring; attacker(x25519_public(y)).\tbeaconcrypt-core/proofs/trusted-boundary.md#the-fs-selection-heuristic-nx\n";
 	assert_eq!(count(DECLARATION_ALLOWLIST, nx), 1);
 	for (name, allowlist, diagnostic) in [
 		(
