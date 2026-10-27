@@ -306,19 +306,21 @@ struct FailingStore {
 }
 
 impl SnapshotStore for FailingStore {
-	fn load(&self) -> Option<ServerSnapshot> {
+	fn load(&self) -> Result<Option<ServerSnapshot>, PersistenceError> {
 		self.inner.borrow().load()
 	}
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&beaconcrypt::SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
-		!self.fail.get()
-			&& self
-				.inner
+	) -> Result<bool, PersistenceError> {
+		if self.fail.get() {
+			Ok(false)
+		} else {
+			self.inner
 				.borrow_mut()
 				.compare_and_swap(expected, replacement)
+		}
 	}
 }
 
@@ -433,15 +435,19 @@ fn host_store_constructors_validate_exact_context_length_and_restore_input() {
 	);
 	assert_eq!(
 		dispatch(13, 0, 0, &[], &[]).status,
-		abi::error_status(PersistenceError::MissingSnapshot)
+		abi::error_status(if cfg!(target_arch = "wasm32") {
+			PersistenceError::MissingSnapshot
+		} else {
+			PersistenceError::Storage
+		})
 	);
 }
 
 #[test]
-fn host_load_failures_match_native_missing_snapshot_status() {
+fn host_load_failures_distinguish_missing_snapshots_and_storage_errors() {
 	struct LoadResult(i64);
 	impl SnapshotStore for LoadResult {
-		fn load(&self) -> Option<ServerSnapshot> {
+		fn load(&self) -> Result<Option<ServerSnapshot>, PersistenceError> {
 			let mut calls = 0;
 			let snapshot = store::load_snapshot(|ptr, len| {
 				calls += 1;
@@ -455,11 +461,11 @@ fn host_load_failures_match_native_missing_snapshot_status() {
 			&mut self,
 			_: Option<&beaconcrypt::SnapshotHead>,
 			_: &ServerSnapshot,
-		) -> bool {
+		) -> Result<bool, PersistenceError> {
 			panic!("missing/invalid snapshots must not reach activation CAS")
 		}
 	}
-	for (host_result, expected_status) in [(-1, 3), (-2, 3), (-3, 4), (0, 4)] {
+	for (host_result, expected_status) in [(-1, 3), (-2, 13), (-3, 4), (0, 4)] {
 		let restored =
 			PersistentServer::restore(Box::new(LoadResult(host_result)) as Box<dyn SnapshotStore>);
 		assert_eq!(abi::error_status(restored.err().unwrap()), expected_status);
@@ -498,4 +504,186 @@ fn beacon_constructor_requires_the_mldsa_pin_after_the_ed25519_key() {
 	assert_eq!(checked(24, beacon, 0, &[], &[]).data.len(), 1952);
 	checked(9, beacon, 0, &[], &[]);
 	checked(9, server, 0, &[], &[]);
+}
+
+#[test]
+fn registration_presence_is_explicit_and_malformed_flags_do_not_accept() {
+	let owner = checked(1, 0, 19, &[9; 64], &[3]).handle;
+	let ed = checked(3, owner, 0, &[], &[]).data.clone();
+	let ml = checked(24, owner, 0, &[], &[]).data.clone();
+	let mut absent = Beacon::new(19, &ed, &ml);
+	let request = absent.get_registration_bundle().unwrap();
+	let before = checked(14, owner, 0, &[], &[]).data.clone();
+	for flag in [2, u64::MAX] {
+		assert_eq!(
+			dispatch(5, owner, flag, &request, &[]).status,
+			INVALID_ARGUMENT
+		);
+		assert_eq!(checked(14, owner, 0, &[], &[]).data, before);
+	}
+	let response = checked(5, owner, 0, &request, &[]);
+	assert_eq!(absent.finish_registration(&response.data).unwrap(), [0xff]);
+	let mut empty = Beacon::new(19, &ed, &ml);
+	let request = empty.get_registration_bundle().unwrap();
+	let before = checked(14, owner, 0, &[], &[]).data.clone();
+	let response = dispatch(5, owner, 1, &request, &[]);
+	assert_eq!(response.status, REJECTED);
+	assert!(response.data.is_empty());
+	let after = checked(14, owner, 0, &[], &[]).data.clone();
+	let before = decode_head(&before).unwrap();
+	let after_head = decode_head(&after).unwrap();
+	assert_eq!(after_head.generation(), before.generation() + 1);
+	assert_eq!(dispatch(5, owner, 0, &request, b"retry").status, REJECTED);
+	assert_eq!(checked(14, owner, 0, &[], &[]).data, after);
+	let mut present = Beacon::new(19, &ed, &ml);
+	let request = present.get_registration_bundle().unwrap();
+	let response = checked(5, owner, 1, &request, b"present");
+	assert_eq!(
+		present.finish_registration(&response.data).unwrap(),
+		b"present"
+	);
+	checked(9, owner, 0, &[], &[]);
+}
+
+#[test]
+fn explicit_send_replies_preserve_effects_payloads_and_metadata() {
+	let owner = checked(1, 0, 19, &[9; 64], &[3]).handle;
+	let mut beacon = Beacon::new(
+		19,
+		&checked(3, owner, 0, &[], &[]).data,
+		&checked(24, owner, 0, &[], &[]).data,
+	);
+	let request = beacon.get_registration_bundle().unwrap();
+	let registration = checked(5, owner, 0, &request, b"hello");
+	beacon.finish_registration(&registration.data).unwrap();
+	let peer = registration.key_id;
+	for (index, op) in [25, 26, 27].into_iter().enumerate() {
+		let before = checked(14, owner, 0, &[], &[]).data.clone();
+		for (input, kid) in [(&[][..], peer), (&b"unknown"[..], u64::MAX)] {
+			let rejected = checked(op, owner, kid, input, &[]);
+			assert_eq!(rejected.handle, owner);
+			assert_eq!(rejected.state, [0]);
+			assert!(rejected.data.is_empty());
+			assert_eq!((rejected.key_id, rejected.seq), (0, 0));
+			assert_eq!(checked(14, owner, 0, &[], &[]).data, before);
+		}
+		assert_eq!(
+			dispatch(op, owner, peer, b"payload", b"unexpected").status,
+			INVALID_ARGUMENT
+		);
+		let sent = checked(op, owner, peer, b"payload", &[]);
+		assert_eq!(sent.handle, owner);
+		assert_eq!(sent.key_id, peer);
+		assert_eq!(sent.seq, index as u64 + 2);
+		assert_eq!(sent.state[0], 1);
+		let ciphertext = if op == 27 {
+			let json: serde_json::Value = serde_json::from_slice(&sent.data).unwrap();
+			assert_eq!(json["seq"], sent.seq);
+			assert_eq!(json["kid"], sent.key_id);
+			serde_json::from_value::<Vec<u8>>(json["data"].clone()).unwrap()
+		} else {
+			sent.data.clone()
+		};
+		assert_eq!(
+			beacon.decrypt_message(&ciphertext).unwrap().plaintext,
+			b"payload"
+		);
+		if op == 26 {
+			let state: serde_json::Value = serde_json::from_slice(&sent.state[1..]).unwrap();
+			assert!(state.get("send_key").is_some());
+		} else {
+			assert_eq!(sent.state, [1]);
+		}
+	}
+	checked(9, owner, 0, &[], &[]);
+}
+
+#[test]
+fn explicit_beacon_send_replies_are_supported_with_no_update_operations() {
+	use beaconcrypt::ProviderServer;
+	let mut native = beaconcrypt::Server::new(19, Some(&[8; 32]), Some(&[9; 32]));
+	let public = [
+		native.identity_pk().as_bytes().as_slice(),
+		native.mldsa_public_key().as_slice(),
+	]
+	.concat();
+	let beacon = checked(2, 0, 19, &public, &[]).handle;
+	let rejected = checked(25, beacon, 0, b"not registered", &[]);
+	assert_eq!(rejected.state, [0]);
+	assert!(rejected.data.is_empty());
+	let request = checked(4, beacon, 0, &[], &[]);
+	let pending = native.get_shared_secret(&request.data).unwrap();
+	let response = native.build_registration_response(pending, None).unwrap();
+	checked(6, beacon, 0, &response.serialized, &[]);
+	assert_eq!(checked(25, beacon, 0, &[], &[]).state, [0]);
+	let sent = checked(25, beacon, 0, b"payload", &[]);
+	assert_eq!(sent.state, [1]);
+	assert_eq!(sent.key_id, 19);
+	assert_eq!(sent.seq, 1);
+	assert_eq!(
+		native.decrypt_message(&sent.data).unwrap().plaintext,
+		b"payload"
+	);
+	for op in [26, 27] {
+		assert_eq!(
+			dispatch(op, beacon, 0, b"payload", &[]).status,
+			INVALID_ARGUMENT
+		);
+	}
+	checked(9, beacon, 0, &[], &[]);
+}
+
+#[test]
+fn consumed_send_reply_and_persistence_errors_carry_no_payload_or_metadata() {
+	let consumed = send_response::<()>(41, Ok(SendOutcome::ConsumedWithoutOutput), |_| {
+		panic!("no output")
+	});
+	assert_eq!(consumed.status, 0);
+	assert_eq!(consumed.handle, 41);
+	assert_eq!(consumed.state, [2]);
+	assert!(consumed.data.is_empty());
+	assert_eq!((consumed.key_id, consumed.seq), (0, 0));
+	let failed = send_response::<()>(41, Err(PersistenceError::CommitUnknown), |_| {
+		panic!("withhold output")
+	});
+	assert_eq!(failed.status, 15);
+	assert!(failed.data.is_empty() && failed.state.is_empty());
+	assert_eq!((failed.handle, failed.key_id, failed.seq), (0, 0, 0));
+
+	for op in [25, 26, 27] {
+		let store = FailingStore {
+			inner: Rc::new(RefCell::new(MemoryStore::default())),
+			fail: Rc::new(Cell::new(false)),
+		};
+		let server = PersistentServer::create(
+			19,
+			Some(&[7; 32]),
+			Some(&[8; 32]),
+			Box::new(store.clone()) as Box<dyn SnapshotStore>,
+		)
+		.unwrap();
+		let mut beacon = Beacon::new(
+			19,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+		);
+		let owner = REGISTRY
+			.with_borrow_mut(|registry| registry.server(Ok(server)))
+			.handle;
+		let response = checked(
+			5,
+			owner,
+			0,
+			&beacon.get_registration_bundle().unwrap(),
+			b"hello",
+		);
+		store.fail.set(true);
+		let failed = dispatch(op, owner, response.key_id, b"withhold", &[]);
+		assert_eq!(failed.status, 6);
+		assert!(failed.data.is_empty() && failed.state.is_empty());
+		let poisoned = dispatch(op, owner, response.key_id, b"again", &[]);
+		assert_eq!(poisoned.status, 12);
+		assert!(poisoned.data.is_empty() && poisoned.state.is_empty());
+		checked(9, owner, 0, &[], &[]);
+	}
 }

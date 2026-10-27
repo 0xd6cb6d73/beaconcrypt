@@ -86,14 +86,14 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 	(
 		"server",
 		"",
-		"get_shared_secret_with_rng",
+		"get_shared_secret_from_lookup_with_rng",
 		"lookup.resume(consumed)",
 		"registration Server replay-status gate",
 	),
 	(
 		"server",
 		"",
-		"get_shared_secret_with_rng",
+		"get_shared_secret_from_lookup_with_rng",
 		"self.consumed_registrations.try_reserve(1).ok()?;",
 		"registration Server consumed-set reservation",
 	),
@@ -436,14 +436,14 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 	(
 		"server",
 		"",
-		"get_shared_secret_with_rng",
+		"authenticate_registration_lookup",
 		"InitPacket::from_slices(registration.identity_key,registration.pre_key,registration.one_time_key,registration.pq_key,registration.mldsa_public_key,registration.signature,)",
 		"registration complete fixed-width init parser mapping",
 	),
 	(
 		"server",
 		"",
-		"get_shared_secret_with_rng",
+		"get_shared_secret_from_lookup_with_rng",
 		"RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:None,beacon_one_time:None,beacon_kem:None,}",
 		"registration Server local secret handles",
 	),
@@ -943,6 +943,12 @@ const SERVER_LIFECYCLE: &[(&str, &str)] = &[
 const ENTROPY_DELEGATES: &[(&str, &str, &str, &str)] = &[
 	(
 		"server",
+		"",
+		"get_shared_secret_with_rng",
+		"letlookup=self.authenticate_registration_lookup(buffer)?;self.get_shared_secret_from_lookup_with_rng(lookup,rng)",
+	),
+	(
+		"server",
 		"impl ProviderServer for Server",
 		"get_shared_secret",
 		"self.get_shared_secret_with_rng(buffer,&mutbeaconcrypt_crypto::OsRng)",
@@ -977,7 +983,7 @@ const ENTROPY_REQUESTS: &[(&str, &str, &str, &str)] = &[
 	(
 		"server",
 		"",
-		"get_shared_secret_with_rng",
+		"get_shared_secret_from_lookup_with_rng",
 		"crate::pqxdh::execute_agreement(effect,crate::pqxdh::RegistrationKeys{identity_secret:self.identity_sk(),beacon_prekey:None,beacon_one_time:None,beacon_kem:None,},rng,)",
 	),
 	(
@@ -1071,14 +1077,27 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 	}
 	agreement(snapshot)?;
 	completion(snapshot)?;
-	let accept = body(snapshot, "server", "", "get_shared_secret_with_rng")?;
+	let authenticate = body(snapshot, "server", "", "authenticate_registration_lookup")?;
 	require_ordered_once(
-		&accept,
+		&authenticate,
 		&[
 			"letregistration=decode_init(buffer)?;",
 			"letpacket=InitPacket::from_slices(",
 			"auth::authenticate_init(self.authentication_pin()?,packet)?;",
-			"letlookup=beaconcrypt_core::peer::begin_registration_lookup(control,authenticated);letregistration_id=*lookup.request().as_bytes();",
+			"Some(beaconcrypt_core::peer::begin_registration_lookup(control,authenticated,))",
+		],
+		"registration Server authenticate-before-lookup order",
+	)?;
+	let accept = body(
+		snapshot,
+		"server",
+		"",
+		"get_shared_secret_from_lookup_with_rng",
+	)?;
+	require_ordered_once(
+		&accept,
+		&[
+			"letregistration_id=*lookup.request().as_bytes();",
 			"letconsumed=self.consumed_registrations.contains(&registration_id);",
 			"leteffect=lookup.resume(consumed);",
 			"ifmatches!(effect,AgreementEffect::Rejected(_)){returnNone;}",
@@ -1253,11 +1272,16 @@ pub(super) fn lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 		snapshot,
 		"server",
 		"",
-		"get_shared_secret_with_rng",
+		"get_shared_secret_from_lookup_with_rng",
 		"letconsumed=self.consumed_registrations.contains(&registration_id);",
 		"registration Server replay-status polarity",
 	)?;
-	let accept = body(snapshot, "server", "", "get_shared_secret_with_rng")?;
+	let accept = body(
+		snapshot,
+		"server",
+		"",
+		"get_shared_secret_from_lookup_with_rng",
+	)?;
 	let (_, after_insert) = accept
 		.split_once(
 			"letinserted=self.consumed_registrations.insert(*pending.request().as_bytes());",
@@ -1290,6 +1314,9 @@ fn source_mut<'a>(snapshot: &'a mut Snapshot, name: &str) -> &'a mut String {
 		"records" => &mut snapshot.core_record_effects,
 		"peer" => &mut snapshot.core_peer,
 		"ratchet" => &mut snapshot.adapter_ratchet,
+		"wire" => &mut snapshot.adapter_wire,
+		"parser" => &mut snapshot.transport_parser,
+		"portable-hkdf" => &mut snapshot.portable_hkdf,
 		"core-pqxdh" => &mut snapshot.core_pqxdh,
 		"agreement" => &mut snapshot.core_agreement,
 		"auth" => &mut snapshot.adapter_auth,
@@ -1323,6 +1350,14 @@ pub(super) fn replace_contract(
 			+ source[search_start..]
 				.find(&marker)
 				.expect("missing mutation function");
+		if source
+			.as_bytes()
+			.get(start + marker.len())
+			.is_some_and(|byte| byte.is_ascii_alphanumeric() || *byte == b'_')
+		{
+			search_start = start + marker.len();
+			continue;
+		}
 		let mut parentheses = 0usize;
 		let mut brackets = 0usize;
 		let mut declaration = false;
@@ -1699,7 +1734,7 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 		(
 			"server",
 			"",
-			"get_shared_secret_with_rng",
+			"get_shared_secret_from_lookup_with_rng",
 			"letconsumed=self.consumed_registrations.contains(&registration_id)",
 			"letconsumed=self.known_ids.contains_key(&self.identity_key_kid)",
 		),
@@ -1713,35 +1748,35 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 		(
 			"server",
 			"",
-			"get_shared_secret_with_rng",
+			"get_shared_secret_from_lookup_with_rng",
 			"lookup.resume(consumed)",
 			"lookup.resume(false)",
 		),
 		(
 			"server",
 			"",
-			"get_shared_secret_with_rng",
+			"get_shared_secret_from_lookup_with_rng",
 			"self.consumed_registrations.try_reserve(1).ok()?;",
 			"let _ = self.consumed_registrations.capacity();",
 		),
 		(
 			"server",
 			"",
-			"get_shared_secret_with_rng",
+			"get_shared_secret_from_lookup_with_rng",
 			"self.consumed_registrations.insert(*pending.request().as_bytes())",
 			"self.consumed_registrations.insert([0;64])",
 		),
 		(
 			"server",
 			"",
-			"get_shared_secret_with_rng",
+			"get_shared_secret_from_lookup_with_rng",
 			"letregistration=pending.resume(inserted)?;",
 			"letregistration=pending.resume(inserted)?; let _late = Some(())?;",
 		),
 		(
 			"server",
 			"",
-			"get_shared_secret_with_rng",
+			"get_shared_secret_from_lookup_with_rng",
 			"letregistration=pending.resume(inserted)?;",
 			"letregistration=pending.resume(inserted)?; if !inserted { return None; }",
 		),
@@ -1971,7 +2006,7 @@ fn registration_wire_fields_and_attached_signature_roles_cannot_be_substituted()
 		(
 			"server",
 			"",
-			"get_shared_secret_with_rng",
+			"authenticate_registration_lookup",
 			&[
 				"registration.identity_key",
 				"registration.pre_key",
@@ -2076,5 +2111,5 @@ fn registration_entropy_delegates_and_requests_cannot_be_substituted() {
 			checked += 1;
 		}
 	}
-	assert_eq!(checked, 27);
+	assert_eq!(checked, 30);
 }

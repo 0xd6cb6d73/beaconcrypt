@@ -161,6 +161,8 @@ func (b *Beacon) GenerateRegistration() ([]byte, error) {
 	})
 }
 
+// RegisterBeacon uses nil for the protocol witness. A supplied empty slice
+// consumes acceptance but rejects response construction, matching Rust/Python.
 func (s *Server) RegisterBeacon(registration, initialMessage []byte) (*RegistrationResponse, error) {
 	if s == nil {
 		return nil, ErrClosed
@@ -171,7 +173,11 @@ func (s *Server) RegisterBeacon(registration, initialMessage []byte) (*Registrat
 		}
 		regPtr, regFree := cBytes(registration)
 		defer regFree()
-		msgPtr, msgFree := cBytes(initialMessage)
+		messageBytes := initialMessage
+		if initialMessage != nil && len(initialMessage) == 0 {
+			messageBytes = []byte{0}
+		}
+		msgPtr, msgFree := cBytes(messageBytes)
 		defer msgFree()
 		response := C.beaconcrypt_register_beacon(
 			handle,

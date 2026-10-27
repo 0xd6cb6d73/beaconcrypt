@@ -10,7 +10,7 @@ use crate::server::{
 	ProviderServer, ReceiveTransition, RecvState, RegResponse, RegistrationOutput, SendState,
 	Server,
 };
-use crate::{Decrypted, Encrypted};
+use crate::{Decrypted, Encrypted, SendOutcome};
 
 const SNAPSHOT_MAGIC: &[u8; 16] = b"beaconcrypt-snap";
 const SNAPSHOT_VERSION: u16 = 3;
@@ -264,18 +264,22 @@ fn snapshot_digest(bytes: &[u8]) -> Result<[u8; DIGEST_SIZE], PersistenceError> 
 /// keep that trusted head in a rollback-resistant domain; canonical encoding and a digest do not
 /// make an old generation fresh.
 /// Use [`ServerSnapshot::validate_successor`] inside that transaction to check the replacement's parent link and monotone generation as well as its lineage.
+/// `Ok(false)` from CAS means the comparison or successor validation was rejected. Return [`PersistenceError::Storage`]
+/// for a storage failure and [`PersistenceError::CommitUnknown`] when the write may have
+/// committed. A persistent owner withholds output and becomes poisoned after either write error.
 pub trait SnapshotStore {
-	fn load(&self) -> Option<ServerSnapshot>;
+	/// Return `Ok(None)` only for an absent snapshot; report read failures as `Storage`.
+	fn load(&self) -> Result<Option<ServerSnapshot>, PersistenceError>;
 
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool;
+	) -> Result<bool, PersistenceError>;
 }
 
 impl<S: SnapshotStore + ?Sized> SnapshotStore for Box<S> {
-	fn load(&self) -> Option<ServerSnapshot> {
+	fn load(&self) -> Result<Option<ServerSnapshot>, PersistenceError> {
 		(**self).load()
 	}
 
@@ -283,7 +287,7 @@ impl<S: SnapshotStore + ?Sized> SnapshotStore for Box<S> {
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
+	) -> Result<bool, PersistenceError> {
 		(**self).compare_and_swap(expected, replacement)
 	}
 }
@@ -315,26 +319,54 @@ impl BindingSnapshotStore {
 
 #[cfg(any(feature = "cbinds", feature = "pybinds"))]
 impl SnapshotStore for BindingSnapshotStore {
-	fn load(&self) -> Option<ServerSnapshot> {
-		self.snapshot
+	fn load(&self) -> Result<Option<ServerSnapshot>, PersistenceError> {
+		Ok(self
+			.snapshot
 			.as_ref()
-			.map(|bytes| ServerSnapshot::from_bytes(bytes.as_slice().to_vec()))
+			.map(|bytes| ServerSnapshot::from_bytes(bytes.as_slice().to_vec())))
 	}
 
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
+	) -> Result<bool, PersistenceError> {
 		if self.head.as_ref() != expected {
-			return false;
+			return Ok(false);
 		}
 		let Ok(replacement_head) = replacement.validate_successor(expected) else {
-			return false;
+			return Ok(false);
 		};
 		self.snapshot = Some(Zeroizing::new(replacement.as_bytes().to_vec()));
 		self.head = Some(replacement_head);
-		true
+		Ok(true)
+	}
+}
+
+/// Plaintext remains protected while persistence can still reject its publication.
+struct TentativeDecrypted {
+	plaintext: Zeroizing<Vec<u8>>,
+	key_id: u64,
+	seq: u64,
+}
+
+impl From<Decrypted> for TentativeDecrypted {
+	fn from(output: Decrypted) -> Self {
+		Self {
+			plaintext: Zeroizing::new(output.plaintext),
+			key_id: output.key_id,
+			seq: output.seq,
+		}
+	}
+}
+
+impl TentativeDecrypted {
+	fn release(mut self) -> Decrypted {
+		Decrypted {
+			plaintext: core::mem::take(&mut *self.plaintext),
+			key_id: self.key_id,
+			seq: self.seq,
+		}
 	}
 }
 
@@ -410,7 +442,7 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		let server = Server::try_new_with_rng(server_kid, id_seed, mldsa_seed, rng)
 			.map_err(|_| PersistenceError::Initialization)?;
 		let snapshot = ServerSnapshot::encode(&server, lineage, 0, [0; DIGEST_SIZE])?;
-		if !store.compare_and_swap(None, &snapshot) {
+		if !store.compare_and_swap(None, &snapshot)? {
 			return Err(PersistenceError::StaleGeneration);
 		}
 		let head = snapshot.head()?;
@@ -427,7 +459,7 @@ impl<S: SnapshotStore> PersistentServer<S> {
 	/// Activation itself advances the generation by CAS, so two restorers of one head cannot both
 	/// become live.
 	pub fn restore(mut store: S) -> Result<Self, PersistenceError> {
-		let snapshot = store.load().ok_or(PersistenceError::MissingSnapshot)?;
+		let snapshot = store.load()?.ok_or(PersistenceError::MissingSnapshot)?;
 		let (server, stored_head) = snapshot.decode()?;
 		let generation = stored_head
 			.generation
@@ -435,7 +467,7 @@ impl<S: SnapshotStore> PersistentServer<S> {
 			.ok_or(PersistenceError::GenerationExhausted)?;
 		let activated =
 			ServerSnapshot::encode(&server, stored_head.lineage, generation, stored_head.digest)?;
-		if !store.compare_and_swap(Some(&stored_head), &activated) {
+		if !store.compare_and_swap(Some(&stored_head), &activated)? {
 			return Err(PersistenceError::StaleGeneration);
 		}
 		let head = activated.head()?;
@@ -458,7 +490,10 @@ impl<S: SnapshotStore> PersistentServer<S> {
 	/// Read the trusted store's committed snapshot only if it still belongs to this owner.
 	/// The returned bytes contain plaintext secrets and do not authenticate themselves.
 	pub fn snapshot(&self) -> Result<ServerSnapshot, PersistenceError> {
-		let snapshot = self.store.load().ok_or(PersistenceError::MissingSnapshot)?;
+		let snapshot = self
+			.store
+			.load()?
+			.ok_or(PersistenceError::MissingSnapshot)?;
 		if snapshot.head()? != self.head {
 			return Err(PersistenceError::StaleGeneration);
 		}
@@ -503,10 +538,12 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		buffer: &[u8],
 		rng: &mut R,
 	) -> Result<Option<RegistrationOutput>, PersistenceError> {
-		if buffer.len() > beaconcrypt_parse::MAX_MESSAGE_SIZE {
-			return self.reject_oversized();
-		}
-		self.commit(|server| server.get_shared_secret_with_rng(buffer, rng))
+		self.commit_transition(|server| {
+			// Acceptance inserts a replay marker only when returning its one-use token.
+			let output = server.get_shared_secret_with_rng(buffer, rng);
+			let changed = output.is_some();
+			(output, changed)
+		})
 	}
 
 	pub fn build_registration_response(
@@ -517,7 +554,12 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		if !self.server.registration_response_fits(data) {
 			return self.reject_oversized();
 		}
-		self.commit(|server| server.build_registration_response(registration, data))
+		self.commit_transition(|server| {
+			// Completion publishes the peer and counter together with its response.
+			let output = server.build_registration_response(registration, data);
+			let changed = output.is_some();
+			(output, changed)
+		})
 	}
 
 	pub fn encrypt_message(
@@ -525,15 +567,28 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<Encrypted>, PersistenceError> {
-		if !self.outgoing_message_fits(bytes.len(), kid) {
-			return self.reject_oversized();
-		}
-		self.commit(|server| server.encrypt_message(bytes, kid))
+		self.encrypt_message_outcome(bytes, kid)
+			.map(SendOutcome::into_option)
+	}
+
+	/// Report the send's effect only after its changed state commits durably.
+	/// Storage or uncertain-commit errors release no outcome and poison this owner.
+	pub fn encrypt_message_outcome(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> Result<SendOutcome<Encrypted>, PersistenceError> {
+		self.commit_send(|server| server.encrypt_message_outcome(bytes, kid))
 	}
 
 	pub fn decrypt_message(&mut self, bytes: &[u8]) -> Result<Option<Decrypted>, PersistenceError> {
 		Ok(self
-			.commit_receive(|server| server.decrypt_message_transition(bytes))?
+			.commit_receive(|server| {
+				server
+					.decrypt_message_transition(bytes)
+					.map(TentativeDecrypted::from)
+			})?
+			.map(TentativeDecrypted::release)
 			.into_option())
 	}
 
@@ -542,10 +597,17 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<SendState>, PersistenceError> {
-		if !self.outgoing_message_fits(bytes.len(), kid) {
-			return self.reject_oversized();
-		}
-		self.commit(|server| server.encrypt_and_update(bytes, kid))
+		self.encrypt_and_update_outcome(bytes, kid)
+			.map(SendOutcome::into_option)
+	}
+
+	/// Commit send-key consumption before releasing its outcome or observational update.
+	pub fn encrypt_and_update_outcome(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> Result<SendOutcome<SendState>, PersistenceError> {
+		self.commit_send(|server| server.encrypt_and_update_outcome(bytes, kid))
 	}
 
 	pub fn decrypt_and_update(
@@ -562,18 +624,22 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<String>, PersistenceError> {
-		if !self.outgoing_message_fits(bytes.len(), kid) {
-			return self.reject_oversized();
-		}
-		self.commit(|server| server.encrypt_and_update_json(bytes, kid))
+		self.encrypt_and_update_json_outcome(bytes, kid)
+			.map(SendOutcome::into_option)
 	}
 
-	fn outgoing_message_fits(&self, plaintext_len: usize, kid: u64) -> bool {
-		let sequence = self
-			.server
-			.ratchet_status(kid)
-			.map_or(0, |status| status.send_sequence().saturating_add(1));
-		crate::wire::frame_len(plaintext_len, sequence, self.server.identity_key_kid()).is_some()
+	/// Commit send-key consumption before releasing its outcome or JSON update.
+	pub fn encrypt_and_update_json_outcome(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> Result<SendOutcome<String>, PersistenceError> {
+		self.commit_send(|server| {
+			server
+				.encrypt_and_update_json_outcome(bytes, kid)
+				.map(Zeroizing::new)
+		})
+		.map(|outcome| outcome.map(|mut json| core::mem::take(&mut *json)))
 	}
 
 	fn reject_oversized<T>(&self) -> Result<Option<T>, PersistenceError> {
@@ -601,8 +667,14 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		project: impl FnOnce(&Server, Decrypted) -> Result<T, E>,
 	) -> Result<Option<T>, PersistenceError> {
 		// Commit the authoritative receive effect before constructing any caller-visible update.
-		let transition = self.commit_receive(|server| server.decrypt_message_transition(bytes))?;
-		Self::project_receive_output(transition, |decrypted| project(&self.server, decrypted))
+		let transition = self.commit_receive(|server| {
+			server
+				.decrypt_message_transition(bytes)
+				.map(TentativeDecrypted::from)
+		})?;
+		Self::project_receive_output(transition, |decrypted| {
+			project(&self.server, decrypted.release())
+		})
 	}
 
 	fn project_receive_output<T, U, E>(
@@ -621,47 +693,44 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		&mut self,
 		operation: impl FnOnce(&mut Server) -> ReceiveTransition<T>,
 	) -> Result<ReceiveTransition<T>, PersistenceError> {
-		if self.poisoned {
-			return Err(PersistenceError::Poisoned);
-		}
-		self.poisoned = true;
-		let output = match operation(&mut self.server) {
-			ReceiveTransition::Rejected => {
-				// Rejection is an exact-state transition, so it creates no snapshot generation.
-				self.poisoned = false;
-				return Ok(ReceiveTransition::Rejected);
-			}
-			ReceiveTransition::Accepted(output) => output,
-		};
-		let generation = self
-			.head
-			.generation
-			.checked_add(1)
-			.ok_or(PersistenceError::GenerationExhausted)?;
-		let snapshot = ServerSnapshot::encode(
-			&self.server,
-			self.head.lineage,
-			generation,
-			self.head.digest,
-		)?;
-		let successor_head = snapshot.head()?;
-		if !self.store.compare_and_swap(Some(&self.head), &snapshot) {
-			return Err(PersistenceError::StaleGeneration);
-		}
-		self.head = successor_head;
-		self.poisoned = false;
-		Ok(ReceiveTransition::Accepted(output))
+		self.commit_transition(|server| match operation(server) {
+			ReceiveTransition::Rejected => (ReceiveTransition::Rejected, false),
+			ReceiveTransition::Accepted(output) => (ReceiveTransition::Accepted(output), true),
+		})
 	}
 
+	fn commit_send<T>(
+		&mut self,
+		operation: impl FnOnce(&mut Server) -> SendOutcome<T>,
+	) -> Result<SendOutcome<T>, PersistenceError> {
+		self.commit_transition(|server| {
+			let output = operation(server);
+			let changed = output.changed();
+			(output, changed)
+		})
+	}
+
+	#[cfg(test)]
 	fn commit<T>(
 		&mut self,
 		operation: impl FnOnce(&mut Server) -> T,
+	) -> Result<T, PersistenceError> {
+		self.commit_transition(|server| (operation(server), true))
+	}
+
+	fn commit_transition<T>(
+		&mut self,
+		operation: impl FnOnce(&mut Server) -> (T, bool),
 	) -> Result<T, PersistenceError> {
 		if self.poisoned {
 			return Err(PersistenceError::Poisoned);
 		}
 		self.poisoned = true;
-		let output = operation(&mut self.server);
+		let (output, changed) = operation(&mut self.server);
+		if !changed {
+			self.poisoned = false;
+			return Ok(output);
+		}
 		let generation = self
 			.head
 			.generation
@@ -674,7 +743,7 @@ impl<S: SnapshotStore> PersistentServer<S> {
 			self.head.digest,
 		)?;
 		let successor_head = snapshot.head()?;
-		if !self.store.compare_and_swap(Some(&self.head), &snapshot) {
+		if !self.store.compare_and_swap(Some(&self.head), &snapshot)? {
 			return Err(PersistenceError::StaleGeneration);
 		}
 		self.head = successor_head;
@@ -695,6 +764,10 @@ pub enum PersistenceError {
 	Initialization,
 	Digest,
 	Poisoned,
+	/// The store failed before it could confirm a read or write.
+	Storage,
+	/// A write may have committed; restore authoritative state before retrying.
+	CommitUnknown,
 }
 
 impl fmt::Display for PersistenceError {
@@ -710,6 +783,8 @@ impl fmt::Display for PersistenceError {
 			Self::Initialization => "failed to initialize snapshot dependencies",
 			Self::Digest => "failed to compute snapshot identity digest",
 			Self::Poisoned => "persistent server is poisoned after a failed commit",
+			Self::Storage => "snapshot storage operation failed",
+			Self::CommitUnknown => "snapshot commit outcome is unknown",
 		};
 		formatter.write_str(message)
 	}
@@ -806,22 +881,23 @@ mod tests {
 	}
 
 	impl SnapshotStore for MemoryStore {
-		fn load(&self) -> Option<ServerSnapshot> {
-			self.snapshot
+		fn load(&self) -> Result<Option<ServerSnapshot>, PersistenceError> {
+			Ok(self
+				.snapshot
 				.as_ref()
-				.map(|bytes| ServerSnapshot::from_bytes(bytes.clone()))
+				.map(|bytes| ServerSnapshot::from_bytes(bytes.clone())))
 		}
 
 		fn compare_and_swap(
 			&mut self,
 			expected: Option<&SnapshotHead>,
 			replacement: &ServerSnapshot,
-		) -> bool {
+		) -> Result<bool, PersistenceError> {
 			if self.head.as_ref() != expected {
-				return false;
+				return Ok(false);
 			}
 			let Ok(replacement_head) = replacement.head() else {
-				return false;
+				return Ok(false);
 			};
 			match expected {
 				Some(previous)
@@ -829,14 +905,14 @@ mod tests {
 						|| previous.generation().checked_add(1)
 							!= Some(replacement_head.generation()) =>
 				{
-					return false;
+					return Ok(false);
 				}
-				None if replacement_head.generation() != 0 => return false,
+				None if replacement_head.generation() != 0 => return Ok(false),
 				_ => {}
 			}
 			self.snapshot = Some(replacement.as_bytes().to_vec());
 			self.head = Some(replacement_head);
-			true
+			Ok(true)
 		}
 	}
 
@@ -913,14 +989,14 @@ mod tests {
 				.is_none()
 		);
 		assert_eq!(persistent.server.serialize_state().unwrap(), before);
-		assert_eq!(persistent.head().generation(), 1);
+		assert_eq!(persistent.head().generation(), 0);
 		assert!(!persistent.is_poisoned());
 		let pending = persistent
 			.get_shared_secret_with_rng(&bundle, &mut rng)
 			.unwrap()
 			.unwrap();
 		let committed = persistent.head();
-		assert_eq!(committed.generation(), 2);
+		assert_eq!(committed.generation(), 1);
 		drop(pending);
 		let PersistentServer { store, .. } = persistent;
 		let mut restored = PersistentServer::restore(store).unwrap();
@@ -997,6 +1073,14 @@ mod tests {
 	fn persistence_errors_have_stable_messages() {
 		let cases = [
 			(PersistenceError::MissingSnapshot, "snapshot store is empty"),
+			(
+				PersistenceError::Storage,
+				"snapshot storage operation failed",
+			),
+			(
+				PersistenceError::CommitUnknown,
+				"snapshot commit outcome is unknown",
+			),
 			(PersistenceError::InvalidSnapshot, "invalid server snapshot"),
 			(
 				PersistenceError::NonCanonicalSnapshot,
@@ -1060,6 +1144,55 @@ mod tests {
 		let PersistentServer { store, .. } = persistent;
 		let restored = PersistentServer::restore(store).unwrap();
 		assert_eq!(restored.identity_key_kid(), 6);
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn consumed_send_without_output_is_committed_and_survives_restore() {
+		use crate::{Beacon, ProviderBeacon};
+
+		let mut persistent = deterministic_persistent_server();
+		let mut beacon = Beacon::new(
+			7,
+			persistent.identity_pk().as_bytes(),
+			&persistent.mldsa_public_key(),
+		);
+		let request = beacon.get_registration_bundle().unwrap();
+		let pending = persistent.get_shared_secret(&request).unwrap().unwrap();
+		let response = persistent
+			.build_registration_response(pending, None)
+			.unwrap()
+			.unwrap();
+		beacon.finish_registration(&response.serialized).unwrap();
+		let head = persistent.head();
+		let previous_sequence = persistent
+			.ratchet_status(response.kid)
+			.unwrap()
+			.send_sequence();
+		let withheld = persistent
+			.commit_send(|server| {
+				// Model an operation whose consumed key yields no caller-visible output.
+				let _output = server.encrypt_message(b"withheld", response.kid).unwrap();
+				SendOutcome::<Encrypted>::ConsumedWithoutOutput
+			})
+			.unwrap();
+		assert!(matches!(withheld, SendOutcome::ConsumedWithoutOutput));
+		assert_eq!(persistent.head().generation(), head.generation() + 1);
+		let PersistentServer { store, .. } = persistent;
+		let mut restored = PersistentServer::restore(store).unwrap();
+		assert_eq!(
+			restored
+				.ratchet_status(response.kid)
+				.unwrap()
+				.send_sequence(),
+			previous_sequence + 1
+		);
+		let next = restored
+			.encrypt_message(b"next", response.kid)
+			.unwrap()
+			.unwrap();
+		assert_eq!(next.seq, previous_sequence + 2);
+		assert_eq!(beacon.decrypt_message(&next).unwrap().plaintext, b"next");
 	}
 
 	#[test]

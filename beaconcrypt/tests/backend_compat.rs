@@ -226,11 +226,21 @@ fn hkdf_sha512_salt_context_and_output_boundaries_match_sodium() {
 			let rust_prk = rust::extract(salt, ikm).unwrap();
 			for info in [None, Some(&b""[..]), Some(&b"domain\0bytes"[..])] {
 				for size in [0, 1, 32, 64, 76, 129, 255 * 64, 255 * 64 + 1] {
+					let expected = native::expand(size, info, &native_prk).ok();
 					assert_eq!(
 						rust::expand(size, info, &rust_prk).ok(),
-						native::expand(size, info, &native_prk).ok(),
+						expected,
 						"salt {salt:?}, info {info:?}, size {size}"
 					);
+					let mut output = vec![0x5a; size];
+					let result = rust::expand_into(&mut output, info, &rust_prk);
+					if let Some(expected) = expected {
+						assert!(result.is_ok());
+						assert_eq!(output, expected);
+					} else {
+						assert!(result.is_err());
+						assert_eq!(output, vec![0x5a; size]);
+					}
 				}
 			}
 		}

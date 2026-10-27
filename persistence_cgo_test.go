@@ -48,13 +48,13 @@ func TestSnapshotCallbackLifetimeAndFailedConstructors(t *testing.T) {
 				code = StatusMissingSnapshot
 			case "load-error":
 				failedStore.loadError = errors.New("injected load error")
-				code = StatusMissingSnapshot
+				code = StatusStorage
 			case "load-panic":
 				failedStore.panicLoad = true
-				code = StatusMissingSnapshot
+				code = StatusStorage
 			case "cas-panic":
 				failedStore.panicCAS = true
-				code = StatusStaleGeneration
+				code = StatusCommitUnknown
 			}
 			context := newSnapshotStoreContext(failedStore)
 			var failed *Server

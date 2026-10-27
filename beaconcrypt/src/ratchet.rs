@@ -88,15 +88,13 @@ pub type AeadNonce = crypto_aead::chacha20poly1305_ietf::Nonce;
 fn symmetric_ratchet_hkdf<const OUTPUT_SIZE: usize>(
 	request: &verified_ratchet::SymmetricRatchetKdfRequest,
 ) -> [u8; OUTPUT_SIZE] {
+	const { assert!(OUTPUT_SIZE <= 255 * 64) };
 	let prk = crypto_kdf::hkdf::sha512::extract(None, request.input())
 		.expect("HKDF-SHA-512 extract accepts every fixed-width ratchet chain");
-	let expanded = Zeroizing::new(
-		crypto_kdf::hkdf::sha512::expand(OUTPUT_SIZE, Some(request.info()), &prk)
-			.expect("the fixed ratchet output sizes are below the HKDF-SHA-512 limit"),
-	);
-	let mut output = [0u8; OUTPUT_SIZE];
-	output.copy_from_slice(&expanded);
-	output
+	let mut output = Zeroizing::new([0u8; OUTPUT_SIZE]);
+	crypto_kdf::hkdf::sha512::expand_into(&mut output[..], Some(request.info()), &prk)
+		.expect("the fixed ratchet output sizes are below the HKDF-SHA-512 limit");
+	*output
 }
 
 pub(crate) fn ratchet_hkdf(
@@ -517,14 +515,7 @@ pub(crate) fn execute_write_request(request: records::RecordWriteRequest<'_>) ->
 			parts,
 			sequence,
 			sender,
-		} => {
-			let ciphertext = join_record_parts(parts)?;
-			crate::wire::encode_frame(CryptoFrame {
-				cipher_text: &ciphertext,
-				seq: sequence,
-				key_id: sender,
-			})
-		}
+		} => crate::wire::encode_frame_parts(sequence, sender, &parts),
 	}
 }
 

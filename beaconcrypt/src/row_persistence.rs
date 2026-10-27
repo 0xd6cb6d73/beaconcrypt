@@ -9,7 +9,9 @@ use beaconcrypt_crypto::{TryCryptoRng, crypto_generichash, crypto_sign, ensure_i
 use zeroize::Zeroizing;
 
 use crate::shared::EstablishedRemote;
-use crate::{Decrypted, Encrypted, ProviderServer, RegResponse, Server, SnapshotLineage};
+use crate::{
+	Decrypted, Encrypted, ProviderServer, RegResponse, SendOutcome, Server, SnapshotLineage,
+};
 
 const MAGIC: &[u8; 16] = b"beaconcrypt-row\0";
 const VERSION: u8 = 1;
@@ -229,6 +231,14 @@ pub struct RowMessage {
 }
 
 impl RowMessage {
+	pub(crate) fn into_encrypted(mut self) -> Encrypted {
+		Encrypted {
+			ciphertext: core::mem::take(&mut *self.data),
+			key_id: self.key_id,
+			seq: self.sequence,
+		}
+	}
+
 	pub fn data(&self) -> &[u8] {
 		&self.data
 	}
@@ -538,15 +548,21 @@ impl<S: RowStore> CachedRowServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<Encrypted>, RowError> {
+		self.encrypt_message_outcome(bytes, kid)
+			.map(|outcome| outcome.map(RowMessage::into_encrypted).into_option())
+	}
+
+	/// Release an explicit send outcome only after its row transaction commits.
+	pub fn encrypt_message_outcome(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> Result<SendOutcome<RowMessage>, RowError> {
 		if !send_input_fits(bytes, self.identity_key_kid()) {
-			return Ok(None);
+			return Ok(SendOutcome::Rejected);
 		}
 		let output = self.transaction(|session| session.encrypt_message(bytes, kid))?;
-		Ok(output.message.map(|mut message| Encrypted {
-			ciphertext: core::mem::take(&mut *message.data),
-			key_id: message.key_id,
-			seq: message.sequence,
-		}))
+		Ok(SendOutcome::from_attempt(output.message, output.changed))
 	}
 
 	pub fn decrypt_message(&mut self, bytes: &[u8]) -> Result<Option<Decrypted>, RowError> {
@@ -783,18 +799,24 @@ impl<S: RowStore> RowServer<S> {
 		data: Option<&[u8]>,
 		rng: &mut R,
 	) -> Result<Option<RegResponse>, RowError> {
-		// Preserve the convenience API's validation before any database access. Composed callbacks
-		// instead choose their own preflight inside the acceptance transaction.
-		let mut session = self.identity.row_session(self.identity_key_kid());
-		let Some(pending) = session.get_shared_secret_with_rng(bytes, rng) else {
+		// Authenticate before database access, then reject durable replays before agreement or entropy.
+		// Composed callbacks instead choose their own preflight inside the acceptance transaction.
+		let Some(lookup) = self.identity.authenticate_registration_lookup(bytes) else {
 			return Ok(None);
 		};
 		let accepted = transact(&mut self.store, |transaction| {
-			consume_registration_marker(transaction, self.lineage, &self.identity_digest, &pending)
+			accept_registration_lookup_with_rng(
+				&self.identity,
+				transaction,
+				self.lineage,
+				&self.identity_digest,
+				lookup,
+				rng,
+			)
 		})?;
-		if !accepted {
+		let Some(pending) = accepted else {
 			return Ok(None);
-		}
+		};
 		let output = transact(&mut self.store, |transaction| {
 			complete_registration(
 				&self.identity,
@@ -817,15 +839,21 @@ impl<S: RowStore> RowServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<Encrypted>, RowError> {
+		self.encrypt_message_outcome(bytes, kid)
+			.map(|outcome| outcome.map(RowMessage::into_encrypted).into_option())
+	}
+
+	/// Release an explicit send outcome only after its row transaction commits.
+	pub fn encrypt_message_outcome(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> Result<SendOutcome<RowMessage>, RowError> {
 		if !send_input_fits(bytes, self.identity_key_kid()) {
-			return Ok(None);
+			return Ok(SendOutcome::Rejected);
 		}
 		let output = self.transaction(|session| session.encrypt_message(bytes, kid))?;
-		Ok(output.message.map(|mut message| Encrypted {
-			ciphertext: core::mem::take(&mut *message.data),
-			key_id: message.key_id,
-			seq: message.sequence,
-		}))
+		Ok(SendOutcome::from_attempt(output.message, output.changed))
 	}
 
 	/// Authenticate once and commit the resulting peer before releasing plaintext. Rejection writes nothing.
@@ -988,20 +1016,20 @@ impl<'a> RowSession<'a> {
 	) -> Result<bool, RowError> {
 		self.checked(|session| {
 			session.begin_native(SessionPhase::Acceptance)?;
-			let mut server = session
-				.identity
-				.row_session(session.identity.identity_key_kid());
-			let Some(pending) = server.get_shared_secret_with_rng(bytes, rng) else {
+			let Some(lookup) = session.identity.authenticate_registration_lookup(bytes) else {
 				return Ok(false);
 			};
-			if !consume_registration_marker(
+			let pending = accept_registration_lookup_with_rng(
+				session.identity,
 				session.transaction,
 				session.lineage,
 				session.identity_digest,
-				&pending,
-			)? {
+				lookup,
+				rng,
+			)?;
+			let Some(pending) = pending else {
 				return Ok(false);
-			}
+			};
 			session.pending_registration = Some(pending);
 			Ok(true)
 		})
@@ -1080,26 +1108,33 @@ impl<'a> RowSession<'a> {
 	}
 }
 
-fn consume_registration_marker(
+fn accept_registration_lookup_with_rng<R: TryCryptoRng + ?Sized>(
+	identity: &Server,
 	transaction: &mut dyn RowTransaction,
 	lineage: SnapshotLineage,
 	identity_digest: &[u8; 32],
-	pending: &crate::RegistrationOutput,
-) -> Result<bool, RowError> {
-	let replay_key = storage_key(lineage, REGISTRATION, &pending.row_registration_id());
+	lookup: beaconcrypt_core::peer::RegistrationLookup,
+	rng: &mut R,
+) -> Result<Option<crate::RegistrationOutput>, RowError> {
+	let replay_key = storage_key(lineage, REGISTRATION, lookup.request().as_bytes());
 	if let Some(bytes) = transaction.load(&replay_key)? {
 		let bytes = Zeroizing::new(bytes);
 		let row = bound_row(&replay_key, &bytes, identity_digest)?;
 		if row.generation != 0 || !row.payload.is_empty() {
 			return Err(RowError::InvalidRow);
 		}
-		return Ok(false);
+		return Ok(None);
 	}
+	let mut server = identity.row_session(identity.identity_key_kid());
+	let Some(pending) = server.get_shared_secret_from_lookup_with_rng(lookup, rng) else {
+		return Ok(None);
+	};
+	let replay_key = storage_key(lineage, REGISTRATION, &pending.row_registration_id());
 	transaction.store(
 		&replay_key,
 		&encode_row(&replay_key, 0, identity_digest, &[]),
 	)?;
-	Ok(true)
+	Ok(Some(pending))
 }
 
 fn complete_registration(

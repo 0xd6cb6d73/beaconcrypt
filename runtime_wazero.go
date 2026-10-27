@@ -250,11 +250,30 @@ func (i *wasmInstance) call(op uint32, arg uint64, input, extra []byte) (out was
 	}
 	status := PersistenceStatus(binary.LittleEndian.Uint32(view))
 	dataLen, stateLen := binary.LittleEndian.Uint32(view[24:]), binary.LittleEndian.Uint32(view[28:])
-	if status > StatusPoisoned || uint64(dataLen)+uint64(stateLen)+32 != uint64(a.length) {
+	if (status > StatusStorage && status != StatusCommitUnknown) || uint64(dataLen)+uint64(stateLen)+32 != uint64(a.length) {
 		return out, i.invalidABI("invalid response header")
 	}
 	if status != StatusOK {
 		return out, &PersistenceError{Code: status, Cause: i.state.err}
+	}
+	if op == 25 || op == 26 || op == 27 {
+		if stateLen == 0 {
+			return out, i.invalidABI("missing send outcome")
+		}
+		kind := SendOutcome(view[32+dataLen])
+		keyID, sequence := binary.LittleEndian.Uint64(view[8:]), binary.LittleEndian.Uint64(view[16:])
+		switch kind {
+		case SendRejected, SendConsumedWithoutOutput:
+			if dataLen != 0 || stateLen != 1 || keyID != 0 || sequence != 0 {
+				return out, i.invalidABI("invalid empty send outcome")
+			}
+		case SendSent:
+			if dataLen == 0 || sequence == 0 || (op == 26 && stateLen == 1) || (op != 26 && stateLen != 1) {
+				return out, i.invalidABI("invalid sent outcome")
+			}
+		default:
+			return out, i.invalidABI("unknown send outcome")
+		}
 	}
 	if (op == 14 || op == 16 || op == 19) && (dataLen != 72 || stateLen != 0) {
 		return out, i.invalidABI("invalid snapshot head response")
@@ -452,12 +471,12 @@ func wasmSnapshotLoad(ctx context.Context, mod api.Module, token, ptr, capacity 
 func wasmSnapshotCAS(ctx context.Context, mod api.Module, token, expectedPtr, expectedLen, replacementPtr, replacementLen uint32) (result uint32) {
 	state := wasmCallback(ctx, token)
 	if state == nil {
-		return 0
+		return 2
 	}
 	defer func() {
 		if problem := recover(); problem != nil {
 			state.setError(fmt.Errorf("snapshot CAS panic: %v", problem))
-			result = 0
+			result = 3
 		}
 	}()
 	var expected *SnapshotHead
@@ -465,24 +484,24 @@ func wasmSnapshotCAS(ctx context.Context, mod api.Module, token, expectedPtr, ex
 		data, ok := mod.Memory().Read(expectedPtr, expectedLen)
 		if !ok {
 			state.setError(errors.New("invalid expected snapshot pointer"))
-			return 0
+			return 2
 		}
 		head, err := decodeWasmHead(data)
 		if err != nil {
 			state.setError(err)
-			return 0
+			return 2
 		}
 		expected = &head
 	}
 	data, ok := mod.Memory().Read(replacementPtr, replacementLen)
 	if !ok {
 		state.setError(errors.New("invalid replacement snapshot pointer"))
-		return 0
+		return 2
 	}
 	accepted, err := state.store.CompareAndSwap(expected, bytes.Clone(data))
 	if err != nil {
 		state.setError(err)
-		return 0
+		return 3
 	}
 	if accepted {
 		return 1

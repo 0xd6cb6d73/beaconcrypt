@@ -6,8 +6,8 @@ use zeroize::Zeroizing;
 use crate::cbinds::{
 	Buffer, RegistrationResponse, STATUS_ENCODING, STATUS_GENERATION_EXHAUSTED,
 	STATUS_INITIALIZATION, STATUS_INVALID_ARGUMENT, STATUS_INVALID_SNAPSHOT,
-	STATUS_MISSING_SNAPSHOT, STATUS_OK, STATUS_REJECTED, STATUS_STALE_GENERATION, empty_buffer,
-	into_buffer,
+	STATUS_MISSING_SNAPSHOT, STATUS_OK, STATUS_REJECTED, STATUS_STALE_GENERATION, SendResult,
+	empty_buffer, encrypted_state, failed_send_result, into_buffer, send_result,
 };
 use crate::row_binding_server::BindingRowServer;
 use crate::{
@@ -513,6 +513,37 @@ pub extern "C" fn beaconcrypt_row_server_encrypt_with_metadata(
 	})
 }
 
+/// Encrypt with a committed, explicit send effect. Empty plaintext is an unchanged rejection. Errors suppress all outcomes and output; inspect result.status before result.outcome. Release successful buffers with beaconcrypt_free_buffer.
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_row_server_encrypt_outcome(
+	handle: *mut RowServerHandle,
+	data: *const u8,
+	len: usize,
+	kid: u64,
+) -> SendResult {
+	let Some(server) = (unsafe { handle.as_mut() }) else {
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	let Some(data) = (unsafe { bytes(data, len) }) else {
+		server.1.set(STATUS_INVALID_ARGUMENT);
+		return failed_send_result(STATUS_INVALID_ARGUMENT);
+	};
+	match server.0.encrypt_message_outcome(data, kid) {
+		Ok(outcome) => {
+			server.1.set(STATUS_OK);
+			send_result(
+				outcome.map(crate::RowMessage::into_encrypted),
+				encrypted_state,
+			)
+		}
+		Err(error) => {
+			let code = status(error);
+			server.1.set(code);
+			failed_send_result(code)
+		}
+	}
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_row_server_decrypt(
 	handle: *mut RowServerHandle,
@@ -969,6 +1000,108 @@ pub extern "C" fn beaconcrypt_row_session_complete_registration(
 #[cfg(test)]
 mod composition_tests {
 	use super::*;
+
+	#[derive(Default)]
+	struct SendStore {
+		rows: std::collections::BTreeMap<Vec<u8>, Vec<u8>>,
+		fail: std::rc::Rc<Cell<bool>>,
+	}
+
+	impl RowTransaction for std::collections::BTreeMap<Vec<u8>, Vec<u8>> {
+		fn load(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>, RowError> {
+			Ok(self.get(key).cloned())
+		}
+		fn store(&mut self, key: &[u8], value: &[u8]) -> Result<(), RowError> {
+			self.insert(key.to_vec(), value.to_vec());
+			Ok(())
+		}
+	}
+
+	impl RowStore for SendStore {
+		fn transaction(
+			&mut self,
+			operation: &mut dyn FnMut(&mut dyn RowTransaction) -> Result<(), RowError>,
+		) -> Result<(), RowError> {
+			let mut pending = self.rows.clone();
+			operation(&mut pending)?;
+			if self.fail.get() {
+				return Err(RowError::Storage("commit failed".into()));
+			}
+			self.rows = pending;
+			Ok(())
+		}
+	}
+
+	#[test]
+	fn row_send_outcome_abi_commits_success_and_suppresses_storage_failures() {
+		use crate::cbinds::{SEND_OUTCOME_REJECTED, SEND_OUTCOME_SENT, beaconcrypt_free_buffer};
+		use crate::{Beacon, ProviderBeacon};
+		for cached in [false, true] {
+			let store = SendStore::default();
+			let fail = store.fail.clone();
+			let store = Box::new(store) as Box<dyn RowStore>;
+			let lineage = SnapshotLineage::from_bytes([9; 32]);
+			let owner = if cached {
+				BindingRowServer::Cached(
+					CachedRowServer::create(19, Some(&[7; 32]), Some(&[8; 32]), store, lineage, 2)
+						.unwrap(),
+				)
+			} else {
+				BindingRowServer::Rows(
+					RowServer::create(19, Some(&[7; 32]), Some(&[8; 32]), store, lineage).unwrap(),
+				)
+			};
+			let mut handle = RowServerHandle(owner, Cell::new(STATUS_OK));
+			let mut beacon = Beacon::new(
+				19,
+				handle.0.identity_pk().as_bytes(),
+				&handle.0.mldsa_public_key(),
+			);
+			let bundle = beacon.get_registration_bundle().unwrap();
+			let registration = handle.0.register_beacon(&bundle, None).unwrap().unwrap();
+			beacon
+				.finish_registration(&registration.serialized)
+				.unwrap();
+			let kid = registration.kid;
+			for (ptr, len, status) in [
+				(std::ptr::null(), 1, STATUS_INVALID_ARGUMENT),
+				(std::ptr::null(), 0, STATUS_OK),
+				(b"".as_ptr(), 0, STATUS_OK),
+			] {
+				let result = beaconcrypt_row_server_encrypt_outcome(&mut handle, ptr, len, kid);
+				assert_eq!(
+					(result.status, result.outcome),
+					(status, SEND_OUTCOME_REJECTED)
+				);
+				assert_eq!(beaconcrypt_row_server_last_status(&handle), status);
+				assert!(result.message.data.ptr.is_null() && result.message.state.ptr.is_null());
+				assert_eq!((result.message.key_id, result.message.seq), (0, 0));
+			}
+			let result =
+				beaconcrypt_row_server_encrypt_outcome(&mut handle, b"payload".as_ptr(), 7, kid);
+			assert_eq!(
+				(result.status, result.outcome),
+				(STATUS_OK, SEND_OUTCOME_SENT)
+			);
+			assert_eq!((result.message.key_id, result.message.seq), (kid, 2));
+			assert!(result.message.state.ptr.is_null());
+			let frame =
+				unsafe { slice::from_raw_parts(result.message.data.ptr, result.message.data.len) };
+			assert_eq!(beacon.decrypt_message(frame).unwrap().plaintext, b"payload");
+			beaconcrypt_free_buffer(result.message.data);
+			fail.set(true);
+			let result =
+				beaconcrypt_row_server_encrypt_outcome(&mut handle, b"withheld".as_ptr(), 8, kid);
+			assert_eq!(result.status, ROW_STATUS_STORAGE);
+			assert_eq!(beaconcrypt_row_server_last_status(&handle), result.status);
+			assert!(result.message.data.ptr.is_null() && result.message.state.ptr.is_null());
+			assert_eq!((result.message.key_id, result.message.seq), (0, 0));
+		}
+		let result =
+			beaconcrypt_row_server_encrypt_outcome(std::ptr::null_mut(), b"x".as_ptr(), 1, 0);
+		assert_eq!(result.status, STATUS_INVALID_ARGUMENT);
+		assert!(result.message.data.ptr.is_null());
+	}
 
 	#[test]
 	fn invalid_argument_blocks_later_native_access() {

@@ -194,6 +194,7 @@ impl Beacon {
 			_ => None,
 		}
 	}
+	/// Return legacy optional ciphertext; use [`Self::encrypt_message_outcome`] to retain send effects on failure.
 	pub fn encrypt_message(&mut self, b: &[u8]) -> Option<crate::Encrypted> {
 		let sender = self.identity_key_kid;
 		let BeaconState::Established {
@@ -211,6 +212,16 @@ impl Beacon {
 			binding.associated_data(),
 			ratchet,
 		)
+	}
+	/// Report unchanged rejection, ciphertext, or send-key consumption without output.
+	pub fn encrypt_message_outcome(
+		&mut self,
+		bytes: &[u8],
+	) -> crate::SendOutcome<crate::Encrypted> {
+		let before = self.ratchet_status().map(|status| status.send_sequence());
+		let output = self.encrypt_message(bytes);
+		let after = self.ratchet_status().map(|status| status.send_sequence());
+		crate::SendOutcome::from_attempt(output, before != after)
 	}
 	pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> {
 		let BeaconState::Established {

@@ -173,6 +173,40 @@ int main(void) {
   assert(plaintext.ptr == NULL && store.attempts == attempts);
   assert(beaconcrypt_server_last_status(server) == beaconcrypt_STATUS_REJECTED);
   assert(!beaconcrypt_server_is_poisoned(server));
+  beaconcrypt_SendResult rejected = beaconcrypt_encrypt_to_beacon_outcome(
+      server, response.key_id, NULL, 0);
+  assert(rejected.status == beaconcrypt_STATUS_OK);
+  assert(rejected.outcome == beaconcrypt_SEND_OUTCOME_REJECTED);
+  assert(rejected.message.data.ptr == NULL && rejected.message.state.ptr == NULL);
+  assert(rejected.message.key_id == 0 && rejected.message.seq == 0);
+  beaconcrypt_SendResult sent = beaconcrypt_encrypt_and_update_outcome(
+      server, response.key_id, (const uint8_t *)"explicit", 8);
+  assert(sent.status == beaconcrypt_STATUS_OK);
+  assert(sent.outcome == beaconcrypt_SEND_OUTCOME_SENT);
+  assert(sent.message.key_id == response.key_id);
+  assert(sent.message.data.ptr != NULL && sent.message.state.len != 0);
+  plaintext = beaconcrypt_decrypt_server_message(
+      beacon, sent.message.data.ptr, sent.message.data.len);
+  assert(plaintext.len == 8 && memcmp(plaintext.ptr, "explicit", 8) == 0);
+  beaconcrypt_free_buffer(plaintext);
+  beaconcrypt_free_buffer(sent.message.data);
+  beaconcrypt_free_buffer(sent.message.state);
+  sent = beaconcrypt_encrypt_and_update_json_outcome(
+      server, response.key_id, (const uint8_t *)"json", 4);
+  assert(sent.status == beaconcrypt_STATUS_OK);
+  assert(sent.outcome == beaconcrypt_SEND_OUTCOME_SENT);
+  assert(sent.message.data.len != 0 && sent.message.state.ptr == NULL);
+  beaconcrypt_free_buffer(sent.message.data);
+  sent = beaconcrypt_encrypt_to_server_outcome(
+      beacon, (const uint8_t *)"explicit beacon", 15);
+  assert(sent.status == beaconcrypt_STATUS_OK);
+  assert(sent.outcome == beaconcrypt_SEND_OUTCOME_SENT);
+  assert(sent.message.key_id == 19 && sent.message.seq == 2);
+  plaintext = beaconcrypt_decrypt_beacon_message(
+      server, sent.message.data.ptr, sent.message.data.len);
+  assert(plaintext.len == 15 && memcmp(plaintext.ptr, "explicit beacon", 15) == 0);
+  beaconcrypt_free_buffer(plaintext);
+  beaconcrypt_free_buffer(sent.message.data);
   beaconcrypt_free_buffer(inbound);
   beaconcrypt_server_free(server);
   beaconcrypt_beacon_free(beacon);

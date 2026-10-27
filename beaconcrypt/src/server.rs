@@ -368,11 +368,54 @@ impl Server {
 	pub(crate) fn associated_data(&self, k: u64) -> Option<[u8; AD_SIZE]> {
 		Some(*self.known_ids.get(&k)?.binding().associated_data())
 	}
+	/// Return legacy optional ciphertext; use [`Self::encrypt_message_outcome`] to retain send effects on failure.
 	pub fn encrypt_message(&mut self, b: &[u8], k: u64) -> Option<crate::Encrypted> {
 		let ad = self.associated_data(k)?;
 		let sender = self.identity_key_kid();
 		encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)
 	}
+	/// Report unchanged rejection, ciphertext, or send-key consumption without output.
+	pub fn encrypt_message_outcome(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> crate::SendOutcome<crate::Encrypted> {
+		self.send_outcome(kid, |server| server.encrypt_message(bytes, kid))
+	}
+
+	/// Return the send effect together with the existing observational update when available.
+	pub fn encrypt_and_update_outcome(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> crate::SendOutcome<SendState> {
+		self.send_outcome(kid, |server| server.encrypt_and_update(bytes, kid))
+	}
+
+	/// Return the send effect together with the existing JSON update when available.
+	pub fn encrypt_and_update_json_outcome(
+		&mut self,
+		bytes: &[u8],
+		kid: u64,
+	) -> crate::SendOutcome<String> {
+		self.send_outcome(kid, |server| server.encrypt_and_update_json(bytes, kid))
+	}
+
+	fn send_outcome<T>(
+		&mut self,
+		kid: u64,
+		operation: impl FnOnce(&mut Self) -> Option<T>,
+	) -> crate::SendOutcome<T> {
+		let before = self
+			.ratchet_status(kid)
+			.map(|status| status.send_sequence());
+		let output = operation(self);
+		let after = self
+			.ratchet_status(kid)
+			.map(|status| status.send_sequence());
+		crate::SendOutcome::from_attempt(output, before != after)
+	}
+
 	pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> {
 		self.decrypt_message_transition(b).into_option()
 	}
@@ -491,7 +534,15 @@ impl Server {
 		buffer: &[u8],
 		rng: &mut R,
 	) -> Option<RegistrationOutput> {
-		use beaconcrypt_core::agreement::AgreementEffect;
+		let lookup = self.authenticate_registration_lookup(buffer)?;
+		self.get_shared_secret_from_lookup_with_rng(lookup, rng)
+	}
+
+	/// Authenticate the exact replay lookup before preparing any shared-secret material.
+	pub(crate) fn authenticate_registration_lookup(
+		&self,
+		buffer: &[u8],
+	) -> Option<beaconcrypt_core::peer::RegistrationLookup> {
 		use beaconcrypt_core::registration::InitPacket;
 		let control = self.control;
 		let registration = decode_init(buffer)?;
@@ -504,7 +555,19 @@ impl Server {
 			registration.signature,
 		)?;
 		let authenticated = auth::authenticate_init(self.authentication_pin()?, packet)?;
-		let lookup = beaconcrypt_core::peer::begin_registration_lookup(control, authenticated);
+		Some(beaconcrypt_core::peer::begin_registration_lookup(
+			control,
+			authenticated,
+		))
+	}
+
+	/// Finish a lookup after its owner has checked any external replay history.
+	pub(crate) fn get_shared_secret_from_lookup_with_rng<R: TryCryptoRng + ?Sized>(
+		&mut self,
+		lookup: beaconcrypt_core::peer::RegistrationLookup,
+		rng: &mut R,
+	) -> Option<RegistrationOutput> {
+		use beaconcrypt_core::agreement::AgreementEffect;
 		let registration_id = *lookup.request().as_bytes();
 		let consumed = self.consumed_registrations.contains(&registration_id);
 		let effect = lookup.resume(consumed);

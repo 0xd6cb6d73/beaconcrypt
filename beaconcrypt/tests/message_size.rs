@@ -37,34 +37,35 @@ impl Store {
 }
 
 impl SnapshotStore for Store {
-	fn load(&self) -> Option<ServerSnapshot> {
-		self.0
+	fn load(&self) -> Result<Option<ServerSnapshot>, beaconcrypt::PersistenceError> {
+		Ok(self
+			.0
 			.lock()
 			.unwrap()
 			.snapshot
 			.as_ref()
-			.map(|snapshot| ServerSnapshot::from_bytes(snapshot.as_bytes().to_vec()))
+			.map(|snapshot| ServerSnapshot::from_bytes(snapshot.as_bytes().to_vec())))
 	}
 
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
+	) -> Result<bool, beaconcrypt::PersistenceError> {
 		let mut state = self.0.lock().unwrap();
 		state.attempts += 1;
 		if std::mem::take(&mut state.fail_next) {
-			return false;
+			return Ok(false);
 		}
 		let current = state
 			.snapshot
 			.as_ref()
 			.map(|snapshot| snapshot.head().unwrap());
 		if current.as_ref() != expected || replacement.validate_successor(expected).is_err() {
-			return false;
+			return Ok(false);
 		}
 		state.snapshot = Some(ServerSnapshot::from_bytes(replacement.as_bytes().to_vec()));
-		true
+		Ok(true)
 	}
 }
 
@@ -158,7 +159,7 @@ fn persistent_oversize_rejections_skip_cas_and_preserve_poison_fencing() {
 	let mut oversized = init.clone();
 	oversized.resize(MAX_MESSAGE_SIZE + 1, 0);
 	// The inclusive boundary still admits an ordinary registration attempt. This
-	// malformed request follows the existing persisted-rejection behavior.
+	// malformed request preserves state and does not create a snapshot generation.
 	let head = server.head();
 	let attempts = store.attempts();
 	assert!(
@@ -167,8 +168,8 @@ fn persistent_oversize_rejections_skip_cas_and_preserve_poison_fencing() {
 			.unwrap()
 			.is_none()
 	);
-	assert_eq!(server.head().generation(), head.generation() + 1);
-	assert_eq!(store.attempts(), attempts + 1);
+	assert_eq!(server.head(), head);
+	assert_eq!(store.attempts(), attempts);
 	let head = server.head();
 	let attempts = store.attempts();
 	let snapshot = store.bytes();

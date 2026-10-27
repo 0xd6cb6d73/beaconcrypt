@@ -14,12 +14,10 @@ fn snapshot_load_rejects_missing_and_unrepresentable_lengths_without_copying() {
 			length
 		});
 		assert_eq!(calls, 1, "announced length {length}");
-		if matches!(length, -1 | -2) {
-			assert!(snapshot.is_none());
-		} else {
-			let snapshot = snapshot.unwrap();
-			assert!(snapshot.as_bytes().is_empty());
-			assert_eq!(snapshot.head(), Err(PersistenceError::InvalidSnapshot));
+		match length {
+			-1 => assert!(snapshot.unwrap().is_none()),
+			-2 => assert!(matches!(snapshot, Err(PersistenceError::Storage))),
+			_ => assert!(matches!(snapshot, Err(PersistenceError::InvalidSnapshot))),
 		}
 	}
 }
@@ -40,13 +38,41 @@ fn memory_store_commits_only_the_expected_head_and_valid_successor() {
 		PersistentServer::restore(MemoryStore::from_bytes(original.as_bytes().to_vec()).unwrap())
 			.unwrap();
 	let successor = restored.snapshot().unwrap();
-	assert!(!store.compare_and_swap(None, &successor));
-	assert!(!store.compare_and_swap(Some(&previous), &original));
-	assert!(!store.compare_and_swap(Some(&previous), &ServerSnapshot::from_bytes(vec![])));
-	assert_eq!(store.load().unwrap().as_bytes(), original.as_bytes());
-	assert!(store.compare_and_swap(Some(&previous), &successor));
-	assert_eq!(store.load().unwrap().as_bytes(), successor.as_bytes());
-	assert!(!store.compare_and_swap(Some(&previous), &successor));
+	assert!(!store.compare_and_swap(None, &successor).unwrap());
+	assert!(!store.compare_and_swap(Some(&previous), &original).unwrap());
+	assert!(
+		!store
+			.compare_and_swap(Some(&previous), &ServerSnapshot::from_bytes(vec![]))
+			.unwrap()
+	);
+	assert_eq!(
+		store.load().unwrap().unwrap().as_bytes(),
+		original.as_bytes()
+	);
+	assert!(store.compare_and_swap(Some(&previous), &successor).unwrap());
+	assert_eq!(
+		store.load().unwrap().unwrap().as_bytes(),
+		successor.as_bytes()
+	);
+	assert!(!store.compare_and_swap(Some(&previous), &successor).unwrap());
+}
+
+#[test]
+fn host_cas_distinguishes_conflict_storage_failure_and_uncertain_commit() {
+	assert_eq!(store::cas_result(0), Ok(false));
+	assert_eq!(store::cas_result(1), Ok(true));
+	assert_eq!(store::cas_result(2), Err(PersistenceError::Storage));
+	for status in [3, 4, u32::MAX] {
+		assert_eq!(
+			store::cas_result(status),
+			Err(PersistenceError::CommitUnknown)
+		);
+	}
+	assert_eq!(crate::abi::error_status(PersistenceError::Storage), 13);
+	assert_eq!(
+		crate::abi::error_status(PersistenceError::CommitUnknown),
+		15
+	);
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -140,15 +166,16 @@ fn snapshot_load_copies_one_complete_read_and_requires_the_exact_returned_length
 				unsafe { std::slice::from_raw_parts_mut(ptr as *mut u8, capacity as usize) };
 			output.copy_from_slice(snapshot.as_bytes());
 			copied
-		})
-		.unwrap();
+		});
 		assert_eq!(calls, 2);
 		if copied == length {
+			let loaded = loaded.unwrap().unwrap();
 			assert_eq!(loaded.as_bytes(), snapshot.as_bytes());
 			assert_eq!(loaded.head().unwrap(), snapshot.head().unwrap());
+		} else if copied == -2 {
+			assert!(matches!(loaded, Err(PersistenceError::Storage)));
 		} else {
-			assert!(loaded.as_bytes().is_empty());
-			assert_eq!(loaded.head(), Err(PersistenceError::InvalidSnapshot));
+			assert!(matches!(loaded, Err(PersistenceError::InvalidSnapshot)));
 		}
 	}
 }
@@ -162,10 +189,9 @@ fn snapshot_load_rejects_lengths_above_the_guest_slice_bound_without_copying() {
 			calls += 1;
 			assert_eq!((ptr, capacity), (0, 0));
 			length
-		})
-		.unwrap();
+		});
 		assert_eq!(calls, 1);
-		assert!(invalid.as_bytes().is_empty());
+		assert!(matches!(invalid, Err(PersistenceError::InvalidSnapshot)));
 	}
 }
 

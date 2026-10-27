@@ -63,7 +63,7 @@ pub use server::{
 };
 #[cfg(feature = "pqxdh")]
 pub use shared::{DH_OUT_LEN, ED25519_SEED_SIZE};
-pub use shared::{Decrypted, Encrypted, KEX_KDF_OUT_LEN, SignType};
+pub use shared::{Decrypted, Encrypted, KEX_KDF_OUT_LEN, SendOutcome, SignType};
 
 #[cfg(any(feature = "cbinds", feature = "gobinds"))]
 mod cbinds;
@@ -87,8 +87,8 @@ mod beaconcrypt {
 
 	#[pymodule_export]
 	use crate::pybinds::{
-		Beacon, EncryptStatePy, PersistenceError, RegResponsePy, Server, SnapshotHeadPy,
-		snapshot_head, validate_snapshot_successor,
+		Beacon, EncryptStatePy, PersistenceError, RegResponsePy, SendResultPy, Server,
+		SnapshotHeadPy, snapshot_head, validate_snapshot_successor,
 	};
 
 	#[pymodule_export]

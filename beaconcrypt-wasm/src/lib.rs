@@ -7,21 +7,22 @@
 //! `(ptr << 32) | len`. Reply bytes are little endian:
 //! `[status:u32, handle:u32, key_id:u64, seq:u64, data_len:u32, state_len:u32]`,
 //! followed by data and optional observational ratchet JSON. Status values
-//! match the production PersistenceStatus enum (0..12). Failures carry no data.
+//! match the production PersistenceStatus enum (0..13 and 15; 14 is reserved for row sessions). Failures carry no data.
 //! Inputs must describe entire allocations returned by bc_alloc, or (0,0).
 //! Hosts copy reply data before bc_free, which wipes the complete allocation.
 //! A zero packed reply indicates allocation failure and invalidates the guest.
 //!
 //! Operations: 1 checkpoint server (arg=kid,input=seed concatenation,extra=presence flags), 2 beacon
 //! (arg=server kid,input=Ed25519 public key || ML-DSA-65 public key), 3 identity, 4 registration bundle,
-//! 5 register (input=bundle,extra=optional first plaintext), 6 finish registration,
+//! 5 register (input=bundle,extra=initial plaintext,arg=1 preserves explicit presence; arg=0 infers legacy optional presence), 6 finish registration,
 //! 7 encrypt (arg=peer kid for server), 8 decrypt, 9 close, 10 export checkpoint,
 //! 11 restore trusted checkpoint, 12 host-store server (extra=context u32 + seed flags),
 //! 13 restore host store (arg=context), 14 owner head, 15 poisoned flag,
 //! 16 validate snapshot successor (extra=optional 72-byte head), 17 ratchet status,
 //! 18 host-store server with lineage (extra=context u32 + lineage[32] + seed flags),
 //! 19 parse snapshot head, 20 encrypt and update, 21 decrypt and update,
-//! 22 encrypt and update JSON, 23 decrypt and update JSON, 24 ML-DSA-65 public key. Seed flags select Ed25519
+//! 22 encrypt and update JSON, 23 decrypt and update JSON, 24 ML-DSA-65 public key,
+//! 25 encrypt outcome (both roles), 26 encrypt/update outcome, 27 encrypt/JSON outcome. Outcome replies have STATUS_OK and state[0] = 0 rejected, 1 sent, or 2 consumed without output; remaining state bytes are observational JSON only for successful op26. Error replies carry no outcome. Metadata is meaningful only for sent outcomes. Seed flags select Ed25519
 //! (bit0) and ML-DSA (bit1), whose supplied 32-byte seeds appear in that order. Operations 7,8 and
 //! 20,21 return key_id/seq metadata; JSON operations return JSON in data only.
 //! Store-backed constructors take ownership of a valid supplied host context.
@@ -35,10 +36,11 @@ use std::{cell::RefCell, collections::BTreeMap};
 
 use abi::{INITIALIZATION, INVALID_ARGUMENT, REJECTED, Response};
 use beaconcrypt::{
-	Beacon, PersistenceError, PersistentServer, ProviderBeacon, ServerSnapshot, SnapshotLineage,
-	SnapshotStore,
+	Beacon, PersistenceError, PersistentServer, ProviderBeacon, SendOutcome, ServerSnapshot,
+	SnapshotLineage, SnapshotStore,
 };
 use store::{HostStore, MemoryStore, decode_head, encode_head};
+use zeroize::Zeroizing;
 
 type Server = PersistentServer<Box<dyn SnapshotStore>>;
 
@@ -107,6 +109,35 @@ fn protocol<T>(
 		Ok(Some(value)) => success(value),
 		Ok(None) => Response::failed(REJECTED),
 		Err(error) => Response::persistence(error),
+	}
+}
+
+fn send_response<T>(
+	handle: u32,
+	result: Result<SendOutcome<T>, PersistenceError>,
+	sent: impl FnOnce(T) -> Response,
+) -> Response {
+	match result {
+		Err(error) => Response::persistence(error),
+		Ok(SendOutcome::Rejected) => {
+			let mut response = Response::success(handle, 0, Vec::new());
+			response.state = vec![0];
+			response
+		}
+		Ok(SendOutcome::ConsumedWithoutOutput) => {
+			let mut response = Response::success(handle, 0, Vec::new());
+			response.state = vec![2];
+			response
+		}
+		Ok(SendOutcome::Sent(value)) => {
+			let mut response = sent(value);
+			// Protect the old secret state while adding its small outcome prefix; ciphertext is moved unchanged.
+			let original = Zeroizing::new(std::mem::take(&mut response.state));
+			response.state = Vec::with_capacity(original.len() + 1);
+			response.state.push(1);
+			response.state.extend_from_slice(&original);
+			response
+		}
 	}
 }
 
@@ -271,13 +302,18 @@ fn dispatch(op: u32, handle: u32, arg: u64, input: &[u8], extra: &[u8]) -> Respo
 				None => Response::failed(REJECTED),
 			},
 			(5, Handle::Server(server)) => {
+				let application = match arg {
+					0 => optional(extra),
+					1 => Some(extra),
+					_ => return Response::failed(INVALID_ARGUMENT),
+				};
 				let pending = match server.get_shared_secret(input) {
 					Ok(Some(pending)) => pending,
 					Ok(None) => return Response::failed(REJECTED),
 					Err(error) => return Response::persistence(error),
 				};
 				protocol(
-					server.build_registration_response(pending, optional(extra)),
+					server.build_registration_response(pending, application),
 					|registration| {
 						Response::success(handle, registration.kid, registration.serialized)
 					},
@@ -298,6 +334,40 @@ fn dispatch(op: u32, handle: u32, arg: u64, input: &[u8], extra: &[u8]) -> Respo
 				}
 				None => Response::failed(REJECTED),
 			},
+			(25, Handle::Server(server)) => send_response(
+				handle,
+				server.encrypt_message_outcome(input, arg),
+				|message| {
+					Response::message(handle, message.key_id, message.seq, message.ciphertext)
+				},
+			),
+			(25, Handle::Beacon(beacon)) => send_response(
+				handle,
+				Ok(beacon.encrypt_message_outcome(input)),
+				|message| {
+					Response::message(handle, message.key_id, message.seq, message.ciphertext)
+				},
+			),
+			(26, Handle::Server(server)) => send_response(
+				handle,
+				server.encrypt_and_update_outcome(input, arg),
+				|update| {
+					let mut response =
+						Response::message(handle, update.kid, update.seq, update.data);
+					response.state = update.state.as_str().as_bytes().to_vec();
+					response
+				},
+			),
+			(27, Handle::Server(server)) => send_response(
+				handle,
+				server.encrypt_and_update_json_outcome(input, arg),
+				|json| {
+					let sequence = server
+						.ratchet_status(arg)
+						.map_or(0, |status| status.send_sequence());
+					Response::message(handle, arg, sequence, json.into_bytes())
+				},
+			),
 			(8, Handle::Server(server)) => protocol(server.decrypt_message(input), |message| {
 				Response::message(handle, message.key_id, message.seq, message.plaintext)
 			}),

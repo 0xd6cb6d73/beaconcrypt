@@ -23,31 +23,32 @@ struct Stored {
 struct Store(Arc<Mutex<Stored>>);
 
 impl SnapshotStore for Store {
-	fn load(&self) -> Option<ServerSnapshot> {
-		self.0
+	fn load(&self) -> Result<Option<ServerSnapshot>, beaconcrypt::PersistenceError> {
+		Ok(self
+			.0
 			.lock()
 			.unwrap()
 			.bytes
 			.clone()
-			.map(ServerSnapshot::from_bytes)
+			.map(ServerSnapshot::from_bytes))
 	}
 
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
+	) -> Result<bool, beaconcrypt::PersistenceError> {
 		let mut stored = self.0.lock().unwrap();
 		stored.attempts += 1;
 		if std::mem::take(&mut stored.fail_next) || stored.head.as_ref() != expected {
-			return false;
+			return Ok(false);
 		}
 		let Ok(head) = replacement.validate_successor(expected) else {
-			return false;
+			return Ok(false);
 		};
 		stored.bytes = Some(replacement.as_bytes().to_vec());
 		stored.head = Some(head);
-		true
+		Ok(true)
 	}
 }
 
@@ -269,7 +270,7 @@ impl History {
 			record.frame.clone()
 		};
 		let before_head = self.server.head();
-		let before_snapshot = self.store.load().unwrap().as_bytes().to_vec();
+		let before_snapshot = self.store.load().unwrap().unwrap().as_bytes().to_vec();
 		let output = match direction {
 			Direction::ToServer => receive(&mut self.server, &frame, api).unwrap(),
 			Direction::ToBeacon => peer
@@ -287,7 +288,10 @@ impl History {
 		}
 		if output.is_none() || matches!(direction, Direction::ToBeacon) {
 			assert_eq!(self.server.head(), before_head);
-			assert_eq!(self.store.load().unwrap().as_bytes(), before_snapshot);
+			assert_eq!(
+				self.store.load().unwrap().unwrap().as_bytes(),
+				before_snapshot
+			);
 		}
 	}
 
@@ -297,7 +301,7 @@ impl History {
 		self.attempts += 1;
 		let old_head = self.server.head();
 		let authoritative = active.head();
-		let bytes = self.store.load().unwrap().as_bytes().to_vec();
+		let bytes = self.store.load().unwrap().unwrap().as_bytes().to_vec();
 		assert_eq!(
 			self.server.snapshot().err(),
 			Some(PersistenceError::StaleGeneration)
@@ -320,7 +324,7 @@ impl History {
 		assert!(self.server.is_poisoned());
 		assert_eq!(self.server.head(), old_head);
 		assert_eq!(self.store.0.lock().unwrap().head, Some(authoritative));
-		assert_eq!(self.store.load().unwrap().as_bytes(), bytes);
+		assert_eq!(self.store.load().unwrap().unwrap().as_bytes(), bytes);
 		assert!(matches!(
 			self.server.decrypt_message(b"invalid frame"),
 			Err(PersistenceError::Poisoned)
@@ -339,7 +343,7 @@ impl History {
 			self.send(peer, direction, payload);
 		}
 		let before_head = self.server.head();
-		let bytes = self.store.load().unwrap().as_bytes().to_vec();
+		let bytes = self.store.load().unwrap().unwrap().as_bytes().to_vec();
 		let statuses: Vec<_> = self
 			.peers
 			.iter()
@@ -375,7 +379,7 @@ impl History {
 		assert!(self.server.is_poisoned());
 		assert_eq!(self.server.head(), before_head);
 		assert_eq!(self.store.0.lock().unwrap().head, Some(before_head));
-		assert_eq!(self.store.load().unwrap().as_bytes(), bytes);
+		assert_eq!(self.store.load().unwrap().unwrap().as_bytes(), bytes);
 		assert!(matches!(
 			self.server.encrypt_message(payload, self.peers[peer].kid),
 			Err(PersistenceError::Poisoned)

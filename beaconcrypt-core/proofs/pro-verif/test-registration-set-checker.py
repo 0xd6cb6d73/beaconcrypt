@@ -114,6 +114,27 @@ class InterpretedAdmissionSourceGate(unittest.TestCase):
             "beacon_kem: None,\n\t\t\t},\n\t\t\t&mut beaconcrypt_crypto::OsRng,",
         )
 
+    def test_portable_wrapper_cannot_skip_authentication(self):
+        self.mutate_source(
+            "beaconcrypt/src/server.rs",
+            "let lookup = self.authenticate_registration_lookup(buffer)?;",
+            "return None;",
+        )
+
+    def test_portable_wrapper_cannot_change_the_input(self):
+        self.mutate_source(
+            "beaconcrypt/src/server.rs",
+            "self.authenticate_registration_lookup(buffer)?",
+            "self.authenticate_registration_lookup(&[])?",
+        )
+
+    def test_portable_wrapper_cannot_replace_the_rng(self):
+        self.mutate_source(
+            "beaconcrypt/src/server.rs",
+            "self.get_shared_secret_from_lookup_with_rng(lookup, rng)",
+            "self.get_shared_secret_from_lookup_with_rng(lookup, &mut beaconcrypt_crypto::OsRng)",
+        )
+
     def test_ephemeral_generation_and_encapsulation_use_caller_entropy(self):
         for old, new in (
             (

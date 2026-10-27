@@ -7,12 +7,14 @@ use crate::persistence::BindingSnapshotStore;
 use crate::server::{RecvState, SendState};
 use crate::{
 	Beacon as PqxdhBeacon, PersistenceError as NativePersistenceError, PersistentServer,
-	ProviderBeacon, RegResponse, ServerSnapshot, SnapshotHead, SnapshotLineage, SnapshotStore,
+	ProviderBeacon, RegResponse, SendOutcome, ServerSnapshot, SnapshotHead, SnapshotLineage,
+	SnapshotStore,
 };
 use pyo3::class::{PyTraverseError, PyVisit};
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::PyBytes;
+use pyo3::types::{PyBytes, PyString};
+use zeroize::Zeroizing;
 
 pyo3::create_exception!(beaconcrypt, PersistenceError, PyValueError);
 
@@ -32,6 +34,8 @@ fn persistence_error(py: Python<'_>, error: NativePersistenceError, cause: Optio
 		NativePersistenceError::Initialization => "initialization",
 		NativePersistenceError::Digest => "digest",
 		NativePersistenceError::Poisoned => "poisoned",
+		NativePersistenceError::Storage => "storage",
+		NativePersistenceError::CommitUnknown => "commit_unknown",
 	};
 	let exception = PersistenceError::new_err(error.to_string());
 	if let Err(attribute_error) = exception.value(py).setattr("code", code) {
@@ -163,7 +167,7 @@ impl PySnapshotStore {
 }
 
 impl SnapshotStore for PySnapshotStore {
-	fn load(&self) -> Option<ServerSnapshot> {
+	fn load(&self) -> Result<Option<ServerSnapshot>, NativePersistenceError> {
 		self.capture(|py| {
 			let result = self.object(py)?.bind(py).call_method0("load")?;
 			if result.is_none() {
@@ -174,14 +178,14 @@ impl SnapshotStore for PySnapshotStore {
 				)))
 			}
 		})
-		.flatten()
+		.ok_or(NativePersistenceError::Storage)
 	}
 
 	fn compare_and_swap(
 		&mut self,
 		expected: Option<&SnapshotHead>,
 		replacement: &ServerSnapshot,
-	) -> bool {
+	) -> Result<bool, NativePersistenceError> {
 		self.capture(|py| {
 			let expected = expected
 				.map(|inner| Py::new(py, SnapshotHeadPy { inner: *inner }))
@@ -194,7 +198,7 @@ impl SnapshotStore for PySnapshotStore {
 				)?
 				.extract::<bool>()
 		})
-		.unwrap_or(false)
+		.ok_or(NativePersistenceError::CommitUnknown)
 	}
 }
 
@@ -222,8 +226,8 @@ impl From<RegResponse> for RegResponsePy {
 
 #[pyclass(name = "EncryptState")]
 pub struct EncryptStatePy {
-	data: Vec<u8>,
-	state: String,
+	data: Zeroizing<Vec<u8>>,
+	state: Zeroizing<String>,
 	kid: u64,
 	seq: u64,
 }
@@ -251,9 +255,9 @@ impl EncryptStatePy {
 
 impl From<SendState> for EncryptStatePy {
 	fn from(value: SendState) -> Self {
-		let state = value.state.as_str().to_owned();
+		let state = Zeroizing::new(value.state.as_str().to_owned());
 		Self {
-			data: value.data,
+			data: Zeroizing::new(value.data),
 			state,
 			kid: value.kid,
 			seq: value.seq,
@@ -263,12 +267,116 @@ impl From<SendState> for EncryptStatePy {
 
 impl From<RecvState> for EncryptStatePy {
 	fn from(value: RecvState) -> Self {
-		let state = value.state.as_str().to_owned();
+		let state = Zeroizing::new(value.state.as_str().to_owned());
 		Self {
-			data: value.data,
+			data: Zeroizing::new(value.data),
 			state,
 			kid: value.kid,
 			seq: value.seq,
+		}
+	}
+}
+
+enum SendValue {
+	Bytes(Zeroizing<Vec<u8>>),
+	Update(EncryptStatePy),
+	Json(Zeroizing<String>),
+}
+
+struct SentValue {
+	value: SendValue,
+	key_id: u64,
+	seq: u64,
+}
+
+/// Exact send effect. Values copied into Python remain owned by the caller; the library's retained buffers are erased when this object is dropped.
+#[pyclass(name = "SendResult", frozen)]
+pub struct SendResultPy {
+	inner: SendOutcome<SentValue>,
+}
+
+impl SendResultPy {
+	pub(crate) fn encrypted(outcome: SendOutcome<crate::Encrypted>) -> Self {
+		Self {
+			inner: outcome.map(|value| SentValue {
+				key_id: value.key_id,
+				seq: value.seq,
+				value: SendValue::Bytes(Zeroizing::new(value.ciphertext)),
+			}),
+		}
+	}
+
+	fn update(outcome: SendOutcome<SendState>) -> Self {
+		Self {
+			inner: outcome.map(|value| SentValue {
+				key_id: value.kid,
+				seq: value.seq,
+				value: SendValue::Update(EncryptStatePy::from(value)),
+			}),
+		}
+	}
+
+	fn json(outcome: SendOutcome<String>, key_id: u64, seq: u64) -> Self {
+		Self {
+			inner: outcome.map(|value| SentValue {
+				key_id,
+				seq,
+				value: SendValue::Json(Zeroizing::new(value)),
+			}),
+		}
+	}
+}
+
+#[pymethods]
+impl SendResultPy {
+	#[getter]
+	fn outcome(&self) -> &'static str {
+		match self.inner {
+			SendOutcome::Rejected => "rejected",
+			SendOutcome::Sent(_) => "sent",
+			SendOutcome::ConsumedWithoutOutput => "consumed_without_output",
+		}
+	}
+
+	#[getter]
+	fn changed(&self) -> bool {
+		self.inner.changed()
+	}
+
+	#[getter]
+	fn key_id(&self) -> Option<u64> {
+		match &self.inner {
+			SendOutcome::Sent(value) => Some(value.key_id),
+			_ => None,
+		}
+	}
+
+	#[getter]
+	fn seq(&self) -> Option<u64> {
+		match &self.inner {
+			SendOutcome::Sent(value) => Some(value.seq),
+			_ => None,
+		}
+	}
+
+	#[getter]
+	fn value(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+		let SendOutcome::Sent(value) = &self.inner else {
+			return Ok(py.None());
+		};
+		match &value.value {
+			SendValue::Bytes(bytes) => Ok(PyBytes::new(py, bytes).into_any().unbind()),
+			SendValue::Json(json) => Ok(PyString::new(py, json).into_any().unbind()),
+			SendValue::Update(value) => Py::new(
+				py,
+				EncryptStatePy {
+					data: value.data.clone(),
+					state: value.state.clone(),
+					kid: value.kid,
+					seq: value.seq,
+				},
+			)
+			.map(|value| value.into_any()),
 		}
 	}
 }
@@ -369,6 +477,7 @@ impl Server {
 
 	/// Create a server whose results are released only after the store durably commits them.
 	/// The store supplies load() -> bytes | None and compare_and_swap(expected, replacement) -> bool.
+	/// Read exceptions produce `storage`; commit exceptions produce `commit_unknown` because the store may already have committed. The original exception remains the cause.
 	/// Callbacks must atomically validate and compare the complete trusted head, preserve rollback resistance, and never reenter this server.
 	#[staticmethod]
 	#[pyo3(signature = (kid, id_seed, mldsa_seed, store, lineage=None))]
@@ -505,6 +614,53 @@ impl Server {
 		)
 	}
 
+	/// Return an explicit committed send effect instead of an ambiguous optional message.
+	fn encrypt_to_beacon_outcome(
+		&mut self,
+		py: Python<'_>,
+		data: Vec<u8>,
+		kid: u64,
+	) -> PyResult<SendResultPy> {
+		persistence_result(
+			py,
+			self._0.encrypt_message_outcome(&data, kid),
+			&self.callback_error,
+		)
+		.map(SendResultPy::encrypted)
+	}
+
+	fn encrypt_and_update_outcome(
+		&mut self,
+		py: Python<'_>,
+		data: Vec<u8>,
+		kid: u64,
+	) -> PyResult<SendResultPy> {
+		persistence_result(
+			py,
+			self._0.encrypt_and_update_outcome(&data, kid),
+			&self.callback_error,
+		)
+		.map(SendResultPy::update)
+	}
+
+	fn encrypt_and_update_json_outcome(
+		&mut self,
+		py: Python<'_>,
+		data: Vec<u8>,
+		kid: u64,
+	) -> PyResult<SendResultPy> {
+		let outcome = persistence_result(
+			py,
+			self._0.encrypt_and_update_json_outcome(&data, kid),
+			&self.callback_error,
+		)?;
+		let sequence = self
+			._0
+			.ratchet_status(kid)
+			.map_or(0, |status| status.send_sequence());
+		Ok(SendResultPy::json(outcome, kid, sequence))
+	}
+
 	fn decrypt_and_update(
 		&mut self,
 		py: Python<'_>,
@@ -569,9 +725,36 @@ impl Beacon {
 			.map(|decrypted| decrypted.plaintext)
 	}
 
+	fn encrypt_message_to_server_outcome(&mut self, data: Vec<u8>) -> SendResultPy {
+		SendResultPy::encrypted(self._0.encrypt_message_outcome(&data))
+	}
+
 	fn encrypt_message_to_server(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
 		self._0
 			.encrypt_message(&data)
 			.map(|encrypted| encrypted.ciphertext)
+	}
+}
+
+#[cfg(test)]
+mod send_result_tests {
+	use super::*;
+
+	#[test]
+	fn explicit_failure_results_preserve_effect_and_withhold_success_metadata() {
+		for (inner, outcome, changed) in [
+			(SendOutcome::Rejected, "rejected", false),
+			(
+				SendOutcome::ConsumedWithoutOutput,
+				"consumed_without_output",
+				true,
+			),
+		] {
+			let result = SendResultPy::encrypted(inner);
+			assert_eq!(result.outcome(), outcome);
+			assert_eq!(result.changed(), changed);
+			assert_eq!(result.key_id(), None);
+			assert_eq!(result.seq(), None);
+		}
 	}
 }

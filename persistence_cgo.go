@@ -22,6 +22,7 @@ type snapshotStoreContext struct {
 	handle cgo.Handle
 	mu     sync.Mutex
 	err    error
+	status PersistenceStatus
 }
 
 func newSnapshotStoreContext(store SnapshotStore) *snapshotStoreContext {
@@ -31,6 +32,10 @@ func newSnapshotStoreContext(store SnapshotStore) *snapshotStoreContext {
 }
 
 func (context *snapshotStoreContext) setError(err error) {
+	context.setErrorStatus(err, StatusStorage)
+}
+
+func (context *snapshotStoreContext) setErrorStatus(err error, status PersistenceStatus) {
 	if err == nil {
 		return
 	}
@@ -38,7 +43,14 @@ func (context *snapshotStoreContext) setError(err error) {
 	defer context.mu.Unlock()
 	if context.err == nil {
 		context.err = err
+		context.status = status
 	}
+}
+
+func (context *snapshotStoreContext) lastStatus() PersistenceStatus {
+	context.mu.Lock()
+	defer context.mu.Unlock()
+	return context.status
 }
 
 func (context *snapshotStoreContext) takeError() error {
@@ -49,6 +61,7 @@ func (context *snapshotStoreContext) takeError() error {
 	defer context.mu.Unlock()
 	err := context.err
 	context.err = nil
+	context.status = StatusOK
 	return err
 }
 
@@ -260,7 +273,7 @@ func beaconcryptGoStoreCompareAndSwap(token C.uintptr_t, expected *C.beaconcrypt
 	defer func() {
 		if problem := recover(); problem != nil {
 			if context != nil {
-				context.setError(fmt.Errorf("snapshot store CompareAndSwap panic: %v", problem))
+				context.setErrorStatus(fmt.Errorf("snapshot store CompareAndSwap panic: %v", problem), StatusCommitUnknown)
 			}
 			ok = false
 		}
@@ -278,10 +291,21 @@ func beaconcryptGoStoreCompareAndSwap(token C.uintptr_t, expected *C.beaconcrypt
 	}
 	accepted, err := context.store.CompareAndSwap(previous, replacement)
 	if err != nil {
-		context.setError(err)
+		context.setErrorStatus(err, StatusCommitUnknown)
 		return false
 	}
 	return C.bool(accepted)
+}
+
+//export beaconcryptGoStoreLastError
+func beaconcryptGoStoreLastError(token C.uintptr_t) (status C.uint32_t) {
+	defer func() {
+		if recover() != nil {
+			status = C.uint32_t(StatusCommitUnknown)
+		}
+	}()
+	context := cgo.Handle(token).Value().(*snapshotStoreContext)
+	return C.uint32_t(context.lastStatus())
 }
 
 //export beaconcryptGoStoreDestroy

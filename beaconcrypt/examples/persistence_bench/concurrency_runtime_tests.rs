@@ -691,7 +691,7 @@ fn payload_classes_preserve_declared_bytes_and_lengths() {
 }
 
 #[test]
-fn native_commit_panic_is_reported_and_remaining_callbacks_are_cancelled() {
+fn native_commit_error_is_reported_and_remaining_callbacks_are_cancelled() {
 	bounded_failure_check(|| {
 		let directory = tempfile::tempdir().unwrap();
 		let path = directory.path().join("panic.sqlite");
@@ -734,7 +734,7 @@ fn native_commit_panic_is_reported_and_remaining_callbacks_are_cancelled() {
 			})
 			.unwrap();
 		// Corrupt only the owned fixture after successful preparation. The real store's
-		// fixed-width lineage decode now panics inside the measured native operation.
+		// fixed-width lineage decode reports an error inside the measured native operation.
 		connection
 			.execute("UPDATE snapshot SET lineage=x'00'", [])
 			.unwrap();
@@ -755,7 +755,7 @@ fn native_commit_panic_is_reported_and_remaining_callbacks_are_cancelled() {
 		assert_eq!(result.failures.len(), 2);
 		assert_eq!(result.failures[0]["id"], 0);
 		assert_eq!(result.failures[0]["outcome"], "failed");
-		assert_eq!(result.failures[0]["error"], "native operation panicked");
+		assert_eq!(result.failures[0]["error"], "invalid server snapshot");
 		assert_eq!(result.failures[0]["conflicts"], 0);
 		assert_eq!(result.failures[0]["retries"], 0);
 		assert_eq!(result.failures[1]["id"], 1);
@@ -767,7 +767,7 @@ fn native_commit_panic_is_reported_and_remaining_callbacks_are_cancelled() {
 			.unwrap();
 		assert_eq!(
 			saved, after,
-			"a panicked callback must not persist a candidate"
+			"a failed callback must not persist a candidate"
 		);
 	});
 }
