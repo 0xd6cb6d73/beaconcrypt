@@ -1,0 +1,155 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b: the Server taskings after the response, at sequences 2
+   and 3 (K_s = 2), each sent when the attacker schedules it.  For each
+   tasking the adversary chooses the application's plaintext form: either
+   an 8-byte prefix of its choice followed by fresh bytes (the form of
+   fs-records-s2b-taskings.pvl), or a whole plaintext of its choice.  Every
+   trace of the fresh form is a trace of this form.  Each FsSent is the
+   allocation of its sequence, as in the fresh form.  Exactly one of this
+   file and fs-records-s2b-taskings.pvl is loaded; the authentication
+   targets use this one, the secrecy targets cannot. *)
+(* @beaconcrypt-fs-fidelity key=taskings.encrypt src=beaconcrypt/src/server.rs:371-375 anchor=pub fn encrypt_message(&mut self, b: &[u8], k: u64) -> Option<crate::Encrypted> { *)
+(* @beaconcrypt-fs-fidelity key=taskings.seal src=beaconcrypt/src/ratchet.rs:546-579 anchor=fn execute_record_send( *)
+(* @beaconcrypt-fs-fidelity key=taskings.allocate src=beaconcrypt-core/src/ratchet/concrete.rs:133-155 anchor=pub fn begin_send<Context>(kernel: ConcreteRatchetKernel, context: Context) -> SendStart<Context> { *)
+(* @beaconcrypt-fs-fidelity key=taskings.advance src=beaconcrypt-core/src/ratchet/concrete.rs:171-182 anchor=pub fn resume(mut self, response: RatchetKdfResponse) -> SendSeal<Context> { *)
+(* @beaconcrypt-fs-fidelity key=taskings.stays_advanced src=beaconcrypt-core/src/ratchet/concrete.rs:206-209 anchor=pub fn finish<Output>(self, sealed: Option<Output>) -> (ConcreteRatchetKernel, Option<Output>) { *)
+(* @beaconcrypt-fs-fidelity key=taskings.snapshot src=beaconcrypt/src/server.rs:620-630 anchor=fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<SendState> { *)
+
+(* The application's choice of a whole adversary-chosen plaintext; any other
+   mode input selects the fresh form.  A model-only control value, like
+   fs_build. *)
+fun fs_chosen_tasking(): bitstring [data].
+
+let FsS2bTasking3(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  assigned_key_id: key_id,
+  root: bitstring,
+  associated_data: bitstring,
+  send_chain_3: bitstring
+) =
+  in(c, app_mode_3: bitstring) [precise];
+  if app_mode_3 = fs_chosen_tasking() then
+  (
+    in(c, app_plaintext_3: bitstring) [precise];
+    event FsSent(
+      server_to_beacon(),
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      3,
+      app_plaintext_3
+    );
+    out(
+      c,
+      seal_frame(
+        ratchet_material(send_chain_3),
+        associated_data,
+        fs_seq(3),
+        SERVER_KEY_ID,
+        app_plaintext_3
+      )
+    )
+  )
+  else
+  (
+    in(c, app_prefix_3: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding) [precise];
+    new tasking_body_3: bitstring;
+    let tasking_3 = registration_payload(app_prefix_3, tasking_body_3) in
+    event FsSent(
+      server_to_beacon(),
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      3,
+      tasking_3
+    );
+    out(
+      c,
+      seal_frame(
+        ratchet_material(send_chain_3),
+        associated_data,
+        fs_seq(3),
+        SERVER_KEY_ID,
+        tasking_3
+      )
+    )
+  ).
+
+let FsS2bTaskings(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  assigned_key_id: key_id,
+  root: bitstring,
+  associated_data: bitstring,
+  send_chain_2: bitstring,
+  send_chain_3: bitstring
+) =
+  in(c, app_mode_2: bitstring) [precise];
+  if app_mode_2 = fs_chosen_tasking() then
+  (
+    in(c, app_plaintext_2: bitstring) [precise];
+    event FsSent(
+      server_to_beacon(),
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      2,
+      app_plaintext_2
+    );
+    out(
+      c,
+      seal_frame(
+        ratchet_material(send_chain_2),
+        associated_data,
+        fs_seq(2),
+        SERVER_KEY_ID,
+        app_plaintext_2
+      )
+    );
+    FsS2bTasking3(
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      associated_data,
+      send_chain_3
+    )
+  )
+  else
+  (
+    in(c, app_prefix_2: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding) [precise];
+    new tasking_body_2: bitstring;
+    let tasking_2 = registration_payload(app_prefix_2, tasking_body_2) in
+    event FsSent(
+      server_to_beacon(),
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      2,
+      tasking_2
+    );
+    out(
+      c,
+      seal_frame(
+        ratchet_material(send_chain_2),
+        associated_data,
+        fs_seq(2),
+        SERVER_KEY_ID,
+        tasking_2
+      )
+    );
+    FsS2bTasking3(
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      associated_data,
+      send_chain_3
+    )
+  ).

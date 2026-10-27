@@ -1,0 +1,163 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+(* Exact HKDF label and projection endpoint controls                     *)
+(**************************************************************************)
+
+(* Each correct fixture reaches its endpoint commitment, while each wrong-label or wrong-projection fixture blocks at exact frame opening and cannot emit its commitment event. *)
+free HKDF_CORRECT_ROOT_COMMIT_WITNESS: bitstring [private].
+free HKDF_WRONG_ROOT_COMMIT_WITNESS: bitstring [private].
+free HKDF_CORRECT_SYMMETRIC_COMMIT_WITNESS: bitstring [private].
+free HKDF_WRONG_SYMMETRIC_COMMIT_WITNESS: bitstring [private].
+free HKDF_WRONG_PROJECTION_COMMIT_WITNESS: bitstring [private].
+
+event HkdfCorrectRootEndpointCommitted(bitstring).
+event HkdfWrongRootOpeningAttempted(bitstring).
+event HkdfWrongRootEndpointCommitted(bitstring).
+event HkdfCorrectSymmetricEndpointCommitted(bitstring).
+event HkdfWrongSymmetricOpeningAttempted(bitstring).
+event HkdfWrongSymmetricEndpointCommitted(bitstring).
+event HkdfWrongProjectionOpeningAttempted(bitstring).
+event HkdfWrongProjectionEndpointCommitted(bitstring).
+
+let HkdfCorrectRootEndpoint() =
+  new root_input: bitstring;
+  new associated_data: bitstring;
+  new sender_id: key_id;
+  let message_sequence = first_sequence() in
+  let root = pqxdh_root(root_input) in
+  let material = ratchet_material(server_to_beacon_chain(root)) in
+  let frame = seal_frame(
+    material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    HKDF_CORRECT_ROOT_COMMIT_WITNESS
+  ) in
+  let opened = open_frame(
+    material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    frame
+  ) in
+  if opened = HKDF_CORRECT_ROOT_COMMIT_WITNESS then
+    event HkdfCorrectRootEndpointCommitted(opened).
+
+let HkdfWrongRootLabelEndpoint() =
+  new root_input: bitstring;
+  new associated_data: bitstring;
+  new sender_id: key_id;
+  let message_sequence = first_sequence() in
+  let correct_root = pqxdh_root(root_input) in
+  let wrong_root = hkdf_first_32(
+    hkdf_sha512_no_salt(root_input, symmetric_ratchet_domain())
+  ) in
+  let sender_material = ratchet_material(
+    server_to_beacon_chain(correct_root)
+  ) in
+  let receiver_material = ratchet_material(
+    server_to_beacon_chain(wrong_root)
+  ) in
+  let frame = seal_frame(
+    sender_material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    HKDF_WRONG_ROOT_COMMIT_WITNESS
+  ) in
+  event HkdfWrongRootOpeningAttempted(HKDF_WRONG_ROOT_COMMIT_WITNESS);
+  let opened = open_frame(
+    receiver_material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    frame
+  ) in
+  if opened = HKDF_WRONG_ROOT_COMMIT_WITNESS then
+    event HkdfWrongRootEndpointCommitted(opened).
+
+let HkdfCorrectSymmetricEndpoint() =
+  new root_input: bitstring;
+  new associated_data: bitstring;
+  new sender_id: key_id;
+  let message_sequence = first_sequence() in
+  let root = pqxdh_root(root_input) in
+  let chain = server_to_beacon_chain(root) in
+  let material = ratchet_material(chain) in
+  let frame = seal_frame(
+    material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    HKDF_CORRECT_SYMMETRIC_COMMIT_WITNESS
+  ) in
+  let opened = open_frame(
+    material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    frame
+  ) in
+  if opened = HKDF_CORRECT_SYMMETRIC_COMMIT_WITNESS then
+    event HkdfCorrectSymmetricEndpointCommitted(opened).
+
+let HkdfWrongSymmetricLabelEndpoint() =
+  new root_input: bitstring;
+  new associated_data: bitstring;
+  new sender_id: key_id;
+  let message_sequence = first_sequence() in
+  let root = pqxdh_root(root_input) in
+  let sender_chain = server_to_beacon_chain(root) in
+  let wrong_receiver_chain = hkdf_first_32(
+    hkdf_sha512_no_salt(root, pqxdh_domain())
+  ) in
+  let sender_material = ratchet_material(sender_chain) in
+  let receiver_material = ratchet_material(wrong_receiver_chain) in
+  let frame = seal_frame(
+    sender_material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    HKDF_WRONG_SYMMETRIC_COMMIT_WITNESS
+  ) in
+  event HkdfWrongSymmetricOpeningAttempted(
+    HKDF_WRONG_SYMMETRIC_COMMIT_WITNESS
+  );
+  let opened = open_frame(
+    receiver_material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    frame
+  ) in
+  if opened = HKDF_WRONG_SYMMETRIC_COMMIT_WITNESS then
+    event HkdfWrongSymmetricEndpointCommitted(opened).
+
+let HkdfWrongProjectionEndpoint() =
+  new root_input: bitstring;
+  new associated_data: bitstring;
+  new sender_id: key_id;
+  let message_sequence = first_sequence() in
+  let root = pqxdh_root(root_input) in
+  let sender_material = ratchet_material(server_to_beacon_chain(root)) in
+  let receiver_material = ratchet_material(beacon_to_server_chain(root)) in
+  let frame = seal_frame(
+    sender_material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    HKDF_WRONG_PROJECTION_COMMIT_WITNESS
+  ) in
+  event HkdfWrongProjectionOpeningAttempted(
+    HKDF_WRONG_PROJECTION_COMMIT_WITNESS
+  );
+  let opened = open_frame(
+    receiver_material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    frame
+  ) in
+  if opened = HKDF_WRONG_PROJECTION_COMMIT_WITNESS then
+    event HkdfWrongProjectionEndpointCommitted(opened).

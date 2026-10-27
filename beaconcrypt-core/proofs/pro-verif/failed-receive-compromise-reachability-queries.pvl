@@ -1,0 +1,8 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* The compromise witness explicitly repeats one state term on both sides of the rejected receive boundary. *)
+query session: bitstring, target_sequence: sequence, unchanged_state: bitstring;
+  event(ReceiveStateCompromised(session, target_sequence, unchanged_state, unchanged_state)).
+
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, accepted_frame: bitstring, target_material: bitstring, forged_frame: bitstring, entry_state: bitstring, committed_state: bitstring;
+  event(ReceiveHonestFutureDelivered(session, target_sequence, sender, receiver, RECEIVE_TARGET_SECRET, accepted_frame, target_material, forged_frame, entry_state, committed_state)).

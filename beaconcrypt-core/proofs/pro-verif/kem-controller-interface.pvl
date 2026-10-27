@@ -1,0 +1,22 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Precision annotations constrain ProVerif's Horn-clause approximation to
+   one reply per execution of an input; they do not restrict process traces. *)
+set preciseActions = true.
+
+(* Authentication-only adversarial overapproximation. The public controller
+   chooses every generated KEM public key, ciphertext and shared-secret byte
+   value, including coincidences and arbitrary fallback values. It observes
+   all its replies. A creation handle is public instrumentation, not a secret
+   key encoding. No KEM constructor or decapsulation equation is available. *)
+free kem_controller: channel.
+fun kem_generate_request(bitstring): bitstring [data].
+fun kem_generate_reply(bitstring): bitstring [data].
+fun kem_encapsulation_request(bitstring): bitstring [data].
+fun kem_encapsulation_reply(bitstring, bitstring): bitstring [data].
+fun kem_decapsulation_request(bitstring, bitstring, bitstring): bitstring [data].
+fun kem_decapsulation_reply(bitstring): bitstring [data].
+fun kem_failure(): bitstring [data].
+event KemControllerRequested(bitstring).
+event KemControllerReturned(bitstring, bitstring).
+event KemControllerRejected(bitstring).

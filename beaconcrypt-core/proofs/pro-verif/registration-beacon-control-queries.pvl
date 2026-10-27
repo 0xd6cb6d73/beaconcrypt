@@ -1,0 +1,20 @@
+(* SPDX-License-Identifier: 0BSD *)
+event RegistrationBeaconControlFirstSuccess().
+event RegistrationBeaconControlFirstFailure().
+event RegistrationBeaconControlRetrySuccess().
+event RegistrationBeaconControlRetryFailure().
+set preciseActions = false.
+set maxHyp = none.
+set preciseLetExpand = false.
+query event(RegistrationBeaconControlFirstSuccess()).
+query event(RegistrationBeaconControlFirstFailure()).
+query event(RegistrationBeaconControlRetrySuccess()).
+query event(RegistrationBeaconControlRetryFailure()).
+query owner:channel, attempt:bitstring, target:sequence, opened:bitstring, frame:bitstring;
+ event(RegistrationBeaconOpened(owner,attempt,target,opened,frame)).
+query owner:channel, attempt:bitstring, server:bitstring;
+ event(RegistrationBeaconPinRejected(owner,attempt,server)).
+query owner:channel, attempt:bitstring, server:bitstring;
+ event(RegistrationBeaconDhComplete(owner,attempt,server)).
+query owner:channel, attempt:bitstring;
+ event(RegistrationBeaconSharedCleared(owner,attempt)).

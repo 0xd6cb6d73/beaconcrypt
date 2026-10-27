@@ -1,0 +1,6 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* The fresh control name is generated only by the experiment. The leak
+   and eligibility-removal controls must make its disclosure reachable. *)
+fun fs_strong_reply(bitstring, bitstring, bool): bitstring [data].
+event FsStrongControlSecret(bitstring).

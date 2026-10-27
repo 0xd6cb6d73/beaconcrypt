@@ -1,0 +1,128 @@
+# Reviewed allowlist of ProVerif resolution heuristics, precision settings and output settings. The transcript-fidelity test scans every .pv and .pvl file under proofs/pro-verif, including generated files, after removing comments as ProVerif does (nested, each comment a token separator). It fails on any axiom, restriction, elimtrue or clauses declaration, and it requires every set, param, nounif, select, noselect, lemma and secrecy-assumption (not) declaration and every [precise] input to match exactly one entry below, with no stale entries. It also scans every string literal of every Python file under proofs/pro-verif, because the checkers and generators write ProVerif text at run time: a keyword counts there when it starts a literal or follows a format placeholder, a period, a brace or a comment end; forbidden declarations fail, and every other declaration except secrecy assumptions, which ProVerif verifies itself, and every [precise] needs an entry under the Python file's path.
+# Columns, separated by one tab: path, kind, occurrence count in that file, declaration with whitespace collapsed (or [precise]), and the documentation paragraph that explains why the entry does not change what a verdict means.
+proofs/pro-verif/check-general-registration.py	precise	1	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/check-registration-response.py	set	1	set maxHyp=2.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/check-registration-response.py	set	1	set preciseActions=false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/check-registration-set.py	set	1	set preciseActions = true.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-common.pvl	nounif	1	nounif y: bitstring; attacker(x25519_public(y)).	doc/formal-verification-analysis.md#the-fs-selection-heuristic-nx
+proofs/pro-verif/fs-records-b2s-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-records-b2s-sends-chosen.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-records-b2s-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-records-b2s.pvl	precise	5	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-records-s2b-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-records-s2b-taskings-chosen.pvl	precise	6	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-records-s2b-taskings.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-records-s2b.pvl	precise	3	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-registration.pvl	precise	3	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/general-registration-admission.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/general-registration-admission.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/general-registration-admission.pv	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/general-registration-admission.pv	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/general-registration-admission.pv	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/general-registration-admission.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/general-registration-public-witness.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/generate-general-registration.py	precise	1	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/generate-kem-controller-auth.py	precise	1	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/kem-controller-interface.pvl	set	1	set preciseActions = true.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/live-material-endpoint-origin.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-endpoint-origin.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-endpoint-origin.pv	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-endpoint-origin.pv	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-endpoint-origin.pv	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-no-disclosure.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-no-disclosure.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-no-disclosure.pv	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-no-disclosure.pv	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-no-disclosure.pv	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-origin.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-origin.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-origin.pv	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-origin.pv	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-origin.pv	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-reachable.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-reachable.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-reachable.pv	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-reachable.pv	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-reachable.pv	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-wrong-sequence.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-wrong-sequence.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-wrong-sequence.pv	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-wrong-sequence.pv	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-wrong-sequence.pv	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-private-application-service.pvl	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-private-application-service.pvl	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-private-application-service.pvl	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-private-application-service.pvl	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-private-application-service.pvl	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/registration-beacon-admission-queries.pvl	set	1	set maxHyp = 2.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-beacon-admission-queries.pvl	set	1	set preciseActions = false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-beacon-admission-queries.pvl	set	1	set preciseLetExpand = false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-beacon-control-queries.pvl	set	1	set maxHyp = none.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-beacon-control-queries.pvl	set	1	set preciseActions = false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-beacon-control-queries.pvl	set	1	set preciseLetExpand = false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-beacon-control.pv	precise	1	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-set-admission-queries.pvl	set	1	set preciseActions = true.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-set-admission-reachability.pvl	set	1	set preciseActions = true.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-set-response-queries.pvl	set	1	set maxHyp = 2.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-set-response-queries.pvl	set	1	set preciseActions = false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-encoding-interface.pvl	nounif	1	nounif y: bitstring; attacker(x25519_high_bit_alias(y)).	doc/formal-verification-analysis.md#the-fs-encoding-profile
+proofs/pro-verif/fs-encoding-registration.pvl	precise	3	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/check-pending-registration.py	precise	2	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-pending-registration.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-pending-fixtures.pvl	precise	16	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/active-strong-secrecy-models.py	precise	8	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-b2s-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-b2s-sends.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-b2s.pvl	precise	5	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-control-b2s-leak.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-control-b2s-ungated.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-control-s2b-leak.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-control-s2b-ungated.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-s2b-taskings.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-common.pvl	nounif	1	nounif x:bitstring, y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/check-active-strong-secrecy.py	nounif	1	nounif x:bitstring, y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/active-strong-secrecy-models.py	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-s2b.pv	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/registration-provenance.pvl	precise	3	[precise]	doc/formal-verification-analysis.md#signature-origin-across-registration-schedules
+proofs/pro-verif/registration-provenance-wrong-purpose.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#signature-origin-across-registration-schedules
+proofs/pro-verif/delayed-response.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#claim-specific-delayed-initial-response-origin
+proofs/pro-verif/delayed-response-wrong-binding.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#claim-specific-delayed-initial-response-origin
+proofs/pro-verif/delayed-response-models.py	precise	3	[precise]	doc/formal-verification-analysis.md#claim-specific-delayed-initial-response-origin
+proofs/pro-verif/symbolic-name-order.py	precise	1	[precise]	doc/formal-verification-analysis.md#complete-symbolic-continuation-under-early-fresh-server-names
+proofs/pro-verif/test-symbolic-name-order.py	precise	2	[precise]	doc/formal-verification-analysis.md#complete-symbolic-continuation-under-early-fresh-server-names
+proofs/pro-verif/record-origin-cache.pvl	precise	5	[precise]	doc/formal-verification-analysis.md#selected-near-record-origin-with-exact-ids-and-plaintext-replies
+proofs/pro-verif/record-origin-cache-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#selected-near-record-origin-with-exact-ids-and-plaintext-replies
+proofs/pro-verif/record-origin-cache-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#selected-near-record-origin-with-exact-ids-and-plaintext-replies
+proofs/pro-verif/record-origin-models.py	precise	3	[precise]	doc/formal-verification-analysis.md#selected-near-record-origin-with-exact-ids-and-plaintext-replies
+proofs/pro-verif/tasking-origin.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#server-to-beacon-source-origin-with-actual-replies
+proofs/pro-verif/tasking-origin-cache.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#server-to-beacon-source-origin-with-actual-replies
+proofs/pro-verif/tasking-origin-models.py	precise	1	[precise]	doc/formal-verification-analysis.md#server-to-beacon-source-origin-with-actual-replies
+proofs/pro-verif/application-secrecy-b2s.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#fresh-record-secrecy-with-private-application-plaintext
+proofs/pro-verif/application-secrecy-s2b.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#fresh-record-secrecy-with-private-application-plaintext
+proofs/pro-verif/application-secrecy-models.py	precise	2	[precise]	doc/formal-verification-analysis.md#fresh-record-secrecy-with-private-application-plaintext
+proofs/pro-verif/test-application-secrecy-checker.py	precise	1	[precise]	doc/formal-verification-analysis.md#fresh-record-secrecy-with-private-application-plaintext
+proofs/pro-verif/exact-interface-strong-b2s-auxiliary.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-control-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-leak-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-origin-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-origin-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-origin.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-ungated-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s.pv	nounif	1	nounif x:bitstring,y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s.pv	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-auxiliary.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-control-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-leak-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-origin-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-origin-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-origin.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-ungated-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b.pv	nounif	1	nounif x:bitstring,y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b.pv	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-models.py	precise	3	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/test-exact-interface-strong-checker.py	precise	1	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-models.py	nounif	1	nounif x:bitstring,y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/test-exact-interface-strong-checker.py	nounif	1	nounif x:bitstring,y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-models.py	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces

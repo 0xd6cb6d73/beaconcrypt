@@ -1,0 +1,7 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+process
+ new owner:bitstring; new mutex:channel;
+ (out(mutex,registration_set_mutex()) |
+  RegistrationSetServer(owner,SERVER_IDENTITY_SECRET,mutex) |
+  !RegistrationSetHonestBundle())

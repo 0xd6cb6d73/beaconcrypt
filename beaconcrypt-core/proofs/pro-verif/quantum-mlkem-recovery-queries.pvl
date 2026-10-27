@@ -1,0 +1,4 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Run once with ordinary quantum-capabilities.pvl (expected true) and once with quantum-mlkem-recovery.pvl as well (expected false). *)
+query attacker(QUANTUM_MLKEM_CONTROL_SECRET).

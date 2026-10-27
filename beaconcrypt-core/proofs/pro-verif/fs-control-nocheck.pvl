@@ -1,0 +1,12 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* NEGATIVE CONTROL C-NOCHECK for fs-registration: the consumed-ID
+   comparison is removed, so every registration is treated as Fresh.  The
+   insertion into the slots and everything else are unchanged.  Loaded
+   instead of fs-registration-consumed.pvl; R1 must become FALSE. *)
+letfun fs_reg_consumed(
+  registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+  slot_1: beaconcrypt_core__pqxdh__t_RegistrationId,
+  slot_2: beaconcrypt_core__pqxdh__t_RegistrationId
+) =
+  false.

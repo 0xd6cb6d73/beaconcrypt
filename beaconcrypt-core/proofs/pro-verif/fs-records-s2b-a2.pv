@@ -1,0 +1,13 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b A2 (re-proved), security result: bundle origin in the
+   record process.  A Server object accepts a bundle for an identity whose
+   secret the attacker does not hold only if a Beacon with that identity,
+   whatever Server key it pins, sent exactly that verified key tuple and
+   registration ID. *)
+query obj: bitstring, s: bitstring, s2: bitstring, k: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+      rid: beaconcrypt_core__pqxdh__t_RegistrationId, root: bitstring;
+  event(FsServerAccepted(obj, s, ed_public(k), init, rid, root))
+  ==> event(FsBeaconStarted(s2, ed_public(k), init, rid)) || attacker(k).
+
+process FsRecordsS2bMain()

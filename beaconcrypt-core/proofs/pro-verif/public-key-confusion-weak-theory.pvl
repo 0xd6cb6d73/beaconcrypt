@@ -1,0 +1,94 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+(* Deliberately weakened public-key encoding theories                    *)
+(**************************************************************************)
+
+(* The algorithm control erases the ML-KEM-versus-X25519 marker distinction, while the independent role control erases only the prekey-versus-one-time marker distinction; neither equation changes the production constructors. *)
+fun weak_pk_algorithm_encoding(bitstring): bitstring [data].
+letfun weak_pk_tag_mlkem768(public_key: bitstring) =
+  weak_pk_algorithm_encoding(public_key).
+letfun weak_pk_tag_x25519_prekey(public_key: bitstring) =
+  weak_pk_algorithm_encoding(public_key).
+
+reduc forall public_key: bitstring;
+  weak_pk_parse_mlkem768(
+    weak_pk_algorithm_encoding(public_key)
+  ) = public_key.
+reduc forall public_key: bitstring;
+  weak_pk_parse_x25519_prekey(
+    weak_pk_algorithm_encoding(public_key)
+  ) = public_key.
+
+fun weak_pk_x25519_role_encoding(bitstring): bitstring [data].
+letfun weak_pk_tag_x25519_prekey_role(public_key: bitstring) =
+  weak_pk_x25519_role_encoding(public_key).
+letfun weak_pk_tag_x25519_one_time_role(public_key: bitstring) =
+  weak_pk_x25519_role_encoding(public_key).
+
+reduc forall public_key: bitstring;
+  weak_pk_parse_x25519_prekey_role(
+    weak_pk_x25519_role_encoding(public_key)
+  ) = public_key.
+reduc forall public_key: bitstring;
+  weak_pk_parse_x25519_one_time_role(
+    weak_pk_x25519_role_encoding(public_key)
+  ) = public_key.
+
+let WeakAlgorithmTagConfusionControl() =
+  new public_key: bitstring;
+  let encoded_mlkem = weak_pk_tag_mlkem768(public_key) in
+  let encoded_x25519 = weak_pk_tag_x25519_prekey(public_key) in
+  (
+    let parsed_mlkem = weak_pk_parse_mlkem768(encoded_mlkem) in
+    if parsed_mlkem = public_key then
+      event PkAlgorithmMlkemLegitimateParsed(
+        PK_ALGORITHM_MLKEM_PARSE_WITNESS
+      )
+  |
+    let parsed_x25519 = weak_pk_parse_x25519_prekey(
+      encoded_x25519
+    ) in
+    if parsed_x25519 = public_key then
+      event PkAlgorithmX25519LegitimateParsed(
+        PK_ALGORITHM_X25519_PARSE_WITNESS
+      )
+  |
+    event PkAlgorithmConfusionAttempted(
+      PK_ALGORITHM_CONFUSION_WITNESS
+    );
+    let confused_x25519 = weak_pk_parse_x25519_prekey(
+      encoded_mlkem
+    ) in
+    if confused_x25519 = public_key then
+      event PkAlgorithmConfusionAccepted(
+        PK_ALGORITHM_CONFUSION_WITNESS
+      )
+  ).
+
+let WeakX25519RoleConfusionControl() =
+  new public_key: bitstring;
+  let encoded_prekey = weak_pk_tag_x25519_prekey_role(public_key) in
+  let encoded_one_time = weak_pk_tag_x25519_one_time_role(public_key) in
+  (
+    let parsed_prekey = weak_pk_parse_x25519_prekey_role(
+      encoded_prekey
+    ) in
+    if parsed_prekey = public_key then
+      event PkRolePrekeyLegitimateParsed(PK_ROLE_PREKEY_PARSE_WITNESS)
+  |
+    let parsed_one_time = weak_pk_parse_x25519_one_time_role(
+      encoded_one_time
+    ) in
+    if parsed_one_time = public_key then
+      event PkRoleOneTimeLegitimateParsed(
+        PK_ROLE_ONE_TIME_PARSE_WITNESS
+      )
+  |
+    event PkRoleConfusionAttempted(PK_ROLE_CONFUSION_WITNESS);
+    let confused_one_time = weak_pk_parse_x25519_one_time_role(
+      encoded_prekey
+    ) in
+    if confused_one_time = public_key then
+      event PkRoleConfusionAccepted(PK_ROLE_CONFUSION_WITNESS)
+  ).

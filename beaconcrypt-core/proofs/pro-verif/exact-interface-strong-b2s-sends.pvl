@@ -1,0 +1,19 @@
+(* SPDX-License-Identifier: 0BSD *)
+let L2Send2(s:bitstring,b:bitstring,kid:key_id,root:bitstring,ad:bitstring,chain:bitstring)=
+ in(c,l2_send(call:bitstring,use_chosen:bool,left:bitstring,right:bitstring,fail_seal:bool)) [precise];
+ if use_chosen then (let plaintext=left in
+  event FsSent(beacon_to_server(),s,b,kid,root,2,plaintext);
+  if fail_seal then (out(c,l2_reply(call,l2_none())); 0) else (event L2Published(beacon_to_server(),s,b,kid,root,2,plaintext);
+ out(c,l2_reply(call,l2_some(seal_frame(ratchet_material(chain),ad,fs_seq(2),kid,plaintext)))); 0)) else (let plaintext=if s=ed_public(SERVER_IDENTITY_SECRET) then choice[left,right] else left in
+  event FsSent(beacon_to_server(),s,b,kid,root,2,plaintext);
+  if fail_seal then (out(c,l2_reply(call,l2_none())); 0) else (event L2Published(beacon_to_server(),s,b,kid,root,2,plaintext); event L2FreshPublished(beacon_to_server(),s,b,kid,root,2,plaintext);
+ out(c,l2_reply(call,l2_some(seal_frame(ratchet_material(chain),ad,fs_seq(2),kid,plaintext)))); 0)).
+let L2Send1(s:bitstring,b:bitstring,kid:key_id,root:bitstring,ad:bitstring,chain:bitstring)=
+ in(c,l2_send(call:bitstring,use_chosen:bool,left:bitstring,right:bitstring,fail_seal:bool)) [precise];
+ if use_chosen then (let plaintext=left in
+  event FsSent(beacon_to_server(),s,b,kid,root,1,plaintext);
+  if fail_seal then (out(c,l2_reply(call,l2_none())); L2Send2(s,b,kid,root,ad,ratchet_next(chain))) else (event L2Published(beacon_to_server(),s,b,kid,root,1,plaintext);
+ out(c,l2_reply(call,l2_some(seal_frame(ratchet_material(chain),ad,fs_seq(1),kid,plaintext)))); L2Send2(s,b,kid,root,ad,ratchet_next(chain)))) else (let plaintext=if s=ed_public(SERVER_IDENTITY_SECRET) then choice[left,right] else left in
+  event FsSent(beacon_to_server(),s,b,kid,root,1,plaintext);
+  if fail_seal then (out(c,l2_reply(call,l2_none())); L2Send2(s,b,kid,root,ad,ratchet_next(chain))) else (event L2Published(beacon_to_server(),s,b,kid,root,1,plaintext); event L2FreshPublished(beacon_to_server(),s,b,kid,root,1,plaintext);
+ out(c,l2_reply(call,l2_some(seal_frame(ratchet_material(chain),ad,fs_seq(1),kid,plaintext)))); L2Send2(s,b,kid,root,ad,ratchet_next(chain)))).

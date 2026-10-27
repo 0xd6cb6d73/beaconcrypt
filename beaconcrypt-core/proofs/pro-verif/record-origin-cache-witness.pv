@@ -1,0 +1,4 @@
+(* SPDX-License-Identifier: 0BSD *)
+query s:bitstring,k:bitstring,kid:key_id,root:bitstring,m:bitstring;
+ event(L2CachedAccepted(s,ed_public(k),kid,root,m)) && event(L2SelectedIdentity(k)).
+process L2Main(false)

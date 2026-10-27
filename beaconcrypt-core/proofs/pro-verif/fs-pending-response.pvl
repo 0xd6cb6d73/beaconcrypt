@@ -1,0 +1,87 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Public natural-number identifiers expose the source counter's predictability.
+   The service is parameterized by its initial value and upper limit; the U64
+   production instance has limit 2^64-1. Neither identifier is a fresh name. *)
+fun registration_response_identifier(nat): key_id [data].
+fun registration_response_nonempty(bitstring): bitstring [data].
+fun registration_response_empty(): bitstring [data].
+fun registration_response_default_payload(): bitstring [data].
+fun registration_response_witness(): bitstring [data].
+fun registration_response_success(bitstring): bitstring [data].
+
+table registration_response_used(bitstring, bitstring).
+table registration_response_peers(bitstring, key_id, bitstring, bitstring, bitstring, bitstring).
+
+event RegistrationResponseConsumed(bitstring, bitstring).
+event RegistrationResponseFailed(bitstring, bitstring).
+event RegistrationResponseCompleted(bitstring, bitstring, nat, nat, bool).
+event RegistrationResponsePrepared(bitstring, bitstring, nat, bitstring, bitstring, bitstring).
+event RegistrationResponseInnerWritten(bitstring, bitstring, key_id, bitstring, bitstring).
+event RegistrationResponsePublished(bitstring, bitstring, nat, nat, key_id, bitstring, bitstring, bitstring).
+event RegistrationResponseInstalled(bitstring, bitstring, key_id, bitstring, bitstring, bitstring).
+
+letfun registration_response_identity(init: beaconcrypt_core__pqxdh__t_InitKex) =
+  let beaconcrypt_core__pqxdh__InitKex(encoded, prekey, one_time, pq) = init in
+  let tag_ed25519(identity: bitstring) = encoded in identity.
+
+(* Nonempty application values denote arbitrary nonempty byte strings.
+   The separate empty value and default witness retain the source Option path. *)
+letfun registration_response_plaintext(data: bitstring) =
+  if data = registration_response_default_payload() then
+    registration_response_nonempty(registration_response_witness())
+  else let registration_response_nonempty(bytes: bitstring) = data in data.
+
+(* Observe the same value that is reinstalled on the private counter channel. *)
+let RegistrationResponseReturn(owner: bitstring, token: bitstring, reply: channel,
+  mutex: channel, counter: channel, before: nat, after: nat,
+  success: bool, result: bitstring) =
+  event RegistrationResponseCompleted(owner, token, before, after, success);
+  (out(counter, after) | out(mutex, registration_set_mutex()) | out(reply, result)).
+
+let RegistrationResponseFailure(owner: bitstring, token: bitstring, reply: channel,
+  mutex: channel, counter: channel, before: nat) =
+  event RegistrationResponseFailed(owner, token);
+  RegistrationResponseReturn(owner, token, reply, mutex, counter, before, before,
+    false, registration_set_failure()).
+
+(* Consume the token before this continuation. The two initial chains and the
+   first step share the original fixed HKDF equations; they are not resampled. *)
+let SchedResponseTail(owner: bitstring, token: bitstring, reply: channel,
+  mutex: channel, counter: channel, before: nat, next: nat,
+  server_identity: bitstring, server_id: key_id, beacon_identity: bitstring,
+  ephemeral: bitstring, ciphertext: bitstring, root: bitstring,
+  data: bitstring, failure_stage: nat) =
+  if failure_stage <> 1 then (
+    if failure_stage <> 2 then (
+      let associated_data = beaconcrypt_core__pqxdh__build_associated_data(server_identity, beacon_identity) in
+      let send_chain = server_to_beacon_chain(root) in
+      let receive_chain = beacon_to_server_chain(root) in
+      event RegistrationResponsePrepared(owner, token, next, root, send_chain, receive_chain);
+      let plaintext = registration_response_plaintext(data) in (
+        if failure_stage <> 3 then (
+          if failure_stage <> 4 then (
+            let assigned = fs_kid(next) in
+            let binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(key_id_encoding(assigned)) in
+            let authenticated = registration_payload(binding, plaintext) in
+            let material = ratchet_material(send_chain) in
+            if failure_stage <> 5 then (
+              let frame = seal_frame(material, associated_data, fs_seq(1), server_id, authenticated) in
+              if failure_stage <> 6 then (
+                event RegistrationResponseInnerWritten(owner, token, assigned, authenticated, frame);
+                let response = kex_response(server_identity, ephemeral, ciphertext, frame, assigned) in
+                if failure_stage <> 7 then (
+                  let advanced = ratchet_next(send_chain) in
+                  insert registration_response_peers(owner, assigned, beacon_identity, associated_data, advanced, receive_chain);
+                  event RegistrationResponseInstalled(owner, token, assigned, associated_data, advanced, receive_chain);
+                  event RegistrationResponsePublished(owner, token, before, next, assigned, authenticated, frame, response);
+                  RegistrationResponseReturn(owner, token, reply, mutex, counter,
+                    before, next, true, registration_response_success(response))
+                ) else RegistrationResponseFailure(owner, token, reply, mutex, counter, before)
+              ) else RegistrationResponseFailure(owner, token, reply, mutex, counter, before)
+            ) else RegistrationResponseFailure(owner, token, reply, mutex, counter, before)
+          ) else RegistrationResponseFailure(owner, token, reply, mutex, counter, before)
+        ) else RegistrationResponseFailure(owner, token, reply, mutex, counter, before)
+      ) else RegistrationResponseFailure(owner, token, reply, mutex, counter, before)
+    ) else RegistrationResponseFailure(owner, token, reply, mutex, counter, before)
+  ) else RegistrationResponseFailure(owner, token, reply, mutex, counter, before).
+

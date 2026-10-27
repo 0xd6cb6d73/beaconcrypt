@@ -1,0 +1,10 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Resolution-order heuristic for the alias constructor, matching nx in fs-common.pvl. It does not restrict traces. *)
+nounif y: bitstring; attacker(x25519_high_bit_alias(y)).
+
+(* The core checks these four outputs before building the root input. The native DH adapter may reject earlier; the zero event below witnesses only this explicit core boundary. *)
+letfun fs_dh_nonzero(dh1: bitstring, dh2: bitstring, dh3: bitstring, dh4: bitstring) =
+  dh1 <> x25519_all_zero && dh2 <> x25519_all_zero && dh3 <> x25519_all_zero && dh4 <> x25519_all_zero.
+
+event FsServerZeroRejected(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).

@@ -1,0 +1,9 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration R3, witness, K_reg = 2 (expected reachable): an honest
+   Beacon's bundle replayed to the object that accepted it is refused. *)
+query obj: bitstring, s: bitstring, k: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex, rid: beaconcrypt_core__pqxdh__t_RegistrationId;
+  event(FsServerReplayRejected(obj, s, ed_public(k), rid))
+  && event(FsBeaconStarted(s, ed_public(k), init, rid)).
+
+process FsRegistrationMain()

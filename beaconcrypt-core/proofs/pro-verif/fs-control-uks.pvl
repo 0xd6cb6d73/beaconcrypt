@@ -1,0 +1,13 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* NEGATIVE CONTROL C-UKS for fs-registration: the session no longer binds
+   the Beacon identity.  The root input takes DH3 (ephemeral with the
+   prekey) in the DH2 slot, and the associated data omits the Beacon
+   identity.  Loaded instead of fs-registration-binding.pvl; A1 must become
+   FALSE through an unknown-key-share trace. *)
+fun fs_uks_ad(bitstring): bitstring.
+
+letfun fs_root_dh2(dh2: bitstring, dh3: bitstring) = dh3.
+
+letfun fs_associated_data(server_identity: bitstring, beacon_identity: bitstring) =
+  fs_uks_ad(server_identity).

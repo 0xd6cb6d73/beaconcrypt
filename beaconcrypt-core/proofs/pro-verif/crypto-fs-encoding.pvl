@@ -1,0 +1,203 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+(* Reviewed symbolic primitive boundary                                   *)
+(**************************************************************************)
+
+(* Production-facing transcript sorts, domains, encodings, AEAD, and CTX
+   declarations come from production-transcript-interface.pvl. *)
+type direction.
+type role.
+
+fun first_sequence(): sequence [data].
+fun next_sequence(sequence): sequence [data].
+fun server_to_beacon(): direction [data].
+fun beacon_to_server(): direction [data].
+fun beacon_role(): role [data].
+fun server_role(): role [data].
+
+(* Ed25519 and its authenticated verification equation. *)
+fun ed_public(bitstring): bitstring.
+fun sign(bitstring, bitstring): bitstring.
+reduc forall message: bitstring, signing_key: bitstring;
+  verify_signature(sign(message, signing_key), ed_public(signing_key)) = message.
+
+(* Encoding profile for the bounded registration process. This keeps the role-asymmetric DH idealisation and adds the already modelled high-bit alias, a low-order zero result at the core boundary, and implicit KEM rejection. Same-role DH symmetry and the full X25519 input equivalence classes are not represented. A zero-result witness concerns the core guard; it does not assert that the trusted native DH implementation returns zero instead of rejecting earlier. *)
+fun x25519_public(bitstring): bitstring.
+fun x25519_high_bit_alias(bitstring): bitstring.
+fun x25519_flip_high_bit(bitstring): bitstring
+reduc forall alias_secret: bitstring;
+  x25519_flip_high_bit(x25519_public(alias_secret)) = x25519_high_bit_alias(alias_secret)
+otherwise forall alias_secret: bitstring;
+  x25519_flip_high_bit(x25519_high_bit_alias(alias_secret)) = x25519_public(alias_secret).
+reduc forall identity_secret: bitstring;
+  x25519_public_from_ed(ed_public(identity_secret)) =
+  x25519_public(identity_secret).
+const x25519_low_order: bitstring [data].
+const x25519_all_zero: bitstring [data].
+fun x25519_shared(bitstring, bitstring): bitstring [private].
+fun x25519_server_dh(bitstring, bitstring): bitstring
+reduc forall server_secret: bitstring, beacon_secret: bitstring;
+  x25519_server_dh(server_secret, x25519_public(beacon_secret)) =
+  x25519_shared(server_secret, beacon_secret)
+otherwise forall server_secret: bitstring, beacon_secret: bitstring;
+  x25519_server_dh(server_secret, x25519_high_bit_alias(beacon_secret)) =
+  x25519_shared(server_secret, beacon_secret)
+otherwise forall server_secret: bitstring;
+  x25519_server_dh(server_secret, x25519_low_order) = x25519_all_zero.
+fun x25519_beacon_dh(bitstring, bitstring): bitstring
+reduc forall beacon_secret: bitstring, server_secret: bitstring;
+  x25519_beacon_dh(beacon_secret, x25519_public(server_secret)) =
+  x25519_shared(server_secret, beacon_secret)
+otherwise forall beacon_secret: bitstring, server_secret: bitstring;
+  x25519_beacon_dh(beacon_secret, x25519_high_bit_alias(server_secret)) =
+  x25519_shared(server_secret, beacon_secret)
+otherwise forall beacon_secret: bitstring;
+  x25519_beacon_dh(beacon_secret, x25519_low_order) = x25519_all_zero.
+
+(* ML-KEM implicit rejection for admitted ciphertext strings. Correct encapsulations use the correctness equation; other strings yield a deterministic private term. This is an idealisation of the implicit-rejection interface, not a security consequence of IND-CCA. Length and decode refusal are handled by the abstract message interface. Free shared-secret terms retain the existing public-key binding idealisation; neither that binding nor fallback-term injectivity is established here. *)
+fun mlkem_public(bitstring): bitstring.
+fun mlkem_ciphertext(bitstring, bitstring): bitstring.
+fun mlkem_shared_secret(bitstring, bitstring): bitstring.
+fun mlkem_implicit_reject(bitstring, bitstring): bitstring [private].
+fun mlkem_decapsulate(bitstring, bitstring): bitstring
+reduc forall secret_key: bitstring, coins: bitstring;
+  mlkem_decapsulate(
+    mlkem_ciphertext(mlkem_public(secret_key), coins),
+    secret_key
+  ) = mlkem_shared_secret(mlkem_public(secret_key), coins)
+otherwise forall ciphertext: bitstring, secret_key: bitstring;
+  mlkem_decapsulate(ciphertext, secret_key) =
+  mlkem_implicit_reject(secret_key, ciphertext).
+
+(* This constructor is referenced by the registration-ID backend replacement. *)
+fun registration_identifier(bitstring, bitstring): bitstring [data].
+
+(* Stored record material contains only the projected key and nonce.  It does
+   not retain the HKDF stream, so disclosing cached material cannot reveal the
+   second projection that becomes the next chain. *)
+fun ratchet_key_nonce(bitstring, bitstring): bitstring.
+reduc forall key: bitstring, nonce: bitstring;
+  material_key(ratchet_key_nonce(key, nonce)) = key.
+reduc forall key: bitstring, nonce: bitstring;
+  material_nonce(ratchet_key_nonce(key, nonce)) = nonce.
+
+letfun pqxdh_root(input: bitstring) =
+  hkdf_first_32(hkdf_sha512_no_salt(input, pqxdh_domain())).
+
+(* The server sends on the first initialization projection and receives on the
+   second; the beacon reverses those roles at its existing call sites. *)
+letfun server_to_beacon_chain(root: bitstring) =
+  hkdf_first_32(
+    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+  ).
+
+letfun beacon_to_server_chain(root: bitstring) =
+  hkdf_second_32(
+    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+  ).
+
+letfun ratchet_next(chain: bitstring) =
+  hkdf_second_32(
+    hkdf_sha512_no_salt(chain, symmetric_ratchet_domain())
+  ).
+
+letfun ratchet_material(chain: bitstring) =
+  ratchet_key_nonce(
+    hkdf_first_32(
+      hkdf_sha512_no_salt(chain, symmetric_ratchet_domain())
+    ),
+    hkdf_final_12(
+      hkdf_sha512_no_salt(chain, symmetric_ratchet_domain())
+    )
+  ).
+
+(* @beaconcrypt-cryptoframe-v1 crypto_frame.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id *)
+fun crypto_frame(
+  bitstring,
+  bitstring,
+  bitstring,
+  sequence,
+  key_id
+): bitstring [data].
+
+letfun seal_frame(
+  material: bitstring,
+  associated_data: bitstring,
+  message_sequence: sequence,
+  sender_id: key_id,
+  plaintext: bitstring
+) =
+  crypto_frame(
+    aead_cipher(
+      material_key(material),
+      material_nonce(material),
+      associated_data,
+      plaintext
+    ),
+    aead_tag(
+      material_key(material),
+      material_nonce(material),
+      associated_data,
+      plaintext
+    ),
+    ctx_commitment(
+      material_key(material),
+      material_nonce(material),
+      associated_data,
+      aead_tag(
+        material_key(material),
+        material_nonce(material),
+        associated_data,
+        plaintext
+      ),
+      message_sequence,
+      sender_id
+    ),
+    message_sequence,
+    sender_id
+  ).
+
+reduc forall key: bitstring,
+             nonce: bitstring,
+             associated_data: bitstring,
+             message_sequence: sequence,
+             sender_id: key_id,
+             plaintext: bitstring;
+  open_frame(
+    ratchet_key_nonce(key, nonce),
+    associated_data,
+    message_sequence,
+    sender_id,
+    crypto_frame(
+      aead_cipher(
+        key,
+        nonce,
+        associated_data,
+        plaintext
+      ),
+      aead_tag(
+        key,
+        nonce,
+        associated_data,
+        plaintext
+      ),
+      blake2b512(
+        ctx_preimage(
+          key,
+          nonce,
+          associated_data,
+          aead_tag(
+            key,
+            nonce,
+            associated_data,
+            plaintext
+          ),
+          sequence_le64(message_sequence),
+          sender_id_le64(sender_id)
+        )
+      ),
+      message_sequence,
+      sender_id
+    )
+  ) = plaintext.

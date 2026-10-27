@@ -1,0 +1,76 @@
+(* A2 projection over exact T0 equations; see the scoped source-lifting argument. *)
+fun prov_server_owner(): bitstring [data].
+fun prov_publish(bitstring, bitstring, bitstring, bitstring, bitstring, bitstring): bitstring [data].
+fun prov_dh(bitstring, direction, bitstring, bitstring): bitstring [data].
+fun prov_reply(bitstring, bitstring): bitstring [data].
+fun prov_none(): bitstring [data].
+fun prov_observe(bitstring, bitstring): bitstring [data].
+event ProvAllocated(bitstring).
+event ProvPublished(bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId).
+event ProvAccepted(bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId).
+
+(* No signing capability: each hidden identity exposes exactly role-tagged DH,
+   an opaque public owner handle, and the optional result on the same call. *)
+let ProvDhService(dh_owner: bitstring, dh_seed: bitstring) =
+ !in(c, dh_request: bitstring) [precise];
+ let prov_dh(=dh_owner, dh_role: direction, dh_peer: bitstring, dh_call: bitstring) = dh_request in (
+  if dh_role = server_to_beacon() then (
+   let dh_server_result = x25519_server_dh(dh_seed, dh_peer) in
+    out(c, prov_reply(dh_call, dh_server_result))
+   else out(c, prov_reply(dh_call, prov_none()))
+  ) else (
+   if dh_role = beacon_to_server() then (
+    let dh_beacon_result = x25519_beacon_dh(dh_seed, dh_peer) in
+     out(c, prov_reply(dh_call, dh_beacon_result))
+    else out(c, prov_reply(dh_call, prov_none()))
+   ) else out(c, prov_reply(dh_call, prov_none()))
+  )
+ ).
+
+(* Exactly one returned bundle per process; private failed attempts are not
+   returned and hence are absent from this public-output projection. *)
+let ProvPublishRound(publish_owner: bitstring, publish_seed: bitstring) =
+ in(c, publication_request: bitstring) [precise];
+ let prov_publish(=publish_owner, publication_pin: bitstring,
+  publication_prekey: bitstring, publication_one_time: bitstring,
+  publication_pq: bitstring, publication_call: bitstring) = publication_request in
+ let publication_identity = ed_public(publish_seed) in
+ let publication_init = beaconcrypt_core__pqxdh__VerifiedInitKex(publication_identity,
+  publication_prekey, publication_one_time, publication_pq) in
+ let publication_rid = beaconcrypt_core__pqxdh__registration_id(publication_init) in
+ let publication_bundle = signed_init_kex(tag_ed25519(publication_identity),
+  sign(tag_x25519_prekey(publication_prekey), publish_seed),
+  sign(tag_x25519_one_time(publication_one_time), publish_seed),
+  sign(tag_mlkem768(publication_pq), publish_seed)) in
+ event ProvPublished(publication_identity, publication_init, publication_rid);
+ out(c, prov_reply(publication_call, publication_bundle)).
+
+(* The unsigned triple is adversary-selected for this signature-only projection.
+   Source honest nonidentity fresh material can be exposed before publication;
+   no actual generator distribution or whole-state equality follows. *)
+let ProvOwner(two_triples: bool) =
+ new owner_seed: bitstring;
+ new owner_handle: bitstring;
+ event ProvAllocated(owner_seed);
+ out(c, (owner_handle, ed_public(owner_seed)));
+ (ProvDhService(owner_handle, owner_seed)
+ | ProvPublishRound(owner_handle, owner_seed)
+ | if two_triples then ProvPublishRound(owner_handle, owner_seed)).
+
+let ProvObserver() =
+ !in(c, observe_request: bitstring) [precise];
+ let prov_observe(observe_call: bitstring, observe_raw: bitstring) = observe_request in
+ let (observe_core: beaconcrypt_core__pqxdh__t_InitKex,
+  observe_verified: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+  observe_identity: bitstring, observe_prekey: bitstring,
+  observe_one_time: bitstring, observe_pq: bitstring) = registration_set_verify(observe_raw) in (
+  let observe_rid = beaconcrypt_core__pqxdh__registration_id(observe_verified) in
+  event ProvAccepted(observe_identity, observe_verified, observe_rid);
+  out(c, prov_reply(observe_call, observe_raw))
+ ) else out(c, prov_reply(observe_call, prov_none())).
+
+let ProvMain(two_triples: bool) =
+ out(c, ed_public(SERVER_IDENTITY_SECRET));
+ (ProvDhService(prov_server_owner(), SERVER_IDENTITY_SECRET)
+ | !ProvOwner(two_triples)
+ | ProvObserver()).

@@ -1,0 +1,4 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+query owner: bitstring; event(SchedBuilt(owner, owner, sched_token(0), 2)).
+process SchedReverseWitness()

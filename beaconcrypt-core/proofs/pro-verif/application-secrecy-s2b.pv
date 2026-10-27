@@ -1,0 +1,4 @@
+(* Exact selected fresh-publication secrecy under trusted application receive plaintext. *)
+query k:bitstring,kid:key_id,root:bitstring,t:nat,m:bitstring;
+ event(S2bFreshPublished(server_to_beacon(),ed_public(SERVER_IDENTITY_SECRET),ed_public(k),kid,root,t,m)) && event(S2bSelectedIdentity(k)) && attacker(m).
+process S2bMain(false)

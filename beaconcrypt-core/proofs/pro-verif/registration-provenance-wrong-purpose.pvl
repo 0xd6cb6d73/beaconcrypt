@@ -1,0 +1,30 @@
+letfun prov_bad_verify(raw: bitstring) =
+  let signed_init_kex(encoded_identity, signed_prekey, signed_one_time, signed_pq) = raw in
+  let tag_ed25519(identity: bitstring) = encoded_identity in
+  let pq_payload = verify_signature(signed_pq, identity) in
+  let pre_payload = verify_signature(signed_prekey, identity) in
+  let one_payload = verify_signature(signed_one_time, identity) in
+  let tag_x25519_prekey(prekey: bitstring) = pre_payload in
+  let tag_x25519_prekey(one_time: bitstring) = one_payload in
+  let tag_mlkem768(pq: bitstring) = pq_payload in
+  let core_init = beaconcrypt_core__pqxdh__InitKex(encoded_identity, pre_payload, one_payload, pq_payload) in
+  let verified = beaconcrypt_core__pqxdh__VerifiedInitKex(identity, prekey, one_time, pq) in
+  (core_init, verified, identity, prekey, one_time, pq).
+
+let ProvWrongPurposeObserver() =
+ !in(c, observe_request: bitstring) [precise];
+ let prov_observe(observe_call: bitstring, observe_raw: bitstring) = observe_request in
+ let (observe_core: beaconcrypt_core__pqxdh__t_InitKex,
+  observe_verified: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+  observe_identity: bitstring, observe_prekey: bitstring,
+  observe_one_time: bitstring, observe_pq: bitstring) = prov_bad_verify(observe_raw) in (
+  let observe_rid = beaconcrypt_core__pqxdh__registration_id(observe_verified) in
+  event ProvAccepted(observe_identity, observe_verified, observe_rid);
+  out(c, prov_reply(observe_call, observe_raw))
+ ) else out(c, prov_reply(observe_call, prov_none())).
+
+let ProvWrongPurposeMain(two_triples: bool) =
+ out(c, ed_public(SERVER_IDENTITY_SECRET));
+ (ProvDhService(prov_server_owner(), SERVER_IDENTITY_SECRET)
+ | !ProvOwner(two_triples)
+ | ProvWrongPurposeObserver()).

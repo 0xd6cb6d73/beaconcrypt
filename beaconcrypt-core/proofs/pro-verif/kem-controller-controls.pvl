@@ -1,0 +1,24 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Every controller operation admits explicit optional failure. *)
+query handle: bitstring;
+  event(KemControllerRejected(kem_generate_request(handle))).
+query public_key: bitstring;
+  event(KemControllerRejected(kem_encapsulation_request(public_key))).
+query handle: bitstring, public_key: bitstring, ciphertext: bitstring;
+  event(KemControllerRejected(kem_decapsulation_request(handle, public_key, ciphertext))).
+
+(* Distinct source origins may receive the same KEM public key. *)
+query left: bitstring, right: bitstring, public_key: bitstring;
+  event(KemControllerReturned(kem_generate_request(left), kem_generate_reply(public_key))) &&
+  event(KemControllerReturned(kem_generate_request(right), kem_generate_reply(public_key))) && left <> right.
+
+(* Secrets may coincide across distinct public keys without equal coins. *)
+query left: bitstring, right: bitstring, first: bitstring, second: bitstring, shared: bitstring;
+  event(KemControllerReturned(kem_encapsulation_request(left), kem_encapsulation_reply(first, shared))) &&
+  event(KemControllerReturned(kem_encapsulation_request(right), kem_encapsulation_reply(second, shared))) && left <> right.
+
+(* The decapsulation result can differ from an encapsulation result at the same ciphertext and key. No correctness or implicit-rejection equality is silently imposed by this controller. *)
+query handle: bitstring, public_key: bitstring, ciphertext: bitstring, sent: bitstring, received: bitstring;
+  event(KemControllerReturned(kem_encapsulation_request(public_key), kem_encapsulation_reply(ciphertext, sent))) &&
+  event(KemControllerReturned(kem_decapsulation_request(handle, public_key, ciphertext), kem_decapsulation_reply(received))) && sent <> received.

@@ -1,0 +1,169 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* One private state token serializes each actual Beacon object's API. The
+   callback-order events are observations, never origin admission checks. *)
+fun registration_beacon_init_sent(): bitstring [data].
+fun registration_beacon_aborted(): bitstring [data].
+fun registration_beacon_established(key_id, bitstring, bitstring, bitstring, receive_cache): bitstring [data].
+fun registration_beacon_success(bitstring): bitstring [data].
+fun registration_beacon_failure(): bitstring [data].
+
+event RegistrationBeaconStarted(channel, bitstring, beaconcrypt_core__pqxdh__t_InitKex).
+event RegistrationBeaconAttempt(channel, bitstring, bitstring).
+event RegistrationBeaconDecapsulated(channel, bitstring, bitstring).
+event RegistrationBeaconDhComplete(channel, bitstring, bitstring).
+event RegistrationBeaconSharedCleared(channel, bitstring).
+event RegistrationBeaconPinRejected(channel, bitstring, bitstring).
+event RegistrationBeaconPrepared(channel, bitstring, bitstring, bitstring, bitstring).
+event RegistrationBeaconRawPlan(channel, bitstring, sequence, bitstring, bitstring, receive_cache).
+event RegistrationBeaconOpened(channel, bitstring, sequence, bitstring, bitstring).
+event RegistrationBeaconCommitted(channel, bitstring, bitstring, key_id, bitstring, bitstring, bitstring, bitstring, receive_cache).
+event RegistrationBeaconReturned(channel, bitstring, bitstring).
+event RegistrationBeaconFailed(channel, bitstring).
+event RegistrationBeaconClosedRejected(channel, bitstring).
+
+let RegistrationBeaconFailure(owner: channel, token: channel, reply: channel, attempt: bitstring) =
+  event RegistrationBeaconFailed(owner, attempt);
+  (out(token, registration_beacon_aborted()) | out(reply, registration_beacon_failure())).
+
+(* The immutable parsed target chooses a source-equivalent receive-plan branch.
+   This Boolean is inspected only after the same opening has executed. The
+   non-one branch still derives every source key and attempts opening. *)
+let RegistrationBeaconOpen(owner: channel, token: channel, reply: channel,
+  attempt: bitstring, raw: bitstring, assigned: key_id, associated_data: bitstring,
+  frame: bitstring, target: sequence, sender: key_id, send: bitstring,
+  material: bitstring, next: bitstring, skipped: receive_cache, admitted: bool,
+  failure_stage: nat) =
+  event RegistrationBeaconRawPlan(owner, attempt, target, material, next, skipped);
+  if failure_stage <> 15 then (
+    let opened = open_frame(material, associated_data, target, sender, frame) in (
+      event RegistrationBeaconOpened(owner, attempt, target, opened, frame);
+      if admitted then (
+        let binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(key_id_encoding(assigned)) in
+        let registration_payload(=binding, registration_response_nonempty(application)) = opened in (
+          let state = registration_beacon_established(assigned, associated_data, send, next, skipped) in
+          event RegistrationBeaconCommitted(owner, attempt, raw, assigned, associated_data,
+            application, send, next, skipped);
+          event RegistrationBeaconReturned(owner, attempt, application);
+          (out(token, state) | out(reply, registration_beacon_success(application)))
+        ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+      ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+    ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+  ) else RegistrationBeaconFailure(owner, token, reply, attempt).
+
+(* Both directional initial projections precede the actual app getter. This
+   pure target dispatch is not early rejection: every admitted raw target 2..51
+   still reaches its complete plan/open before the registration gate refuses. *)
+let RegistrationBeaconAfterRoot(owner: channel, token: channel, reply: channel,
+  attempt: bitstring, raw: bitstring, server_identity: bitstring, server_id: key_id,
+  identity: bitstring, assigned: key_id, frame: bitstring, root: bitstring, failure_stage: nat) =
+  if failure_stage <> 13 then (
+    let associated_data = beaconcrypt_core__pqxdh__build_associated_data(server_identity, identity) in
+    let send = beacon_to_server_chain(root) in
+    let receive = server_to_beacon_chain(root) in
+    event RegistrationBeaconPrepared(owner, attempt, root, send, receive);
+    if failure_stage <> 14 then (
+      let crypto_frame(cipher, tag, commitment, target, sender) = frame in (
+        if sender = server_id then (
+          if target = first_sequence() then (
+            let general_plan(material, next, skipped) = general_prefix_1(receive) in
+            RegistrationBeaconOpen(owner, token, reply, attempt, raw, assigned, associated_data,
+              frame, first_sequence(), sender, send, material, next, skipped, true, failure_stage)
+          ) else (
+            let general_plan(material, next, skipped) = general_initial_plan(target, receive) in (
+              RegistrationBeaconOpen(owner, token, reply, attempt, raw, assigned, associated_data,
+                frame, target, sender, send, material, next, skipped, false, failure_stage)
+            ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+          )
+        ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+      ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+    ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+  ) else RegistrationBeaconFailure(owner, token, reply, attempt).
+
+(* Decode and typed field/conversion failures retain the actual preparation
+   order. Decapsulation precedes DH1..DH4; pinning occurs after those calls. *)
+let RegistrationBeaconPrepare(owner: channel, token: channel, reply: channel,
+  attempt: bitstring, raw: bitstring, pinned_identity: bitstring, server_id: key_id,
+  identity_secret: bitstring, prekey_secret: bitstring, one_time_secret: bitstring,
+  pq_secret: bitstring, failure_stage: nat) =
+  let kex_response(server_identity, ephemeral, ciphertext, frame, assigned) = raw in (
+    if failure_stage <> 1 then (
+      if failure_stage <> 2 then (
+        if failure_stage <> 3 then (
+          if failure_stage <> 4 then (
+            let converted_server = x25519_public_from_ed(server_identity) in (
+              if failure_stage <> 5 then (
+                if failure_stage <> 6 then (
+                  let kem = mlkem_decapsulate(ciphertext, pq_secret) in (
+                    event RegistrationBeaconDecapsulated(owner, attempt, ciphertext);
+                    if failure_stage <> 7 then (
+                      let dh1 = x25519_beacon_dh(prekey_secret, converted_server) in (
+                        if failure_stage <> 8 then (
+                          let dh2 = x25519_beacon_dh(identity_secret, ephemeral) in (
+                            if failure_stage <> 9 then (
+                              let dh3 = x25519_beacon_dh(prekey_secret, ephemeral) in (
+                                if failure_stage <> 10 then (
+                                  let dh4 = x25519_beacon_dh(one_time_secret, ephemeral) in (
+                                    event RegistrationBeaconDhComplete(owner, attempt, server_identity);
+                                    event RegistrationBeaconSharedCleared(owner, attempt);
+                                    if server_identity = pinned_identity then (
+                                      if failure_stage <> 11 then (
+                                        let shared = beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1, dh2, dh3, dh4, kem) in
+                                        let input = beaconcrypt_core__pqxdh__build_root_key_input(shared) in
+                                        if failure_stage <> 12 then (
+                                          let root = pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(input)) in
+                                          RegistrationBeaconAfterRoot(owner, token, reply, attempt, raw, server_identity,
+                                            server_id, ed_public(identity_secret), assigned, frame, root, failure_stage)
+                                        ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+                                      ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+                                    ) else (event RegistrationBeaconPinRejected(owner, attempt, server_identity);
+                                      RegistrationBeaconFailure(owner, token, reply, attempt))
+                                  ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+                                ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+                              ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+                            ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+                          ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+                        ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+                      ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+                    ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+                  ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+                ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+              ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+            ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+          ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+        ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+      ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+    ) else RegistrationBeaconFailure(owner, token, reply, attempt)
+  ) else RegistrationBeaconFailure(owner, token, reply, attempt).
+
+let RegistrationBeaconOwner(pinned_identity: bitstring, server_id: key_id) =
+  new identity_secret: bitstring;
+  new prekey_secret: bitstring;
+  new pq_secret: bitstring;
+  new one_time_secret: bitstring;
+  new origin: bitstring;
+  new owner: channel;
+  new token: channel;
+  let identity = ed_public(identity_secret) in
+  let prekey = x25519_public(prekey_secret) in
+  let one_time = x25519_public(one_time_secret) in
+  let pq = mlkem_public(pq_secret) in
+  let init = beaconcrypt_core__pqxdh__InitKex(tag_ed25519(identity), tag_x25519_prekey(prekey),
+    tag_x25519_one_time(one_time), tag_mlkem768(pq)) in
+  event RegistrationSetHonestSigned(identity, init, origin);
+  insert registration_set_origin(identity, origin);
+  event RegistrationBeaconStarted(owner, identity, init);
+  (out(c, (owner, signed_init_kex(tag_ed25519(identity),
+    sign(tag_x25519_prekey(prekey), identity_secret),
+    sign(tag_x25519_one_time(one_time), identity_secret), sign(tag_mlkem768(pq), identity_secret))))
+  | out(token, registration_beacon_init_sent())
+  | !in(owner, (reply: channel, raw: bitstring, failure_stage: nat));
+    in(token, private_state: bitstring);
+    new attempt: bitstring;
+    if private_state = registration_beacon_init_sent() then (
+      event RegistrationBeaconAttempt(owner, attempt, raw);
+      RegistrationBeaconPrepare(owner, token, reply, attempt, raw, pinned_identity, server_id,
+        identity_secret, prekey_secret, one_time_secret, pq_secret, failure_stage)
+    ) else (
+      event RegistrationBeaconClosedRejected(owner, attempt);
+      out(token, private_state) | out(reply, registration_beacon_failure())
+    )).

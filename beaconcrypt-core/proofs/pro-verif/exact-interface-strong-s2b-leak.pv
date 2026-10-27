@@ -1,0 +1,2 @@
+query m:bitstring; event(ExactStrongProbe(true,m)) && attacker(m).
+process S2bMain(false)

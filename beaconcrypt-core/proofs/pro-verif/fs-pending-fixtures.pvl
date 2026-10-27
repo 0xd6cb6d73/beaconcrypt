@@ -1,0 +1,66 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Finite source-operation fixtures; no global schedule or authentication claim. *)
+
+(* The finite fixtures construct attacker-owned valid public keys and signatures.
+   They do not rely on the old theory's unconstrained ML-KEM public input domain.
+   Fresh private channels below are per-call return slots, not protocol entropy. *)
+letfun sched_fixture_bundle(identity_secret: bitstring, prekey_secret: bitstring,
+ one_time_secret: bitstring, kem_secret: bitstring) =
+ signed_init_kex(tag_ed25519(ed_public(identity_secret)),
+  sign(tag_x25519_prekey(x25519_public(prekey_secret)), identity_secret),
+  sign(tag_x25519_one_time(x25519_public(one_time_secret)), identity_secret),
+  sign(tag_mlkem768(mlkem_public(kem_secret)), identity_secret)).
+
+let SchedCrossObjectWitness() =
+ new accepting: bitstring; new building: bitstring;
+ new lock: channel; new accepted_state: channel; new built_state: channel;
+ out(c, (accepting, building, ed_public(SERVER_IDENTITY_SECRET)));
+ in(c, (identity_raw: bitstring, prekey_raw: bitstring, one_time_raw: bitstring, kem_raw: bitstring)) [precise];
+ let raw = sched_fixture_bundle(identity_raw, prekey_raw, one_time_raw, kem_raw) in
+ (SchedAccept(accepting, raw, 0, sched_call(sched_call_index(0), sched_accept(accepting, raw, 0)),
+    lock, accepted_state, 1, 0, 0, 0)
+ | in(accepted_state, (accepts: nat, builds: nat, counter: nat));
+   in(lock, ticket_counter: nat);
+   in(c, token: bitstring) [precise];
+   SchedBuild(building, token, registration_response_default_payload(), 0,
+    sched_call(sched_call_index(1), sched_build(building, token, registration_response_default_payload(), 0)),
+    lock, built_state, 0, 1, 0, ticket_counter, 2)).
+
+let SchedReverseWitness() =
+ new owner: bitstring;
+ new lock1: channel; new lock2: channel; new lock3: channel; new lock4: channel;
+ new state1: channel; new state2: channel; new state3: channel; new state4: channel;
+ out(c, (owner, ed_public(SERVER_IDENTITY_SECRET)));
+ in(c, (identity_raw1: bitstring, prekey_raw1: bitstring, one_time_raw1: bitstring, kem_raw1: bitstring)) [precise];
+ let raw1 = sched_fixture_bundle(identity_raw1, prekey_raw1, one_time_raw1, kem_raw1) in
+ (SchedAccept(owner, raw1, 0, sched_call(sched_call_index(0), sched_accept(owner, raw1, 0)), lock1, state1, 1, 0, 0, 0)
+ | in(state1, (a1: nat, b1: nat, n1: nat)) [precise]; in(lock1, t1: nat) [precise];
+   in(c, (identity_raw2: bitstring, prekey_raw2: bitstring, one_time_raw2: bitstring, kem_raw2: bitstring)) [precise];
+ let raw2 = sched_fixture_bundle(identity_raw2, prekey_raw2, one_time_raw2, kem_raw2) in
+   (SchedAccept(owner, raw2, 0, sched_call(sched_call_index(1), sched_accept(owner, raw2, 0)), lock2, state2, a1+1, b1, n1, t1)
+   | in(state2, (a2: nat, b2: nat, n2: nat)) [precise]; in(lock2, t2: nat) [precise];
+     (SchedBuild(owner, sched_token(1), registration_response_default_payload(), 0,
+       sched_call(sched_call_index(2), sched_build(owner, sched_token(1), registration_response_default_payload(), 0)),
+       lock3, state3, a2, b2+1, n2, t2, 2)
+     | in(state3, (a3: nat, b3: nat, n3: nat)) [precise]; in(lock3, t3: nat) [precise];
+       SchedBuild(owner, sched_token(0), registration_response_default_payload(), 0,
+       sched_call(sched_call_index(3), sched_build(owner, sched_token(0), registration_response_default_payload(), 0)),
+       lock4, state4, a3, b3+1, n3, t3, 2)))).
+
+let SchedLinearFixture() =
+ new accepting: bitstring; new building: bitstring;
+ new lock1: channel; new lock2: channel; new lock3: channel;
+ new state1: channel; new state2: channel; new state3: channel;
+ out(c, (accepting, building, ed_public(SERVER_IDENTITY_SECRET)));
+ in(c, (identity_raw: bitstring, prekey_raw: bitstring, one_time_raw: bitstring, kem_raw: bitstring)) [precise];
+ let raw = sched_fixture_bundle(identity_raw, prekey_raw, one_time_raw, kem_raw) in
+ (SchedAccept(accepting, raw, 0, sched_call(sched_call_index(0), sched_accept(accepting, raw, 0)),
+    lock1, state1, 1, 0, 0, 0)
+ | in(state1, (a1: nat, b1: nat, n1: nat)) [precise]; in(lock1, t1: nat) [precise];
+   in(c, data: bitstring) [precise];
+   (SchedBuild(accepting, sched_token(0), data, 0,
+      sched_call(sched_call_index(1), sched_build(accepting, sched_token(0), data, 0)), lock2, state2, a1, b1+1, n1, t1, 2)
+   | in(state2, (a2: nat, b2: nat, n2: nat)) [precise]; in(lock2, t2: nat) [precise];
+     SchedBuild(building, sched_token(0), registration_response_default_payload(), 0,
+      sched_call(sched_call_index(2), sched_build(building, sched_token(0), registration_response_default_payload(), 0)),
+      lock3, state3, 0, 1, 0, t2, 2))).

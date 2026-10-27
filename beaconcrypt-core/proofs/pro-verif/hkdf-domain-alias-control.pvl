@@ -1,0 +1,89 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+(* Deliberate root/symmetric HKDF domain-alias differential              *)
+(**************************************************************************)
+
+(* The production fixture keeps the two exact domains distinct; the weakened fixture explicitly normalizes both to the symmetric domain and must disclose the canary across the confused root derivation. *)
+free hkdf_domain_alias_channel: channel.
+free HKDF_DOMAIN_ALIAS_CANARY: bitstring [private].
+free HKDF_DOMAIN_COMPARISON_WITNESS: bitstring [private].
+
+event HkdfDomainComparisonAttempted(bitstring).
+
+letfun deliberately_aliased_domain(domain: kdf_domain) =
+  symmetric_ratchet_domain().
+
+let HkdfDistinctDomainControl() =
+  new root_input: bitstring;
+  new associated_data: bitstring;
+  new sender_id: key_id;
+  let message_sequence = first_sequence() in
+  let sender_root = hkdf_first_32(
+    hkdf_sha512_no_salt(root_input, pqxdh_domain())
+  ) in
+  let receiver_root = hkdf_first_32(
+    hkdf_sha512_no_salt(root_input, symmetric_ratchet_domain())
+  ) in
+  let sender_material = ratchet_material(
+    server_to_beacon_chain(sender_root)
+  ) in
+  let receiver_material = ratchet_material(
+    server_to_beacon_chain(receiver_root)
+  ) in
+  let frame = seal_frame(
+    sender_material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    HKDF_DOMAIN_ALIAS_CANARY
+  ) in
+  event HkdfDomainComparisonAttempted(HKDF_DOMAIN_COMPARISON_WITNESS);
+  let opened = open_frame(
+    receiver_material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    frame
+  ) in
+  out(hkdf_domain_alias_channel, opened).
+
+let HkdfAliasedDomainControl() =
+  new root_input: bitstring;
+  new associated_data: bitstring;
+  new sender_id: key_id;
+  let message_sequence = first_sequence() in
+  let sender_root = hkdf_first_32(
+    hkdf_sha512_no_salt(
+      root_input,
+      deliberately_aliased_domain(pqxdh_domain())
+    )
+  ) in
+  let receiver_root = hkdf_first_32(
+    hkdf_sha512_no_salt(
+      root_input,
+      deliberately_aliased_domain(symmetric_ratchet_domain())
+    )
+  ) in
+  let sender_material = ratchet_material(
+    server_to_beacon_chain(sender_root)
+  ) in
+  let receiver_material = ratchet_material(
+    server_to_beacon_chain(receiver_root)
+  ) in
+  let frame = seal_frame(
+    sender_material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    HKDF_DOMAIN_ALIAS_CANARY
+  ) in
+  event HkdfDomainComparisonAttempted(HKDF_DOMAIN_COMPARISON_WITNESS);
+  let opened = open_frame(
+    receiver_material,
+    associated_data,
+    message_sequence,
+    sender_id,
+    frame
+  ) in
+  out(hkdf_domain_alias_channel, opened).

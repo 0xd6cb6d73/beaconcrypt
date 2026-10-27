@@ -1,0 +1,19 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Historical exact-field correspondences. These remain explicit regression controls: the canonical constructor theory proves them, while accepted X25519 response aliases refute them. They are not production authentication claims. *)
+
+query transcript: establishment_transcript_t;
+  inj-event(BeaconCommitted(transcript)) ==>
+  inj-event(ServerCommitted(transcript)).
+
+query main_agreement: registration_session_t, main_sequence: sequence, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id, main_server_assigned: key_id;
+  inj-event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)) ==>
+  inj-event(ServerRegistrationSessionCommitted(main_agreement, main_server_assigned)).
+
+query main_agreement: registration_session_t, main_sequence: sequence, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id, main_server_assigned: key_id;
+  inj-event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)) ==>
+  inj-event(RegistrationRecordSent(main_agreement, main_sequence, main_payload, main_frame, main_server_assigned)).
+
+(* Moved verbatim from main-registration-control-queries.pvl. BeaconAnyCommitted is emitted beside BeaconCommitted with the same 18-field transcript, so the same public high-bit alias refutes it. *)
+query main_transcript: establishment_transcript_t;
+  inj-event(BeaconAnyCommitted(main_transcript)) ==> inj-event(ServerCommitted(main_transcript)).

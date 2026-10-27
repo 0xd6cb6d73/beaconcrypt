@@ -1,0 +1,18 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b C5c, the replay-rejected witness, written as a
+   correspondence (expected FALSE): "a frame that a Beacon refused at
+   sequence t was never accepted by it before" is false: a frame that the
+   Beacon accepted at t is delivered again and refused.  FsReceivedFrame and
+   FsReceiveRejected carry the frame itself, so the refused frame is the
+   accepted one, not merely some frame at an accepted sequence.  The finish
+   accepts the response frame at sequence 1, so one receive attempt
+   (K_r = 1) exhibits it: the replayed response frame is an old target that
+   is not cached and is refused without an open. *)
+query s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat, f: bitstring,
+      i: time, j: time;
+  event(FsReceivedFrame(server_to_beacon(), s, b, kid, root, t, f))@i
+  && event(FsReceiveRejected(server_to_beacon(), s, b, kid, root, t, f))@j
+  ==> j < i.
+
+process FsRecordsS2bMain()

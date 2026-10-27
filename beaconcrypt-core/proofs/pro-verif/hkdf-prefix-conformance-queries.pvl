@@ -1,0 +1,5 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Both events must be reachable; these queries therefore have the intentional result "false". *)
+query event(HkdfInitialLeftEqualsStepKey(HKDF_PREFIX_LEFT_WITNESS)).
+query event(HkdfInitialRightEqualsStepNext(HKDF_PREFIX_RIGHT_WITNESS)).

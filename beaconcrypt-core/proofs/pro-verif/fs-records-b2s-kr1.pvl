@@ -1,0 +1,7 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s bound K_r = 1: one attacker-scheduled receive attempt of
+   each installed Server peer after the response build.  Used for the
+   witnesses and the control that need at most one Server acceptance (S4,
+   FAR, PINREAD and C-UKS on UKSr). *)
+expand FS_B2S_RECV_STEP(FsB2sRecv1, FsB2sRecvStop, FsB2sRecvStop).

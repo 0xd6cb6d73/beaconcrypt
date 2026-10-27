@@ -1,0 +1,60 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Rejected future receives do not expose application plaintext while the receiver state stays private. *)
+query attacker(RECEIVE_PAST_SECRET).
+query attacker(RECEIVE_SKIPPED_SECRET).
+query attacker(RECEIVE_TARGET_SECRET).
+query attacker(RECEIVE_MAX_GAP_SECRET).
+query attacker(RECEIVE_CACHED_SECRET).
+query attacker(RECEIVE_AFTER_RELEASE_SECRET).
+
+(* The repeated invalid frame is attempted from the exact same state term as the first rejection. *)
+query session: bitstring, target_sequence: sequence, forged_frame: bitstring, entry_state: bitstring;
+  inj-event(ReceiveRejectionRetried(session, target_sequence, forged_frame, entry_state)) ==>
+  inj-event(ReceiveRejectedNeutral(session, target_sequence, forged_frame, entry_state)).
+
+(* Successful future delivery starts from the same unchanged state carried across both rejected attempts. *)
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, plaintext: bitstring, accepted_frame: bitstring, target_material: bitstring, forged_frame: bitstring, entry_state: bitstring, committed_state: bitstring;
+  inj-event(ReceiveFutureAccepted(session, target_sequence, sender, receiver, plaintext, accepted_frame, target_material, forged_frame, entry_state, committed_state)) ==>
+  inj-event(ReceiveRejectionRetried(session, target_sequence, forged_frame, entry_state)).
+
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, plaintext: bitstring, accepted_frame: bitstring, target_material: bitstring, forged_frame: bitstring, entry_state: bitstring, committed_state: bitstring;
+  inj-event(ReceiveHonestFutureDelivered(session, target_sequence, sender, receiver, plaintext, accepted_frame, target_material, forged_frame, entry_state, committed_state)) ==>
+  inj-event(ReceiveFutureAccepted(session, target_sequence, sender, receiver, plaintext, accepted_frame, target_material, forged_frame, entry_state, committed_state)).
+
+(* Future success consumes rather than caches the target material. *)
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, plaintext: bitstring, accepted_frame: bitstring, target_material: bitstring, forged_frame: bitstring, entry_state: bitstring, committed_state: bitstring;
+  inj-event(ReceiveFutureAccepted(session, target_sequence, sender, receiver, plaintext, accepted_frame, target_material, forged_frame, entry_state, committed_state)) ==>
+  inj-event(MessageKeyUnavailable(session, beacon_role(), server_to_beacon(), target_sequence, target_material)).
+
+(* Replay rejection is relative to the exact post-success state and the same accepted record. *)
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, plaintext: bitstring, accepted_frame: bitstring, target_material: bitstring, forged_frame: bitstring, entry_state: bitstring, committed_state: bitstring;
+  inj-event(ReceiveReplayRejected(session, target_sequence, sender, receiver, plaintext, accepted_frame, target_material, forged_frame, entry_state, committed_state)) ==>
+  inj-event(ReceiveFutureAccepted(session, target_sequence, sender, receiver, plaintext, accepted_frame, target_material, forged_frame, entry_state, committed_state)).
+
+(* Delayed delivery is possible only for a material published as skipped by the preceding successful future receive. *)
+query session: bitstring, delayed_sequence: sequence, sender: key_id, receiver: key_id, plaintext: bitstring, delayed_frame: bitstring, delayed_material: bitstring, committed_state: bitstring, final_state: bitstring;
+  inj-event(ReceiveDelayedCachedAccepted(session, delayed_sequence, sender, receiver, plaintext, delayed_frame, delayed_material, committed_state, final_state)) ==>
+  inj-event(MessageKeyCached(session, beacon_role(), server_to_beacon(), delayed_sequence, delayed_material)).
+
+query session: bitstring, delayed_sequence: sequence, sender: key_id, receiver: key_id, plaintext: bitstring, delayed_frame: bitstring, delayed_material: bitstring, committed_state: bitstring, final_state: bitstring;
+  inj-event(ReceiveDelayedCachedAccepted(session, delayed_sequence, sender, receiver, plaintext, delayed_frame, delayed_material, committed_state, final_state)) ==>
+  inj-event(MessageKeyUnavailable(session, beacon_role(), server_to_beacon(), delayed_sequence, delayed_material)).
+
+(* Both exact capacity-leg successes consume their selected target materials. *)
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, plaintext: bitstring, accepted_frame: bitstring, target_material: bitstring, entry_state: bitstring, committed_state: bitstring;
+  inj-event(ReceiveMaximumGapAccepted(session, target_sequence, sender, receiver, plaintext, accepted_frame, target_material, entry_state, committed_state)) ==>
+  inj-event(MessageKeyUnavailable(session, beacon_role(), server_to_beacon(), target_sequence, target_material)).
+
+query session: bitstring, cached_sequence: sequence, cached_material: bitstring, full_state: bitstring, released_state: bitstring;
+  inj-event(ReceiveCachedKeyConsumed(session, cached_sequence, cached_material, full_state, released_state)) ==>
+  inj-event(MessageKeyUnavailable(session, beacon_role(), server_to_beacon(), cached_sequence, cached_material)).
+
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, plaintext: bitstring, accepted_frame: bitstring, target_material: bitstring, rejected_state: bitstring, released_state: bitstring, committed_state: bitstring;
+  inj-event(ReceiveAfterCapacityReleaseAccepted(session, target_sequence, sender, receiver, plaintext, accepted_frame, target_material, rejected_state, released_state, committed_state)) ==>
+  inj-event(MessageKeyUnavailable(session, beacon_role(), server_to_beacon(), target_sequence, target_material)).
+
+(* Before compromise, every successfully opened frame has one matching honest send with the same complete record label. *)
+query session: bitstring, message_direction: direction, message_sequence: sequence, sender: key_id, receiver: key_id, plaintext: bitstring;
+  inj-event(MessageReceived(session, message_direction, message_sequence, sender, receiver, plaintext)) ==>
+  inj-event(MessageSent(session, message_direction, message_sequence, sender, receiver, plaintext)).

@@ -1,0 +1,14 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration A2, security result, K_reg = 3: bundle origin.  If a
+   Server object accepts a bundle for identity ed_public(k), then a Beacon
+   with that identity started exactly that verified key tuple and
+   registration ID, or the attacker holds k.  The Beacon's pin s2 is left
+   free: bundles carry no Server field, so the claim does not depend on
+   which Server key the Beacon pins. *)
+query obj: bitstring, s: bitstring, s2: bitstring, k: bitstring,
+      init: beaconcrypt_core__pqxdh__t_VerifiedInitKex, rid: beaconcrypt_core__pqxdh__t_RegistrationId, root: bitstring;
+  event(FsServerAccepted(obj, s, ed_public(k), init, rid, root))
+  ==> event(FsBeaconStarted(s2, ed_public(k), init, rid)) || attacker(k).
+
+process FsRegistrationMain()

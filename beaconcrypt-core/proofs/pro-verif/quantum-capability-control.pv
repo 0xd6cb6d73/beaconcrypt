@@ -1,0 +1,5 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+process
+  out(c, ed_public(QUANTUM_ED_CAPABILITY_SECRET));
+  out(c, x25519_public(QUANTUM_X25519_CAPABILITY_SECRET))

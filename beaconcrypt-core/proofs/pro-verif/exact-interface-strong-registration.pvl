@@ -1,0 +1,142 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* One source Server object owns one private mutex and one consumed-ID set.
+   An ID is the extracted identity/one-time projection, never identity alone.
+   The shared table is partitioned by the private object handle, not by key bytes.
+   Honest origins are observations; no origin lookup controls admission. *)
+table registration_set_consumed(bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).
+table registration_set_origin(bitstring, bitstring).
+(* The opaque returned token retains its root and response fields privately. *)
+table registration_set_pending(bitstring, bitstring,
+  beaconcrypt_core__pqxdh__t_RegistrationId, beaconcrypt_core__pqxdh__t_InitKex,
+  bitstring, bitstring, bitstring).
+fun registration_set_success(bitstring): bitstring [data].
+fun registration_set_failure(): bitstring [data].
+fun registration_set_mutex(): bitstring [data].
+
+event RegistrationSetStarted(bitstring, bitstring, bitstring).
+event RegistrationSetFresh(bitstring, bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).
+event RegistrationSetConsumed(bitstring, bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).
+event RegistrationSetReturned(bitstring, bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).
+event RegistrationSetReplay(bitstring, bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).
+event RegistrationSetFailed(bitstring, bitstring).
+event RegistrationSetFreshFailed(bitstring, bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).
+event RegistrationSetHonestSigned(bitstring, beaconcrypt_core__pqxdh__t_InitKex, bitstring).
+event RegistrationSetHonestAccepted(bitstring, beaconcrypt_core__pqxdh__t_InitKex, bitstring).
+
+(* Source order: identity admission, PQ signature, prekey signature, one-time
+   signature, then the core width/tag checks. Typed terms abstract decoding. *)
+letfun registration_set_verify(raw: bitstring) =
+  let signed_init_kex(encoded_identity, signed_prekey, signed_one_time, signed_pq) = raw in
+  let tag_ed25519(identity: bitstring) = encoded_identity in
+  let pq_payload = verify_signature(signed_pq, identity) in
+  let pre_payload = verify_signature(signed_prekey, identity) in
+  let one_payload = verify_signature(signed_one_time, identity) in
+  let tag_x25519_prekey(prekey: bitstring) = pre_payload in
+  let tag_x25519_one_time(one_time: bitstring) = one_payload in
+  let tag_mlkem768(pq: bitstring) = pq_payload in
+  let core_init = beaconcrypt_core__pqxdh__InitKex(encoded_identity, pre_payload, one_payload, pq_payload) in
+  let verified = beaconcrypt_core__pqxdh__VerifiedInitKex(identity, prekey, one_time, pq) in
+  (core_init, verified, identity, prekey, one_time, pq).
+
+(* The existing primitive theory is retained here, including its documented
+   idealizations. This process makes no additional computational assumption. *)
+letfun registration_set_root(server_secret: bitstring, identity: bitstring, prekey: bitstring,
+  one_time: bitstring, pq: bitstring, failure_stage: nat) =
+  (* Native public-point checks precede generation; the environment may reject. *)
+  if failure_stage <> 2 then
+  if failure_stage <> 3 then
+  if failure_stage <> 4 then
+  new ephemeral_secret[]: bitstring;
+  let ephemeral = x25519_public(ephemeral_secret) in
+  (* KEM public-key construction and encapsulation follow the ephemeral draw. *)
+  if failure_stage <> 5 then
+  if failure_stage <> 6 then
+  new kem_coins[]: bitstring;
+  let ciphertext = mlkem_ciphertext(pq, kem_coins) in
+  let kem = mlkem_shared_secret(pq, kem_coins) in
+  if failure_stage <> 7 then
+  let converted = x25519_public_from_ed(identity) in
+  if failure_stage <> 8 then
+  if failure_stage <> 9 then
+  let dh1 = x25519_server_dh(server_secret, prekey) in
+  if failure_stage <> 10 then
+  let dh2 = x25519_server_dh(ephemeral_secret, converted) in
+  if failure_stage <> 11 then
+  let dh3 = x25519_server_dh(ephemeral_secret, prekey) in
+  if failure_stage <> 12 then
+  let dh4 = x25519_server_dh(ephemeral_secret, one_time) in
+  if failure_stage <> 13 then
+  let shared = beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1, dh2, dh3, dh4, kem) in
+  let root_input = beaconcrypt_core__pqxdh__build_root_key_input(shared) in
+  let root = pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)) in
+  if failure_stage <> 14 then (ephemeral, ciphertext, root_input, root).
+
+(* This observer may block forever for an unknown identity without blocking
+   the source continuation, which has already published its optional reply. *)
+let RegistrationSetObserve(identity: bitstring, init: beaconcrypt_core__pqxdh__t_InitKex) =
+  get registration_set_origin(=identity, origin: bitstring) in
+  event RegistrationSetHonestAccepted(identity, init, origin).
+
+(* failure_stage is an environment-controlled rejection point, not a wire field.
+   Stages 1..14 follow the source callback order; 0 permits the ordinary path.
+   It can force rejection but cannot bypass any ordinary primitive validation. *)
+let RegistrationSetServer(owner: bitstring, server_secret: bitstring, mutex: channel) =
+  !in(c, (reply: channel, raw: bitstring, failure_stage: nat));
+  in(mutex, =registration_set_mutex());
+  new attempt: bitstring;
+  event RegistrationSetStarted(owner, attempt, raw);
+  let (core_init: beaconcrypt_core__pqxdh__t_InitKex,
+    verified: beaconcrypt_core__pqxdh__t_VerifiedInitKex, identity: bitstring,
+    prekey: bitstring, one_time: bitstring, pq: bitstring) = registration_set_verify(raw) in (
+    let rid = beaconcrypt_core__pqxdh__registration_id(verified) in
+    get registration_set_consumed(=owner, =rid) in (
+      event RegistrationSetReplay(owner, attempt, rid);
+      out(mutex, registration_set_mutex()) | out(reply, registration_set_failure())
+    ) else (
+      event RegistrationSetFresh(owner, attempt, rid);
+      if failure_stage <> 1 then (
+        let (ephemeral: bitstring, ciphertext: bitstring,
+          root_input: beaconcrypt_core__pqxdh__t_RootKeyInput, root: bitstring) =
+          registration_set_root(server_secret, identity, prekey, one_time, pq, failure_stage) in (
+          event RegistrationSetConsumed(owner, attempt, rid);
+          insert registration_set_consumed(owner, rid);
+          insert registration_set_pending(owner, attempt, rid, core_init, ephemeral, ciphertext, root);
+          event RegistrationSetReturned(owner, attempt, rid);
+          (out(mutex, registration_set_mutex()) |
+           out(reply, registration_set_success(attempt)) |
+           RegistrationSetObserve(identity, core_init))
+        ) else (
+          event RegistrationSetFreshFailed(owner, attempt, rid);
+          event RegistrationSetFailed(owner, attempt);
+          out(mutex, registration_set_mutex()) | out(reply, registration_set_failure())
+        )
+      ) else (
+        event RegistrationSetFreshFailed(owner, attempt, rid);
+        event RegistrationSetFailed(owner, attempt);
+        out(mutex, registration_set_mutex()) | out(reply, registration_set_failure())
+      )
+    )
+  ) else (
+    event RegistrationSetFailed(owner, attempt);
+    out(mutex, registration_set_mutex()) | out(reply, registration_set_failure())
+  ).
+
+let RegistrationSetHonestBundle() =
+  new identity_secret: bitstring;
+  new prekey_secret: bitstring;
+  new pq_secret: bitstring;
+  new one_time_secret: bitstring;
+  new origin: bitstring;
+  let identity = ed_public(identity_secret) in
+  let prekey = x25519_public(prekey_secret) in
+  let one_time = x25519_public(one_time_secret) in
+  let pq = mlkem_public(pq_secret) in
+  let init = beaconcrypt_core__pqxdh__InitKex(tag_ed25519(identity),
+    tag_x25519_prekey(prekey), tag_x25519_one_time(one_time), tag_mlkem768(pq)) in
+  event RegistrationSetHonestSigned(identity, init, origin);
+  insert registration_set_origin(identity, origin);
+  out(c, signed_init_kex(tag_ed25519(identity),
+    sign(tag_x25519_prekey(prekey), identity_secret),
+    sign(tag_x25519_one_time(one_time), identity_secret),
+    sign(tag_mlkem768(pq), identity_secret))).

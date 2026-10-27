@@ -1,0 +1,8 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b bound K_r = 3: three attacker-scheduled Beacon receive
+   attempts after the finish.  Used for the security results and the
+   controls C-RETAIN and C-STALE. *)
+expand FS_S2B_RECV_STEP(FsS2bRecv3, FsS2bRecvStop).
+expand FS_S2B_RECV_STEP(FsS2bRecv2, FsS2bRecv3).
+expand FS_S2B_RECV_STEP(FsS2bRecv1, FsS2bRecv2).

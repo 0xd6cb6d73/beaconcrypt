@@ -1,0 +1,87 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* EXTERNAL ASSUMPTION, NOT A PROOF OF ML-DSA-65 SECURITY.
+   This ideal signature constructor/destructor admits only signatures made
+   with the matching secret, message and context. It assumes unforgeability
+   for unexposed ML signing keys; it neither establishes EUF-CMA nor gives a
+   computational, quantum, QROM or implementation reduction. In particular,
+   no classical-key recovery rule applies to this independent secret name.
+   Signing is public for attacker-owned or compromised signing keys.
+
+   blake2b512 is the existing opaque free hash constructor. Its collision-free
+   symbolic use is an additional idealization, not a BLAKE2b theorem. The
+   ordered preimage constructors below represent the reviewed concatenation
+   of decoded fields. They do not prove CBOR parsing, byte serialization,
+   length correctness, compiler correctness or native-library behavior. *)
+fun mldsa_public(bitstring): bitstring.
+fun mldsa_sign(bitstring, bitstring, bitstring): bitstring.
+reduc forall message: bitstring, signing_secret: bitstring, context: bitstring;
+  mldsa_verify(mldsa_sign(message, signing_secret, context), mldsa_public(signing_secret), context) = message.
+
+fun mldsa_signing_context(): bitstring [data].
+fun mldsa_init_domain(): bitstring [data].
+fun mldsa_response_domain(): bitstring [data].
+fun mldsa_beacon_label(): bitstring [data].
+fun mldsa_server_label(): bitstring [data].
+fun mldsa_spaces64(): bitstring [data].
+fun mldsa_zero(): bitstring [data].
+fun mldsa_length_prefixed(bitstring): bitstring [data].
+fun mldsa_signature_input(bitstring, bitstring, bitstring, bitstring): bitstring [data].
+
+(* domain || LE64(server ID) || server Ed key || agent ML key || server ML
+   key || four LE64-length-prefixed decoded Init fields, in wire order. *)
+fun mldsa_init_preimage(
+  bitstring, bitstring, bitstring, bitstring, bitstring,
+  bitstring, bitstring, bitstring, bitstring
+): bitstring [data].
+letfun mldsa_init_hash(
+  server_id: key_id, server_ed: bitstring, agent_ml: bitstring,
+  server_ml: bitstring, classical_init: bitstring
+) =
+  let signed_init_kex(identity, prekey, one_time, pq) = classical_init in
+  blake2b512(mldsa_init_preimage(
+    mldsa_init_domain(), sender_id_le64(server_id), server_ed, agent_ml, server_ml,
+    mldsa_length_prefixed(identity), mldsa_length_prefixed(prekey),
+    mldsa_length_prefixed(one_time), mldsa_length_prefixed(pq)
+  )).
+
+(* The application field here is raw C || T || U, never a virtual frame with
+   an added sequence or sender. Signature bytes are absent from both hashes. *)
+fun mldsa_response_fields(bitstring, bitstring, bitstring, bitstring, key_id): bitstring [data].
+fun mldsa_response_preimage(
+  bitstring, bitstring, bitstring, bitstring, bitstring, bitstring, bitstring
+): bitstring [data].
+letfun mldsa_response_hash(init_hash: bitstring, response: bitstring) =
+  let mldsa_response_fields(identity, ephemeral, kem, raw_ctu, assigned) = response in
+  blake2b512(mldsa_response_preimage(
+    mldsa_response_domain(), init_hash,
+    mldsa_length_prefixed(identity), mldsa_length_prefixed(ephemeral),
+    mldsa_length_prefixed(kem), mldsa_length_prefixed(raw_ctu), sender_id_le64(assigned)
+  )).
+
+letfun mldsa_beacon_input(hash: bitstring) =
+  mldsa_signature_input(mldsa_spaces64(), mldsa_beacon_label(), mldsa_zero(), hash).
+letfun mldsa_server_input(hash: bitstring) =
+  mldsa_signature_input(mldsa_spaces64(), mldsa_server_label(), mldsa_zero(), hash).
+
+(* Six request byte fields and five response byte fields are represented by
+   these wrappers around their classical decoded projections, not CBOR bytes. *)
+fun mldsa_signed_init_kex(bitstring, bitstring, bitstring): bitstring [data].
+fun mldsa_signed_kex_response(bitstring, bitstring): bitstring [data].
+
+(* Filling the two hash slots of the 281-byte core array: base prefix153 ||
+   BLAKE2b512(server ML key) || BLAKE2b512(agent ML key). The core constructor
+   abstracts its identity/domain prefix and its zero-filled reserved suffix;
+   this wrapper replaces that suffix, rather than appending to281 bytes. *)
+fun mldsa_associated_data(bitstring, bitstring, bitstring): bitstring [data].
+letfun mldsa_ad(base: bitstring, server_ml: bitstring, agent_ml: bitstring) =
+  mldsa_associated_data(base, blake2b512(server_ml), blake2b512(agent_ml)).
+
+fun mldsa_raw_ctu(bitstring, bitstring, bitstring): bitstring [data].
+reduc forall body: bitstring, tag: bitstring, commitment: bitstring,
+             seq: sequence, sender: key_id;
+  mldsa_strip(crypto_frame(body, tag, commitment, seq, sender)) =
+    mldsa_raw_ctu(body, tag, commitment).
+reduc forall body: bitstring, tag: bitstring, commitment: bitstring, pinned: key_id;
+  mldsa_restore(mldsa_raw_ctu(body, tag, commitment), pinned) =
+    crypto_frame(body, tag, commitment, first_sequence(), pinned).

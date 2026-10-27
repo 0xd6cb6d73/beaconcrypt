@@ -1,0 +1,2 @@
+query root:bitstring; event(A1Root(root)) && attacker(root).
+process A1Main(false)

@@ -1,0 +1,10 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration W2, witness, K_reg = 2 (expected reachable): an honest
+   Beacon completes registration with the second key ID of an object, so the
+   key-ID counter is exercised. *)
+query s: bitstring, b: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex, root: bitstring,
+      ad: bitstring, p: bitstring;
+  event(FsBeaconEstablished(s, b, init, fs_kid(2), root, ad, p)).
+
+process FsRegistrationMain()
