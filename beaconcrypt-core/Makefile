@@ -133,6 +133,7 @@ PROVERIF_APPLICATION_TARGETS := \
 LEAN_DIR := proofs/lean
 LEAN_ROOT := $(LEAN_DIR)/BeaconcryptCore.lean
 AUTHENTICATION_EXTRACTION_WORK_DIR ?= $(abspath ../.build/proofs/authentication-extraction)
+ADAPTER_AUTHENTICATION_EXTRACTION_WORK_DIR ?= $(abspath ../../.build/proofs/adapter-authentication-extraction)
 LEAN_PROOF_PATHS := $(LEAN_DIR)/BeaconcryptCore $(LEAN_DIR)/BeaconcryptCore.lean
 LEAN_GENERATED_PATHS := \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction.lean \
@@ -142,6 +143,10 @@ LEAN_GENERATED_PATHS := \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction/Types.lean \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction/TypesExternal_Template.lean \
 	$(LEAN_DIR)/BeaconcryptCore/AuthenticationExtraction \
+	$(LEAN_DIR)/BeaconcryptCore/AdapterAuthenticationExtraction/Types.lean \
+	$(LEAN_DIR)/BeaconcryptCore/AdapterAuthenticationExtraction/Funs.lean \
+	$(LEAN_DIR)/BeaconcryptCore/AdapterAuthenticationExtraction/external-signatures.json \
+	$(LEAN_DIR)/BeaconcryptCore/AdapterAuthenticationExtraction/provenance.json \
 	$(LEAN_DIR)/llbc
 
 # Hax creates the Lean project/root files only when they are absent.
@@ -161,6 +166,8 @@ LEAN_GENERATED_PATHS := \
 	check-proverif-mldsa-auth check-proverif-mldsa-joint \
 	verify-proverif-mldsa-joint verify-proverif-mldsa-joint-in-shell \
 	extract-authentication-lean check-generated-authentication-lean \
+	extract-adapter-authentication-lean check-generated-adapter-authentication-lean \
+	check-adapter-authentication-source \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
 	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
 	check-proverif-extraction check-generated check-generated-lean \
@@ -851,6 +858,20 @@ check-generated-authentication-lean:
 	python3 proofs/extract-authentication.py --check \
 		--work-dir '$(AUTHENTICATION_EXTRACTION_WORK_DIR)'
 
+# The selected production adapter has separate output and maintained primitive models.
+# Regeneration is explicit; the ordinary Lean build checks source provenance only.
+extract-adapter-authentication-lean:
+	python3 ../scripts/extract_adapter_authentication.py --write \
+		--work-dir '$(ADAPTER_AUTHENTICATION_EXTRACTION_WORK_DIR)'
+
+check-generated-adapter-authentication-lean:
+	python3 ../scripts/extract_adapter_authentication.py --check \
+		--work-dir '$(ADAPTER_AUTHENTICATION_EXTRACTION_WORK_DIR)'
+
+check-adapter-authentication-source:
+	python3 ../scripts/test_extract_adapter_authentication.py
+	python3 ../scripts/extract_adapter_authentication.py --check-source
+
 check-lean-policy:
 	@if rg -n --pcre2 '\b(?:sorry|admit|axiom)\b|sorryAx' $(LEAN_PROOF_PATHS) \
 		--glob '*.lean'; then \
@@ -875,6 +896,7 @@ check-lean-root:
 		BeaconcryptCore.Refinement.PqxdhSession \
 		BeaconcryptCore.Refinement.PqxdhCommitment \
 		BeaconcryptCore.Refinement.TranscriptAuth \
+		BeaconcryptCore.Refinement.AdapterResponseAuthentication \
 		BeaconcryptCore.Refinement.SessionBinding \
 		BeaconcryptCore.PanicFreedom.SessionBinding \
 		BeaconcryptCore.Refinement.PeerCollections \
@@ -939,7 +961,7 @@ check-lean-panic-freedom:
 prepare-lean-dependencies:
 	bash $(LEAN_DIR)/apply-dependency-patches.sh
 
-check-lean: prepare-lean-dependencies check-lean-policy check-lean-root check-lean-panic-freedom
+check-lean: prepare-lean-dependencies check-lean-policy check-lean-root check-lean-panic-freedom check-adapter-authentication-source
 	cd $(LEAN_DIR) && lake --rehash build
 
 # Regenerate and check the complete default beaconcrypt-core production surface.

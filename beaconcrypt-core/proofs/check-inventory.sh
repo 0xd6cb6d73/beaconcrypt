@@ -50,14 +50,14 @@ declare -A expected_category_counts=(
 	[parser-rust]=5
 	[core-rust]=17
 	[control]=19
-	[generated-lean]=13
+	[generated-lean]=15
 	[generated-proverif]=1
-	[handwritten-lean]=2063
+	[handwritten-lean]=2066
 	[handwritten-proverif]=298
 	[inventory]=3
-	[lean-control]=13
+	[lean-control]=15
 	[lean-dependency-overlay]=4
-	[validation]=82
+	[validation]=84
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -181,6 +181,8 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/check-mldsa-joint-session.py \
 	proofs/pro-verif/test-mldsa-joint-session-checker.py \
 	proofs/extract-authentication.py \
+	../scripts/extract_adapter_authentication.py \
+	../scripts/test_extract_adapter_authentication.py \
 	tests/authentication.rs \
 	tests/session.rs \
 	tests/agreement.rs \
@@ -258,6 +260,8 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/AuthenticationExtraction/Types.lean \
 	proofs/lean/BeaconcryptCore/AuthenticationExtraction/TypesExternal.lean \
 	proofs/lean/BeaconcryptCore/AuthenticationExtraction/TypesExternal_Template.lean \
+	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/Funs.lean \
 	> "$tmp_dir/generated-lean"
 compare_set generated-lean "$tmp_dir/generated-lean"
 
@@ -265,6 +269,8 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore.lean \
 	proofs/lean/BeaconcryptCore/Assumptions/FunsExternal.lean \
 	proofs/lean/BeaconcryptCore/Assumptions/TypesExternal.lean \
+	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/TypesExternal.lean \
+	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/FunsExternal.lean \
 	proofs/lean/BeaconcryptCore/Verification/PqxdhCommitmentRefinement.lean \
 	proofs/lean/BeaconcryptCore/Verification/ProofObligations.lean \
 	> "$tmp_dir/handwritten-lean"
@@ -287,6 +293,8 @@ printf '%s\n' \
 	proofs/lean/lakefile.toml \
 	proofs/lean/lean-toolchain \
 	proofs/lean/BeaconcryptCore/AuthenticationExtraction/provenance.json \
+	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/external-signatures.json \
+	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/provenance.json \
 	proofs/lean/pqxdh_spec.md > "$tmp_dir/lean-control"
 compare_set lean-control "$tmp_dir/lean-control"
 
@@ -49921,6 +49929,53 @@ require_line_count 1 '^check-proverif-cbor-registration: check-proverif-extracti
 require_occurrence_count 1 \
 	'else if \(scenario == "cbor-registration"\) \{\s*if \(query_count != 5\)' \
 	"CBOR registration exact five-result classifier" proofs/pro-verif/check-results.awk
+
+# Selected production adapter response-authentication extraction.
+adapter_extraction=proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction
+printf '%s\n' Funs.lean FunsExternal.lean Types.lean TypesExternal.lean |
+	LC_ALL=C sort > "$tmp_dir/expected-adapter-extraction"
+find "$adapter_extraction" -type f -name '*.lean' -printf '%P\n' |
+	LC_ALL=C sort > "$tmp_dir/actual-adapter-extraction"
+cmp -s "$tmp_dir/expected-adapter-extraction" "$tmp_dir/actual-adapter-extraction" ||
+	fail "selected adapter extraction Lean file set changed"
+[[ -z "$(find "$adapter_extraction" -type l -print -quit)" ]] ||
+	fail "symlink in selected adapter extraction"
+for adapter_handwritten in \
+	"$adapter_extraction/TypesExternal.lean" \
+	"$adapter_extraction/FunsExternal.lean" \
+	proofs/lean/BeaconcryptCore/Refinement/AdapterResponseAuthentication.lean; do
+	require_line_count 1 '^set_option warningAsError true$' "$adapter_handwritten" \
+		"selected adapter handwritten Lean warnings are errors"
+	reject_matches "selected adapter handwritten Lean warning suppression" \
+		'\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' \
+		"$adapter_handwritten"
+done
+python3 ../scripts/test_extract_adapter_authentication.py
+python3 ../scripts/extract_adapter_authentication.py --check-source
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.AdapterResponseAuthentication$' \
+	proofs/lean/BeaconcryptCore.lean "adapter response-authentication proof import"
+adapter_refinement=proofs/lean/BeaconcryptCore/Refinement/AdapterResponseAuthentication.lean
+require_line_count 7 '^theorem ' "$adapter_refinement" \
+	"adapter response-authentication theorem total"
+require_line_count 7 '^#guard_msgs in$' "$adapter_refinement" \
+	"adapter response-authentication guarded dependencies"
+for theorem_name in replies_forwarded admission_rejected missing_packet_rejected hash_rejected \
+	verification_result_exact successful_response_retains_pending_packet successful_response_was_verified; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$adapter_refinement" \
+		"adapter response-authentication theorem ${theorem_name}"
+	require_line_count 1 \
+		"^#print axioms BeaconcryptCore\\.Refinement\\.AdapterResponseAuthentication\\.${theorem_name}$" \
+		"$adapter_refinement" "adapter response-authentication dependency ${theorem_name}"
+done
+require_line_count 1 '^extract-adapter-authentication-lean:$' Makefile \
+	"explicit adapter response-authentication extraction target"
+require_line_count 1 '^check-generated-adapter-authentication-lean:$' Makefile \
+	"explicit adapter response-authentication regeneration check"
+require_occurrence_count 1 \
+	'^check-adapter-authentication-source:\n\tpython3 ../scripts/test_extract_adapter_authentication\.py\n\tpython3 ../scripts/extract_adapter_authentication\.py --check-source$' \
+	"source-only adapter response-authentication preflight" Makefile
+require_line_count 1 '^check-lean: .* check-adapter-authentication-source$' Makefile \
+	"adapter response-authentication provenance before Lean build"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py

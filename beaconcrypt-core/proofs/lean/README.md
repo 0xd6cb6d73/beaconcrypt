@@ -21,6 +21,14 @@ Rust
 
 This is the Aeneas/Charon-backed `lean` target. Do not use Hax's `legacy-lean` backend.
 
+### Selected production adapter extraction
+
+`AdapterAuthenticationExtraction` selects the unchanged production function `beaconcrypt::auth::authenticate_response` from the `beaconcrypt` crate with `beacon,pqxdh` and no default features. Its generated `Types.lean` and `Funs.lean` are separate from the maintained core extraction. `TypesExternal.lean` and `FunsExternal.lean` are handwritten models that reuse the existing core definitions and provide explicit hash/verification parameters; the generated external templates are retained as reviewed JSON evidence and are not Lean import targets. The only installed change to the generated driver is its explicit operations-instance binder.
+
+Run `make -C beaconcrypt-core SHELL=bash extract-adapter-authentication-lean` to regenerate, or `make -C beaconcrypt-core SHELL=bash check-generated-adapter-authentication-lean` to compare a fresh extraction with the reviewed output. Both targets use `ADAPTER_AUTHENTICATION_EXTRACTION_WORK_DIR`, which defaults to a sibling `.build/proofs/adapter-authentication-extraction` directory outside the checkout and can be overridden with an explicitly owned scratch directory. Changes to external signatures require separate inspection and the runner's explicit review option; these Make targets do not approve them automatically.
+
+`make -C beaconcrypt-core SHELL=bash check-adapter-authentication-source` checks runner regressions and source/artifact provenance without invoking Rust, Charon, Aeneas or Lean. It is also a preflight of `check-lean`. The two maintained adapter models and the adapter refinement treat Lean warnings as errors. The refinement concerns deterministic request forwarding, rejection, continuation and returned state. Primitive implementations/security, probabilistic-oracle interpretation, codecs and the global mandatory-ML composition remain separate boundaries.
+
 ### Prerequisites
 
 Run Lean extraction inside the repository's proof environment so the pinned Hax, Charon, Aeneas, Lean, and Lake versions are used.
@@ -55,6 +63,7 @@ proofs/lean/
 │   │   ├── FunsExternal_Template.lean
 │   │   └── FunsExternal.lean             # generated assumptions forwarding module
 │   ├── AuthenticationExtraction/         # isolated transcript regeneration check
+│   ├── AdapterAuthenticationExtraction/  # selected production response-authentication driver
 │   ├── Model/
 │   │   ├── Ratchet.lean                  # handwritten ideal symmetric ratchet
 │   │   └── Pqxdh/                       # handwritten ideal modified-PQXDH model
