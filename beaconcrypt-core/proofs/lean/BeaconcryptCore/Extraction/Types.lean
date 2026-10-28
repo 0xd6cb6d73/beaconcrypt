@@ -1002,6 +1002,36 @@ structure ratchet.control.ReceiveRestoreStep where
   restore : ratchet.control.RatchetRestore
   slot : Std.U8
 
+/-- [beaconcrypt_core::ratchet::concrete::ReceiveAdvanceKdf]
+    Source: 'beaconcrypt-core/src/ratchet/concrete.rs', lines 503:0-512:1
+    Visibility: public -/
+structure ratchet.concrete.ReceiveAdvanceKdf where
+  entry : ratchet.concrete.ConcreteRatchetKernel
+  target : Std.U64
+  working_control : ratchet.control.RatchetState
+  staged_slots : Array (core.option.Option (ratchet.refined.CachedReceiveKey
+    ratchet.RatchetMaterial)) 50#usize
+  first_slot : Std.U8
+  derived : Std.U8
+  remaining : Std.U8
+  request : ratchet.SymmetricRatchetKdfRequest
+
+/-- [beaconcrypt_core::ratchet::concrete::ReceiveAdvanceEffect]
+    Source: 'beaconcrypt-core/src/ratchet/concrete.rs', lines 492:0-499:1
+    Visibility: public -/
+@[discriminant isize]
+inductive ratchet.concrete.ReceiveAdvanceEffect where
+| ReceiveAdvanceRejected :
+  ratchet.concrete.ConcreteRatchetKernel →
+  ratchet.concrete.ReceiveAdvanceEffect
+| ReceiveAdvanceKdfRequested :
+  ratchet.concrete.ReceiveAdvanceKdf →
+  ratchet.concrete.ReceiveAdvanceEffect
+| ReceiveAdvanceCompleted :
+  ratchet.concrete.ConcreteRatchetKernel →
+  Std.U64 →
+  ratchet.concrete.ReceiveAdvanceEffect
+
 /-- [beaconcrypt_core::ratchet::control::ReceiveFinish]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 336:0-339:1
     Visibility: public -/

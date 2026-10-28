@@ -50,12 +50,12 @@ declare -A expected_category_counts=(
 	[parser-rust]=5
 	[core-rust]=17
 	[control]=19
-	[generated-lean]=13
+	[generated-lean]=14
 	[generated-proverif]=1
-	[handwritten-lean]=2063
+	[handwritten-lean]=2064
 	[handwritten-proverif]=298
 	[inventory]=3
-	[lean-control]=13
+	[lean-control]=15
 	[lean-dependency-overlay]=4
 	[validation]=82
 )
@@ -258,6 +258,7 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/AuthenticationExtraction/Types.lean \
 	proofs/lean/BeaconcryptCore/AuthenticationExtraction/TypesExternal.lean \
 	proofs/lean/BeaconcryptCore/AuthenticationExtraction/TypesExternal_Template.lean \
+	proofs/lean/source-coverage.json \
 	> "$tmp_dir/generated-lean"
 compare_set generated-lean "$tmp_dir/generated-lean"
 
@@ -275,6 +276,8 @@ done
 compare_set handwritten-lean "$tmp_dir/handwritten-lean"
 
 printf '%s\n' \
+	../scripts/check_core_source_coverage.py \
+	../scripts/test_check_core_source_coverage.py \
 	../scripts/check_lean_panic_freedom.py \
 	../scripts/test_check_lean_panic_freedom.py \
 	proofs/lean/panic-freedom.json \

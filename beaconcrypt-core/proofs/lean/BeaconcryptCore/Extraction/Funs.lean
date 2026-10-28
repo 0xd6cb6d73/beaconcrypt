@@ -5802,6 +5802,179 @@ def ratchet.concrete.finish_concrete_restore
   let rr ← ratchet.refined.finish_refined_restore restore.refined
   ok { refined := rr }
 
+/-- [beaconcrypt_core::ratchet::concrete::begin_receive_advance]:
+    Source: 'beaconcrypt-core/src/ratchet/concrete.rs', lines 515:0-547:1
+    Visibility: public -/
+def ratchet.concrete.begin_receive_advance
+  (kernel : ratchet.concrete.ConcreteRatchetKernel) (target : Std.U64) :
+  RustM ratchet.concrete.ReceiveAdvanceEffect
+  := do
+  let plan ← ratchet.control.plan_receive_until kernel.refined.control target
+  match plan.sequence with
+  | core.option.Option.None =>
+    ok (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceRejected kernel)
+  | core.option.Option.Some sequence =>
+    if plan.derivations = 0#u64
+    then
+      ok (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceCompleted kernel
+        sequence)
+    else
+      if plan.derivations > ratchet.control.RATCHET_MAX_GAP
+      then
+        ok (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceRejected
+          kernel)
+      else
+        let remaining ← lift (UScalar.cast .U8 plan.derivations)
+        let first_slot ←
+          ratchet.control.RatchetState.receive_cache_len kernel.refined.control
+        let b ←
+          ratchet.refined.refined_receive_slots_are_empty kernel.refined
+            first_slot remaining
+        if b
+        then
+          let a ← ratchet.RatchetChain.as_bytes kernel.refined.receive_chain
+          let request ← ratchet.SymmetricRatchetKdfRequest.new a
+          let a1 ←
+            ratchet.refined.empty_material_slots ratchet.RatchetMaterial
+          ok (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceKdfRequested
+            {
+              entry := kernel,
+              target := sequence,
+              working_control := kernel.refined.control,
+              staged_slots := a1,
+              first_slot,
+              derived := 0#u8,
+              remaining,
+              request
+            })
+        else
+          ok (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceRejected
+            kernel)
+
+/-- [beaconcrypt_core::ratchet::concrete::{beaconcrypt_core::ratchet::concrete::ReceiveAdvanceKdf}::request]:
+    Source: 'beaconcrypt-core/src/ratchet/concrete.rs', lines 551:4-553:5
+    Visibility: public -/
+def ratchet.concrete.ReceiveAdvanceKdf.impl.request
+  (self : ratchet.concrete.ReceiveAdvanceKdf) :
+  RustM ratchet.SymmetricRatchetKdfRequest
+  := do
+  ok self.request
+
+/-- [beaconcrypt_core::ratchet::concrete::{beaconcrypt_core::ratchet::concrete::ReceiveAdvanceKdf}::cancel]:
+    Source: 'beaconcrypt-core/src/ratchet/concrete.rs', lines 555:4-557:5
+    Visibility: public -/
+def ratchet.concrete.ReceiveAdvanceKdf.cancel
+  (self : ratchet.concrete.ReceiveAdvanceKdf) :
+  RustM ratchet.concrete.ConcreteRatchetKernel
+  := do
+  ok self.entry
+
+/-- [beaconcrypt_core::ratchet::concrete::{beaconcrypt_core::ratchet::concrete::ReceiveAdvanceKdf}::resume]:
+    Source: 'beaconcrypt-core/src/ratchet/concrete.rs', lines 559:4-610:5
+    Visibility: public -/
+def ratchet.concrete.ReceiveAdvanceKdf.resume
+  (self : ratchet.concrete.ReceiveAdvanceKdf)
+  (response : ratchet.RatchetKdfResponse) :
+  RustM ratchet.concrete.ReceiveAdvanceEffect
+  := do
+  if self.remaining = 0#u8
+  then
+    ok (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceRejected
+      self.entry)
+  else
+    let advanced ← ratchet.control.advance_receive self.working_control
+    match advanced.sequence with
+    | core.option.Option.None =>
+      ok (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceRejected
+        self.entry)
+    | core.option.Option.Some sequence =>
+      match advanced.slot with
+      | core.option.Option.None =>
+        ok (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceRejected
+          self.entry)
+      | core.option.Option.Some slot =>
+        let slot_index ← lift (UScalar.cast .Usize slot)
+        let o ←
+          ratchet.control.RatchetState.receive_key_at advanced.state slot
+        let b ←
+          core.option.Option.Insts.CoreCmpPartialEqOption.eq
+            core.U64.Insts.CoreCmpPartialEqU64 o advanced.sequence
+        if b
+        then
+          let i ← ratchet.control.RECEIVE_CACHE_CAPACITY
+          if slot_index >= i
+          then
+            ok (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceRejected
+              self.entry)
+          else
+            let i1 ← lift (UScalar.cast .Usize self.first_slot)
+            let i2 ← lift (UScalar.cast .Usize self.derived)
+            let i3 ← i1 + i2
+            if slot_index = i3
+            then
+              let o1 ← Array.index_usize self.staged_slots slot_index
+              let b1 ← core.option.Option.is_some o1
+              if b1
+              then
+                ok
+                  (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceRejected
+                  self.entry)
+              else
+                let stepped ←
+                  ratchet.concrete.ratchet_step_from_response response
+                let (_, index_mut_back) ←
+                  Array.index_mut_usize self.staged_slots slot_index
+                let i4 ← self.derived + 1#u8
+                let i5 ← self.remaining - 1#u8
+                if i5 = 0#u8
+                then
+                  if sequence = self.target
+                  then
+                    let a :=
+                      index_mut_back (core.option.Option.Some
+                        { sequence, material := stepped.material })
+                    let (rr, _) ←
+                      ratchet.refined.publish_future_receive_slots
+                        self.entry.refined a self.first_slot i4
+                    ok
+                      (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceCompleted
+                      {
+                        refined :=
+                          {
+                            rr
+                              with
+                              control := advanced.state,
+                              receive_chain := stepped.chain
+                          }
+                      } self.target)
+                  else
+                    ok
+                      (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceRejected
+                      self.entry)
+                else
+                  let a ← ratchet.RatchetChain.as_bytes stepped.chain
+                  let srkr ← ratchet.SymmetricRatchetKdfRequest.new a
+                  let a1 :=
+                    index_mut_back (core.option.Option.Some
+                      { sequence, material := stepped.material })
+                  ok
+                    (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceKdfRequested
+                    {
+                      self
+                        with
+                        working_control := advanced.state,
+                        staged_slots := a1,
+                        derived := i4,
+                        remaining := i5,
+                        request := srkr
+                    })
+            else
+              ok (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceRejected
+                self.entry)
+        else
+          ok (ratchet.concrete.ReceiveAdvanceEffect.ReceiveAdvanceRejected
+            self.entry)
+
 /-- [beaconcrypt_core::ratchet::RATCHET_KDF_OUTPUT_SIZE]
     Source: 'beaconcrypt-core/src/ratchet.rs', lines 61:0-62:95
     Visibility: public -/

@@ -142,6 +142,7 @@ LEAN_GENERATED_PATHS := \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction/Types.lean \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction/TypesExternal_Template.lean \
 	$(LEAN_DIR)/BeaconcryptCore/AuthenticationExtraction \
+	$(LEAN_DIR)/source-coverage.json \
 	$(LEAN_DIR)/llbc
 
 # Hax creates the Lean project/root files only when they are absent.
@@ -839,7 +840,9 @@ extract-lean:
 		exit 1; \
 	}
 	rm -rf $(LEAN_DIR)/llbc
-	cargo hax -C --locked ';' into lean
+	cargo hax -C --locked ';' into lean \
+		--charon-args="--rustc-arg='--cfg=feature=\"test-utils\"'"
+	python3 ../scripts/check_core_source_coverage.py --write
 
 # The authentication cohort is regenerated separately while the global AD/CTX migration proceeds.
 # Both modes retain their isolated extraction evidence and preserve the historical Extraction files.
@@ -872,6 +875,7 @@ check-lean-root:
 	@for module in \
 		BeaconcryptCore.Extraction \
 		BeaconcryptCore.PanicFreedom.API \
+		BeaconcryptCore.PanicFreedom.TestUtils \
 		BeaconcryptCore.Refinement.PqxdhSession \
 		BeaconcryptCore.Refinement.PqxdhCommitment \
 		BeaconcryptCore.Refinement.TranscriptAuth \
@@ -933,6 +937,8 @@ check-lean-root:
 # Reconstruct unconditional contracts from every current extracted operation.
 # The following Lake build checks each certificate against that exact signature.
 check-lean-panic-freedom:
+	python3 ../scripts/test_check_core_source_coverage.py
+	python3 ../scripts/check_core_source_coverage.py
 	python3 ../scripts/test_check_lean_panic_freedom.py
 	python3 ../scripts/check_lean_panic_freedom.py
 
