@@ -2352,6 +2352,30 @@ import BeaconcryptCore.Computational.CborLogPins
 import BeaconcryptCore.Computational.CborAdmissionCompileSecrecy
 import BeaconcryptCore.Computational.CborRawRegistrationBuild
 
+-- Complete session agreement and extracted production record/codec correspondence.
+import BeaconcryptCore.Computational.PqxdhDeploymentSessionCoupling
+import BeaconcryptCore.Computational.PqxdhDeploymentSessionDeployment
+import BeaconcryptCore.Computational.PqxdhDeploymentSessionExecution
+import BeaconcryptCore.Computational.PqxdhDeploymentSessionFullExecution
+import BeaconcryptCore.Computational.PqxdhDeploymentSessionFullSecurity
+import BeaconcryptCore.Computational.PqxdhDeploymentSessionReceipt
+import BeaconcryptCore.Computational.PqxdhDeploymentSessionResume
+import BeaconcryptCore.Computational.PqxdhDeploymentSessionSecurity
+import BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshot
+import BeaconcryptCore.Refinement.AdapterRecordReceive
+import BeaconcryptCore.Refinement.FrameCodecArgument
+import BeaconcryptCore.Refinement.FrameCodecCanonical
+import BeaconcryptCore.Refinement.FrameCodecContracts
+import BeaconcryptCore.Refinement.FrameCodecDecodeTotality
+import BeaconcryptCore.Refinement.FrameCodecEndian
+import BeaconcryptCore.Refinement.FrameCodecReadBack
+import BeaconcryptCore.Refinement.FrameCodecRepresentation
+import BeaconcryptCore.Refinement.FrameCodecRoundtrip
+import BeaconcryptCore.Refinement.FrameCodecTotality
+import BeaconcryptCore.Refinement.FrameCodecWord
+import BeaconcryptCore.Refinement.FrameCodecWriteBytes
+import BeaconcryptCore.Refinement.FrameCodecWriter
+
 /-!
 # Beaconcrypt-core verification root
 

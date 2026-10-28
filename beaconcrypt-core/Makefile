@@ -134,6 +134,8 @@ LEAN_DIR := proofs/lean
 LEAN_ROOT := $(LEAN_DIR)/BeaconcryptCore.lean
 AUTHENTICATION_EXTRACTION_WORK_DIR ?= $(abspath ../.build/proofs/authentication-extraction)
 ADAPTER_AUTHENTICATION_EXTRACTION_WORK_DIR ?= $(abspath ../../.build/proofs/adapter-authentication-extraction)
+ADAPTER_RECORD_EXTRACTION_WORK_DIR ?= $(abspath ../../.build/proofs/$(notdir $(abspath ..))/adapter-record-extraction)
+FRAME_CODEC_EXTRACTION_WORK_DIR ?= $(abspath ../../.build/proofs/$(notdir $(abspath ..))/frame-codec-extraction)
 LEAN_PROOF_PATHS := $(LEAN_DIR)/BeaconcryptCore $(LEAN_DIR)/BeaconcryptCore.lean
 LEAN_GENERATED_PATHS := \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction.lean \
@@ -147,6 +149,14 @@ LEAN_GENERATED_PATHS := \
 	$(LEAN_DIR)/BeaconcryptCore/AdapterAuthenticationExtraction/Funs.lean \
 	$(LEAN_DIR)/BeaconcryptCore/AdapterAuthenticationExtraction/external-signatures.json \
 	$(LEAN_DIR)/BeaconcryptCore/AdapterAuthenticationExtraction/provenance.json \
+	$(LEAN_DIR)/BeaconcryptCore/AdapterRecordExtraction/Types.lean \
+	$(LEAN_DIR)/BeaconcryptCore/AdapterRecordExtraction/Funs.lean \
+	$(LEAN_DIR)/BeaconcryptCore/AdapterRecordExtraction/external-signatures.json \
+	$(LEAN_DIR)/BeaconcryptCore/AdapterRecordExtraction/provenance.json \
+	$(LEAN_DIR)/BeaconcryptCore/FrameCodecExtraction/Types.lean \
+	$(LEAN_DIR)/BeaconcryptCore/FrameCodecExtraction/Funs.lean \
+	$(LEAN_DIR)/BeaconcryptCore/FrameCodecExtraction/external-signatures.json \
+	$(LEAN_DIR)/BeaconcryptCore/FrameCodecExtraction/provenance.json \
 	$(LEAN_DIR)/llbc
 
 # Hax creates the Lean project/root files only when they are absent.
@@ -168,6 +178,8 @@ LEAN_GENERATED_PATHS := \
 	extract-authentication-lean check-generated-authentication-lean \
 	extract-adapter-authentication-lean check-generated-adapter-authentication-lean \
 	check-adapter-authentication-source \
+	extract-adapter-record-lean check-generated-adapter-record-lean check-adapter-record-source \
+	extract-frame-codec-lean check-generated-frame-codec-lean check-frame-codec-source \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
 	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
 	check-proverif-extraction check-generated check-generated-lean \
@@ -187,6 +199,9 @@ verify:
 verify-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) check-generated-authentication-lean
+	$(MAKE) check-generated-adapter-authentication-lean
+	$(MAKE) check-generated-adapter-record-lean
+	$(MAKE) check-generated-frame-codec-lean
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
 	$(MAKE) check-proverif-mldsa-auth
@@ -872,6 +887,30 @@ check-adapter-authentication-source:
 	python3 ../scripts/test_extract_adapter_authentication.py
 	python3 ../scripts/extract_adapter_authentication.py --check-source
 
+extract-adapter-record-lean:
+	python3 ../scripts/extract_adapter_record.py --write \
+		--work-dir '$(ADAPTER_RECORD_EXTRACTION_WORK_DIR)'
+
+check-generated-adapter-record-lean:
+	python3 ../scripts/extract_adapter_record.py --check \
+		--work-dir '$(ADAPTER_RECORD_EXTRACTION_WORK_DIR)'
+
+check-adapter-record-source:
+	python3 ../scripts/test_extract_adapter_record.py
+	python3 ../scripts/extract_adapter_record.py --check-source
+
+extract-frame-codec-lean:
+	python3 ../scripts/extract_frame_codec.py --write \
+		--work-dir '$(FRAME_CODEC_EXTRACTION_WORK_DIR)'
+
+check-generated-frame-codec-lean:
+	python3 ../scripts/extract_frame_codec.py --check \
+		--work-dir '$(FRAME_CODEC_EXTRACTION_WORK_DIR)'
+
+check-frame-codec-source:
+	python3 ../scripts/test_extract_frame_codec.py
+	python3 ../scripts/extract_frame_codec.py --check-source
+
 check-lean-policy:
 	@if rg -n --pcre2 '\b(?:sorry|admit|axiom)\b|sorryAx' $(LEAN_PROOF_PATHS) \
 		--glob '*.lean'; then \
@@ -897,6 +936,13 @@ check-lean-root:
 		BeaconcryptCore.Refinement.PqxdhCommitment \
 		BeaconcryptCore.Refinement.TranscriptAuth \
 		BeaconcryptCore.Refinement.AdapterResponseAuthentication \
+		BeaconcryptCore.Refinement.AdapterRecordReceive \
+		BeaconcryptCore.Refinement.FrameCodecReadBack \
+		BeaconcryptCore.Refinement.FrameCodecContracts \
+		BeaconcryptCore.Refinement.FrameCodecDecodeTotality \
+		BeaconcryptCore.Refinement.FrameCodecCanonical \
+		BeaconcryptCore.Refinement.FrameCodecWriteBytes \
+		BeaconcryptCore.Computational.PqxdhDeploymentSessionDeployment \
 		BeaconcryptCore.Refinement.SessionBinding \
 		BeaconcryptCore.PanicFreedom.SessionBinding \
 		BeaconcryptCore.Refinement.PeerCollections \
@@ -961,7 +1007,7 @@ check-lean-panic-freedom:
 prepare-lean-dependencies:
 	bash $(LEAN_DIR)/apply-dependency-patches.sh
 
-check-lean: prepare-lean-dependencies check-lean-policy check-lean-root check-lean-panic-freedom check-adapter-authentication-source
+check-lean: prepare-lean-dependencies check-lean-policy check-lean-root check-lean-panic-freedom check-adapter-record-source check-frame-codec-source check-adapter-authentication-source
 	cd $(LEAN_DIR) && lake --rehash build
 
 # Regenerate and check the complete default beaconcrypt-core production surface.
@@ -973,6 +1019,9 @@ verify-lean:
 verify-lean-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) check-generated-authentication-lean
+	$(MAKE) check-generated-adapter-authentication-lean
+	$(MAKE) check-generated-adapter-record-lean
+	$(MAKE) check-generated-frame-codec-lean
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
 

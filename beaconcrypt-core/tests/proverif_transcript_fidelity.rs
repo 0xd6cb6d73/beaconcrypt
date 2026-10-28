@@ -104,6 +104,7 @@ const LEAN_PQXDH_THEOREMS: &str =
 	include_str!("../proofs/lean/BeaconcryptCore/Model/Pqxdh/Theorems.lean");
 const TRANSPORT_SCHEMA: &str = include_str!("../../beaconcrypt-parse/schema/transport.cddl");
 const TRANSPORT_PARSER: &str = include_str!("../../beaconcrypt-parse/src/lib.rs");
+const TRANSPORT_FRAME: &str = include_str!("../../beaconcrypt-parse/src/frame.rs");
 const TRANSPORT_SIZING: &str = include_str!("../src/transport.rs");
 const ADAPTER_WIRE: &str = include_str!("../../beaconcrypt/src/wire.rs");
 const PORTABLE_HKDF: &str = include_str!("../../beaconcrypt-crypto/src/crypto_kdf.rs");
@@ -798,6 +799,7 @@ struct Snapshot {
 	phase1_schema: String,
 	phase2_schema: String,
 	transport_parser: String,
+	transport_frame: String,
 	transport_sizing: String,
 	adapter_wire: String,
 	portable_hkdf: String,
@@ -862,6 +864,7 @@ impl Snapshot {
 			phase1_schema: PHASE1_SCHEMA.to_owned(),
 			phase2_schema: PHASE2_SCHEMA.to_owned(),
 			transport_parser: TRANSPORT_PARSER.to_owned(),
+			transport_frame: TRANSPORT_FRAME.to_owned(),
 			transport_sizing: TRANSPORT_SIZING.to_owned(),
 			adapter_wire: ADAPTER_WIRE.to_owned(),
 			portable_hkdf: PORTABLE_HKDF.to_owned(),
@@ -1306,8 +1309,9 @@ fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
 	let parser = compact(&uncommented_rust(&snapshot.transport_parser)?);
 	for wanted in [
 		"pubusebeaconcrypt_core::transport::{MAX_MESSAGE_SIZE,encoded_frame_len,encoded_init_len,encoded_response_len,};",
-		"pubusetransport::{cryptoframeasCryptoFrame,initkexasInitKex,kexresponseasKexResponse};",
-		"preflight(input,&[0x85,1,2],&[0,0,2])?;matchvalidate_and_parse_cryptoframe(input){ParsedFrame::Some{v:(frame,[])}=>Some(frame),_=>None,}",
+		"pubuseframe::FrameasCryptoFrame;",
+		"pubusetransport::{initkexasInitKex,kexresponseasKexResponse};",
+		"pubfndecode_frame(input:&[u8])->Option<CryptoFrame<'_>>{frame::decode(input)}",
 		"preflight(input,&[0x88,2,0],&[2,2,2,2,2,2])?;matchvalidate_and_parse_initkex(input){ParsedInit::Some{v:(init,[])}=>Some(init),_=>None,}",
 		"preflight(input,&[0x88,2,1],&[2,2,2,2,0,2])?;matchvalidate_and_parse_kexresponse(input){ParsedResponse::Some{v:(response,[])}=>Some(response),_=>None,}",
 	] {
@@ -11427,10 +11431,18 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		mutation_count += 1;
 	}
 	for (name, from, to) in [
-		("cbor_frame_array_arity", "[0x85, 1, 2]", "[0x84, 1, 2]"),
-		("cbor_frame_version", "[0x85, 1, 2]", "[0x85, 2, 2]"),
-		("cbor_frame_kind", "[0x85, 1, 2]", "[0x85, 1, 1]"),
-		("cbor_frame_field_types", "&[0, 0, 2]", "&[2, 0, 0]"),
+		(
+			"cbor_frame_array_arity",
+			"input[0] != 0x85",
+			"input[0] != 0x84",
+		),
+		("cbor_frame_version", "input[1] != 1", "input[1] != 2"),
+		("cbor_frame_kind", "input[2] != 2", "input[2] != 1"),
+		(
+			"cbor_frame_field_types",
+			"decode_argument(rest, 0)?",
+			"decode_argument(rest, 2)?",
+		),
 		("cbor_init_array_arity", "[0x88, 2, 0]", "[0x87, 2, 0]"),
 		(
 			"cbor_init_field_types",
@@ -11445,8 +11457,8 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cbor_frame_trailing_suffix",
-			"v: (frame, [])",
-			"v: (frame, _)",
+			"length != cipher_text.len() as u64",
+			"length > cipher_text.len() as u64",
 		),
 		("cbor_init_trailing_suffix", "v: (init, [])", "v: (init, _)"),
 		(
@@ -11480,8 +11492,17 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 			"rest.split_at(width)",
 		),
 	] {
-		assert_rejected(name, "CBOR", |snapshot| {
-			replace_once(&mut snapshot.transport_parser, from, to)
+		let diagnostic = if name.starts_with("cbor_frame_") {
+			"record effects"
+		} else {
+			"CBOR"
+		};
+		assert_rejected(name, diagnostic, |snapshot| {
+			if name.starts_with("cbor_frame_") {
+				replace_once_after(&mut snapshot.transport_frame, "fn decode(", from, to)
+			} else {
+				replace_once(&mut snapshot.transport_parser, from, to)
+			}
 		});
 		mutation_count += 1;
 	}

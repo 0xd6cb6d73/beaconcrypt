@@ -28,12 +28,13 @@ mod lowstar {
 pub use beaconcrypt_core::transport::{
 	MAX_MESSAGE_SIZE, encoded_frame_len, encoded_init_len, encoded_response_len,
 };
-pub use transport::{cryptoframe as CryptoFrame, initkex as InitKex, kexresponse as KexResponse};
+mod frame;
+pub use frame::Frame as CryptoFrame;
+pub use transport::{initkex as InitKex, kexresponse as KexResponse};
 use transport::{
-	option__·Transport_cryptoframe···Pulse_Lib_Slice_slice·uint8_t· as ParsedFrame,
 	option__·Transport_initkex···Pulse_Lib_Slice_slice·uint8_t· as ParsedInit,
 	option__·Transport_kexresponse···Pulse_Lib_Slice_slice·uint8_t· as ParsedResponse,
-	validate_and_parse_cryptoframe, validate_and_parse_initkex, validate_and_parse_kexresponse,
+	validate_and_parse_initkex, validate_and_parse_kexresponse,
 };
 
 // Reject containers before the generic generated validator can scan their contents.
@@ -77,41 +78,12 @@ fn primitive_argument(input: &[u8], major: u8) -> Option<(u64, &[u8])> {
 
 /// Encode a frame, returning zero if its complete encoding exceeds the message limit.
 pub fn encode_frame(frame: CryptoFrame<'_>, output: &mut [u8]) -> usize {
-	if encoded_frame_len(frame.seq, frame.key_id, frame.cipher_text.len()).is_none() {
-		return 0;
-	}
-	transport::serialize_cryptoframe(frame, output)
+	frame::encode_parts(frame.seq, frame.key_id, &[frame.cipher_text], output)
 }
 
 /// Encode borrowed ciphertext parts directly into the final frame buffer. Rejection leaves the output untouched.
 pub fn encode_frame_parts(sequence: u64, key_id: u64, parts: &[&[u8]], output: &mut [u8]) -> usize {
-	let Some(ciphertext_length) = parts
-		.iter()
-		.try_fold(0usize, |length, part| length.checked_add(part.len()))
-	else {
-		return 0;
-	};
-	let Some(length) = encoded_frame_len(sequence, key_id, ciphertext_length) else {
-		return 0;
-	};
-	let Some(output) = output.get_mut(..length) else {
-		return 0;
-	};
-	// Reuse the generated primitive encoders without its append-and-rotate array assembly.
-	let mut offset = cbordetver::cbor_det_serialize_array(5, output, 0);
-	for value in [1, 2, sequence, key_id] {
-		offset += transport::serialize_uint(value, &mut output[offset..]);
-	}
-	let header = offset;
-	offset += transport::serialize_uint(ciphertext_length as u64, &mut output[offset..]);
-	// A canonical byte-string header differs from the same unsigned length only in its major type.
-	output[header] |= cbordetveraux::cbor_major_type_byte_string << 5;
-	for part in parts {
-		let end = offset + part.len();
-		output[offset..end].copy_from_slice(part);
-		offset = end;
-	}
-	length
+	frame::encode_parts(sequence, key_id, parts, output)
 }
 
 /// Encode a registration request, returning zero if its complete encoding exceeds the limit.
@@ -152,11 +124,7 @@ pub fn encode_response(response: KexResponse<'_>, output: &mut [u8]) -> usize {
 
 /// Validate and borrow exactly one frame, before routing or touching any ratchet.
 pub fn decode_frame(input: &[u8]) -> Option<CryptoFrame<'_>> {
-	preflight(input, &[0x85, 1, 2], &[0, 0, 2])?;
-	match validate_and_parse_cryptoframe(input) {
-		ParsedFrame::Some { v: (frame, []) } => Some(frame),
-		_ => None,
-	}
+	frame::decode(input)
 }
 
 /// Validate and borrow exactly one registration request.
@@ -179,3 +147,6 @@ pub fn decode_response(input: &[u8]) -> Option<KexResponse<'_>> {
 
 #[cfg(test)]
 mod preflight_tests;
+
+#[cfg(test)]
+mod frame_tests;

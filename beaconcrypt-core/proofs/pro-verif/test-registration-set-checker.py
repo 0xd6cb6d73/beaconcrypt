@@ -265,6 +265,48 @@ class InterpretedAdmissionSourceGate(unittest.TestCase):
             "self.commitment.as_slice(),\n\t\t\tself.tag.as_slice(),",
         )
 
+    def test_frame_wrapper_preserves_the_selected_sender(self):
+        self.mutate_source(
+            "beaconcrypt-parse/src/lib.rs",
+            "frame::encode_parts(sequence, key_id, parts, output)",
+            "frame::encode_parts(sequence, 0, parts, output)",
+        )
+
+    def test_frame_flat_writer_checks_combined_length(self):
+        self.mutate_source(
+            "beaconcrypt-parse/src/frame.rs",
+            "first.len().checked_add(second.len())",
+            "first.len().checked_add(0)",
+        )
+
+    def test_frame_flat_writer_preserves_the_final_commitment(self):
+        self.mutate_source(
+            "beaconcrypt-parse/src/frame.rs",
+            "output[end..length].copy_from_slice(third)",
+            "output[end..length].copy_from_slice(second)",
+        )
+
+    def test_frame_header_checks_capacity_before_writing(self):
+        self.mutate_source(
+            "beaconcrypt-parse/src/frame.rs",
+            "if output.len() < length {",
+            "if false {",
+        )
+
+    def test_frame_header_preserves_the_canonical_domain(self):
+        self.mutate_source(
+            "beaconcrypt-parse/src/frame.rs",
+            "output[..3].copy_from_slice(&[0x85, 1, 2])",
+            "output[..3].copy_from_slice(&[0x85, 2, 1])",
+        )
+
+    def test_frame_payload_keeps_the_byte_string_major_type(self):
+        self.mutate_source(
+            "beaconcrypt-parse/src/frame.rs",
+            "write_argument(2, payload_length as u64, &mut output[offset..])",
+            "write_argument(0, payload_length as u64, &mut output[offset..])",
+        )
+
     def test_commitment_gate_remains_before_aead(self):
         self.mutate_source(
             "beaconcrypt-core/src/record.rs",

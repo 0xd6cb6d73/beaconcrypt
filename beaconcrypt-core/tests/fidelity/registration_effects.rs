@@ -1316,6 +1316,7 @@ fn source_mut<'a>(snapshot: &'a mut Snapshot, name: &str) -> &'a mut String {
 		"ratchet" => &mut snapshot.adapter_ratchet,
 		"wire" => &mut snapshot.adapter_wire,
 		"parser" => &mut snapshot.transport_parser,
+		"frame" => &mut snapshot.transport_frame,
 		"portable-hkdf" => &mut snapshot.portable_hkdf,
 		"core-pqxdh" => &mut snapshot.core_pqxdh,
 		"agreement" => &mut snapshot.core_agreement,

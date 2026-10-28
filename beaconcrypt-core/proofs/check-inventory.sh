@@ -47,17 +47,17 @@ declare -A expected_category_counts=(
 	[adapter-rust]=19
 	[adapter-schema]=1
 	[crypto-rust]=8
-	[parser-rust]=5
+	[parser-rust]=7
 	[core-rust]=17
 	[control]=19
-	[generated-lean]=15
+	[generated-lean]=19
 	[generated-proverif]=1
-	[handwritten-lean]=2066
+	[handwritten-lean]=2091
 	[handwritten-proverif]=298
 	[inventory]=3
-	[lean-control]=15
+	[lean-control]=19
 	[lean-dependency-overlay]=4
-	[validation]=84
+	[validation]=88
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -183,6 +183,10 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/extract-authentication.py \
 	../scripts/extract_adapter_authentication.py \
 	../scripts/test_extract_adapter_authentication.py \
+	../scripts/extract_adapter_record.py \
+	../scripts/test_extract_adapter_record.py \
+	../scripts/extract_frame_codec.py \
+	../scripts/test_extract_frame_codec.py \
 	tests/authentication.rs \
 	tests/session.rs \
 	tests/agreement.rs \
@@ -262,6 +266,10 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/AuthenticationExtraction/TypesExternal_Template.lean \
 	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/Types.lean \
 	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/FrameCodecExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/FrameCodecExtraction/Funs.lean \
 	> "$tmp_dir/generated-lean"
 compare_set generated-lean "$tmp_dir/generated-lean"
 
@@ -271,6 +279,9 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/Assumptions/TypesExternal.lean \
 	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/TypesExternal.lean \
 	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/FunsExternal.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/TypesExternal.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/FunsExternal.lean \
+	proofs/lean/BeaconcryptCore/FrameCodecExtraction/FunsExternal.lean \
 	proofs/lean/BeaconcryptCore/Verification/PqxdhCommitmentRefinement.lean \
 	proofs/lean/BeaconcryptCore/Verification/ProofObligations.lean \
 	> "$tmp_dir/handwritten-lean"
@@ -295,6 +306,10 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/AuthenticationExtraction/provenance.json \
 	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/external-signatures.json \
 	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/provenance.json \
+	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/external-signatures.json \
+	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/provenance.json \
+	proofs/lean/BeaconcryptCore/FrameCodecExtraction/external-signatures.json \
+	proofs/lean/BeaconcryptCore/FrameCodecExtraction/provenance.json \
 	proofs/lean/pqxdh_spec.md > "$tmp_dir/lean-control"
 compare_set lean-control "$tmp_dir/lean-control"
 
@@ -2056,12 +2071,7 @@ for statement in [
 
 # Actual core-owned record continuations supersede the complete-record callback seam.
 # Pin every reviewed body/field/mutation tuple, plus execution of all validators and controls.
-record_pins = {'BODIES': {'count': 64,
-            'sha256': '0bd87efa11a46dd677353df18a46a39c90356655581d27fdb08653f97f274472'},
- 'DECLARATIONS': {'count': 11,
-                  'sha256': 'd146e391f621db1b6c2ad9794486fd5da41470811b93474bcae8dbbedf0c81b2'},
- 'MIGRATED': {'count': 107,
-              'sha256': '5bed49160c8b1c0c04d11e8deca2eff733774525d4b5ffaab8066045aeb994d9'}}
+record_pins = {'BODIES': {'count': 73, 'sha256': '0ddce781c3d9cac77e2ab5aa789e58c1b5918c7100e83324e1c82dbeaed21a26'}, 'DECLARATIONS': {'count': 11, 'sha256': 'd146e391f621db1b6c2ad9794486fd5da41470811b93474bcae8dbbedf0c81b2'}, 'MIGRATED': {'count': 115, 'sha256': '471538fd9aec22c7f2335e73d727c8975c6776a2afbf7bead8e7aa1b8029aea8'}}
 for name, pin in record_pins.items():
     found = re.search(r"^const " + name + r":.*?= &\[(.*?)^\];", records, re.M | re.S)
     require(found is not None, f"reviewed record {name} table")
@@ -2073,7 +2083,7 @@ for selected, field in [
     ("records", "core_record_effects"), ("registration", "core_registration"),
     ("ratchet", "adapter_ratchet"), ("beacon", "adapter_beacon"),
     ("server", "adapter_server"), ("wire", "adapter_wire"),
-    ("parser", "transport_parser"), ("portable-hkdf", "portable_hkdf"),
+    ("parser", "transport_parser"), ("frame", "transport_frame"), ("portable-hkdf", "portable_hkdf"),
 ]:
     once(function(records, "source"), '"' + selected + '"=>&snapshot.' + field + ',', f"record source selects {selected}")
     once(function(source, "source_mut"), '"' + selected + '"=>&mutsnapshot.' + field + ',', f"record mutation selects {selected}")
@@ -2105,7 +2115,7 @@ once(function(records, "record_request_privacy_and_part_types_cannot_be_weakened
 relocated = function(records, "every_moved_record_operand_failure_and_bypass_control_is_rejected")
 for statement in ["inMIGRATED{", "super::registration_effects::replace_contract(", "super::validate(&changed).unwrap_err()", "error.contains(diagnostic)"]:
     once(relocated, statement, f"relocated record controls execute: {statement}")
-for name, count in [("BODY_MUTATION_COUNT", 128), ("DECLARATION_MUTATION_COUNT", 11), ("MIGRATED_CONTROL_COUNT", 107)]:
+for name, count in [("BODY_MUTATION_COUNT", 146), ("DECLARATION_MUTATION_COUNT", 11), ("MIGRATED_CONTROL_COUNT", 115)]:
     once(records, f"const {name}: usize = {count};", f"reviewed exact record count {name}")
 
 
@@ -2174,7 +2184,7 @@ for statement in ["if!declaration{breakstart;}", "b';'ifparentheses==0&&brackets
     once(function(transport, "replace_body"), statement, f"transport source mutation skips trait declarations: {statement}")
 once(function(transport, "replace_body"), "source.replace_range(open+1..end-1,body);", "transport mutations replace the actual Rust body")
 
-print("Registration/record/peer/transport fidelity inventory: 57 synchronized inputs, 32+5+3+2+1 tests, 623 registration plus 246 record plus 110 peer plus 61 transport negative controls; 87 original record control names retained")
+print("Registration/record/peer/transport fidelity inventory: 58 synchronized inputs, 32+5+3+2+1 tests, 623 registration plus 272 record plus 110 peer plus 61 transport negative controls; 87 original record control names retained")
 PY_REGISTRATION_FIDELITY
 
 require_line_count 1 \
@@ -49976,6 +49986,288 @@ require_occurrence_count 1 \
 	"source-only adapter response-authentication preflight" Makefile
 require_line_count 1 '^check-lean: .* check-adapter-authentication-source$' Makefile \
 	"adapter response-authentication provenance before Lean build"
+
+# Genuine production record-controller and ordinary-frame codec extractions.
+for extraction_kind in AdapterRecord FrameCodec; do
+	extraction_dir="proofs/lean/BeaconcryptCore/${extraction_kind}Extraction"
+	if [[ "$extraction_kind" == AdapterRecord ]]; then
+		printf '%s\n' Funs.lean FunsExternal.lean Types.lean TypesExternal.lean
+	else
+		printf '%s\n' Funs.lean FunsExternal.lean Types.lean
+	fi | LC_ALL=C sort > "$tmp_dir/expected-${extraction_kind}-extraction"
+	find "$extraction_dir" -type f -name '*.lean' -printf '%P\n' |
+		LC_ALL=C sort > "$tmp_dir/actual-${extraction_kind}-extraction"
+	cmp -s "$tmp_dir/expected-${extraction_kind}-extraction" "$tmp_dir/actual-${extraction_kind}-extraction" ||
+		fail "${extraction_kind} extraction Lean file set changed"
+	[[ -z "$(find "$extraction_dir" -type l -print -quit)" ]] ||
+		fail "symlink in ${extraction_kind} extraction"
+done
+for maintained_model in \
+	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/TypesExternal.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/FunsExternal.lean \
+	proofs/lean/BeaconcryptCore/FrameCodecExtraction/FunsExternal.lean; do
+	require_line_count 1 '^set_option warningAsError true$' "$maintained_model" "new native extraction model warnings are errors"
+	reject_matches "new native extraction model warning suppression" \
+		'\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$maintained_model"
+done
+python3 ../scripts/test_extract_adapter_record.py
+python3 ../scripts/extract_adapter_record.py --check-source
+python3 ../scripts/test_extract_frame_codec.py
+python3 ../scripts/extract_frame_codec.py --check-source
+for extraction_name in adapter-record frame-codec; do
+	require_line_count 1 "^extract-${extraction_name}-lean:$" Makefile "explicit ${extraction_name} extraction target"
+	require_line_count 1 "^check-generated-${extraction_name}-lean:$" Makefile "explicit ${extraction_name} regeneration check"
+	require_line_count 1 "^check-lean: .* check-${extraction_name}-source( |$)" Makefile "${extraction_name} source provenance before Lean build"
+done
+require_occurrence_count 1 \
+	'^check-adapter-record-source:\n\tpython3 ../scripts/test_extract_adapter_record\.py\n\tpython3 ../scripts/extract_adapter_record\.py --check-source$' \
+	"source-only production record extraction preflight" Makefile
+require_occurrence_count 1 \
+	'^check-frame-codec-source:\n\tpython3 ../scripts/test_extract_frame_codec\.py\n\tpython3 ../scripts/extract_frame_codec\.py --check-source$' \
+	"source-only production frame codec extraction preflight" Makefile
+
+# Session agreement and extracted production-code theorem rosters.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionCoupling.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhDeploymentSessionCoupling$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSessionCoupling root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "PqxdhDeploymentSessionCoupling warnings are errors"
+reject_matches "PqxdhDeploymentSessionCoupling warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhDeploymentSessionCoupling theorem total"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSessionCoupling guarded dependencies"
+for theorem_name in localized_frozen_state frozen_state local_bundle_materialized draw_materialized fixed_root_state contextual_root_state localizedView_erase recorded_localized_state frozen_root_state; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "PqxdhDeploymentSessionCoupling theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Computational\\.PqxdhDeploymentSessionCoupling\.${theorem_name}$" "$selected_source_module" "PqxdhDeploymentSessionCoupling dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionDeployment.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhDeploymentSessionDeployment$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSessionDeployment root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "PqxdhDeploymentSessionDeployment warnings are errors"
+reject_matches "PqxdhDeploymentSessionDeployment warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentSessionDeployment theorem total"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSessionDeployment guarded dependencies"
+for theorem_name in merge_erased game_erase game_rejected decision_spec decision_le_generated complete_agreement_billed; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "PqxdhDeploymentSessionDeployment theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Computational\\.PqxdhDeploymentSessionDeployment\.${theorem_name}$" "$selected_source_module" "PqxdhDeploymentSessionDeployment dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionExecution.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhDeploymentSessionExecution$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSessionExecution root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "PqxdhDeploymentSessionExecution warnings are errors"
+reject_matches "PqxdhDeploymentSessionExecution warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhDeploymentSessionExecution theorem total"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSessionExecution guarded dependencies"
+for theorem_name in source_snapshot_root compiled_snapshot_root compiled_erase; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "PqxdhDeploymentSessionExecution theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Computational\\.PqxdhDeploymentSessionExecution\.${theorem_name}$" "$selected_source_module" "PqxdhDeploymentSessionExecution dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionFullExecution.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhDeploymentSessionFullExecution$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSessionFullExecution root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "PqxdhDeploymentSessionFullExecution warnings are errors"
+reject_matches "PqxdhDeploymentSessionFullExecution warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentSessionFullExecution theorem total"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSessionFullExecution guarded dependencies"
+for theorem_name in normalized_run full_erase full_audit discard_record embedded_cut_unit adversary_cut_unit; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "PqxdhDeploymentSessionFullExecution theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Computational\\.PqxdhDeploymentSessionFullExecution\.${theorem_name}$" "$selected_source_module" "PqxdhDeploymentSessionFullExecution dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionFullSecurity.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhDeploymentSessionFullSecurity$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSessionFullSecurity root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "PqxdhDeploymentSessionFullSecurity warnings are errors"
+reject_matches "PqxdhDeploymentSessionFullSecurity warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhDeploymentSessionFullSecurity theorem total"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSessionFullSecurity guarded dependencies"
+for theorem_name in decision_spec root_order decision_order generated_erase complete_agreement_billed; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "PqxdhDeploymentSessionFullSecurity theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Computational\\.PqxdhDeploymentSessionFullSecurity\.${theorem_name}$" "$selected_source_module" "PqxdhDeploymentSessionFullSecurity dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionReceipt.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhDeploymentSessionReceipt$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSessionReceipt root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "PqxdhDeploymentSessionReceipt warnings are errors"
+reject_matches "PqxdhDeploymentSessionReceipt warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhDeploymentSessionReceipt theorem total"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSessionReceipt guarded dependencies"
+for theorem_name in matching_fields common_complete authenticated_iff failure_iff; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "PqxdhDeploymentSessionReceipt theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Computational\\.PqxdhDeploymentSessionReceipt\.${theorem_name}$" "$selected_source_module" "PqxdhDeploymentSessionReceipt dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionResume.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhDeploymentSessionResume$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSessionResume root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "PqxdhDeploymentSessionResume warnings are errors"
+reject_matches "PqxdhDeploymentSessionResume warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhDeploymentSessionResume theorem total"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSessionResume guarded dependencies"
+for theorem_name in cut_pure cut_query_bind cut_stopped resume_cut frozen_cut_from cut_unit_from frozen_cut_unit cut_query_bound resume_frozen; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "PqxdhDeploymentSessionResume theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Computational\\.PqxdhDeploymentSessionResume\.${theorem_name}$" "$selected_source_module" "PqxdhDeploymentSessionResume dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionSecurity.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSecurity$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSessionSecurity root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "PqxdhDeploymentSessionSecurity warnings are errors"
+reject_matches "PqxdhDeploymentSessionSecurity warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhDeploymentSessionSecurity theorem total"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSessionSecurity guarded dependencies"
+for theorem_name in generated_order decision_order complete_agreement_bound complete_agreement_billed; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "PqxdhDeploymentSessionSecurity theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Computational\\.PqxdhDeploymentSessionSecurity\.${theorem_name}$" "$selected_source_module" "PqxdhDeploymentSessionSecurity dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionSnapshot.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshot$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSessionSnapshot root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "PqxdhDeploymentSessionSnapshot warnings are errors"
+reject_matches "PqxdhDeploymentSessionSnapshot warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhDeploymentSessionSnapshot theorem total"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSessionSnapshot guarded dependencies"
+for theorem_name in handler_run advance_saved erase_from erase saved_support saved_view view_frozen_from view_frozen; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "PqxdhDeploymentSessionSnapshot theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Computational\\.PqxdhDeploymentSessionSnapshot\.${theorem_name}$" "$selected_source_module" "PqxdhDeploymentSessionSnapshot dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/AdapterRecordReceive.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.AdapterRecordReceive$' proofs/lean/BeaconcryptCore.lean "AdapterRecordReceive root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "AdapterRecordReceive warnings are errors"
+reject_matches "AdapterRecordReceive warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 10 '^theorem ' "$selected_source_module" "AdapterRecordReceive theorem total"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "AdapterRecordReceive guarded dependencies"
+for theorem_name in receiver_unfold rust_map_eq_bind mapReply_eq_map finish_bytes output_map receiver_aead receiver_commitment receiver_source receive_source receive_native_model; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "AdapterRecordReceive theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.AdapterRecordReceive\.${theorem_name}$" "$selected_source_module" "AdapterRecordReceive dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/FrameCodecArgument.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.FrameCodecArgument$' proofs/lean/BeaconcryptCore.lean "FrameCodecArgument root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "FrameCodecArgument warnings are errors"
+reject_matches "FrameCodecArgument warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 4 '^theorem ' "$selected_source_module" "FrameCodecArgument theorem total"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "FrameCodecArgument guarded dependencies"
+for theorem_name in argument_length_pos argumentBytes_length encode_argument_exact decode_argument_roundtrip; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "FrameCodecArgument theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.FrameCodecArgument\.${theorem_name}$" "$selected_source_module" "FrameCodecArgument dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/FrameCodecCanonical.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.FrameCodecCanonical$' proofs/lean/BeaconcryptCore.lean "FrameCodecCanonical root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "FrameCodecCanonical warnings are errors"
+reject_matches "FrameCodecCanonical warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 3 '^theorem ' "$selected_source_module" "FrameCodecCanonical theorem total"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "FrameCodecCanonical guarded dependencies"
+for theorem_name in word_from_bytes from_bytes_injective decode_argument_canonical; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "FrameCodecCanonical theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.FrameCodecCanonical\.${theorem_name}$" "$selected_source_module" "FrameCodecCanonical dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/FrameCodecContracts.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.FrameCodecContracts$' proofs/lean/BeaconcryptCore.lean "FrameCodecContracts root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "FrameCodecContracts warnings are errors"
+reject_matches "FrameCodecContracts warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 11 '^theorem ' "$selected_source_module" "FrameCodecContracts theorem total"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "FrameCodecContracts guarded dependencies"
+for theorem_name in decode_canonical_of_arguments nativeDecode_canonical_of_arguments frame_readBack stable_of_arguments readWritable_of_arguments nativeWrite_source decode_canonical nativeDecode_canonical stable readWritable contracts; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "FrameCodecContracts theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.FrameCodecContracts\.${theorem_name}$" "$selected_source_module" "FrameCodecContracts dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/FrameCodecDecodeTotality.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.FrameCodecDecodeTotality$' proofs/lean/BeaconcryptCore.lean "FrameCodecDecodeTotality root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "FrameCodecDecodeTotality warnings are errors"
+reject_matches "FrameCodecDecodeTotality warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 1 '^theorem ' "$selected_source_module" "FrameCodecDecodeTotality theorem total"
+require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "FrameCodecDecodeTotality guarded dependencies"
+for theorem_name in decode_total; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "FrameCodecDecodeTotality theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.FrameCodecDecodeTotality\.${theorem_name}$" "$selected_source_module" "FrameCodecDecodeTotality dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/FrameCodecEndian.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.FrameCodecEndian$' proofs/lean/BeaconcryptCore.lean "FrameCodecEndian root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "FrameCodecEndian warnings are errors"
+reject_matches "FrameCodecEndian warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 4 '^theorem ' "$selected_source_module" "FrameCodecEndian theorem total"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "FrameCodecEndian guarded dependencies"
+for theorem_name in from_word octet_zero from_padded_two from_padded_four; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "FrameCodecEndian theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.FrameCodecEndian\.${theorem_name}$" "$selected_source_module" "FrameCodecEndian dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/FrameCodecReadBack.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.FrameCodecReadBack$' proofs/lean/BeaconcryptCore.lean "FrameCodecReadBack root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "FrameCodecReadBack warnings are errors"
+reject_matches "FrameCodecReadBack warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 10 '^theorem ' "$selected_source_module" "FrameCodecReadBack theorem total"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "FrameCodecReadBack guarded dependencies"
+for theorem_name in concrete_abs_byte concrete_abs_bytes nativeDecode_oversize nativeDecode_normal nativeDecode_exact native_render_of_arguments payload_le_render render_readback_of_arguments native_render render_readback; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "FrameCodecReadBack theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.FrameCodecReadBack\.${theorem_name}$" "$selected_source_module" "FrameCodecReadBack dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/FrameCodecRepresentation.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.FrameCodecRepresentation$' proofs/lean/BeaconcryptCore.lean "FrameCodecRepresentation root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "FrameCodecRepresentation warnings are errors"
+reject_matches "FrameCodecRepresentation warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 5 '^theorem ' "$selected_source_module" "FrameCodecRepresentation theorem total"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "FrameCodecRepresentation guarded dependencies"
+for theorem_name in octet_abs header_abs bigEndian_abs argument_abs frame_abs; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "FrameCodecRepresentation theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.FrameCodecRepresentation\.${theorem_name}$" "$selected_source_module" "FrameCodecRepresentation dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/FrameCodecRoundtrip.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.FrameCodecRoundtrip$' proofs/lean/BeaconcryptCore.lean "FrameCodecRoundtrip root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "FrameCodecRoundtrip warnings are errors"
+reject_matches "FrameCodecRoundtrip warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 7 '^theorem ' "$selected_source_module" "FrameCodecRoundtrip theorem total"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "FrameCodecRoundtrip guarded dependencies"
+for theorem_name in suffix_exact decode_components_result decode_components decode_oversize decode_short decode_roundtrip_of_arguments decode_roundtrip; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "FrameCodecRoundtrip theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.FrameCodecRoundtrip\.${theorem_name}$" "$selected_source_module" "FrameCodecRoundtrip dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/FrameCodecTotality.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.FrameCodecTotality$' proofs/lean/BeaconcryptCore.lean "FrameCodecTotality root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "FrameCodecTotality warnings are errors"
+reject_matches "FrameCodecTotality warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 1 '^theorem ' "$selected_source_module" "FrameCodecTotality theorem total"
+require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "FrameCodecTotality guarded dependencies"
+for theorem_name in decode_argument_total; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "FrameCodecTotality theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.FrameCodecTotality\.${theorem_name}$" "$selected_source_module" "FrameCodecTotality dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/FrameCodecWord.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.FrameCodecWord$' proofs/lean/BeaconcryptCore.lean "FrameCodecWord root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "FrameCodecWord warnings are errors"
+reject_matches "FrameCodecWord warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 1 '^theorem ' "$selected_source_module" "FrameCodecWord theorem total"
+require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "FrameCodecWord guarded dependencies"
+for theorem_name in word_exact; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "FrameCodecWord theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.FrameCodecWord\.${theorem_name}$" "$selected_source_module" "FrameCodecWord dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/FrameCodecWriteBytes.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.FrameCodecWriteBytes$' proofs/lean/BeaconcryptCore.lean "FrameCodecWriteBytes root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "FrameCodecWriteBytes warnings are errors"
+reject_matches "FrameCodecWriteBytes warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 27 '^theorem ' "$selected_source_module" "FrameCodecWriteBytes theorem total"
+require_line_count 27 '^#guard_msgs in$' "$selected_source_module" "FrameCodecWriteBytes guarded dependencies"
+for theorem_name in clone_bytes copy_bytes slice_mut_exact range_mut_exact prefix_mut_exact suffix_mut_exact rangeView_length prefix_read_exact array_prefix_exact argumentSlice_view write_argument_exact splice_length splice_bytes suffix_splice splice_extend write_header_steps headerOutput_length headerOutput_bytes argument_size offsetOf_value header_size admitted_size write_header_success checked_add_some encode_three_steps encode_three_success encode_three_render; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "FrameCodecWriteBytes theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.FrameCodecWriteBytes\.${theorem_name}$" "$selected_source_module" "FrameCodecWriteBytes dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/FrameCodecWriter.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.FrameCodecWriter$' proofs/lean/BeaconcryptCore.lean "FrameCodecWriter root import"
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "FrameCodecWriter warnings are errors"
+reject_matches "FrameCodecWriter warning suppression" '\bset_option\s+(?:warningAsError|linter\.deprecated)\s+false\b' "$selected_source_module"
+require_line_count 4 '^theorem ' "$selected_source_module" "FrameCodecWriter theorem total"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "FrameCodecWriter guarded dependencies"
+for theorem_name in header_rejected header_short_output first_length_overflow complete_length_overflow; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "FrameCodecWriter theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore\\.Refinement\\.FrameCodecWriter\.${theorem_name}$" "$selected_source_module" "FrameCodecWriter dependency ${theorem_name}"
+done
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
