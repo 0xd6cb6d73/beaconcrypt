@@ -942,6 +942,7 @@ check-lean-root:
 		BeaconcryptCore.Refinement.FrameCodecDecodeTotality \
 		BeaconcryptCore.Refinement.FrameCodecCanonical \
 		BeaconcryptCore.Refinement.FrameCodecWriteBytes \
+		BeaconcryptCore.Computational.PqxdhDeploymentPublicationSecurity \
 		BeaconcryptCore.Computational.PqxdhDeploymentSessionDeployment \
 		BeaconcryptCore.Refinement.SessionBinding \
 		BeaconcryptCore.PanicFreedom.SessionBinding \

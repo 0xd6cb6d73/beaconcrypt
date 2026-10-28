@@ -1187,3 +1187,21 @@ The production ordinary-frame path uses the extracted flat canonical codec in `b
 `FrameCodecCanonical.decode_argument_canonical` and `FrameCodecContracts.decode_canonical` prove that every accepted ordinary frame consumes its entire canonical encoding. `nativeDecode_canonical` carries this fact to the actual byte facade, together with its complete-message and payload-representability bounds. The source-backed `nativeWrite` and `withFrames` codec discharge the existing ordinary-frame `FrameReadBack`, `Stable` and `ReadWritable` obligations with no remaining parser or writer law premise. `nativeWrite_source` supplies an actual three-chunk encoder execution for every admitted logical write with sufficient destination capacity. Registration-level `CborRegistrationCodec.Representable` and Phase 1/Phase 2 reader laws still depend on their outer registration parsers and admission rules.
 
 These additions narrow the earlier controller and ordinary-frame codec boundaries. Native cryptographic implementation conformance, primitive security and related-key contracts, registration serialization, allocation and compiler interpretation, physical erasure, persistent installation and global mandatory-ML composition remain explicit obligations. The higher-level computational experiment retains its existing classical, random-oracle and protected-identity scope; these local source correspondences do not add a global quantum or mandatory-ML deployment theorem.
+
+### Publication origin with failed bundle writes
+
+`PqxdhDeploymentPublicationSecurity` proves CE-A2pub and its registration-replay corollary on the unrestricted final transcript of the complete common deployment experiment, including Fresh bundle writes that reject after signing.
+
+The previous filtered theorems remain available with their original bound; the new bound adds one ordinary joint-use weak-EUF reduction family for each of at most `qBundle` global bundle-call ordinals, each ranging over the original `qCreate + 1` generated identity positions.
+
+The executable selected client sees public generated identity handles and the actual prepared one-time public key, retains its complete earlier signing history and literal source randomness, and omits the whole current and future matching signing/writer blocks.
+
+A concrete one-sided coupling transfers the real bad trajectories on which all matching attempts failed; extra modified trajectories are allowed, and no independence between signature bytes and writer rejection is assumed.
+
+The genuine constructor, complete source execution, unique successful publication and an exact chronological occurrence audit establish the first matching attempt, its absent prehistory message, every matching failure, and generated identity ownership on that same execution.
+
+The final event, its containment and the ordinary challenger's field freshness are proved from the actual initialized source program, rather than supplied as extra premises.
+
+The contracts remain the original attached-signature format rule, setup wiring, Phase1/Phase2 read-back laws and certified adversary budgets; each added reduction retains the original signing, converted-DH, uniform, creation and private-read caps.
+
+This result concerns publication in the final public transcript and does not establish publication before acceptance; it neither changes Rust nor removes the existing primitive, codec, compiler, classical-ROM or mandatory-ML composition boundaries.
