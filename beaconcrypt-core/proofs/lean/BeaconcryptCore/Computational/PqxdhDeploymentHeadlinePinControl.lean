@@ -7,8 +7,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftProtocolHistory
 
 Facts of the compiled client's record control (`PqxdhRecordLiftProtocol.Control`) for every private service reply, used by the lift of the b2s Server-pin row of design-v2 section 7.6 (R1):
 
-- `ServerIs identity`: the control holds a Server with that identity. `ShellsOk ok`: every established owner's installed shell has associated data that `ok` admits at its owner index. `ControlOk` is both.
-- Every capability whose Beacon install fits `ok` (`InstallFits`), every environment effect, the Server initializer and the Server and Beacon record steps keep both facts (`capability_ok`, `effects_ok`, `initialize_ok`, `serverStep_ok`, `beaconStep_ok`, `handler_ok`). An environment program whose reachable requests all fit keeps them (`effects_program_ok`, through the generic `keep_bounded`).
+- `ServerIs identity`: the control holds a Server with that identity and every peer's installed AD equals its identity-derived AD (`LegacyPeers`). Constructor imports establish this equality with populated metadata, while the old environment's later installs use the legacy binding. `ShellsOk ok`: every established owner's installed shell has associated data that `ok` admits at its owner index. `ControlOk` is both.
+- Every capability whose Beacon install fits `ok` and whose Server install uses the legacy binding (`InstallFits`), every environment effect, the Server initializer and the Server and Beacon record steps keep these facts (`capability_ok`, `effects_ok`, `initialize_ok`, `serverStep_ok`, `beaconStep_ok`, `handler_ok`). An environment program whose reachable requests all fit keeps them (`effects_program_ok`, through the generic `keep_bounded`).
 - On the flattened CTX world (`PqxdhRecordLiftFlat.nativeImpl`, any key modes): a native command that is not an environment command (`Quiet`: a coin, a BLAKE2b query or a record command) keeps the environment state and both facts (`nativeImpl_quiet`); an environment command is an outcome of the environment's step and keeps both facts when the step's reachable requests fit (`nativeImpl_env`).
 
 No assumption or contract; no security claim. No `PqxdhBoundary*` module is imported.
@@ -28,9 +28,39 @@ variable {n : ℕ}
 
 /-! ### The control facts -/
 
-/-- The record control holds a Server with the given identity. -/
+/-- The old deployment environment installs identity-derived AD, including constructor-imported known peers. -/
+def LegacyPeers (server : PqxdhRecordLiftWorldCompiler.Server n) : Prop :=
+  ∀ keyId peer, server.peers keyId = some peer →
+    peer.binding.associatedBytes server.identity = RawCtxServerRouting.associatedBytes server.identity peer.identity
+
+/-- The source constructor import explicitly fills each known peer's metadata with its identity-derived AD. -/
+theorem legacyPeers_imported (created : PqxdhLiveServerConstruction.Created Unit) :
+    LegacyPeers (PqxdhRecordLiftWorldCompiler.Server.fromKnown (n := n)
+      (PqxdhRecordLiftWorld.importedServer created)) := by
+  intro keyId peer found
+  simp only [PqxdhRecordLiftWorldCompiler.Server.fromKnown, PqxdhRecordLiftWorld.importedServer,
+    Option.map_map, Option.map_eq_some_iff] at found
+  obtain ⟨original, _, rfl⟩ := found
+  rfl
+
+/-- Replacing one peer preserves legacy AD when the replacement has the same identity-derived AD. -/
+theorem legacyPeers_store (server : PqxdhRecordLiftWorldCompiler.Server n) (holds : LegacyPeers server)
+    (keyId : Std.U64) (peer : PqxdhRecordLiftWorldCompiler.Peer n)
+    (fits : peer.binding.associatedBytes server.identity =
+      RawCtxServerRouting.associatedBytes server.identity peer.identity) :
+    LegacyPeers { server with peers := Function.update server.peers keyId (some peer) } := by
+  intro other current found
+  by_cases same : other = keyId
+  · subst other
+    simp only [Function.update_self, Option.some.injEq] at found
+    subst current
+    exact fits
+  · simp only [Function.update_of_ne same] at found
+    exact holds other current found
+
+/-- The record control holds a Server with the given identity and the old environment's derived legacy peer AD. -/
 def ServerIs (identity : RawCtxServerRouting.Identity) (control : PqxdhRecordLiftProtocol.Control n) : Prop :=
-  ∃ server, control.server = some server ∧ server.identity = identity
+  ∃ server, control.server = some server ∧ server.identity = identity ∧ LegacyPeers server
 
 /-- Every established owner's installed shell has associated data admitted by `ok` at its owner index. -/
 def ShellsOk (ok : ℕ → Std.Array Std.U8 281#usize → Prop) (control : PqxdhRecordLiftProtocol.Control n) : Prop :=
@@ -42,8 +72,9 @@ def ControlOk (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array 
     (control : PqxdhRecordLiftProtocol.Control n) : Prop :=
   ServerIs identity control ∧ ShellsOk ok control
 
-/-- An environment effect fits `ok`: a Beacon install carries associated data that `ok` admits at its owner index; every other effect fits. -/
+/-- A Beacon install carries AD admitted by `ok`; a Server install uses the old environment's legacy binding; other effects fit. -/
 def InstallFits (ok : ℕ → Std.Array Std.U8 281#usize → Prop) : (EnvEffects n).Domain → Prop
+  | .inr (.installServer _ binding _) => binding.associatedData = none
   | .inr (.installBeacon owner shell _) => ok owner shell.associatedData
   | _ => True
 
@@ -143,12 +174,17 @@ theorem capability_ok (query : (CapabilitySpec n).Domain) (fits : InstallFits ok
         split_ifs at supported
         · simp only [bind_pure_comp, support_map] at supported
           obtain ⟨stored, _, rfl⟩ := supported
-          obtain ⟨current, found, same⟩ := holds.1
+          obtain ⟨current, found, same, legacy⟩ := holds.1
           rw [existing, Option.some.injEq] at found
           subst found
-          refine ⟨⟨_, rfl, same⟩, fun owner shell kernel present => ?_⟩
-          rw [markUsed_owners] at present
-          exact holds.2 owner shell kernel present
+          refine ⟨⟨_, rfl, same, ?_⟩, fun owner shell kernel present => ?_⟩
+          · apply legacyPeers_store server legacy keyId ⟨peerIdentity, stored⟩
+            change peerIdentity.associatedData = none at fits
+            simp only [PeerBinding.associatedBytes, PeerBinding.associatedArray, fits,
+              Option.getD_none, PqxdhRecordLiftWorldCompiler.Peer.identity,
+              RawCtxServerRouting.associatedBytes]
+          · rw [markUsed_owners] at present
+            exact holds.2 owner shell kernel present
         · simp only [support_pure, Set.mem_singleton_iff] at supported
           subst result
           exact holds
@@ -157,8 +193,8 @@ theorem capability_ok (query : (CapabilitySpec n).Domain) (fits : InstallFits ok
       split_ifs at supported
       · simp only [bind_pure_comp, support_map] at supported
         obtain ⟨stored, _, rfl⟩ := supported
-        obtain ⟨current, found, same⟩ := holds.1
-        refine ⟨⟨current, by rw [markUsed_server]; exact found, same⟩, ?_⟩
+        obtain ⟨current, found, same, legacy⟩ := holds.1
+        refine ⟨⟨current, by rw [markUsed_server]; exact found, same, legacy⟩, ?_⟩
         exact shellsOk_setEstablished ok control holds.2 owner shell stored fits
       · simp only [support_pure, Set.mem_singleton_iff] at supported
         subst result
@@ -185,7 +221,7 @@ theorem initialize_ok (created : PqxdhLiveServerConstruction.Created Unit) (cont
     (holds : ControlOk identity ok control) (result : Unit × PqxdhRecordLiftProtocol.Control n)
     (supported : result ∈ support (PqxdhRecordLiftProtocol.initializeServer created control)) :
     ControlOk identity ok result.2 := by
-  obtain ⟨server, existing, _⟩ := holds.1
+  obtain ⟨server, existing, _, _⟩ := holds.1
   simp only [PqxdhRecordLiftProtocol.initializeServer, existing, support_pure, Set.mem_singleton_iff] at supported
   subst result
   exact holds
@@ -197,7 +233,7 @@ theorem serverStep_ok (decode : RawCtxReceive.FrameDecoder) (route : RawCtxServe
     (result : RawCtxServerMixed.SourceSpec.Range query × PqxdhRecordLiftProtocol.Control n)
     (supported : result ∈ support (PqxdhRecordLiftProtocol.serverStep decode route query control)) :
     ControlOk identity ok result.2 := by
-  obtain ⟨current, existing, same⟩ := holds.1
+  obtain ⟨current, existing, same, legacy⟩ := holds.1
   simp only [PqxdhRecordLiftProtocol.serverStep, existing] at supported
   cases query with
   | inl request =>
@@ -208,21 +244,25 @@ theorem serverStep_ok (decode : RawCtxReceive.FrameDecoder) (route : RawCtxServe
         subst result
         exact holds
       · simp only [bind_pure_comp, support_map] at supported
+        rename_i peer selected
         obtain ⟨inner, _, rfl⟩ := supported
-        exact ⟨⟨_, rfl, same⟩, holds.2⟩
+        exact ⟨⟨_, rfl, same, legacyPeers_store current legacy keyId
+          { peer with kernel := inner.2.kernel } (legacy keyId peer selected)⟩, holds.2⟩
   | inr raw =>
       dsimp only at supported
       split at supported
       · simp only [support_pure, Set.mem_singleton_iff] at supported
         subst result
-        exact ⟨⟨_, rfl, same⟩, holds.2⟩
+        exact ⟨⟨_, rfl, same, legacy⟩, holds.2⟩
       · split at supported
         · simp only [support_pure, Set.mem_singleton_iff] at supported
           subst result
-          exact ⟨⟨_, rfl, same⟩, holds.2⟩
+          exact ⟨⟨_, rfl, same, legacy⟩, holds.2⟩
         · simp only [bind_pure_comp, support_map] at supported
+          rename_i peer selected
           obtain ⟨inner, _, rfl⟩ := supported
-          exact ⟨⟨_, rfl, same⟩, holds.2⟩
+          exact ⟨⟨_, rfl, same, legacyPeers_store current legacy _
+            { peer with kernel := inner.2.kernel } (legacy _ peer selected)⟩, holds.2⟩
 
 /-- Every Beacon record step keeps both control facts: an established owner keeps its shell. -/
 theorem beaconStep_ok (decode : RawCtxReceive.FrameDecoder) (owner : ℕ) (query : RawCtxMixedOwner.SourceSpec.Domain)
@@ -416,6 +456,18 @@ end Native
 end BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl
 
 -- Axiom guards (generated)
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.legacyPeers_imported' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.legacyPeers_imported
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.legacyPeers_store' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.legacyPeers_store
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.shellsOk_append' depends on axioms: [propext,

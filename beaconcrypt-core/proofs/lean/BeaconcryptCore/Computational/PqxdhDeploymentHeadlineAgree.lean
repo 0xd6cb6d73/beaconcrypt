@@ -9,7 +9,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive
 - A counterpart production (`Production control secret handle frame ad plaintext`) is a replay-dictionary seal at a label that `handle` owns, matching `frame` (sequence, sender and complete payload, `PqxdhRecordFactsOriginReplay.Matches`), whose frame `handle` produced (it is in the tagged produced-frame log, whether or not its writer succeeded), with record AD bytes `ad` and plaintext `plaintext`.
 - `AgreeFailure codec route result`: some transcript entry is an accepted raw receive (`Entry.received` with a decryption) on a receiving handle (`PqxdhRecordLiftIdeal.receivingHandle`) that holds a hidden slot, with decoded frame `frame`, and there is no counterpart handle of that slot (`PqxdhRecordLiftIdeal.Counterpart`) with a production of `frame` whose AD bytes are both the receiving handle's and the producing handle's AD (`PqxdhDeploymentHeadlineAgreeSeal.handleAd`) and whose plaintext is the received plaintext. `agreeEvent` is its Boolean.
 - `ctxRun_agreement` is the positive pointwise form on every supported outcome of every ideal CTX world. Its proof joins the receive side (`PqxdhDeploymentHeadlineAgreeReceive.ctxRun_entryAd`: the accepted receive matches a seal with the received plaintext and the receiving handle's AD), the dictionary origin of the frozen origin facts (`PqxdhRecordFactsOriginInvariant.ctxRun_dictionary_origin`: the seal's frame was produced by a handle that owns its label, the counterpart by `counterpart_of_opposite`) and the seal side (`PqxdhDeploymentHeadlineAgreeSeal.ctxRun_sealAd`: some owner of the label has the seal's AD), with `ownsLabel_unique` (one installed handle per slot and role, `PqxdhRecordLiftOrigins.Unique`) identifying the two owners. `ctxRun_agree` is its negated form.
-- The identity form, the third ingredient: `associatedBytes_inj`, the injectivity of the extracted `build_associated_data` (Rust `beaconcrypt-core/src/pqxdh.rs:928-947`: fixed-width Ed25519-tagged Server identity, then Beacon identity, then the two domain strings) through `RawCtxServerRouting.associatedBytes_exact` and `Pqxdh.assocData_inj`; `ctxRun_peer_agreement` (a Server peer receive: its counterpart is an established Beacon owner holding the slot, which produced the frame from a seal with the received plaintext and the AD `associatedBytes(Server identity, peer identity)`, and whose installed shell AD is that AD), `ctxRun_owner_agreement` (the same for a Beacon owner receive with its Server peer counterpart), and `owner_pin` (an owner whose installed AD is a peer's AD carries exactly that peer's ordered identity pair: any pair from which the extracted builder produces the owner's AD bytes is the Server identity and the peer identity).
+- The handle-specific forms `ctxRun_peer_agreement` and `ctxRun_owner_agreement` retain the complete installed peer binding: the counterpart produced the frame with the received plaintext and `PeerBinding.associatedBytes` of the Server identity and that binding, and the owner's installed shell AD is the same AD. For legacy identity-derived bindings, `associatedBytes_inj` and `owner_pin` recover the ordered Server and Beacon identity pair through `RawCtxServerRouting.associatedBytes_exact` and `Pqxdh.assocData_inj`.
 
 Not claimed here: a statement in the common deployment experiment. The record-lift view (`PqxdhRecordLiftIdeal.View`) and the CE observation (`PqxdhDeploymentKemTransfer.Observed`) carry neither handle ADs nor seal plaintexts, so the agreement is a fact about the full ideal-world outcome; turning the b2s Server-pin and mode-O plaintext rows of design-v2 section 7.6 computational additionally needs the CE environment's AD facts (an established owner's shell AD is the builder's output on its created pin and its own identity, and the Server identity is the one its build responses carry) and a containment of the corresponding CE events in `AgreeFailure` under the chain's designation and ideal-slot facts; this is recorded as the remainder of P2b step 3. No `PqxdhBoundary*` module is imported.
 -/
@@ -158,7 +158,7 @@ theorem owner_pin (server peer : RawCtxServerRouting.Identity) (shell : BeaconSh
   rw [← same, built]
   rfl
 
-/-- AG for a Server peer receive: its counterpart is an established Beacon owner holding the slot that produced the decoded frame from a seal with the received plaintext and the AD `associatedBytes(Server identity, peer identity)`, and the owner's installed shell AD is that AD. -/
+/-- AG for a Server peer receive: its counterpart is an established Beacon owner holding the slot that produced the decoded frame from a seal with the received plaintext and the complete installed peer-binding AD, and the owner's installed shell AD is that AD. -/
 theorem ctxRun_peer_agreement (modes : Label n → KeyMode) (ideal : ∀ label, modes label ≠ .real)
     (replace : Pqxdh.Bytes → Pqxdh.Bytes) (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
@@ -175,8 +175,8 @@ theorem ctxRun_peer_agreement (modes : Label n → KeyMode) (ideal : ∀ label, 
       result.1.2.owners[owner]? = some (.established shell kernel) ∧
       handleSlot result.1.2 (.owner owner) = some slot ∧
       Production result.1.2 result.2 (.owner owner) frame
-        (RawCtxServerRouting.associatedBytes server.identity peer.identity) decrypted.plaintext ∧
-      PqxdhRefinement.absBytes shell.associatedData = RawCtxServerRouting.associatedBytes server.identity peer.identity := by
+        (PeerBinding.associatedBytes server.identity peer.binding) decrypted.plaintext ∧
+      PqxdhRefinement.absBytes shell.associatedData = PeerBinding.associatedBytes server.identity peer.binding := by
   obtain ⟨other, ad, counterpart, production, receiverAd, producerAd⟩ := ctxRun_agreement modes ideal replace setup
     codec route env serverKid bounds mode adversary result supported value valueMember entry entryMember .server raw
     decrypted (.peer keyId) slot frame received (by simp only [receivingHandle, routed, Option.map_some]) hidden decoded
@@ -205,7 +205,7 @@ theorem counterpart_owner (slots : Handle → Option (Slot n)) (slot : Slot n) (
   | peer keyId => exact ⟨keyId, rfl, counterpart⟩
   | owner _ => exact False.elim counterpart
 
-/-- AG for a Beacon owner receive: its counterpart is a present Server peer holding the slot that produced the decoded frame from a seal with the received plaintext and the AD `associatedBytes(Server identity, peer identity)`, and the receiving owner's installed shell AD is that AD. -/
+/-- AG for a Beacon owner receive: its counterpart is a present Server peer holding the slot that produced the decoded frame from a seal with the received plaintext and the complete installed peer-binding AD, and the receiving owner's installed shell AD is that AD. -/
 theorem ctxRun_owner_agreement (modes : Label n → KeyMode) (ideal : ∀ label, modes label ≠ .real)
     (replace : Pqxdh.Bytes → Pqxdh.Bytes) (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
@@ -222,8 +222,8 @@ theorem ctxRun_owner_agreement (modes : Label n → KeyMode) (ideal : ∀ label,
       result.1.2.owners[owner]? = some (.established shell kernel) ∧
       handleSlot result.1.2 (.peer keyId) = some slot ∧
       Production result.1.2 result.2 (.peer keyId) frame
-        (RawCtxServerRouting.associatedBytes server.identity peer.identity) decrypted.plaintext ∧
-      PqxdhRefinement.absBytes shell.associatedData = RawCtxServerRouting.associatedBytes server.identity peer.identity := by
+        (PeerBinding.associatedBytes server.identity peer.binding) decrypted.plaintext ∧
+      PqxdhRefinement.absBytes shell.associatedData = PeerBinding.associatedBytes server.identity peer.binding := by
   obtain ⟨other, ad, counterpart, production, receiverAd, producerAd⟩ := ctxRun_agreement modes ideal replace setup
     codec route env serverKid bounds mode adversary result supported value valueMember entry entryMember (.owner owner)
     raw decrypted (.owner owner) slot frame received rfl hidden decoded

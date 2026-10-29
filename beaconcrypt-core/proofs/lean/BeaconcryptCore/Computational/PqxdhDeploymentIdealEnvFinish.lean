@@ -672,7 +672,7 @@ theorem commit_case (created : PqxdhLiveServerConstruction.Created Unit) (owner 
         (simulateQ PqxdhRecordLiftWorld.effects (commitEnv e owner control before shared staged)).run (withCache w cache)) =
       (fun r => (r.1.1, r.2)) <$> PqxdhDeploymentIdealDefer.beaconInstall owner
         (((PqxdhBeaconPhase2Publication.finish control before staged).1, none),
-          finishedX (merge e w) owner (shared.1, serverGame world.records.server e.native.shared.2.server.identityKeyId
+          finishedX (merge e w) owner (shared.1, serverGame (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId
             { shared.2 with ctx := cache }) (PqxdhBeaconPhase2Publication.finish control before staged).2 none
             ((merge e w).backend.2.1, ((merge e w).backend.1, (merge e w).seeds))) := by
   have inactive : ¬ RawCtxBeaconLifecycle.Established before.beacon.phase := by
@@ -950,7 +950,7 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
   simp only [map_bind, bind_assoc]
   refine bind_congr fun prepared => ?_
   have sharedM : (merge e w).base.native.shared = (e.native.shared.1, PqxdhDeploymentEnvironmentReal.serverGame
-      world.records.server e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := w.primitive.2 }) := by
+      (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := w.primitive.2 }) := by
     rw [show (merge e w).base.native = PqxdhDeploymentEnvironmentJoin.fill w e.native from rfl, fill_some w world found]
     rfl
   cases prepared with
@@ -1016,7 +1016,7 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
           rw [show (withCache (withCache w w.primitive.2) (withCache w w.primitive.2).primitive.2).primitive.2 =
             w.primitive.2 from rfl, fwd, sharedM, dummy]
           change _ = (fun result => (result.1, (e.native.shared.1, { (PqxdhDeploymentEnvironmentReal.serverGame
-            world.records.server e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := w.primitive.2 })
+            (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := w.primitive.2 })
               with ctx := result.2.2 }))) <$> (PqxdhDeploymentHiddenEntry.finishErasedSvc setup codec
                 (PqxdhDeploymentHiddenLayout.splitOutput read.1).1 PqxdhDeploymentHiddenSplit.dummySeed
                   (embed pending)).run ((), w.primitive.2) >>= _
@@ -1192,7 +1192,7 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
             PqxdhDeploymentEnvironment.ctxEffects_coins, bind_map_left, map_bind, sharedM]
           unfold PqxdhDeploymentIdealErase.knownWork
           rw [StateT.run_bind, markedRoot_game setup.hmac _ pending.root e.native.shared
-            (PqxdhDeploymentEnvironmentReal.serverGame world.records.server e.native.shared.2.server.identityKeyId
+            (PqxdhDeploymentEnvironmentReal.serverGame (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId
               { e.native.shared.2 with ctx := w.primitive.2 })]
           simp only [map_bind, Functor.map_map, bind_assoc, bind_map_left]
           apply OracleComp.bind_congr_of_forall_mem_support
@@ -1212,7 +1212,7 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
             rw [Functor.map_map] at h
             exact h
           · simp only [simulateQ_map, StateT.run_map, bind_map_left]
-            change _ = (fun res => (res.1, (family', { (PqxdhDeploymentEnvironmentReal.serverGame world.records.server
+            change _ = (fun res => (res.1, (family', { (PqxdhDeploymentEnvironmentReal.serverGame (MldsaLegacyServerRouting.forgetServer world.records.server)
               e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := w.primitive.2 }) with
                 ctx := res.2.2 }))) <$> (simulateQ (PqxdhRegistrationJointKemPostSkeleton.tailNative setup codec)
                   (PqxdhBeaconPhase2Shared.afterRoot codec.frameRead pending root)).run ((), w.primitive.2) >>= _
@@ -1272,7 +1272,7 @@ theorem finishChallenge_keeps (created : PqxdhLiveServerConstruction.Created Uni
         (PqxdhBeaconPhase2Publication.finish control before staged).1 (PqxdhBeaconPhase2Publication.finish control before
           staged).2 e.native.shared rfl cache (.inactive .aborted)
         below (by rw [abortedPhase]) (PqxdhDeploymentEnvironmentReal.fillOwner_inactive .aborted _)).2
-      exact ⟨kept.stripped, kept.createdEq, kept.server, kept.ownersLength, kept.owners⟩
+      exact ⟨kept.stripped, kept.createdEq, kept.server, kept.ownersLength, kept.owners, kept.legacyAD⟩
     · have kernelPhase : (PqxdhDeploymentIdealKernel.setOwnerKernel (PqxdhBeaconPhase2Publication.finish control before
           staged).2 (PqxdhRecordLiftWorld.kernel .beacon seed)).beacon.phase =
             .established control' associatedData (PqxdhRecordLiftWorld.kernel .beacon seed) := by
@@ -1302,7 +1302,7 @@ theorem finishChallenge_keeps (created : PqxdhLiveServerConstruction.Created Uni
           strip ⟨e.native.shared, e.native.owners.set owner (PqxdhBeaconPhase2Publication.finish control before staged).2⟩ := by
         simp only [strip, List.map_set, stripOwner_setOwnerKernel]
       rw [nativeEq] at kept
-      exact ⟨kept.stripped, kept.createdEq, kept.server, kept.ownersLength, kept.owners⟩
+      exact ⟨kept.stripped, kept.createdEq, kept.server, kept.ownersLength, kept.owners, kept.legacyAD⟩
 
 /-- Owner k's challenge finish in capability form splits the final split form's challenge finish: the reassembled law is the split form's (exactly) and admissibility is kept, from an admissible joint state whose selected accept was active, whose owner k is in the `initSent` phase, whose allocator has room and whose World holds no Beacon marker. -/
 theorem finishChallenge_splits (t : Target count) (p : Params KemSK count)

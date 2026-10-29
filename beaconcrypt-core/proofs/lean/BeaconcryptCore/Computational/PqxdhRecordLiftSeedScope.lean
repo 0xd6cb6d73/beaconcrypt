@@ -24,7 +24,7 @@ theorem installServer_safe {ι KemSK Reader Response : Type} {baseSpec : OracleS
     (policy : PqxdhRecordLiftWorldCompiler.LookupPolicy n)
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+    (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (state : Control n) (secret : Private n) (scope : Scoped secret) :
     Safe (interpreter policy setup codec) Allowed
       ((installServer keyId identity ref).run state) secret := by

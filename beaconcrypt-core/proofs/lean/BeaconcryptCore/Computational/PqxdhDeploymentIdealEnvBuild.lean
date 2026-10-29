@@ -1106,10 +1106,13 @@ theorem buildHidden_keeps (created : PqxdhLiveServerConstruction.Created Unit) (
   · rw [envEq, worldEq]
     exact good_intro created _ (builtSettled e.native session (none, e.native.shared.2.server) log) _ world rfl
       good.createdEq found sender identity peers good.ownersLength (good_matched created e w good)
+      (good.legacyAD world found)
   · rw [envEq, worldEq]
     refine good_intro created _ (builtSettled e.native session (some response, PqxdhServerRegistrationPublication.publish
       e.native.shared.2.server candidate PqxdhDeploymentHiddenSplit.placeholderKernel ()) log) _ _ rfl good.createdEq rfl
       sender identity (fun keyId => ?_) good.ownersLength (good_matched created e w good)
+      (MldsaLegacyServerRouting.legacy_insert world.records.server candidate.key_id candidate.beacon_identity_public_key
+        _ (good.legacyAD world found))
     simp only [builtSettled, installPeer, PqxdhServerRegistrationPublication.publish]
     by_cases same : keyId = candidate.key_id
     · subst same

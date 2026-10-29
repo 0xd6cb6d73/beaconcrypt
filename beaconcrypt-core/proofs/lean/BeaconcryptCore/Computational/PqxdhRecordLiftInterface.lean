@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentSecrecy
 import BeaconcryptCore.Computational.PqxdhRecordLiftSeed
+import BeaconcryptCore.Computational.PqxdhRecordPeerBinding
 
 /-! The proposed record-lift capability boundary. This module fixes request and reply types, exact seed-kernel resolution and an open program, not a world interpreter or a security theorem. Restricted registration effects expose no hidden-state, cache or secrecy-ledger read and no record command. The exact CE secrecy wrapper runs outside those programs. CE must first prove its outstanding failed-finish erasure equality before connecting its ideal game to a future interpreter. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -73,14 +74,14 @@ inductive InactivePhase where
   | aborted
   deriving DecidableEq
 
-/-- Environment capabilities. The future interpreter must enforce vacant Server installs, legal Beacon phases and one install per slot/role, and route every hash through the record cache. No capability invokes a record command or returns hidden material or an analysis log. -/
+/-- Environment capabilities enforce vacant Server installs, legal Beacon phases and one install per slot/role, and route every hash through the record cache. No capability invokes a record command or returns hidden material or an analysis log. -/
 inductive Capability (n : Nat) where
   | peerPresent (keyId : Std.U64)
   | ownerPresent (owner : Nat)
   | appendOwner (sender : Std.U64) (serverIdentity : RawCtxServerRouting.Identity)
       (phase : InactivePhase)
   | advanceOwner (owner : Nat) (phase : InactivePhase)
-  | installServer (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (kernel : KernelRef n)
+  | installServer (keyId : Std.U64) (binding : PeerBinding) (kernel : KernelRef n)
   | installBeacon (owner : Nat) (shell : BeaconShell) (kernel : KernelRef n)
   | hash (bytes : Pqxdh.Bytes)
 

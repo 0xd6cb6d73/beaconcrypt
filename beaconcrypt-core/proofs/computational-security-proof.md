@@ -64,7 +64,7 @@ $$
 
 Server-side slot conditions hold without this term. All reductions depend on the transferred event and claim; symbols for different events do not denote one interchangeable adversary.
 
-**5. Evaluate the ideal failures and add the losses.** In the ideal authenticated world, a receive must reproduce a genuine produced record. A record whose writer failed was produced but never published; its hidden 512-bit commitment can still be guessed. Across the whole run this contributes $p_{\mathrm{pub}}=2RS/2^{512}$, including leakage through the writer's success bit. A decoded frame returned on one handle and accepted on a non-partner handle contributes $p_{\mathrm{bind},g}=(R+S+H_g)S/2^{512}$, where $H_g$ includes all shared hash queries and environment work. In the ideal hidden world, a private fresh message has the stated conservative guessing bound $2^{-\ell}$ for minimum length $\ell$ bytes. This is the formal bound, not an asserted $2^{-8\ell}$ strengthening.
+**5. Evaluate the ideal failures and add the losses.** In the ideal authenticated world, a receive must reproduce a genuine produced record. A record whose writer failed was produced but never published; its hidden 512-bit commitment can still be guessed. Across the whole run this contributes $p_{\mathrm{pub}}=2RS/2^{512}$, including leakage through the writer's success bit. A decoded frame returned on one handle and accepted on a non-partner handle contributes $p_{\mathrm{bind},g}=(R+S+H_g)S/2^{512}$, where $H_g$ includes all shared hash queries and environment work. In the ideal hidden world, the byte-shift argument bounds guessing a private fresh message by $256^{-\ell}=2^{-8\ell}$ for minimum length $\ell$ bytes. The stronger byte endpoints retain this term instead of weakening it to the earlier $2^{-\ell}$ compatibility bound; they add no cryptographic assumption.
 
 Triangle inequalities through steps 2–4 and the disjoint sum in step 1 prove the bounds below. CE-OR concerns ordinary raw receives: all Beacon-to-Server positions and Server-to-Beacon positions at least two. The sequence-one response opened inside registration finish belongs to CE-A1 instead.
 
@@ -74,9 +74,9 @@ Triangle inequalities through steps 2–4 and the disjoint sum in step 1 prove t
 | CE-OR: Server to Beacon | $\sum_g(\kappa_g+\alpha_g+\beta_g+p_{\mathrm{pub}})$ |
 | CE-UKS: receiver-side binding failure | $\sum_g(\kappa_g+\alpha_g+p_{\mathrm{bind},g})$ |
 | CE-UKS: sender-side binding failure | $\sum_g(\kappa_g+\alpha_g+\beta_g+p_{\mathrm{bind},g})$ |
-| CE-APP: guess a designated private fresh message, mode P | $\sum_g(\kappa_g+\rho_g+\beta_g+2^{-\ell})$ |
+| CE-APP: guess a designated private fresh message, mode P | $\sum_g(\kappa_g+\rho_g+\beta_g+256^{-\ell})$ |
 
-The CE-APP Server-only form omits $\beta_g$. Event arguments are suppressed in the table. The corresponding statements are in [`HeadlineOrigin`](lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineOrigin.lean), [`HeadlineUks`](lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineUks.lean) and [`HeadlineApp`](lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineApp.lean).
+The CE-APP Server-only form omits $\beta_g$. Event arguments are suppressed in the table. The corresponding statements are in [`HeadlineOrigin`](lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineOrigin.lean), [`HeadlineUks`](lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineUks.lean) and [`HeadlineByteApp`](lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineByteApp.lean). The earlier [`HeadlineApp`](lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineApp.lean) statements remain available with their conservative guessing term.
 
 For CE-LOR, let $J$ be public-view eligibility and $W$ eligible correct guessing of the hidden bit. Ideal hidden records satisfy $\Pr[W]=\tfrac12\Pr[J]$. Transfer both events separately, combining the slot anomaly before bounding it, to obtain
 
@@ -95,8 +95,32 @@ The corollaries using ProVerif-shaped eligibility add the applicable registratio
 
 The LQ-F variants repeat the confidentiality argument after the run reveals the specified Ed25519 identity seeds and DH scalars, retaining the ML-KEM secrets, roots, chains and plaintexts as private. The root candidate term includes post-run HMAC queries: $(q_{\mathrm{accept}}+q_{\mathrm{finish}}+q_{\mathrm{hmac}}+q_{\mathrm{hmac},2})/2^{256}$. The post adversary remains classical; these are later-disclosure confidentiality claims, without quantum/QROM or later-authentication claims. The exact reveal and its exceptions are in [the experiment guide](https://github.com/0xd6cb6d73/beaconcrypt/blob/e9f5048b8e27144ef3648aa06b09bd063baa38d7/doc/impl/deployment-experiment.md#later-quantum-mode-lq-f).
 
+## Native mandatory ML authentication and populated AD281
+
+The separate native endpoint [`RegistrationNativeProductionSecurity.ceapp_bound`](lean/BeaconcryptCore/Computational/RegistrationNativeProductionSecurity.lean) bounds the broad original CE-APP event of the generated native profile in publication mode. It executes the actual constructor, local ML credential generation, mandatory Init and response authentication callbacks, populated AD281 bindings, both protocol roles and the unchanged original raw/secrecy ledger. Let $q=q_{\mathrm{build}}+q_{\mathrm{finish}}$ and $\mathcal G_N=\mathrm{Fin}(q_{\mathrm{accept}})\times\mathrm{Fin}(q_{\mathrm{create}}+1)$. Its bound has the following form:
+
+$$
+\Pr[\mathrm{CE\text{-}APP}_{\mathrm{native}}]
+\le \varepsilon_{\mathrm{Ed}}
++\sum_{g\in\mathcal G_N}\left(
+\varepsilon_{\mathrm{key},g}+\varepsilon_{\mathrm{KEM},g}
++2\left[\varepsilon_{\mathrm{recovery},g}+q\,256^{-160}+q\,256^{-32}\right]
++\varepsilon_{\mathrm{records},g}+256^{-\ell}
+\right).
+$$
+
+Here $\varepsilon_{\mathrm{Ed}}$ is the global real-source Ed25519 identity-origin sum, charged outside the single canonical target sum. Each target's key term contains the explicit ordinary related-input family advantage and the five primitive key-schedule losses summed over at most $q$ admitted material demands. The family advantage remains an explicit loss whose smallness requires its corresponding related-input assumption. Each KEM term is one concrete whole-client ordinary IND-CCA advantage plus one unconditional correctness error. Each recovery term is the explicit PRF advantage of one suffix-key recovery tester whose adversary samples the entire honest startup and KEM prior; the displayed factor two also doubles both guessing allowances. This additional primitive family is $F_k(h)=\operatorname{fromRoot}(\mathrm{source},\operatorname{nativeRoot}(\mathrm{source},h\mathbin{\|}k))$, with a uniform 32-byte key $k$, an adaptive 160-byte head $h$ and a complete 108-byte answer. Its smallness is an explicit composite-family PRF requirement, beyond ordinary HMAC PRF security. The record term is the genuine-prior expectation of the three concrete, exactly billed HMAC/Extract, CTX integrity and IND-dollar privacy losses. These expected record advantages remain context indexed in the theorem.
+
+The proof derives the original target's protected input and successful installation ordinal from its actual monitored path, then derives the same claimed physical handle's hidden origin in the actual selective execution. The final origin-aware observer is carried through every record hop before applying the byte-accurate fresh-message bound. Constructor and ML-generation coin caps, supported-prior callback `Frame` allowances, both wire readback contracts, the source identity conversion, full key-schedule correctness, functional decapsulation and short-signature rejection remain explicit conditions. All Ready, prefix-count, installation-origin and source-game joins are proved internally. This native endpoint is an ordinary CE-APP claim; the earlier later-disclosure and other headline statements retain their own stated profiles.
+
+## Raw CBOR headline profile
+
+The source14 raw-CBOR profile now has named [`ce_app`](lean/BeaconcryptCore/Computational/CborRawHeadlineApp.lean), [`ce_or_s2b` and `ce_or_b2s`](lean/BeaconcryptCore/Computational/CborRawHeadlineOrigin.lean), and [`ce_lor`](lean/BeaconcryptCore/Computational/CborRawHeadlineLorSecurity.lean) bounds. Its compiler preserves the complete original event ledger and raw returned bytes while executing separate registration and ordinary-record writers, including failed-writer poststates and the original private test/fresh draws. The bounds consume actual primitive reductions, the explicit Beacon-side KEM/correctness/guessing anomaly, and the failed-publication term $2RS/2^{512}$ where applicable; CE-APP uses $256^{-\ell}$.
+
+This is the legacy source14 registration profile, with its original ML-field layout. It is distinct from the native mandatory-ML CE-APP experiment above. Concrete codec, canonical readback, routing and source contracts remain explicit at the raw-CBOR boundary.
+
 ## Relationship to implementation
 
 The source-game equalities preserve full returned values and state under their codec and interpreter contracts. Their connection to unextracted adapter code includes reviewed Rust-to-Lean transcriptions; primitive implementations, compiler behavior, side channels, physical erasure, persistence, snapshots and restoration remain outside this proof. The resource bills bound coins and oracle calls, not running time.
 
-Two current limits prevent reading this note as a theorem about the complete current wire implementation. First, the global games retain reserved-zero ML fingerprint fields in AD281; local authentication/extraction results do not yet compose mandatory ML verification and populated fingerprints into those games. Second, raw CBOR registration uses a different writer from ordinary records; its adaptive source, public-representation and named-event transfers into the existing headline compiler remain obligations. These limits are documented in [the computational record composition analysis](https://github.com/0xd6cb6d73/beaconcrypt/blob/e9f5048b8e27144ef3648aa06b09bd063baa38d7/doc/formal-verification-analysis.md#core-lifecycle-extraction-computational-record-composition-2026-10-25), [the CBOR adaptation record](https://github.com/0xd6cb6d73/beaconcrypt/blob/e9f5048b8e27144ef3648aa06b09bd063baa38d7/doc/impl/cbor-proof-adaptation.md#adaptive-compiler-and-remaining-security-scope) and [the trusted boundary](trusted-boundary.md). They do not change the reductions above for their stated logical experiment.
+The logical profiles above retain their stated primitive, codec, source and resource contracts. The native mandatory-ML result covers its broad ordinary CE-APP event; the source14 raw-CBOR and later-disclosure results have their separately identified scope. Concrete adapter, parser and primitive implementation correspondence remains part of the reviewed trust boundary in [trusted-boundary.md](trusted-boundary.md).

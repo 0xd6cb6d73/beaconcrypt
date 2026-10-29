@@ -1,0 +1,161 @@
+-- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.RegistrationNativeKemEarlyGame
+import BeaconcryptCore.Computational.PqxdhKemCorrectnessStopped
+
+/-! The whole-program early candidate replacement has one ordinary CCA advantage and one unconditional correctness error. Selected exact-ciphertext decapsulations are covered before and after the getter; no temporal eligibility restriction is introduced. -/
+open OracleComp OracleSpec CoreModels Aeneas ENNReal
+set_option autoImplicit false
+set_option backward.isDefEq.respectTransparency false
+namespace BeaconcryptCore.Computational.RegistrationNativeKemEarlyCorrectness
+open PqxdhKemIndCca
+open PqxdhInitializerSecrecy
+open RegistrationNativeKemInterface (Spec)
+open RegistrationNativeKemGame (Context)
+open RegistrationNativeKemTotalChallenge (sourcePrepare)
+open RegistrationNativeKemEarlyGame (sourcePost)
+variable {κ ι KemSK Auxiliary : Type} {ambient : OracleSpec κ} {base : OracleSpec ι}
+
+noncomputable def correctnessError (baseImpl : QueryImpl base ProbComp)
+    (kem : MlKemScheme (baseSpec := base) (SK := KemSK)) : ℝ :=
+  (𝒟[simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)] {true}).toReal
+
+noncomputable def branch (baseImpl : QueryImpl base ProbComp) (kem : MlKemScheme (baseSpec := base) (SK := KemSK))
+    (other : QueryImpl ambient (StateT Auxiliary ProbComp)) (initial : ProbComp Auxiliary)
+    (work : OracleComp (Spec ambient KemSK) Bool) (count : Nat) (selected : Fin (count + 1)) (real : Bool) :
+    ProbComp Bool := do
+  let chosen ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
+  let context ← sourcePrepare baseImpl kem other initial (pure false) count selected 0 chosen
+  let pair ← simulateQ (kemAmbientImpl baseImpl) (kem.encaps chosen.1)
+  let uniform ← $ᵗ MlKemSharedSecret
+  PqxdhDynamicKemPost.evaluate baseImpl kem chosen.2 pair.1
+    (RegistrationNativeKemEarlyGame.resume kem other work selected ⟨chosen.1, pair.1, context⟩ (if real then pair.2 else uniform))
+
+noncomputable def sourceReal (baseImpl : QueryImpl base ProbComp) (kem : MlKemScheme (baseSpec := base) (SK := KemSK))
+    (other : QueryImpl ambient (StateT Auxiliary ProbComp)) (initial : ProbComp Auxiliary)
+    (work : OracleComp (Spec ambient KemSK) Bool) (count : Nat) (selected : Fin (count + 1)) :
+    ProbComp Bool := do
+  let chosen ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
+  let context ← sourcePrepare baseImpl kem other initial (pure false) count selected 0 chosen
+  let pair ← simulateQ (kemAmbientImpl baseImpl) (kem.encaps chosen.1)
+  let _ ← $ᵗ MlKemSharedSecret
+  sourcePost baseImpl kem other selected chosen context pair.1 pair.2 work
+
+/-- The executable native CCA branch is exactly its complete source prephase and blocked postphase, retaining all private state. -/
+theorem branch_source (baseImpl : QueryImpl base ProbComp) (kem : MlKemScheme (baseSpec := base) (SK := KemSK))
+    (other : QueryImpl ambient (StateT Auxiliary ProbComp)) (initial : ProbComp Auxiliary)
+    (work : OracleComp (Spec ambient KemSK) Bool) (count : Nat) (selected : Fin (count + 1)) (real : Bool) :
+    RegistrationNativeKemEarlyGame.branch baseImpl kem other initial work count selected real =
+      branch baseImpl kem other initial work count selected real := by
+  simp only [RegistrationNativeKemEarlyGame.branch, oneKeyBranchMain, oneKeyPrefix, oneKeyFinish,
+    RegistrationNativeKemEarlyGame.adversary, branch, simulateQ_bind, bind_assoc, pure_bind,
+    runtimeOfImpl_liftProbComp, simulateQ_kemAmbient_liftProbComp]
+  apply bind_congr
+  intro chosen
+  have same := RegistrationNativeKemChallenge.prepare_source baseImpl kem other initial (pure false) count selected 0 chosen
+  change simulateQ (kemAmbientImpl baseImpl)
+    (simulateQ (kem.IND_CCA_preChallengeImpl chosen.2)
+      (RegistrationNativeKemGame.prepare baseImpl kem other initial (pure false) count selected 0 chosen.1)) = _ at same
+  rw [same]
+  rfl
+
+/-- The single ordinary correctness-error event covers every repeated native use of the selected challenge ciphertext. No perfect-correctness premise or conditioned error is introduced. -/
+theorem branch_real_error (baseImpl : QueryImpl base ProbComp) (kem : MlKemScheme (baseSpec := base) (SK := KemSK))
+    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem)
+    (other : QueryImpl ambient (StateT Auxiliary ProbComp)) (initial : ProbComp Auxiliary)
+    (work : OracleComp (Spec ambient KemSK) Bool) (count : Nat) (selected : Fin (count + 1)) :
+    discreteDistance (branch baseImpl kem other initial work count selected true)
+      (sourceReal baseImpl kem other initial work count selected) ≤ correctnessError baseImpl kem := by
+  have point : ∀ (chosen : MlKem768PublicKey × KemSK) (context : Context ambient KemSK Auxiliary count)
+      (pair : MlKem768Ciphertext × MlKemSharedSecret),
+      discreteDistance (do
+          let uniform ← $ᵗ MlKemSharedSecret
+          PqxdhDynamicKemPost.evaluate baseImpl kem chosen.2
+            pair.1 (RegistrationNativeKemEarlyGame.resume kem other work selected ⟨chosen.1, pair.1, context⟩ (if true then pair.2 else uniform)))
+        (do
+          let _ ← $ᵗ MlKemSharedSecret
+          sourcePost baseImpl kem other selected chosen context pair.1 pair.2 work) ≤
+      (𝒟[simulateQ (kemAmbientImpl baseImpl) (do
+          let recovered ← kem.decaps chosen.2 pair.1
+          pure (decide (recovered ≠ some pair.2)))] {true}).toReal := by
+    intro chosen context pair
+    by_cases good : functional.result chosen.2 pair.1 = some pair.2
+    · have agreement : kem.decaps chosen.2 pair.1 = pure (some pair.2) :=
+        (functional.exact chosen.2 pair.1).trans (congrArg pure good)
+      have same := RegistrationNativeKemEarlyGame.resume_source baseImpl kem other selected chosen context pair.1 pair.2 work
+        agreement
+      simp only [↓reduceIte, same, discreteDistance_self]
+      exact ENNReal.toReal_nonneg
+    · have bad : (𝒟[simulateQ (kemAmbientImpl baseImpl) (do
+          let recovered ← kem.decaps chosen.2 pair.1
+          pure (decide (recovered ≠ some pair.2)))] {true}).toReal = 1 := by
+        rw [functional.exact]
+        simp [good]
+      rw [bad]
+      exact discreteDistance_le_one _ _
+  unfold branch sourceReal
+  refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind _ _ _
+    (fun pair => simulateQ (kemAmbientImpl baseImpl)
+      (PqxdhKemCorrectnessStopped.keyError kem pair.1 pair.2))
+    (fun result => result = true) ?_) (le_of_eq ?_)
+  · intro chosen
+    refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind _ _ _
+      (fun _ => simulateQ (kemAmbientImpl baseImpl)
+        (PqxdhKemCorrectnessStopped.keyError kem chosen.1 chosen.2))
+      (fun result => result = true) ?_) (le_of_eq ?_)
+    · intro context
+      refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind _ _ _
+        (fun pair => simulateQ (kemAmbientImpl baseImpl) (do
+          let recovered ← kem.decaps chosen.2 pair.1
+          pure (decide (recovered ≠ some pair.2))))
+        (fun result => result = true) ?_) (le_of_eq ?_)
+      · intro pair
+        rw [prEvent_eq_evalDist_singleton]
+        exact point chosen context pair
+      · simp only [PqxdhKemCorrectnessStopped.keyError, simulateQ_bind]
+    · rw [(OracleComp.EvalDistEq.bind_const _ _).prEvent_eq (fun result => result = true)]
+  · rw [correctnessError, ← prEvent_eq_evalDist_singleton _ true,
+      PqxdhKemCorrectnessStopped.error_keygen, simulateQ_bind]
+
+
+/-- The actual native selected-getter source admits a genuine two-sided ordinary KEM hop with coefficient-one CCA and correctness losses. -/
+theorem source_close (baseImpl : QueryImpl base ProbComp) (kem : MlKemScheme (baseSpec := base) (SK := KemSK))
+    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem)
+    (other : QueryImpl ambient (StateT Auxiliary ProbComp)) (initial : ProbComp Auxiliary)
+    (work : OracleComp (Spec ambient KemSK) Bool) (count : Nat) (selected : Fin (count + 1)) :
+    (sourceReal baseImpl kem other initial work count selected).boolDistance
+      (RegistrationNativeKemEarlyGame.branch baseImpl kem other initial work count selected false) ≤
+    (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+      (RegistrationNativeKemEarlyGame.adversary baseImpl kem other initial work count selected).toINDCCA).toReal +
+      correctnessError baseImpl kem := by
+  have hop := RegistrationNativeKemEarlyGame.branch_distance baseImpl kem other initial work count selected
+  have close : (sourceReal baseImpl kem other initial work count selected).boolDistance
+      (RegistrationNativeKemEarlyGame.branch baseImpl kem other initial work count selected true) ≤
+      correctnessError baseImpl kem := by
+    rw [ProbComp.boolDistance_comm, branch_source]
+    refine le_trans ?_ (branch_real_error baseImpl kem functional other initial work count selected)
+    rw [ProbComp.boolDistance]
+    simpa only [← prEvent_eq_evalDist_singleton] using abs_prEvent_toReal_sub_le_discreteDistance _ _
+  have triangle := ProbComp.boolDistance_triangle
+    (sourceReal baseImpl kem other initial work count selected)
+    (RegistrationNativeKemEarlyGame.branch baseImpl kem other initial work count selected true)
+    (RegistrationNativeKemEarlyGame.branch baseImpl kem other initial work count selected false)
+  rw [hop] at triangle
+  linarith
+
+end BeaconcryptCore.Computational.RegistrationNativeKemEarlyCorrectness
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeKemEarlyCorrectness.branch_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeKemEarlyCorrectness.branch_source
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeKemEarlyCorrectness.branch_real_error' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeKemEarlyCorrectness.branch_real_error
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeKemEarlyCorrectness.source_close' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeKemEarlyCorrectness.source_close

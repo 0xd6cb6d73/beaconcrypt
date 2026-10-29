@@ -46,9 +46,10 @@ noncomputable def stripOwner (owner : PqxdhRegistrationSchedule.Owner KemSK) : P
       { owner with beacon := { owner.beacon with phase := .established control associatedData placeholderKernel } }
   | _ => owner
 
-/-- A Server peer with its record coordinate stripped: the kernel is the placeholder. -/
-noncomputable def stripPeer (peer : RawCtxServerRouting.Peer Unit) : RawCtxServerRouting.Peer Unit :=
-  { peer with kernel := placeholderKernel }
+/-- The legacy registration view forgets peer metadata and replaces its record kernel by the placeholder; actual AD coherence is retained separately by the join invariant. -/
+noncomputable def stripPeer {PeerMetadata : Type}
+    (peer : RawCtxServerRouting.Peer PeerMetadata) : RawCtxServerRouting.Peer Unit :=
+  ⟨peer.identity, placeholderKernel, ()⟩
 
 /-- The registration state with every record coordinate stripped (commitment reply-final 4.4, critique M6): every Server peer kernel and every established owner kernel is the placeholder, and the CTX cache is empty. -/
 noncomputable def strip (state : PqxdhRegistrationSchedule.State KemSK) : PqxdhRegistrationSchedule.State KemSK :=
@@ -321,7 +322,9 @@ theorem stripOwner_idem (owner : PqxdhRegistrationSchedule.Owner KemSK) : stripO
   cases h : owner.beacon.phase <;> simp only [h]
 
 /-- Stripping a peer twice strips it once. -/
-theorem stripPeer_comp : stripPeer ∘ stripPeer = stripPeer := rfl
+theorem stripPeer_comp {PeerMetadata : Type} :
+    stripPeer (PeerMetadata := Unit) ∘ stripPeer (PeerMetadata := PeerMetadata) =
+      stripPeer (PeerMetadata := PeerMetadata) := rfl
 
 /-- Stripping owners twice strips them once. -/
 theorem stripOwner_comp : stripOwner (KemSK := KemSK) ∘ stripOwner = stripOwner :=

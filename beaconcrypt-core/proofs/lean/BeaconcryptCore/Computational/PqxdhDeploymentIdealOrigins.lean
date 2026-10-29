@@ -124,8 +124,8 @@ theorem aWorldStep_run (env : Environment n E) (query : PqxdhDeploymentInterface
           ((PqxdhRecordLiftInterface.native env query).run e)).run state := rfl
 
 /-- Erasing the annotation of an annotated joint step gives the joint step. -/
-theorem aWorldStep_erase {Bk : Type} (env : Environment n (EnvState KemSK Bk))
-    (query : PqxdhDeploymentInterface.Spec.Domain) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n)
+theorem aWorldStep_erase (env : Environment n (E))
+    (query : PqxdhDeploymentInterface.Spec.Domain) (e : E) (w : PqxdhRecordLiftWorld.State n)
     (o : Origins n) :
     (fun result => (result.1, (result.2.1, result.2.2.1))) <$> (aWorldStep setup codec route env query).run (e, (w, o)) =
       (worldStep setup codec route env query).run (e, w) := by
@@ -172,8 +172,8 @@ theorem query_free (request : (WorldSpec n).Domain) (other : isAnnot request = f
   (isQueryBoundP_query_iff _ _ _).mpr fun annotating => by simp [other] at annotating
 
 /-- A query that is not a registration command keeps the annotation: the annotated joint step is the joint step with the annotation unchanged. -/
-theorem aWorldStep_fixed {Bk : Type} (env : Environment n (EnvState KemSK Bk))
-    (query : PqxdhDeploymentInterface.Spec.Domain) (fixed : IsFixed query) (e : EnvState KemSK Bk)
+theorem aWorldStep_fixed (env : Environment n (E))
+    (query : PqxdhDeploymentInterface.Spec.Domain) (fixed : IsFixed query) (e : E)
     (w : PqxdhRecordLiftWorld.State n) (o : Origins n) :
     (aWorldStep setup codec route env query).run (e, (w, o)) =
       (fun result => (result.1, (result.2.1, (result.2.2, o)))) <$> (worldStep setup codec route env query).run (e, w) := by
@@ -191,7 +191,7 @@ end Joint
 /-! ### Keeping an invariant on the annotated record world with the ledger -/
 
 section Keeps
-variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response Bk : Type}
+variable {E : Type} {ι : Type} {baseSpec : OracleSpec ι} {Reader Response Bk : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
 
 /-- Every annotated joint step from an admissible joint state (`Good` and the stable predicate `inv`) is admissible: its annotation erases to a joint step (`PqxdhDeploymentEnvironmentJoin.worldStep_keeps`). -/
@@ -210,8 +210,8 @@ theorem aWorldStep_good (env : Environment n (EnvState KemSK Bk))
     holds _ erased
 
 /-- A query that is not a registration command keeps the environment state and the World's fixed view. -/
-theorem worldStep_fixedView (env : Environment n (EnvState KemSK Bk)) (query : PqxdhDeploymentInterface.Spec.Domain)
-    (fixed : IsFixed query) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n) :
+theorem worldStep_fixedView (env : Environment n (E)) (query : PqxdhDeploymentInterface.Spec.Domain)
+    (fixed : IsFixed query) (e : E) (w : PqxdhRecordLiftWorld.State n) :
     ∀ result ∈ support ((worldStep setup codec route env query).run (e, w)),
       result.2.1 = e ∧ fixedView result.2.2 = fixedView w := by
   intro result member
@@ -634,7 +634,7 @@ theorem update_used (used : PqxdhRecordLiftInterface.Slot n → Role → Bool) (
 
 open PqxdhRecordLiftInterface (KernelRef BeaconShell) in
 /-- A Server install keeps the annotation invariant with its reply annotated, and a known install keeps the annotation. -/
-theorem installServer_annInv (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+theorem installServer_annInv (keyId : Std.U64) (identity : PqxdhRecordLiftInterface.PeerBinding) (ref : KernelRef n)
     (w : PqxdhRecordLiftWorld.State n) (o : Origins n) (holds : AnnInv w o) :
     ∀ result ∈ support ((PqxdhRecordLiftWorld.installServer keyId identity ref).run w),
       AnnInv result.2 (annotate (.inr (.inl (.inr (.installServer keyId identity ref)))) result.1 o) ∧

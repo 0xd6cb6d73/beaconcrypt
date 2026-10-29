@@ -37,8 +37,10 @@ def StoredKernel.erase (interpret : Interpretation n) : StoredKernel n → Concr
   | .hidden slot kernel => interpret slot kernel
 
 structure Peer (n : Nat) where
-  identity : RawCtxServerRouting.Identity
+  binding : PeerBinding
   kernel : StoredKernel n
+
+def Peer.identity (peer : Peer n) : RawCtxServerRouting.Identity := peer.binding.identity
 
 structure Server (n : Nat) where
   sender : Std.U64
@@ -50,11 +52,14 @@ inductive Phase (n : Nat) where
   | inactive (phase : InactivePhase)
   | established (shell : BeaconShell) (kernel : StoredKernel n)
 
-def Peer.erase (interpret : Interpretation n) (peer : Peer n) : RawCtxServerRouting.Peer Unit :=
-  ⟨peer.identity, peer.kernel.erase interpret, ()⟩
+noncomputable def Peer.erase (interpret : Interpretation n)
+    (serverIdentity : RawCtxServerRouting.Identity) (peer : Peer n) :
+    RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize) :=
+  ⟨peer.identity, peer.kernel.erase interpret, peer.binding.associatedArray serverIdentity⟩
 
-def Server.erase (interpret : Interpretation n) (server : Server n) : PqxdhRecordLiftWorld.Server :=
-  ⟨server.sender, ⟨⟨server.identity, fun keyId => (server.peers keyId).map (Peer.erase interpret), ()⟩,
+noncomputable def Server.erase (interpret : Interpretation n) (server : Server n) : PqxdhRecordLiftWorld.Server :=
+  ⟨server.sender, ⟨⟨server.identity,
+    fun keyId => (server.peers keyId).map (Peer.erase interpret server.identity), ()⟩,
     server.rawAttempts⟩⟩
 
 def Phase.erase (interpret : Interpretation n) : Phase n → PqxdhRecordLiftBeacon.Phase
@@ -82,7 +87,7 @@ def origins (state : State n) : PqxdhRecordLiftOrigins.Origins n :=
     fun owner => (state.owners[owner]?).bind Phase.origin⟩
 
 /-- Structural full-state erasure; the separate chain table is interpreted through the supplied map, never exposed as a public observation. -/
-def erase (interpret : Interpretation n) (state : State n) : PqxdhRecordLiftOrigins.State n :=
+noncomputable def erase (interpret : Interpretation n) (state : State n) : PqxdhRecordLiftOrigins.State n :=
   (⟨state.server.map (Server.erase interpret), state.owners.map (Phase.erase interpret),
     state.ownerRaw, state.produced, state.primitive, state.seeds, state.used⟩, origins state)
 
@@ -134,7 +139,7 @@ theorem erase_peer_exists (interpret : Interpretation n) (state : State n)
     ∃ server peer, (erase interpret state).1.server = some server ∧
       server.records.server.peers keyId = some peer := by
   obtain ⟨server, peer, kernel, serverFound, found, _⟩ := peer_origin_exists state keyId slot tagged
-  exact ⟨server.erase interpret, peer.erase interpret,
+  exact ⟨server.erase interpret, peer.erase interpret server.identity,
     by simp [erase, serverFound], by simp [Server.erase, found]⟩
 
 /-- Full-state erasure retains the exact established shell at every hidden Beacon tag. -/
@@ -187,24 +192,25 @@ theorem chain_extension_agrees (state : State n)
     (seedExtension_agrees state left right hleft hright coordinate.slot present)
 
 /-- Private constructor peers supplied by the environment are caller-known source kernels. -/
-def Peer.fromKnown (peer : RawCtxServerRouting.Peer Unit) : Peer n :=
-  ⟨peer.identity, .known peer.kernel⟩
+def Peer.fromKnown (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize)) : Peer n :=
+  ⟨⟨peer.identity, some peer.metadata⟩, .known peer.kernel⟩
 
 def Server.fromKnown (server : PqxdhRecordLiftWorld.Server) : Server n :=
   ⟨server.sender, server.records.server.identity,
     fun keyId => (server.records.server.peers keyId).map Peer.fromKnown, server.records.rawAttempts⟩
 
 /-- Importing a known peer neither changes nor invents any native field. -/
-theorem known_peer_erasure (interpret : Interpretation n) (peer : RawCtxServerRouting.Peer Unit) :
-    Peer.erase interpret (Peer.fromKnown peer) = peer := by
+theorem known_peer_erasure (interpret : Interpretation n) {serverIdentity : RawCtxServerRouting.Identity}
+    (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize)) :
+    Peer.erase interpret serverIdentity (Peer.fromKnown peer) = peer := by
   cases peer with
-  | mk identity kernel metadata => cases metadata; rfl
+  | mk identity kernel metadata => rfl
 
 /-- The complete constructor-supplied Server map, outer sender and raw counter survive known import. -/
 theorem known_server_erasure (interpret : Interpretation n) (server : PqxdhRecordLiftWorld.Server) :
     Server.erase interpret (Server.fromKnown server) = server := by
   have peers : (fun keyId => ((server.records.server.peers keyId).map Peer.fromKnown).map
-      (Peer.erase interpret)) = server.records.server.peers := by
+      (Peer.erase interpret server.records.server.identity)) = server.records.server.peers := by
     funext keyId
     cases found : server.records.server.peers keyId <;> simp [known_peer_erasure]
   cases server with
@@ -224,12 +230,11 @@ theorem known_server_origins (server : PqxdhRecordLiftWorld.Server) (keyId : Std
     simp [Server.fromKnown, found, Peer.fromKnown, StoredKernel.origin]
 
 /-- The same private constructor handoff, importing its existing source peers as caller-known kernels. Duplicate initialization cannot reset any field. -/
-def initializeServer (created : PqxdhLiveServerConstruction.Created Unit) :
+noncomputable def initializeServer (created : PqxdhLiveServerConstruction.Created Unit) :
     StateT (State n) ProbComp Unit := fun state => match state.server with
   | some _ => pure ((), state)
   | none => pure ((), { state with server := some (Server.fromKnown
-      ⟨created.server.server.metadata.sender,
-        ⟨⟨created.server.server.identity, created.server.server.peers, ()⟩, 0⟩⟩) })
+      (PqxdhRecordLiftWorld.importedServer created)) })
 
 /-- Private initialization has exactly the original complete World effect and keeps the reply-derived provenance unchanged. -/
 theorem initialize_erasure (interpret : Interpretation n)
@@ -453,9 +458,12 @@ noncomputable def project (state : State n) : PqxdhRecordLiftOrigins.State n :=
 theorem peer_interpretation_agrees (state : State n)
     (left right : PqxdhRecordLiftChainTable.Seeds (Slot n))
     (hleft : SeedExtension state left) (hright : SeedExtension state right)
-    (peer : Peer n) (scopeOK : KernelScoped state peer.kernel) :
-    Peer.erase (interpret left state.chain) peer = Peer.erase (interpret right state.chain) peer :=
-  congrArg (fun kernel => (⟨peer.identity, kernel, ()⟩ : RawCtxServerRouting.Peer Unit))
+    (peer : Peer n) (scopeOK : KernelScoped state peer.kernel)
+    {serverIdentity : RawCtxServerRouting.Identity} :
+    Peer.erase (interpret left state.chain) serverIdentity peer =
+      Peer.erase (interpret right state.chain) serverIdentity peer :=
+  congrArg (fun kernel => (⟨peer.identity, kernel, peer.binding.associatedArray serverIdentity⟩ :
+        RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize)))
     (stored_interpretation_agrees state left right hleft hright peer.kernel scopeOK)
 
 theorem server_interpretation_agrees (state : State n)
@@ -464,8 +472,10 @@ theorem server_interpretation_agrees (state : State n)
     (server : Server n)
     (scopeOK : ∀ keyId peer, server.peers keyId = some peer → KernelScoped state peer.kernel) :
     Server.erase (interpret left state.chain) server = Server.erase (interpret right state.chain) server := by
-  have peers : (fun keyId => (server.peers keyId).map (Peer.erase (interpret left state.chain))) =
-      (fun keyId => (server.peers keyId).map (Peer.erase (interpret right state.chain))) := by
+  have peers : (fun keyId => (server.peers keyId).map
+      (Peer.erase (interpret left state.chain) server.identity)) =
+      (fun keyId => (server.peers keyId).map
+        (Peer.erase (interpret right state.chain) server.identity)) := by
     funext keyId
     cases found : server.peers keyId with
     | none => rfl
@@ -567,7 +577,7 @@ def BeaconReady (state : State n) (owner : Nat) : Prop :=
 open Classical
 
 /-- Source admission precedes seed resolution. Installing a private peer stores its origin and logical kernel, while retaining the exact immutable Server sender and identity. -/
-noncomputable def installServer (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+noncomputable def installServer (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) : StateT (State n) ProbComp Bool := fun state =>
   match state.server with
   | none => pure (false, state)
@@ -742,7 +752,7 @@ theorem installBeacon_scoped (owner : Nat) (shell : BeaconShell) (ref : KernelRe
     exact scopeOK
 
 /-- Both Server admission branches preserve scope, including a caller-known replacement value. -/
-theorem installServer_scoped (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+theorem installServer_scoped (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (state : State n) (scopeOK : Scoped state) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) : Scoped result.2 := by
   simp only [installServer, StateT.run] at supported
@@ -932,9 +942,9 @@ theorem server_update_erasure (interpret : Interpretation n) (server : Server n)
       { Server.erase interpret server with records :=
         { (Server.erase interpret server).records with server :=
           { (Server.erase interpret server).records.server with
-            peers := Function.update (Server.erase interpret server).records.server.peers keyId (some (Peer.erase interpret peer)) } } } := by
-  have peers : (fun target => (Function.update server.peers keyId (some peer) target).map (Peer.erase interpret)) =
-      Function.update (fun target => (server.peers target).map (Peer.erase interpret)) keyId (some (Peer.erase interpret peer)) := by
+            peers := Function.update (Server.erase interpret server).records.server.peers keyId (some (Peer.erase interpret server.identity peer)) } } } := by
+  have peers : (fun target => (Function.update server.peers keyId (some peer) target).map (Peer.erase interpret server.identity)) =
+      Function.update (fun target => (server.peers target).map (Peer.erase interpret server.identity)) keyId (some (Peer.erase interpret server.identity peer)) := by
     funext target
     by_cases same : target = keyId <;> simp [same]
   simp only [Server.erase, peers]
@@ -953,7 +963,7 @@ theorem resolve_server_erasure (role : Role) (ref : KernelRef n) (state : State 
   exact Option.some.inj same
 
 
-theorem installServer_finish_erasure (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem installServer_finish_erasure (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) (state : State n) (scopeOK : Scoped state)
     (server : Server n) (existing : state.server = some server) (result : StoredKernel n × State n)
     (supported : result ∈ support ((resolve .server ref).run state)) :
@@ -964,7 +974,8 @@ theorem installServer_finish_erasure (keyId : Std.U64) (identity : RawCtxServerR
           { (Server.erase (interpret (cachedSeeds state) state.chain) server).records with server :=
             { (Server.erase (interpret (cachedSeeds state) state.chain) server).records.server with
               peers := Function.update (Server.erase (interpret (cachedSeeds state) state.chain) server).records.server.peers
-                keyId (some ⟨identity, storedView result.2 result.1, ()⟩) } } } } := by
+                keyId (some ⟨identity.identity, storedView result.2 result.1,
+                  identity.associatedArray server.identity⟩) } } } } := by
   rw [world_server_replace, server_update_erasure, world_markUsed]
   have stable := resolve_server_erasure .server ref state scopeOK server existing result supported
   have marked : interpret (cachedSeeds (markUsed result.2 .server ref)) (markUsed result.2 .server ref).chain =
@@ -975,7 +986,7 @@ theorem installServer_finish_erasure (keyId : Std.U64) (identity : RawCtxServerR
 
 
 /-- Labeled Server installation returns the exact native success/refusal and full World poststate. -/
-theorem installServer_erasure (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem installServer_erasure (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) (state : State n) (scopeOK : Scoped state) :
     Prod.map id world <$> (installServer keyId identity ref).run state =
       (PqxdhRecordLiftWorld.installServer keyId identity ref).run (world state) := by
@@ -1044,7 +1055,7 @@ theorem initialize_scoped (created : PqxdhLiveServerConstruction.Created Unit) (
       · intro server existing keyId peer present
         simp only [Option.some.injEq] at existing
         subst server
-        simp only [Server.fromKnown] at present
+        simp only [Server.fromKnown, PqxdhRecordLiftWorld.importedServer] at present
         cases entry : created.server.server.peers keyId with
         | none => simp [entry] at present
         | some native =>
@@ -1325,7 +1336,7 @@ theorem installBeacon_ready (owner : Nat) (shell : BeaconShell) (ref : KernelRef
     exact ready
 
 /-- Server installation preserves every old peer certificate and installs the new one at exactly the vacant handle. -/
-theorem installServer_ready (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+theorem installServer_ready (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (state : State n) (ready : Ready state) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) : Ready result.2 := by
   simp only [installServer, StateT.run] at supported
@@ -1381,7 +1392,7 @@ theorem initialize_ready (created : PqxdhLiveServerConstruction.Created Unit) (s
       · intro server existing keyId peer present
         simp only [Option.some.injEq] at existing
         subst server
-        simp only [Server.fromKnown] at present
+        simp only [Server.fromKnown, PqxdhRecordLiftWorld.importedServer] at present
         cases entry : created.server.server.peers keyId with
         | none => simp [entry] at present
         | some native =>
@@ -1486,7 +1497,7 @@ theorem installBeacon_tableGood (source : PqxdhJointKdfGame.FixedHkdfSha512NoSal
     exact good
 
 theorem installServer_tableGood (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+    (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (state : State n) (good : TableGood source state) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) : TableGood source result.2 := by
   simp only [installServer, StateT.run] at supported
@@ -2035,7 +2046,7 @@ theorem ownerRun_real {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Respo
 
 /-- The source peer identity builds AD in Server/Beacon order; assigned target ID and immutable local sender are distinct. -/
 noncomputable def serverOwner (server : Server n) (keyId : Std.U64) (peer : Peer n) : Owner n :=
-  ⟨peer.kernel, keyId, RawCtxServerRouting.associatedBytes server.identity peer.identity, server.rawAttempts⟩
+  ⟨peer.kernel, keyId, peer.binding.associatedBytes server.identity, server.rawAttempts⟩
 
 def beaconOwner (shell : BeaconShell) (kernel : StoredKernel n) (rawAttempts : Nat) : Owner n :=
   ⟨kernel, shell.control.server_binding.identity_key_id, PqxdhRefinement.absBytes shell.associatedData, rawAttempts⟩
@@ -2136,13 +2147,14 @@ theorem server_table_mono (seeds : PqxdhRecordLiftChainTable.Seeds (Slot n))
     (before after : PqxdhRecordLiftChainTable.Table (Slot n)) (mono : before ≤ after)
     (server : Server n) (ready : ∀ keyId peer, server.peers keyId = some peer → StoredReady before peer.kernel) :
     Server.erase (interpret seeds after) server = Server.erase (interpret seeds before) server := by
-  have peers : (fun keyId => (server.peers keyId).map (Peer.erase (interpret seeds after))) =
-      (fun keyId => (server.peers keyId).map (Peer.erase (interpret seeds before))) := by
+  have peers : (fun keyId => (server.peers keyId).map (Peer.erase (interpret seeds after) server.identity)) =
+      (fun keyId => (server.peers keyId).map (Peer.erase (interpret seeds before) server.identity)) := by
     funext keyId
     cases found : server.peers keyId with
     | none => rfl
     | some peer =>
-        exact congrArg some (congrArg (fun kernel => RawCtxServerRouting.Peer.mk peer.identity kernel ())
+        exact congrArg some (congrArg (fun kernel => RawCtxServerRouting.Peer.mk peer.identity kernel
+          (peer.binding.associatedArray server.identity))
           (storedView_table_mono seeds before after mono peer.kernel (ready keyId peer found)))
   simp only [Server.erase, peers]
 
@@ -2322,47 +2334,44 @@ theorem beaconStep_erasure {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader 
 
 
 noncomputable def sourceServerOwner (server : PqxdhRecordLiftWorld.Server) (keyId : Std.U64)
-    (peer : RawCtxServerRouting.Peer Unit) : RawCtxWholeOwner.OwnerState Unit :=
-  ⟨RawCtxServerRouting.selectedOwner keyId
-    (RawCtxServerRouting.associatedBytes server.records.server.identity peer.identity) peer, server.records.rawAttempts⟩
+    (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize)) : RawCtxWholeOwner.OwnerState Unit :=
+  ⟨MldsaServerRouting.selected PqxdhRefinement.absBytes keyId peer, server.records.rawAttempts⟩
 
 def sourceServerPublish {Reply : Type} (server : PqxdhRecordLiftWorld.Server) (keyId : Std.U64)
-    (peer : RawCtxServerRouting.Peer Unit) (result : Reply × RawCtxWholeOwner.OwnerState Unit) :
-    Reply × RawCtxServerRouting.State Unit Unit :=
+    (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize)) (result : Reply × RawCtxWholeOwner.OwnerState Unit) :
+    Reply × RawCtxServerRouting.State Unit (Std.Array Std.U8 281#usize) :=
   (result.1, ⟨RawCtxServerRouting.putPeer server.records.server keyId peer result.2.owner.kernel, result.2.rawAttempts⟩)
 
 
 /-- Original Server send selects the same whole-owner call and reinstalls its exact result in the original peer map. -/
 theorem source_server_send (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (plaintext : Pqxdh.Bytes) (server : PqxdhRecordLiftWorld.Server)
-    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer Unit)
+    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize))
     (selected : server.records.server.peers keyId = some peer) :
-    (RawCtxServerMixed.serverImpl (fun _ => server.sender) route decode (.inl (plaintext, keyId))).run server.records =
+    (MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => server.sender) route decode (.inl (plaintext, keyId))).run server.records =
       sourceServerPublish server keyId peer <$>
         (RawCtxMixedOwner.ownerImpl server.sender decode (.inl plaintext)).run (sourceServerOwner server keyId peer) := by
-  simp only [RawCtxServerMixed.serverImpl, StateT.run, RawCtxServerMixed.sendServer,
-    RawCtxServerSend.sendServer_selected (fun _ => server.sender) plaintext keyId server.records peer selected,
-    bind_pure_comp, simulateQ_map, QueryImpl.simulateQ_compose,
-    RawCtxMixedOwner.ownerImpl, RawCtxMixedOwner.sendAdapter]
+  simp only [MldsaServerRouting.handler, StateT.run, MldsaServerRouting.send,
+    selected, bind_pure_comp]
   rfl
 
 /-- Original header routing and AD lookup select the same peer before invoking the complete raw owner operation. -/
 theorem source_server_raw (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (server : PqxdhRecordLiftWorld.Server)
-    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer Unit)
+    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize))
     (selected : server.records.server.peers keyId = some peer) (routed : route raw = some keyId) :
-    (RawCtxServerMixed.serverImpl (fun _ => server.sender) route decode (.inr raw)).run server.records =
+    (MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => server.sender) route decode (.inr raw)).run server.records =
       sourceServerPublish server keyId peer <$>
         (RawCtxMixedOwner.ownerImpl server.sender decode (.inr raw)).run (sourceServerOwner server keyId peer) := by
-  simp only [RawCtxServerMixed.serverImpl, StateT.run, RawCtxServerMixed.rawServer, routed,
-    RawCtxServerRouting.peerAssociatedData, selected, bind_pure_comp,
+  simp only [MldsaServerRouting.handler, StateT.run, MldsaServerRouting.receive, routed,
+    selected, bind_pure_comp,
     RawCtxMixedOwner.ownerImpl]
   rfl
 
 
 def worldServerPublish {Reply : Type} (tag : PqxdhDeploymentInterface.FrameTag)
     (state : PqxdhRecordLiftWorld.State n) (server : PqxdhRecordLiftWorld.Server)
-    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer Unit)
+    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize))
     (result : (Reply × RawCtxWholeOwner.OwnerState Unit) ×
       (PqxdhRecordLiftWorld.Primitive × List PqxdhDeploymentNative.Frame)) : Reply × PqxdhRecordLiftWorld.State n :=
   (result.1.1, PqxdhRecordLiftWorld.produce tag result.2.2
@@ -2383,7 +2392,7 @@ theorem serverPublish_erasure {Reply : Type} (tag : PqxdhDeploymentInterface.Fra
     (mono : state.chain ≤ result.2.1) (ready : Ready state) :
     Prod.map id world (serverPublish tag state server keyId peer result) =
       worldServerPublish tag (world state) (Server.erase (interpret (cachedSeeds state) state.chain) server)
-        keyId (Peer.erase (interpret (cachedSeeds state) state.chain) peer)
+        keyId (Peer.erase (interpret (cachedSeeds state) state.chain) server.identity peer)
           (ownerResult (cachedSeeds state) result) := by
   simp only [serverPublish, Prod.map, id_eq, world_produce, world_server_replace]
   have framed := world_recordFrame state result.2.1 result.2.2.1 mono ready
@@ -2407,9 +2416,9 @@ theorem world_server_selected {ι : Type} {baseSpec : OracleSpec ι} {KemSK Read
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (query : RawCtxServerMixed.SourceSpec.Domain) (state : PqxdhRecordLiftWorld.State n)
     (server : PqxdhRecordLiftWorld.Server) (existing : state.server = some server)
-    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer Unit)
+    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize))
     (work : OracleComp RawCtxMixedOwner.NativeSpec (RawCtxServerMixed.SourceSpec.Range query × RawCtxWholeOwner.OwnerState Unit))
-    (selected : (RawCtxServerMixed.serverImpl (fun _ => server.sender) route codec.frameRead query).run server.records =
+    (selected : (MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => server.sender) route codec.frameRead query).run server.records =
       sourceServerPublish server keyId peer <$> work) :
     (PqxdhRecordLiftWorld.serverStep setup codec route query).run state =
       worldServerPublish (PqxdhDeploymentNative.serverTag query) state server keyId peer <$>
@@ -2434,7 +2443,7 @@ theorem serverStep_send_erasure {ι : Type} {baseSpec : OracleSpec ι} {KemSK Re
     Prod.map id world <$> (serverStep (realPolicy setup codec) setup codec route (.inl (plaintext, keyId))).run state =
       (PqxdhRecordLiftWorld.serverStep setup codec route (.inl (plaintext, keyId))).run (world state) := by
   let nativeServer := Server.erase (interpret (cachedSeeds state) state.chain) server
-  let nativePeer := Peer.erase (interpret (cachedSeeds state) state.chain) peer
+  let nativePeer := Peer.erase (interpret (cachedSeeds state) state.chain) server.identity peer
   have nativeExisting : (world state).server = some nativeServer := by
     simp only [world, project, erase, existing, Option.map_some, nativeServer]
   have nativeSelected : nativeServer.records.server.peers keyId = some nativePeer := by
@@ -2469,7 +2478,7 @@ theorem serverStep_raw_erasure {ι : Type} {baseSpec : OracleSpec ι} {KemSK Rea
     Prod.map id world <$> (serverStep (realPolicy setup codec) setup codec route (.inr raw)).run state =
       (PqxdhRecordLiftWorld.serverStep setup codec route (.inr raw)).run (world state) := by
   let nativeServer := Server.erase (interpret (cachedSeeds state) state.chain) server
-  let nativePeer := Peer.erase (interpret (cachedSeeds state) state.chain) peer
+  let nativePeer := Peer.erase (interpret (cachedSeeds state) state.chain) server.identity peer
   have nativeExisting : (world state).server = some nativeServer := by
     simp only [world, project, erase, existing, Option.map_some, nativeServer]
   have nativeSelected : nativeServer.records.server.peers keyId = some nativePeer := by
@@ -2499,8 +2508,8 @@ theorem world_server_pure {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader R
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (query : RawCtxServerMixed.SourceSpec.Domain) (state : PqxdhRecordLiftWorld.State n)
     (server : PqxdhRecordLiftWorld.Server) (existing : state.server = some server)
-    (reply : RawCtxServerMixed.SourceSpec.Range query) (after : RawCtxServerRouting.State Unit Unit)
-    (source : (RawCtxServerMixed.serverImpl (fun _ => server.sender) route codec.frameRead query).run server.records = pure (reply, after)) :
+    (reply : RawCtxServerMixed.SourceSpec.Range query) (after : RawCtxServerRouting.State Unit (Std.Array Std.U8 281#usize))
+    (source : (MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => server.sender) route codec.frameRead query).run server.records = pure (reply, after)) :
     (PqxdhRecordLiftWorld.serverStep setup codec route query).run state =
       pure (reply, { state with server := some { server with records := after } }) := by
   have pureApply {A : Type} (value : A) :
@@ -2537,10 +2546,10 @@ theorem serverStep_erasure {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader 
           | none =>
               have nativeMissing : nativeServer.records.server.peers keyId = none := by
                 simp only [nativeServer, Server.erase, selected, Option.map_none]
-              have source : (RawCtxServerMixed.serverImpl (fun _ => nativeServer.sender) route codec.frameRead
+              have source : (MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => nativeServer.sender) route codec.frameRead
                   (.inl (plaintext, keyId))).run nativeServer.records = pure (none, nativeServer.records) := by
-                simp only [RawCtxServerMixed.serverImpl, StateT.run, RawCtxServerMixed.sendServer,
-                  RawCtxServerSend.sendServer_missing _ _ _ _ nativeMissing, simulateQ_pure]
+                simp only [MldsaServerRouting.handler, StateT.run, MldsaServerRouting.send,
+                  nativeMissing]
               rw [world_server_pure setup codec route (.inl (plaintext, keyId)) (world state) nativeServer nativeExisting none nativeServer.records source]
               simp only [serverStep, StateT.run, existing, selected, map_pure]
               change pure (none, world state) = pure (none, { world state with server := some nativeServer })
@@ -2548,9 +2557,9 @@ theorem serverStep_erasure {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader 
       | inr raw =>
           cases routed : route raw with
           | none =>
-              have source : (RawCtxServerMixed.serverImpl (fun _ => nativeServer.sender) route codec.frameRead
+              have source : (MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => nativeServer.sender) route codec.frameRead
                   (.inr raw)).run nativeServer.records = pure (.None, { nativeServer.records with rawAttempts := nativeServer.records.rawAttempts + 1 }) := by
-                simp only [RawCtxServerMixed.serverImpl, StateT.run, RawCtxServerMixed.rawServer, routed]
+                simp only [MldsaServerRouting.handler, StateT.run, MldsaServerRouting.receive, routed]
               rw [world_server_pure setup codec route (.inr raw) (world state) nativeServer nativeExisting .None _ source]
               simp only [serverStep, StateT.run, existing, routed, map_pure, Prod.map, id_eq,
                 world_server_replace, server_raw_erasure]
@@ -2559,11 +2568,10 @@ theorem serverStep_erasure {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader 
               cases selected : server.peers keyId with
               | some peer => exact serverStep_raw_erasure setup codec route raw keyId state good server existing peer selected routed
               | none =>
-                  have source : (RawCtxServerMixed.serverImpl (fun _ => nativeServer.sender) route codec.frameRead
+                  have source : (MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => nativeServer.sender) route codec.frameRead
                       (.inr raw)).run nativeServer.records = pure (.None, { nativeServer.records with rawAttempts := nativeServer.records.rawAttempts + 1 }) := by
-                    simp only [RawCtxServerMixed.serverImpl, StateT.run, RawCtxServerMixed.rawServer, routed,
-                      RawCtxServerRouting.peerAssociatedData, nativeServer, Server.erase, selected, Option.map_none]
-                    rfl
+                    simp only [MldsaServerRouting.handler, StateT.run, MldsaServerRouting.receive, routed,
+                      nativeServer, Server.erase, selected, Option.map_none]
                   rw [world_server_pure setup codec route (.inr raw) (world state) nativeServer nativeExisting .None _ source]
                   simp only [serverStep, StateT.run, existing, routed, selected, map_pure, Prod.map, id_eq,
                     world_server_replace, server_raw_erasure]

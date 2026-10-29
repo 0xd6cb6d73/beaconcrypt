@@ -62,7 +62,7 @@ def recordView {n : Nat} (state : PqxdhRecordLiftWorld.State n) :=
 open PqxdhRecordLiftWorld (State)
 
 /-- Server installation can change peer kernels while preserving all record-event coordinates. -/
-theorem install_server_view {n : Nat} (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem install_server_view {n : Nat} (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) (state : State n) (result : Bool × State n)
     (supported : result ∈ support ((PqxdhRecordLiftWorld.installServer keyId identity ref).run state)) :
     recordView result.2 = recordView state := by
@@ -154,7 +154,8 @@ theorem nonrecord_view {ι KemSK Reader Response : Type} {baseSpec : OracleSpec 
   rcases query with created | (effect | record)
   case inl =>
     cases found : state.server <;> simp_all [PqxdhRecordLiftWorld.handler,
-      PqxdhRecordLiftWorld.initializeServer, StateT.run, recordView, PqxdhRecordLiftWorld.rawCounters]
+      PqxdhRecordLiftWorld.initializeServer, PqxdhRecordLiftWorld.importedServer,
+      StateT.run, recordView, PqxdhRecordLiftWorld.rawCounters]
   case inr.inr => cases kind : recordKind record <;> simp_all [WorldRecord]
   case inr.inl => exact effects_view effect state result supported
 

@@ -275,8 +275,8 @@ theorem merge_withE (p : P) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.St
 theorem good_withE (created : PqxdhLiveServerConstruction.Created Unit) (p : P) (e : EnvState KemSK Bk)
     (w : PqxdhRecordLiftWorld.State n) :
     PqxdhDeploymentEnvironmentJoin.Good created (withE p e) w ↔ PqxdhDeploymentEnvironmentJoin.Good created e w :=
-  ⟨fun good => ⟨good.stripped, good.createdEq, good.server, good.ownersLength, good.owners⟩,
-    fun good => ⟨good.stripped, good.createdEq, good.server, good.ownersLength, good.owners⟩⟩
+  ⟨fun good => ⟨good.stripped, good.createdEq, good.server, good.ownersLength, good.owners, good.legacyAD⟩,
+    fun good => ⟨good.stripped, good.createdEq, good.server, good.ownersLength, good.owners, good.legacyAD⟩⟩
 
 /-- The parameterized predicate of stable predicates is stable. -/
 theorem stable_param (inv : P → EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop) (stable : ∀ p, Stable (inv p)) :

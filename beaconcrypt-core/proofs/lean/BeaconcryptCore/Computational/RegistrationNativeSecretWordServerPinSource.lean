@@ -1,0 +1,113 @@
+-- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.RegistrationNativeSecretWordFrontendPin
+import BeaconcryptCore.Computational.RegistrationNativeSecretWordTargetPath
+
+/-! The original Server authentication pin persists through the exact interpreted typed, raw and full native ledger callbacks. The chronological path theorem preserves its initial value under arbitrary outer key replies and actual intervening native failures. -/
+open OracleComp OracleSpec CoreModels Aeneas
+open Aeneas.Std hiding namespace core alloc
+open RustM beaconcrypt_core
+set_option autoImplicit false
+set_option backward.isDefEq.respectTransparency false
+namespace BeaconcryptCore.Computational.RegistrationNativeSecretWordServerPinSource
+open PqxdhServerAuthExperiment (Setup Checks)
+open RegistrationNativeSecretWordMessage (Message)
+open RegistrationNativeSecretWord (Key)
+open RegistrationNativeSecretWordService (Combined)
+open RegistrationNativeSecretWordInterpreter (Provider)
+open RegistrationNativeSecretWordTargetSource (State)
+variable {n : Nat} {ι KemSK Value : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
+variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
+  (route : RawCtxServerRouting.SenderDecoder)
+  (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
+  (input : Message → Option Key) (inside : RegistrationNativeSuffixKeyPrf.Prefix → Bool)
+  (provider : Provider KemSK) (outer : QueryImpl Combined ProbComp)
+  (selectedOwner selectedAccept : Nat) (publicPrekey : PqxdhJointIdentity.PeerEncoding)
+local notation "typedImpl" => RegistrationNativeSecretWordTargetSource.typed (n := n) (source := source)
+  setup checks wire route sign input inside provider outer selectedOwner selectedAccept publicPrekey
+local notation "rawImpl" => RegistrationNativeRawAdapter.handler wire typedImpl
+
+/-- Interpreting the actual public Word callback preserves the original Server pin. -/
+theorem typed (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State n KemSK source)
+    (result : RegistrationNativeRawAdapter.TypedSpec.Range query × State n KemSK source)
+    (supported : result ∈ support ((typedImpl query).run before)) :
+    result.2.1.server.pin = before.1.server.pin := by
+  rw [RegistrationNativeSecretWordTargetSource.typed_run, support_map] at supported
+  obtain ⟨reached, called, returned⟩ := supported
+  cases returned
+  apply RegistrationNativeSecretWordFrontendPin.query setup checks wire sign selectedOwner selectedAccept publicPrekey query before.1 reached.1
+  apply OracleComp.support_simulateQ_run'_subset
+    (RegistrationNativeSecretWordTargetSource.implementation setup wire route sign input inside provider outer) _ before.2
+  rw [StateT.run'_eq, support_map]
+  exact Set.mem_image_of_mem Prod.fst called
+
+private theorem program_preserves {Index : Type} {spec : OracleSpec Index}
+    (implementation : QueryImpl spec (StateT (State n KemSK source) ProbComp))
+    (step : ∀ query before result, result ∈ support ((implementation query).run before) →
+      result.2.1.server.pin = before.1.server.pin)
+    (work : OracleComp spec Value) (before : State n KemSK source) (result : Value × State n KemSK source)
+    (supported : result ∈ support ((simulateQ implementation work).run before)) :
+    result.2.1.server.pin = before.1.server.pin := by
+  apply OracleComp.simulateQ_run_preserves_inv_of_query implementation
+    (fun current => current.1.server.pin = before.1.server.pin)
+    (fun query current prior next reached => (step query current next reached).trans prior) work before _ result supported
+  rfl
+
+/-- Every raw adapter path retains the same Server authentication pin. -/
+theorem raw (query : RegistrationNativeInterface.Spec.Domain) (before : State n KemSK source)
+    (result : RegistrationNativeInterface.Spec.Range query × State n KemSK source)
+    (supported : result ∈ support ((rawImpl query).run before)) :
+    result.2.1.server.pin = before.1.server.pin := by
+  exact program_preserves typedImpl
+    (typed setup checks wire route sign input inside provider outer selectedOwner selectedAccept publicPrekey)
+    (RegistrationNativeRawAdapter.adapter wire query) before result supported
+
+/-- A complete original ledger callback preserves the Server pin, including secrecy coin/send programs. -/
+theorem full (serverKeyId : U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    (query : RegistrationNativeInterface.FullSpec.Domain)
+    (before : RegistrationNativeLedger.State × State n KemSK source)
+    (result : RegistrationNativeInterface.FullSpec.Range query × (RegistrationNativeLedger.State × State n KemSK source))
+    (supported : result ∈ support ((RegistrationNativeFullCompiler.handler setup.source.crypto wire serverKeyId bounds typedImpl query).run before)) :
+    result.2.2.1.server.pin = before.2.1.server.pin := by
+  rw [RegistrationNativeFullCompiler.handler, RegistrationNativeLedger.interpreted,
+    QueryImpl.flattenStateT_mapStateTBase_apply_run, support_map] at supported
+  obtain ⟨reached, called, returned⟩ := supported
+  cases returned
+  exact program_preserves rawImpl
+    (raw setup checks wire route sign input inside provider outer selectedOwner selectedAccept publicPrekey)
+    _ before.2 reached called
+
+/-- The same chronological original path retains its actual initial Server pin. -/
+theorem path (serverKeyId : U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    {before after : RegistrationNativeLedger.State × State n KemSK source}
+    {entries : List RegistrationNativeInterface.Entry}
+    (path : RegistrationNativeSecretWordTargetPath.Path
+      (RegistrationNativeFullCompiler.handler setup.source.crypto wire serverKeyId bounds typedImpl) before entries after) :
+    after.2.1.server.pin = before.2.1.server.pin := by
+  apply RegistrationNativeSecretWordTargetPath.preserves _
+    (fun current => current.2.1.server.pin = before.2.1.server.pin)
+    (fun query current result prior reached => (full setup checks wire route sign input inside provider outer selectedOwner selectedAccept publicPrekey
+        serverKeyId bounds query current result reached).trans prior) path
+  rfl
+
+end BeaconcryptCore.Computational.RegistrationNativeSecretWordServerPinSource
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeSecretWordServerPinSource.typed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeSecretWordServerPinSource.typed
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeSecretWordServerPinSource.raw' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeSecretWordServerPinSource.raw
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeSecretWordServerPinSource.full' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeSecretWordServerPinSource.full
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeSecretWordServerPinSource.path' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeSecretWordServerPinSource.path

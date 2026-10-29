@@ -434,7 +434,7 @@ theorem provenance_annotate (query : (WorldSpec n).Domain) (reply : (WorldSpec n
     PqxdhRecordLiftOrigins.annotate_unique query reply _ _ good.1 good.2 unused⟩
 
 /-- A successful actual Server install uses a vacant handle and an unused role, so arbitrary allocation behavior cannot replace a prior sender or duplicate its hidden origin. -/
-theorem install_server (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+theorem install_server (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (control : PqxdhRecordLiftProtocol.Control n) (safe : Safe control)
     (result : Bool × PqxdhRecordLiftProtocol.Control n)
     (supported : result ∈ support (PqxdhRecordLiftProtocol.installServer keyId identity ref control)) :
@@ -1033,7 +1033,7 @@ theorem protocol_resolve_trace {P : Type}
 /-- Source Server install guards and seed resolution never produce an ordinary hidden-record sealing attempt. -/
 theorem protocol_installServer_trace {P : Type}
     (service : List (PqxdhRecordLiftWorldCompiler.Label n) → QueryImpl (PqxdhRecordLiftProtocol.ServiceSpec n) (StateT P (OracleComp targetSpec)))
-    (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+    (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (control : PqxdhRecordLiftProtocol.Control n) (state : P × List (PqxdhRecordLiftWorldCompiler.Label n))
     (result : (Bool × PqxdhRecordLiftProtocol.Control n) × (P × List (PqxdhRecordLiftWorldCompiler.Label n)))
     (supported : result ∈ support ((simulateQ (traceService service)
