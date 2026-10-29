@@ -216,7 +216,7 @@ theorem installBeacon_roles (owner : Nat) (shell : BeaconShell) (ref : KernelRef
     exact roles
 
 /-- Successful Server installation establishes the physical Server directions; occupied handles and repeat use are refused. -/
-theorem installServer_roles (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+theorem installServer_roles (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (state : State n) (roles : Roles state) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) : Roles result.2 := by
   simp only [installServer, StateT.run] at supported
@@ -257,7 +257,7 @@ theorem initialize_roles (created : PqxdhLiveServerConstruction.Created Unit) (s
       · intro server existing keyId peer present
         simp only [Option.some.injEq] at existing
         subst server
-        simp only [Server.fromKnown] at present
+        simp only [Server.fromKnown, PqxdhRecordLiftWorld.importedServer] at present
         cases entry : created.server.server.peers keyId with
         | none => simp [entry] at present
         | some native =>
@@ -600,7 +600,7 @@ theorem origins_frame (before after : State n) (server : after.server = before.s
   simp only [origins, server, owners]
 
 /-- The computed Server origins follow the actual installation reply, without assuming prior reachability. -/
-theorem installServer_origins (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+theorem installServer_origins (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (state : State n) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) :
     origins result.2 = if result.1 then
@@ -760,7 +760,7 @@ theorem initialize_origins (created : PqxdhLiveServerConstruction.Created Unit) 
       apply congrArg₂ PqxdhRecordLiftOrigins.Origins.mk
       · funext keyId
         cases entry : created.server.server.peers keyId <;>
-          simp [found, Server.fromKnown, Peer.fromKnown, entry, StoredKernel.origin]
+          simp [found, Server.fromKnown, PqxdhRecordLiftWorld.importedServer, Peer.fromKnown, entry, StoredKernel.origin]
       · rfl
 
 /-- Complete Beacon publication preserves the origin of the selected existing owner and every other handle. -/
@@ -899,7 +899,7 @@ theorem resolve_used (role : Role) (ref : KernelRef n) (state : State n)
       exact facts.2.2.2.1
 
 /-- The actual Server admission branch both consumes the requested role and proves that role was previously unused. -/
-theorem installServer_uses (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+theorem installServer_uses (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (state : State n) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) :
     result.2.used = (if result.1 then markUsed state .server ref else state).used ∧
@@ -1566,7 +1566,7 @@ theorem markUsed_forward (state : State n) (role : Role) (ref : KernelRef n) :
   cases ref <;> exact forward_refl state
 
 /-- Actual Server installation admits only an empty target, so even a successful hidden install cannot reset an old sender. -/
-theorem installServer_forward (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+theorem installServer_forward (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (state : State n) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) : Forward state result.2 := by
   simp only [installServer, StateT.run] at supported
@@ -2262,7 +2262,7 @@ theorem protocol_resolve_trace {P : Type}
 /-- Source Server install guards and seed resolution never produce an ordinary hidden-record sealing attempt. -/
 theorem protocol_installServer_trace {P : Type}
     (service : QueryImpl (PqxdhRecordLiftProtocol.ServiceSpec n) (StateT P ProbComp))
-    (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+    (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (control : PqxdhRecordLiftProtocol.Control n) (state : P × List (Label n))
     (result : (Bool × PqxdhRecordLiftProtocol.Control n) × (P × List (Label n)))
     (supported : result ∈ support ((simulateQ (recordService service)

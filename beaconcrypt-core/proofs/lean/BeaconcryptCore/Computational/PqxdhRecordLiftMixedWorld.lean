@@ -116,7 +116,7 @@ theorem resolve_counters (role : Role) (ref : KernelRef n) (state : State n)
     rfl
 
 /-- Server admission performs no native primitive or direct-effect request. -/
-theorem install_server_counters (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem install_server_counters (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) (state : State n) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) :
     (result.2.primitive.1.native, result.2.primitive.1.effects) =
@@ -336,7 +336,7 @@ theorem installBeacon_tableGood (source : PqxdhJointKdfGame.FixedHkdfSha512NoSal
     exact good
 
 theorem installServer_tableGood (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (ideal : Coordinate (Slot n) → Bool) (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+    (ideal : Coordinate (Slot n) → Bool) (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (state : State n) (good : TableGood source ideal state) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) : TableGood source ideal result.2 := by
   simp only [installServer, StateT.run] at supported

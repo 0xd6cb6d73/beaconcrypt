@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhRecordLiftBeacon
 import BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable
+import BeaconcryptCore.Computational.MldsaServerRouting
 
 /-! An executable probabilistic interpreter of the frozen capability boundary. Dynamic records use the existing source programs and one actual CTX cache. The analysis state records every primitive call and underlying uniform query. Registration/source erasure, installation shell correspondence and security remain separate obligations. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -30,7 +31,7 @@ abbrev Primitive := Counts × CtxRomAuth.CtxRO.QueryCache
 /-- The immutable outer sender is distinct from each assigned peer handle. -/
 structure Server where
   sender : Std.U64
-  records : RawCtxServerRouting.State Unit Unit
+  records : RawCtxServerRouting.State Unit (Std.Array Std.U8 281#usize)
 
 /-- Only record-relevant Beacon fields are retained. The raw counter map distinguishes absent handles from existing inactive owners. -/
 structure State (n : Nat) where
@@ -66,11 +67,18 @@ noncomputable def primitives (setup : Setup baseSpec KemSK) (codec : Codec Reade
     native := Function.update state.1.native kind (state.1.native kind + 1) }, result.1.2.2))
 
 /-- Full source constructor data is private; retain precisely its native record coordinates. Duplicate private initialization cannot reset the world. -/
-def initializeServer (created : PqxdhLiveServerConstruction.Created Unit) : StateT (State n) ProbComp Unit :=
+noncomputable def importedServer (created : PqxdhLiveServerConstruction.Created Unit) : Server :=
+  ⟨created.server.server.metadata.sender,
+    ⟨⟨created.server.server.identity,
+      fun keyId => (created.server.server.peers keyId).map fun peer =>
+        ⟨peer.identity, peer.kernel,
+          RawCtxServerRouting.associatedArray created.server.server.identity peer.identity⟩, ()⟩, 0⟩⟩
+
+noncomputable def initializeServer (created : PqxdhLiveServerConstruction.Created Unit) :
+    StateT (State n) ProbComp Unit :=
   fun state => match state.server with
   | some _ => pure ((), state)
-  | none => pure ((), { state with server := some ⟨created.server.server.metadata.sender,
-        ⟨⟨created.server.server.identity, created.server.server.peers, ()⟩, 0⟩⟩ })
+  | none => pure ((), { state with server := some (importedServer created) })
 
 /-- CE administrative phase edges. Refused or same-state source commands require no transition. -/
 def LegalAdvance : InactivePhase → InactivePhase → Prop
@@ -129,7 +137,7 @@ noncomputable def resolve (role : Role) : KernelRef n → StateT (State n) ProbC
       pure (kernel role result.1.1, { result.2 with seeds := result.1.2 })
 
 /-- All administrative validation precedes hidden resolution, so rejected installs neither sample nor consume a slot. -/
-noncomputable def installServer (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+noncomputable def installServer (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) : StateT (State n) ProbComp Bool := fun state =>
   match state.server with
   | none => pure (false, state)
@@ -137,7 +145,9 @@ noncomputable def installServer (keyId : Std.U64) (identity : RawCtxServerRoutin
       if server.records.server.peers keyId = none ∧ Unused state .server ref then do
         let resolved ← (resolve .server ref).run state
         let next := markUsed resolved.2 .server ref
-        let peers := Function.update server.records.server.peers keyId (some ⟨identity, resolved.1, ()⟩)
+        let peers := Function.update server.records.server.peers keyId
+          (some ⟨identity.identity, resolved.1,
+            identity.associatedArray server.records.server.identity⟩)
         pure (true, { next with server := some { server with records :=
           { server.records with server := { server.records.server with peers := peers } } } })
       else pure (false, state)
@@ -195,7 +205,8 @@ noncomputable def serverStep (setup : Setup baseSpec KemSK) (codec : Codec Reade
       | .inr _ => pure (.None, state)
   | some server => do
       let result ← (simulateQ (primitives setup codec) (PqxdhDeploymentNative.logged
-        ((RawCtxServerMixed.serverImpl (fun _ => server.sender) route codec.frameRead query).run
+        ((MldsaServerRouting.handler PqxdhRefinement.absBytes
+          (fun _ => server.sender) route codec.frameRead query).run
           server.records))).run state.primitive
       pure (result.1.1.1, produce (PqxdhDeploymentNative.serverTag query) result.1.2
         { state with server := some { server with records := result.1.1.2 }, primitive := result.2 })
@@ -347,7 +358,7 @@ theorem resolve_hit (role : Role) (slot : Slot n) (state : State n) (seed : Pqxd
   rfl
 
 /-- Refused Server admission is a pure rejection before resolution or any state update. -/
-theorem installServer_refused (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem installServer_refused (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) (state : State n)
     (refused : ¬ (ServerVacant state keyId ∧ Unused state .server ref)) :
     (installServer keyId identity ref).run state = pure (false, state) := by
@@ -361,7 +372,7 @@ theorem installBeacon_refused (owner : Nat) (shell : BeaconShell) (ref : KernelR
   simp only [installBeacon, StateT.run, ite_eq_right refused]
 
 /-- Every successful Server installation had a vacant target and unused hidden role at admission. -/
-theorem installServer_admitted (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem installServer_admitted (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) (state after : State n)
     (supported : (true, after) ∈ support ((installServer keyId identity ref).run state)) :
     ServerVacant state keyId ∧ Unused state .server ref := by
@@ -411,7 +422,7 @@ theorem markUsed_store (state : State n) (role : Role) (ref : KernelRef n) :
   cases ref <;> exact le_refl _
 
 /-- Server installation cannot erase cached seeds or clear any used marker. -/
-theorem installServer_persists (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem installServer_persists (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) (state : State n) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) :
     Persistent state result.2 := by
@@ -559,7 +570,7 @@ theorem schedule_persists {Y : Type} (setup : Setup baseSpec KemSK) (codec : Cod
     work state (persistent_refl state) result supported
 
 /-- A successful hidden Server installation consumes exactly the operation's slot/role marker. -/
-theorem installServer_marks (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem installServer_marks (keyId : Std.U64) (identity : PeerBinding)
     (slot : Slot n) (state after : State n)
     (supported : (true, after) ∈ support ((installServer keyId identity (.hidden slot)).run state)) :
     after.used slot .server = true := by
@@ -579,7 +590,7 @@ theorem installBeacon_marks (owner : Nat) (shell : BeaconShell) (slot : Slot n) 
   simpa [markUsed] using (congrArg (fun result => result.2.used slot .beacon) equal).symm
 
 /-- Once marked, another Server installation for this slot rejects even at a different vacant handle. -/
-theorem usedServer_refuses (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem usedServer_refuses (keyId : Std.U64) (identity : PeerBinding)
     (slot : Slot n) (state : State n) (used : state.used slot .server = true) :
     (installServer keyId identity (.hidden slot)).run state = pure (false, state) :=
   installServer_refused keyId identity (.hidden slot) state (by simp [Unused, used])

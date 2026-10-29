@@ -76,10 +76,10 @@ def splitInit (_ : Created Unit) : SplitBk := (∅, (emptyAlloc, IdealCore.initi
 /-! ### Registration steps as slot clients -/
 
 /-- A probabilistic computation as a slot client (coins only). -/
-abbrev liftS {α : Type} (work : ProbComp α) : OracleComp SlotSpec α := OracleComp.liftComp work SlotSpec
+noncomputable abbrev liftS {α : Type} (work : ProbComp α) : OracleComp SlotSpec α := OracleComp.liftComp work SlotSpec
 
 /-- A stateful probabilistic step as a stateful slot client that issues coins only. -/
-def onSlots {σ α : Type} (step : StateT σ ProbComp α) : StateT σ (OracleComp SlotSpec) α :=
+noncomputable def onSlots {σ α : Type} (step : StateT σ ProbComp α) : StateT σ (OracleComp SlotSpec) α :=
   fun state => liftS (step.run state)
 
 section Real

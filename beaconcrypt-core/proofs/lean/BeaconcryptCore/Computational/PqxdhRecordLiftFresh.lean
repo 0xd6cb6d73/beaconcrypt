@@ -783,13 +783,13 @@ theorem keyAt_unique (claim : X → Option (Nat × Pqxdh.Bytes)) (first second :
   rw [h₁, Option.some.injEq] at h₂
   simpa only [Prod.mk.eta] using h₂
 
-/-- **Fresh-message guessing with zeroed hidden plaintexts.** In the CTX world with zeroed hidden plaintexts (any key modes and observation mode), the adversary's claim hits a fresh message on a hidden handle with probability at most `2^-min`: summing the per-claim bound over the claimed index and message length, the claims exclude each other, so their probabilities add up to at most one. -/
-theorem fresh_zeros (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+/-- **Fresh-message guessing with zeroed hidden plaintexts.** In the CTX world with zeroed hidden plaintexts (any key modes and observation mode), the adversary's claim hits a fresh message on a hidden handle with probability at most `256^-min`: summing the per-claim bound over the claimed index and message length, the claims exclude each other, so their probabilities add up to at most one. -/
+theorem fresh_zeros_bytes (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds)
     (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (claim : X → Option (Nat × Pqxdh.Bytes)) :
     𝒟[(fun result => freshEvent claim (ctxView result)) <$>
         ctxRun modes zeros setup codec route env serverKid bounds mode adversary] {true} ≤
-      ((2 ^ bounds.min : Nat) : ℝ≥0∞)⁻¹ := by
+      ((256 ^ bounds.min : Nat) : ℝ≥0∞)⁻¹ := by
   have bound := fun key : ℕ × ℕ =>
     hitAt_bound modes setup codec route env serverKid bounds mode adversary claim key.1 key.2
   generalize ctxRun modes zeros setup codec route env serverKid bounds mode adversary = work at bound ⊢
@@ -816,9 +816,17 @@ theorem fresh_zeros (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK)
     _ ≤ ((256 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹ * 1 := by
         gcongr
         exact (measure_mono (Set.subset_univ _)).trans (evalDist_apply_univ_le_one work)
-    _ ≤ ((2 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹ := by
-        rw [mul_one]
-        exact ENNReal.inv_le_inv.mpr (Nat.cast_le.mpr (Nat.pow_le_pow_left (by norm_num) _))
+    _ = ((256 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹ := mul_one _
+
+/-- Compatibility form of the byte-accurate bound, weakened to the original `2^-min` statement. -/
+theorem fresh_zeros (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds)
+    (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (claim : X → Option (Nat × Pqxdh.Bytes)) :
+    𝒟[(fun result => freshEvent claim (ctxView result)) <$>
+        ctxRun modes zeros setup codec route env serverKid bounds mode adversary] {true} ≤
+      ((2 ^ bounds.min : Nat) : ℝ≥0∞)⁻¹ :=
+  (fresh_zeros_bytes modes setup codec route env serverKid bounds mode adversary claim).trans
+    (ENNReal.inv_le_inv.mpr (Nat.cast_le.mpr (Nat.pow_le_pow_left (show 2 ≤ 256 by decide) bounds.min)))
 
 /-! ### Transfer to the record-ideal world -/
 
@@ -854,6 +862,18 @@ theorem idealRecords_fresh (setup : Setup baseSpec KemSK) (codec : Codec Reader 
   intro E X env adversary claim
   rw [PqxdhRecordLiftLor.law_zeros setup codec route env serverKid bounds adversary _ (freshEvent_hiding claim)]
   exact fresh_zeros (fun _ => .random) setup codec route env serverKid bounds .P adversary claim
+
+/-- Byte-accurate fresh-message secrecy: the minimal length counts bytes, so the guessing term is `256^-min`. No contract or selection loss is added. -/
+theorem idealRecords_fresh_bytes (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (route : RawCtxServerRouting.SenderDecoder) (serverKid : Std.U64) (bounds : FreshBounds)
+    (env : Environment n E) (adversary : OracleComp (ModeSpec .P) X)
+    (claim : X → Option (Nat × Pqxdh.Bytes)) :
+    𝒟[(fun result => freshEvent claim (ctxView result)) <$>
+      idealRecords setup codec route env serverKid bounds .P adversary] {true} ≤
+      ((256 ^ bounds.min : Nat) : ℝ≥0∞)⁻¹ := by
+  simpa only [PqxdhRecordLiftLor.law_zeros setup codec route env serverKid bounds adversary _
+    (freshEvent_hiding claim)] using
+    fresh_zeros_bytes (fun _ => .random) setup codec route env serverKid bounds .P adversary claim
 
 end BeaconcryptCore.Computational.PqxdhRecordLiftFresh
 
@@ -1076,3 +1096,15 @@ end BeaconcryptCore.Computational.PqxdhRecordLiftFresh
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRecordLiftFresh.idealRecords_fresh
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRecordLiftFresh.fresh_zeros_bytes' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRecordLiftFresh.fresh_zeros_bytes
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRecordLiftFresh.idealRecords_fresh_bytes' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRecordLiftFresh.idealRecords_fresh_bytes

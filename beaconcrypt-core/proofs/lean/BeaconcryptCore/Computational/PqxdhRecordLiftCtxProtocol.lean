@@ -155,7 +155,7 @@ theorem resolve_admitted (read : RawCtxReceive.FrameDecoder) (role : Role) (ref 
 
 /-- Source peer admission and one-use checks do not introduce an opening request. -/
 theorem installServer_admitted (read : RawCtxReceive.FrameDecoder) (keyId : Std.U64)
-    (identity : RawCtxServerRouting.Identity) (ref : KernelRef n) (state : Control n) :
+    (identity : PeerBinding) (ref : KernelRef n) (state : Control n) :
     ((installServer keyId identity ref).run state).AllQueriesSatisfy (Admitted read) := by
   change (installServer keyId identity ref state).AllQueriesSatisfy _
   unfold installServer

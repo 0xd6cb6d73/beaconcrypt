@@ -583,7 +583,7 @@ open PqxdhDeploymentIdealEnvReal (realAt_splits_create realAt_splits_bundle real
 theorem good_backend {Bk Bk' : Type} (created : PqxdhLiveServerConstruction.Created Unit) (e : EnvState KemSK Bk)
     (w : PqxdhRecordLiftWorld.State 2) (good : Good created e w) (b : Bk') :
     Good created (⟨e.native, b, e.snap, e.log, e.created⟩ : EnvState KemSK Bk') w :=
-  ⟨good.stripped, good.createdEq, good.server, good.ownersLength, good.owners⟩
+  ⟨good.stripped, good.createdEq, good.server, good.ownersLength, good.owners, good.legacyAD⟩
 
 /-- Filling the World's record coordinates keeps which owners are in the `initSent` phase. -/
 theorem initSentAt_fill (w : PqxdhRecordLiftWorld.State 2) (state : PqxdhRegistrationSchedule.State KemSK) (index : ℕ) :

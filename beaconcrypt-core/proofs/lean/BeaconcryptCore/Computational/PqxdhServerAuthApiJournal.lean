@@ -8,7 +8,7 @@ namespace BeaconcryptCore.Computational.PqxdhServerAuthApiJournal
 variable {ι : Type} {spec : OracleSpec ι} {α : Type}
 
 /-- Record the exact query and actual reply after each public call returns. Private interpreter state is absent from this interface. The returned list has source chronological order. -/
-def record (client : OracleComp spec α) : OracleComp spec (α × QueryLog spec) :=
+noncomputable def record (client : OracleComp spec α) : OracleComp spec (α × QueryLog spec) :=
   (simulateQ loggingOracle client).run
 
 /-- Erasing the journal gives the identical client program, before any oracle interpretation or probability calculation. -/

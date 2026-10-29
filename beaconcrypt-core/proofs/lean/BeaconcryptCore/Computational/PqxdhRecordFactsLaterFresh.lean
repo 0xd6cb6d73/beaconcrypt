@@ -136,14 +136,14 @@ theorem hitAt_bound (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK)
     rw [same (fun _ => 0), evalDist_map_true]
     simp [shiftedHit, Nat.not_le_of_gt short]
 
-/-- Adaptive fresh-message guessing in the zeroed later world is bounded by `2^{-min}`, without an index-selection loss: the disjoint adaptive claims provide their own probability weights. -/
-theorem fresh_zeros (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+/-- Adaptive fresh-message guessing in the zeroed later world is bounded by `256^{-min}`, without an index-selection loss: the disjoint adaptive claims provide their own probability weights. -/
+theorem fresh_zeros_bytes (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds)
     (mode : Mode) (reveal : E → R) (first : OracleComp (ModeSpec mode) X)
     (second : X → R → OracleComp PostSpec Out) (claim : Out → Option (Nat × Pqxdh.Bytes)) :
     𝒟[(fun result => freshEvent claim (ctxView result)) <$>
         laterCtxRun setup codec route env serverKid bounds mode reveal first second modes zeros] {true} ≤
-      ((2 ^ bounds.min : Nat) : ℝ≥0∞)⁻¹ := by
+      ((256 ^ bounds.min : Nat) : ℝ≥0∞)⁻¹ := by
   have bound := fun key : ℕ × ℕ =>
     hitAt_bound modes setup codec route env serverKid bounds mode reveal first second claim key.1 key.2
   generalize laterCtxRun setup codec route env serverKid bounds mode reveal first second modes zeros = work at bound ⊢
@@ -166,8 +166,18 @@ theorem fresh_zeros (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK)
     _ ≤ ((256 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹ * 1 := by
         gcongr
         exact (measure_mono (Set.subset_univ _)).trans (evalDist_apply_univ_le_one work)
-    _ ≤ ((2 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹ := by
-        simpa only [mul_one] using ENNReal.inv_le_inv.mpr (Nat.cast_le.mpr (Nat.pow_le_pow_left (show 2 ≤ 256 by decide) bounds.min))
+    _ = ((256 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹ := mul_one _
+
+/-- Compatibility form of the byte-accurate later bound, weakened to the original `2^-min` statement. -/
+theorem fresh_zeros (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds)
+    (mode : Mode) (reveal : E → R) (first : OracleComp (ModeSpec mode) X)
+    (second : X → R → OracleComp PostSpec Out) (claim : Out → Option (Nat × Pqxdh.Bytes)) :
+    𝒟[(fun result => freshEvent claim (ctxView result)) <$>
+        laterCtxRun setup codec route env serverKid bounds mode reveal first second modes zeros] {true} ≤
+      ((2 ^ bounds.min : Nat) : ℝ≥0∞)⁻¹ :=
+  (fresh_zeros_bytes modes setup codec route env serverKid bounds mode reveal first second claim).trans
+    (ENNReal.inv_le_inv.mpr (Nat.cast_le.mpr (Nat.pow_le_pow_left (show 2 ≤ 256 by decide) bounds.min)))
 
 /-- The frozen later fresh-message target, with a final adaptive index and bytes chosen after any E-only reveal and post adversary. No cryptographic, `Frame` or budget premise. -/
 theorem later_idealRecords_fresh (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -177,6 +187,18 @@ theorem later_idealRecords_fresh (setup : Setup baseSpec KemSK) (codec : Codec R
   rw [PqxdhRecordFactsLaterLor.law_zeros setup codec route env serverKid bounds reveal first second _
     (freshEvent_hiding claim)]
   exact fresh_zeros (fun _ => .random) setup codec route env serverKid bounds .P reveal first second claim
+
+/-- Byte-accurate fresh-message secrecy after the full E-only post phase, with no cryptographic, `Frame` or budget premise. -/
+theorem later_idealRecords_fresh_bytes (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (route : RawCtxServerRouting.SenderDecoder) (serverKid : Std.U64) (bounds : FreshBounds)
+    (env : Environment n E) (reveal : E → R) (first : OracleComp (ModeSpec .P) X)
+    (second : X → R → OracleComp PostSpec Out) (claim : Out → Option (Nat × Pqxdh.Bytes)) :
+    𝒟[(fun result => freshEvent claim (ctxView result)) <$>
+      laterIdealRecords setup codec route env serverKid bounds .P reveal first second] {true} ≤
+      ((256 ^ bounds.min : Nat) : ℝ≥0∞)⁻¹ := by
+  simpa only [PqxdhRecordFactsLaterLor.law_zeros setup codec route env serverKid bounds reveal first second _
+    (freshEvent_hiding claim)] using
+    fresh_zeros_bytes (fun _ => .random) setup codec route env serverKid bounds .P reveal first second claim
 
 end BeaconcryptCore.Computational.PqxdhRecordFactsLaterFresh
 
@@ -215,3 +237,15 @@ end BeaconcryptCore.Computational.PqxdhRecordFactsLaterFresh
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRecordFactsLaterFresh.later_idealRecords_fresh
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRecordFactsLaterFresh.fresh_zeros_bytes' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRecordFactsLaterFresh.fresh_zeros_bytes
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRecordFactsLaterFresh.later_idealRecords_fresh_bytes' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRecordFactsLaterFresh.later_idealRecords_fresh_bytes

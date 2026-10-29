@@ -165,11 +165,22 @@ theorem server_native {ι KemSK Reader Response : Type} {baseSpec : OracleSpec �
   | some current =>
     simp only [serverStep, StateT.run, server, bind_pure_comp, support_map] at supported
     obtain ⟨inner, reached, rfl⟩ := supported
-    apply native_support setup codec _ kind _ ?_ state.primitive inner reached
-    apply PqxdhDeploymentCompileBudget.logged_bound
     cases query with
-    | inl send => exact RawCtxServerMixed.send_bound _ send.1 send.2 _ kind
-    | inr raw => exact RawCtxServerMixed.raw_bound route codec.frameRead raw _ kind
+    | inl send =>
+        apply native_support setup codec
+          (PqxdhDeploymentNative.logged (MldsaServerRouting.send PqxdhRefinement.absBytes
+            (fun _ => current.sender) send.1 send.2 current.records)) kind (RawCtxMixedOwner.sendCost kind)
+          ?_ state.primitive inner reached
+        exact PqxdhDeploymentCompileBudget.logged_bound _ _ _ []
+          (MldsaServerRouting.send_bound PqxdhRefinement.absBytes (fun _ => current.sender)
+            send.1 send.2 current.records kind)
+    | inr raw =>
+        apply native_support setup codec
+          (PqxdhDeploymentNative.logged (MldsaServerRouting.receive PqxdhRefinement.absBytes
+            route codec.frameRead raw current.records)) kind (RawCtxMixedOwner.receiveCost kind)
+          ?_ state.primitive inner reached
+        exact PqxdhDeploymentCompileBudget.logged_bound _ _ _ []
+          (MldsaServerRouting.raw_bound PqxdhRefinement.absBytes route codec.frameRead raw current.records kind)
 
 /-- An actual Beacon attempt inherits its source cap for every phase, including inactive and absent owners. -/
 theorem beacon_native {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι} {n : Nat}
@@ -211,7 +222,7 @@ theorem resolve_counters {n : Nat} (role : Role) (ref : KernelRef n) (state : St
     rfl
 
 /-- Server admission performs no native primitive or direct-effect request. -/
-theorem install_server_counters {n : Nat} (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem install_server_counters {n : Nat} (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) (state : State n) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) :
     (result.2.primitive.1.native, result.2.primitive.1.effects) =
@@ -592,7 +603,7 @@ theorem resolve_uniform {n : Nat} (role : Role) (ref : KernelRef n) (state : Sta
       exact le_refl _
 
 /-- All Server admission branches pay uniform work solely from fresh hidden-seed draws. -/
-theorem install_server_uniform {n : Nat} (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem install_server_uniform {n : Nat} (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) (state : State n) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) :
     result.2.primitive.1.uniform + 64 * state.seeds.2.draws ≤
@@ -843,7 +854,7 @@ theorem resolve_seed_accounting {n : Nat} (role : Role) (ref : KernelRef n) (sta
       rfl
 
 /-- Server admission retains exact seed occupancy accounting on success and refusal. -/
-theorem install_server_seed_accounting {n : Nat} (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem install_server_seed_accounting {n : Nat} (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) (state : State n) (result : Bool × State n)
     (supported : result ∈ support ((installServer keyId identity ref).run state)) :
     SeedAccounting state result.2 := by

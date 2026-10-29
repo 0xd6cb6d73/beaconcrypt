@@ -147,12 +147,11 @@ def initialControl : Control n := control PqxdhRecordLiftWorldCompiler.initial
 def initialPrivate : Private n := privateState PqxdhRecordLiftWorldCompiler.initial
 
 /-- Duplicate initialization cannot reset the source control. Existing constructor peers are imported as caller-known kernels. -/
-def initializeServer (created : PqxdhLiveServerConstruction.Created Unit) : Client n Unit :=
+noncomputable def initializeServer (created : PqxdhLiveServerConstruction.Created Unit) : Client n Unit :=
   fun state => match state.server with
   | some _ => pure ((), state)
   | none => pure ((), { state with server := some (PqxdhRecordLiftWorldCompiler.Server.fromKnown
-      ⟨created.server.server.metadata.sender,
-        ⟨⟨created.server.server.identity, created.server.server.peers, ()⟩, 0⟩⟩) })
+      (PqxdhRecordLiftWorld.importedServer created)) })
 
 def Unused (state : Control n) (role : Role) : KernelRef n → Prop
   | .known _ => True
@@ -166,7 +165,7 @@ def BeaconReady (state : Control n) (owner : Nat) : Prop :=
   state.owners[owner]? = some (.inactive .initSent)
 
 /-- Admission is decided from source control before requesting hidden allocation. -/
-noncomputable def installServer (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+noncomputable def installServer (keyId : Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) : Client n Bool := fun state =>
   match state.server with
   | none => pure (false, state)
@@ -649,7 +648,7 @@ theorem installServer_factor {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reade
     (policy : PqxdhRecordLiftWorldCompiler.LookupPolicy n)
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : KernelRef n)
+    (keyId : Std.U64) (identity : PeerBinding) (ref : KernelRef n)
     (state : PqxdhRecordLiftWorldCompiler.State n) :
     (simulateQ (interpreter policy setup codec) ((installServer keyId identity ref).run (control state))).run
       (privateState state) =

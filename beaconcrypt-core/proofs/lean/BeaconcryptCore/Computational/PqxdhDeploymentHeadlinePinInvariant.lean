@@ -10,7 +10,9 @@ The two facts of the ideal environment that the P2b remainder names for the b2s 
 - (a) every established owner's installed shell has associated data `RawCtxServerRouting.associatedArray pin beacon`, where `pin` is the pin with which the public transcript summary (`PqxdhDeploymentTranscript.summarize`) created that owner and `beacon` is some Beacon identity;
 - (b) when the record control holds a Server, every successful build entry of the final transcript is the Phase 2 writer output of fields carrying that Server's identity (`PqxdhDeploymentEligibility.BuildShaped`); with `Phase2ReadBack`, the Server identity field read from a build response is then the record control's Server identity.
 
-Proof: the joint invariant `Inv` of the flattened world (ledger, environment state, record control): the environment's Server identity, the environment's pins equal to the summary's created pins, `ControlOk` with `PinOk` (the associated data the transcript admits), and every build entry shaped. It holds after the startup, whose effects are coins, and the Server installation (`startup_facts`, `install_facts`, `PqxdhDeploymentHeadlinePinEnv.envGD_start`), and every adversary query keeps it (`full_inv`): quiet native commands (`forward_quiet`), environment commands (`forward_env`, from `PqxdhDeploymentHeadlinePinEnv.envGD_move`, `PqxdhDeploymentHeadlinePinEnv.envGD_ok` and `PqxdhDeploymentHeadlinePinControl.nativeImpl_env`, with `fits_of_ok`) and secrecy commands, whose native commands are coins and sends (`secrecy_quiet`, `secrecy_inv`). `ctxRun_pinFacts` (every key modes and plaintext replacement), `idealAuth_pinFacts`.
+The invariant also records that every Server peer in this old environment has identity-derived AD (`LegacyPeers`). The actual constructor import explicitly fills that metadata, and subsequent real and hidden Server publication effects use `PeerBinding.legacy`; record callbacks preserve the binding. This source-derived fact connects the generic agreement theorem's full `PeerBinding.associatedBytes` to the legacy `owner_pin` helper without imposing any law on arbitrary populated bindings.
+
+Proof: the joint invariant `Inv` of the flattened world (ledger, environment state, record control): the environment's Server identity, the environment's pins equal to the summary's created pins, `ControlOk` with `PinOk` (the associated data the transcript admits) and `LegacyPeers`, and every build entry shaped. It holds after the startup, whose effects are coins, and the Server installation (`startup_facts`, `install_facts`, `PqxdhDeploymentHeadlinePinEnv.envGD_start`), and every adversary query keeps it (`full_inv`): quiet native commands (`forward_quiet`), environment commands (`forward_env`, from `PqxdhDeploymentHeadlinePinEnv.envGD_move`, `PqxdhDeploymentHeadlinePinEnv.envGD_ok` and `PqxdhDeploymentHeadlinePinControl.nativeImpl_env`, with `fits_of_ok`) and secrecy commands, whose native commands are coins and sends (`secrecy_quiet`, `secrecy_inv`). `ctxRun_pinFacts` (every key modes and plaintext replacement), `idealAuth_pinFacts`.
 
 No assumption or codec law; support facts only. No `PqxdhBoundary*` module is imported.
 -/
@@ -29,7 +31,7 @@ open PqxdhRecordLiftIdeal (ctxRun idealAuth)
 open PqxdhRecordLiftFlat (NativeState nativeImpl fullImpl)
 open PqxdhDeploymentEnvironment (EnvState)
 open PqxdhDeploymentHeadlinePinEnv (pins serverId InstallOk badInstall PinMove)
-open PqxdhDeploymentHeadlinePinControl (ServerIs ShellsOk ControlOk InstallFits Quiet)
+open PqxdhDeploymentHeadlinePinControl (LegacyPeers ServerIs ShellsOk ControlOk InstallFits Quiet)
 
 variable {KemSK : Type}
 
@@ -81,16 +83,17 @@ theorem shellsOk_extend {n : ℕ} (transcript : List Entry) (entry : Entry) (con
 theorem fits_of_ok {Bk : Type} {n : ℕ} (transcript : List Entry) (e : EnvState KemSK Bk)
     (agree : (summarize transcript).owners.map Prod.fst = pins e) (query : (EnvEffects n).Domain)
     (good : badInstall e query = false) : InstallFits (PinOk transcript) query := by
+  have admissible : InstallOk e query := by
+    by_contra bad
+    have flagged := (PqxdhDeploymentHeadlinePinEnv.badInstall_iff e _).2 bad
+    rw [good] at flagged
+    cases flagged
   rcases query with coin | capability
   · trivial
   · cases capability with
+    | installServer _ _ _ => exact admissible
     | installBeacon owner shell ref =>
-        have ok : InstallOk e (n := n) (.inr (.installBeacon owner shell ref)) := by
-          by_contra bad
-          have flagged := (PqxdhDeploymentHeadlinePinEnv.badInstall_iff e _).2 bad
-          rw [good] at flagged
-          cases flagged
-        obtain ⟨before, found, beacon, built⟩ := ok
+        obtain ⟨before, found, beacon, built⟩ := admissible
         have mapped : ((summarize transcript).owners.map Prod.fst)[owner]? = some before.beacon.serverIdentity := by
           rw [agree]
           unfold pins
@@ -346,7 +349,7 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) {count : ℕ}
 open PqxdhRecordLiftWorldCompiler (Label Phase)
 
-/-- The two ideal-world facts of the pin lift on a CTX-world outcome: (b) when the record control holds a Server, every successful build entry of the final transcript is the Phase 2 writer output of fields carrying that Server's identity; (a) every established owner's installed shell has the extracted associated data of the pin with which the transcript created that owner and some Beacon identity. -/
+/-- The pin lift's two protocol facts, together with the old environment's source-derived legacy peer AD: build fields carry the record Server identity; established owner AD carries its created pin; every Server peer binding has its identity-derived AD. -/
 def PinFacts {n : ℕ} {E X : Type} (result : PqxdhRecordLiftIdeal.Client n E X × PqxdhRecordLiftIdeal.CtxPrivate n) :
     Prop :=
   ∀ value ∈ result.1.1,
@@ -354,7 +357,8 @@ def PinFacts {n : ℕ} {E X : Type} (result : PqxdhRecordLiftIdeal.Client n E X 
       PqxdhDeploymentEligibility.BuildShaped codec server.identity entry) ∧
     (∀ (owner : ℕ) shell kernel, result.1.2.owners[owner]? = some (Phase.established shell kernel) →
       ∃ pin keyId beacon, (summarize value.2.1.2.transcript).owners[owner]? = some (pin, keyId) ∧
-        shell.associatedData = RawCtxServerRouting.associatedArray pin beacon)
+        shell.associatedData = RawCtxServerRouting.associatedArray pin beacon) ∧
+    (∀ server, result.1.2.server = some server → LegacyPeers server)
 
 /-- An environment coin of the compiled client keeps the record control. -/
 theorem effects_coin_control {n : ℕ} (coin : unifSpec.Domain) (control : PqxdhRecordLiftProtocol.Control n) :
@@ -397,7 +401,7 @@ theorem install_facts {n : ℕ} (modes : Label n → PqxdhRecordLiftIdeal.KeyMod
     PqxdhRecordLiftProtocol.control, PqxdhRecordLiftWorldCompiler.initial, support_pure,
     Set.mem_singleton_iff] at client
   rw [client]
-  exact ⟨⟨_, rfl, rfl⟩, rfl⟩
+  exact ⟨⟨_, rfl, rfl, PqxdhDeploymentHeadlinePinControl.legacyPeers_imported created⟩, rfl⟩
 
 /-- **The two env_g ideal-world invariants.** On every outcome of every CTX world (in particular `idealAuth`) with the ideal environment of a target, the record control and the final transcript satisfy `PinFacts`. -/
 theorem ctxRun_pinFacts {A X : Type} (modes : Label 2 → PqxdhRecordLiftIdeal.KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
@@ -439,12 +443,16 @@ theorem ctxRun_pinFacts {A X : Type} (modes : Label 2 → PqxdhRecordLiftIdeal.K
     intro value valueMember
     simp only [Option.mem_def, Option.some.injEq] at valueMember
     subst valueMember
-    refine ⟨fun server found entry entryMember => ?_, fun owner shell kernel found => finalInv.2.2.1.2 owner shell kernel found⟩
-    obtain ⟨current, currentFound, currentIdentity⟩ := finalInv.2.2.1.1
-    rw [found, Option.some.injEq] at currentFound
-    subst currentFound
-    rw [currentIdentity]
-    exact finalInv.2.2.2 entry entryMember
+    obtain ⟨current, currentFound, currentIdentity, legacy⟩ := finalInv.2.2.1.1
+    refine ⟨fun server found entry entryMember => ?_,
+      (fun owner shell kernel found => finalInv.2.2.1.2 owner shell kernel found), fun server found => ?_⟩
+    · rw [found, Option.some.injEq] at currentFound
+      subst currentFound
+      rw [currentIdentity]
+      exact finalInv.2.2.2 entry entryMember
+    · rw [found, Option.some.injEq] at currentFound
+      subst currentFound
+      exact legacy
 
 /-- **The two env_g ideal-world invariants in `idealAuth`.** On every outcome of the integrity-ideal world with the ideal environment of a target, `PinFacts` holds. -/
 theorem idealAuth_pinFacts {A X : Type} (route : RawCtxServerRouting.SenderDecoder)

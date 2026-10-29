@@ -48,7 +48,7 @@ theorem kernel_total (role : Role) (seed : PqxdhRecordLiftSeed.Seed) :
   PqxdhRecordLiftWorld.hiddenKernel_total role seed
 
 /-- A hidden Server installation is admitted exactly when the control state admits it, under every reply: refusal depends on no seed, table or primitive state, and the only private request, the allocation, replies with unit. -/
-theorem installServer_admission (keyId : Aeneas.Std.U64) (identity : RawCtxServerRouting.Identity)
+theorem installServer_admission (keyId : Aeneas.Std.U64) (identity : PeerBinding)
     (ref : KernelRef n) (control : Control n) (result : Bool × Control n)
     (supported : result ∈ support ((installServer keyId identity ref).run control)) :
     result.1 = true ↔ ∃ server, control.server = some server ∧ server.peers keyId = none ∧

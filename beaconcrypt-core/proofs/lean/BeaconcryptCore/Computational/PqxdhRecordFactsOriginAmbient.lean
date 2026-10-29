@@ -90,7 +90,7 @@ theorem resolve_kept (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pq
 theorem installServer_kept (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (ref : PqxdhRecordLiftInterface.KernelRef n)
+    (keyId : Std.U64) (identity : PqxdhRecordLiftInterface.PeerBinding) (ref : PqxdhRecordLiftInterface.KernelRef n)
     (control : PqxdhRecordLiftProtocol.Control n) (before : CtxPrivate n)
     (result : (Bool × PqxdhRecordLiftProtocol.Control n) × CtxPrivate n)
     (supported : result ∈ support ((simulateQ (ctxInterpreter modes replace setup codec)

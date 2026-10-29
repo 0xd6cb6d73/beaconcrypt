@@ -266,7 +266,7 @@ theorem initial_schedule_facts {Result : Type} (setup : Setup baseSpec KemSK) (c
 /-- A successful Server reply records the requested provenance at exactly its assigned handle. -/
 theorem server_success (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (keyId : Std.U64)
-    (identity : RawCtxServerRouting.Identity) (ref : KernelRef n) (before after : State n)
+    (identity : PeerBinding) (ref : KernelRef n) (before after : State n)
     (supported : (true, after) ∈ support ((handler setup codec route
       (.inr (.inl (.inr (.installServer keyId identity ref))))).run before)) :
     after.2.peers = Function.update before.2.peers keyId (origin ref) ∧
@@ -292,7 +292,7 @@ theorem beacon_success (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
 /-- A refused Server request cannot create or erase any provenance annotation. -/
 theorem server_refused (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (keyId : Std.U64)
-    (identity : RawCtxServerRouting.Identity) (ref : KernelRef n) (before after : State n)
+    (identity : PeerBinding) (ref : KernelRef n) (before after : State n)
     (supported : (false, after) ∈ support ((handler setup codec route
       (.inr (.inl (.inr (.installServer keyId identity ref))))).run before)) :
     after.2 = before.2 :=
@@ -322,11 +322,13 @@ theorem append_result (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
 /-- Successful hidden Server installation creates an actual source peer whose initial kernel comes from the same cached seed named by its provenance. This is an installation fact, not a claim that later evolved kernels equal their initial value. -/
 theorem server_hidden_installed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (keyId : Std.U64)
-    (identity : RawCtxServerRouting.Identity) (slot : Slot n) (before after : State n)
+    (identity : PeerBinding) (slot : Slot n) (before after : State n)
     (supported : (true, after) ∈ support ((handler setup codec route
       (.inr (.inl (.inr (.installServer keyId identity (.hidden slot)))))).run before)) :
     ∃ seed server, after.1.server = some server ∧
-      server.records.server.peers keyId = some ⟨identity, PqxdhRecordLiftWorld.kernel .server seed, ()⟩ ∧
+      server.records.server.peers keyId = some ⟨identity.identity,
+        PqxdhRecordLiftWorld.kernel .server seed,
+        identity.associatedArray server.records.server.identity⟩ ∧
       after.1.seeds.1 slot = some seed ∧ after.2.peers keyId = some slot := by
   have tagged := (server_success setup codec route keyId identity (.hidden slot) before after supported).1
   have actual := (handler_result setup codec route
@@ -342,7 +344,8 @@ theorem server_hidden_installed (setup : Setup baseSpec KemSK) (codec : Codec Re
     PqxdhRecordLiftWorld.resolve_hidden_facts .server slot _ inner member
   refine ⟨seed, { server with records := { server.records with server :=
     { server.records.server with peers := (Function.update server.records.server.peers keyId
-      (some ⟨identity, inner.1, ()⟩)) } } }, ?_, ?_, ?_, ?_⟩
+      (some ⟨identity.identity, inner.1,
+        identity.associatedArray server.records.server.identity⟩)) } } }, ?_, ?_, ?_, ?_⟩
   · exact (congrArg (fun result => result.2.server) equal).symm
   · simp [sameKernel]
   · simpa only [PqxdhRecordLiftWorld.markUsed] using

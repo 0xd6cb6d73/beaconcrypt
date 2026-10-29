@@ -233,7 +233,7 @@ def SplitC {α : Type}
       SlotGood z.2 ∧ Stored z.1.2.2 z.2
 
 /-- A native step lifted to the CE state (`PqxdhDeploymentIdealSteps.tailCE`'s form for auxiliary and mutation requests). -/
-def liftCE {α : Type} (work : PqxdhServerAuthNative.NativeGame KemSK α) :
+noncomputable def liftCE {α : Type} (work : PqxdhServerAuthNative.NativeGame KemSK α) :
     StateT (PqxdhServerAuthNative.NativeState KemSK × Option (ℕ × Coord)) (OracleComp SlotSpec) α :=
   fun s => (fun r => (r.1, (r.2, s.2))) <$> PqxdhDeploymentIdealSteps.liftS (work.run s.1)
 

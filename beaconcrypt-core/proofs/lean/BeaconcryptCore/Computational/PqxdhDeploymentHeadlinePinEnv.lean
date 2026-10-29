@@ -8,7 +8,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish
 Support facts of the ideal environment of a target (`PqxdhDeploymentIdealEnv.idealStep` and `PqxdhDeploymentIdealEnv.envGD`) for every reply of every coin, BLAKE2b request and capability request (supports of the environment's `OracleComp (EnvEffects 2)` programs, which leave every reply free), as the lift of the b2s Server-pin row of design-v2 section 7.6 (R1) needs them:
 
 - Every step keeps the environment's Server identity (`serverId`); the environment's pins (`pins`: every owner's pinned Server identity, in index order) follow the public transcript summary's owner update for the step's command and reply (a create appends the parsed pin, every other command keeps them); and a successful build reply is the Phase 2 writer output of fields carrying the Server identity (`PqxdhDeploymentEligibility.BuildShaped`). This is `PinMove`, proved for every command of the ideal step (`idealStep_move`) and of `envGD` (`envGD_move`) from the per-command facts `createPoolStep_pin`, `bundleStep_pin`, `acceptStep_pin`, `acceptSelectedEnv_pin` (the active selected accept's marker tail installs only games with the Server's identity: `tailCE_keeps`, `tail_keeps`, `acceptExposed_server`), `buildStep_pin` and `buildCachedEnv_pin` (the Phase 2 writer callback answers with the codec's writer: `build_wrote` for the native build, `genericBuild_wrote` and `freeBuild_wrote` for the factored hidden build of the marked session), `finishStep_pin`, `finishChallengeEnv_pin` and `hmacStep_pin`.
-- Every Beacon install that a step issues carries the extracted associated data of the addressed owner's pinned Server identity and some Beacon identity (`InstallOk`). A finish establishes an owner only after the outer pin check of the source commit `PqxdhBeaconPhase2Publication.finish` (Rust `beacon_prepare_finish` and `finish_registration`, `beaconcrypt-core/src/pqxdh.rs`), with the associated data `build_associated_data(expected Server identity, Beacon identity)` of the `InitSent` control (`associatedData_array`, `finish_pin`, `owner_pin`, `finishSplitFwd_for`, `groupEnv_ok`). Stated as the query bound `IsQueryBoundP (badInstall e) 0` of every step (`idealStep_ok`, `envGD_ok`).
+- Every Beacon install that a step issues carries the extracted associated data of the addressed owner's pinned Server identity and some Beacon identity (`InstallOk`). A finish establishes an owner only after the outer pin check of the source commit `PqxdhBeaconPhase2Publication.finish` (Rust `beacon_prepare_finish` and `finish_registration`, `beaconcrypt-core/src/pqxdh.rs`), with the associated data `build_associated_data(expected Server identity, Beacon identity)` of the `InitSent` control (`associatedData_array`, `finish_pin`, `owner_pin`, `finishSplitFwd_for`, `groupEnv_ok`). Every Server install issued by this old environment uses `PeerBinding.legacy`, which derives AD from the two identities. Stated as the query bound `IsQueryBoundP (badInstall e) 0` of every step (`idealStep_ok`, `envGD_ok`).
 - `envGD_start`: every startup outcome of `envGD` holds the constructed Server's identity and no owner.
 
 These are support facts of the environment program; they use no codec law, charge nothing and make no security claim. No `PqxdhBoundary*` module is imported.
@@ -212,8 +212,9 @@ def pins (e : EnvState KemSK Bk) : List PqxdhBeaconPhase2Preparation.Word32 :=
 /-- The Server identity of an environment state. -/
 def serverId (e : EnvState KemSK Bk) : RawCtxServerRouting.Identity := e.native.shared.2.server.server.identity
 
-/-- A capability request is admissible at an environment state: a Beacon install carries the extracted associated data of the addressed owner's pinned Server identity and some Beacon identity; every other request is admissible. -/
+/-- A Beacon install carries the addressed owner's pinned AD; a Server install uses the old environment's legacy binding. Other requests are admissible. -/
 def InstallOk (e : EnvState KemSK Bk) : (EnvEffects n).Domain → Prop
+  | .inr (.installServer _ binding _) => binding.associatedData = none
   | .inr (.installBeacon owner shell _) => ∃ before, e.native.owners[owner]? = some before ∧
       ∃ beacon, shell.associatedData = RawCtxServerRouting.associatedArray before.beacon.serverIdentity beacon
   | _ => True
@@ -1361,7 +1362,7 @@ theorem serverEffect_ok (e : EnvState KemSK Bk) (settled : Option PqxdhServerReg
   · trivial
   · split
     · trivial
-    · exact issue_ok e _ trivial
+    · exact issue_ok e _ rfl
 
 /-- The real build issues no inadmissible request. -/
 theorem buildStep_ok (session : ℕ) (payload : Option Pqxdh.Bytes) (e : EnvState KemSK Bk) :
@@ -1464,7 +1465,7 @@ theorem hiddenServerEffect_ok (e : EnvState KemSK Bk) (slot : PqxdhRecordLiftInt
   · trivial
   · split
     · trivial
-    · exact issue_ok e _ trivial
+    · exact issue_ok e _ rfl
 
 open PqxdhDeploymentIdealSteps (SplitBk) in
 /-- The marked build issues no inadmissible request. -/
