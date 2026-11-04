@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary
-import BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter
+import BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterCallers
 import BeaconcryptCore.PanicFreedom.PeerOwnership
 import BeaconcryptCore.PanicFreedom.RegistrationPublication
 import BeaconcryptCore.PanicFreedom.RegistrationTrivial
@@ -25,6 +25,7 @@ variable [localOps : PublicWrapperPlatform.LocalOperations] [crypto : PublicWrap
 variable [containers : PublicWrapperPlatform.ContainerOperations]
 variable [authentication : beaconcrypt.auth.Operations] [recordOps : beaconcrypt.ratchet.Operations]
 variable [wire : AdapterWirePrimitive.Operations] [writer : RegistrationWriterPrimitive.Operations]
+attribute [local irreducible] beaconcrypt_registration_writer.wire.encode_response
 
 abbrev Remote := shared.EstablishedRemote beaconcrypt_crypto.crypto_sign.PublicKey
 abbrev PeerMap := hashbrown.map.HashMap U64 Remote collections.KeyedHasher hashbrown.alloc.inner.Global
@@ -54,7 +55,7 @@ abbrev vacantInsert (entry : Vacant) (remote : Remote) :=
 structure Contracts : Prop where
   publicLeaves : AdapterPublicTrivial.Contracts
   allocation : AdapterWire.Contracts
-  serialization : AdapterRegistrationWriter.Contracts
+  serialization : AdapterRegistrationWriterCallers.ResponseCallerContracts
   parse : ∀ input, Normal (primitive.parse input)
   initial : ∀ request, Normal (localOps.ratchet_initial_ratchet_hkdf request)
   kdf : ∀ request, Normal (recordOps.kdf request)
@@ -95,6 +96,7 @@ theorem build_registration_response_total (contracts : Contracts) (self : server
   repeat'
     try simp only [uncurry, bind_tc_ok]
     first
+      | with_reducible exact AdapterRegistrationWriterCallers.response_native_total contracts.serialization (by assumption)
       | with_reducible apply normal_bind_at
       | with_reducible exact AdapterPublicTrivial.server_authentication_pin_total contracts.publicLeaves _
       | with_reducible exact registration_application_bytes_total _
@@ -111,7 +113,6 @@ theorem build_registration_response_total (contracts : Contracts) (self : server
       | with_reducible exact contracts.reserve _
       | with_reducible exact contracts.entry _ _
       | with_reducible exact contracts.insert _ _
-      | with_reducible exact AdapterRegistrationWriter.encode_response_total contracts.serialization contracts.allocation _
       | with_reducible exact AdapterPublicTrivial.established_remote_from_peer_total _ _ _
       | with_reducible exact PeerOwnership.CompletionLookup_request_total _
       | with_reducible exact PeerOwnership.CompletionLookup_resume_total _ _

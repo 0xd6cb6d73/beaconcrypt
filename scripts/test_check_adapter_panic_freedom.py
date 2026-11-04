@@ -476,6 +476,16 @@ class AdapterBoundaryTests(unittest.TestCase):
                 "preservation": {"module": "Proof", "theorem": "Proof.preserves"},
             }
         }
+        certificate[name]["kdf_composition"] = {
+            "module": "Proof",
+            "theorem": "Proof.kdf_total",
+            "preservation": {"module": "Proof", "theorem": "Proof.kdf_preserves"},
+        }
+        certificate[name]["writer_composition"] = {
+            "module": "Proof",
+            "theorem": "Proof.writer_total",
+            "preservation": {"module": "Proof", "theorem": "Proof.writer_preserves"},
+        }
         return (
             name,
             {"AdapterPublicWrapperExtraction": (namespace, instances, definitions)},
@@ -528,6 +538,388 @@ class AdapterBoundaryTests(unittest.TestCase):
             ValueError, "invalid source preservation certificate"
         ):
             checker.render(parsed, certificate)
+
+    def decoder_fixture(self, name):
+        namespace, operation = name.split(".", 1)
+        binders = "(self buffer : Nat)"
+        if namespace == "beaconcrypt_public_server_entry":
+            binders = (
+                "{R E : Type} (selected : rand_core.TryCryptoRng R E) "
+                + binders
+                + " (rng : R)"
+            )
+        ns, instances, definitions = checker.declarations(
+            f"namespace {namespace}\n"
+            "variable [BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs]\n"
+            f"def {operation} {binders} : RustM (Nat × Nat) := ok (0, self)\n"
+            f"end {namespace}\n"
+        )
+        row = {"module": "Proof", "theorem": "Proof.total", "form": "exists"}
+        if name in checker.PRESERVATION_PREDICATES:
+            row["preservation"] = {"module": "Proof", "theorem": "Proof.preserves"}
+        if name in checker.KDF_COMPOSITION:
+            row["kdf_composition"] = {
+                "module": "Proof",
+                "theorem": "Proof.kdf_total",
+                "preservation": {"module": "Proof", "theorem": "Proof.kdf_preserves"},
+            }
+        cohort = (
+            "AdapterPublicServerEntryExtraction"
+            if namespace == "beaconcrypt_public_server_entry"
+            else "AdapterPublicWrapperExtraction"
+        )
+        return {cohort: (ns, instances, definitions)}, {name: row}
+
+    def test_native_decoder_composition_is_mandatory_for_each_public_entry(self):
+        for name, contract in checker.DECODER_COMPOSITION.items():
+            with self.subTest(name=name):
+                parsed, certificates = self.decoder_fixture(name)
+                with self.assertRaisesRegex(ValueError, "invalid certificate fields"):
+                    checker.render(parsed, certificates)
+                composed = {"module": "Proof", "theorem": "Proof.source_total"}
+                if name in checker.PRESERVATION_PREDICATES:
+                    composed["preservation"] = {
+                        "module": "Proof",
+                        "theorem": "Proof.source_preserves",
+                    }
+                certificates[name]["decoder_composition"] = composed
+                rendered = checker.render(parsed, certificates)
+                source = rendered.split("theorem operation_000_decoders ", 1)[1]
+                self.assertIn(checker.DECODER_SOURCE + ".sourceCodecs", source)
+                self.assertIn("theorem source_decoder_init", source)
+                self.assertIn("theorem source_decoder_response", source)
+                self.assertIn(
+                    "= beaconcrypt_parse.extraction_decode_init input", source
+                )
+                self.assertIn(
+                    "= beaconcrypt_parse.extraction_decode_response input", source
+                )
+                self.assertIn(checker.DECODER_SOURCE + "." + contract, source)
+                self.assertNotIn(
+                    "PublicWrapperPlatform.Codecs]", source.split("\n\n", 1)[0]
+                )
+                self.assertNotIn("AdapterPublicServer.AuthenticationContracts", source)
+                self.assertNotIn("AdapterPublicBeaconFinish.Contracts", source)
+                if name.startswith("beaconcrypt_public_server_entry."):
+                    self.assertIn("AgreementRngContracts selected)", source)
+                if name in checker.PRESERVATION_PREDICATES:
+                    self.assertIn("theorem operation_000_decoders_preserves", source)
+
+    def test_native_decoder_manifest_cannot_add_a_premise_or_weaken_preservation(self):
+        name = "beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration"
+        for field in ("premise", "postcondition"):
+            parsed, certificates = self.decoder_fixture(name)
+            composed = {
+                "module": "Proof",
+                "theorem": "Proof.source_total",
+                "preservation": {
+                    "module": "Proof",
+                    "theorem": "Proof.source_preserves",
+                },
+            }
+            if field == "premise":
+                composed[field] = "False"
+            else:
+                composed["preservation"][field] = "True"
+            certificates[name]["decoder_composition"] = composed
+            with self.assertRaisesRegex(ValueError, "invalid decoder .*certificate"):
+                checker.render(parsed, certificates)
+
+    def writer_fixture(self, name):
+        kind = checker.WRITER_COMPOSITION[name]
+        namespace, operation = name.split(".", 1)
+        binders = "(self reg_out data : Nat)"
+        if kind in {"init", "response"}:
+            binders = f"({kind} : Nat)"
+        elif kind == "bundle":
+            binders = "{R E : Type} (selected : rand_core.TryCryptoRng R E) (self : Nat) (rng : R)"
+        ns, instances, definitions = checker.declarations(
+            f"namespace {namespace}\n"
+            "variable [BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations]\n"
+            f"def {operation} {binders} : RustM Nat := ok 0\nend {namespace}\n"
+        )
+        row = {"module": "Proof", "theorem": "Proof.total", "form": "exists"}
+        if name in checker.PRESERVATION_PREDICATES:
+            row["preservation"] = {"module": "Proof", "theorem": "Proof.preserves"}
+        if name in checker.SOURCE_COMPOSITION:
+            row["source_composition"] = {
+                "module": "Proof",
+                "theorem": "Proof.source_total",
+                "preservation": {
+                    "module": "Proof",
+                    "theorem": "Proof.source_preserves",
+                },
+            }
+        if name in checker.KDF_COMPOSITION:
+            row["kdf_composition"] = {
+                "module": "Proof",
+                "theorem": "Proof.kdf_total",
+                "preservation": {"module": "Proof", "theorem": "Proof.kdf_preserves"},
+            }
+        cohort = (
+            "AdapterRegistrationWriterExtraction"
+            if kind in {"init", "response"}
+            else "AdapterPublicWrapperExtraction"
+        )
+        return {cohort: (ns, instances, definitions)}, {name: row}
+
+    def test_actual_writer_composition_is_mandatory_and_has_fixed_contracts(self):
+        for name, kind in checker.WRITER_COMPOSITION.items():
+            with self.subTest(name=name):
+                parsed, certificates = self.writer_fixture(name)
+                with self.assertRaisesRegex(ValueError, "invalid certificate fields"):
+                    checker.render(parsed, certificates)
+                composed = {"module": "Proof", "theorem": "Proof.writer_total"}
+                if name in checker.PRESERVATION_PREDICATES:
+                    composed["preservation"] = {
+                        "module": "Proof",
+                        "theorem": "Proof.writer_preserves",
+                    }
+                certificates[name]["writer_composition"] = composed
+                source = checker.render(parsed, certificates).split(
+                    "theorem operation_000_writers ", 1
+                )[1]
+                self.assertIn(checker.WRITER_SELECTION + ".sourceOperations", source)
+                self.assertNotIn(
+                    "RegistrationWriterPrimitive.Operations]",
+                    source.split("\n\n", 1)[0],
+                )
+                self.assertNotIn("AdapterRegistrationWriter.Contracts", source)
+                self.assertIn("theorem source_writer_init", source)
+                self.assertIn("theorem source_writer_response", source)
+                if kind in {"init", "response"}:
+                    self.assertIn(kind.title() + "Shape " + kind, source)
+                    self.assertNotIn("output.length", source)
+                else:
+                    self.assertNotIn("_adapter_shape", source)
+                    self.assertIn(checker.PUBLIC_WRITER_SOURCE + ".", source)
+                    self.assertIn("theorem operation_000_writers_preserves", source)
+                if kind == "bundle":
+                    self.assertIn("GenerationContracts selected)", source)
+                if kind == "build":
+                    self.assertLess(
+                        source.index("[_adapter_seal_primitives"),
+                        source.index("(_adapter_writer_source_contracts"),
+                    )
+
+    def test_writer_manifest_cannot_supply_a_precondition_or_weaken_state(self):
+        name = next(
+            name for name, kind in checker.WRITER_COMPOSITION.items() if kind == "build"
+        )
+        for field in ("precondition", "postcondition"):
+            parsed, certificates = self.writer_fixture(name)
+            composed = {
+                "module": "Proof",
+                "theorem": "Proof.writer_total",
+                "preservation": {
+                    "module": "Proof",
+                    "theorem": "Proof.writer_preserves",
+                },
+            }
+            if field == "precondition":
+                composed[field] = "False"
+            else:
+                composed["preservation"][field] = "True"
+            certificates[name]["writer_composition"] = composed
+            with self.assertRaisesRegex(ValueError, "invalid writer .*certificate"):
+                checker.render(parsed, certificates)
+
+    def test_kdf_contract_selects_only_the_actual_output_width(self):
+        for operation, width in (
+            ("symmetric_ratchet_hkdf", "OUTPUT_SIZE"),
+            ("ratchet_hkdf", "76#usize"),
+            ("initial_ratchet_hkdf", "64#usize"),
+        ):
+            size_binder = "(OUTPUT_SIZE : Usize)" if width == "OUTPUT_SIZE" else ""
+            _, _, definitions = checker.declarations(
+                "namespace beaconcrypt_ratchet_kdf\n"
+                f"def ratchet.{operation} {size_binder} (request : Unit) : RustM Unit := ok ()\n"
+                "end beaconcrypt_ratchet_kdf\n"
+            )
+            premises = checker.assumptions(
+                "AdapterRatchetKdfExtraction", next(iter(definitions.values()))
+            )
+            self.assertIn(
+                "AdapterRatchetKdf.Contracts " + width + ")", " ".join(premises)
+            )
+            self.assertEqual(
+                any("OUTPUT_SIZE.val ≤ 16320" in premise for premise in premises),
+                width == "OUTPUT_SIZE",
+            )
+            self.assertNotIn("∀", " ".join(premises))
+        _, _, definitions = checker.declarations(
+            "namespace beaconcrypt_ratchet_kdf\ndef ratchet.extra : RustM Unit := ok ()\nend beaconcrypt_ratchet_kdf\n"
+        )
+        with self.assertRaisesRegex(ValueError, "unreviewed native ratchet KDF"):
+            checker.assumptions(
+                "AdapterRatchetKdfExtraction", next(iter(definitions.values()))
+            )
+
+    def test_compared_profiles_require_exact_roster_inputs_and_both_output_hashes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            for filename in ("Types.lean", "Funs.lean"):
+                (target / filename).write_text("reviewed " + filename)
+            installed = {
+                name: checker.sha256(target / name)
+                for name in ("Types.lean", "Funs.lean")
+            }
+            raw = {
+                name: "a" * 64
+                for name in (
+                    "Types.lean",
+                    "Funs.lean",
+                    "TypesExternal_Template.lean",
+                    "FunsExternal_Template.lean",
+                )
+            }
+            valid = {
+                "feature_profiles": checker.COMPARED_FEATURE_PROFILES[
+                    "AdapterRatchetKdfExtraction"
+                ],
+                "raw_generated_sha256": raw,
+                "profile_comparisons": {
+                    name: {
+                        "raw_generated_sha256": raw,
+                        "normalized_generated_sha256": installed,
+                    }
+                    for name in ("canonical", "beacon", "server")
+                },
+            }
+
+            def write(value):
+                (target / "provenance.json").write_text(json.dumps(value))
+
+            write(valid)
+            self.assertEqual(
+                set(
+                    checker.compared_profile_inventory(
+                        "AdapterRatchetKdfExtraction", target
+                    )
+                ),
+                {"canonical", "beacon", "server"},
+            )
+            for mutation in (
+                "missing-profile",
+                "extra-profile",
+                "features",
+                "raw",
+                "installed",
+                "fields",
+            ):
+                with self.subTest(mutation=mutation):
+                    changed = json.loads(json.dumps(valid))
+                    if mutation == "missing-profile":
+                        del changed["profile_comparisons"]["server"]
+                    elif mutation == "extra-profile":
+                        changed["profile_comparisons"]["other"] = changed[
+                            "profile_comparisons"
+                        ]["server"]
+                    elif mutation == "features":
+                        changed["feature_profiles"]["beacon"]["default_features"] = True
+                    elif mutation == "raw":
+                        changed["profile_comparisons"]["beacon"][
+                            "raw_generated_sha256"
+                        ]["Funs.lean"] = ("b" * 64)
+                    elif mutation == "installed":
+                        changed["profile_comparisons"]["server"][
+                            "normalized_generated_sha256"
+                        ]["Funs.lean"] = ("b" * 64)
+                    else:
+                        changed["profile_comparisons"]["beacon"]["ignored"] = True
+                    write(changed)
+                    with self.assertRaisesRegex(ValueError, "compared feature-profile"):
+                        checker.compared_profile_inventory(
+                            "AdapterRatchetKdfExtraction", target
+                        )
+
+    def test_kdf_source_contracts_supply_missing_instances_and_no_opaque_kdf_law(self):
+        for name, (kind, _) in checker.KDF_COMPOSITION.items():
+            namespace, operation = name.split(".", 1)
+            _, _, definitions = checker.declarations(
+                f"namespace {namespace}\ndef {operation} (self : Unit) : RustM Unit := ok ()\nend {namespace}\n"
+            )
+            definition = next(iter(definitions.values()))
+            premises = checker.kdf_composition_assumptions(definition, [], False)
+            joined = " ".join(premises)
+            self.assertIn("PublicWrapperPlatform.Material]", joined)
+            self.assertIn("AdapterInitEdPrimitive.Operations]", joined)
+            self.assertIn("PublicWrapperPlatform.CryptoOperations]", joined)
+            self.assertIn("AdapterRatchetKdfPrimitive.Operations]", joined)
+            self.assertIn("AdapterRatchetKdf.Contracts 76#usize", joined)
+            self.assertNotIn("AdapterRecordSend.Contracts", joined)
+            self.assertNotIn("AdapterRecordReceive.Contracts", joined)
+            self.assertEqual(
+                "AdapterRatchetKdf.Contracts 64#usize" in joined,
+                kind in {"finish", "build"},
+            )
+            selections = " ".join(checker.kdf_selection(kind))
+            if kind == "finish":
+                self.assertIn(
+                    "AdapterRegistrationDecoderSource.sourceCodecs", selections
+                )
+                self.assertNotIn("decode", joined)
+            if kind == "build":
+                self.assertLess(
+                    joined.index("AdapterSealPrimitive.Operations]"),
+                    joined.index("AdapterRatchetKdfSource.ResponseContracts"),
+                )
+                self.assertIn(
+                    "RegistrationNativeSourceEncoders.sourceOperations", selections
+                )
+            if ".server." in name and name.startswith("beaconcrypt_public_ordinary."):
+                self.assertIn("AdapterPublicOrdinary.LookupContracts", joined)
+                self.assertIn("ValidServer self", joined)
+        name = next(iter(checker.KDF_COMPOSITION))
+        ns, operation = name.split(".", 1)
+        _, _, definitions = checker.declarations(
+            f"namespace {ns}\ndef {operation} : RustM Unit := ok ()\nend {ns}\n"
+        )
+        present = [
+            "[_existing : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]"
+        ]
+        premises = checker.kdf_composition_assumptions(
+            next(iter(definitions.values())), present, False
+        )
+        self.assertFalse(
+            any("PublicWrapperPlatform.Material]" in premise for premise in premises)
+        )
+
+    def test_source_safety_modules_cannot_be_silently_omitted(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            proof = root / "beaconcrypt-core/proofs/lean/BeaconcryptCore/PanicFreedom"
+            proof.mkdir(parents=True)
+            with self.assertRaisesRegex(
+                ValueError, "required source-safety module omission"
+            ):
+                checker.safety_modules(root)
+            for module in checker.REQUIRED_SOURCE_SAFETY_MODULES:
+                (proof / (module + ".lean")).write_text("-- fixture\n")
+            self.assertEqual(
+                len(checker.safety_modules(root)),
+                len(checker.REQUIRED_SOURCE_SAFETY_MODULES),
+            )
+            (proof / "AdapterFiniteCallsCoverage.lean").unlink()
+            with self.assertRaisesRegex(ValueError, "AdapterFiniteCallsCoverage"):
+                checker.safety_modules(root)
+
+    def test_kdf_source_manifest_cannot_supply_its_own_premise(self):
+        name = "beaconcrypt.ratchet.execute_record_receive"
+        ns, instances, definitions = checker.declarations(
+            "namespace beaconcrypt\ndef ratchet.execute_record_receive : RustM Unit := ok ()\nend beaconcrypt\n"
+        )
+        parsed = {"AdapterRecordExtraction": (ns, instances, definitions)}
+        row = {"module": "Proof", "theorem": "Proof.total", "form": "exists"}
+        with self.assertRaisesRegex(ValueError, "invalid certificate fields"):
+            checker.render(parsed, {name: row})
+        row["kdf_composition"] = {
+            "module": "Proof",
+            "theorem": "Proof.source_total",
+            "precondition": "False",
+        }
+        with self.assertRaisesRegex(ValueError, "invalid KDF composition certificate"):
+            checker.render(parsed, {name: row})
 
     def test_lift_inventory_covers_multiline_definitions_and_rejects_new_modules(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -666,9 +1058,9 @@ class AdapterBoundaryTests(unittest.TestCase):
             )
         )
         reviewed = reviewed["native_cohorts"]
-        self.assertEqual(sum(len(ds) for _, _, ds in parsed.values()), 130)
+        self.assertEqual(sum(len(ds) for _, _, ds in parsed.values()), 133)
         self.assertEqual(
-            sum(d.monadic for _, _, ds in parsed.values() for d in ds.values()), 99
+            sum(d.monadic for _, _, ds in parsed.values() for d in ds.values()), 102
         )
         self.assertEqual(
             reviewed["AdapterBeaconConstructorExtraction"]["features"],
@@ -682,6 +1074,11 @@ class AdapterBoundaryTests(unittest.TestCase):
             ["beacon", "pqxdh", "server"],
         )
         self.assertTrue(reviewed["AdapterRecordHelpersExtraction"]["external_models"])
+        self.assertEqual(
+            set(reviewed["AdapterRatchetKdfExtraction"]["compared_feature_profiles"]),
+            {"canonical", "beacon", "server"},
+        )
+        self.assertEqual(len(reviewed["AdapterRatchetKdfExtraction"]["definitions"]), 3)
 
 
 if __name__ == "__main__":

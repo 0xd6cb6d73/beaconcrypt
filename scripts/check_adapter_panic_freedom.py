@@ -53,6 +53,18 @@ COHORTS = {
     "AdapterPublicOrdinaryExtraction": "extract_adapter_public_ordinary",
     "AdapterBeaconConstructorExtraction": "extract_adapter_beacon_constructor",
     "AdapterServerConstructorExtraction": "extract_adapter_server_constructor",
+    "AdapterRatchetKdfExtraction": "extract_adapter_ratchet_kdf",
+}
+# The new source bodies are identical under both production role-only profiles.
+COMPARED_FEATURE_PROFILES = {
+    "AdapterRatchetKdfExtraction": {
+        "canonical": {
+            "default_features": False,
+            "features": ["beacon", "server", "pqxdh"],
+        },
+        "beacon": {"default_features": False, "features": ["beacon", "pqxdh"]},
+        "server": {"default_features": False, "features": ["server", "pqxdh"]},
+    }
 }
 INTERPRETER_LIFTS = {
     "AdapterAuthenticationRequestExtraction",
@@ -120,6 +132,55 @@ PUBLIC_TRIVIAL_CONTRACTS = {
 ORDINARY = "BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary"
 SOURCE_COMPOSITION = {
     "beaconcrypt_public_wrapper.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response": "BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource",
+}
+DECODER_SOURCE = "BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource"
+DECODER_COMPOSITION = {
+    "beaconcrypt_public_wrapper.server.Server.authenticate_registration_lookup": "AuthenticationContracts",
+    "beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration": "FinishContracts",
+    "beaconcrypt_public_server_entry.server.Server.get_shared_secret_with_rng": "AuthenticationContracts",
+}
+WRITER_SOURCE = "BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterSource"
+PUBLIC_WRITER_SOURCE = (
+    "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource"
+)
+WRITER_SELECTION = "BeaconcryptCore.Computational.RegistrationNativeSourceEncoders"
+WRITER_COMPOSITION = {
+    "beaconcrypt_registration_writer.wire.encode_init": "init",
+    "beaconcrypt_registration_writer.wire.encode_response": "response",
+    "beaconcrypt_public_wrapper.beacon.Beacon.get_registration_bundle_with_rng": "bundle",
+    "beaconcrypt_public_wrapper.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response": "build",
+}
+KDF_SOURCE = "BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource"
+KDF_COMPOSITION = {
+    "beaconcrypt_record_send.ratchet.execute_record_send": (
+        "send",
+        "execute_record_send",
+    ),
+    "beaconcrypt.ratchet.execute_record_receive": ("receive", "execute_record_receive"),
+    "beaconcrypt_public_ordinary.beacon.Beacon.encrypt_message": (
+        "send",
+        "beacon_encrypt_message",
+    ),
+    "beaconcrypt_public_ordinary.beacon.Beacon.decrypt_message": (
+        "receive",
+        "beacon_decrypt_message",
+    ),
+    "beaconcrypt_public_ordinary.server.Server.encrypt_message": (
+        "send",
+        "server_encrypt_message",
+    ),
+    "beaconcrypt_public_ordinary.server.Server.decrypt_message": (
+        "receive",
+        "server_decrypt_message",
+    ),
+    "beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration": (
+        "finish",
+        "finish_registration",
+    ),
+    "beaconcrypt_public_wrapper.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response": (
+        "build",
+        "build_registration_response",
+    ),
 }
 PRESERVATION_PREDICATES = {
     **{
@@ -331,6 +392,23 @@ def assumptions(cohort: str, definition: "Definition") -> list[str]:
         return [
             "(_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterPublicServerBuild.Contracts)"
         ]
+    if cohort == "AdapterRatchetKdfExtraction":
+        sizes = {
+            "ratchet.symmetric_ratchet_hkdf": "OUTPUT_SIZE",
+            "ratchet.ratchet_hkdf": "76#usize",
+            "ratchet.initial_ratchet_hkdf": "64#usize",
+        }
+        if definition.local_name not in sizes:
+            raise ValueError(
+                "unreviewed native ratchet KDF operation: " + definition.name
+            )
+        size = sizes[definition.local_name]
+        result = [
+            f"(_adapter_kdf : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts {size})"
+        ]
+        if size == "OUTPUT_SIZE":
+            result.append("(_adapter_output_bound : OUTPUT_SIZE.val ≤ 16320)")
+        return result
     if cohort not in CONTRACTS:
         raise ValueError(
             f"no reviewed external-operation contract for {definition.name}"
@@ -592,6 +670,33 @@ def interpreter_lifts(proof: Path) -> dict:
     return result
 
 
+def compared_profile_inventory(cohort: str, directory: Path) -> dict | None:
+    if cohort not in COMPARED_FEATURE_PROFILES:
+        return None
+    provenance = json.loads((directory / "provenance.json").read_text())
+    expected = COMPARED_FEATURE_PROFILES[cohort]
+    if provenance.get("feature_profiles") != expected:
+        raise ValueError("compared feature-profile configuration drift: " + cohort)
+    comparisons = provenance.get("profile_comparisons")
+    if not isinstance(comparisons, dict) or set(comparisons) != set(expected):
+        raise ValueError("compared feature-profile roster drift: " + cohort)
+    installed = {name: sha256(directory / name) for name in ("Types.lean", "Funs.lean")}
+    for name, comparison in comparisons.items():
+        if not isinstance(comparison, dict) or set(comparison) != {
+            "raw_generated_sha256",
+            "normalized_generated_sha256",
+        }:
+            raise ValueError("compared feature-profile fields drift: " + name)
+        if comparison["raw_generated_sha256"] != provenance["raw_generated_sha256"]:
+            raise ValueError("compared feature-profile raw output drift: " + name)
+        if comparison["normalized_generated_sha256"] != installed:
+            raise ValueError("compared feature-profile installed output drift: " + name)
+    return {
+        name: {**configuration, "generated_sha256": installed}
+        for name, configuration in expected.items()
+    }
+
+
 def inventory(
     root: Path,
 ) -> tuple[dict, dict[str, tuple[str, list[str], dict[str, Definition]]]]:
@@ -642,6 +747,9 @@ def inventory(
                 for name, definition in sorted(definitions.items())
             },
         }
+        compared = compared_profile_inventory(cohort, directory)
+        if compared is not None:
+            output[cohort]["compared_feature_profiles"] = compared
     exceptions = {
         name
         for _, _, ds in parsed.values()
@@ -695,7 +803,62 @@ def preservation_assumptions(cohort: str, definition: Definition) -> list[str]:
     return result
 
 
+REQUIRED_SOURCE_SAFETY_MODULES = {
+    "AdapterRegistrationDecoderSource",
+    "AdapterRegistrationWriterCallers",
+    "AdapterRegistrationWriterSource",
+    "AdapterRegistrationWriterSourceRegression",
+    "AdapterPublicRegistrationWriterSource",
+    "AdapterFiniteCalls",
+    "AdapterFiniteCallsCoverage",
+    "AdapterFiniteCallsSource",
+    "AdapterFiniteCallsKdfSource",
+    "AdapterRatchetKdf",
+    "AdapterRatchetKdfSource",
+    "AdapterRatchetKdfRegression",
+}
+
+
+# Typed, independently compiled guards pin native routing, structural iteration,
+# construction, and the exact normal-return/valid-state conclusions. Their
+# statements live in reviewed Lean code, never in an arbitrary JSON proposition.
+REQUIRED_SOURCE_THEOREMS = [
+    "BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage." + role + suffix
+    for role in ("beacon", "server")
+    for suffix in (
+        "_finish_native" if role == "beacon" else "_build_native",
+        "_bundle_native" if role == "beacon" else "_accept_native",
+        "_send_native",
+        "_receive_native",
+        "_nil_exact",
+        "_cons_exact",
+        "_sequence_normal_valid",
+        "_constructor_native",
+        "_constructor_sequence_normal_valid",
+        "_successful_constructor_sequence_normal_valid",
+        "_hosted_constructor_native",
+        "_hosted_constructor_sequence_normal_valid",
+        "_hosted_successful_constructor_sequence_normal_valid",
+    )
+] + [
+    "BeaconcryptCore.PanicFreedom.AdapterFiniteCallsKdfSource." + endpoint
+    for endpoint in (
+        "beacon_calls_preserve",
+        "server_calls_preserve",
+        "constructor_and_beacon_calls_preserve",
+        "constructor_and_server_calls_preserve",
+        "hosted_constructor_and_beacon_calls_preserve",
+        "hosted_constructor_and_server_calls_preserve",
+    )
+]
+
+
 def safety_modules(root: Path) -> list[str]:
+    proof = root / "beaconcrypt-core/proofs/lean/BeaconcryptCore/PanicFreedom"
+    actual = {path.stem for path in proof.glob("Adapter*.lean")}
+    missing = REQUIRED_SOURCE_SAFETY_MODULES - actual
+    if missing:
+        raise ValueError(f"required source-safety module omission: {sorted(missing)}")
     return sorted(
         "BeaconcryptCore.PanicFreedom." + path.stem
         for path in (
@@ -720,6 +883,157 @@ def source_composition_assumptions(name: str, preserve: bool) -> list[str]:
             "[_adapter_lookup : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations]",
             "(_adapter_laws : BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildState.ContainerContracts)",
             f"(_adapter_valid : {ORDINARY}.ValidServer self)",
+        ]
+    return result
+
+
+def decoder_composition_assumptions(
+    definition: Definition, preserve: bool
+) -> list[str]:
+    """Actual extracted decoders; no normality premise for an opaque codec."""
+    result = [
+        "[_adapter_validator : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations]",
+        f"(_adapter_decoded_contracts : {DECODER_SOURCE}.{DECODER_COMPOSITION[definition.name]})",
+    ]
+    if definition.name.startswith("beaconcrypt_public_server_entry."):
+        loops = "BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops"
+        result += [
+            f"(_adapter_agreement : {loops}.AgreementContracts)",
+            f"(_adapter_rng : {loops}.AgreementRngContracts {selected_rng(definition)})",
+            "(_adapter_replay : BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept.ReplayContracts)",
+        ]
+        if preserve:
+            result += [
+                "[_adapter_lookup : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations]",
+                f"(_adapter_valid : {ORDINARY}.ValidServer self)",
+            ]
+    elif preserve:
+        result += [f"(_adapter_valid : {ORDINARY}.ValidBeacon self)"]
+    return result
+
+
+def writer_composition_assumptions(definition: Definition, preserve: bool) -> list[str]:
+    """Source serializers at native signed-view callers and sized helper inputs."""
+    kind = WRITER_COMPOSITION[definition.name]
+    result = [
+        "(_adapter_other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)",
+    ]
+    if kind in {"init", "response"}:
+        shape = "Init" if kind == "init" else "Response"
+        result += [
+            "(_adapter_allocation : BeaconcryptCore.PanicFreedom.AdapterWire.Contracts)",
+            f"(_adapter_shape : BeaconcryptCore.Refinement.RegistrationSerializer{shape}Bytes.{shape}Shape {kind})",
+        ]
+    else:
+        contract = "BundleContracts" if kind == "bundle" else "ResponseContracts"
+        if kind == "bundle":
+            result += [
+                f"(_adapter_writer_source_contracts : {PUBLIC_WRITER_SOURCE}.{contract})",
+                "(_adapter_rng : BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.GenerationContracts "
+                + selected_rng(definition)
+                + ")",
+            ]
+        else:
+            result += [
+                "[_adapter_seal_primitives : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]",
+                "[_adapter_frame_fallback : BeaconcryptCore.Refinement.FrameDispatchFallback.Operations]",
+                f"(_adapter_writer_source_contracts : {PUBLIC_WRITER_SOURCE}.{contract})",
+                "(_adapter_seal_fallback : BeaconcryptCore.Refinement.AdapterSealJoinCallbacks.Operations)",
+                "(_adapter_writer_fallback : BeaconcryptCore.Refinement.RecordRoutingCallbacks.Operations)",
+            ]
+        if preserve:
+            if kind == "build":
+                result += [
+                    "[_adapter_lookup : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations]",
+                    "(_adapter_laws : BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildState.ContainerContracts)",
+                ]
+            state = "Beacon" if kind == "bundle" else "Server"
+            result += [f"(_adapter_valid : {ORDINARY}.Valid{state} self)"]
+    return result
+
+
+def kdf_composition_assumptions(
+    definition: Definition, instance_binders: list[str], preserve: bool
+) -> list[str]:
+    """Selected API success/borrow laws replace opaque ratchet KDF normality."""
+    kind, _ = KDF_COMPOSITION[definition.name]
+    result = []
+    required = [
+        "BeaconcryptCore.Refinement.PublicWrapperPlatform.Material",
+        "BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations",
+        "BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations",
+        "BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations",
+    ]
+    if kind == "finish":
+        required += [
+            "BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations"
+        ]
+    if kind == "build":
+        required += [
+            "BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations",
+            "BeaconcryptCore.Refinement.FrameDispatchFallback.Operations",
+        ]
+    for index, instance in enumerate(required):
+        if not any(
+            binder.endswith(": " + instance + "]") for binder in instance_binders
+        ):
+            result.append(f"[_adapter_kdf_instance_{index:02d} : {instance}]")
+    result += [
+        "(_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)"
+    ]
+    if kind in {"finish", "build"}:
+        result += [
+            "(_adapter_initial : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 64#usize)"
+        ]
+    contract = {
+        "send": "SendContracts",
+        "receive": "ReceiveContracts",
+        "finish": "FinishContracts",
+        "build": "ResponseContracts",
+    }[kind]
+    result += [f"(_adapter_kdf_leaves : {KDF_SOURCE}.{contract})"]
+    if kind == "build":
+        result += [
+            "(_adapter_other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)",
+            "(_adapter_seal_fallback : BeaconcryptCore.Refinement.AdapterSealJoinCallbacks.Operations)",
+            "(_adapter_writer_fallback : BeaconcryptCore.Refinement.RecordRoutingCallbacks.Operations)",
+        ]
+        if preserve:
+            result += [
+                "[_adapter_lookup : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations]",
+                "(_adapter_laws : BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildState.ContainerContracts)",
+            ]
+    if definition.name.startswith("beaconcrypt_public_ordinary.server."):
+        result += [f"(_adapter_lookups : {ORDINARY}.LookupContracts)"]
+    if definition.name.startswith("beaconcrypt_public_ordinary.") or preserve:
+        state = "Server" if ".server." in definition.name else "Beacon"
+        result += [f"(_adapter_valid : {ORDINARY}.Valid{state} self)"]
+    return result
+
+
+def kdf_selection(kind: str) -> list[str]:
+    if kind in {"send", "receive"}:
+        dictionary = (
+            "beaconcrypt_record_send.ratchet.Operations"
+            if kind == "send"
+            else "beaconcrypt.ratchet.Operations"
+        )
+        selector = (
+            "sourceSendOperations" if kind == "send" else "sourceReceiveOperations"
+        )
+        return [f"letI := {KDF_SOURCE}.{selector} (inferInstance : {dictionary})"]
+    result = [
+        f"letI := {KDF_SOURCE}.sourceReceiveOperations (inferInstance : beaconcrypt.ratchet.Operations)",
+        f"letI := {KDF_SOURCE}.sourceLocalOperations (inferInstance : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations)",
+    ]
+    if kind == "finish":
+        result += [f"letI := {DECODER_SOURCE}.sourceCodecs"]
+    else:
+        result += [
+            f"letI := {WRITER_SELECTION}.sourceOperations _adapter_other",
+            "letI := BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource.sourceLocalOperations "
+            "(inferInstance : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations) "
+            "_adapter_seal_fallback _adapter_writer_fallback",
         ]
     return result
 
@@ -749,6 +1063,15 @@ def render(
         if name in SOURCE_COMPOSITION:
             required.add("source_composition")
             imports.add(SOURCE_COMPOSITION[name])
+        if name in DECODER_COMPOSITION:
+            required.add("decoder_composition")
+            imports.add(DECODER_SOURCE)
+        if name in WRITER_COMPOSITION:
+            required.add("writer_composition")
+            imports.update((WRITER_SOURCE, PUBLIC_WRITER_SOURCE))
+        if name in KDF_COMPOSITION:
+            required.add("kdf_composition")
+            imports.add(KDF_SOURCE)
         if set(certificate) != required:
             raise ValueError(f"invalid certificate fields for {name}")
         if not NAME.fullmatch(certificate["module"]) or not NAME.fullmatch(
@@ -777,6 +1100,61 @@ def render(
             ):
                 raise ValueError(f"invalid source preservation certificate for {name}")
             imports.update((composed["module"], preserved["module"]))
+        if name in DECODER_COMPOSITION:
+            composed = certificate["decoder_composition"]
+            fields = {"module", "theorem"}
+            if name in PRESERVATION_PREDICATES:
+                fields.add("preservation")
+            if set(composed) != fields or not all(
+                NAME.fullmatch(composed[key]) for key in ("module", "theorem")
+            ):
+                raise ValueError(f"invalid decoder composition certificate for {name}")
+            imports.add(composed["module"])
+            if name in PRESERVATION_PREDICATES:
+                preserved = composed["preservation"]
+                if set(preserved) != {"module", "theorem"} or not all(
+                    NAME.fullmatch(value) for value in preserved.values()
+                ):
+                    raise ValueError(
+                        f"invalid decoder preservation certificate for {name}"
+                    )
+                imports.add(preserved["module"])
+        if name in WRITER_COMPOSITION:
+            composed = certificate["writer_composition"]
+            fields = {"module", "theorem"}
+            if name in PRESERVATION_PREDICATES:
+                fields.add("preservation")
+            if set(composed) != fields or not all(
+                NAME.fullmatch(composed[key]) for key in ("module", "theorem")
+            ):
+                raise ValueError(f"invalid writer composition certificate for {name}")
+            imports.add(composed["module"])
+            if name in PRESERVATION_PREDICATES:
+                preserved = composed["preservation"]
+                if set(preserved) != {"module", "theorem"} or not all(
+                    NAME.fullmatch(value) for value in preserved.values()
+                ):
+                    raise ValueError(
+                        f"invalid writer preservation certificate for {name}"
+                    )
+                imports.add(preserved["module"])
+        if name in KDF_COMPOSITION:
+            composed = certificate["kdf_composition"]
+            fields = {"module", "theorem"}
+            if name in PRESERVATION_PREDICATES:
+                fields.add("preservation")
+            if set(composed) != fields or not all(
+                NAME.fullmatch(composed[key]) for key in ("module", "theorem")
+            ):
+                raise ValueError(f"invalid KDF composition certificate for {name}")
+            imports.add(composed["module"])
+            if name in PRESERVATION_PREDICATES:
+                preserved = composed["preservation"]
+                if set(preserved) != {"module", "theorem"} or not all(
+                    NAME.fullmatch(value) for value in preserved.values()
+                ):
+                    raise ValueError(f"invalid KDF preservation certificate for {name}")
+                imports.add(preserved["module"])
     lines = [f"import {module}" for module in sorted(imports)]
     lines += [
         "import Lean.Util.CollectAxioms",
@@ -906,7 +1284,202 @@ def render(
                         f"  adapter_certificate {endpoint['theorem']}",
                         "",
                     ]
+            if name in DECODER_COMPOSITION:
+                composed = certificate["decoder_composition"]
+                # The source-selected wrapper has no ambient opaque Codecs dictionary.
+                decoder_instances = [
+                    binder
+                    for binder in instance_binders
+                    if not binder.endswith("PublicWrapperPlatform.Codecs]")
+                ]
+                for preserve in (
+                    (False, True) if name in PRESERVATION_PREDICATES else (False,)
+                ):
+                    checked_decoder_name = (
+                        checked_name + "_decoders" + ("_preserves" if preserve else "")
+                    )
+                    names.append(checked_decoder_name)
+                    endpoint = composed["preservation"] if preserve else composed
+                    postcondition = (
+                        " ∧ ("
+                        + PRESERVATION_PREDICATES[name].format(result=witness)
+                        + ")"
+                        if preserve
+                        else ""
+                    )
+                    lines += [
+                        "-- Actual arbitrary-slice source decoders, including malformed-input rejection.",
+                        f"theorem {checked_decoder_name} {' '.join(decoder_instances)} {definition.binders}",
+                    ]
+                    lines += [
+                        f"    {premise}"
+                        for premise in decoder_composition_assumptions(
+                            definition, preserve
+                        )
+                    ]
+                    lines += [
+                        f"    : letI := {DECODER_SOURCE}.sourceCodecs",
+                        f"      ∃ {witness}, {name} {definition.arguments} = ok {witness}{postcondition} := by",
+                        f"  adapter_certificate {endpoint['theorem']}",
+                        "",
+                    ]
+            if name in WRITER_COMPOSITION:
+                composed = certificate["writer_composition"]
+                writer_instances = [
+                    binder
+                    for binder in instance_binders
+                    if not binder.endswith("RegistrationWriterPrimitive.Operations]")
+                ]
+                for preserve in (
+                    (False, True) if name in PRESERVATION_PREDICATES else (False,)
+                ):
+                    checked_writer_name = (
+                        checked_name + "_writers" + ("_preserves" if preserve else "")
+                    )
+                    names.append(checked_writer_name)
+                    endpoint = composed["preservation"] if preserve else composed
+                    postcondition = (
+                        " ∧ ("
+                        + PRESERVATION_PREDICATES[name].format(result=witness)
+                        + ")"
+                        if preserve
+                        else ""
+                    )
+                    lines += [
+                        "-- Actual serializers; signed public callers derive packet shape and native sizing derives room.",
+                        f"theorem {checked_writer_name} {' '.join(writer_instances)} {definition.binders}",
+                    ]
+                    lines += [
+                        f"    {premise}"
+                        for premise in writer_composition_assumptions(
+                            definition, preserve
+                        )
+                    ]
+                    lines += [
+                        f"    : letI := {WRITER_SELECTION}.sourceOperations _adapter_other"
+                    ]
+                    if WRITER_COMPOSITION[name] == "build":
+                        lines += [
+                            "      letI := BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource.sourceLocalOperations "
+                            "(inferInstance : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations) "
+                            "_adapter_seal_fallback _adapter_writer_fallback"
+                        ]
+                    lines += [
+                        f"      ∃ {witness}, {name} {definition.arguments} = ok {witness}{postcondition} := by",
+                        f"  adapter_certificate {endpoint['theorem']}",
+                        "",
+                    ]
+            if name in KDF_COMPOSITION:
+                composed = certificate["kdf_composition"]
+                kind = KDF_COMPOSITION[name][0]
+                replaced = {
+                    "finish": "PublicWrapperPlatform.Codecs]",
+                    "build": "RegistrationWriterPrimitive.Operations]",
+                }.get(kind)
+                kdf_instances = [
+                    binder
+                    for binder in instance_binders
+                    if not replaced or not binder.endswith(replaced)
+                ]
+                for preserve in (
+                    (False, True) if name in PRESERVATION_PREDICATES else (False,)
+                ):
+                    checked_kdf_name = (
+                        checked_name + "_kdf" + ("_preserves" if preserve else "")
+                    )
+                    names.append(checked_kdf_name)
+                    endpoint = composed["preservation"] if preserve else composed
+                    postcondition = (
+                        " ∧ ("
+                        + PRESERVATION_PREDICATES[name].format(result=witness)
+                        + ")"
+                        if preserve
+                        else ""
+                    )
+                    lines += [
+                        "-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.",
+                        f"theorem {checked_kdf_name} {' '.join(kdf_instances)} {definition.binders}",
+                    ]
+                    lines += [
+                        f"    {premise}"
+                        for premise in kdf_composition_assumptions(
+                            definition, kdf_instances, preserve
+                        )
+                    ]
+                    selections = kdf_selection(KDF_COMPOSITION[name][0])
+                    lines += ["    : " + selections[0]] + [
+                        "      " + selected for selected in selections[1:]
+                    ]
+                    lines += [
+                        f"      ∃ {witness}, {name} {definition.arguments} = ok {witness}{postcondition} := by",
+                        f"  adapter_certificate {endpoint['theorem']}",
+                        "",
+                    ]
         lines += [f"end {cohort}", ""]
+    if set(certificates) & set(DECODER_COMPOSITION):
+        for operation, field in (
+            ("init", "decodeInit"),
+            ("response", "decodeResponse"),
+        ):
+            checked = "source_decoder_" + operation
+            names.append(checked)
+            lines += [
+                "-- Pin the selected dictionary to the original extracted decoder, not just a normally returning codec.",
+                f"theorem {checked} [_adapter_validator : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations] (input : Slice U8) :",
+                f"    {DECODER_SOURCE}.sourceCodecs.{field} input = beaconcrypt_parse.extraction_decode_{operation} input := by",
+                f"  adapter_certificate {DECODER_SOURCE}.source_{operation}",
+                "",
+            ]
+    if set(certificates) & set(WRITER_COMPOSITION):
+        for operation, packet in (("init", "initkex"), ("response", "kexresponse")):
+            checked = "source_writer_" + operation
+            names.append(checked)
+            lines += [
+                "-- Pin the selected serializer leaf to the original extraction on every input and buffer.",
+                f"theorem {checked} (other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)",
+                f"    (packet : beaconcrypt_parse.transport.{packet}) (output : Slice U8) :",
+                f"    @beaconcrypt_parse.encode_{operation} ({WRITER_SELECTION}.sourceOperations other) packet output =",
+                f"      @beaconcrypt_parse.extraction_encode_{operation} (BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.operations other) packet output := by",
+                f"  adapter_certificate {WRITER_SELECTION}.runtime_{operation}_binding",
+                "",
+            ]
+    if set(certificates) & set(KDF_COMPOSITION):
+        for operation, dictionary, field, native in (
+            (
+                "send",
+                "beaconcrypt_record_send.ratchet.Operations",
+                "kdf",
+                "ratchet_hkdf",
+            ),
+            ("receive", "beaconcrypt.ratchet.Operations", "kdf", "ratchet_hkdf"),
+            (
+                "initial",
+                "BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations",
+                "ratchet_initial_ratchet_hkdf",
+                "initial_ratchet_hkdf",
+            ),
+        ):
+            checked = "source_kdf_" + operation
+            names.append(checked)
+            selector = {
+                "send": "sourceSendOperations",
+                "receive": "sourceReceiveOperations",
+                "initial": "sourceLocalOperations",
+            }[operation]
+            lines += [
+                f"theorem {checked} [_adapter_material : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]",
+                "    [_adapter_platform : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]",
+                "    [_adapter_primitive : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]",
+                "    [_adapter_crypto : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]",
+                "    [_adapter_hkdf : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]",
+                f"    (previous : {dictionary}) (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest) :",
+                f"    ({KDF_SOURCE}.{selector} previous).{field} request =",
+                f"      beaconcrypt_ratchet_kdf.ratchet.{native} request := by",
+                f"  adapter_certificate {KDF_SOURCE}.source_{operation}_kdf",
+                "",
+            ]
+    if additional_modules is not None:
+        names.extend(REQUIRED_SOURCE_THEOREMS)
     lines += [
         "-- Inspect transitive dependencies of every exported contract, including imported libraries.",
         "run_cmd do",
@@ -1169,6 +1742,117 @@ def check_lean_controls(root: Path) -> None:
                 + output
             )
         print("Compiled adapter safety control: opaque-child-discharge PASS")
+
+    name = "beaconcrypt_public_wrapper.server.Server.authenticate_registration_lookup"
+    component = json.loads((proof / "adapter-panic-freedom.json").read_text())[name]
+    component["decoder_composition"] = {
+        "module": component["module"],
+        "theorem": component["theorem"],
+    }
+    with tempfile.TemporaryDirectory(
+        prefix="beaconcrypt-adapter-decoder-control-"
+    ) as directory:
+        temporary = Path(directory)
+        generated = temporary / "OpaqueDecoder.lean"
+        generated.write_text(
+            render(
+                {cohort: (namespace, instances, {name: definitions[name]})},
+                {name: component},
+            )
+        )
+        checked = subprocess.run(
+            lean_control_command(
+                "adapter-opaque-decoder-contract",
+                ["lake", "env", "lean", "--root=" + str(temporary), str(generated)],
+            ),
+            cwd=proof,
+            text=True,
+            capture_output=True,
+        )
+        output = checked.stdout + checked.stderr
+        if not checked.returncode or not any(
+            message in output for message in ("failed", "unify", "type mismatch")
+        ):
+            raise ValueError(
+                "opaque decoder certificate was accepted as source composition:\n"
+                + output
+            )
+        print("Compiled adapter safety control: opaque-decoder-discharge PASS")
+
+    cohort = "AdapterRegistrationWriterExtraction"
+    namespace, instances, definitions = all_parsed[cohort]
+    name = "beaconcrypt_registration_writer.wire.encode_init"
+    component = json.loads((proof / "adapter-panic-freedom.json").read_text())[name]
+    component["writer_composition"] = {
+        "module": component["module"],
+        "theorem": component["theorem"],
+    }
+    with tempfile.TemporaryDirectory(
+        prefix="beaconcrypt-adapter-writer-control-"
+    ) as directory:
+        temporary = Path(directory)
+        generated = temporary / "OpaqueWriter.lean"
+        generated.write_text(
+            render(
+                {cohort: (namespace, instances, {name: definitions[name]})},
+                {name: component},
+            )
+        )
+        checked = subprocess.run(
+            lean_control_command(
+                "adapter-opaque-writer-contract",
+                ["lake", "env", "lean", "--root=" + str(temporary), str(generated)],
+            ),
+            cwd=proof,
+            text=True,
+            capture_output=True,
+        )
+        output = checked.stdout + checked.stderr
+        if not checked.returncode or not any(
+            message in output for message in ("failed", "unify", "type mismatch")
+        ):
+            raise ValueError(
+                "opaque writer certificate was accepted as source composition:\n"
+                + output
+            )
+        print("Compiled adapter safety control: opaque-writer-discharge PASS")
+
+    cohort = "AdapterRecordExtraction"
+    namespace, instances, definitions = all_parsed[cohort]
+    name = "beaconcrypt.ratchet.execute_record_receive"
+    component = json.loads((proof / "adapter-panic-freedom.json").read_text())[name]
+    component["kdf_composition"] = {
+        "module": component["module"],
+        "theorem": component["theorem"],
+    }
+    with tempfile.TemporaryDirectory(
+        prefix="beaconcrypt-adapter-kdf-control-"
+    ) as directory:
+        temporary = Path(directory)
+        generated = temporary / "OpaqueKdf.lean"
+        generated.write_text(
+            render(
+                {cohort: (namespace, instances, {name: definitions[name]})},
+                {name: component},
+            )
+        )
+        checked = subprocess.run(
+            lean_control_command(
+                "adapter-opaque-kdf-contract",
+                ["lake", "env", "lean", "--root=" + str(temporary), str(generated)],
+            ),
+            cwd=proof,
+            text=True,
+            capture_output=True,
+        )
+        output = checked.stdout + checked.stderr
+        if not checked.returncode or not any(
+            message in output for message in ("failed", "unify", "type mismatch")
+        ):
+            raise ValueError(
+                "opaque KDF certificate was accepted as source composition:\n" + output
+            )
+        print("Compiled adapter safety control: opaque-kdf-discharge PASS")
 
 
 def main() -> int:

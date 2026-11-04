@@ -1175,6 +1175,105 @@
         "Std.Do"
       ]
     },
+    "AdapterRatchetKdfExtraction": {
+      "compared_feature_profiles": {
+        "beacon": {
+          "default_features": false,
+          "features": [
+            "beacon",
+            "pqxdh"
+          ],
+          "generated_sha256": {
+            "Funs.lean": "aa1154798614e3a1d86e2c2711f2c24a6dd36046abbd9c08e817e9ea4fc283aa",
+            "Types.lean": "244e612226b410dbc4f414dbbcf2f397c86d2b057e916c26d4051646fbcf146e"
+          }
+        },
+        "canonical": {
+          "default_features": false,
+          "features": [
+            "beacon",
+            "server",
+            "pqxdh"
+          ],
+          "generated_sha256": {
+            "Funs.lean": "aa1154798614e3a1d86e2c2711f2c24a6dd36046abbd9c08e817e9ea4fc283aa",
+            "Types.lean": "244e612226b410dbc4f414dbbcf2f397c86d2b057e916c26d4051646fbcf146e"
+          }
+        },
+        "server": {
+          "default_features": false,
+          "features": [
+            "server",
+            "pqxdh"
+          ],
+          "generated_sha256": {
+            "Funs.lean": "aa1154798614e3a1d86e2c2711f2c24a6dd36046abbd9c08e817e9ea4fc283aa",
+            "Types.lean": "244e612226b410dbc4f414dbbcf2f397c86d2b057e916c26d4051646fbcf146e"
+          }
+        }
+      },
+      "default_features": false,
+      "definitions": {
+        "beaconcrypt_ratchet_kdf.ratchet.initial_ratchet_hkdf": {
+          "binders": "(request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest)",
+          "monadic": true,
+          "return_type": "RustM (Array Std.U8 64#usize)",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_ratchet_kdf.ratchet.ratchet_hkdf": {
+          "binders": "(request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest)",
+          "monadic": true,
+          "return_type": "RustM beaconcrypt_core.ratchet.RatchetKdfResponse",
+          "role": "internal-helper"
+        },
+        "beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf": {
+          "binders": "(OUTPUT_SIZE : Std.Usize)\n  (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest)",
+          "monadic": true,
+          "return_type": "RustM (Array Std.U8 OUTPUT_SIZE)",
+          "role": "internal-helper"
+        }
+      },
+      "external_models": {
+        "FunsExternal.lean": {
+          "declarations": [
+            "beaconcrypt_crypto.crypto_kdf.hkdf.sha512.expand_into",
+            "beaconcrypt_crypto.CryptoError.Insts.CoreFmtDebug",
+            "zeroize.Zeroizing.Insts.CoreOpsDerefDerefMut.deref_mut"
+          ],
+          "sha256": "f567764bb20912fbdb789dd474d5ebf6ebeec230432517e48a2db875b7c58e23"
+        },
+        "TypesExternal.lean": {
+          "declarations": [
+            "BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations"
+          ],
+          "sha256": "40b0f4c16e7782fc9629055c4a8f5d62945100f21f37d8ea298fcaf08b8ea1fd"
+        }
+      },
+      "extractor": "scripts/extract_adapter_ratchet_kdf.py",
+      "features": [
+        "beacon",
+        "pqxdh",
+        "server"
+      ],
+      "generated_sha256": {
+        "Funs.lean": "aa1154798614e3a1d86e2c2711f2c24a6dd36046abbd9c08e817e9ea4fc283aa",
+        "Types.lean": "244e612226b410dbc4f414dbbcf2f397c86d2b057e916c26d4051646fbcf146e"
+      },
+      "instance_parameters": [
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]",
+        "[BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]",
+        "[BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]",
+        "[BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]"
+      ],
+      "namespace": "beaconcrypt_ratchet_kdf",
+      "opening_commands": [
+        "CoreModels Aeneas",
+        "Aeneas.Std hiding namespace core alloc",
+        "RustM ControlFlow Error",
+        "Std.Do"
+      ]
+    },
     "AdapterRecordExtraction": {
       "default_features": false,
       "definitions": {

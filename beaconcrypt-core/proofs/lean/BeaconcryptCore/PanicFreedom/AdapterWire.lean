@@ -54,4 +54,40 @@ theorem encode_record_total (contracts : Contracts) {T : Type}
               AdapterWireVector.resize_empty, AdapterWireVector.deref_mut_bytes,
               serialized, empty, ↓reduceIte, AdapterWireVector.truncate_bytes, bind_tc_ok, id_eq]⟩
 
+/-- Only the serializer call reached after successful reservation needs to return normally. -/
+theorem encode_record_total_at (contracts : Contracts) {T : Type}
+    (serializer : AdapterWirePrimitive.Serializer T) (capacity : Usize) (value : T)
+    (serializerNormal : ∃ result, serializer.call_once value (AdapterWireVector.zeros capacity) = ok result) :
+    ∃ result, beaconcrypt.wire.encode_record serializer capacity value = ok result := by
+  obtain ⟨allocation, reserved⟩ := contracts.reserve (Slice.new U8) capacity
+  cases allocation with
+  | Err error =>
+    exact ⟨.None, by simp! only [beaconcrypt.wire.encode_record, alloc.vec.Vec.new,
+      rust_primitives.sequence.seq_empty, alloc.vec.Vec.try_reserve_exact,
+      reserved, core.result.Result.ok,
+      core.option.Option.Insts.CoreOpsTry_traitTry.branch,
+      core.option.Option.Insts.CoreOpsTry_traitTryTOptionInfallible.branch,
+      core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual,
+      bind_tc_ok]⟩
+  | Ok success =>
+    exact serializerNormal.elim
+      fun result serialized => by
+        rcases result with ⟨written, bytes⟩
+        by_cases empty : written = 0#usize
+        · exact ⟨.None, by simp! only [beaconcrypt.wire.encode_record, alloc.vec.Vec.new,
+            rust_primitives.sequence.seq_empty, alloc.vec.Vec.try_reserve_exact,
+            reserved, core.result.Result.ok,
+            core.option.Option.Insts.CoreOpsTry_traitTry.branch,
+            core.option.Option.Insts.CoreOpsTry_traitTryTOptionInfallible.branch,
+            AdapterWireVector.resize_empty, AdapterWireVector.deref_mut_bytes,
+            serialized, empty, ↓reduceIte, bind_tc_ok]⟩
+        · exact ⟨.Some (AdapterWireVector.take bytes written), by
+            simp! only [beaconcrypt.wire.encode_record, alloc.vec.Vec.new,
+              rust_primitives.sequence.seq_empty, alloc.vec.Vec.try_reserve_exact,
+              reserved, core.result.Result.ok,
+              core.option.Option.Insts.CoreOpsTry_traitTry.branch,
+              core.option.Option.Insts.CoreOpsTry_traitTryTOptionInfallible.branch,
+              AdapterWireVector.resize_empty, AdapterWireVector.deref_mut_bytes,
+              serialized, empty, ↓reduceIte, AdapterWireVector.truncate_bytes, bind_tc_ok, id_eq]⟩
+
 end BeaconcryptCore.PanicFreedom.AdapterWire

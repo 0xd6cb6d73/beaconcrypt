@@ -50,14 +50,14 @@ declare -A expected_category_counts=(
 	[parser-rust]=7
 	[core-rust]=17
 	[control]=19
-	[generated-lean]=80
+	[generated-lean]=82
 	[generated-proverif]=1
-	[handwritten-lean]=6827
+	[handwritten-lean]=6841
 	[handwritten-proverif]=298
 	[inventory]=3
-	[lean-control]=71
+	[lean-control]=73
 	[lean-dependency-overlay]=4
-	[validation]=185
+	[validation]=187
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -185,6 +185,8 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	../scripts/test_extract_adapter_authentication.py \
 	../scripts/extract_adapter_record.py \
 	../scripts/test_extract_adapter_record.py \
+	../scripts/extract_adapter_ratchet_kdf.py \
+	../scripts/test_extract_adapter_ratchet_kdf.py \
 	../scripts/lift_adapter_record_requests.py \
 	../scripts/test_lift_adapter_record_requests.py \
 	../scripts/check_registration_codec_extraction.py \
@@ -273,6 +275,8 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/Funs.lean \
 	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/Types.lean \
 	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterRatchetKdfExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterRatchetKdfExtraction/Funs.lean \
 	proofs/lean/BeaconcryptCore/AdapterRecordRequestExtraction.lean \
 	proofs/lean/BeaconcryptCore/FrameCodecExtraction/Types.lean \
 	proofs/lean/BeaconcryptCore/FrameCodecExtraction/Funs.lean \
@@ -288,6 +292,8 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/FunsExternal.lean \
 	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/TypesExternal.lean \
 	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/FunsExternal.lean \
+	proofs/lean/BeaconcryptCore/AdapterRatchetKdfExtraction/TypesExternal.lean \
+	proofs/lean/BeaconcryptCore/AdapterRatchetKdfExtraction/FunsExternal.lean \
 	proofs/lean/BeaconcryptCore/FrameCodecExtraction/FunsExternal.lean \
 	proofs/lean/BeaconcryptCore/Verification/PqxdhCommitmentRefinement.lean \
 	proofs/lean/BeaconcryptCore/Verification/ProofObligations.lean \
@@ -318,6 +324,8 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/AuthenticationExtraction/provenance.json \
 	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/external-signatures.json \
 	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/provenance.json \
+	proofs/lean/BeaconcryptCore/AdapterRatchetKdfExtraction/external-signatures.json \
+	proofs/lean/BeaconcryptCore/AdapterRatchetKdfExtraction/provenance.json \
 	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/external-signatures.json \
 	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/provenance.json \
 	proofs/lean/BeaconcryptCore/FrameCodecExtraction/external-signatures.json \

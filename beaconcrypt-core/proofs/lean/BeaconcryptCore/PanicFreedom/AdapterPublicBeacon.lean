@@ -2,7 +2,7 @@
 import BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops
 import BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary
 import BeaconcryptCore.PanicFreedom.AdapterPublicTrivial
-import BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter
+import BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterCallers
 import BeaconcryptCore.PanicFreedom.RegistrationSigningContinuations
 import BeaconcryptCore.PanicFreedom.RegistrationTrivial
 import BeaconcryptCore.PanicFreedom.Registration
@@ -25,12 +25,13 @@ variable [localOps : PublicWrapperPlatform.LocalOperations]
 variable [authentication : beaconcrypt.auth.Operations] [recordOps : beaconcrypt.ratchet.Operations]
 omit recordOps
 variable [RegistrationWriterPrimitive.Operations] [AdapterWirePrimitive.Operations]
+attribute [local irreducible] beaconcrypt_registration_writer.wire.encode_init
 
 structure BundleContracts : Prop where
   init : AdapterPublicRegistrationLoops.InitContracts
   kxPublicBytes : ∀ key, Normal (crypto.kxPublicBytes key)
   publicLeaves : AdapterPublicTrivial.Contracts
-  writer : AdapterRegistrationWriter.Contracts
+  writer : AdapterRegistrationWriterCallers.InitCallerContracts
   allocation : AdapterWire.Contracts
   kemPublicBytes : ∀ key, Normal (crypto.kemPublicBytes key)
 
@@ -54,6 +55,7 @@ theorem get_registration_bundle_preserves (contracts : BundleContracts)
   repeat'
     try simp only [bind_tc_ok]
     first
+      | with_reducible exact AdapterRegistrationWriterCallers.init_native_total contracts.writer (by assumption)
       | (solve | simp_all [AdapterPublicOrdinary.ValidBeacon])
       | with_reducible exact random.kxGenerate _
       | with_reducible exact contracts.kxPublicBytes _
@@ -66,7 +68,6 @@ theorem get_registration_bundle_preserves (contracts : BundleContracts)
       | exact RegistrationTrivial.BeaconInitReady_publish_total _ _
       | exact RegistrationTrivial.PublishedBeaconInit_into_parts_total _
       | exact RegistrationTrivial.BeaconPending_aborted_state_total _
-      | exact AdapterRegistrationWriter.encode_init_total contracts.writer contracts.allocation _
       | intro value
       | split
       | apply ensures_bind_at

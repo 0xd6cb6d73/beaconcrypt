@@ -1119,6 +1119,7 @@ check-lean-panic-freedom:
 # explicit individual-operation laws, and intentional constructor exceptions.
 check-adapter-panic-freedom:
 	python3 ../scripts/test_check_adapter_panic_freedom.py
+	python3 ../scripts/test_extract_adapter_ratchet_kdf.py
 	python3 ../scripts/check_adapter_panic_freedom.py --check-source
 
 prepare-lean-dependencies:

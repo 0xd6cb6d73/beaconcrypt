@@ -4,6 +4,7 @@ import BeaconcryptCore.AdapterInitAuthenticationExtraction.Funs
 import BeaconcryptCore.AdapterPublicOrdinaryExtraction.Funs
 import BeaconcryptCore.AdapterPublicServerEntryExtraction.Funs
 import BeaconcryptCore.AdapterPublicWrapperExtraction.Funs
+import BeaconcryptCore.AdapterRatchetKdfExtraction.Funs
 import BeaconcryptCore.AdapterRecordExtraction.Funs
 import BeaconcryptCore.AdapterRecordHelpersExtraction.Funs
 import BeaconcryptCore.AdapterRecordRoutingExtraction.Funs
@@ -17,6 +18,10 @@ import BeaconcryptCore.PanicFreedom.AdapterBeaconAgreementRegression
 import BeaconcryptCore.PanicFreedom.AdapterBeaconAgreementSafety
 import BeaconcryptCore.PanicFreedom.AdapterConstructorValidity
 import BeaconcryptCore.PanicFreedom.AdapterConstructors
+import BeaconcryptCore.PanicFreedom.AdapterFiniteCalls
+import BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage
+import BeaconcryptCore.PanicFreedom.AdapterFiniteCallsKdfSource
+import BeaconcryptCore.PanicFreedom.AdapterFiniteCallsSource
 import BeaconcryptCore.PanicFreedom.AdapterInitAuthentication
 import BeaconcryptCore.PanicFreedom.AdapterLookupShapeRegression
 import BeaconcryptCore.PanicFreedom.AdapterNormal
@@ -27,17 +32,25 @@ import BeaconcryptCore.PanicFreedom.AdapterPublicBeaconFinish
 import BeaconcryptCore.PanicFreedom.AdapterPublicFinishSafety
 import BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary
 import BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops
+import BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource
 import BeaconcryptCore.PanicFreedom.AdapterPublicServer
 import BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept
 import BeaconcryptCore.PanicFreedom.AdapterPublicServerBuild
 import BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource
 import BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildState
 import BeaconcryptCore.PanicFreedom.AdapterPublicTrivial
+import BeaconcryptCore.PanicFreedom.AdapterRatchetKdf
+import BeaconcryptCore.PanicFreedom.AdapterRatchetKdfRegression
+import BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource
 import BeaconcryptCore.PanicFreedom.AdapterRecordHelpers
 import BeaconcryptCore.PanicFreedom.AdapterRecordReceive
 import BeaconcryptCore.PanicFreedom.AdapterRecordRouting
 import BeaconcryptCore.PanicFreedom.AdapterRecordSend
+import BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource
 import BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter
+import BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterCallers
+import BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterSource
+import BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterSourceRegression
 import BeaconcryptCore.PanicFreedom.AdapterResponseAuthentication
 import BeaconcryptCore.PanicFreedom.AdapterSeal
 import BeaconcryptCore.PanicFreedom.AdapterSealJoin
@@ -241,6 +254,26 @@ theorem operation_014_preserves [_adapter_instance_00 : BeaconcryptCore.Refineme
     : ∃ adapter_result, beaconcrypt_public_ordinary.beacon.Beacon.decrypt_message self b = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon adapter_result.2) := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.beacon_decrypt_message_preserves
 
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_014_kdf [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : beaconcrypt_record_send.ratchet.Operations] [_adapter_instance_04 : beaconcrypt.ratchet.Operations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_06 : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_08 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_09 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] (self : beacon.Beacon) (b : Slice Std.U8)
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.ReceiveContracts)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon self)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceReceiveOperations (inferInstance : beaconcrypt.ratchet.Operations)
+      ∃ adapter_result, beaconcrypt_public_ordinary.beacon.Beacon.decrypt_message self b = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.beacon_decrypt_message_total
+
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_014_kdf_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : beaconcrypt_record_send.ratchet.Operations] [_adapter_instance_04 : beaconcrypt.ratchet.Operations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_06 : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_08 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_09 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] (self : beacon.Beacon) (b : Slice Std.U8)
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.ReceiveContracts)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon self)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceReceiveOperations (inferInstance : beaconcrypt.ratchet.Operations)
+      ∃ adapter_result, beaconcrypt_public_ordinary.beacon.Beacon.decrypt_message self b = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon adapter_result.2) := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.beacon_decrypt_message_preserves
+
 -- production-entry: beaconcrypt_public_ordinary.beacon.Beacon.encrypt_message
 theorem operation_015 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : beaconcrypt_record_send.ratchet.Operations] [_adapter_instance_04 : beaconcrypt.ratchet.Operations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_06 : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_08 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_09 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] (self : beacon.Beacon) (b : Slice Std.U8)
     (_adapter_record : BeaconcryptCore.PanicFreedom.AdapterRecordSend.Contracts)
@@ -254,6 +287,26 @@ theorem operation_015_preserves [_adapter_instance_00 : BeaconcryptCore.Refineme
     (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon self)
     : ∃ adapter_result, beaconcrypt_public_ordinary.beacon.Beacon.encrypt_message self b = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon adapter_result.2) := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.beacon_encrypt_message_preserves
+
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_015_kdf [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : beaconcrypt_record_send.ratchet.Operations] [_adapter_instance_04 : beaconcrypt.ratchet.Operations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_06 : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_08 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_09 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] (self : beacon.Beacon) (b : Slice Std.U8)
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.SendContracts)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon self)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceSendOperations (inferInstance : beaconcrypt_record_send.ratchet.Operations)
+      ∃ adapter_result, beaconcrypt_public_ordinary.beacon.Beacon.encrypt_message self b = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.beacon_encrypt_message_total
+
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_015_kdf_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : beaconcrypt_record_send.ratchet.Operations] [_adapter_instance_04 : beaconcrypt.ratchet.Operations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_06 : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_08 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_09 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] (self : beacon.Beacon) (b : Slice Std.U8)
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.SendContracts)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon self)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceSendOperations (inferInstance : beaconcrypt_record_send.ratchet.Operations)
+      ∃ adapter_result, beaconcrypt_public_ordinary.beacon.Beacon.encrypt_message self b = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon adapter_result.2) := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.beacon_encrypt_message_preserves
 
 -- Pure dictionary definition (no RustM execution): beaconcrypt_public_ordinary.beaconcrypt_crypto.crypto_sign.PublicKey.Insts.BeaconcryptSharedSignaturePk
 -- Pure dictionary definition (no RustM execution): beaconcrypt_public_ordinary.collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13
@@ -402,6 +455,28 @@ theorem operation_030_preserves [_adapter_instance_00 : BeaconcryptCore.Refineme
     : ∃ adapter_result, beaconcrypt_public_ordinary.server.Server.decrypt_message self b = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer adapter_result.2) := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.server_decrypt_message_preserves
 
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_030_kdf [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : beaconcrypt_record_send.ratchet.Operations] [_adapter_instance_04 : beaconcrypt.ratchet.Operations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_06 : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_08 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_09 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] (self : server.Server) (b : Slice Std.U8)
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.ReceiveContracts)
+    (_adapter_lookups : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.LookupContracts)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer self)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceReceiveOperations (inferInstance : beaconcrypt.ratchet.Operations)
+      ∃ adapter_result, beaconcrypt_public_ordinary.server.Server.decrypt_message self b = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.server_decrypt_message_total
+
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_030_kdf_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : beaconcrypt_record_send.ratchet.Operations] [_adapter_instance_04 : beaconcrypt.ratchet.Operations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_06 : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_08 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_09 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] (self : server.Server) (b : Slice Std.U8)
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.ReceiveContracts)
+    (_adapter_lookups : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.LookupContracts)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer self)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceReceiveOperations (inferInstance : beaconcrypt.ratchet.Operations)
+      ∃ adapter_result, beaconcrypt_public_ordinary.server.Server.decrypt_message self b = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer adapter_result.2) := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.server_decrypt_message_preserves
+
 -- internal-helper: beaconcrypt_public_ordinary.server.Server.decrypt_message_transition
 theorem operation_031 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : beaconcrypt_record_send.ratchet.Operations] [_adapter_instance_04 : beaconcrypt.ratchet.Operations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_06 : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_08 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_09 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] (self : server.Server) (b : Slice Std.U8)
     (_adapter_record : BeaconcryptCore.PanicFreedom.AdapterRecordReceive.Contracts)
@@ -433,6 +508,28 @@ theorem operation_032_preserves [_adapter_instance_00 : BeaconcryptCore.Refineme
     (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer self)
     : ∃ adapter_result, beaconcrypt_public_ordinary.server.Server.encrypt_message self b k = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer adapter_result.2) := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.server_encrypt_message_preserves
+
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_032_kdf [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : beaconcrypt_record_send.ratchet.Operations] [_adapter_instance_04 : beaconcrypt.ratchet.Operations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_06 : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_08 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_09 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] (self : server.Server) (b : Slice Std.U8) (k : Std.U64)
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.SendContracts)
+    (_adapter_lookups : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.LookupContracts)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer self)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceSendOperations (inferInstance : beaconcrypt_record_send.ratchet.Operations)
+      ∃ adapter_result, beaconcrypt_public_ordinary.server.Server.encrypt_message self b k = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.server_encrypt_message_total
+
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_032_kdf_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : beaconcrypt_record_send.ratchet.Operations] [_adapter_instance_04 : beaconcrypt.ratchet.Operations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_06 : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_08 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_09 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] (self : server.Server) (b : Slice Std.U8) (k : Std.U64)
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.SendContracts)
+    (_adapter_lookups : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.LookupContracts)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer self)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceSendOperations (inferInstance : beaconcrypt_record_send.ratchet.Operations)
+      ∃ adapter_result, beaconcrypt_public_ordinary.server.Server.encrypt_message self b k = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer adapter_result.2) := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.server_encrypt_message_preserves
 
 -- production-entry: beaconcrypt_public_ordinary.server.Server.identity_key_kid
 theorem operation_033 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : beaconcrypt_record_send.ratchet.Operations] [_adapter_instance_04 : beaconcrypt.ratchet.Operations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_06 : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_08 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_09 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] (self : server.Server)
@@ -503,6 +600,34 @@ theorem operation_038_preserves [_adapter_instance_00 : BeaconcryptCore.Refineme
     : ∃ adapter_result, beaconcrypt_public_server_entry.server.Server.get_shared_secret_with_rng (R := R) (Clause0_Clause0_Error := Clause0_Clause0_Error) rand_coreTryCryptoRngInst self buffer rng = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer adapter_result.2.1) := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept.get_shared_secret_with_rng_preserves
 
+-- Actual arbitrary-slice source decoders, including malformed-input rejection.
+theorem operation_038_decoders [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_10 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
+  rand_core.TryCryptoRng R Clause0_Clause0_Error) (self : server.Server)
+  (buffer : Slice Std.U8) (rng : R)
+    [_adapter_validator : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations]
+    (_adapter_decoded_contracts : BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.AuthenticationContracts)
+    (_adapter_agreement : BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.AgreementContracts)
+    (_adapter_rng : BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.AgreementRngContracts rand_coreTryCryptoRngInst)
+    (_adapter_replay : BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept.ReplayContracts)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.sourceCodecs
+      ∃ adapter_result, beaconcrypt_public_server_entry.server.Server.get_shared_secret_with_rng (R := R) (Clause0_Clause0_Error := Clause0_Clause0_Error) rand_coreTryCryptoRngInst self buffer rng = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.get_shared_secret_with_rng_total
+
+-- Actual arbitrary-slice source decoders, including malformed-input rejection.
+theorem operation_038_decoders_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_10 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
+  rand_core.TryCryptoRng R Clause0_Clause0_Error) (self : server.Server)
+  (buffer : Slice Std.U8) (rng : R)
+    [_adapter_validator : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations]
+    (_adapter_decoded_contracts : BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.AuthenticationContracts)
+    (_adapter_agreement : BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.AgreementContracts)
+    (_adapter_rng : BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.AgreementRngContracts rand_coreTryCryptoRngInst)
+    (_adapter_replay : BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept.ReplayContracts)
+    [_adapter_lookup : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations]
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer self)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.sourceCodecs
+      ∃ adapter_result, beaconcrypt_public_server_entry.server.Server.get_shared_secret_with_rng (R := R) (Clause0_Clause0_Error := Clause0_Clause0_Error) rand_coreTryCryptoRngInst self buffer rng = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer adapter_result.2.1) := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.get_shared_secret_with_rng_preserves
+
 end AdapterPublicServerEntryExtraction
 
 section AdapterPublicWrapperExtraction
@@ -531,6 +656,50 @@ theorem operation_040_preserves [_adapter_instance_00 : BeaconcryptCore.Refineme
     (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon self)
     : ∃ adapter_result, beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration self bytes = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon adapter_result.2) := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicBeaconFinish.finish_registration_preserves
+
+-- Actual arbitrary-slice source decoders, including malformed-input rejection.
+theorem operation_040_decoders [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_10 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (self : beacon.Beacon) (bytes : Slice Std.U8)
+    [_adapter_validator : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations]
+    (_adapter_decoded_contracts : BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.FinishContracts)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.sourceCodecs
+      ∃ adapter_result, beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration self bytes = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.finish_registration_total
+
+-- Actual arbitrary-slice source decoders, including malformed-input rejection.
+theorem operation_040_decoders_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_10 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (self : beacon.Beacon) (bytes : Slice Std.U8)
+    [_adapter_validator : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations]
+    (_adapter_decoded_contracts : BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.FinishContracts)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon self)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.sourceCodecs
+      ∃ adapter_result, beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration self bytes = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon adapter_result.2) := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.finish_registration_preserves
+
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_040_kdf [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_10 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (self : beacon.Beacon) (bytes : Slice Std.U8)
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    [_adapter_kdf_instance_04 : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_initial : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 64#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.FinishContracts)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceReceiveOperations (inferInstance : beaconcrypt.ratchet.Operations)
+      letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceLocalOperations (inferInstance : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations)
+      letI := BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.sourceCodecs
+      ∃ adapter_result, beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration self bytes = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.finish_registration_total
+
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_040_kdf_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_10 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (self : beacon.Beacon) (bytes : Slice Std.U8)
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    [_adapter_kdf_instance_04 : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_initial : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 64#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.FinishContracts)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon self)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceReceiveOperations (inferInstance : beaconcrypt.ratchet.Operations)
+      letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceLocalOperations (inferInstance : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations)
+      letI := BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.sourceCodecs
+      ∃ adapter_result, beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration self bytes = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon adapter_result.2) := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.finish_registration_preserves
 
 -- loop-helper: beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration_loop
 theorem operation_041 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_10 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (effect : beaconcrypt_core.registration.BeaconInitialOpen) (i : Std.U64)
@@ -574,6 +743,29 @@ theorem operation_043_preserves [_adapter_instance_00 : BeaconcryptCore.Refineme
     (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon self)
     : ∃ adapter_result, beaconcrypt_public_wrapper.beacon.Beacon.get_registration_bundle_with_rng (R := R) (Clause0_Clause0_Error := Clause0_Clause0_Error) rand_coreTryCryptoRngInst self rng = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon adapter_result.2.1) := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicBeacon.get_registration_bundle_preserves
+
+-- Actual serializers; signed public callers derive packet shape and native sizing derives room.
+theorem operation_043_writers [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
+  rand_core.TryCryptoRng R Clause0_Clause0_Error) (self : beacon.Beacon)
+  (rng : R)
+    (_adapter_other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)
+    (_adapter_writer_source_contracts : BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource.BundleContracts)
+    (_adapter_rng : BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.GenerationContracts rand_coreTryCryptoRngInst)
+    : letI := BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.sourceOperations _adapter_other
+      ∃ adapter_result, beaconcrypt_public_wrapper.beacon.Beacon.get_registration_bundle_with_rng (R := R) (Clause0_Clause0_Error := Clause0_Clause0_Error) rand_coreTryCryptoRngInst self rng = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource.get_registration_bundle_total
+
+-- Actual serializers; signed public callers derive packet shape and native sizing derives room.
+theorem operation_043_writers_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
+  rand_core.TryCryptoRng R Clause0_Clause0_Error) (self : beacon.Beacon)
+  (rng : R)
+    (_adapter_other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)
+    (_adapter_writer_source_contracts : BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource.BundleContracts)
+    (_adapter_rng : BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops.GenerationContracts rand_coreTryCryptoRngInst)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon self)
+    : letI := BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.sourceOperations _adapter_other
+      ∃ adapter_result, beaconcrypt_public_wrapper.beacon.Beacon.get_registration_bundle_with_rng (R := R) (Clause0_Clause0_Error := Clause0_Clause0_Error) rand_coreTryCryptoRngInst self rng = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidBeacon adapter_result.2.1) := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource.get_registration_bundle_preserves
 
 -- production-entry: beaconcrypt_public_wrapper.beacon.Beacon.identity_pk
 theorem operation_044 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_10 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (self : beacon.Beacon)
@@ -808,11 +1000,91 @@ theorem operation_065_source_preserves [_adapter_instance_00 : BeaconcryptCore.R
       ∃ adapter_result, beaconcrypt_public_wrapper.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response self reg_out data = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer adapter_result.2) := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource.build_registration_response_preserves
 
+-- Actual serializers; signed public callers derive packet shape and native sizing derives room.
+theorem operation_065_writers [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (self : server.Server) (reg_out : server.RegistrationOutput)
+  (data : core.option.Option (Slice Std.U8))
+    (_adapter_other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)
+    [_adapter_seal_primitives : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
+    [_adapter_frame_fallback : BeaconcryptCore.Refinement.FrameDispatchFallback.Operations]
+    (_adapter_writer_source_contracts : BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource.ResponseContracts)
+    (_adapter_seal_fallback : BeaconcryptCore.Refinement.AdapterSealJoinCallbacks.Operations)
+    (_adapter_writer_fallback : BeaconcryptCore.Refinement.RecordRoutingCallbacks.Operations)
+    : letI := BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.sourceOperations _adapter_other
+      letI := BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource.sourceLocalOperations (inferInstance : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations) _adapter_seal_fallback _adapter_writer_fallback
+      ∃ adapter_result, beaconcrypt_public_wrapper.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response self reg_out data = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource.build_registration_response_total
+
+-- Actual serializers; signed public callers derive packet shape and native sizing derives room.
+theorem operation_065_writers_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (self : server.Server) (reg_out : server.RegistrationOutput)
+  (data : core.option.Option (Slice Std.U8))
+    (_adapter_other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)
+    [_adapter_seal_primitives : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
+    [_adapter_frame_fallback : BeaconcryptCore.Refinement.FrameDispatchFallback.Operations]
+    (_adapter_writer_source_contracts : BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource.ResponseContracts)
+    (_adapter_seal_fallback : BeaconcryptCore.Refinement.AdapterSealJoinCallbacks.Operations)
+    (_adapter_writer_fallback : BeaconcryptCore.Refinement.RecordRoutingCallbacks.Operations)
+    [_adapter_lookup : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations]
+    (_adapter_laws : BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildState.ContainerContracts)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer self)
+    : letI := BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.sourceOperations _adapter_other
+      letI := BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource.sourceLocalOperations (inferInstance : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations) _adapter_seal_fallback _adapter_writer_fallback
+      ∃ adapter_result, beaconcrypt_public_wrapper.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response self reg_out data = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer adapter_result.2) := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationWriterSource.build_registration_response_preserves
+
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_065_kdf [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (self : server.Server) (reg_out : server.RegistrationOutput)
+  (data : core.option.Option (Slice Std.U8))
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    [_adapter_kdf_instance_04 : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
+    [_adapter_kdf_instance_05 : BeaconcryptCore.Refinement.FrameDispatchFallback.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_initial : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 64#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.ResponseContracts)
+    (_adapter_other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)
+    (_adapter_seal_fallback : BeaconcryptCore.Refinement.AdapterSealJoinCallbacks.Operations)
+    (_adapter_writer_fallback : BeaconcryptCore.Refinement.RecordRoutingCallbacks.Operations)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceReceiveOperations (inferInstance : beaconcrypt.ratchet.Operations)
+      letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceLocalOperations (inferInstance : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations)
+      letI := BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.sourceOperations _adapter_other
+      letI := BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource.sourceLocalOperations (inferInstance : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations) _adapter_seal_fallback _adapter_writer_fallback
+      ∃ adapter_result, beaconcrypt_public_wrapper.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response self reg_out data = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.build_registration_response_total
+
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_065_kdf_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (self : server.Server) (reg_out : server.RegistrationOutput)
+  (data : core.option.Option (Slice Std.U8))
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    [_adapter_kdf_instance_04 : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
+    [_adapter_kdf_instance_05 : BeaconcryptCore.Refinement.FrameDispatchFallback.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_initial : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 64#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.ResponseContracts)
+    (_adapter_other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)
+    (_adapter_seal_fallback : BeaconcryptCore.Refinement.AdapterSealJoinCallbacks.Operations)
+    (_adapter_writer_fallback : BeaconcryptCore.Refinement.RecordRoutingCallbacks.Operations)
+    [_adapter_lookup : BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform.LookupOperations]
+    (_adapter_laws : BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildState.ContainerContracts)
+    (_adapter_valid : BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer self)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceReceiveOperations (inferInstance : beaconcrypt.ratchet.Operations)
+      letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceLocalOperations (inferInstance : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations)
+      letI := BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.sourceOperations _adapter_other
+      letI := BeaconcryptCore.PanicFreedom.AdapterPublicServerBuildSource.sourceLocalOperations (inferInstance : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations) _adapter_seal_fallback _adapter_writer_fallback
+      ∃ adapter_result, beaconcrypt_public_wrapper.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response self reg_out data = ok adapter_result ∧ (BeaconcryptCore.PanicFreedom.AdapterPublicOrdinary.ValidServer adapter_result.2) := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.build_registration_response_preserves
+
 -- internal-helper: beaconcrypt_public_wrapper.server.Server.authenticate_registration_lookup
 theorem operation_066 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_10 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (self : server.Server) (buffer : Slice Std.U8)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterPublicServer.AuthenticationContracts)
     : ∃ adapter_result, beaconcrypt_public_wrapper.server.Server.authenticate_registration_lookup self buffer = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterPublicServer.authenticate_registration_lookup_total
+
+-- Actual arbitrary-slice source decoders, including malformed-input rejection.
+theorem operation_066_decoders [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_10 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (self : server.Server) (buffer : Slice Std.U8)
+    [_adapter_validator : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations]
+    (_adapter_decoded_contracts : BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.AuthenticationContracts)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.sourceCodecs
+      ∃ adapter_result, beaconcrypt_public_wrapper.server.Server.authenticate_registration_lookup self buffer = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.authenticate_registration_lookup_total
 
 -- internal-helper: beaconcrypt_public_wrapper.server.Server.authentication_pin
 theorem operation_067 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator] [_adapter_instance_04 : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations] [_adapter_instance_05 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_06 : BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations] [_adapter_instance_07 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Codecs] [_adapter_instance_08 : beaconcrypt.ratchet.Operations] [_adapter_instance_09 : beaconcrypt.auth.Operations] [_adapter_instance_10 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_11 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (self : server.Server)
@@ -883,6 +1155,35 @@ theorem operation_075 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicW
 
 end AdapterPublicWrapperExtraction
 
+section AdapterRatchetKdfExtraction
+open beaconcrypt_ratchet_kdf
+open CoreModels Aeneas
+open Aeneas.Std hiding namespace core alloc
+open RustM ControlFlow Error
+open Std.Do
+
+-- internal-helper: beaconcrypt_ratchet_kdf.ratchet.initial_ratchet_hkdf
+theorem operation_076 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations] (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest)
+    (_adapter_kdf : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 64#usize)
+    : ∃ adapter_result, beaconcrypt_ratchet_kdf.ratchet.initial_ratchet_hkdf request = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.initial_ratchet_hkdf_total
+
+-- internal-helper: beaconcrypt_ratchet_kdf.ratchet.ratchet_hkdf
+theorem operation_077 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations] (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest)
+    (_adapter_kdf : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    : ∃ adapter_result, beaconcrypt_ratchet_kdf.ratchet.ratchet_hkdf request = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.ratchet_hkdf_total
+
+-- internal-helper: beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf
+theorem operation_078 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations] (OUTPUT_SIZE : Std.Usize)
+  (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest)
+    (_adapter_kdf : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts OUTPUT_SIZE)
+    (_adapter_output_bound : OUTPUT_SIZE.val ≤ 16320)
+    : ∃ adapter_result, beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf OUTPUT_SIZE request = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.symmetric_ratchet_hkdf_total
+
+end AdapterRatchetKdfExtraction
+
 section AdapterRecordExtraction
 open beaconcrypt
 open CoreModels Aeneas
@@ -891,26 +1192,38 @@ open RustM ControlFlow Error
 open Std.Do
 
 -- internal-helper: beaconcrypt.ratchet.execute_record_receive
-theorem operation_076 [_adapter_instance_00 : beaconcrypt.ratchet.Operations] (effect : beaconcrypt_core.record_effects.RecordReceiveEffect)
+theorem operation_079 [_adapter_instance_00 : beaconcrypt.ratchet.Operations] (effect : beaconcrypt_core.record_effects.RecordReceiveEffect)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterRecordReceive.Contracts)
     : ∃ adapter_result, beaconcrypt.ratchet.execute_record_receive effect = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRecordReceive.execute_record_receive_total
 
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_079_kdf [_adapter_instance_00 : beaconcrypt.ratchet.Operations] (effect : beaconcrypt_core.record_effects.RecordReceiveEffect)
+    [_adapter_kdf_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]
+    [_adapter_kdf_instance_01 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]
+    [_adapter_kdf_instance_02 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.ReceiveContracts)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceReceiveOperations (inferInstance : beaconcrypt.ratchet.Operations)
+      ∃ adapter_result, beaconcrypt.ratchet.execute_record_receive effect = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.execute_record_receive_total
+
 -- Pure dictionary definition (no RustM execution): beaconcrypt.ratchet.execute_record_receive.closure.Insts.CoreOpsFunctionFnOnceTupleOpenedRecordVecU8Decrypted
 -- closure-helper: beaconcrypt.ratchet.execute_record_receive.closure.Insts.CoreOpsFunctionFnOnceTupleOpenedRecordVecU8Decrypted.call_once
-theorem operation_077 [_adapter_instance_00 : beaconcrypt.ratchet.Operations] (c : ratchet.execute_record_receive.closure)
+theorem operation_080 [_adapter_instance_00 : beaconcrypt.ratchet.Operations] (c : ratchet.execute_record_receive.closure)
   (tupled_args : beaconcrypt_core.record.OpenedRecord (alloc.vec.Vec Std.U8))
     : ∃ adapter_result, beaconcrypt.ratchet.execute_record_receive.closure.Insts.CoreOpsFunctionFnOnceTupleOpenedRecordVecU8Decrypted.call_once c tupled_args = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRecordReceive.output_call_once_total
 
 -- loop-helper: beaconcrypt.ratchet.execute_record_receive_loop
-theorem operation_078 [_adapter_instance_00 : beaconcrypt.ratchet.Operations] (effect : beaconcrypt_core.record_effects.RecordReceiveEffect)
+theorem operation_081 [_adapter_instance_00 : beaconcrypt.ratchet.Operations] (effect : beaconcrypt_core.record_effects.RecordReceiveEffect)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterRecordReceive.Contracts)
     : ∃ adapter_result, beaconcrypt.ratchet.execute_record_receive_loop effect = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRecordReceive.execute_record_receive_loop_total
 
 -- loop-helper: beaconcrypt.ratchet.execute_record_receive_loop.body
-theorem operation_079 [_adapter_instance_00 : beaconcrypt.ratchet.Operations] (effect : beaconcrypt_core.record_effects.RecordReceiveEffect)
+theorem operation_082 [_adapter_instance_00 : beaconcrypt.ratchet.Operations] (effect : beaconcrypt_core.record_effects.RecordReceiveEffect)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterRecordReceive.Contracts)
     : ∃ adapter_result, beaconcrypt.ratchet.execute_record_receive_loop.body effect = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRecordReceive.execute_record_receive_loop_body_total
@@ -925,13 +1238,13 @@ open RustM ControlFlow Error
 open Std.Do
 
 -- specialized-extraction-helper: beaconcrypt_record_helpers.ratchet._proof_join_record_three
-theorem operation_080 [_adapter_instance_00 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.FrameDispatchFallback.Operations] (parts : Array (Slice Std.U8) 3#usize)
+theorem operation_083 [_adapter_instance_00 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.FrameDispatchFallback.Operations] (parts : Array (Slice Std.U8) 3#usize)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterWire.Contracts)
     : ∃ adapter_result, beaconcrypt_record_helpers.ratchet._proof_join_record_three parts = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRecordHelpers.join_total
 
 -- specialized-extraction-helper: beaconcrypt_record_helpers.wire._proof_encode_frame_three
-theorem operation_081 [_adapter_instance_00 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.FrameDispatchFallback.Operations] (sequence : Std.U64) (sender : Std.U64)
+theorem operation_084 [_adapter_instance_00 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.FrameDispatchFallback.Operations] (sequence : Std.U64) (sender : Std.U64)
   (parts : Array (Slice Std.U8) 3#usize)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterWire.Contracts)
     : ∃ adapter_result, beaconcrypt_record_helpers.wire._proof_encode_frame_three sequence sender parts = ok adapter_result := by
@@ -939,7 +1252,7 @@ theorem operation_081 [_adapter_instance_00 : BeaconcryptCore.Refinement.Adapter
 
 -- Pure dictionary definition (no RustM execution): beaconcrypt_record_helpers.wire._proof_encode_frame_three.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize
 -- closure-helper: beaconcrypt_record_helpers.wire._proof_encode_frame_three.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once
-theorem operation_082 [_adapter_instance_00 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.FrameDispatchFallback.Operations] (c : wire._proof_encode_frame_three.closure) (tupled_args : Slice Std.U8)
+theorem operation_085 [_adapter_instance_00 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.FrameDispatchFallback.Operations] (c : wire._proof_encode_frame_three.closure) (tupled_args : Slice Std.U8)
     : ∃ adapter_result, beaconcrypt_record_helpers.wire._proof_encode_frame_three.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once c tupled_args = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRecordHelpers.encode_frame_closure_total
 
@@ -953,7 +1266,7 @@ open RustM ControlFlow Error
 open Std.Do
 
 -- internal-helper: beaconcrypt_record_routing.ratchet.execute_write_request
-theorem operation_083 [_adapter_instance_00 : BeaconcryptCore.Refinement.RecordRoutingCallbacks.Operations] (request : beaconcrypt_core.record_effects.RecordWriteRequest)
+theorem operation_086 [_adapter_instance_00 : BeaconcryptCore.Refinement.RecordRoutingCallbacks.Operations] (request : beaconcrypt_core.record_effects.RecordWriteRequest)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterRecordRouting.Contracts)
     : ∃ adapter_result, beaconcrypt_record_routing.ratchet.execute_write_request request = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRecordRouting.execute_write_request_total
@@ -968,15 +1281,28 @@ open RustM ControlFlow Error
 open Std.Do
 
 -- internal-helper: beaconcrypt_record_send.ratchet.execute_record_send
-theorem operation_084 [_adapter_instance_00 : beaconcrypt_record_send.ratchet.Operations] (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)
+theorem operation_087 [_adapter_instance_00 : beaconcrypt_record_send.ratchet.Operations] (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)
   (context : beaconcrypt_core.record_effects.SealFrameContext)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterRecordSend.Contracts)
     : ∃ adapter_result, beaconcrypt_record_send.ratchet.execute_record_send kernel context = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRecordSend.execute_record_send_total
 
+-- Actual ratchet KDF wrappers, using selected-width HKDF API contracts and reached borrow shape.
+theorem operation_087_kdf [_adapter_instance_00 : beaconcrypt_record_send.ratchet.Operations] (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)
+  (context : beaconcrypt_core.record_effects.SealFrameContext)
+    [_adapter_kdf_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]
+    [_adapter_kdf_instance_01 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]
+    [_adapter_kdf_instance_02 : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]
+    [_adapter_kdf_instance_03 : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (_adapter_ongoing : BeaconcryptCore.PanicFreedom.AdapterRatchetKdf.Contracts 76#usize)
+    (_adapter_kdf_leaves : BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.SendContracts)
+    : letI := BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceSendOperations (inferInstance : beaconcrypt_record_send.ratchet.Operations)
+      ∃ adapter_result, beaconcrypt_record_send.ratchet.execute_record_send kernel context = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.execute_record_send_total
+
 -- Pure dictionary definition (no RustM execution): beaconcrypt_record_send.ratchet.execute_record_send.closure.Insts.CoreOpsFunctionFnOnceTupleSealedRecordVecU8Encrypted
 -- closure-helper: beaconcrypt_record_send.ratchet.execute_record_send.closure.Insts.CoreOpsFunctionFnOnceTupleSealedRecordVecU8Encrypted.call_once
-theorem operation_085 [_adapter_instance_00 : beaconcrypt_record_send.ratchet.Operations] (_c : ratchet.execute_record_send.closure)
+theorem operation_088 [_adapter_instance_00 : beaconcrypt_record_send.ratchet.Operations] (_c : ratchet.execute_record_send.closure)
   (tupled_args : beaconcrypt_core.record_effects.SealedRecord (alloc.vec.Vec
   Std.U8))
     : ∃ adapter_result, beaconcrypt_record_send.ratchet.execute_record_send.closure.Insts.CoreOpsFunctionFnOnceTupleSealedRecordVecU8Encrypted.call_once _c tupled_args = ok adapter_result := by
@@ -992,30 +1318,48 @@ open RustM ControlFlow Error
 open Std.Do
 
 -- internal-helper: beaconcrypt_registration_writer.wire.encode_init
-theorem operation_086 [_adapter_instance_00 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (init : beaconcrypt_parse.transport.initkex)
+theorem operation_089 [_adapter_instance_00 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (init : beaconcrypt_parse.transport.initkex)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter.Contracts)
     (_adapter_wire_contracts : BeaconcryptCore.PanicFreedom.AdapterWire.Contracts)
     : ∃ adapter_result, beaconcrypt_registration_writer.wire.encode_init init = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter.encode_init_total
 
+-- Actual serializers; signed public callers derive packet shape and native sizing derives room.
+theorem operation_089_writers [_adapter_instance_01 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (init : beaconcrypt_parse.transport.initkex)
+    (_adapter_other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)
+    (_adapter_allocation : BeaconcryptCore.PanicFreedom.AdapterWire.Contracts)
+    (_adapter_shape : BeaconcryptCore.Refinement.RegistrationSerializerInitBytes.InitShape init)
+    : letI := BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.sourceOperations _adapter_other
+      ∃ adapter_result, beaconcrypt_registration_writer.wire.encode_init init = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterSource.init_total
+
 -- Pure dictionary definition (no RustM execution): beaconcrypt_registration_writer.wire.encode_init.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize
 -- closure-helper: beaconcrypt_registration_writer.wire.encode_init.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once
-theorem operation_087 [_adapter_instance_00 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (c : wire.encode_init.closure) (tupled_args : Slice Std.U8)
+theorem operation_090 [_adapter_instance_00 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (c : wire.encode_init.closure) (tupled_args : Slice Std.U8)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter.Contracts)
     (_adapter_wire_contracts : BeaconcryptCore.PanicFreedom.AdapterWire.Contracts)
     : ∃ adapter_result, beaconcrypt_registration_writer.wire.encode_init.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once c tupled_args = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter.encode_init_closure_total
 
 -- internal-helper: beaconcrypt_registration_writer.wire.encode_response
-theorem operation_088 [_adapter_instance_00 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (response : beaconcrypt_parse.transport.kexresponse)
+theorem operation_091 [_adapter_instance_00 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (response : beaconcrypt_parse.transport.kexresponse)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter.Contracts)
     (_adapter_wire_contracts : BeaconcryptCore.PanicFreedom.AdapterWire.Contracts)
     : ∃ adapter_result, beaconcrypt_registration_writer.wire.encode_response response = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter.encode_response_total
 
+-- Actual serializers; signed public callers derive packet shape and native sizing derives room.
+theorem operation_091_writers [_adapter_instance_01 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (response : beaconcrypt_parse.transport.kexresponse)
+    (_adapter_other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)
+    (_adapter_allocation : BeaconcryptCore.PanicFreedom.AdapterWire.Contracts)
+    (_adapter_shape : BeaconcryptCore.Refinement.RegistrationSerializerResponseBytes.ResponseShape response)
+    : letI := BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.sourceOperations _adapter_other
+      ∃ adapter_result, beaconcrypt_registration_writer.wire.encode_response response = ok adapter_result := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterSource.response_total
+
 -- Pure dictionary definition (no RustM execution): beaconcrypt_registration_writer.wire.encode_response.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize
 -- closure-helper: beaconcrypt_registration_writer.wire.encode_response.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once
-theorem operation_089 [_adapter_instance_00 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (c : wire.encode_response.closure) (tupled_args : Slice Std.U8)
+theorem operation_092 [_adapter_instance_00 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (c : wire.encode_response.closure) (tupled_args : Slice Std.U8)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterRegistrationWriter.Contracts)
     (_adapter_wire_contracts : BeaconcryptCore.PanicFreedom.AdapterWire.Contracts)
     : ∃ adapter_result, beaconcrypt_registration_writer.wire.encode_response.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once c tupled_args = ok adapter_result := by
@@ -1031,7 +1375,7 @@ open RustM ControlFlow Error
 open Std.Do
 
 -- internal-helper: beaconcrypt_seal.ratchet.execute_seal_request
-theorem operation_090 [_adapter_instance_00 : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.AdapterSealJoinCallbacks.Operations] (request : beaconcrypt_core.record_effects.AeadSealRequest)
+theorem operation_093 [_adapter_instance_00 : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations] [_adapter_instance_01 : BeaconcryptCore.Refinement.AdapterSealJoinCallbacks.Operations] (request : beaconcrypt_core.record_effects.AeadSealRequest)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterSeal.Contracts)
     : ∃ adapter_result, beaconcrypt_seal.ratchet.execute_seal_request request = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterSeal.execute_seal_request_total
@@ -1046,7 +1390,7 @@ open RustM ControlFlow Error
 open Std.Do
 
 -- specialized-extraction-helper: beaconcrypt_seal_join.ratchet._proof_join_seal_two
-theorem operation_091 [_adapter_instance_00 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (parts : Array (Slice Std.U8) 2#usize)
+theorem operation_094 [_adapter_instance_00 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] (parts : Array (Slice Std.U8) 2#usize)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterWire.Contracts)
     : ∃ adapter_result, beaconcrypt_seal_join.ratchet._proof_join_seal_two parts = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterSealJoin.join_total
@@ -1064,14 +1408,14 @@ open beaconcrypt_public_wrapper
 -- Pure dictionary definition (no RustM execution): beaconcrypt_server_constructor.error.KeyGenError.Insts.CoreFmtDebug
 -- Intentional Result.expect panic; unconditional totality excluded: beaconcrypt_server_constructor.server.Server.new
 -- production-entry: beaconcrypt_server_constructor.server.Server.try_new
-theorem operation_092 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard] [_adapter_instance_05 : BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard] (server_kid : Std.U64) (id_seed : core.option.Option (Slice Std.U8))
+theorem operation_095 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard] [_adapter_instance_05 : BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard] (server_kid : Std.U64) (id_seed : core.option.Option (Slice Std.U8))
   (mldsa_seed : core.option.Option (Slice Std.U8))
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterConstructors.ServerContracts BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard.os)
     : ∃ adapter_result, beaconcrypt_server_constructor.server.Server.try_new server_kid id_seed mldsa_seed = ok adapter_result := by
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterConstructors.server_try_new_total
 
 -- The returned state supports the next public operation, including rejection paths.
-theorem operation_092_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard] [_adapter_instance_05 : BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard] (server_kid : Std.U64) (id_seed : core.option.Option (Slice Std.U8))
+theorem operation_095_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard] [_adapter_instance_05 : BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard] (server_kid : Std.U64) (id_seed : core.option.Option (Slice Std.U8))
   (mldsa_seed : core.option.Option (Slice Std.U8))
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterConstructors.ServerContracts BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard.os)
     [_adapter_allocator : BeaconcryptCore.Refinement.PublicWrapperPlatform.Allocator]
@@ -1083,7 +1427,7 @@ theorem operation_092_preserves [_adapter_instance_00 : BeaconcryptCore.Refineme
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterConstructorValidity.server_try_new_valid
 
 -- production-entry: beaconcrypt_server_constructor.server.Server.try_new_with_rng
-theorem operation_093 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard] [_adapter_instance_05 : BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard] {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
+theorem operation_096 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard] [_adapter_instance_05 : BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard] {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
   rand_core.TryCryptoRng R Clause0_Clause0_Error) (server_kid : Std.U64)
   (id_seed : core.option.Option (Slice Std.U8))
   (mldsa_seed : core.option.Option (Slice Std.U8)) (rng : R)
@@ -1092,7 +1436,7 @@ theorem operation_093 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicW
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterConstructors.server_try_new_with_rng_total
 
 -- The returned state supports the next public operation, including rejection paths.
-theorem operation_093_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard] [_adapter_instance_05 : BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard] {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
+theorem operation_096_preserves [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard] [_adapter_instance_05 : BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard] {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
   rand_core.TryCryptoRng R Clause0_Clause0_Error) (server_kid : Std.U64)
   (id_seed : core.option.Option (Slice Std.U8))
   (mldsa_seed : core.option.Option (Slice Std.U8)) (rng : R)
@@ -1107,7 +1451,7 @@ theorem operation_093_preserves [_adapter_instance_00 : BeaconcryptCore.Refineme
 
 -- Pure dictionary definition (no RustM execution): beaconcrypt_server_constructor.server.Server.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
 -- closure-helper: beaconcrypt_server_constructor.server.Server.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once
-theorem operation_094 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard] [_adapter_instance_05 : BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard] {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
+theorem operation_097 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard] [_adapter_instance_05 : BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard] {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
   rand_core.TryCryptoRng R Clause0_Clause0_Error)
   (_c : server.Server.try_new_with_rng.closure R Clause0_Clause0_Error)
   (_tupled_args : beaconcrypt_crypto.CryptoError)
@@ -1116,7 +1460,7 @@ theorem operation_094 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicW
 
 -- Pure dictionary definition (no RustM execution): beaconcrypt_server_constructor.server.Server.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError
 -- closure-helper: beaconcrypt_server_constructor.server.Server.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError.call_once
-theorem operation_095 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard] [_adapter_instance_05 : BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard] {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
+theorem operation_098 [_adapter_instance_00 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] [_adapter_instance_01 : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform] [_adapter_instance_02 : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations] [_adapter_instance_03 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations] [_adapter_instance_04 : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard] [_adapter_instance_05 : BeaconcryptCore.Refinement.AdapterServerConstructorPrimitive.Standard] {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
   rand_core.TryCryptoRng R Clause0_Clause0_Error)
   (_c : server.Server.try_new_with_rng.closure_1 R Clause0_Clause0_Error)
   (_tupled_args : core.array.TryFromSliceError)
@@ -1133,7 +1477,7 @@ open RustM ControlFlow Error
 open Std.Do
 
 -- internal-helper: beaconcrypt.wire.encode_record
-theorem operation_096 [_adapter_instance_00 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] {T0 : Type} (coreopsfunctionFnOnceT0TupleMutSliceU8UsizeInst :
+theorem operation_099 [_adapter_instance_00 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations] {T0 : Type} (coreopsfunctionFnOnceT0TupleMutSliceU8UsizeInst :
   BeaconcryptCore.Refinement.AdapterWirePrimitive.Serializer T0) (capacity : Std.Usize)
   (serialize : T0)
     (_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterWire.Contracts)
@@ -1142,6 +1486,60 @@ theorem operation_096 [_adapter_instance_00 : BeaconcryptCore.Refinement.Adapter
   adapter_certificate BeaconcryptCore.PanicFreedom.AdapterWire.encode_record_total
 
 end AdapterWireExtraction
+
+-- Pin the selected dictionary to the original extracted decoder, not just a normally returning codec.
+theorem source_decoder_init [_adapter_validator : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations] (input : Slice U8) :
+    BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.sourceCodecs.decodeInit input = beaconcrypt_parse.extraction_decode_init input := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.source_init
+
+-- Pin the selected dictionary to the original extracted decoder, not just a normally returning codec.
+theorem source_decoder_response [_adapter_validator : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations] (input : Slice U8) :
+    BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.sourceCodecs.decodeResponse input = beaconcrypt_parse.extraction_decode_response input := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRegistrationDecoderSource.source_response
+
+-- Pin the selected serializer leaf to the original extraction on every input and buffer.
+theorem source_writer_init (other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)
+    (packet : beaconcrypt_parse.transport.initkex) (output : Slice U8) :
+    @beaconcrypt_parse.encode_init (BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.sourceOperations other) packet output =
+      @beaconcrypt_parse.extraction_encode_init (BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.operations other) packet output := by
+  adapter_certificate BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.runtime_init_binding
+
+-- Pin the selected serializer leaf to the original extraction on every input and buffer.
+theorem source_writer_response (other : BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.OtherBranches)
+    (packet : beaconcrypt_parse.transport.kexresponse) (output : Slice U8) :
+    @beaconcrypt_parse.encode_response (BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.sourceOperations other) packet output =
+      @beaconcrypt_parse.extraction_encode_response (BeaconcryptCore.Refinement.RegistrationSerializerReachableSource.operations other) packet output := by
+  adapter_certificate BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.runtime_response_binding
+
+theorem source_kdf_send [_adapter_material : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]
+    [_adapter_platform : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]
+    [_adapter_primitive : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]
+    [_adapter_crypto : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]
+    [_adapter_hkdf : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (previous : beaconcrypt_record_send.ratchet.Operations) (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest) :
+    (BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceSendOperations previous).kdf request =
+      beaconcrypt_ratchet_kdf.ratchet.ratchet_hkdf request := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.source_send_kdf
+
+theorem source_kdf_receive [_adapter_material : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]
+    [_adapter_platform : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]
+    [_adapter_primitive : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]
+    [_adapter_crypto : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]
+    [_adapter_hkdf : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (previous : beaconcrypt.ratchet.Operations) (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest) :
+    (BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceReceiveOperations previous).kdf request =
+      beaconcrypt_ratchet_kdf.ratchet.ratchet_hkdf request := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.source_receive_kdf
+
+theorem source_kdf_initial [_adapter_material : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]
+    [_adapter_platform : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]
+    [_adapter_primitive : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]
+    [_adapter_crypto : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]
+    [_adapter_hkdf : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
+    (previous : BeaconcryptCore.Refinement.PublicWrapperPlatform.LocalOperations) (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest) :
+    (BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.sourceLocalOperations previous).ratchet_initial_ratchet_hkdf request =
+      beaconcrypt_ratchet_kdf.ratchet.initial_ratchet_hkdf request := by
+  adapter_certificate BeaconcryptCore.PanicFreedom.AdapterRatchetKdfSource.source_initial_kdf
 
 -- Inspect transitive dependencies of every exported contract, including imported libraries.
 run_cmd do
@@ -1165,8 +1563,12 @@ run_cmd do
       ``operation_013,
       ``operation_014,
       ``operation_014_preserves,
+      ``operation_014_kdf,
+      ``operation_014_kdf_preserves,
       ``operation_015,
       ``operation_015_preserves,
+      ``operation_015_kdf,
+      ``operation_015_kdf_preserves,
       ``operation_016,
       ``operation_017,
       ``operation_018,
@@ -1187,10 +1589,14 @@ run_cmd do
       ``operation_029,
       ``operation_030,
       ``operation_030_preserves,
+      ``operation_030_kdf,
+      ``operation_030_kdf_preserves,
       ``operation_031,
       ``operation_031_preserves,
       ``operation_032,
       ``operation_032_preserves,
+      ``operation_032_kdf,
+      ``operation_032_kdf_preserves,
       ``operation_033,
       ``operation_034,
       ``operation_034_preserves,
@@ -1199,15 +1605,23 @@ run_cmd do
       ``operation_037,
       ``operation_038,
       ``operation_038_preserves,
+      ``operation_038_decoders,
+      ``operation_038_decoders_preserves,
       ``operation_039,
       ``operation_040,
       ``operation_040_preserves,
+      ``operation_040_decoders,
+      ``operation_040_decoders_preserves,
+      ``operation_040_kdf,
+      ``operation_040_kdf_preserves,
       ``operation_041,
       ``operation_041_preserves,
       ``operation_042,
       ``operation_042_preserves,
       ``operation_043,
       ``operation_043_preserves,
+      ``operation_043_writers,
+      ``operation_043_writers_preserves,
       ``operation_044,
       ``operation_045,
       ``operation_046,
@@ -1233,7 +1647,12 @@ run_cmd do
       ``operation_065_preserves,
       ``operation_065_source,
       ``operation_065_source_preserves,
+      ``operation_065_writers,
+      ``operation_065_writers_preserves,
+      ``operation_065_kdf,
+      ``operation_065_kdf_preserves,
       ``operation_066,
+      ``operation_066_decoders,
       ``operation_067,
       ``operation_068,
       ``operation_068_preserves,
@@ -1248,6 +1667,7 @@ run_cmd do
       ``operation_077,
       ``operation_078,
       ``operation_079,
+      ``operation_079_kdf,
       ``operation_080,
       ``operation_081,
       ``operation_082,
@@ -1256,17 +1676,62 @@ run_cmd do
       ``operation_085,
       ``operation_086,
       ``operation_087,
+      ``operation_087_kdf,
       ``operation_088,
       ``operation_089,
+      ``operation_089_writers,
       ``operation_090,
       ``operation_091,
+      ``operation_091_writers,
       ``operation_092,
-      ``operation_092_preserves,
       ``operation_093,
-      ``operation_093_preserves,
       ``operation_094,
       ``operation_095,
-      ``operation_096
+      ``operation_095_preserves,
+      ``operation_096,
+      ``operation_096_preserves,
+      ``operation_097,
+      ``operation_098,
+      ``operation_099,
+      ``source_decoder_init,
+      ``source_decoder_response,
+      ``source_writer_init,
+      ``source_writer_response,
+      ``source_kdf_send,
+      ``source_kdf_receive,
+      ``source_kdf_initial,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_finish_native,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_bundle_native,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_send_native,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_receive_native,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_nil_exact,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_cons_exact,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_sequence_normal_valid,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_constructor_native,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_constructor_sequence_normal_valid,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_successful_constructor_sequence_normal_valid,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_hosted_constructor_native,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_hosted_constructor_sequence_normal_valid,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.beacon_hosted_successful_constructor_sequence_normal_valid,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_build_native,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_accept_native,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_send_native,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_receive_native,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_nil_exact,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_cons_exact,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_sequence_normal_valid,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_constructor_native,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_constructor_sequence_normal_valid,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_successful_constructor_sequence_normal_valid,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_hosted_constructor_native,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_hosted_constructor_sequence_normal_valid,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsCoverage.server_hosted_successful_constructor_sequence_normal_valid,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsKdfSource.beacon_calls_preserve,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsKdfSource.server_calls_preserve,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsKdfSource.constructor_and_beacon_calls_preserve,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsKdfSource.constructor_and_server_calls_preserve,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsKdfSource.hosted_constructor_and_beacon_calls_preserve,
+      ``BeaconcryptCore.PanicFreedom.AdapterFiniteCallsKdfSource.hosted_constructor_and_server_calls_preserve
     ]
   for (declaration, information) in (← Lean.getEnv).constants.toList do
     if declaration.toString.startsWith "BeaconcryptCore.PanicFreedom.Adapter" && information.isTheorem && !certificates.contains declaration then

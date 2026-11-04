@@ -62,7 +62,7 @@ variable [writer : RegistrationWriterPrimitive.Operations]
 structure Contracts : Prop where
   publicLeaves : AdapterPublicTrivial.Contracts
   allocation : AdapterWire.Contracts
-  serialization : AdapterRegistrationWriter.Contracts
+  serialization : AdapterRegistrationWriterCallers.ResponseCallerContracts
   sealingPrimitive : AdapterSeal.PrimitiveContracts
   parse : ∀ input, Normal (primitive.parse input)
   initial : ∀ request, Normal (localOps.ratchet_initial_ratchet_hkdf request)
