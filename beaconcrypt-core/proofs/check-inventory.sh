@@ -52,10 +52,10 @@ declare -A expected_category_counts=(
 	[control]=19
 	[generated-lean]=80
 	[generated-proverif]=1
-	[handwritten-lean]=6794
+	[handwritten-lean]=6825
 	[handwritten-proverif]=298
 	[inventory]=3
-	[lean-control]=67
+	[lean-control]=71
 	[lean-dependency-overlay]=4
 	[validation]=185
 )
@@ -301,6 +301,10 @@ compare_set handwritten-lean "$tmp_dir/handwritten-lean"
 
 printf '%s\n' \
 	../scripts/check_lean_panic_freedom.py \
+	../scripts/check_adapter_panic_freedom.py \
+	../scripts/test_check_adapter_panic_freedom.py \
+	proofs/lean/adapter-panic-freedom-inventory.json \
+	proofs/lean/adapter-panic-freedom.json \
 	../scripts/test_check_lean_panic_freedom.py \
 	proofs/lean/panic-freedom.json \
 	proofs/lean/.gitignore \
