@@ -246,7 +246,7 @@ LEAN_GENERATED_PATHS := \
 	check-adapter-record-request-source check-generated-adapter-record-request-lean \
 	check-registration-codec-checkpoint check-registration-codec-extraction \
 	extract-frame-codec-lean check-generated-frame-codec-lean check-frame-codec-source \
-	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-adapter-panic-freedom check-inventory \
+	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-adapter-panic-freedom check-adapter-panic-freedom-controls check-inventory \
 	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
 	check-proverif-extraction check-generated check-generated-lean \
 	$(PROVERIF_CHECK_TARGETS) $(PROVERIF_VERIFY_TARGETS) \
@@ -1124,8 +1124,14 @@ check-adapter-panic-freedom:
 prepare-lean-dependencies:
 	bash $(LEAN_DIR)/apply-dependency-patches.sh
 
+# A standalone control run must first compile the certificates it imports.
+check-adapter-panic-freedom-controls: prepare-lean-dependencies check-adapter-panic-freedom
+	cd $(LEAN_DIR) && lake build BeaconcryptCore.PanicFreedom.AdapterCoverage
+	python3 ../scripts/check_adapter_panic_freedom.py --check-lean-controls
+
 check-lean: prepare-lean-dependencies check-lean-policy check-lean-root check-lean-panic-freedom check-adapter-panic-freedom check-adapter-record-source check-frame-codec-source check-adapter-authentication-source check-adapter-record-request-source check-registration-codec-checkpoint check-computational-completion-source
 	cd $(LEAN_DIR) && lake --rehash build
+	python3 ../scripts/check_adapter_panic_freedom.py --check-lean-controls
 
 # Regenerate and check the complete default beaconcrypt-core production surface.
 verify-lean:

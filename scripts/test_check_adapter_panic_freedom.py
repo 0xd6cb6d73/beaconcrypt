@@ -3,10 +3,212 @@
 """Regression checks for the signature-derived conditional adapter boundary."""
 
 from pathlib import Path
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 
 import check_adapter_panic_freedom as checker
+
+
+class LeanControlCoordinationTests(unittest.TestCase):
+    def test_absent_coordinator_preserves_the_direct_control_command(self):
+        with tempfile.TemporaryDirectory() as directory:
+            command = ["lake", "env", "lean", "Control.lean"]
+            self.assertEqual(
+                checker.lean_control_command(
+                    "control", command, Path(directory) / "absent", {}
+                ),
+                command,
+            )
+
+    def test_available_coordinator_wraps_the_identical_command(self):
+        with tempfile.TemporaryDirectory() as directory:
+            helper = Path(directory) / "coord.sh"
+            helper.write_text("#!/usr/bin/env bash\nexit 0\n")
+            helper.chmod(0o755)
+            command = ["lake", "env", "lean", "Control.lean"]
+            self.assertEqual(
+                checker.lean_control_command("control", command, helper, {}),
+                [str(helper), "lean", "codex", "control", "--", *command],
+            )
+
+    def test_inherited_lease_or_slot_does_not_nest_coordination(self):
+        with tempfile.TemporaryDirectory() as directory:
+            helper = Path(directory) / "coord.sh"
+            helper.write_text("coordinator must not be invoked\n")
+            helper.chmod(0o755)
+            command = ["lake", "env", "lean", "Control.lean"]
+            for environment in (
+                {"COORD_LEASE_TICKET": "00000042"},
+                {"COORD_LEAN_SLOT": "0"},
+                {"COORD_LEAN_SLOT_LOCK": "/tmp/example-lean.lock"},
+            ):
+                with self.subTest(environment=environment):
+                    self.assertEqual(
+                        checker.lean_control_command(
+                            "control", command, helper, environment
+                        ),
+                        command,
+                    )
+
+    def test_nonexecutable_coordinator_is_reported(self):
+        with tempfile.TemporaryDirectory() as directory:
+            helper = Path(directory) / "coord.sh"
+            helper.write_text("not executable\n")
+            with self.assertRaisesRegex(ValueError, "not executable"):
+                checker.lean_control_command(
+                    "control", ["lean", "Control.lean"], helper, {}
+                )
+
+    def test_broken_coordinator_is_not_treated_as_an_absent_runner(self):
+        with tempfile.TemporaryDirectory() as directory:
+            helper = Path(directory) / "coord.sh"
+            helper.symlink_to(Path(directory) / "missing")
+            with self.assertRaisesRegex(ValueError, "not executable"):
+                checker.lean_control_command(
+                    "control", ["lean", "Control.lean"], helper, {}
+                )
+
+
+class LeanControlGateTests(unittest.TestCase):
+    """Exercise the actual Make recipes with fake compilers, never proof engines."""
+
+    prerequisites = {
+        "prepare-lean-dependencies",
+        "check-lean-policy",
+        "check-lean-root",
+        "check-lean-panic-freedom",
+        "check-adapter-panic-freedom",
+        "check-adapter-record-source",
+        "check-frame-codec-source",
+        "check-adapter-authentication-source",
+        "check-adapter-record-request-source",
+        "check-registration-codec-checkpoint",
+        "check-computational-completion-source",
+    }
+    targets = ("check-lean", "check-adapter-panic-freedom-controls")
+
+    def run_gate(self, target, *, fail_build=False, fail_controls=False):
+        make = shutil.which("make")
+        if make is None:
+            self.skipTest(
+                "GNU Make is required for the Make-recipe integration controls"
+            )
+        makefile = Path(__file__).resolve().parents[1] / "beaconcrypt-core/Makefile"
+        source = makefile.read_text()
+        for gate in self.targets:
+            match = re.search(r"^" + re.escape(gate) + r":([^\n]*)$", source, re.M)
+            self.assertIsNotNone(match, gate)
+            # Fail before invoking Make if a new prerequisite needs isolation.
+            self.assertLessEqual(set(match[1].split()), self.prerequisites)
+        with tempfile.TemporaryDirectory(prefix="beaconcrypt-lean-gate-") as directory:
+            temporary = Path(directory)
+            fakebin = temporary / "bin"
+            fakebin.mkdir()
+            lean = temporary / "lean"
+            lean.mkdir()
+            events = temporary / "events.jsonl"
+            tool = (
+                f"#!{sys.executable}\n"
+                "import json, os, pathlib, sys\n"
+                "name = pathlib.Path(sys.argv[0]).name\n"
+                "with open(os.environ['BC_ADAPTER_GATE_LOG'], 'a') as output:\n"
+                "    output.write(json.dumps([name, sys.argv[1:]]) + '\\n')\n"
+                "if name == 'lake' and os.environ.get('BC_ADAPTER_GATE_FAIL_BUILD') == '1':\n"
+                "    raise SystemExit(23)\n"
+                "if name == 'python3' and '--check-lean-controls' in sys.argv and os.environ.get('BC_ADAPTER_GATE_FAIL_CONTROLS') == '1':\n"
+                "    raise SystemExit(29)\n"
+            )
+            for name in ("lake", "python3"):
+                path = fakebin / name
+                path.write_text(tool)
+                path.chmod(0o755)
+            overrides = temporary / "prerequisites.mk"
+            overrides.write_text(
+                ".PHONY: "
+                + " ".join(sorted(self.prerequisites))
+                + "\n"
+                + " ".join(sorted(self.prerequisites))
+                + ": ; @:\n"
+            )
+            environment = os.environ.copy()
+            for key in ("MAKEFLAGS", "MFLAGS", "MAKEOVERRIDES", "MAKELEVEL"):
+                environment.pop(key, None)
+            environment.update(
+                {
+                    "PATH": str(fakebin) + os.pathsep + environment.get("PATH", ""),
+                    "BC_ADAPTER_GATE_LOG": str(events),
+                    "BC_ADAPTER_GATE_FAIL_BUILD": str(int(fail_build)),
+                    "BC_ADAPTER_GATE_FAIL_CONTROLS": str(int(fail_controls)),
+                }
+            )
+            result = subprocess.run(
+                [
+                    make,
+                    "--no-print-directory",
+                    "-f",
+                    str(makefile),
+                    "-f",
+                    str(overrides),
+                    "SHELL=" + shutil.which("bash"),
+                    "LEAN_DIR=" + str(lean),
+                    target,
+                ],
+                cwd=temporary,
+                env=environment,
+                text=True,
+                capture_output=True,
+                timeout=30,
+            )
+            calls = (
+                [json.loads(line) for line in events.read_text().splitlines()]
+                if events.exists()
+                else []
+            )
+            return result, calls
+
+    def test_both_gates_build_certificates_before_running_controls(self):
+        for target in self.targets:
+            with self.subTest(target=target):
+                result, calls = self.run_gate(target)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                build = (
+                    ["--rehash", "build"]
+                    if target == "check-lean"
+                    else ["build", "BeaconcryptCore.PanicFreedom.AdapterCoverage"]
+                )
+                self.assertEqual(
+                    calls,
+                    [
+                        ["lake", build],
+                        [
+                            "python3",
+                            [
+                                "../scripts/check_adapter_panic_freedom.py",
+                                "--check-lean-controls",
+                            ],
+                        ],
+                    ],
+                )
+
+    def test_failed_build_prevents_controls_and_fails_the_gate(self):
+        for target in self.targets:
+            with self.subTest(target=target):
+                result, calls = self.run_gate(target, fail_build=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual([call[0] for call in calls], ["lake"])
+
+    def test_failed_controls_fail_both_gates(self):
+        for target in self.targets:
+            with self.subTest(target=target):
+                result, calls = self.run_gate(target, fail_controls=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual([call[0] for call in calls], ["lake", "python3"])
 
 
 class AdapterBoundaryTests(unittest.TestCase):

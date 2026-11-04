@@ -13,6 +13,8 @@ import BeaconcryptCore.AdapterSealExtraction.Funs
 import BeaconcryptCore.AdapterSealJoinExtraction.Funs
 import BeaconcryptCore.AdapterServerConstructorExtraction.Funs
 import BeaconcryptCore.AdapterWireExtraction.Funs
+import BeaconcryptCore.PanicFreedom.AdapterBeaconAgreementRegression
+import BeaconcryptCore.PanicFreedom.AdapterBeaconAgreementSafety
 import BeaconcryptCore.PanicFreedom.AdapterConstructorValidity
 import BeaconcryptCore.PanicFreedom.AdapterConstructors
 import BeaconcryptCore.PanicFreedom.AdapterInitAuthentication

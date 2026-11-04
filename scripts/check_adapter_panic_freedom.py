@@ -14,6 +14,7 @@ import argparse
 from dataclasses import dataclass
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -949,11 +950,37 @@ def check_provenance(root: Path) -> None:
         )
 
 
+def lean_control_command(
+    label: str,
+    command: list[str],
+    coordinator: Path = Path("/tmp/bc-coord/coord.sh"),
+    environment: dict[str, str] | None = None,
+) -> list[str]:
+    """Coordinate when available without nesting an inherited lease or slot.
+
+    The coordinator's inherited environment is trusted orchestration metadata,
+    not an independently validated live lease. Dedicated runners without this
+    optional local helper execute the identical controls directly.
+    """
+    inherited = os.environ if environment is None else environment
+    if any(
+        inherited.get(marker)
+        for marker in ("COORD_LEASE_TICKET", "COORD_LEAN_SLOT", "COORD_LEAN_SLOT_LOCK")
+    ):
+        return command
+    if not coordinator.exists() and not coordinator.is_symlink():
+        return command
+    if not coordinator.is_file() or not os.access(coordinator, os.X_OK):
+        raise ValueError(f"Lean control coordinator is not executable: {coordinator}")
+    return [str(coordinator), "lean", "codex", label, "--", *command]
+
+
 def check_lean_controls(root: Path) -> None:
     """Compile positive, wrong-type, and transitive-dependency controls freshly.
 
-    This mode runs inside the pinned proof shell, after response and ordinary safety modules are built.
-    Every Lean invocation independently acquires the repository coordination slot.
+    Run after the actual safety modules are built, under the pinned Lean environment.
+    Each invocation uses local coordination when available, or its inherited lease/slot.
+    Runners without the optional coordinator still compile every control.
     Deliberately invalid fixture sources live only in a temporary directory.
     """
     proof = root / "beaconcrypt-core/proofs/lean"
@@ -1007,19 +1034,17 @@ def check_lean_controls(root: Path) -> None:
             fixture.write_text(header + body + "end AdapterPanicFixture\n")
             generated = temporary / "AdapterPanicControl.lean"
             generated.write_text(render(parsed, certificate))
-            prefix = [
-                "/tmp/bc-coord/coord.sh",
-                "lean",
-                "codex",
+            prefix = lean_control_command(
                 "adapter-safety-" + label,
-                "--",
-                "lake",
-                "env",
-                "env",
-                "LEAN_PATH=" + str(temporary) + ":" + lean_path,
-                "lean",
-                "--root=" + str(temporary),
-            ]
+                [
+                    "lake",
+                    "env",
+                    "env",
+                    "LEAN_PATH=" + str(temporary) + ":" + lean_path,
+                    "lean",
+                    "--root=" + str(temporary),
+                ],
+            )
             built = subprocess.run(
                 prefix + ["-o", str(fixture.with_suffix(".olean")), str(fixture)],
                 cwd=proof,
@@ -1089,18 +1114,10 @@ def check_lean_controls(root: Path) -> None:
             render({cohort: (namespace, instances, {name: definitions[name]})}, weaker)
         )
         checked = subprocess.run(
-            [
-                "/tmp/bc-coord/coord.sh",
-                "lean",
-                "codex",
+            lean_control_command(
                 "adapter-weakened-preservation",
-                "--",
-                "lake",
-                "env",
-                "lean",
-                "--root=" + str(temporary),
-                str(generated),
-            ],
+                ["lake", "env", "lean", "--root=" + str(temporary), str(generated)],
+            ),
             cwd=proof,
             text=True,
             capture_output=True,
@@ -1135,18 +1152,10 @@ def check_lean_controls(root: Path) -> None:
             )
         )
         checked = subprocess.run(
-            [
-                "/tmp/bc-coord/coord.sh",
-                "lean",
-                "codex",
+            lean_control_command(
                 "adapter-opaque-child-contract",
-                "--",
-                "lake",
-                "env",
-                "lean",
-                "--root=" + str(temporary),
-                str(generated),
-            ],
+                ["lake", "env", "lean", "--root=" + str(temporary), str(generated)],
+            ),
             cwd=proof,
             text=True,
             capture_output=True,

@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.PanicFreedom.AdapterPublicBeacon
-import BeaconcryptCore.PanicFreedom.AdapterPublicAgreementSafety
+import BeaconcryptCore.PanicFreedom.AdapterBeaconAgreementSafety
 import BeaconcryptCore.PanicFreedom.AdapterPublicFinishSafety
 import BeaconcryptCore.PanicFreedom.AdapterResponseAuthentication
 import BeaconcryptCore.PanicFreedom.RegistrationPublication
@@ -25,8 +25,7 @@ variable [authentication : beaconcrypt.auth.Operations] [recordOps : beaconcrypt
 variable [codec : PublicWrapperPlatform.Codecs]
 
 structure Contracts : Prop where
-  agreement : AdapterPublicRegistrationLoops.AgreementContracts
-  random : AdapterPublicRegistrationLoops.AgreementRngContracts pqxdh.NoEntropy.Insts.Rand_coreTryCryptoRngCryptoError
+  agreement : AdapterBeaconAgreementSafety.Contracts
   record : AdapterRecordReceive.Contracts
   response : AdapterResponseAuthentication.Contracts
   decode : ∀ input, Normal (codec.decodeResponse input)
@@ -70,7 +69,7 @@ theorem finish_registration_preserves (contracts : Contracts) (self : beacon.Bea
       | exact response_option_total _
       | exact AdapterResponseAuthentication.authenticate_response_total contracts.response _ _
       | exact KeyAgreement.begin_beacon_agreement_total _
-      | exact AdapterPublicAgreementSafety.execute_beacon_agreement_total contracts.agreement contracts.random _ _
+      | exact AdapterBeaconAgreementSafety.execute_beacon_agreement_entry_total contracts.agreement _ _ _ (by assumption)
       | exact RegistrationPublication.begin_beacon_completion_total _
       | exact RegistrationTrivial.BeaconInitialKdf_request_total _
       | exact Trivial.pqxdh_concrete_InitialRatchetKdfResponse_from_bytes_total _
