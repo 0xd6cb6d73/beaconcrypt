@@ -1,0 +1,286 @@
+-- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorRealEdSource
+import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorEdUnselectedSource
+import BeaconcryptCore.Computational.RegistrationNativePlatformEdOperandLineage
+
+/-! The actual original prekey prefix retains its one-time-message freshness and source-owned row before the fixed public selection. The canonical marker run then erases through the complete source controller, including every original pin rejection and later writer failure. -/
+open OracleComp OracleSpec CoreModels Aeneas
+open Aeneas.Std hiding namespace core alloc
+open RustM beaconcrypt_core PqxdhRefinement
+set_option autoImplicit false
+set_option warningAsError true
+set_option maxRecDepth 8192
+set_option backward.isDefEq.respectTransparency false
+namespace BeaconcryptCore.Computational.RegistrationNativeIdentityCensorRealBeginSource
+open PqxdhServerAuthExperiment (Setup Checks)
+open PqxdhEd25519EufCma (Ed25519Signature)
+open RegistrationNativeIdentityCensorEdOutgoingSource (Full interpret)
+open BeaconcryptCore.Refinement
+variable {n : Nat} {I KemSK Platform : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
+attribute [local irreducible] registration.BeaconEd25519Signing.resume
+variable (setup : Setup base KemSK) (checks : Checks)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource)
+variable (writer : registration.SignedInitView → StateT Platform ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
+local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
+local notation "callback" => (fun query => Main (RegistrationNativePlatformIdentityProgram.native
+  (RegistrationNativeIdentityFrontend.outgoing (n := n) (Auxiliary := RegistrationServerRoleBackend.State) setup mlSource index owner query)))
+local notation "encoder" => (fun fields => Main (RegistrationNativePlatformIdentityProgram.external (writer fields)))
+
+theorem pre_key (selected : Nat) (placeholder : Ed25519Signature)
+    (pending : registration.BeaconEd25519Signing) (request : registration.Ed25519SigningRequest)
+    (requested : pending.request = .ok request) (stage : pending.stage = .PreKey)
+    (tagged : RegistrationNativeIdentitySigningRole.Tagged pending.state.started)
+    (lineage : pending.state.beacon_identity = PqxdhRootTableInitialization.rootArray owner.identity.publicIdentity.ed25519)
+    (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)) (seed : PqxdhJointIdentity.IdentitySeed)
+    (handle : owner.identity.handle = selected)
+    (armed : before.1.2.armed = true) (held : before.1.2.target = none) (sourceTarget : before.2.target = none)
+    (fresh : absBytes pending.state.started.message.one_time_key ∉ PqxdhJointIdentity.signedMessages
+      (RegistrationNativeIdentityHistory.history selected before.2.pool.transcript))
+    (found : before.2.pool.seeds[selected]? = some seed) :
+    Prod.map id RegistrationNativeIdentityCensorActualHashSource.project <$>
+      (RegistrationNativePlatformBeaconPublication.fromEd
+        (fun query => interpret setup.joint selected placeholder false (callback query))
+        (fun fields => interpret setup.joint selected placeholder false (encoder fields)) pending).run before =
+      (RegistrationNativePlatformBeaconPublication.fromEd
+        (fun query => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (callback query))
+        (fun fields => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (encoder fields)) pending).run
+          (RegistrationNativeIdentityCensorActualHashSource.project before) := by
+  obtain ⟨actual, run, _key, _role, message⟩ := RegistrationSigning.ed_request_exact pending
+  cases RustM.ok.inj (run.symm.trans requested)
+  have messageEq : TranscriptAuthParts.absSlice request.message = absBytes pending.state.started.message.prekey :=
+    congrArg (List.map absByte) (by simpa only [RegistrationSigning.signingMessageValues, stage] using message)
+  have currentRole : RegistrationNativeIdentitySigningRole.oneTime (TranscriptAuthParts.absSlice request.message) = false := by
+    rw [messageEq]
+    exact tagged.1
+  conv_lhs => rw [RegistrationNativePlatformBeaconPublication.fromEd.eq_def]
+  conv_rhs => rw [RegistrationNativePlatformBeaconPublication.fromEd.eq_def]
+  simp only [requested, RegistrationNativePlatformBeaconPublication.continueWith, StateT.run_bind, map_bind]
+  have current := RegistrationNativeIdentityCensorRealSigning.outgoing setup checks representation created selected index owner request placeholder before
+  dsimp only at current
+  rw [← current, bind_map_left]
+  apply bind_congr_of_forall_mem_support
+  rintro ⟨reply, after⟩ reached
+  have frame := RegistrationNativeIdentityCensorEdUnselectedSource.frame setup checks representation created selected index owner request placeholder false before held currentRole (reply, after) reached
+  obtain ⟨effect, resumed, facts⟩ := RegistrationSigning.ed_resume_refines pending reply
+  simp only [Prod.map, id_eq]
+  rw [resumed]
+  cases effect <;> simp only [RegistrationSigning.EdReplyTransition, stage] at facts
+  case Rejected previous => simp only [StateT.run_pure, map_pure, Prod.map_apply, id_eq]
+  case FingerprintRequested next => cases facts.2.1
+  case Ed25519SigningRequested next =>
+    have nextStage : next.stage = .OneTimeKey := facts.2.1
+    have nextStarted := congrArg (fun state : registration.BeaconInitState => state.started) facts.2.2.2
+    change next.state.started = pending.state.started at nextStarted
+    have nextTagged : RegistrationNativeIdentitySigningRole.Tagged next.state.started := nextStarted ▸ tagged
+    obtain ⟨nextRequest, nextRequested, nextKey, _nextRole, _nextMessage⟩ := RegistrationSigning.ed_request_exact next
+    have publicKey : nextRequest.public_key = PqxdhRootTableInitialization.rootArray owner.identity.publicIdentity.ed25519 :=
+      nextKey.trans ((RegistrationNativePlatformEdOperandLineage.resume_identity pending next reply resumed).trans lineage)
+    have nextFresh := RegistrationNativeIdentityCensorEdUnselectedSource.fresh setup checks representation created selected index owner request placeholder false before held currentRole
+      (absBytes pending.state.started.message.one_time_key) tagged.2.1 fresh (reply, after) reached
+    rw [← nextStarted] at nextFresh
+    exact RegistrationNativeIdentityCensorRealEdSource.first_one_time setup checks representation created index owner writer selected placeholder
+      next nextRequest nextRequested nextStage nextTagged after seed handle publicKey
+      ((congrArg (fun state => state.1.armed) frame).trans armed)
+      ((congrArg (fun state => state.1.target) frame).trans held)
+      ((congrArg (fun state => state.2.target) frame).trans sourceTarget)
+      nextFresh ((congrArg (fun state => state.2.pool.seeds[selected]?) frame).trans found)
+
+/-- Repeated matching target entry preserves the same canonical source marginal through its genuine prekey prefix. -/
+theorem repeated_pre_key (selected : Nat) (placeholder : Ed25519Signature)
+    (pending : registration.BeaconEd25519Signing) (request : registration.Ed25519SigningRequest)
+    (requested : pending.request = .ok request) (stage : pending.stage = .PreKey)
+    (tagged : RegistrationNativeIdentitySigningRole.Tagged pending.state.started)
+    (lineage : pending.state.beacon_identity = PqxdhRootTableInitialization.rootArray owner.identity.publicIdentity.ed25519)
+    (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)) (seed : PqxdhJointIdentity.IdentitySeed)
+    (handle : owner.identity.handle = selected)
+    (held : before.1.2.target = some (absBytes pending.state.started.message.one_time_key))
+    (sourceTarget : before.2.target = some (absBytes pending.state.started.message.one_time_key))
+    (found : before.2.pool.seeds[selected]? = some seed) :
+    Prod.map id RegistrationNativeIdentityCensorActualHashSource.project <$>
+      (RegistrationNativePlatformBeaconPublication.fromEd
+        (fun query => interpret setup.joint selected placeholder false (callback query))
+        (fun fields => interpret setup.joint selected placeholder false (encoder fields)) pending).run before =
+      (RegistrationNativePlatformBeaconPublication.fromEd
+        (fun query => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (callback query))
+        (fun fields => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (encoder fields)) pending).run
+          (RegistrationNativeIdentityCensorActualHashSource.project before) := by
+  obtain ⟨actual, run, _key, _role, message⟩ := RegistrationSigning.ed_request_exact pending
+  cases RustM.ok.inj (run.symm.trans requested)
+  have messageEq : TranscriptAuthParts.absSlice request.message = absBytes pending.state.started.message.prekey :=
+    congrArg (List.map absByte) (by simpa only [RegistrationSigning.signingMessageValues, stage] using message)
+  have currentRole : RegistrationNativeIdentitySigningRole.oneTime (TranscriptAuthParts.absSlice request.message) = false := by
+    rw [messageEq]
+    exact tagged.1
+  conv_lhs => rw [RegistrationNativePlatformBeaconPublication.fromEd.eq_def]
+  conv_rhs => rw [RegistrationNativePlatformBeaconPublication.fromEd.eq_def]
+  simp only [requested, RegistrationNativePlatformBeaconPublication.continueWith, StateT.run_bind, map_bind]
+  have current := RegistrationNativeIdentityCensorRealSigning.outgoing setup checks representation created selected index owner request placeholder before
+  dsimp only at current
+  rw [← current, bind_map_left]
+  apply bind_congr_of_forall_mem_support
+  rintro ⟨reply, after⟩ reached
+  have frame := RegistrationNativeIdentityCensorEdForwardSource.frame setup checks representation created selected index owner request placeholder false before (absBytes pending.state.started.message.one_time_key) held tagged.2.1 currentRole (reply, after) reached
+  obtain ⟨effect, resumed, facts⟩ := RegistrationSigning.ed_resume_refines pending reply
+  simp only [Prod.map, id_eq]
+  rw [resumed]
+  cases effect <;> simp only [RegistrationSigning.EdReplyTransition, stage] at facts
+  case Rejected previous => simp only [StateT.run_pure, map_pure, Prod.map_apply, id_eq]
+  case FingerprintRequested next => cases facts.2.1
+  case Ed25519SigningRequested next =>
+    have nextStage : next.stage = .OneTimeKey := facts.2.1
+    have nextStarted := congrArg (fun state : registration.BeaconInitState => state.started) facts.2.2.2
+    change next.state.started = pending.state.started at nextStarted
+    have nextTagged : RegistrationNativeIdentitySigningRole.Tagged next.state.started := nextStarted ▸ tagged
+    obtain ⟨nextRequest, nextRequested, nextKey, _nextRole, _nextMessage⟩ := RegistrationSigning.ed_request_exact next
+    have publicKey : nextRequest.public_key = PqxdhRootTableInitialization.rootArray owner.identity.publicIdentity.ed25519 :=
+      nextKey.trans ((RegistrationNativePlatformEdOperandLineage.resume_identity pending next reply resumed).trans lineage)
+    have nextHeld : after.1.2.target = some (absBytes next.state.started.message.one_time_key) := by
+      rw [nextStarted]
+      exact (congrArg (fun state => state.1.target) frame).trans held
+    have nextTarget : after.2.target = some (absBytes next.state.started.message.one_time_key) := by
+      rw [nextStarted]
+      exact (congrArg (fun state => state.2.target) frame).trans sourceTarget
+    exact RegistrationNativeIdentityCensorRealEdSource.one_time setup checks representation created index owner writer selected placeholder
+      next nextRequest nextRequested nextStage nextTagged after seed handle publicKey
+      nextHeld nextTarget ((congrArg (fun state => state.2.pool.seeds[selected]?) frame).trans found)
+
+attribute [local irreducible] registration.begin_beacon_init
+
+private def BeginProgress (inputs : pqxdh.BeaconStartInputs) (started : pqxdh.BeaconStart) : registration.BeaconInitEffect → Prop
+  | .Rejected _ => True
+  | .Ed25519SigningRequested pending => pending.stage = .PreKey ∧ pending.state.started = started ∧
+      pending.state.beacon_identity = inputs.identity_public_key
+  | _ => False
+
+private theorem begin_progress (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
+    (pin : session.ServerAuthenticationPin) (mldsa : Array U8 1952#usize)
+    (started : pqxdh.BeaconStart) (built : pqxdh.beacon_start control inputs coins = .ok started) :
+    ∃ effect, registration.begin_beacon_init control inputs coins pin mldsa = .ok effect ∧ BeginProgress inputs started effect := by
+  obtain ⟨actual, actualRun, begun⟩ := RegistrationSigningContinuations.begin_beacon_init_exact control inputs coins pin mldsa
+  have same : actual = started := RustM.ok.inj (actualRun.symm.trans built)
+  subst actual
+  rw [begun]
+  split_ifs
+  · exact ⟨_, rfl, trivial⟩
+  · exact ⟨_, rfl, rfl, rfl, rfl⟩
+
+private def fromEffect {S Encoded : Type}
+    (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (StateT S ProbComp))
+    (encode : registration.SignedInitView → StateT S ProbComp (RustM (core.option.Option Encoded))) :
+    registration.BeaconInitEffect → StateT S ProbComp (RustM (RegistrationBeaconInitExecutor.Result Encoded))
+  | .Rejected previous => pure (.ok (.Err previous))
+  | .Ed25519SigningRequested pending => RegistrationNativePlatformBeaconPublication.fromEd impl encode pending
+  | _ => pure .div
+
+private theorem begin_eq {S Encoded : Type}
+    (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (StateT S ProbComp))
+    (encode : registration.SignedInitView → StateT S ProbComp (RustM (core.option.Option Encoded)))
+    (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
+    (pin : session.ServerAuthenticationPin) (mldsa : Array U8 1952#usize)
+    (effect : registration.BeaconInitEffect)
+    (begun : registration.begin_beacon_init control inputs coins pin mldsa = .ok effect) :
+    RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin mldsa = fromEffect impl encode effect := by
+  unfold RegistrationNativePlatformBeaconPublication.begin
+  rw [begun]
+  cases effect <;> rfl
+
+
+/-- Original begin/pin control and the actual tagged tuple derive the prekey entry and chronological first selection. Every early rejection and later failed writer retains the literal honest-source marginal. -/
+theorem begin (selected : Nat) (placeholder : Ed25519Signature)
+    (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
+    (pin : session.ServerAuthenticationPin) (mldsa : Array U8 1952#usize)
+    (started : pqxdh.BeaconStart) (built : pqxdh.beacon_start control inputs coins = .ok started)
+    (lineage : inputs.identity_public_key = PqxdhRootTableInitialization.rootArray owner.identity.publicIdentity.ed25519)
+    (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)) (seed : PqxdhJointIdentity.IdentitySeed)
+    (handle : owner.identity.handle = selected)
+    (armed : before.1.2.armed = true) (held : before.1.2.target = none) (sourceTarget : before.2.target = none)
+    (fresh : absBytes started.message.one_time_key ∉ PqxdhJointIdentity.signedMessages
+      (RegistrationNativeIdentityHistory.history selected before.2.pool.transcript))
+    (found : before.2.pool.seeds[selected]? = some seed) :
+    Prod.map id RegistrationNativeIdentityCensorActualHashSource.project <$>
+      (RegistrationNativePlatformBeaconPublication.begin
+        (fun query => interpret setup.joint selected placeholder false (callback query))
+        (fun fields => interpret setup.joint selected placeholder false (encoder fields)) control inputs coins pin mldsa).run before =
+      (RegistrationNativePlatformBeaconPublication.begin
+        (fun query => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (callback query))
+        (fun fields => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (encoder fields)) control inputs coins pin mldsa).run
+          (RegistrationNativeIdentityCensorActualHashSource.project before) := by
+  obtain ⟨effect, begun, progress⟩ := begin_progress control inputs coins pin mldsa started built
+  obtain ⟨taggedStart, tagRun, tagged⟩ := RegistrationNativeIdentitySigningRole.initial control inputs coins
+  have taggedSame : taggedStart = started := RustM.ok.inj (tagRun.symm.trans built)
+  subst taggedStart
+  rw [begin_eq _ _ control inputs coins pin mldsa effect begun, begin_eq _ _ control inputs coins pin mldsa effect begun]
+  cases effect <;> simp only [BeginProgress] at progress
+  case Rejected previous => simp only [fromEffect, StateT.run_pure, map_pure, Prod.map_apply, id_eq]
+  case Ed25519SigningRequested pending =>
+    obtain ⟨request, requested, _key, _role, _message⟩ := RegistrationSigning.ed_request_exact pending
+    have nextTagged : RegistrationNativeIdentitySigningRole.Tagged pending.state.started := progress.2.1 ▸ tagged
+    have pendingFresh : absBytes pending.state.started.message.one_time_key ∉ PqxdhJointIdentity.signedMessages
+        (RegistrationNativeIdentityHistory.history selected before.2.pool.transcript) := progress.2.1 ▸ fresh
+    exact pre_key setup checks representation created index owner writer selected placeholder pending request requested progress.1 nextTagged
+      (progress.2.2.trans lineage) before seed handle armed held sourceTarget pendingFresh found
+
+/-- Repeated matching target publication starts at the original begin/pin gate and retains the same complete honest-source marginal without a fresh-message or rearming condition. -/
+theorem repeated_begin (selected : Nat) (placeholder : Ed25519Signature)
+    (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
+    (pin : session.ServerAuthenticationPin) (mldsa : Array U8 1952#usize)
+    (started : pqxdh.BeaconStart) (built : pqxdh.beacon_start control inputs coins = .ok started)
+    (lineage : inputs.identity_public_key = PqxdhRootTableInitialization.rootArray owner.identity.publicIdentity.ed25519)
+    (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)) (seed : PqxdhJointIdentity.IdentitySeed)
+    (handle : owner.identity.handle = selected)
+    (held : before.1.2.target = some (absBytes started.message.one_time_key))
+    (sourceTarget : before.2.target = some (absBytes started.message.one_time_key))
+    (found : before.2.pool.seeds[selected]? = some seed) :
+    Prod.map id RegistrationNativeIdentityCensorActualHashSource.project <$>
+      (RegistrationNativePlatformBeaconPublication.begin
+        (fun query => interpret setup.joint selected placeholder false (callback query))
+        (fun fields => interpret setup.joint selected placeholder false (encoder fields)) control inputs coins pin mldsa).run before =
+      (RegistrationNativePlatformBeaconPublication.begin
+        (fun query => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (callback query))
+        (fun fields => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (encoder fields)) control inputs coins pin mldsa).run
+          (RegistrationNativeIdentityCensorActualHashSource.project before) := by
+  obtain ⟨effect, begun, progress⟩ := begin_progress control inputs coins pin mldsa started built
+  obtain ⟨taggedStart, tagRun, tagged⟩ := RegistrationNativeIdentitySigningRole.initial control inputs coins
+  have taggedSame : taggedStart = started := RustM.ok.inj (tagRun.symm.trans built)
+  subst taggedStart
+  rw [begin_eq _ _ control inputs coins pin mldsa effect begun, begin_eq _ _ control inputs coins pin mldsa effect begun]
+  cases effect <;> simp only [BeginProgress] at progress
+  case Rejected previous => simp only [fromEffect, StateT.run_pure, map_pure, Prod.map_apply, id_eq]
+  case Ed25519SigningRequested pending =>
+    obtain ⟨request, requested, _key, _role, _message⟩ := RegistrationSigning.ed_request_exact pending
+    have nextTagged : RegistrationNativeIdentitySigningRole.Tagged pending.state.started := progress.2.1 ▸ tagged
+    have nextHeld : before.1.2.target = some (absBytes pending.state.started.message.one_time_key) := by
+      rw [progress.2.1]
+      exact held
+    have nextTarget : before.2.target = some (absBytes pending.state.started.message.one_time_key) := by
+      rw [progress.2.1]
+      exact sourceTarget
+    exact repeated_pre_key setup checks representation created index owner writer selected placeholder pending request requested progress.1 nextTagged
+      (progress.2.2.trans lineage) before seed handle nextHeld nextTarget found
+
+end BeaconcryptCore.Computational.RegistrationNativeIdentityCensorRealBeginSource
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorRealBeginSource.pre_key' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorRealBeginSource.pre_key
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorRealBeginSource.repeated_pre_key' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorRealBeginSource.repeated_pre_key
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorRealBeginSource.begin' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorRealBeginSource.begin
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorRealBeginSource.repeated_begin' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorRealBeginSource.repeated_begin

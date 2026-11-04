@@ -1,0 +1,29 @@
+-- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.RegistrationNativeSourceExecutionDependencyGuards
+import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterLoggedBundle
+/-! These branch-specific VALUE checks require the retained Bundle source proof to consume the concrete observed public-method body, including both live key-generation phases. -/
+set_option autoImplicit false
+set_option warningAsError true
+namespace BeaconcryptCore.Computational
+
+#guard_source_value_dependencies RegistrationNativePlatformPublicAdapterBundleLogged.source_joint includes [
+  RegistrationNativePlatformPublicAdapterBundleLoggedSource.call_source,
+  RegistrationNativePlatformPublicAdapterBundleObservedSource.call_code,
+  RegistrationNativePlatformPublicAdapterBundleObservedSource.withKeys_source,
+  RegistrationNativePlatformPublicAdapterBundleObservedBody.call_code,
+  RegistrationNativePlatformPublicAdapterBundleObservedBody.source,
+  BeaconcryptCore.Refinement.AdapterPublicBundlePublication.withKeys]
+
+#guard_source_value_dependencies RegistrationNativePlatformPublicAdapterLoggedBundle.source_joint includes [
+  RegistrationNativePlatformPublicAdapterBundleLoggedSource.call_source,
+  RegistrationNativePlatformPublicAdapterBundleObservedSource.call_code,
+  RegistrationNativePlatformPublicAdapterBundleObservedSource.withKeys_source,
+  RegistrationNativePlatformPublicAdapterBundleObservedBody.call_code,
+  RegistrationNativePlatformPublicAdapterBundleObservedBody.source,
+  BeaconcryptCore.Refinement.AdapterPublicBundlePublication.withKeys]
+
+/-- error: source endpoint BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBundleLoggedSource.call_erase does not reach source proof BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBundleObservedBody.source through declaration values -/
+#guard_msgs in
+#guard_source_value_dependencies RegistrationNativePlatformPublicAdapterBundleLoggedSource.call_erase includes [RegistrationNativePlatformPublicAdapterBundleObservedBody.source]
+
+end BeaconcryptCore.Computational

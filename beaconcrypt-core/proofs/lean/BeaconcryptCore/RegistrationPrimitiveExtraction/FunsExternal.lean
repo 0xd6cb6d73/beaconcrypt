@@ -1,0 +1,4 @@
+import BeaconcryptCore.RegistrationPrimitiveExtraction.Types
+import BeaconcryptCore.Refinement.RegistrationPrimitivePlatform
+
+set_option warningAsError true

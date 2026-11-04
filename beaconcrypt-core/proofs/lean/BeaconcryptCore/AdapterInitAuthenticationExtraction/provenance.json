@@ -1,0 +1,60 @@
+{
+  "charon_sysroot": "default",
+  "generated_transformation": {
+    "body_rewrites": [],
+    "insert_after": "namespace beaconcrypt\n",
+    "text": "variable [beaconcrypt.auth.Operations] [BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]\n",
+    "warning_header": [
+      "dupNamespace",
+      "hashCommand",
+      "unusedVariables",
+      "style.whitespace",
+      "style.setOption",
+      "style.longLine"
+    ]
+  },
+  "installed_sha256": {
+    "Funs.lean": "02cc869d7f8ba0c84543f3e9d99523f69781875be734ca5cb54d113bf04d537b",
+    "Types.lean": "5f572227457f9042f380511bfed2b6357513227054702111b4b6767eadee9f06",
+    "external-signatures.json": "b4e733e1faf53caa41fb957ffe2fe5c0396b538960646da7b4ae49753a73f50c"
+  },
+  "model_sha256": {
+    "FunsExternal.lean": "be7980412c80e4aeec8733ea6199a8a2e69474a62c0ff6aac9069d1d2a3f657a",
+    "TypesExternal.lean": "cfa042fa660082aeb5695f866b214af8564de9c8eaa2adf5f4fe4ff5293c03d0"
+  },
+  "raw_generated_sha256": {
+    "Funs.lean": "6d242a54256dc80351a29ede7d86a2b196fa8eecb829e823bc29715336d3542c",
+    "FunsExternal_Template.lean": "ab49d9d9b543d6df8c6f764fd93b841dc8b3a21d59bc9038a25f578f11672dda",
+    "Types.lean": "1c9a5c17e21cca56803ccbe0ba413f572213163c67f28694afc15975b06ec490",
+    "TypesExternal_Template.lean": "8523567a9ec3d2416673fd29f4aa75fe72104a375dba090d9d0746e2e9ca447e"
+  },
+  "rust_start_from": "beaconcrypt::auth::authenticate_init",
+  "rustflags": "--cfg hax_compilation --cfg hax_backend_lean",
+  "source_sha256": {
+    "Cargo.lock": "2f9299d8f9844467ef90c9bbea76cdcacec7e1dffae7025930565ef56906b8e6",
+    "Cargo.toml": "755b24b6a434712ac0b941dcb1cf629321f128555a43b5e574c38dd5bf1b3b53",
+    "beaconcrypt-core/Cargo.toml": "8e41a5e7c6f9715417628967f404745000e89d177902bde70d1969ef00af5f09",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/FunsExternal.lean": "d898df0271bb1140fd0eeea86337d4bb5594f68703f4dccc08aab6c33e401d45",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/AdapterOptionDeref.lean": "5428e51b5da058121b1d63a6fe3504fd90c8e08a893e3ee0961851b2c32320c8",
+    "beaconcrypt-crypto/Cargo.toml": "dc34ba30e7cfbe1c17e27be5ffe2e49f151c9ba170fed7e42baf5bc09cec4560",
+    "beaconcrypt-parse/Cargo.toml": "58af4e0cdf2b2dec9cb607cbfc14fafdb1f56db59f95016171504dd83392676e",
+    "beaconcrypt/Cargo.toml": "bd72a2dd47102f91b1f927b90666f78674a9e4af91419dffad3ac69d7195a098",
+    "beaconcrypt/src/auth.rs": "45b2513e304b4d4b12b41ca15ff15b94db54886e302453971d99ec0f1ce4f884",
+    "beaconcrypt/src/lib.rs": "59b2239615ff5c4bfa10db7a7162b078db5abdd10f143f9a3624937a6ff4a3ba",
+    "hax.toml": "5010245f379886dba312f63d3d56f0fa9d3378c927d488106dd096d1bc7206f1",
+    "scripts/extract_adapter_init_authentication.py": "53fc66356c4f6be034b9adffd1dceae9d0095488c18e5bbbcd15614c4cf45596",
+    "scripts/extract_adapter_record.py": "8ce5111851d445c8412805bcdbbe513bd40a3457be518e929abd1a62cb09f4ae"
+  },
+  "tool_sha256": {
+    "aeneas": "88bc16127fd3f4ebbb72c9d0620d7b4c0c3b0810f8eebcc46c219ff7bba60727",
+    "charon": "60ac6a5c4bf9151f0d6db961009268b91ea445e3a5c93bdb8dbfe5b48da36ebc"
+  },
+  "tools": {
+    "aeneas": "nightly-2026.09.03-6852e64",
+    "charon": "nightly-2026.09.02"
+  },
+  "versions": {
+    "hax-lean-lib": "174840bf2f633ae3bae955e08f781b3737ffc0b8",
+    "lean": "leanprover/lean4:v4.35.0"
+  }
+}

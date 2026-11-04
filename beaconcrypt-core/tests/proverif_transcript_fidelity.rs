@@ -19563,6 +19563,11 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 		!= invoked(&[
 			"check-toolchain",
 			"check-generated-authentication-lean",
+			"check-generated-adapter-authentication-lean",
+			"check-generated-adapter-record-lean",
+			"check-adapter-record-request-source",
+			"check-registration-codec-checkpoint",
+			"check-generated-frame-codec-lean",
 			"extract-proverif",
 			"check-proverif",
 			"check-proverif-mldsa-auth",
@@ -21244,8 +21249,38 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		),
 		(
 			"authentication extraction freshness dropped from verify-in-shell",
-			"\t$(MAKE) check-toolchain\n\t$(MAKE) check-generated-authentication-lean\n\t$(MAKE) extract-proverif\n",
-			"\t$(MAKE) check-toolchain\n\t$(MAKE) extract-proverif\n",
+			"\t$(MAKE) check-toolchain\n\t$(MAKE) check-generated-authentication-lean\n",
+			"\t$(MAKE) check-toolchain\n",
+			"verify-in-shell must run check-proverif-fs",
+		),
+		(
+			"adapter authentication extraction freshness dropped from verify-in-shell",
+			"\t$(MAKE) check-generated-adapter-authentication-lean\n",
+			"",
+			"verify-in-shell must run check-proverif-fs",
+		),
+		(
+			"adapter record extraction freshness dropped from verify-in-shell",
+			"\t$(MAKE) check-generated-adapter-record-lean\n",
+			"",
+			"verify-in-shell must run check-proverif-fs",
+		),
+		(
+			"adapter request transformation gate dropped from verify-in-shell",
+			"\t$(MAKE) check-adapter-record-request-source\n",
+			"",
+			"verify-in-shell must run check-proverif-fs",
+		),
+		(
+			"registration codec checkpoint controls dropped from verify-in-shell",
+			"\t$(MAKE) check-registration-codec-checkpoint\n",
+			"",
+			"verify-in-shell must run check-proverif-fs",
+		),
+		(
+			"frame codec extraction freshness dropped from verify-in-shell",
+			"\t$(MAKE) check-generated-frame-codec-lean\n",
+			"",
 			"verify-in-shell must run check-proverif-fs",
 		),
 		(
@@ -21337,7 +21372,7 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		);
 		checked += 1;
 	}
-	assert_eq!(checked, 17);
+	assert_eq!(checked, 22);
 }
 
 #[test]

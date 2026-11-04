@@ -1,0 +1,228 @@
+-- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.RegistrationNativePlatformOriginWarmReserveBound
+import BeaconcryptCore.Computational.RegistrationNativePlatformOriginSourceFormBound
+open OracleComp OracleSpec CoreModels Aeneas ENNReal MeasureTheory ProbabilityTheory
+open Aeneas.Std hiding namespace core alloc
+open beaconcrypt_core
+set_option autoImplicit false
+set_option warningAsError true
+set_option maxRecDepth 8192
+set_option maxHeartbeats 1800000
+namespace BeaconcryptCore.Computational.RegistrationNativePlatformOriginWarmFormBound
+open PqxdhRecordLiftProtocol (ServiceSpec)
+open PqxdhRecordLiftIdeal (CtxPrivate KeyMode)
+open PqxdhRecordLiftWorldCompiler (Label)
+open PqxdhServerAuthExperiment (Setup Codec)
+open PqxdhRecordFactsOriginOrdinalPath (Prefix)
+open RegistrationNativePlatformOriginSourceSendSyntax (Form Reply)
+open RegistrationNativePlatformOriginReserveContinuationBound (continued)
+open RegistrationNativePlatformOriginSourceFormBound (run Bad Flags Joint coin_bound coin_prefix quiet_bound)
+variable {n : Nat} {I KemSK Platform Failure Reader Response A X : Type} {base : OracleSpec I}
+local instance (T : Type) : MeasurableSpace T := ⊤
+local instance (T : Type) : DiscreteMeasurableSpace T := ⟨fun _=>trivial⟩
+local instance : MeasurableSpace (Joint n A X) := ⊤
+local instance : DiscreteMeasurableSpace (Joint n A X) := ⟨fun _=>trivial⟩
+local instance : MeasurableSpace (Joint n A X × Bool) := ⊤
+local instance : DiscreteMeasurableSpace (Joint n A X × Bool) := ⟨fun _=>trivial⟩
+local instance : MeasurableSpace ((X × CtxPrivate n) × Bool) := ⊤
+local instance : DiscreteMeasurableSpace ((X × CtxPrivate n) × Bool) := ⟨fun _=>trivial⟩
+noncomputable local instance (p : Prop) : Decidable p:=Classical.propDecidable p
+private theorem coins_base {Y : Type} (work : ProbComp Y) :
+    (simulateQ (RegistrationNativePlatformOriginGateSource.coins (n := n)) work).AllQueriesSatisfy
+      RegistrationNativePlatformOriginErasedFields.BaseOnly := by
+  induction work using OracleComp.inductionOn with
+  | pure value=>trivial
+  | query_bind query next ih=>
+    simp only [simulateQ_bind,simulateQ_spec_query,RegistrationNativePlatformOriginGateSource.coins,bind_assoc,
+      allQueriesSatisfy_query_bind_iff]
+    exact ⟨by trivial,fun _=>⟨by trivial,fun reply=>ih reply⟩⟩
+
+private theorem prefix_base (reserve : Nat → StateT Platform ProbComp (core.result.Result Unit Failure))
+    (beforeP : Platform) (tag : PqxdhDeploymentInterface.FrameTag) (reply : Reply) :
+    (RegistrationNativePlatformOriginResumedCallback.prefixWork (n := n) reserve beforeP tag reply).AllQueriesSatisfy
+      RegistrationNativePlatformOriginErasedFields.BaseOnly := by
+  rw [RegistrationNativePlatformOriginResumedCallback.prefixWork,allQueriesSatisfy_query_bind_iff]
+  exact ⟨by trivial,fun _=>coins_base _⟩
+
+theorem hidden_bound {E Value : Type} (route : RawCtxServerRouting.SenderDecoder)
+    (modes : Label n → KeyMode) (ideal : ∀label,modes label≠.real)
+    (replace : Pqxdh.Bytes → Pqxdh.Bytes) (setup : Setup base KemSK)
+    (actualWork : OracleComp (PqxdhRecordLiftInterface.WorldSpec n) (RegistrationNativeEntropyRun.Outcome E Value))
+    (journal : OracleComp (ServiceSpec n) X)
+    (project : X → PqxdhRecordLiftIdeal.Client n (RegistrationNativeRecordPackage.Extra E) Value)
+    (projected : project <$>journal=RegistrationNativeRecordOriginProgram.program
+      (RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)) route actualWork)
+    (start : CtxPrivate n) (virgin : PqxdhRecordFactsPrivateCacheSource.Virgin start [])
+    (initialEmpty : ∀label,(start.keys label).1.successfulSeals=[])
+    (rawCap : Nat) (bounded : (RegistrationNativeRecordOriginProgram.program
+      (RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)) route actualWork).IsQueryBoundP
+      (fun query=>PqxdhRecordLiftCtxProtocolBounds.categoryCost .raw query=1) rawCap)
+    (reserve : Nat → StateT Platform ProbComp (core.result.Result Unit Failure)) (read : A → Reply)
+    (accepts : Label n → X × CtxPrivate n → Prop)
+    (pending : PqxdhRecordLiftProtocol.Sealing n) (tag : PqxdhDeploymentInterface.FrameTag)
+    (beforeP : Platform) (after : Reply → Platform → A) (same : ∀output state,read (after output state)=output)
+    (future : A → OracleComp (ServiceSpec n) X) (before : CtxPrivate n)
+    (past : List (Label n)) (cuts : List (PqxdhRecordFactsOriginOrdinalCut.Cut n X))
+    (beforePrefix : Prefix (PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup
+        (RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)))
+      journal start []
+      ((do let _←((ServiceSpec n).query (.lookup pending.material) :OracleComp (ServiceSpec n) _)
+           let sealed←((ServiceSpec n).query (.sealing pending) :OracleComp (ServiceSpec n) _)
+           continued reserve (fun output state=>pure (after output state)) beforeP tag sealed) >>=future) before past cuts)
+    (flags : Flags (PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup
+        (RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)))
+      (RawCtxUniversalDecoder.decoder (RegistrationNativeWire.ledgerCodec
+        (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)).frameRead)
+      accepts journal start) :
+    𝒟[run (PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup
+        (RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)))
+      (do let _←((ServiceSpec n).query (.lookup pending.material) :OracleComp (ServiceSpec n) _)
+          let sealed←((ServiceSpec n).query (.sealing pending) :OracleComp (ServiceSpec n) _)
+          continued reserve (fun output state=>pure (after output state)) beforeP tag sealed) future before]
+      {result|Bad read accepts before result}≤2*rawCap*((2^512:Nat):ℝ≥0∞)⁻¹ := by
+  let codec:=RegistrationNativeWire.ledgerCodec
+    (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)
+  let service:=PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup codec
+  let decode:=RawCtxUniversalDecoder.decoder codec.frameRead
+  let afterFuture:=fun output state=>future (after output state)
+  let body:=do
+    let _←((ServiceSpec n).query (.lookup pending.material) :OracleComp (ServiceSpec n) _)
+    let sealed←((ServiceSpec n).query (.sealing pending) :OracleComp (ServiceSpec n) _)
+    continued reserve (fun output state=>pure (after output state)) beforeP tag sealed
+  have bind_continued (sealed : Reply) :
+      (continued (n := n) reserve (fun output state=>pure (after output state)) beforeP tag sealed >>=future)=
+        continued reserve afterFuture beforeP tag sealed := by
+    simp only [continued,bind_assoc,pure_bind,afterFuture]
+  have prefixForm : body >>=future=
+      (do let _←((ServiceSpec n).query (.lookup pending.material) :OracleComp (ServiceSpec n) _)
+          let sealed←((ServiceSpec n).query (.sealing pending) :OracleComp (ServiceSpec n) _)
+          continued reserve afterFuture beforeP tag sealed) := by
+    simp only [body,bind_assoc,bind_continued]
+  change Prefix service journal start [] (body >>=future) before past cuts at beforePrefix
+  rw [prefixForm] at beforePrefix
+  change 𝒟[run service body future before] {result|Bad read accepts before result}≤_
+  have form : run service body future before=
+      (do let looked←(service (.lookup pending.material)).run before
+          run service (((ServiceSpec n).query (.sealing pending) :OracleComp (ServiceSpec n) _) >>=
+            continued reserve (fun output state=>pure (after output state)) beforeP tag) future looked.2) := by
+    simp only [run,body,simulateQ_bind,simulateQ_spec_query,StateT.run_bind,bind_assoc]
+  rw [form]
+  let : MeasurableSpace (Unit × CtxPrivate n):=⊤
+  let : DiscreteMeasurableSpace (Unit × CtxPrivate n):=⟨fun _=>trivial⟩
+  apply PqxdhRecordFactsOriginAverage.bind_le
+  intro looked lookupCalled
+  have sealPrefix:=Prefix.step beforePrefix lookupCalled
+  simp only [PqxdhRecordLiftWorldProvenance.sealingCoordinates,PqxdhRecordFactsOriginOrdinalPath.cutAt,List.append_nil] at sealPrefix
+  let cut :PqxdhRecordFactsOriginOrdinalCut.Cut n X:=⟨pending,continued reserve afterFuture beforeP tag,looked.2,past⟩
+  have localBound:=RegistrationNativePlatformOriginWarmReserveBound.reached route modes replace setup actualWork journal project projected start virgin initialEmpty
+    rawCap bounded cut (ideal pending.material) (PqxdhRecordFactsOriginOrdinalPath.prefix_reach service sealPrefix)
+    reserve afterFuture beforeP tag rfl
+  let observed:=RegistrationNativePlatformOriginReplyJointObservation.joint reserve after future beforeP tag pending.material decode service looked.2 pending
+  have erased : Prod.fst <$>observed=run service
+      (((ServiceSpec n).query (.sealing pending) :OracleComp (ServiceSpec n) _) >>=
+        continued reserve (fun output state=>pure (after output state)) beforeP tag) future looked.2 :=
+    RegistrationNativePlatformOriginReplyJointObservation.erase reserve after future beforeP tag pending.material decode service looked.2 pending
+  have sameProbability : 𝒟[Prod.fst <$>observed] {result|Bad read accepts before result}=
+      𝒟[observed] {result|Bad read accepts before result.1} := by
+    rw [←prEvent_eq_evalDist_of_discrete,←prEvent_eq_evalDist_of_discrete,prEvent_map]
+  rw [←erased,sameProbability]
+  calc
+    _≤𝒟[observed] {result|result.2=true} := by
+      apply measure_mono_ae
+      apply OracleComp.ae_evalDist_of_forall_mem_support
+      intro result supported bad
+      change result.2=true
+      obtain ⟨sealed,gated,finished,sealCalled,gateCalled,finishedCalled,equal⟩ :=
+        RegistrationNativePlatformOriginReplyJointObservation.cases_source reserve after future beforeP tag pending.material decode service looked.2 pending result supported
+      obtain ⟨refused,label,acquired,accepted⟩ :=bad
+      obtain ⟨entry,absent,present⟩ :=acquired
+      have lookupKept:=RegistrationNativePlatformOriginErasedFields.base_call modes replace setup codec
+        (.lookup pending.material) (by trivial) before looked lookupCalled
+      have gateKept:=RegistrationNativePlatformOriginErasedFields.program modes replace setup codec _
+        (prefix_base reserve beforeP tag sealed.1) sealed.2 gated gateCalled
+      have material : pending.material=label := by
+        by_contra different
+        have other:=RegistrationNativePlatformOriginErasedFields.sealing_other modes replace setup codec pending looked.2 sealed sealCalled label (Ne.symm different)
+        have fresh : entry∉(looked.2.keys label).1.successfulSeals:=by rw [lookupKept];exact absent
+        have inserted : entry∈(sealed.2.keys label).1.successfulSeals:=by rw [←gateKept];simpa only [equal] using present
+        exact fresh ((congrArg (fun state=>state.1.successfulSeals) other) ▸inserted)
+      have markedCalled : finished∈support ((simulateQ (PqxdhRecordFactsOriginMuteAdaptive.marked pending.material decode service)
+          (continued reserve afterFuture beforeP tag sealed.1)).run (sealed.2,false)) := by
+        rw [RegistrationNativePlatformOriginReplyJointObservation.continued_form reserve beforeP tag pending.material decode service]
+        rw [mem_support_bind_iff]
+        exact ⟨gated,gateCalled,finishedCalled⟩
+      have acceptedPending : accepts pending.material (finished.1,finished.2.1) := by
+        rw [material]
+        simpa only [equal] using accepted
+      have raised:=flags cut cuts sealPrefix sealed sealCalled finished markedCalled acceptedPending
+      have absentOutput : gated.1.1=none :=by simpa only [equal,same] using refused
+      simpa only [equal,absentOutput,Option.isNone_none,Bool.true_and] using raised
+    _≤2*rawCap*((2^512:Nat):ℝ≥0∞)⁻¹ := by
+      have projection:=RegistrationNativePlatformOriginReplyJointObservation.project reserve after future beforeP tag pending.material decode service looked.2 pending
+      have probability : 𝒟[observed] {result|result.2=true}=
+          𝒟[RegistrationNativePlatformOriginResumedCallback.sealingObservation reserve afterFuture beforeP tag pending.material decode service looked.2 pending]
+            {result|result.2=true} := by
+        rw [←projection]
+        rw [←prEvent_eq_evalDist_of_discrete,←prEvent_eq_evalDist_of_discrete,prEvent_map]
+      exact probability.trans_le localBound
+
+/-- The actual source normal form averages its original coins and contributes the coefficient-two bound once for its single possible hidden send; neither coordinate nor failure histories are conditioned away. -/
+theorem bound {E Value : Type} (route : RawCtxServerRouting.SenderDecoder)
+    (modes : Label n → KeyMode) (ideal : ∀label,modes label≠.real)
+    (replace : Pqxdh.Bytes → Pqxdh.Bytes) (setup : Setup base KemSK)
+    (actualWork : OracleComp (PqxdhRecordLiftInterface.WorldSpec n) (RegistrationNativeEntropyRun.Outcome E Value))
+    (journal : OracleComp (ServiceSpec n) X)
+    (project : X → PqxdhRecordLiftIdeal.Client n (RegistrationNativeRecordPackage.Extra E) Value)
+    (projected : project <$>journal=RegistrationNativeRecordOriginProgram.program
+      (RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)) route actualWork)
+    (start : CtxPrivate n) (virgin : PqxdhRecordFactsPrivateCacheSource.Virgin start [])
+    (initialEmpty : ∀label,(start.keys label).1.successfulSeals=[])
+    (rawCap : Nat) (bounded : (RegistrationNativeRecordOriginProgram.program
+      (RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)) route actualWork).IsQueryBoundP
+      (fun query=>PqxdhRecordLiftCtxProtocolBounds.categoryCost .raw query=1) rawCap)
+    (reserve : Nat → StateT Platform ProbComp (core.result.Result Unit Failure)) (read : A → Reply)
+    (accepts : Label n → X × CtxPrivate n → Prop)
+    (body : OracleComp (ServiceSpec n) A) (sourceForm : Form reserve read body)
+    (future : A → OracleComp (ServiceSpec n) X) (before : CtxPrivate n)
+    (past : List (Label n)) (cuts : List (PqxdhRecordFactsOriginOrdinalCut.Cut n X))
+    (beforePrefix : Prefix (PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup
+        (RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)))
+      journal start []
+      (body >>=future) before past cuts)
+    (flags : Flags (PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup
+        (RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)))
+      (RawCtxUniversalDecoder.decoder (RegistrationNativeWire.ledgerCodec
+        (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)).frameRead)
+      accepts journal start) :
+    𝒟[run (PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup
+        (RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativePlatformConcreteSource.wire)))
+      body future before]
+      {result|Bad read accepts before result}≤2*rawCap*((2^512:Nat):ℝ≥0∞)⁻¹ := by
+  induction sourceForm generalizing before past cuts with
+  | quiet body quiet=>
+    rw [quiet_bound modes replace setup _ read accepts body quiet future before]
+    exact bot_le
+  | hidden pending tag beforeP after same=>
+    exact hidden_bound route modes ideal replace setup actualWork journal project projected start virgin initialEmpty rawCap bounded reserve read accepts
+      pending tag beforeP after same future before past cuts beforePrefix flags
+  | coin amount next _later ih=>
+    apply coin_bound modes replace setup _ read accepts amount next future before (2*rawCap*((2^512:Nat):ℝ≥0∞)⁻¹)
+    intro result supported
+    apply ih result.1 result.2 past cuts
+    rw [bind_assoc] at beforePrefix
+    exact coin_prefix _ journal start [] amount
+      (fun reply=>next reply >>=future) before past cuts beforePrefix result supported
+
+end BeaconcryptCore.Computational.RegistrationNativePlatformOriginWarmFormBound
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformOriginWarmFormBound.hidden_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformOriginWarmFormBound.hidden_bound
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformOriginWarmFormBound.bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformOriginWarmFormBound.bound

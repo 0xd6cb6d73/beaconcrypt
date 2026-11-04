@@ -1,0 +1,7 @@
+-- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.AdapterPublicWrapperExtraction.Funs
+import BeaconcryptCore.AdapterRecordSendExtraction.Types
+import BeaconcryptCore.AdapterRecordExtraction.Types
+import BeaconcryptCore.FrameCodecExtraction.Funs
+set_option autoImplicit false
+set_option warningAsError true

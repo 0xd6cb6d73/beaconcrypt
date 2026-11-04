@@ -1,0 +1,78 @@
+{
+  "charon_sysroot": "default",
+  "generated_transformation": {
+    "binders": "variable [BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations]\nvariable [BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]\n",
+    "body_rewrites": [],
+    "mutable_serializers": [
+      [
+        "core.ops.function.FnOnce wire.encode_init.closure (Slice Std.U8) Std.Usize",
+        "BeaconcryptCore.Refinement.AdapterWirePrimitive.Serializer wire.encode_init.closure"
+      ],
+      [
+        "core.ops.function.FnOnce wire.encode_response.closure (Slice Std.U8)\n  Std.Usize",
+        "BeaconcryptCore.Refinement.AdapterWirePrimitive.Serializer wire.encode_response.closure"
+      ]
+    ],
+    "namespace": [
+      "beaconcrypt",
+      "beaconcrypt_registration_writer"
+    ],
+    "warning_header": [
+      "dupNamespace",
+      "hashCommand",
+      "unusedVariables",
+      "style.whitespace",
+      "style.setOption",
+      "style.longLine"
+    ]
+  },
+  "installed_sha256": {
+    "Funs.lean": "a6896a3e9857686fa4bbd65547a9e16d9fe85f14a5490ac49d3e39262e9e9f82",
+    "Types.lean": "c9d3d4a8368eda95aa9ba6f683c3d3ae52abb1afdc836c1fd0ab14291babccba",
+    "external-signatures.json": "a3521a43c8aafe90462bd883b807306221ebfe51890c9904f099cb57b38282e2"
+  },
+  "model_sha256": {
+    "FunsExternal.lean": "197462035401c72108c54d6b91f6b915f2b6ea9ecce13af43b1e50baa74c2d0f",
+    "TypesExternal.lean": "b98d2579b61fc15b5ab92fc4b187a0fc7414def3c43248a4f5c8f750c8e15253"
+  },
+  "raw_generated_sha256": {
+    "Funs.lean": "30666eb809b86dae74c60b939bdc00c4f90e998176693826fcf6d87a75aa3c5a",
+    "FunsExternal_Template.lean": "fdaeb3b6db1419b5c5743a0324bc4b943b557c2f6c3888406f33fdc583e56e47",
+    "Types.lean": "23156287637db0c705c167c62768aa2ddc97f2790f9c0c52da265e71d78271bb",
+    "TypesExternal_Template.lean": "8523567a9ec3d2416673fd29f4aa75fe72104a375dba090d9d0746e2e9ca447e"
+  },
+  "rust_start_from": [
+    "beaconcrypt::wire::encode_init",
+    "beaconcrypt::wire::encode_response"
+  ],
+  "rustflags": "--cfg hax_compilation --cfg hax_backend_lean",
+  "source_sha256": {
+    "Cargo.lock": "2f9299d8f9844467ef90c9bbea76cdcacec7e1dffae7025930565ef56906b8e6",
+    "Cargo.toml": "755b24b6a434712ac0b941dcb1cf629321f128555a43b5e574c38dd5bf1b3b53",
+    "beaconcrypt-core/Cargo.toml": "8e41a5e7c6f9715417628967f404745000e89d177902bde70d1969ef00af5f09",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterWireExtraction/Funs.lean": "f18bac513d0a035754095822efd96644187acc5bcc4a0d104c2049c902e9719e",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterWireExtraction/FunsExternal.lean": "9822fc8237bc8030f80a44c545a6122390db0f427a26302a0366b537ca2a4406",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Extraction/Funs.lean": "b1e87d15a9f9fe89770527890655a8cd8bedec3477c9203e3b7df466759eeb6f",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/RegistrationPrimitiveExtraction/Types.lean": "29b8c3cbe236b02bf927d4bab9dfc6ad1720d97b5514fed293e0373244ac1c30",
+    "beaconcrypt-crypto/Cargo.toml": "dc34ba30e7cfbe1c17e27be5ffe2e49f151c9ba170fed7e42baf5bc09cec4560",
+    "beaconcrypt-parse/Cargo.toml": "58af4e0cdf2b2dec9cb607cbfc14fafdb1f56db59f95016171504dd83392676e",
+    "beaconcrypt/Cargo.toml": "bd72a2dd47102f91b1f927b90666f78674a9e4af91419dffad3ac69d7195a098",
+    "beaconcrypt/src/lib.rs": "59b2239615ff5c4bfa10db7a7162b078db5abdd10f143f9a3624937a6ff4a3ba",
+    "beaconcrypt/src/wire.rs": "443e1320beafe10872b7517689da3c669e206ef5444a8e36fcdc86a304504549",
+    "hax.toml": "5010245f379886dba312f63d3d56f0fa9d3378c927d488106dd096d1bc7206f1",
+    "scripts/extract_adapter_record.py": "8ce5111851d445c8412805bcdbbe513bd40a3457be518e929abd1a62cb09f4ae",
+    "scripts/extract_adapter_registration_writer.py": "33ca2ece5c057d4d1d130faaf851822bbd0c153855457a60e10f05b1b5ce0818"
+  },
+  "tool_sha256": {
+    "aeneas": "88bc16127fd3f4ebbb72c9d0620d7b4c0c3b0810f8eebcc46c219ff7bba60727",
+    "charon": "60ac6a5c4bf9151f0d6db961009268b91ea445e3a5c93bdb8dbfe5b48da36ebc"
+  },
+  "tools": {
+    "aeneas": "nightly-2026.09.03-6852e64",
+    "charon": "nightly-2026.09.02"
+  },
+  "versions": {
+    "hax-lean-lib": "174840bf2f633ae3bae955e08f781b3737ffc0b8",
+    "lean": "leanprover/lean4:v4.35.0"
+  }
+}

@@ -1,0 +1,5 @@
+import BeaconcryptCore.RegistrationArrayExtraction.Types
+import BeaconcryptCore.RegistrationShallowExtraction.Funs
+import BeaconcryptCore.Refinement.RegistrationArrayPlatform
+
+set_option warningAsError true

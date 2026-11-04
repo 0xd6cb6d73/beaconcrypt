@@ -1,0 +1,7159 @@
+{
+  "control_preparation": {
+    "distributions": [
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "authenticate_registration_lookup",
+              0
+            ]
+          }
+        ],
+        "switch": 252,
+        "tail_sha256": "3b2712f8a2b95dde5089295fce3678896a3313ade09bdd0ff9d17fbc34d14601"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "authenticate_registration_lookup",
+              0
+            ]
+          }
+        ],
+        "switch": 231,
+        "tail_sha256": "2f9c4771001af73a00a46cd024b150e5576769f051ddb09b900d4c72dde545d5"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "authenticate_registration_lookup",
+              0
+            ]
+          }
+        ],
+        "switch": 208,
+        "tail_sha256": "c1f0f5f74fd6eea58f30648cdfa979021401355ad90e5cb403351c3421926dc7"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "authenticate_registration_lookup",
+              0
+            ]
+          }
+        ],
+        "switch": 188,
+        "tail_sha256": "c1f0f5f74fd6eea58f30648cdfa979021401355ad90e5cb403351c3421926dc7"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_shared_secret_from_lookup_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 342,
+        "tail_sha256": "704ce6191c7276e680b81e74abf18f8b8258a2ac8944daf46adf6d47fa4d138a"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_shared_secret_from_lookup_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 649,
+        "tail_sha256": "c795e8f4a8f0120c1bba64143147b05c53d5515767beb64ef52ef1b717849170"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_shared_secret_from_lookup_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 648,
+        "tail_sha256": "c795e8f4a8f0120c1bba64143147b05c53d5515767beb64ef52ef1b717849170"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_shared_secret_from_lookup_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 624,
+        "tail_sha256": "9b59c0c0007a50c349f29acfdc1971df53b2d676a411af35fa2fe893c0734dde"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_shared_secret_from_lookup_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 621,
+        "tail_sha256": "9b59c0c0007a50c349f29acfdc1971df53b2d676a411af35fa2fe893c0734dde"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_shared_secret_from_lookup_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 649,
+        "tail_sha256": "c795e8f4a8f0120c1bba64143147b05c53d5515767beb64ef52ef1b717849170"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_shared_secret_from_lookup_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 648,
+        "tail_sha256": "c795e8f4a8f0120c1bba64143147b05c53d5515767beb64ef52ef1b717849170"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_shared_secret_from_lookup_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 624,
+        "tail_sha256": "9b59c0c0007a50c349f29acfdc1971df53b2d676a411af35fa2fe893c0734dde"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_shared_secret_from_lookup_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 621,
+        "tail_sha256": "9b59c0c0007a50c349f29acfdc1971df53b2d676a411af35fa2fe893c0734dde"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 11454,
+        "tail_sha256": "77f9802eec77ff4cdb2a1b7e6f4fbb09a4b765d2e1f616d694fff02dbe1109ab"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 11416,
+        "tail_sha256": "77f9802eec77ff4cdb2a1b7e6f4fbb09a4b765d2e1f616d694fff02dbe1109ab"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 11380,
+        "tail_sha256": "22152102f647c8e7c6e46adb62b2cc43adc5ed8111c85133c8e6ccb9cfdab7ed"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 11344,
+        "tail_sha256": "e6e164726309eeeaceebe79ac987d1c8e95b3662d6241b4710d6b7a152cc9238"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 11310,
+        "tail_sha256": "e6e164726309eeeaceebe79ac987d1c8e95b3662d6241b4710d6b7a152cc9238"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 11273,
+        "tail_sha256": "2b4bd17ca79623a37999e4019bf1c27ac09abd04e2ab2f5c404be2a769066657"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 11237,
+        "tail_sha256": "ddfcb986e54fdb2391749467135645827e11de18235700698fb53a42e07217ef"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 11178,
+        "tail_sha256": "c96e2c941f558d755d42669a86db5f167120f79681721320c1ef167f840fd79c"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 11120,
+        "tail_sha256": "da98b8c0d42d996e48fa8f918daa71316bbc8b6f27426bba03ebe0be4bc4c53f"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 11018,
+        "tail_sha256": "f1e0376a8db4ab7a6aba0f2f26b528f84c5d45e2259f0a06d59a5a70e7ec3e0e"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 10938,
+        "tail_sha256": "aef883cb6e521957228d178590c64514c842ff1354addfc8ab17e65d1a31d984"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 10792,
+        "tail_sha256": "977fb21837884ee66f0433c4d00bb70a0d3b656b7e56b6f64662752272722ddf"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 10601,
+        "tail_sha256": "e3fc143dcd3b6aebf0c0f8665122567ce4b00dde907f3ca67779c90bbc1fbf21"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 10343,
+        "tail_sha256": "e3fc143dcd3b6aebf0c0f8665122567ce4b00dde907f3ca67779c90bbc1fbf21"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 9688,
+        "tail_sha256": "534da61abcb25d2eb05d643a878df59e0c3de79263b52477ad2ab8754a830246"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 6814,
+        "tail_sha256": "2f21f704aaaef696a86c98fd6b42a6975fbfe05e68bb2d784a6b0fd7d2b40432"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 9521,
+        "tail_sha256": "534da61abcb25d2eb05d643a878df59e0c3de79263b52477ad2ab8754a830246"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 9521,
+        "tail_sha256": "534da61abcb25d2eb05d643a878df59e0c3de79263b52477ad2ab8754a830246"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 11499,
+        "tail_sha256": "3c9c616d86c9dcc6932a1432ce0f3809fb64470962bb957eb3172636a4ed392a"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 11702,
+        "tail_sha256": "10e96271837d38f49b2e2331ce2ed32743d191b480478ffa42202073e57a55c6"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 11698,
+        "tail_sha256": "10e96271837d38f49b2e2331ce2ed32743d191b480478ffa42202073e57a55c6"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21727,
+        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16769,
+        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16713,
+        "tail_sha256": "de1ed59867e5fbd027f4e40374a2bd45d71bd82776524e477318df4d9f5e987a"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16651,
+        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16554,
+        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 14958,
+        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21715,
+        "tail_sha256": "6d81d9b7a13489ca4b1553a756132690be69f1c0b5f7622196e814d862fe50b0"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21653,
+        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21556,
+        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 19960,
+        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21727,
+        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16769,
+        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16713,
+        "tail_sha256": "de1ed59867e5fbd027f4e40374a2bd45d71bd82776524e477318df4d9f5e987a"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16651,
+        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16554,
+        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 14958,
+        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21715,
+        "tail_sha256": "6d81d9b7a13489ca4b1553a756132690be69f1c0b5f7622196e814d862fe50b0"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21653,
+        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21556,
+        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 19960,
+        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 11702,
+        "tail_sha256": "10e96271837d38f49b2e2331ce2ed32743d191b480478ffa42202073e57a55c6"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 11698,
+        "tail_sha256": "10e96271837d38f49b2e2331ce2ed32743d191b480478ffa42202073e57a55c6"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21727,
+        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16769,
+        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16713,
+        "tail_sha256": "de1ed59867e5fbd027f4e40374a2bd45d71bd82776524e477318df4d9f5e987a"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16651,
+        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16554,
+        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 14958,
+        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21715,
+        "tail_sha256": "6d81d9b7a13489ca4b1553a756132690be69f1c0b5f7622196e814d862fe50b0"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21653,
+        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21556,
+        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 19960,
+        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21727,
+        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16769,
+        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16713,
+        "tail_sha256": "de1ed59867e5fbd027f4e40374a2bd45d71bd82776524e477318df4d9f5e987a"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16651,
+        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 16554,
+        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 14958,
+        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21715,
+        "tail_sha256": "6d81d9b7a13489ca4b1553a756132690be69f1c0b5f7622196e814d862fe50b0"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21653,
+        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 21556,
+        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ],
+        "switch": 19960,
+        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 1
+            }
+          },
+          {
+            "Ident": [
+              "finish_registration",
+              0
+            ]
+          }
+        ],
+        "switch": 21786,
+        "tail_sha256": "205a5491683097ffbaf2eb890b2f23ca4355e7614b00bd6a4a59fc1b56a99662"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 1
+            }
+          },
+          {
+            "Ident": [
+              "finish_registration",
+              0
+            ]
+          }
+        ],
+        "switch": 26081,
+        "tail_sha256": "f55c12c159dcb0a6c50bd7c89623afb931de5f7106238662c58d15ed3794c2d6"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 1
+            }
+          },
+          {
+            "Ident": [
+              "finish_registration",
+              0
+            ]
+          }
+        ],
+        "switch": 25936,
+        "tail_sha256": "9d82d21d1327a398b27921ff48c1784de58fd925da64d878cf71acdc77ee76f0"
+      },
+      {
+        "branches": 3,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 1
+            }
+          },
+          {
+            "Ident": [
+              "finish_registration",
+              0
+            ]
+          }
+        ],
+        "switch": 25751,
+        "tail_sha256": "6e945155f00f76734174925eaf248a033c73bc2b30e0de314657d140ff2ef285"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 1
+            }
+          },
+          {
+            "Ident": [
+              "finish_registration",
+              0
+            ]
+          }
+        ],
+        "switch": 22566,
+        "tail_sha256": "6e945155f00f76734174925eaf248a033c73bc2b30e0de314657d140ff2ef285"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 1
+            }
+          },
+          {
+            "Ident": [
+              "finish_registration",
+              0
+            ]
+          }
+        ],
+        "switch": 25744,
+        "tail_sha256": "7e689ec85f44371750cbabb59fd0a0cb2da29da129f8d8ee45ef0ec18d72002f"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 1
+            }
+          },
+          {
+            "Ident": [
+              "finish_registration",
+              0
+            ]
+          }
+        ],
+        "switch": 23769,
+        "tail_sha256": "7f6dbcbbe73931cc1745d1b10d6093a56ba51fb53baf3b154046d9515e3dd9ec"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 1
+            }
+          },
+          {
+            "Ident": [
+              "finish_registration",
+              0
+            ]
+          }
+        ],
+        "switch": 25476,
+        "tail_sha256": "e77069d12653e6b9eb0862cf7557d2c0f7be49410fe8c2441bcbf9754e9e9d66"
+      },
+      {
+        "branches": 4,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          }
+        ],
+        "switch": 27143,
+        "tail_sha256": "194bd01b580e6287e6b6a4e50e9f7575f8b336630c2ba18fa43dac64dfb967fb"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "_proof_beacon_init_ready",
+              0
+            ]
+          }
+        ],
+        "switch": 27472,
+        "tail_sha256": "2e1c396f4ee76e6cbc04880cc359879fa168a098283f2de3062e91eebcdf694d"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "core",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "option",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "Option",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 22
+            }
+          },
+          {
+            "Ident": [
+              "drop_glue",
+              0
+            ]
+          }
+        ],
+        "switch": 27849,
+        "tail_sha256": "cf614ca2c69327a6c122c00af8a05169766578d0e609d894df51f195590e89cc"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "core",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "result",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "Result",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 32
+            }
+          },
+          {
+            "Ident": [
+              "drop_glue",
+              0
+            ]
+          }
+        ],
+        "switch": 27865,
+        "tail_sha256": "5872eb6b37df76e8eafde27d413f0035be9860458e8def118385f825f81d67b6"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "core",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "ops",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "control_flow",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "ControlFlow",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 33
+            }
+          },
+          {
+            "Ident": [
+              "drop_glue",
+              0
+            ]
+          }
+        ],
+        "switch": 27885,
+        "tail_sha256": "fbf57da054da977c1a038c62246ffe40b1aeadd43a8a4621229fda091c37385d"
+      },
+      {
+        "branches": 4,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "BeaconState",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 46
+            }
+          },
+          {
+            "Ident": [
+              "drop_glue",
+              0
+            ]
+          }
+        ],
+        "switch": 28035,
+        "tail_sha256": "8cd0cf8e90e28c36836faecf7ec5a22d0837952dc96a75360a90dfb5412943f6"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 61
+            }
+          },
+          {
+            "Ident": [
+              "call_mut",
+              0
+            ]
+          }
+        ],
+        "switch": 28455,
+        "tail_sha256": "92d3de9ab29028c6428d6e575259ffc7653791a25c2e2545683d77d1e8a81712"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 61
+            }
+          },
+          {
+            "Ident": [
+              "call_mut",
+              0
+            ]
+          }
+        ],
+        "switch": 28432,
+        "tail_sha256": "92d3de9ab29028c6428d6e575259ffc7653791a25c2e2545683d77d1e8a81712"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 61
+            }
+          },
+          {
+            "Ident": [
+              "call_mut",
+              0
+            ]
+          }
+        ],
+        "switch": 28412,
+        "tail_sha256": "92d3de9ab29028c6428d6e575259ffc7653791a25c2e2545683d77d1e8a81712"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 64
+            }
+          },
+          {
+            "Ident": [
+              "call",
+              0
+            ]
+          }
+        ],
+        "switch": 28837,
+        "tail_sha256": "3a04a56fb5d6490be90f221c18a2c08e65be70c0f4617bd0d1c5abf9e67fe97f"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 64
+            }
+          },
+          {
+            "Ident": [
+              "call",
+              0
+            ]
+          }
+        ],
+        "switch": 28813,
+        "tail_sha256": "3a04a56fb5d6490be90f221c18a2c08e65be70c0f4617bd0d1c5abf9e67fe97f"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 64
+            }
+          },
+          {
+            "Ident": [
+              "call",
+              0
+            ]
+          }
+        ],
+        "switch": 28786,
+        "tail_sha256": "3a48ae7b1151086d87d0d52fcb68eae09572087b272922cacd16532ac99e6e73"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 64
+            }
+          },
+          {
+            "Ident": [
+              "call",
+              0
+            ]
+          }
+        ],
+        "switch": 28764,
+        "tail_sha256": "3a48ae7b1151086d87d0d52fcb68eae09572087b272922cacd16532ac99e6e73"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 71
+            }
+          },
+          {
+            "Ident": [
+              "call",
+              0
+            ]
+          }
+        ],
+        "switch": 29491,
+        "tail_sha256": "ab5a6dad41898a2d476a122834e4d08b4d689cb96d4c5755e04795cb580af62c"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 71
+            }
+          },
+          {
+            "Ident": [
+              "call",
+              0
+            ]
+          }
+        ],
+        "switch": 29462,
+        "tail_sha256": "ab5a6dad41898a2d476a122834e4d08b4d689cb96d4c5755e04795cb580af62c"
+      }
+    ],
+    "functions": [
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "server",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 763
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "authenticate_registration_lookup",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "server",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 763
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "get_shared_secret_from_lookup_with_rng",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "server",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 0
+          }
+        },
+        {
+          "Ident": [
+            "build_registration_response",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "beacon",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 1068
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "get_registration_bundle_with_rng",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "beacon",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 1
+          }
+        },
+        {
+          "Ident": [
+            "finish_registration",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "server",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 763
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "authentication_pin",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "server",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 763
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "identity_sk",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "server",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "registration_response_len",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "shared",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [
+                  {
+                    "clause_id": 0,
+                    "origin": "WhereClauseOnImpl",
+                    "span": {
+                      "data": {
+                        "beg": {
+                          "col": 13,
+                          "line": 460
+                        },
+                        "end": {
+                          "col": 24,
+                          "line": 460
+                        },
+                        "file_id": 10
+                      },
+                      "generated_from_span": null
+                    },
+                    "trait_": {
+                      "regions": [],
+                      "skip_binder": {
+                        "generics": {
+                          "const_generics": [],
+                          "regions": [],
+                          "trait_refs": [],
+                          "types": [
+                            {
+                              "Deduplicated": 2191
+                            }
+                          ]
+                        },
+                        "id": 0
+                      }
+                    }
+                  }
+                ],
+                "trait_type_constraints": [],
+                "types": [
+                  {
+                    "index": 0,
+                    "name": "PkType",
+                    "variance": "Unknown"
+                  }
+                ],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "HashConsedValue": [
+                  23410,
+                  {
+                    "Adt": {
+                      "builtin": null,
+                      "generics": {
+                        "const_generics": [],
+                        "regions": [],
+                        "trait_refs": [],
+                        "types": [
+                          {
+                            "Deduplicated": 2193
+                          }
+                        ]
+                      },
+                      "id": 8
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "from_peer",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "beacon",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 1068
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "identity_pk",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "beacon",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 1068
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "mldsa_public_key",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "beacon",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "_proof_beacon_init_ready",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "beacon",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 1068
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "identity_sk",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_beacon_agreement",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "ratchet",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 13572
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "from_kernel",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "server",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 763
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "identity_pk",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "server",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 763
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "identity_key_kid",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "server",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 763
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "mldsa_public_key",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "auth",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "fingerprint_pin",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "core",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "option",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "Option",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 22
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "core",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "result",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "Result",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 32
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "core",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "ops",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "control_flow",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "ControlFlow",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 33
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Builtin": {
+            "Tuple": 2
+          }
+        },
+        {
+          "Impl": {
+            "Trait": 35
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "shared",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "map_peer_ratchet",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Builtin": {
+            "Tuple": 3
+          }
+        },
+        {
+          "Impl": {
+            "Trait": 40
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "server",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "RegResponse",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 42
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt_crypto",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "crypto_kx",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "KeyPair",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 43
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "beacon",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "BeaconState",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 46
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt_crypto",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "crypto_kem",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "mlkem768",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "KeyPair",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 47
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "ratchet",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Ty": {
+              "kind": "InherentImplBlock",
+              "params": {
+                "const_generics": [],
+                "regions": [],
+                "regions_outlive": [],
+                "trait_clauses": [],
+                "trait_type_constraints": [],
+                "types": [],
+                "types_outlive": []
+              },
+              "skip_binder": {
+                "Deduplicated": 16891
+              }
+            }
+          }
+        },
+        {
+          "Ident": [
+            "new",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 58
+          }
+        },
+        {
+          "Ident": [
+            "call_once",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 59
+          }
+        },
+        {
+          "Ident": [
+            "call_once",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 60
+          }
+        },
+        {
+          "Ident": [
+            "call_once",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 61
+          }
+        },
+        {
+          "Ident": [
+            "call_mut",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 62
+          }
+        },
+        {
+          "Ident": [
+            "call_once",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 63
+          }
+        },
+        {
+          "Ident": [
+            "call_mut",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 64
+          }
+        },
+        {
+          "Ident": [
+            "call",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 65
+          }
+        },
+        {
+          "Ident": [
+            "call_once",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 66
+          }
+        },
+        {
+          "Ident": [
+            "call_once",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 67
+          }
+        },
+        {
+          "Ident": [
+            "call_once",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 68
+          }
+        },
+        {
+          "Ident": [
+            "call_once",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 69
+          }
+        },
+        {
+          "Ident": [
+            "call_once",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 70
+          }
+        },
+        {
+          "Ident": [
+            "call_mut",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 71
+          }
+        },
+        {
+          "Ident": [
+            "call",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Impl": {
+            "Trait": 72
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "closure",
+            7
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 74
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "closure",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 75
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "closure",
+            6
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 76
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "closure",
+            4
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 77
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "closure",
+            5
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 78
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "closure",
+            1
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 79
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "core",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "ptr",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "closure",
+            2
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 90
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "closure",
+            3
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 93
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "closure",
+            8
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 96
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Impl": {
+            "Trait": 103
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ]
+    ],
+    "laws": [
+      "AdapterPublicControlNormalization.branch_tail",
+      "AdapterPublicControlNormalization.terminal_tail",
+      "AdapterPublicControlNormalization.loop_congr"
+    ],
+    "refreshed_labels": 30887,
+    "terminal_tails": [
+      {
+        "discarded_sha256": "c1f0f5f74fd6eea58f30648cdfa979021401355ad90e5cb403351c3421926dc7",
+        "exit": 170,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "authenticate_registration_lookup",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "9b59c0c0007a50c349f29acfdc1971df53b2d676a411af35fa2fe893c0734dde",
+        "exit": 597,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_shared_secret_from_lookup_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "9b59c0c0007a50c349f29acfdc1971df53b2d676a411af35fa2fe893c0734dde",
+        "exit": 597,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 763
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_shared_secret_from_lookup_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "534da61abcb25d2eb05d643a878df59e0c3de79263b52477ad2ab8754a830246",
+        "exit": 9177,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "534da61abcb25d2eb05d643a878df59e0c3de79263b52477ad2ab8754a830246",
+        "exit": 9177,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
+        "exit": 14105,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
+        "exit": 16142,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
+        "exit": 19107,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
+        "exit": 21144,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "10e96271837d38f49b2e2331ce2ed32743d191b480478ffa42202073e57a55c6",
+        "exit": 11695,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
+        "exit": 14105,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
+        "exit": 16142,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
+        "exit": 19107,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
+        "exit": 21144,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
+        "exit": 14105,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
+        "exit": 16142,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
+        "exit": 19107,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
+        "exit": 21144,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "10e96271837d38f49b2e2331ce2ed32743d191b480478ffa42202073e57a55c6",
+        "exit": 11695,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
+        "exit": 14105,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
+        "exit": 16142,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
+        "exit": 19107,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
+        "exit": 21144,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Ty": {
+                "kind": "InherentImplBlock",
+                "params": {
+                  "const_generics": [],
+                  "regions": [],
+                  "regions_outlive": [],
+                  "trait_clauses": [],
+                  "trait_type_constraints": [],
+                  "types": [],
+                  "types_outlive": []
+                },
+                "skip_binder": {
+                  "Deduplicated": 1068
+                }
+              }
+            }
+          },
+          {
+            "Ident": [
+              "get_registration_bundle_with_rng",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "205a5491683097ffbaf2eb890b2f23ca4355e7614b00bd6a4a59fc1b56a99662",
+        "exit": 21785,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 1
+            }
+          },
+          {
+            "Ident": [
+              "finish_registration",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "cf614ca2c69327a6c122c00af8a05169766578d0e609d894df51f195590e89cc",
+        "exit": 27848,
+        "function": [
+          {
+            "Ident": [
+              "core",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "option",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "Option",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 22
+            }
+          },
+          {
+            "Ident": [
+              "drop_glue",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "5872eb6b37df76e8eafde27d413f0035be9860458e8def118385f825f81d67b6",
+        "exit": 27864,
+        "function": [
+          {
+            "Ident": [
+              "core",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "result",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "Result",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 32
+            }
+          },
+          {
+            "Ident": [
+              "drop_glue",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "fbf57da054da977c1a038c62246ffe40b1aeadd43a8a4621229fda091c37385d",
+        "exit": 27884,
+        "function": [
+          {
+            "Ident": [
+              "core",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "ops",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "control_flow",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "ControlFlow",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 33
+            }
+          },
+          {
+            "Ident": [
+              "drop_glue",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "8cd0cf8e90e28c36836faecf7ec5a22d0837952dc96a75360a90dfb5412943f6",
+        "exit": 28004,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "BeaconState",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 46
+            }
+          },
+          {
+            "Ident": [
+              "drop_glue",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "8cd0cf8e90e28c36836faecf7ec5a22d0837952dc96a75360a90dfb5412943f6",
+        "exit": 28031,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "BeaconState",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 46
+            }
+          },
+          {
+            "Ident": [
+              "drop_glue",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "8cd0cf8e90e28c36836faecf7ec5a22d0837952dc96a75360a90dfb5412943f6",
+        "exit": 28034,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "beacon",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "BeaconState",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 46
+            }
+          },
+          {
+            "Ident": [
+              "drop_glue",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "92d3de9ab29028c6428d6e575259ffc7653791a25c2e2545683d77d1e8a81712",
+        "exit": 28378,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 61
+            }
+          },
+          {
+            "Ident": [
+              "call_mut",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "3a48ae7b1151086d87d0d52fcb68eae09572087b272922cacd16532ac99e6e73",
+        "exit": 28730,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 64
+            }
+          },
+          {
+            "Ident": [
+              "call",
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "discarded_sha256": "ab5a6dad41898a2d476a122834e4d08b4d689cb96d4c5755e04795cb580af62c",
+        "exit": 29412,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "pqxdh",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "execute_agreement",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 71
+            }
+          },
+          {
+            "Ident": [
+              "call",
+              0
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "source_preparation": {
+    "source_changes": {
+      "beaconcrypt/src/beacon.rs": {
+        "exits": [
+          "return None",
+          "return Some(ready)"
+        ],
+        "helper_body": "\n\t\t\teffect = match effect {\n\t\t\t\tBeaconInitEffect::Rejected(_) => return None,\n\t\t\t\tBeaconInitEffect::Ready(ready) => return Some(ready),\n\t\t\t\tBeaconInitEffect::Ed25519SigningRequested(pending) => {\n\t\t\t\t\tlet request = pending.request();\n\t\t\t\t\tlet signed = if beacon.identity_pk().as_bytes() == request.public_key {\n\t\t\t\t\t\tcrypto_sign::sign(request.message, beacon.identity_sk()).ok()\n\t\t\t\t\t} else {\n\t\t\t\t\t\tNone\n\t\t\t\t\t};\n\t\t\t\t\tpending.resume(signed.as_deref())\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::FingerprintRequested(pending) => {\n\t\t\t\t\tlet fingerprint = auth::execute_hash(&pending.request());\n\t\t\t\t\tpending.resume(fingerprint)\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::HashRequested(pending) => {\n\t\t\t\t\tlet hash = auth::execute_hash(&pending.request());\n\t\t\t\t\tpending.resume(hash)\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::MldsaSigningRequested(pending) => {\n\t\t\t\t\tlet signature = beacon\n\t\t\t\t\t\t.authentication\n\t\t\t\t\t\t.identity\n\t\t\t\t\t\t.sign_requested(&pending.request());\n\t\t\t\t\tpending.resume(signature.as_deref())\n\t\t\t\t}\n\t\t\t};\n\t\t",
+        "helper_sha256": "2a0ce3cdab87ea29014a10e4490a9f14c43b30b40cc00871af819fcd8e18e1c9",
+        "law": "AdapterPublicControlNormalization.init_loop_factor",
+        "original": "\t\tlet ready = loop {\n\t\t\teffect = match effect {\n\t\t\t\tBeaconInitEffect::Rejected(_) => return None,\n\t\t\t\tBeaconInitEffect::Ready(ready) => break ready,\n\t\t\t\tBeaconInitEffect::Ed25519SigningRequested(pending) => {\n\t\t\t\t\tlet request = pending.request();\n\t\t\t\t\tlet signed = if self.identity_pk().as_bytes() == request.public_key {\n\t\t\t\t\t\tcrypto_sign::sign(request.message, self.identity_sk()).ok()\n\t\t\t\t\t} else {\n\t\t\t\t\t\tNone\n\t\t\t\t\t};\n\t\t\t\t\tpending.resume(signed.as_deref())\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::FingerprintRequested(pending) => {\n\t\t\t\t\tlet fingerprint = auth::execute_hash(&pending.request());\n\t\t\t\t\tpending.resume(fingerprint)\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::HashRequested(pending) => {\n\t\t\t\t\tlet hash = auth::execute_hash(&pending.request());\n\t\t\t\t\tpending.resume(hash)\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::MldsaSigningRequested(pending) => {\n\t\t\t\t\tlet signature = self\n\t\t\t\t\t\t.authentication\n\t\t\t\t\t\t.identity\n\t\t\t\t\t\t.sign_requested(&pending.request());\n\t\t\t\t\tpending.resume(signature.as_deref())\n\t\t\t\t}\n\t\t\t};\n\t\t};",
+        "original_sha256": "fc816e6aabb2192209722867be2199c450adb4f5cbf5d992c1dfa7035d1ef5ca",
+        "prepared_sha256": "ddc988cbda878a5b2deaba290e8f1c63e69dd463f0fcdaa435f55febaf392820",
+        "source_sha256": "71fb13a0d12ba7a49377178cdfb2754564350c12912a95c6784efbd1a582823b"
+      },
+      "beaconcrypt/src/pqxdh.rs": {
+        "law": "AdapterPublicControlNormalization.dh_selectionM",
+        "original": "\t\t\t\tlet secret: Option<&[u8]> = match request.secret_role {\n\t\t\t\t\tDhSecretRole::LocalIdentity => {\n\t\t\t\t\t\tlocal_identity.as_ref().map(|key| key.as_slice())\n\t\t\t\t\t}\n\t\t\t\t\tDhSecretRole::ServerEphemeral => server_ephemeral\n\t\t\t\t\t\t.as_ref()\n\t\t\t\t\t\t.map(|key| key.secret_key.as_bytes().as_slice()),\n\t\t\t\t\tDhSecretRole::BeaconPrekey => {\n\t\t\t\t\t\tkeys.beacon_prekey.map(|key| key.as_bytes().as_slice())\n\t\t\t\t\t}\n\t\t\t\t\tDhSecretRole::BeaconOneTime => {\n\t\t\t\t\t\tkeys.beacon_one_time.map(|key| key.as_bytes().as_slice())\n\t\t\t\t\t}\n\t\t\t\t};\n\t\t\t\tlet shared = secret.and_then(|secret| {\n\t\t\t\t\tcrypto_scalarmult::scalarmult(secret, request.public_key).ok()\n\t\t\t\t});",
+        "original_sha256": "3203fc86d6d3efa27ac19233e31d607179f22b2e16640b0767fd1c3535630274",
+        "prepared": "\t\t\t\tlet shared = match request.secret_role {\n\t\t\t\t\tDhSecretRole::LocalIdentity => local_identity.as_ref().and_then(|key| {\n\t\t\t\t\t\tcrypto_scalarmult::scalarmult(key.as_slice(), request.public_key).ok()\n\t\t\t\t\t}),\n\t\t\t\t\tDhSecretRole::ServerEphemeral => server_ephemeral.as_ref().and_then(|key| {\n\t\t\t\t\t\tcrypto_scalarmult::scalarmult(key.secret_key.as_bytes().as_slice(), request.public_key).ok()\n\t\t\t\t\t}),\n\t\t\t\t\tDhSecretRole::BeaconPrekey => keys.beacon_prekey.and_then(|key| {\n\t\t\t\t\t\tcrypto_scalarmult::scalarmult(key.as_bytes().as_slice(), request.public_key).ok()\n\t\t\t\t\t}),\n\t\t\t\t\tDhSecretRole::BeaconOneTime => keys.beacon_one_time.and_then(|key| {\n\t\t\t\t\t\tcrypto_scalarmult::scalarmult(key.as_bytes().as_slice(), request.public_key).ok()\n\t\t\t\t\t}),\n\t\t\t\t};",
+        "prepared_sha256": "756927bb98155b25aeec14411bc52287605828b0c26a610832a5232c5ddf4b81",
+        "roles": [
+          [
+            "LocalIdentity",
+            "local_identity.as_ref()",
+            "key.as_slice()"
+          ],
+          [
+            "ServerEphemeral",
+            "server_ephemeral.as_ref()",
+            "key.secret_key.as_bytes().as_slice()"
+          ],
+          [
+            "BeaconPrekey",
+            "keys.beacon_prekey",
+            "key.as_bytes().as_slice()"
+          ],
+          [
+            "BeaconOneTime",
+            "keys.beacon_one_time",
+            "key.as_bytes().as_slice()"
+          ]
+        ],
+        "source_sha256": "f3b880ec118bebfd49851156588e681da40f50761470fbacc6940fd69cabc319"
+      }
+    },
+    "unchanged_sha256": {
+      "Cargo.lock": "2f9299d8f9844467ef90c9bbea76cdcacec7e1dffae7025930565ef56906b8e6",
+      "Cargo.toml": "755b24b6a434712ac0b941dcb1cf629321f128555a43b5e574c38dd5bf1b3b53",
+      "beaconcrypt-core/Cargo.toml": "8e41a5e7c6f9715417628967f404745000e89d177902bde70d1969ef00af5f09",
+      "beaconcrypt-core/src/agreement.rs": "cea8e603c7943f18ba79f95743cc113e3d16e8589c3614240b542ee3ac1109de",
+      "beaconcrypt-core/src/authentication.rs": "794db37d54728df926e9c5f150ded8734eb7521d5781fa3fc4e2f4b2c1f5d1ef",
+      "beaconcrypt-core/src/commitment.rs": "44bd939e02cbfd02671142fae08b83e9e971b8955c6a84c04cc309c17c087a48",
+      "beaconcrypt-core/src/constants.rs": "748979a5b3b340b692bc10a687a27250ef5e6e2a67d43876a32585177226ef0a",
+      "beaconcrypt-core/src/lib.rs": "f32716d2a108cdc1782274bd82cac40bbd70f36e50835e7d09cc31b94e167958",
+      "beaconcrypt-core/src/peer.rs": "df4b0fc85a7a303f56908b13a4d90fb7d9233601040b43e035a99d341bd757bc",
+      "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018",
+      "beaconcrypt-core/src/pqxdh/concrete.rs": "b3a22f8a7c4adb087e217d58e2d302a057fd5ae224cd8fe2c44777472e469c50",
+      "beaconcrypt-core/src/ratchet.rs": "3ed4d65ed1a63605819f8e685707d47b718a91ea9ee23069da88501c8031fa51",
+      "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
+      "beaconcrypt-core/src/ratchet/control.rs": "6c17cc0dbe7445be04dc3ab123a60ecbf3d757da6337a7132d5dafd3e06f5639",
+      "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
+      "beaconcrypt-core/src/record.rs": "530f820ec1998cb60ce9f2d6666f33feabcfcc597fd06997d1272d3abba9edc0",
+      "beaconcrypt-core/src/record_effects.rs": "dbdf79661a17c8d8c128ff349a7efe906d6713912e5510c9a0476b0c3efad2b5",
+      "beaconcrypt-core/src/registration.rs": "fb6f679499585a9d9976abaea31f8dbd8f68f53f6c0f1deb7462ee393acf9f25",
+      "beaconcrypt-core/src/session.rs": "3779c778ce4f8ec534c2fa610c0a334302ada76fc5cd601ade575802ff9c07c4",
+      "beaconcrypt-core/src/transport.rs": "bc3f347f251cb07e44c47699c6fa3db4c9ae8b73c6d1d54c6f9eb54911a463a9",
+      "beaconcrypt-crypto/Cargo.toml": "dc34ba30e7cfbe1c17e27be5ffe2e49f151c9ba170fed7e42baf5bc09cec4560",
+      "beaconcrypt-crypto/src/crypto_aead.rs": "1b62a128ed169c81a45825ede6853b32ae715ce9ea96f9d53803e7fb461b9bf1",
+      "beaconcrypt-crypto/src/crypto_generichash.rs": "292e806217ff105632f48ac32d89f3e9820b8a2b118810790be06e60104168f3",
+      "beaconcrypt-crypto/src/crypto_kdf.rs": "8fc41159cc32f483a89ee4a273b9ebdf32fd75d23591580c991efb8b8c70cdf2",
+      "beaconcrypt-crypto/src/crypto_kem.rs": "3c9a4f768a65f0b013c3b4a479d17be07574adc09305456692effc1ded5e2af5",
+      "beaconcrypt-crypto/src/crypto_kx.rs": "d91d59ad9bc3e95ab8f8227c870282b039274bba07a5572696bf65deaa49b387",
+      "beaconcrypt-crypto/src/crypto_scalarmult.rs": "e5eb492b32357a010c29c6655dc0e2397ab8747225a04b349613f310b570d2ca",
+      "beaconcrypt-crypto/src/crypto_sign.rs": "8340a01b3c081ab79c621785cd4c6193b8af1fa483a4cd726b00ddc172fa011c",
+      "beaconcrypt-crypto/src/lib.rs": "5d808be88690164585ab2c5c17f84396789defbf694694ab3150e709b7debc7f",
+      "beaconcrypt-ffi/Cargo.toml": "2ce277d83eeeb3fcfb82189a8bbe2ad74ffe52490a0bfeb72034a0a66710fec5",
+      "beaconcrypt-ffi/build.rs": "10965a2a16fb0081574ad49abea4d202165fa74caf4fa6aa55f0009023931903",
+      "beaconcrypt-parse/Cargo.toml": "58af4e0cdf2b2dec9cb607cbfc14fafdb1f56db59f95016171504dd83392676e",
+      "beaconcrypt-parse/src/frame.rs": "76d0549aa06916e95fc51c03af9431996d26596bb1053121883d592918c96f92",
+      "beaconcrypt-parse/src/frame_tests.rs": "1061147b64fed42af962accf164ab4e6fe885a9226052c0b17ff9ab9b08483a2",
+      "beaconcrypt-parse/src/generated/cbordetver.rs": "e60e27d58b3fe7eeaca202e9751b596c88884b4a76d5bf57a345a21861066d6c",
+      "beaconcrypt-parse/src/generated/cbordetveraux.rs": "36420e78b9feed0a4c4a1b6a57b28aeba16ae38be9c61f5ff8165fa088ac3589",
+      "beaconcrypt-parse/src/generated/transport.rs": "218245bef2baa287d6d2a77f6013fe7d78c887b4416a88756618240ad83e3fa8",
+      "beaconcrypt-parse/src/lib.rs": "e3ee33763548d8e22950e0f1b459b686f392a182f85d55289f718dd8a3f3b378",
+      "beaconcrypt-parse/src/preflight_tests.rs": "c0e3299054d9003e28dc060d5c3d83e8b5a98219d0f4605ec4482d3ae658479f",
+      "beaconcrypt-wasm/Cargo.toml": "e4a7a2c3aeec7038b8e09b75f2894473e16be0a92750c0dd62c92d5e81ddf616",
+      "beaconcrypt-wasm/src/abi.rs": "8bb2dfaac6c05e0501f39a8350f2828f4d6c6864937406424180bf7cb0dadff9",
+      "beaconcrypt-wasm/src/abi_tests.rs": "82f0ad94b7aa097bb27f53c65d5a658597107cbadd19a31bfe64ead660bcbddb",
+      "beaconcrypt-wasm/src/lib.rs": "4d54ba1abb5e333dca82f8ae81e052fb250a2e72f4596d4ae93f4a8b765725f7",
+      "beaconcrypt-wasm/src/store.rs": "24e9719ab0115328b2b3865f3bb7d18da809e0a4a58736df7e9f345cfcd24b3b",
+      "beaconcrypt-wasm/src/store_tests.rs": "63edd62fdaebab5ecc04d29155d99456404259977853d992cb123962d6b0fcfc",
+      "beaconcrypt-wasm/src/tests.rs": "a646de2495c2658e493fb602016b4eda02d9350965f9fd02849d8558d75ee48e",
+      "beaconcrypt/Cargo.toml": "bd72a2dd47102f91b1f927b90666f78674a9e4af91419dffad3ac69d7195a098",
+      "beaconcrypt/src/auth.rs": "45b2513e304b4d4b12b41ca15ff15b94db54886e302453971d99ec0f1ce4f884",
+      "beaconcrypt/src/cbinds.rs": "72892223fa8d6815419dcda3dbc8a8a1a4a85f373cc4931b43b79c9c196bded1",
+      "beaconcrypt/src/collections.rs": "2eac87345a8673bad9fe89e705a65eb0f20c6ac67a2516872fedd599576b8334",
+      "beaconcrypt/src/deser.rs": "35b49d73e89dafe0d9f5699f513adc4293f1ff2b24146584a6ac5cb272eb6af2",
+      "beaconcrypt/src/error.rs": "588ef788b61ad3914b4b8d2ca031cd0229d0d0e3c158b4e42f285ad169019753",
+      "beaconcrypt/src/lib.rs": "59b2239615ff5c4bfa10db7a7162b078db5abdd10f143f9a3624937a6ff4a3ba",
+      "beaconcrypt/src/persistence.rs": "dd3cbba3843e7899cb51407cd8ec605eeb3818635b0867fbb44e2e10cc332050",
+      "beaconcrypt/src/pybinds.rs": "99add1792edca9c8feb9e94e0e500152baf34c99912be19b3ee9bb77c3b7127e",
+      "beaconcrypt/src/ratchet.rs": "ff38395eceb8695cabee418be5e20074eee8482bd4f9e6d0bb2f801d368fffda",
+      "beaconcrypt/src/row_binding_server.rs": "337de396cec39c4dde6be0022a378bc3669151a9659d6dfbaadae880732a22b3",
+      "beaconcrypt/src/row_cbinds.rs": "c7fd1f48d414573d3d0e984e7e33a005bb727e3f7faa4d16ee987972bd15bf07",
+      "beaconcrypt/src/row_persistence.rs": "8520a908923d130b33f1de85b27d0e2ab8e1232c2783eb4d78a5ba806d9ddea3",
+      "beaconcrypt/src/row_pybinds.rs": "d954d1ccea96f37d1a6cedf84e952b6807d14d827495b0eb8369f13d39f06eb4",
+      "beaconcrypt/src/ser.rs": "eeaad56b6a315e156b4c546b0c82570ece53a336430933ea7dec1050eb36613f",
+      "beaconcrypt/src/server.rs": "9bd205117f41c690f5fae2936c2f70de61e751f04caee78de800e2ba51dffb13",
+      "beaconcrypt/src/shared.rs": "6457931a67e77c2159bd6c33e366b433f1affe95cab2150f5a3df2dfda30a5b9",
+      "beaconcrypt/src/wire.rs": "443e1320beafe10872b7517689da3c669e206ef5444a8e36fcdc86a304504549"
+    }
+  },
+  "templates": {
+    "FunsExternal_Template.lean": {
+      "sha256": "3f200d4524ee710bb60842f9617c64299d94b55688fa0df3da3f4ffd484d2758",
+      "source": "-- THIS FILE WAS AUTOMATICALLY GENERATED BY AENEAS\n-- [beaconcrypt]: external functions.\n-- This is a template file: rename it to \"FunsExternal.lean\" and fill the holes.\nimport Aeneas\nimport CoreModels\nimport BeaconcryptCore.AdapterPublicWrapperExtraction.Types\nopen CoreModels Aeneas\nopen Aeneas.Std hiding namespace core alloc\nopen RustM ControlFlow Error\nopen Std.Do\nset_option linter.dupNamespace false\nset_option linter.hashCommand false\nset_option linter.unusedVariables false\nset_option linter.style.whitespace false\nset_option linter.style.setOption false\nset_option linter.style.longLine false\n\n/- You can set the `maxHeartbeats` value with the `-max-heartbeats` CLI option -/\nset_option maxHeartbeats 1000000\n\n/- You can set the `maxRecDepth` value with the `-max-recdepth` CLI option -/\nset_option maxRecDepth 2048\nopen beaconcrypt\n\n/-- [beaconcrypt::auth::{beaconcrypt::auth::MldsaIdentity}::public_key]:\n    Source: 'beaconcrypt/src/auth.rs', lines 66:4-68:5\n    Visibility: public -/\naxiom auth.MldsaIdentity.public_key\n  : auth.MldsaIdentity \u2192 RustM (Array Std.U8 1952#usize)\n\n/-- [beaconcrypt::auth::execute_hash]:\n    Source: 'beaconcrypt/src/auth.rs', lines 167:0-180:1 -/\naxiom auth.execute_hash\n  :\n  beaconcrypt_core.registration.HashRequest \u2192 RustM (core.option.Option\n    (Array Std.U8 64#usize))\n\n/-- [beaconcrypt::auth::{beaconcrypt::auth::MldsaIdentity}::sign_requested]:\n    Source: 'beaconcrypt/src/auth.rs', lines 209:4-221:5 -/\naxiom auth.MldsaIdentity.sign_requested\n  :\n  auth.MldsaIdentity \u2192 beaconcrypt_core.registration.MldsaSigningRequest \u2192\n    RustM (core.option.Option (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::auth::authenticate_init]:\n    Source: 'beaconcrypt/src/auth.rs', lines 225:0-263:1 -/\naxiom auth.authenticate_init\n  :\n  beaconcrypt_core.session.ServerAuthenticationPin \u2192\n    beaconcrypt_core.registration.InitPacket \u2192 RustM (core.option.Option\n    beaconcrypt_core.registration.AuthenticatedInit)\n\n/-- [beaconcrypt::auth::authenticate_response]:\n    Source: 'beaconcrypt/src/auth.rs', lines 266:0-278:1 -/\naxiom auth.authenticate_response\n  :\n  beaconcrypt_core.registration.BeaconPending \u2192 core.option.Option\n    beaconcrypt_core.registration.ResponsePacket \u2192 RustM (core.result.Result\n    beaconcrypt_core.registration.AuthenticatedResponse\n    beaconcrypt_core.pqxdh.BeaconAborted)\n\n/-- [beaconcrypt::wire::encode_init]:\n    Source: 'beaconcrypt/src/wire.rs', lines 51:0-63:1 -/\naxiom wire.encode_init\n  :\n  beaconcrypt_parse.transport.initkex \u2192 RustM (core.option.Option\n    (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::ratchet::execute_open_request]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 522:0-535:1 -/\naxiom ratchet.execute_open_request\n  :\n  core.option.Option beaconcrypt_core.record.AeadRequest \u2192 RustM\n    (core.option.Option (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::ratchet::execute_commitment_hash]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 489:0-496:1 -/\naxiom ratchet.execute_commitment_hash\n  :\n  beaconcrypt_core.commitment.CommitmentTranscript \u2192 RustM\n    ((core.option.Option (Array Std.U8 64#usize)) \u00d7\n    beaconcrypt_core.commitment.CommitmentTranscript)\n\n/-- [beaconcrypt::ratchet::initial_ratchet_hkdf]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 106:0-110:1 -/\naxiom ratchet.initial_ratchet_hkdf\n  :\n  beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest \u2192 RustM (Array Std.U8\n    64#usize)\n\n/-- [beaconcrypt::ratchet::ratchet_hkdf]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 100:0-104:1 -/\naxiom ratchet.ratchet_hkdf\n  :\n  beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest \u2192 RustM\n    beaconcrypt_core.ratchet.RatchetKdfResponse\n\n/-- [beaconcrypt::pqxdh::{impl rand_core::TryRng<beaconcrypt_crypto::CryptoError> for beaconcrypt::pqxdh::NoEntropy}::try_fill_bytes]:\n    Source: 'beaconcrypt/src/pqxdh.rs', lines 208:4-210:5\n    Visibility: public -/\naxiom pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError.try_fill_bytes\n  :\n  pqxdh.NoEntropy \u2192 Slice Std.U8 \u2192 RustM ((core.result.Result Unit\n    beaconcrypt_crypto.CryptoError) \u00d7 pqxdh.NoEntropy \u00d7 (Slice Std.U8))\n\n/-- [beaconcrypt::pqxdh::{impl rand_core::TryRng<beaconcrypt_crypto::CryptoError> for beaconcrypt::pqxdh::NoEntropy}::try_next_u64]:\n    Source: 'beaconcrypt/src/pqxdh.rs', lines 204:4-206:5\n    Visibility: public -/\naxiom pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError.try_next_u64\n  :\n  pqxdh.NoEntropy \u2192 RustM ((core.result.Result Std.U64\n    beaconcrypt_crypto.CryptoError) \u00d7 pqxdh.NoEntropy)\n\n/-- [beaconcrypt::pqxdh::{impl rand_core::TryRng<beaconcrypt_crypto::CryptoError> for beaconcrypt::pqxdh::NoEntropy}::try_next_u32]:\n    Source: 'beaconcrypt/src/pqxdh.rs', lines 200:4-202:5\n    Visibility: public -/\naxiom pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError.try_next_u32\n  :\n  pqxdh.NoEntropy \u2192 RustM ((core.result.Result Std.U32\n    beaconcrypt_crypto.CryptoError) \u00d7 pqxdh.NoEntropy)\n\n/-- [beaconcrypt::beacon::{impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration::{impl core::ops::function::FnOnce<(beaconcrypt_parse::transport::kexresponse<'_>,), core::option::Option<beaconcrypt_core::registration::ResponsePacket<'_>>> for beaconcrypt::beacon::{impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration::closure}::call_once]:\n    Source: 'beaconcrypt/src/beacon.rs', lines 492:53-501:9 -/\naxiom\n  beacon.ProviderBeaconBeacon.finish_registration.closure.Insts.CoreOpsFunctionFnOnceTuplekexresponseOptionResponsePacket.call_once\n  :\n  beacon.ProviderBeaconBeacon.finish_registration.closure \u2192\n    beaconcrypt_parse.transport.kexresponse \u2192 RustM (core.option.Option\n    beaconcrypt_core.registration.ResponsePacket)\n\n/-- [beaconcrypt::collections::{impl core::hash::BuildHasher<siphasher::sip::SipHasher13> for beaconcrypt::collections::KeyedHasher}::build_hasher]:\n    Source: 'beaconcrypt/src/collections.rs', lines 17:4-19:5\n    Visibility: public -/\naxiom collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13.build_hasher\n  : collections.KeyedHasher \u2192 RustM siphasher.sip.SipHasher13\n\n/-- [beaconcrypt::ratchet::execute_seal_request]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 459:0-486:1 -/\naxiom ratchet.execute_seal_request\n  :\n  beaconcrypt_core.record_effects.AeadSealRequest \u2192 RustM (core.option.Option\n    ((alloc.vec.Vec Std.U8) \u00d7 (Array Std.U8 16#usize)))\n\n/-- [beaconcrypt::ratchet::execute_write_request]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 511:0-520:1 -/\naxiom ratchet.execute_write_request\n  :\n  beaconcrypt_core.record_effects.RecordWriteRequest \u2192 RustM\n    (core.option.Option (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::server::registration_application_bytes]:\n    Source: 'beaconcrypt/src/server.rs', lines 58:0-65:1 -/\naxiom server.registration_application_bytes\n  : beaconcrypt_core.transport.RegistrationApplication \u2192 RustM (Slice Std.U8)\n\n/-- [beaconcrypt::wire::encode_response]:\n    Source: 'beaconcrypt/src/wire.rs', lines 66:0-80:1 -/\naxiom wire.encode_response\n  :\n  beaconcrypt_parse.transport.kexresponse \u2192 RustM (core.option.Option\n    (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::server::{impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response::{impl core::ops::function::FnOnce<(&'_ (alloc::vec::Vec<u8>, [u8; 16usize]),), (&'_ [u8], [u8; 16usize])> for beaconcrypt::server::{impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response::closure}::call_once]:\n    Source: 'beaconcrypt/src/server.rs', lines 640:50-640:87 -/\naxiom\n  server.ProviderServerServer.build_registration_response.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairVecU8ArrayU816PairSharedSliceU8ArrayU816.call_once\n  :\n  server.ProviderServerServer.build_registration_response.closure \u2192\n    ((alloc.vec.Vec Std.U8) \u00d7 (Array Std.U8 16#usize)) \u2192 RustM ((Slice\n    Std.U8) \u00d7 (Array Std.U8 16#usize))\n\n"
+    },
+    "TypesExternal_Template.lean": {
+      "sha256": "ecee449db44f5ccb0373c2da8d051c62d8e9fdaa5ac15a4fcc81fe668e99c83b",
+      "source": "-- THIS FILE WAS AUTOMATICALLY GENERATED BY AENEAS\n-- [beaconcrypt]: external types.\n-- This is a template file: rename it to \"TypesExternal.lean\" and fill the holes.\nimport Aeneas\nimport CoreModels\nopen CoreModels Aeneas\nopen Aeneas.Std hiding namespace core alloc\nopen RustM ControlFlow Error\nopen Std.Do\nset_option linter.dupNamespace false\nset_option linter.hashCommand false\nset_option linter.unusedVariables false\nset_option linter.style.whitespace false\nset_option linter.style.setOption false\nset_option linter.style.longLine false\n\n/- You can set the `maxHeartbeats` value with the `-max-heartbeats` CLI option -/\nset_option maxHeartbeats 1000000\n\n/- You can set the `maxRecDepth` value with the `-max-recdepth` CLI option -/\nset_option maxRecDepth 2048\n\n/-- [beaconcrypt::auth::MldsaIdentity]\n    Source: 'beaconcrypt/src/auth.rs', lines 29:0-31:1\n    Visibility: public -/\naxiom auth.MldsaIdentity : Type\n\n/-- [beaconcrypt::collections::KeyedHasher]\n    Source: 'beaconcrypt/src/collections.rs', lines 12:0-12:40 -/\naxiom collections.KeyedHasher : Type\n\n"
+    }
+  }
+}

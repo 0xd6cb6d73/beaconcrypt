@@ -50,14 +50,14 @@ declare -A expected_category_counts=(
 	[parser-rust]=7
 	[core-rust]=17
 	[control]=19
-	[generated-lean]=19
+	[generated-lean]=80
 	[generated-proverif]=1
-	[handwritten-lean]=3833
+	[handwritten-lean]=6794
 	[handwritten-proverif]=298
 	[inventory]=3
-	[lean-control]=19
+	[lean-control]=67
 	[lean-dependency-overlay]=4
-	[validation]=88
+	[validation]=185
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -185,6 +185,10 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	../scripts/test_extract_adapter_authentication.py \
 	../scripts/extract_adapter_record.py \
 	../scripts/test_extract_adapter_record.py \
+	../scripts/lift_adapter_record_requests.py \
+	../scripts/test_lift_adapter_record_requests.py \
+	../scripts/check_registration_codec_extraction.py \
+	../scripts/test_check_registration_codec_extraction.py \
 	../scripts/extract_frame_codec.py \
 	../scripts/test_extract_frame_codec.py \
 	tests/authentication.rs \
@@ -201,6 +205,7 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	tests/fidelity/transport.rs \
 	tests/fidelity/peer_effects.rs \
 	> "$tmp_dir/validation"
+python3 ../scripts/check_computational_completion.py --paths validation >> "$tmp_dir/validation"
 compare_set validation "$tmp_dir/validation"
 
 awk -F '\t' '$3 ~ /^proofs\// { print "beaconcrypt-core/" $3 }' "$manifest" \
@@ -268,9 +273,11 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/AdapterAuthenticationExtraction/Funs.lean \
 	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/Types.lean \
 	proofs/lean/BeaconcryptCore/AdapterRecordExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordRequestExtraction.lean \
 	proofs/lean/BeaconcryptCore/FrameCodecExtraction/Types.lean \
 	proofs/lean/BeaconcryptCore/FrameCodecExtraction/Funs.lean \
 	> "$tmp_dir/generated-lean"
+python3 ../scripts/check_computational_completion.py --paths generated-lean >> "$tmp_dir/generated-lean"
 compare_set generated-lean "$tmp_dir/generated-lean"
 
 printf '%s\n' \
@@ -289,6 +296,7 @@ for lean_proof_dir in Model Refinement Computational PanicFreedom; do
 	find "proofs/lean/BeaconcryptCore/$lean_proof_dir" -type f -name '*.lean' \
 		-printf '%p\n' >> "$tmp_dir/handwritten-lean"
 done
+python3 ../scripts/check_computational_completion.py --paths handwritten-lean >> "$tmp_dir/handwritten-lean"
 compare_set handwritten-lean "$tmp_dir/handwritten-lean"
 
 printf '%s\n' \
@@ -311,6 +319,8 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/FrameCodecExtraction/external-signatures.json \
 	proofs/lean/BeaconcryptCore/FrameCodecExtraction/provenance.json \
 	proofs/lean/pqxdh_spec.md > "$tmp_dir/lean-control"
+python3 ../scripts/check_computational_completion.py --paths lean-control >> "$tmp_dir/lean-control"
+printf '%s\n' proofs/lean/computational-completion.json >> "$tmp_dir/lean-control"
 compare_set lean-control "$tmp_dir/lean-control"
 
 printf '%s\n' \
@@ -49984,7 +49994,7 @@ require_line_count 1 '^check-generated-adapter-authentication-lean:$' Makefile \
 require_occurrence_count 1 \
 	'^check-adapter-authentication-source:\n\tpython3 ../scripts/test_extract_adapter_authentication\.py\n\tpython3 ../scripts/extract_adapter_authentication\.py --check-source$' \
 	"source-only adapter response-authentication preflight" Makefile
-require_line_count 1 '^check-lean: .* check-adapter-authentication-source$' Makefile \
+require_line_count 1 '^check-lean: .* check-adapter-authentication-source check-adapter-record-request-source check-registration-codec-checkpoint check-computational-completion-source$' Makefile \
 	"adapter response-authentication provenance before Lean build"
 
 # Genuine production record-controller and ordinary-frame codec extractions.
@@ -70783,6 +70793,284 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem legacyPeers_store([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem legacyPeers_store"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.legacyPeers_store$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency legacyPeers_store"
 # END NATIVE_PRODUCTION_FIXES_REVIEWED_ROSTER
+
+# BEGIN COMPUTATIONAL_COMPLETION_CHECKPOINT_ROSTER
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborRawRecordEntropyMass.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordEntropyMass strict warnings"
+require_line_count 2 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordEntropyMass theorem roster"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordEntropyMass guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem keyAt_present([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordEntropyMass theorem keyAt_present"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem fresh_bound([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordEntropyMass theorem fresh_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordEntropyMass\.keyAt_present$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordEntropyMass dependency BeaconcryptCore.Computational.CborRawRecordEntropyMass.keyAt_present"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordEntropyMass\.fresh_bound$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordEntropyMass dependency BeaconcryptCore.Computational.CborRawRecordEntropyMass.fresh_bound"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborRawRecordSelector.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector strict warnings"
+require_line_count 7 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector theorem roster"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem mask_fresh([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector theorem mask_fresh"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem map_modify_invariant([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector theorem map_modify_invariant"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem public_shift([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector theorem public_shift"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem mask_hitAt([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector theorem mask_hitAt"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem mask_shiftedHit([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector theorem mask_shiftedHit"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem mask_present([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector theorem mask_present"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem selected_shift([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector theorem selected_shift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordSelector\.mask_fresh$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector dependency BeaconcryptCore.Computational.CborRawRecordSelector.mask_fresh"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordSelector\.map_modify_invariant$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector dependency BeaconcryptCore.Computational.CborRawRecordSelector.map_modify_invariant"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordSelector\.public_shift$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector dependency BeaconcryptCore.Computational.CborRawRecordSelector.public_shift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordSelector\.mask_hitAt$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector dependency BeaconcryptCore.Computational.CborRawRecordSelector.mask_hitAt"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordSelector\.mask_shiftedHit$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector dependency BeaconcryptCore.Computational.CborRawRecordSelector.mask_shiftedHit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordSelector\.mask_present$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector dependency BeaconcryptCore.Computational.CborRawRecordSelector.mask_present"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordSelector\.selected_shift$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordSelector dependency BeaconcryptCore.Computational.CborRawRecordSelector.selected_shift"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborRawRecordWeightedFresh.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh strict warnings"
+require_line_count 5 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh theorem roster"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem world_couple([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh theorem world_couple"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem mask_mass([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh theorem mask_mass"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem fresh_zeros([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh theorem fresh_zeros"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem selector_hiding([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh theorem selector_hiding"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem fresh_bytes([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh theorem fresh_bytes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordWeightedFresh\.world_couple$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh dependency BeaconcryptCore.Computational.CborRawRecordWeightedFresh.world_couple"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordWeightedFresh\.mask_mass$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh dependency BeaconcryptCore.Computational.CborRawRecordWeightedFresh.mask_mass"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordWeightedFresh\.fresh_zeros$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh dependency BeaconcryptCore.Computational.CborRawRecordWeightedFresh.fresh_zeros"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordWeightedFresh\.selector_hiding$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh dependency BeaconcryptCore.Computational.CborRawRecordWeightedFresh.selector_hiding"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.CborRawRecordWeightedFresh\.fresh_bytes$' "$selected_source_module" "BeaconcryptCore.Computational.CborRawRecordWeightedFresh dependency BeaconcryptCore.Computational.CborRawRecordWeightedFresh.fresh_bytes"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCausalCoverage.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage strict warnings"
+require_line_count 8 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage theorem roster"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem ledger_records([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage theorem ledger_records"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem handler_run([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage theorem handler_run"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem handler_records([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage theorem handler_records"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem advance_consistent([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage theorem advance_consistent"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem program_consistent([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage theorem program_consistent"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem initial_consistent([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage theorem initial_consistent"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem run_consistent([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage theorem run_consistent"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem instrumented_facts([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage theorem instrumented_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalCoverage\.ledger_records$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage.ledger_records"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalCoverage\.handler_run$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage.handler_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalCoverage\.handler_records$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage.handler_records"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalCoverage\.advance_consistent$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage.advance_consistent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalCoverage\.program_consistent$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage.program_consistent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalCoverage\.initial_consistent$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage.initial_consistent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalCoverage\.run_consistent$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage.run_consistent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalCoverage\.instrumented_facts$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage.instrumented_facts"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCausalPublication.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication strict warnings"
+require_line_count 12 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem roster"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem stopAt_empty([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem stopAt_empty"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem freeze_query_bound([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem freeze_query_bound"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem stopped_respects([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem stopped_respects"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem instrumented_erase([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem instrumented_erase"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem publication_before_accept([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem publication_before_accept"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem acceptance_failure_published([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem acceptance_failure_published"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem causal_selected([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem causal_selected"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem selected_le_stopped([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem selected_le_stopped"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem stopped_bound([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem stopped_bound"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem prefix_bound([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem prefix_bound"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem causal_bound([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem causal_bound"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem prefix_family_bills([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication theorem prefix_family_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalPublication\.stopAt_empty$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication.stopAt_empty"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalPublication\.freeze_query_bound$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication.freeze_query_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalPublication\.stopped_respects$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication.stopped_respects"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalPublication\.instrumented_erase$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication.instrumented_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalPublication\.selected_le_stopped$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication.selected_le_stopped"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalPublication\.stopped_bound$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication.stopped_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalPublication\.causal_bound$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication.causal_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalPublication\.prefix_family_bills$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication.prefix_family_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalPublication\.publication_before_accept$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication.publication_before_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalPublication\.acceptance_failure_published$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication.acceptance_failure_published"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalPublication\.causal_selected$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication.causal_selected"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCausalPublication\.prefix_bound$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication dependency BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication.prefix_bound"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionSnapshotCoverage.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage strict warnings"
+require_line_count 7 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage theorem roster"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem logged_run([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage theorem logged_run"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem journal_erase_from([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage theorem journal_erase_from"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem journal_erase([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage theorem journal_erase"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem advance_covered([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage theorem advance_covered"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem covered_from([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage theorem covered_from"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem run_covered([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage theorem run_covered"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem captured_of_stop([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage theorem captured_of_stop"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshotCoverage\.logged_run$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage.logged_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshotCoverage\.journal_erase_from$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage.journal_erase_from"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshotCoverage\.journal_erase$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage.journal_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshotCoverage\.advance_covered$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage.advance_covered"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshotCoverage\.covered_from$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage.covered_from"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshotCoverage\.run_covered$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage.run_covered"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshotCoverage\.captured_of_stop$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage.captured_of_stop"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionSnapshots.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots strict warnings"
+require_line_count 11 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots theorem roster"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem project_native([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots theorem project_native"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem handler_run([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots theorem handler_run"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem project_advance([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots theorem project_advance"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem advance_saved([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots theorem advance_saved"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem erase_from([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots theorem erase_from"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem erase([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots theorem erase"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem project_from([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots theorem project_from"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem project_run([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots theorem project_run"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem view_frozen([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots theorem view_frozen"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem all_owner_bound([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots theorem all_owner_bound"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem captured_le_frozen([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots theorem captured_le_frozen"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshots\.project_native$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots.project_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshots\.handler_run$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots.handler_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshots\.project_advance$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots.project_advance"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshots\.advance_saved$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots.advance_saved"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshots\.erase_from$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots.erase_from"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshots\.erase$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots.erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshots\.project_from$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots.project_from"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshots\.project_run$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots.project_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshots\.view_frozen$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots.view_frozen"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshots\.all_owner_bound$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots.all_owner_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionSnapshots\.captured_le_frozen$' "$selected_source_module" "BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots.captured_le_frozen"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/RegistrationNativeAllocation.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation strict warnings"
+require_line_count 8 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation theorem roster"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem run([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation theorem run"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem reservation_failure([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation theorem reservation_failure"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem reservation_failure_distribution([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation theorem reservation_failure_distribution"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem serialization_failure_distribution([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation theorem serialization_failure_distribution"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem pure_compatibility([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation theorem pure_compatibility"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem scheduledReserve_run([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation theorem scheduledReserve_run"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem fixedSerialize_run([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation theorem fixedSerialize_run"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem retry([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation theorem retry"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeAllocation\.run$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation dependency BeaconcryptCore.Computational.RegistrationNativeAllocation.run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeAllocation\.reservation_failure$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation dependency BeaconcryptCore.Computational.RegistrationNativeAllocation.reservation_failure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeAllocation\.reservation_failure_distribution$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation dependency BeaconcryptCore.Computational.RegistrationNativeAllocation.reservation_failure_distribution"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeAllocation\.serialization_failure_distribution$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation dependency BeaconcryptCore.Computational.RegistrationNativeAllocation.serialization_failure_distribution"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeAllocation\.pure_compatibility$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation dependency BeaconcryptCore.Computational.RegistrationNativeAllocation.pure_compatibility"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeAllocation\.scheduledReserve_run$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation dependency BeaconcryptCore.Computational.RegistrationNativeAllocation.scheduledReserve_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeAllocation\.fixedSerialize_run$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation dependency BeaconcryptCore.Computational.RegistrationNativeAllocation.fixedSerialize_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeAllocation\.retry$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeAllocation dependency BeaconcryptCore.Computational.RegistrationNativeAllocation.retry"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/RegistrationNativeLorEvents.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents strict warnings"
+require_line_count 6 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents theorem roster"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem eligible_view([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents theorem eligible_view"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem j_view([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents theorem j_view"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem w_eq([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents theorem w_eq"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem j_related([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents theorem j_related"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem w_related([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents theorem w_related"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem target_unique([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents theorem target_unique"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeLorEvents\.eligible_view$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents dependency BeaconcryptCore.Computational.RegistrationNativeLorEvents.eligible_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeLorEvents\.j_view$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents dependency BeaconcryptCore.Computational.RegistrationNativeLorEvents.j_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeLorEvents\.w_eq$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents dependency BeaconcryptCore.Computational.RegistrationNativeLorEvents.w_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeLorEvents\.j_related$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents dependency BeaconcryptCore.Computational.RegistrationNativeLorEvents.j_related"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeLorEvents\.w_related$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents dependency BeaconcryptCore.Computational.RegistrationNativeLorEvents.w_related"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeLorEvents\.target_unique$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeLorEvents dependency BeaconcryptCore.Computational.RegistrationNativeLorEvents.target_unique"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/RegistrationNativeObservableHybrid.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeObservableHybrid strict warnings"
+require_line_count 3 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeObservableHybrid theorem roster"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeObservableHybrid guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem kem_distance([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeObservableHybrid theorem kem_distance"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem source_distance([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeObservableHybrid theorem source_distance"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem source_probability([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeObservableHybrid theorem source_probability"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeObservableHybrid\.kem_distance$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeObservableHybrid dependency BeaconcryptCore.Computational.RegistrationNativeObservableHybrid.kem_distance"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeObservableHybrid\.source_distance$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeObservableHybrid dependency BeaconcryptCore.Computational.RegistrationNativeObservableHybrid.source_distance"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativeObservableHybrid\.source_probability$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativeObservableHybrid dependency BeaconcryptCore.Computational.RegistrationNativeObservableHybrid.source_probability"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/RegistrationNativePublicObservation.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation strict warnings"
+require_line_count 7 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation theorem roster"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem entry_public([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation theorem entry_public"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem restore_public([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation theorem restore_public"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem first_payload([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation theorem first_payload"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem acceptOf_public([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation theorem acceptOf_public"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem ledger_public([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation theorem ledger_public"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem first_acceptOf([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation theorem first_acceptOf"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem restored_first_public([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation theorem restored_first_public"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativePublicObservation\.entry_public$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation dependency BeaconcryptCore.Computational.RegistrationNativePublicObservation.entry_public"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativePublicObservation\.restore_public$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation dependency BeaconcryptCore.Computational.RegistrationNativePublicObservation.restore_public"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativePublicObservation\.first_payload$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation dependency BeaconcryptCore.Computational.RegistrationNativePublicObservation.first_payload"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativePublicObservation\.acceptOf_public$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation dependency BeaconcryptCore.Computational.RegistrationNativePublicObservation.acceptOf_public"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativePublicObservation\.ledger_public$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation dependency BeaconcryptCore.Computational.RegistrationNativePublicObservation.ledger_public"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativePublicObservation\.first_acceptOf$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation dependency BeaconcryptCore.Computational.RegistrationNativePublicObservation.first_acceptOf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RegistrationNativePublicObservation\.restored_first_public$' "$selected_source_module" "BeaconcryptCore.Computational.RegistrationNativePublicObservation dependency BeaconcryptCore.Computational.RegistrationNativePublicObservation.restored_first_public"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/AdapterRecordRequestMonad.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordRequestMonad strict warnings"
+require_line_count 4 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordRequestMonad theorem roster"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordRequestMonad guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem run_pure([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordRequestMonad theorem run_pure"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem run_lift([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordRequestMonad theorem run_lift"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem run_bind([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordRequestMonad theorem run_bind"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem ext([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordRequestMonad theorem ext"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordRequestMonad\.Program\.run_pure$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordRequestMonad dependency BeaconcryptCore.Refinement.AdapterRecordRequestMonad.Program.run_pure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordRequestMonad\.Program\.run_lift$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordRequestMonad dependency BeaconcryptCore.Refinement.AdapterRecordRequestMonad.Program.run_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordRequestMonad\.Program\.run_bind$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordRequestMonad dependency BeaconcryptCore.Refinement.AdapterRecordRequestMonad.Program.run_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordRequestMonad\.Program\.ext$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordRequestMonad dependency BeaconcryptCore.Refinement.AdapterRecordRequestMonad.Program.ext"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Refinement/AdapterRecordStatefulReceive.lean
+require_line_count 1 '^set_option warningAsError true$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive strict warnings"
+require_line_count 19 '^(@\[[^]]+\][[:space:]]+)?theorem[[:space:]]' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem roster"
+require_line_count 19 '^#guard_msgs in$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive guarded dependencies"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem body_specializes([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem body_specializes"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem interpret_pure([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem interpret_pure"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem interpret_lift([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem interpret_lift"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem interpret_bind([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem interpret_bind"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem interpret_query([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem interpret_query"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem drive_aead([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem drive_aead"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem drive_rejected([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem drive_rejected"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem native_compare_arrays([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem native_compare_arrays"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem native_hash([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem native_hash"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem native_kdf([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem native_kdf"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem drive_commitment([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem drive_commitment"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem drive_source([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem drive_source"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem abstract_deterministic([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem abstract_deterministic"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem controller_specializes([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem controller_specializes"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem source_stateful([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem source_stateful"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem source_stateful_continuation([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem source_stateful_continuation"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem receive_source([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem receive_source"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem receive_native_model([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem receive_native_model"
+require_line_count 1 '^(@\[[^]]+\][[:space:]]+)?theorem receive_stateful_continuation([[:space:]]|$)' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive theorem receive_stateful_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.body_specializes$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.body_specializes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.interpret_pure$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.interpret_pure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.interpret_lift$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.interpret_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.interpret_bind$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.interpret_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.interpret_query$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.interpret_query"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.drive_aead$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.drive_aead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.drive_rejected$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.drive_rejected"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.native_compare_arrays$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.native_compare_arrays"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.native_hash$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.native_hash"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.native_kdf$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.native_kdf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.drive_commitment$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.drive_commitment"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.drive_source$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.drive_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.abstract_deterministic$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.abstract_deterministic"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.controller_specializes$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.controller_specializes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.source_stateful$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.source_stateful"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.source_stateful_continuation$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.source_stateful_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.receive_source$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.receive_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.receive_native_model$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.receive_native_model"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Refinement\.AdapterRecordStatefulReceive\.receive_stateful_continuation$' "$selected_source_module" "BeaconcryptCore.Refinement.AdapterRecordStatefulReceive dependency BeaconcryptCore.Refinement.AdapterRecordStatefulReceive.receive_stateful_continuation"
+
+python3 ../scripts/test_lift_adapter_record_requests.py
+python3 ../scripts/lift_adapter_record_requests.py --check
+python3 ../scripts/test_check_registration_codec_extraction.py
+# END COMPUTATIONAL_COMPLETION_CHECKPOINT_ROSTER
+
+# BEGIN COMPUTATIONAL_COMPLETION_SOURCE_CONTROLS
+require_line_count 1 '^check-computational-completion-source:$' Makefile "completion source gate"
+require_line_count 1 '^check-generated-computational-completion-lean: check-computational-completion-source$' Makefile "completion fresh extraction prerequisite"
+require_line_count 1 '^	python3 ../scripts/check_computational_completion.py --check-sources$' Makefile "completion negative/source controls"
+require_line_count 1 '^	python3 ../scripts/check_computational_completion.py --check-roster$' Makefile "completion root roster"
+python3 ../scripts/check_computational_completion.py --check-sources
+# END COMPUTATIONAL_COMPLETION_SOURCE_CONTROLS
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py

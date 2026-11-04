@@ -1,0 +1,27 @@
+-- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.RegistrationNativeSourceExecutionDependencyGuards
+import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildLoggedActualSource
+/-! The retained Builder source equality consumes the checked full SDK annotation, actual first-record source leaves, and actual signing/installer Word normalization. The former normalized marginal alone is an explicit negative control. -/
+set_option autoImplicit false
+set_option warningAsError true
+namespace BeaconcryptCore.Computational
+
+#guard_source_value_dependencies RegistrationNativePlatformPublicAdapterBuildLoggedActualSource.active_source includes [
+  RegistrationNativePlatformPublicAdapterBuildObservedProgram.program_source,
+  RegistrationNativePlatformPublicAdapterBuildObservedProgram.receipt_word,
+  BeaconcryptCore.Refinement.AdapterPublicServerBuildObservedBody.source,
+  RegistrationNativePlatformPublicAdapterBuildObservedSource.complete_word,
+  RegistrationNativePlatformPublicAdapterBuildObservedSource.first_normalize,
+  BeaconcryptCore.Refinement.AdapterPublicServerSigningNative.source,
+  BeaconcryptCore.Refinement.AdapterPublicServerBuildWithRecord.factor]
+
+#guard_source_value_dependencies RegistrationNativePlatformPublicAdapterBuildLoggedActualSource.operation_source includes [
+  BeaconcryptCore.Refinement.AdapterPublicServerBuildObservedBody.source,
+  RegistrationNativePlatformPublicAdapterBuildObservedSource.complete_word,
+  BeaconcryptCore.Refinement.AdapterPublicServerSigningNative.source]
+
+/-- error: source endpoint BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildProgramStages.sample_normalized_source does not reach source proof BeaconcryptCore.Refinement.AdapterPublicServerBuildObservedBody.source through declaration values -/
+#guard_msgs in
+#guard_source_value_dependencies RegistrationNativePlatformPublicAdapterBuildProgramStages.sample_normalized_source includes [BeaconcryptCore.Refinement.AdapterPublicServerBuildObservedBody.source]
+
+end BeaconcryptCore.Computational

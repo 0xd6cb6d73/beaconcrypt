@@ -137,7 +137,70 @@ ADAPTER_AUTHENTICATION_EXTRACTION_WORK_DIR ?= $(abspath ../../.build/proofs/adap
 ADAPTER_RECORD_EXTRACTION_WORK_DIR ?= $(abspath ../../.build/proofs/$(notdir $(abspath ..))/adapter-record-extraction)
 FRAME_CODEC_EXTRACTION_WORK_DIR ?= $(abspath ../../.build/proofs/$(notdir $(abspath ..))/frame-codec-extraction)
 LEAN_PROOF_PATHS := $(LEAN_DIR)/BeaconcryptCore $(LEAN_DIR)/BeaconcryptCore.lean
+COMPUTATIONAL_COMPLETION_GENERATED_PATHS := \
+	proofs/lean/BeaconcryptCore/AdapterAuthenticationRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterBeaconConstructorExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterBeaconConstructorExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterBeaconConstructorRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterInitAuthenticationExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterInitAuthenticationExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterInitAuthenticationRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterPublicBuildObservedExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterPublicFinishObservedExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterPublicOrdinaryExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterPublicOrdinaryExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterPublicOrdinaryRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterPublicServerEntryExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterPublicServerEntryExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterPublicServerEntryRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterPublicWrapperExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterPublicWrapperExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterPublicWrapperRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordHelperRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordHelpersExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordHelpersExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordRoutingExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordRoutingExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordSendExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordSendExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterRecordSendRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterRegistrationWriterExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterRegistrationWriterExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterRegistrationWriterRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterSealExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterSealExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterSealJoinExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterSealJoinExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterSealJoinRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterSealRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterServerConstructorExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterServerConstructorExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterServerConstructorRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/AdapterWireExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/AdapterWireExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/AdapterWireRequestExtraction.lean \
+	proofs/lean/BeaconcryptCore/FrameDispatchExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/FrameDispatchExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/RegistrationArrayExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/RegistrationArrayExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/RegistrationHeaderOptimalExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/RegistrationHeaderOptimalExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/RegistrationPreflightExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/RegistrationPreflightExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/RegistrationPrimitiveExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/RegistrationPrimitiveExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/RegistrationSchemaExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/RegistrationSchemaExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/RegistrationSerializerControllerExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/RegistrationSerializerControllerExtraction/SourceCertificates.lean \
+	proofs/lean/BeaconcryptCore/RegistrationSerializerControllerExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/RegistrationShallowExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/RegistrationShallowExtraction/Types.lean \
+	proofs/lean/BeaconcryptCore/RegistrationValidatorExtraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/RegistrationValidatorExtraction/Types.lean
 LEAN_GENERATED_PATHS := \
+	$(COMPUTATIONAL_COMPLETION_GENERATED_PATHS) \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction.lean \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction/Funs.lean \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction/FunsExternal.lean \
@@ -153,6 +216,7 @@ LEAN_GENERATED_PATHS := \
 	$(LEAN_DIR)/BeaconcryptCore/AdapterRecordExtraction/Funs.lean \
 	$(LEAN_DIR)/BeaconcryptCore/AdapterRecordExtraction/external-signatures.json \
 	$(LEAN_DIR)/BeaconcryptCore/AdapterRecordExtraction/provenance.json \
+	$(LEAN_DIR)/BeaconcryptCore/AdapterRecordRequestExtraction.lean \
 	$(LEAN_DIR)/BeaconcryptCore/FrameCodecExtraction/Types.lean \
 	$(LEAN_DIR)/BeaconcryptCore/FrameCodecExtraction/Funs.lean \
 	$(LEAN_DIR)/BeaconcryptCore/FrameCodecExtraction/external-signatures.json \
@@ -179,6 +243,8 @@ LEAN_GENERATED_PATHS := \
 	extract-adapter-authentication-lean check-generated-adapter-authentication-lean \
 	check-adapter-authentication-source \
 	extract-adapter-record-lean check-generated-adapter-record-lean check-adapter-record-source \
+	check-adapter-record-request-source check-generated-adapter-record-request-lean \
+	check-registration-codec-checkpoint check-registration-codec-extraction \
 	extract-frame-codec-lean check-generated-frame-codec-lean check-frame-codec-source \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
 	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
@@ -201,6 +267,8 @@ verify-in-shell:
 	$(MAKE) check-generated-authentication-lean
 	$(MAKE) check-generated-adapter-authentication-lean
 	$(MAKE) check-generated-adapter-record-lean
+	$(MAKE) check-adapter-record-request-source
+	$(MAKE) check-registration-codec-checkpoint
 	$(MAKE) check-generated-frame-codec-lean
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
@@ -911,6 +979,33 @@ check-frame-codec-source:
 	python3 ../scripts/test_extract_frame_codec.py
 	python3 ../scripts/extract_frame_codec.py --check-source
 
+check-adapter-record-request-source:
+	python3 ../scripts/test_lift_adapter_record_requests.py
+	python3 ../scripts/lift_adapter_record_requests.py --check
+
+# The original extraction is compared first; the request lifting then checks the
+# exact reviewed body and the committed transformed output, without rewriting it.
+check-generated-adapter-record-request-lean: check-generated-adapter-record-lean check-adapter-record-request-source
+
+check-registration-codec-checkpoint:
+	python3 ../scripts/test_check_registration_codec_extraction.py
+
+# An explicit feasibility gate. Unsupported reachable parser/serializer bodies
+# fail this target; passing the existing proof matrix does not discharge it.
+REGISTRATION_CODEC_CHECKPOINT_WORK_DIR ?= /tmp/beaconcrypt-registration-codec-checkpoint
+check-registration-codec-extraction: check-registration-codec-checkpoint
+	python3 ../scripts/check_registration_codec_extraction.py --work-dir '$(REGISTRATION_CODEC_CHECKPOINT_WORK_DIR)'
+
+# BEGIN COMPUTATIONAL_COMPLETION_SOURCE_GATES
+COMPUTATIONAL_COMPLETION_EXTRACTION_WORK_DIR ?= /tmp/beaconcrypt-computational-completion-extraction
+.PHONY: check-computational-completion-source check-generated-computational-completion-lean
+check-computational-completion-source:
+	python3 ../scripts/check_computational_completion.py --check-sources
+
+check-generated-computational-completion-lean: check-computational-completion-source
+	python3 ../scripts/check_computational_completion.py --check-extractions '$(COMPUTATIONAL_COMPLETION_EXTRACTION_WORK_DIR)'
+# END COMPUTATIONAL_COMPLETION_SOURCE_GATES
+
 check-lean-policy:
 	@if rg -n --pcre2 '\b(?:sorry|admit|axiom)\b|sorryAx' $(LEAN_PROOF_PATHS) \
 		--glob '*.lean'; then \
@@ -929,6 +1024,7 @@ check-lean-policy:
 	fi
 
 check-lean-root:
+	python3 ../scripts/check_computational_completion.py --check-roster
 	@for module in \
 		BeaconcryptCore.Extraction \
 		BeaconcryptCore.PanicFreedom.API \
@@ -937,6 +1033,20 @@ check-lean-root:
 		BeaconcryptCore.Refinement.TranscriptAuth \
 		BeaconcryptCore.Refinement.AdapterResponseAuthentication \
 		BeaconcryptCore.Refinement.AdapterRecordReceive \
+		BeaconcryptCore.AdapterRecordRequestExtraction \
+		BeaconcryptCore.Refinement.AdapterRecordRequestMonad \
+		BeaconcryptCore.Refinement.AdapterRecordStatefulReceive \
+		BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshots \
+		BeaconcryptCore.Computational.PqxdhDeploymentSessionSnapshotCoverage \
+		BeaconcryptCore.Computational.PqxdhDeploymentCausalPublication \
+		BeaconcryptCore.Computational.PqxdhDeploymentCausalCoverage \
+		BeaconcryptCore.Computational.RegistrationNativeAllocation \
+		BeaconcryptCore.Computational.RegistrationNativeObservableHybrid \
+		BeaconcryptCore.Computational.RegistrationNativeLorEvents \
+		BeaconcryptCore.Computational.RegistrationNativePublicObservation \
+		BeaconcryptCore.Computational.CborRawRecordEntropyMass \
+		BeaconcryptCore.Computational.CborRawRecordSelector \
+		BeaconcryptCore.Computational.CborRawRecordWeightedFresh \
 		BeaconcryptCore.Refinement.FrameCodecReadBack \
 		BeaconcryptCore.Refinement.FrameCodecContracts \
 		BeaconcryptCore.Refinement.FrameCodecDecodeTotality \
@@ -1008,7 +1118,7 @@ check-lean-panic-freedom:
 prepare-lean-dependencies:
 	bash $(LEAN_DIR)/apply-dependency-patches.sh
 
-check-lean: prepare-lean-dependencies check-lean-policy check-lean-root check-lean-panic-freedom check-adapter-record-source check-frame-codec-source check-adapter-authentication-source
+check-lean: prepare-lean-dependencies check-lean-policy check-lean-root check-lean-panic-freedom check-adapter-record-source check-frame-codec-source check-adapter-authentication-source check-adapter-record-request-source check-registration-codec-checkpoint check-computational-completion-source
 	cd $(LEAN_DIR) && lake --rehash build
 
 # Regenerate and check the complete default beaconcrypt-core production surface.
@@ -1023,6 +1133,7 @@ verify-lean-in-shell:
 	$(MAKE) check-generated-adapter-authentication-lean
 	$(MAKE) check-generated-adapter-record-lean
 	$(MAKE) check-generated-frame-codec-lean
+	$(MAKE) check-generated-computational-completion-lean
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
 
