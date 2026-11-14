@@ -16,8 +16,7 @@ HAX_PROVERIF_ITEMS := -** \
 	+!beaconcrypt_core::pqxdh::RootKeyInput \
 	+!beaconcrypt_core::pqxdh::RegistrationKeyIdBinding \
 	+!beaconcrypt_core::pqxdh::registration_id \
-	+!beaconcrypt_core::pqxdh::build_root_key_input \
-	+!beaconcrypt_core::pqxdh::build_associated_data
+	+!beaconcrypt_core::pqxdh::build_root_key_input
 
 PROVERIF_DIR := proofs/pro-verif
 PROVERIF_EXTRACTION := $(PROVERIF_DIR)/extraction/lib.pvl
@@ -43,6 +42,10 @@ PROVERIF_TIMEOUT ?= 240
 PROVERIF_MLDSA_LOG_DIR ?= $(abspath ../.build/proofs/mldsa-auth)
 PROVERIF_MLDSA_JOINT_LOG_DIR ?= $(abspath ../.build/proofs/mldsa-joint)
 PROVERIF_MLDSA_JOINT_TIMEOUT ?= 600
+# The registration version 3 transcript-AD term (AD151 over the 2638-byte transcript) enlarges the
+# exposed-controller query of check-proverif-kem-controller-auth: measured 309 s on 2026-11-12
+# (2 jobs), so 800 s is the smallest round value with at least a 2.5x margin.
+PROVERIF_KEM_CONTROLLER_TIMEOUT ?= 800
 override PROVERIF := proverif
 PROVERIF_SCENARIOS := \
 	aead-commitment \
@@ -85,9 +88,19 @@ PROVERIF_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_SCENARIOS))
 # Free-schedule (fs) scenarios run serially, one query per ProVerif process,
 # outside the parallel PROVERIF_SCENARIOS roster. Each target may need up to
 # PROVERIF_FS_TIMEOUT seconds and a PROVERIF_FS_ADDRESS_SPACE_KIB address space,
-# so the fs group must run alone on the machine. The checker keeps the logs of a
-# failed run in the temporary directory its error message names; set
-# PROVERIF_FS_LOG_DIR to keep every ProVerif log of the group in that directory.
+# so the fs group must run alone on the machine. Owner-approved per-target
+# exceptions (2026-11-12), a resource change caused by the larger registration
+# version 3 transcript-AD151 terms: check-free-schedule.py (LIMIT_EXCEPTIONS)
+# raises the time limit of fs-registration A1 and fs-records-s2b C1 and C3 to
+# 4000 s (at least 1.5 times their slowest diagnostic run, 2635 s) and the
+# address space of A1 to 14 GiB (its diagnostic run peaked at 11.64 GiB
+# resident); owner decision of 2026-11-13: fs-records-s2b C1 also gets the
+# 14 GiB address space (under 10 GiB it ran out of memory, its 14 GiB
+# diagnostic run passed at 9.94 GiB resident); every other fs target keeps
+# these two limits. The checker keeps
+# the logs of a failed run in the temporary directory its error message names;
+# set PROVERIF_FS_LOG_DIR to keep every ProVerif log of the group in that
+# directory.
 PROVERIF_FS_TIMEOUT ?= 1800
 PROVERIF_FS_ADDRESS_SPACE_KIB ?= 10485760
 PROVERIF_FS_LOG_DIR ?=
@@ -104,6 +117,11 @@ PROVERIF_TASKING_ORIGIN_TIMEOUT ?= 180
 PROVERIF_TASKING_ORIGIN_LOG_DIR ?=
 PROVERIF_APPLICATION_SECRECY_TIMEOUT ?= 180
 PROVERIF_APPLICATION_SECRECY_LOG_DIR ?=
+# Owner-approved per-target exception (2026-11-13), a resource change only:
+# check-exact-interface-strong.py (LIMIT_EXCEPTIONS) raises the time limit of
+# the SSX-b2s equivalence to 2700 s (it passed in 1736 s in pvport3 and hit
+# 1800 s twice on a loaded machine with an unchanged saturation); every other
+# exact-interface-strong target keeps this timeout and the 10 GiB cap.
 PROVERIF_EXACT_INTERFACE_STRONG_TIMEOUT ?= 1800
 PROVERIF_EXACT_INTERFACE_STRONG_LOG_DIR ?=
 PROVERIF_EXACT_FAR_LOG_DIR ?=
@@ -208,6 +226,7 @@ LEAN_GENERATED_PATHS := \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction/Types.lean \
 	$(LEAN_DIR)/BeaconcryptCore/Extraction/TypesExternal_Template.lean \
 	$(LEAN_DIR)/BeaconcryptCore/AuthenticationExtraction \
+	$(LEAN_DIR)/source-coverage.json \
 	$(LEAN_DIR)/BeaconcryptCore/AdapterAuthenticationExtraction/Types.lean \
 	$(LEAN_DIR)/BeaconcryptCore/AdapterAuthenticationExtraction/Funs.lean \
 	$(LEAN_DIR)/BeaconcryptCore/AdapterAuthenticationExtraction/external-signatures.json \
@@ -380,8 +399,7 @@ check-proverif-extraction:
 	fi
 	@for required in \
 		'beaconcrypt_core__pqxdh__registration_id' \
-		'beaconcrypt_core__pqxdh__build_root_key_input' \
-		'beaconcrypt_core__pqxdh__build_associated_data'; do \
+		'beaconcrypt_core__pqxdh__build_root_key_input'; do \
 		rg -q "$$required" '$(PROVERIF_EXTRACTION)' || { \
 			echo "missing ProVerif extraction item: $$required" >&2; \
 			exit 1; \
@@ -462,7 +480,7 @@ check-proverif-fs-records-b2s: check-proverif-extraction check-proverif-transcri
 		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
 		$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')
 
-# Kept outside both the parallel roster and the existing three-hour fs group.
+# Kept outside both the parallel roster and the existing serial fs group.
 check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity
 	python3 $(PROVERIF_DIR)/test-primitive-fidelity-checker.py
 	python3 $(PROVERIF_DIR)/check-primitive-fidelity.py \
@@ -705,6 +723,12 @@ check-proverif-public-key-confusion-weak: check-proverif-extraction
 		awk -v scenario=public-key-confusion-weak \
 			-f '$(PROVERIF_CHECKER)'
 
+# Each Phase-2 target runs the production control (transcript AD151 binds the assigned ID, so
+# the relabeled frame no longer opens) and then a counterfactual control derived by
+# generate-phase2-ad-counterfactual.py in which only the assigned-ID transcript field is
+# omitted from both AD derivations. The counterfactual reproduces the original relabeled-frame
+# witnesses, so the authenticated assigned-ID prefix gate is still shown to reject the
+# relabeling on its own (strong theory) and to be load-bearing (weak theory).
 check-proverif-phase2-response-binding: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
@@ -714,6 +738,18 @@ check-proverif-phase2-response-binding: check-proverif-extraction
 			-lib $(PROVERIF_DIR)/phase2-response-binding-queries.pvl \
 			$(PROVERIF_DIR)/phase2-response-binding.pv | \
 		awk -v scenario=phase2-response-binding -f '$(PROVERIF_CHECKER)'
+	@set -o pipefail; \
+		counterfactual=$$(mktemp -d); \
+		trap 'rm -rf "$$counterfactual"' EXIT; \
+		python3 $(PROVERIF_DIR)/generate-phase2-ad-counterfactual.py \
+			$(PROVERIF_DIR)/phase2-response-binding-control.pvl "$$counterfactual/control.pvl"; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl \
+			-lib "$$counterfactual/control.pvl" \
+			-lib $(PROVERIF_DIR)/phase2-response-binding-queries.pvl \
+			$(PROVERIF_DIR)/phase2-response-binding.pv | \
+		awk -v scenario=phase2-response-binding-ad-omits-assigned-id -f '$(PROVERIF_CHECKER)'
 
 check-proverif-phase2-assigned-id-weak: check-proverif-extraction \
 	check-proverif-phase2-response-binding
@@ -725,6 +761,18 @@ check-proverif-phase2-assigned-id-weak: check-proverif-extraction \
 			-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-queries.pvl \
 			$(PROVERIF_DIR)/phase2-assigned-id-weak.pv | \
 		awk -v scenario=phase2-assigned-id-weak -f '$(PROVERIF_CHECKER)'
+	@set -o pipefail; \
+		counterfactual=$$(mktemp -d); \
+		trap 'rm -rf "$$counterfactual"' EXIT; \
+		python3 $(PROVERIF_DIR)/generate-phase2-ad-counterfactual.py \
+			$(PROVERIF_DIR)/phase2-response-binding-control.pvl "$$counterfactual/control.pvl"; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-theory.pvl \
+			-lib "$$counterfactual/control.pvl" \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-queries.pvl \
+			$(PROVERIF_DIR)/phase2-assigned-id-weak.pv | \
+		awk -v scenario=phase2-assigned-id-weak-ad-omits-assigned-id -f '$(PROVERIF_CHECKER)'
 
 check-proverif-phase2-x25519-alias: check-proverif-extraction
 	python3 $(PROVERIF_DIR)/check-phase2-x25519-alias.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
@@ -803,7 +851,7 @@ check-proverif: check-proverif-kem-controller-auth
 check-proverif-kem-controller-auth: check-proverif-extraction check-proverif-transcript-fidelity
 	python3 $(PROVERIF_DIR)/test-kem-controller-auth.py
 	python3 $(PROVERIF_DIR)/check-kem-controller-auth.py \
-		--proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
+		--proverif '$(PROVERIF)' --timeout '$(PROVERIF_KEM_CONTROLLER_TIMEOUT)'
 
 check-proverif-live-private-application-origin check-proverif-live-private-application-no-api \
 check-proverif-live-private-application-no-key: check-proverif-live-private-application-%: check-proverif-extraction
@@ -929,7 +977,9 @@ extract-lean:
 		exit 1; \
 	}
 	rm -rf $(LEAN_DIR)/llbc
-	cargo hax -C --locked ';' into lean
+	cargo hax -C --locked ';' into lean \
+		--charon-args="--rustc-arg='--cfg=feature=\"test-utils\"'"
+	python3 ../scripts/check_core_source_coverage.py --write
 
 # The authentication cohort is regenerated separately while the global AD/CTX migration proceeds.
 # Both modes retain their isolated extraction evidence and preserve the historical Extraction files.
@@ -1028,6 +1078,7 @@ check-lean-root:
 	@for module in \
 		BeaconcryptCore.Extraction \
 		BeaconcryptCore.PanicFreedom.API \
+		BeaconcryptCore.PanicFreedom.TestUtils \
 		BeaconcryptCore.Refinement.PqxdhSession \
 		BeaconcryptCore.Refinement.PqxdhCommitment \
 		BeaconcryptCore.Refinement.TranscriptAuth \
@@ -1112,6 +1163,8 @@ check-lean-root:
 # Reconstruct unconditional contracts from every current extracted operation.
 # The following Lake build checks each certificate against that exact signature.
 check-lean-panic-freedom:
+	python3 ../scripts/test_check_core_source_coverage.py
+	python3 ../scripts/check_core_source_coverage.py
 	python3 ../scripts/test_check_lean_panic_freedom.py
 	python3 ../scripts/check_lean_panic_freedom.py
 

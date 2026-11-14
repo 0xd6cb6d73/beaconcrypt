@@ -46,6 +46,11 @@ class PanicBoundaryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "extra=.*f"):
             checker.render({}, self.certificate)
 
+    def test_multiline_monadic_result_requires_certificate(self):
+        source = self.source + "def new_operation : RustM\n  Unit := ok ()\n"
+        with self.assertRaisesRegex(ValueError, "missing=.*new_operation"):
+            checker.render(checker.declarations(source), self.certificate)
+
     def test_signature_change_changes_checked_proposition(self):
         before = checker.render(checker.declarations(self.source), self.certificate)
         source = "def f {T : Type} (x y : T) : RustM T := ok x\n"
@@ -119,6 +124,17 @@ class PanicBoundaryTests(unittest.TestCase):
         self.certificate["f"]["theorem"] = "Proof.f_total\n  trivial"
         with self.assertRaisesRegex(ValueError, "invalid certificate name"):
             checker.render(checker.declarations(self.source), self.certificate)
+
+    def test_every_operation_receives_transitive_axiom_check(self):
+        source = self.source + "def g : RustM Unit := ok ()\n"
+        certificates = self.certificate | {
+            "g": {"module": "Proof", "theorem": "Proof.g_total", "form": "exists"}
+        }
+        generated = checker.render(checker.declarations(source), certificates)
+        self.assertIn("``operation_000,\n      ``operation_001\n", generated)
+        self.assertIn("for dependency in ← Lean.collectAxioms declaration", generated)
+        self.assertIn("unless allowed.contains dependency", generated)
+        self.assertIn("[``propext, ``Classical.choice, ``Quot.sound]", generated)
 
 
 if __name__ == "__main__":

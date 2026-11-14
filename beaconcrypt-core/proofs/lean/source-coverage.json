@@ -1,0 +1,2822 @@
+{
+  "charon_version": "0.1.247",
+  "extraction_options": {
+    "abort_on_error": false,
+    "consts": null,
+    "deallocate_all_locals": true,
+    "dest_dir": null,
+    "desugar_drops": false,
+    "duplicate_defaulted_methods": false,
+    "error_on_warnings": false,
+    "exclude": [],
+    "extract_opaque_bodies": false,
+    "format": null,
+    "hide_allocator": true,
+    "hide_marker_traits": true,
+    "include": [],
+    "index_to_function_calls": true,
+    "lift_associated_types": [
+      "*"
+    ],
+    "mir": null,
+    "monomorphize": false,
+    "monomorphize_mut": null,
+    "no_dedup_serialized_ast": false,
+    "no_gen_tuple_structs": true,
+    "no_normalize": false,
+    "no_reorder_decls": false,
+    "no_serialize": false,
+    "no_typecheck": false,
+    "opaque": [],
+    "ops_to_function_calls": true,
+    "precise_drops": false,
+    "preset": "Aeneas",
+    "print_built_llbc": false,
+    "print_llbc": false,
+    "print_original_ullbc": false,
+    "print_ullbc": false,
+    "raw_consts": false,
+    "reconstruct_asserts": true,
+    "reconstruct_fallible_operations": true,
+    "reconstruct_matches": true,
+    "remove_adt_clauses": true,
+    "remove_unused_clauses": false,
+    "remove_unused_self_clauses": true,
+    "rustc_args": [
+      "--cfg=hax_compilation",
+      "--cfg=hax_backend_lean",
+      "--cfg=feature=\"test-utils\""
+    ],
+    "skip_borrowck": false,
+    "start_from": [
+      "crate",
+      "core::clone::Clone::clone_from",
+      "core::cmp::PartialEq::ne",
+      "core::cmp::PartialOrd::lt",
+      "core::cmp::PartialOrd::le",
+      "core::cmp::PartialOrd::gt",
+      "core::cmp::PartialOrd::ge",
+      "core::iter::range::Step::forward",
+      "core::iter::range::Step::forward_unchecked",
+      "core::iter::range::Step::backward",
+      "core::iter::range::Step::backward_unchecked"
+    ],
+    "start_from_attribute": [],
+    "start_from_if_exists": [],
+    "start_from_pub": false,
+    "sysroot": null,
+    "targets": [],
+    "translate_all_methods": false,
+    "treat_box_as_builtin": true,
+    "ullbc": false,
+    "unbind_item_vars": true,
+    "unsized_strings": false
+  },
+  "extraction_sha256": {
+    "BeaconcryptCore/Extraction.lean": "e3636319ca639b37b0fb51111ce85e608cef7d8cf376299d46ee940c501fdd95",
+    "BeaconcryptCore/Extraction/Funs.lean": "41f3ae78ed334a1ee8f2b0292b6aa0b084a9e1f4e39c50eb6ac7525d6602cd50",
+    "BeaconcryptCore/Extraction/FunsExternal.lean": "8203bf94959d1a7b1ca576beb446bf115447bb36f5fc47528d21b4c1d0dff66a",
+    "BeaconcryptCore/Extraction/FunsExternal_Template.lean": "6921c5588ca1f993300ebb04b247caf8f5af8dfb720f91b313745a6b03eb2ec7",
+    "BeaconcryptCore/Extraction/Types.lean": "88da2f722bbf1c5656d02f45989a05a7a3963efbca2975004d34f623c4b077eb",
+    "BeaconcryptCore/Extraction/TypesExternal.lean": "a4e3a6156e1707d369057ba494d7dc3680025ae0311b840018b0bbb84b94bf9d",
+    "BeaconcryptCore/Extraction/TypesExternal_Template.lean": "a4d738405d554ec898f0d09c56afcc645d072010ff7f2f0076ea663029358b55"
+  },
+  "functions": [
+    {
+      "end": 2578,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "reject",
+      "name_start": 2321,
+      "start": 2318
+    },
+    {
+      "end": 2958,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "new",
+      "name_start": 2584,
+      "start": 2581
+    },
+    {
+      "end": 3531,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "begin_server_agreement",
+      "name_start": 3054,
+      "start": 3047
+    },
+    {
+      "end": 4287,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "begin_beacon_agreement",
+      "name_start": 3619,
+      "start": 3612
+    },
+    {
+      "end": 4648,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "public_key",
+      "name_start": 4408,
+      "start": 4401
+    },
+    {
+      "end": 4930,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "resume",
+      "name_start": 4658,
+      "start": 4651
+    },
+    {
+      "end": 5212,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "secret_role",
+      "name_start": 5143,
+      "start": 5130
+    },
+    {
+      "end": 5615,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "resume",
+      "name_start": 5222,
+      "start": 5215
+    },
+    {
+      "end": 5796,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "role",
+      "name_start": 5730,
+      "start": 5717
+    },
+    {
+      "end": 6082,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "resume",
+      "name_start": 5806,
+      "start": 5799
+    },
+    {
+      "end": 6421,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "public_key",
+      "name_start": 6199,
+      "start": 6192
+    },
+    {
+      "end": 6775,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "resume",
+      "name_start": 6431,
+      "start": 6424
+    },
+    {
+      "end": 7090,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "ciphertext",
+      "name_start": 6892,
+      "start": 6885
+    },
+    {
+      "end": 7387,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "resume",
+      "name_start": 7100,
+      "start": 7093
+    },
+    {
+      "end": 9173,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "request",
+      "name_start": 7653,
+      "start": 7646
+    },
+    {
+      "end": 10029,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "resume",
+      "name_start": 9183,
+      "start": 9176
+    },
+    {
+      "end": 11676,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "finish_dh",
+      "name_start": 10277,
+      "start": 10274
+    },
+    {
+      "end": 12260,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "request",
+      "name_start": 11939,
+      "start": 11932
+    },
+    {
+      "end": 13292,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "resume",
+      "name_start": 12270,
+      "start": 12263
+    },
+    {
+      "end": 13634,
+      "file": "beaconcrypt-core/src/agreement.rs",
+      "name": "registration_id",
+      "name_start": 13556,
+      "start": 13549
+    },
+    {
+      "end": 1884,
+      "file": "beaconcrypt-core/src/authentication.rs",
+      "name": "encode_u64_le",
+      "name_start": 1663,
+      "start": 1650
+    },
+    {
+      "end": 2970,
+      "file": "beaconcrypt-core/src/authentication.rs",
+      "name": "build_init_transcript",
+      "name_start": 1984,
+      "start": 1977
+    },
+    {
+      "end": 4033,
+      "file": "beaconcrypt-core/src/authentication.rs",
+      "name": "build_response_prefix",
+      "name_start": 3328,
+      "start": 3321
+    },
+    {
+      "end": 4368,
+      "file": "beaconcrypt-core/src/authentication.rs",
+      "name": "parts",
+      "name_start": 4283,
+      "start": 4276
+    },
+    {
+      "end": 4973,
+      "file": "beaconcrypt-core/src/authentication.rs",
+      "name": "build_response_transcript",
+      "name_start": 4465,
+      "start": 4458
+    },
+    {
+      "end": 5420,
+      "file": "beaconcrypt-core/src/authentication.rs",
+      "name": "build_signature_input",
+      "name_start": 5055,
+      "start": 5048
+    },
+    {
+      "end": 5869,
+      "file": "beaconcrypt-core/src/authentication.rs",
+      "name": "bind_associated_data",
+      "name_start": 5513,
+      "start": 5506
+    },
+    {
+      "end": 1342,
+      "file": "beaconcrypt-core/src/commitment.rs",
+      "name": "as_bytes",
+      "name_start": 1271,
+      "start": 1258
+    },
+    {
+      "end": 1592,
+      "file": "beaconcrypt-core/src/commitment.rs",
+      "name": "as_mut_bytes",
+      "name_start": 1505,
+      "start": 1498
+    },
+    {
+      "end": 1841,
+      "file": "beaconcrypt-core/src/commitment.rs",
+      "name": "encode_u64_le",
+      "name_start": 1605,
+      "start": 1596
+    },
+    {
+      "end": 2574,
+      "file": "beaconcrypt-core/src/commitment.rs",
+      "name": "build_commitment_transcript",
+      "name_start": 1958,
+      "start": 1951
+    },
+    {
+      "end": 1225,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "from_trusted_parts",
+      "name_start": 1123,
+      "start": 1110
+    },
+    {
+      "end": 1299,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "key_id",
+      "name_start": 1241,
+      "start": 1228
+    },
+    {
+      "end": 1369,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "binding",
+      "name_start": 1315,
+      "start": 1302
+    },
+    {
+      "end": 1432,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "ratchet",
+      "name_start": 1385,
+      "start": 1372
+    },
+    {
+      "end": 1505,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "ratchet_mut",
+      "name_start": 1442,
+      "start": 1435
+    },
+    {
+      "end": 1596,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "into_parts",
+      "name_start": 1515,
+      "start": 1508
+    },
+    {
+      "end": 1927,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "begin_registration_lookup",
+      "name_start": 1762,
+      "start": 1755
+    },
+    {
+      "end": 2039,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "request",
+      "name_start": 1963,
+      "start": 1956
+    },
+    {
+      "end": 2290,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "resume",
+      "name_start": 2049,
+      "start": 2042
+    },
+    {
+      "end": 2561,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "begin_registration_insert",
+      "name_start": 2448,
+      "start": 2441
+    },
+    {
+      "end": 2669,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "request",
+      "name_start": 2597,
+      "start": 2590
+    },
+    {
+      "end": 2917,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "resume",
+      "name_start": 2750,
+      "start": 2743
+    },
+    {
+      "end": 3704,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "begin_completion_lookup",
+      "name_start": 3306,
+      "start": 3299
+    },
+    {
+      "end": 3792,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "request",
+      "name_start": 3752,
+      "start": 3739
+    },
+    {
+      "end": 4233,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "resume",
+      "name_start": 3881,
+      "start": 3874
+    },
+    {
+      "end": 4961,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "begin_peer_insert",
+      "name_start": 4460,
+      "start": 4453
+    },
+    {
+      "end": 5060,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "request",
+      "name_start": 5013,
+      "start": 5000
+    },
+    {
+      "end": 5410,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "into_parts",
+      "name_start": 5153,
+      "start": 5146
+    },
+    {
+      "end": 5900,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "finish",
+      "name_start": 5670,
+      "start": 5663
+    },
+    {
+      "end": 6142,
+      "file": "beaconcrypt-core/src/peer.rs",
+      "name": "into_parts",
+      "name_start": 6046,
+      "start": 6039
+    },
+    {
+      "end": 1402,
+      "file": "beaconcrypt-core/src/pqxdh/concrete.rs",
+      "name": "request",
+      "name_start": 1336,
+      "start": 1323
+    },
+    {
+      "end": 2121,
+      "file": "beaconcrypt-core/src/pqxdh/concrete.rs",
+      "name": "from_bytes",
+      "name_start": 2035,
+      "start": 2022
+    },
+    {
+      "end": 2213,
+      "file": "beaconcrypt-core/src/pqxdh/concrete.rs",
+      "name": "as_bytes",
+      "name_start": 2137,
+      "start": 2124
+    },
+    {
+      "end": 2651,
+      "file": "beaconcrypt-core/src/pqxdh/concrete.rs",
+      "name": "start_initial_ratchet_kdf",
+      "name_start": 2417,
+      "start": 2410
+    },
+    {
+      "end": 3268,
+      "file": "beaconcrypt-core/src/pqxdh/concrete.rs",
+      "name": "resume_initial_ratchet_kdf",
+      "name_start": 2931,
+      "start": 2924
+    },
+    {
+      "end": 3484,
+      "file": "beaconcrypt-core/src/pqxdh/concrete.rs",
+      "name": "start_beacon_ratchet_kdf",
+      "name_start": 3345,
+      "start": 3338
+    },
+    {
+      "end": 3700,
+      "file": "beaconcrypt-core/src/pqxdh/concrete.rs",
+      "name": "start_server_ratchet_kdf",
+      "name_start": 3561,
+      "start": 3554
+    },
+    {
+      "end": 4036,
+      "file": "beaconcrypt-core/src/pqxdh/concrete.rs",
+      "name": "start_beacon_candidate_ratchet_kdf",
+      "name_start": 3822,
+      "start": 3815
+    },
+    {
+      "end": 4367,
+      "file": "beaconcrypt-core/src/pqxdh/concrete.rs",
+      "name": "start_server_candidate_ratchet_kdf",
+      "name_start": 4153,
+      "start": 4146
+    },
+    {
+      "end": 5871,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "from_encoded",
+      "name_start": 5569,
+      "start": 5556
+    },
+    {
+      "end": 5971,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "identity_key",
+      "name_start": 5887,
+      "start": 5874
+    },
+    {
+      "end": 6061,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "prekey",
+      "name_start": 5987,
+      "start": 5974
+    },
+    {
+      "end": 6163,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "one_time_key",
+      "name_start": 6077,
+      "start": 6064
+    },
+    {
+      "end": 6255,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "pq_key",
+      "name_start": 6179,
+      "start": 6166
+    },
+    {
+      "end": 6807,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_identity_public_key",
+      "name_start": 6703,
+      "start": 6690
+    },
+    {
+      "end": 6925,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_prekey_public_key",
+      "name_start": 6823,
+      "start": 6810
+    },
+    {
+      "end": 7047,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_one_time_public_key",
+      "name_start": 6941,
+      "start": 6928
+    },
+    {
+      "end": 7159,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_pq_public_key",
+      "name_start": 7063,
+      "start": 7050
+    },
+    {
+      "end": 7673,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "registration_id",
+      "name_start": 7375,
+      "start": 7368
+    },
+    {
+      "end": 8427,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "registration_id",
+      "name_start": 8326,
+      "start": 8319
+    },
+    {
+      "end": 8785,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "as_bytes",
+      "name_start": 8720,
+      "start": 8707
+    },
+    {
+      "end": 9284,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "validate_registration_status",
+      "name_start": 9044,
+      "start": 9037
+    },
+    {
+      "end": 9642,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "new",
+      "name_start": 9545,
+      "start": 9532
+    },
+    {
+      "end": 9737,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_key_id",
+      "name_start": 9658,
+      "start": 9645
+    },
+    {
+      "end": 9836,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "expected_server_binding",
+      "name_start": 9753,
+      "start": 9740
+    },
+    {
+      "end": 10225,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_key_id",
+      "name_start": 10146,
+      "start": 10133
+    },
+    {
+      "end": 10324,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "expected_server_binding",
+      "name_start": 10241,
+      "start": 10228
+    },
+    {
+      "end": 11201,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_start",
+      "name_start": 10645,
+      "start": 10638
+    },
+    {
+      "end": 12137,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "validate_init_kex",
+      "name_start": 11365,
+      "start": 11358
+    },
+    {
+      "end": 12853,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "as_bytes",
+      "name_start": 12789,
+      "start": 12776
+    },
+    {
+      "end": 13088,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "as_mut_bytes",
+      "name_start": 13008,
+      "start": 13001
+    },
+    {
+      "end": 13242,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "clear",
+      "name_start": 13185,
+      "start": 13178
+    },
+    {
+      "end": 14574,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "build_root_key_input",
+      "name_start": 13623,
+      "start": 13616
+    },
+    {
+      "end": 14959,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "send_offset",
+      "name_start": 14911,
+      "start": 14898
+    },
+    {
+      "end": 15029,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "receive_offset",
+      "name_start": 14975,
+      "start": 14962
+    },
+    {
+      "end": 15540,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_ratchet_initialization",
+      "name_start": 15463,
+      "start": 15450
+    },
+    {
+      "end": 15780,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_ratchet_initialization",
+      "name_start": 15703,
+      "start": 15690
+    },
+    {
+      "end": 16086,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "send_chain",
+      "name_start": 16012,
+      "start": 15999
+    },
+    {
+      "end": 16182,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "receive_chain",
+      "name_start": 16102,
+      "start": 16089
+    },
+    {
+      "end": 16317,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "into_parts",
+      "name_start": 16192,
+      "start": 16185
+    },
+    {
+      "end": 17054,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "split_initial_ratchet_kdf_output",
+      "name_start": 16412,
+      "start": 16405
+    },
+    {
+      "end": 17597,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_key_id",
+      "name_start": 17527,
+      "start": 17514
+    },
+    {
+      "end": 17678,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_binding",
+      "name_start": 17613,
+      "start": 17600
+    },
+    {
+      "end": 17751,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "assigned_key_id",
+      "name_start": 17694,
+      "start": 17681
+    },
+    {
+      "end": 17833,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "root_key_input",
+      "name_start": 17767,
+      "start": 17754
+    },
+    {
+      "end": 17925,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "root_key_input_mut",
+      "name_start": 17843,
+      "start": 17836
+    },
+    {
+      "end": 18023,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "associated_data",
+      "name_start": 17941,
+      "start": 17928
+    },
+    {
+      "end": 18116,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "ratchet_initialization",
+      "name_start": 18039,
+      "start": 18026
+    },
+    {
+      "end": 18238,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "key_id_binding",
+      "name_start": 18132,
+      "start": 18119
+    },
+    {
+      "end": 19137,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_prepare_finish",
+      "name_start": 18411,
+      "start": 18404
+    },
+    {
+      "end": 19605,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "as_bytes",
+      "name_start": 19528,
+      "start": 19515
+    },
+    {
+      "end": 19932,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "registration_key_id_binding",
+      "name_start": 19622,
+      "start": 19609
+    },
+    {
+      "end": 20265,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_binding",
+      "name_start": 20190,
+      "start": 20177
+    },
+    {
+      "end": 20361,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_key_id",
+      "name_start": 20281,
+      "start": 20268
+    },
+    {
+      "end": 20444,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "assigned_key_id",
+      "name_start": 20377,
+      "start": 20364
+    },
+    {
+      "end": 21167,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "authenticate_registration_key_id_binding",
+      "name_start": 20614,
+      "start": 20607
+    },
+    {
+      "end": 21454,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_key_id",
+      "name_start": 21384,
+      "start": 21371
+    },
+    {
+      "end": 21535,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_binding",
+      "name_start": 21470,
+      "start": 21457
+    },
+    {
+      "end": 21608,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "assigned_key_id",
+      "name_start": 21551,
+      "start": 21538
+    },
+    {
+      "end": 21846,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "new",
+      "name_start": 21785,
+      "start": 21772
+    },
+    {
+      "end": 21915,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_key_id",
+      "name_start": 21862,
+      "start": 21849
+    },
+    {
+      "end": 22168,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_commit",
+      "name_start": 21926,
+      "start": 21919
+    },
+    {
+      "end": 22339,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_abort_candidate",
+      "name_start": 22177,
+      "start": 22170
+    },
+    {
+      "end": 22499,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_abort_init",
+      "name_start": 22354,
+      "start": 22341
+    },
+    {
+      "end": 22657,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_abort_fresh",
+      "name_start": 22514,
+      "start": 22501
+    },
+    {
+      "end": 22948,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "new",
+      "name_start": 22891,
+      "start": 22878
+    },
+    {
+      "end": 23013,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "last_key_id",
+      "name_start": 22964,
+      "start": 22951
+    },
+    {
+      "end": 23877,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "registration_id",
+      "name_start": 23809,
+      "start": 23796
+    },
+    {
+      "end": 23997,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_identity_public_key",
+      "name_start": 23893,
+      "start": 23880
+    },
+    {
+      "end": 24079,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "root_key_input",
+      "name_start": 24013,
+      "start": 24000
+    },
+    {
+      "end": 24171,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "root_key_input_mut",
+      "name_start": 24089,
+      "start": 24082
+    },
+    {
+      "end": 25077,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_accept",
+      "name_start": 24258,
+      "start": 24251
+    },
+    {
+      "end": 25803,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "key_id",
+      "name_start": 25764,
+      "start": 25751
+    },
+    {
+      "end": 25923,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "beacon_identity_public_key",
+      "name_start": 25819,
+      "start": 25806
+    },
+    {
+      "end": 26043,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_identity_public_key",
+      "name_start": 25939,
+      "start": 25926
+    },
+    {
+      "end": 26130,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_identity_key_id",
+      "name_start": 26059,
+      "start": 26046
+    },
+    {
+      "end": 26240,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "ephemeral_public_key",
+      "name_start": 26146,
+      "start": 26133
+    },
+    {
+      "end": 26340,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "kem_ciphertext",
+      "name_start": 26256,
+      "start": 26243
+    },
+    {
+      "end": 26438,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "associated_data",
+      "name_start": 26356,
+      "start": 26343
+    },
+    {
+      "end": 26531,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "ratchet_initialization",
+      "name_start": 26454,
+      "start": 26441
+    },
+    {
+      "end": 26644,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "key_id_binding",
+      "name_start": 26547,
+      "start": 26534
+    },
+    {
+      "end": 27063,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_next_key_id",
+      "name_start": 26869,
+      "start": 26856
+    },
+    {
+      "end": 28396,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_prepare_commit",
+      "name_start": 27139,
+      "start": 27132
+    },
+    {
+      "end": 28788,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "eq",
+      "name_start": 28610,
+      "start": 28607
+    },
+    {
+      "end": 28848,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "ne",
+      "name_start": 28794,
+      "start": 28791
+    },
+    {
+      "end": 29175,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_commit",
+      "name_start": 28891,
+      "start": 28884
+    },
+    {
+      "end": 29298,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "server_abort_candidate",
+      "name_start": 29190,
+      "start": 29177
+    },
+    {
+      "end": 30653,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "build_associated_data",
+      "name_start": 30073,
+      "start": 30066
+    },
+    {
+      "end": 30883,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "tag_sign_key",
+      "name_start": 30658,
+      "start": 30655
+    },
+    {
+      "end": 31177,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "tag_x25519_key",
+      "name_start": 30888,
+      "start": 30885
+    },
+    {
+      "end": 31423,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "tag_mlkem768_key",
+      "name_start": 31182,
+      "start": 31179
+    },
+    {
+      "end": 31684,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "untag_sign_key",
+      "name_start": 31428,
+      "start": 31425
+    },
+    {
+      "end": 32005,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "untag_x25519_key",
+      "name_start": 31689,
+      "start": 31686
+    },
+    {
+      "end": 32282,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "untag_mlkem768_key",
+      "name_start": 32010,
+      "start": 32007
+    },
+    {
+      "end": 32371,
+      "file": "beaconcrypt-core/src/pqxdh.rs",
+      "name": "is_all_zero",
+      "name_start": 32287,
+      "start": 32284
+    },
+    {
+      "end": 1695,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "new",
+      "name_start": 1569,
+      "start": 1562
+    },
+    {
+      "end": 1979,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "from_counters",
+      "name_start": 1705,
+      "start": 1698
+    },
+    {
+      "end": 2058,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "send_sequence",
+      "name_start": 1995,
+      "start": 1982
+    },
+    {
+      "end": 2143,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "receive_sequence",
+      "name_start": 2074,
+      "start": 2061
+    },
+    {
+      "end": 2229,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "receive_cache_len",
+      "name_start": 2159,
+      "start": 2146
+    },
+    {
+      "end": 2312,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "send_chain",
+      "name_start": 2245,
+      "start": 2232
+    },
+    {
+      "end": 2401,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "receive_chain",
+      "name_start": 2328,
+      "start": 2315
+    },
+    {
+      "end": 2522,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "receive_entry_at",
+      "name_start": 2411,
+      "start": 2404
+    },
+    {
+      "end": 2902,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "ratchet_step_from_response",
+      "name_start": 2606,
+      "start": 2603
+    },
+    {
+      "end": 4567,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "begin_send",
+      "name_start": 3868,
+      "start": 3861
+    },
+    {
+      "end": 4682,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "request",
+      "name_start": 4616,
+      "start": 4603
+    },
+    {
+      "end": 4849,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "cancel",
+      "name_start": 4767,
+      "start": 4760
+    },
+    {
+      "end": 5478,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "resume",
+      "name_start": 5095,
+      "start": 5088
+    },
+    {
+      "end": 5573,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "sequence",
+      "name_start": 5530,
+      "start": 5517
+    },
+    {
+      "end": 5946,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "material",
+      "name_start": 5889,
+      "start": 5876
+    },
+    {
+      "end": 6009,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "context",
+      "name_start": 5962,
+      "start": 5949
+    },
+    {
+      "end": 6314,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "finish",
+      "name_start": 6159,
+      "start": 6152
+    },
+    {
+      "end": 7695,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "receive_rejected",
+      "name_start": 7534,
+      "start": 7531
+    },
+    {
+      "end": 9124,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "begin_receive",
+      "name_start": 7758,
+      "start": 7751
+    },
+    {
+      "end": 9242,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "request",
+      "name_start": 9176,
+      "start": 9163
+    },
+    {
+      "end": 9412,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "cancel",
+      "name_start": 9330,
+      "start": 9323
+    },
+    {
+      "end": 11992,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "resume",
+      "name_start": 9730,
+      "start": 9723
+    },
+    {
+      "end": 12264,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "sequence",
+      "name_start": 12047,
+      "start": 12034
+    },
+    {
+      "end": 13143,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "material",
+      "name_start": 12547,
+      "start": 12540
+    },
+    {
+      "end": 13206,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "context",
+      "name_start": 13159,
+      "start": 13146
+    },
+    {
+      "end": 13375,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "reject",
+      "name_start": 13293,
+      "start": 13286
+    },
+    {
+      "end": 14148,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "finish",
+      "name_start": 13599,
+      "start": 13592
+    },
+    {
+      "end": 14624,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "start_concrete_restore",
+      "name_start": 14344,
+      "start": 14337
+    },
+    {
+      "end": 14830,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "concrete_restore_receive_key",
+      "name_start": 14633,
+      "start": 14626
+    },
+    {
+      "end": 15004,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "finish_concrete_restore",
+      "name_start": 14839,
+      "start": 14832
+    },
+    {
+      "end": 16968,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "begin_receive_advance",
+      "name_start": 15829,
+      "start": 15822
+    },
+    {
+      "end": 17117,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "request",
+      "name_start": 17051,
+      "start": 17038
+    },
+    {
+      "end": 17182,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "cancel",
+      "name_start": 17127,
+      "start": 17120
+    },
+    {
+      "end": 18928,
+      "file": "beaconcrypt-core/src/ratchet/concrete.rs",
+      "name": "resume",
+      "name_start": 17192,
+      "start": 17185
+    },
+    {
+      "end": 932,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "empty",
+      "name_start": 847,
+      "start": 838
+    },
+    {
+      "end": 1246,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "append",
+      "name_start": 938,
+      "start": 935
+    },
+    {
+      "end": 1453,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "entry",
+      "name_start": 1258,
+      "start": 1249
+    },
+    {
+      "end": 2089,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "new",
+      "name_start": 2013,
+      "start": 2000
+    },
+    {
+      "end": 2338,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "from_counters",
+      "name_start": 2175,
+      "start": 2162
+    },
+    {
+      "end": 2407,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "send_sequence",
+      "name_start": 2354,
+      "start": 2341
+    },
+    {
+      "end": 2482,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "receive_sequence",
+      "name_start": 2423,
+      "start": 2410
+    },
+    {
+      "end": 2558,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "receive_cache_len",
+      "name_start": 2498,
+      "start": 2485
+    },
+    {
+      "end": 2721,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "receive_key_at",
+      "name_start": 2637,
+      "start": 2624
+    },
+    {
+      "end": 2798,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "default",
+      "name_start": 2761,
+      "start": 2758
+    },
+    {
+      "end": 3170,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "unavailable",
+      "name_start": 3094,
+      "start": 3074
+    },
+    {
+      "end": 3289,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "sequence",
+      "name_start": 3186,
+      "start": 3173
+    },
+    {
+      "end": 3354,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "is_available",
+      "name_start": 3305,
+      "start": 3292
+    },
+    {
+      "end": 4354,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "advance_send",
+      "name_start": 3945,
+      "start": 3931
+    },
+    {
+      "end": 5009,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "finish_send",
+      "name_start": 4774,
+      "start": 4760
+    },
+    {
+      "end": 6353,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "plan_receive_until",
+      "name_start": 5831,
+      "start": 5817
+    },
+    {
+      "end": 7270,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "advance_receive_target",
+      "name_start": 6921,
+      "start": 6907
+    },
+    {
+      "end": 8316,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "advance_receive",
+      "name_start": 7786,
+      "start": 7772
+    },
+    {
+      "end": 10387,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "lookup_receive_key",
+      "name_start": 9855,
+      "start": 9841
+    },
+    {
+      "end": 10972,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "finish_receive",
+      "name_start": 10702,
+      "start": 10688
+    },
+    {
+      "end": 12255,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "finish_receive_with_removal",
+      "name_start": 11213,
+      "start": 11199
+    },
+    {
+      "end": 12889,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "start_restore",
+      "name_start": 12699,
+      "start": 12686
+    },
+    {
+      "end": 13752,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "restore_receive_key_with_slot",
+      "name_start": 13215,
+      "start": 13208
+    },
+    {
+      "end": 13925,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "restore_receive_key",
+      "name_start": 13761,
+      "start": 13754
+    },
+    {
+      "end": 14014,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "finish_restore",
+      "name_start": 13940,
+      "start": 13927
+    },
+    {
+      "end": 14751,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "replace_ratchet_for_peer",
+      "name_start": 14489,
+      "start": 14482
+    },
+    {
+      "end": 15697,
+      "file": "beaconcrypt-core/src/ratchet/control.rs",
+      "name": "advance_send_for_peer",
+      "name_start": 15270,
+      "start": 15256
+    },
+    {
+      "end": 1820,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "empty_material_slots",
+      "name_start": 1250,
+      "start": 1236
+    },
+    {
+      "end": 4477,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "new",
+      "name_start": 4354,
+      "start": 4347
+    },
+    {
+      "end": 4929,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "from_counters",
+      "name_start": 4634,
+      "start": 4627
+    },
+    {
+      "end": 5008,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "send_sequence",
+      "name_start": 4945,
+      "start": 4932
+    },
+    {
+      "end": 5093,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "receive_sequence",
+      "name_start": 5024,
+      "start": 5011
+    },
+    {
+      "end": 5179,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "receive_cache_len",
+      "name_start": 5109,
+      "start": 5096
+    },
+    {
+      "end": 5250,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "send_chain",
+      "name_start": 5195,
+      "start": 5182
+    },
+    {
+      "end": 5330,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "receive_chain",
+      "name_start": 5266,
+      "start": 5253
+    },
+    {
+      "end": 5940,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "receive_entry_at",
+      "name_start": 5436,
+      "start": 5429
+    },
+    {
+      "end": 10402,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "refined_receive_slots_are_empty",
+      "name_start": 9873,
+      "start": 9859
+    },
+    {
+      "end": 12292,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "prepare_cached_receive",
+      "name_start": 10548,
+      "start": 10534
+    },
+    {
+      "end": 15654,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "receive_control_prefix_matches",
+      "name_start": 15154,
+      "start": 15140
+    },
+    {
+      "end": 16811,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "pending_receive_slots_are_valid",
+      "name_start": 15768,
+      "start": 15754
+    },
+    {
+      "end": 18569,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "pending_receive_is_valid",
+      "name_start": 16981,
+      "start": 16967
+    },
+    {
+      "end": 20937,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "publish_cached_receive",
+      "name_start": 20177,
+      "start": 20163
+    },
+    {
+      "end": 21675,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "publish_future_receive_slots",
+      "name_start": 21051,
+      "start": 21037
+    },
+    {
+      "end": 22639,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "publish_future_receive",
+      "name_start": 21830,
+      "start": 21816
+    },
+    {
+      "end": 25102,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "refined_receive_key",
+      "name_start": 24542,
+      "start": 24528
+    },
+    {
+      "end": 29981,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "start_refined_restore",
+      "name_start": 29600,
+      "start": 29593
+    },
+    {
+      "end": 30627,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "refined_restore_receive_key",
+      "name_start": 30068,
+      "start": 30061
+    },
+    {
+      "end": 31000,
+      "file": "beaconcrypt-core/src/ratchet/refined.rs",
+      "name": "finish_refined_restore",
+      "name_start": 30636,
+      "start": 30629
+    },
+    {
+      "end": 2840,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "from_bytes",
+      "name_start": 2767,
+      "start": 2754
+    },
+    {
+      "end": 2919,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "as_bytes",
+      "name_start": 2856,
+      "start": 2843
+    },
+    {
+      "end": 2991,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "into_bytes",
+      "name_start": 2929,
+      "start": 2922
+    },
+    {
+      "end": 3340,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "from_bytes",
+      "name_start": 3253,
+      "start": 3240
+    },
+    {
+      "end": 3433,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "as_bytes",
+      "name_start": 3356,
+      "start": 3343
+    },
+    {
+      "end": 3519,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "into_bytes",
+      "name_start": 3443,
+      "start": 3436
+    },
+    {
+      "end": 3875,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "from_bytes",
+      "name_start": 3786,
+      "start": 3773
+    },
+    {
+      "end": 3970,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "as_bytes",
+      "name_start": 3891,
+      "start": 3878
+    },
+    {
+      "end": 4058,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "into_bytes",
+      "name_start": 3980,
+      "start": 3973
+    },
+    {
+      "end": 4390,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "from_parts",
+      "name_start": 4307,
+      "start": 4294
+    },
+    {
+      "end": 4624,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "from_bytes",
+      "name_start": 4406,
+      "start": 4393
+    },
+    {
+      "end": 4682,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "key",
+      "name_start": 4640,
+      "start": 4627
+    },
+    {
+      "end": 4746,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "nonce",
+      "name_start": 4698,
+      "start": 4685
+    },
+    {
+      "end": 5307,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "new",
+      "name_start": 5207,
+      "start": 5187
+    },
+    {
+      "end": 5383,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "input",
+      "name_start": 5323,
+      "start": 5310
+    },
+    {
+      "end": 5460,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "info",
+      "name_start": 5399,
+      "start": 5386
+    },
+    {
+      "end": 6091,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "from_bytes",
+      "name_start": 6013,
+      "start": 6000
+    },
+    {
+      "end": 6175,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "as_bytes",
+      "name_start": 6107,
+      "start": 6094
+    },
+    {
+      "end": 6434,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "key",
+      "name_start": 6392,
+      "start": 6379
+    },
+    {
+      "end": 6508,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "next_chain",
+      "name_start": 6450,
+      "start": 6437
+    },
+    {
+      "end": 6572,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "nonce",
+      "name_start": 6524,
+      "start": 6511
+    },
+    {
+      "end": 7169,
+      "file": "beaconcrypt-core/src/ratchet.rs",
+      "name": "split_ratchet_kdf_output",
+      "name_start": 6679,
+      "start": 6672
+    },
+    {
+      "end": 690,
+      "file": "beaconcrypt-core/src/record.rs",
+      "name": "finish_frame_read",
+      "name_start": 542,
+      "start": 535
+    },
+    {
+      "end": 1712,
+      "file": "beaconcrypt-core/src/record.rs",
+      "name": "from_frame",
+      "name_start": 1022,
+      "start": 1015
+    },
+    {
+      "end": 2879,
+      "file": "beaconcrypt-core/src/record.rs",
+      "name": "begin_open",
+      "name_start": 2351,
+      "start": 2344
+    },
+    {
+      "end": 2991,
+      "file": "beaconcrypt-core/src/record.rs",
+      "name": "transcript",
+      "name_start": 2925,
+      "start": 2912
+    },
+    {
+      "end": 3163,
+      "file": "beaconcrypt-core/src/record.rs",
+      "name": "transcript_mut",
+      "name_start": 3081,
+      "start": 3074
+    },
+    {
+      "end": 3272,
+      "file": "beaconcrypt-core/src/record.rs",
+      "name": "supplied_commitment",
+      "name_start": 3179,
+      "start": 3166
+    },
+    {
+      "end": 3625,
+      "file": "beaconcrypt-core/src/record.rs",
+      "name": "resume",
+      "name_start": 3361,
+      "start": 3354
+    },
+    {
+      "end": 4818,
+      "file": "beaconcrypt-core/src/record.rs",
+      "name": "request",
+      "name_start": 4437,
+      "start": 4430
+    },
+    {
+      "end": 5338,
+      "file": "beaconcrypt-core/src/record.rs",
+      "name": "finish",
+      "name_start": 4908,
+      "start": 4901
+    },
+    {
+      "end": 1339,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "new",
+      "name_start": 1057,
+      "start": 1044
+    },
+    {
+      "end": 1835,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "registration",
+      "name_start": 1428,
+      "start": 1421
+    },
+    {
+      "end": 2085,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "plaintext_request",
+      "name_start": 1841,
+      "start": 1838
+    },
+    {
+      "end": 2816,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "begin_record_send",
+      "name_start": 2367,
+      "start": 2360
+    },
+    {
+      "end": 2936,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "request",
+      "name_start": 2861,
+      "start": 2848
+    },
+    {
+      "end": 3014,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "cancel",
+      "name_start": 2946,
+      "start": 2939
+    },
+    {
+      "end": 3144,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "resume",
+      "name_start": 3024,
+      "start": 3017
+    },
+    {
+      "end": 3768,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "reject_send",
+      "name_start": 3651,
+      "start": 3648
+    },
+    {
+      "end": 4321,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "request",
+      "name_start": 4016,
+      "start": 4009
+    },
+    {
+      "end": 4971,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "resume",
+      "name_start": 4331,
+      "start": 4324
+    },
+    {
+      "end": 5445,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "transcript",
+      "name_start": 5379,
+      "start": 5366
+    },
+    {
+      "end": 5537,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "transcript_mut",
+      "name_start": 5455,
+      "start": 5448
+    },
+    {
+      "end": 5910,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "resume",
+      "name_start": 5547,
+      "start": 5540
+    },
+    {
+      "end": 6770,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "request",
+      "name_start": 6372,
+      "start": 6365
+    },
+    {
+      "end": 7272,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "finish",
+      "name_start": 6857,
+      "start": 6850
+    },
+    {
+      "end": 8202,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "begin_record_receive",
+      "name_start": 7805,
+      "start": 7798
+    },
+    {
+      "end": 8830,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "normalize_receive",
+      "name_start": 8207,
+      "start": 8204
+    },
+    {
+      "end": 8953,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "request",
+      "name_start": 8878,
+      "start": 8865
+    },
+    {
+      "end": 9031,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "cancel",
+      "name_start": 8963,
+      "start": 8956
+    },
+    {
+      "end": 9166,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "resume",
+      "name_start": 9041,
+      "start": 9034
+    },
+    {
+      "end": 9298,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "transcript",
+      "name_start": 9223,
+      "start": 9210
+    },
+    {
+      "end": 9398,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "transcript_mut",
+      "name_start": 9308,
+      "start": 9301
+    },
+    {
+      "end": 9508,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "supplied_commitment",
+      "name_start": 9414,
+      "start": 9401
+    },
+    {
+      "end": 9949,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "resume",
+      "name_start": 9587,
+      "start": 9580
+    },
+    {
+      "end": 10061,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "request",
+      "name_start": 9990,
+      "start": 9983
+    },
+    {
+      "end": 10230,
+      "file": "beaconcrypt-core/src/record_effects.rs",
+      "name": "finish",
+      "name_start": 10071,
+      "start": 10064
+    },
+    {
+      "end": 2558,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "from_slices",
+      "name_start": 1741,
+      "start": 1734
+    },
+    {
+      "end": 2785,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "fields",
+      "name_start": 2564,
+      "start": 2561
+    },
+    {
+      "end": 3046,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "begin_server_pin",
+      "name_start": 2893,
+      "start": 2886
+    },
+    {
+      "end": 3156,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 3078,
+      "start": 3071
+    },
+    {
+      "end": 3433,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 3166,
+      "start": 3159
+    },
+    {
+      "end": 4436,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "begin_init_authentication",
+      "name_start": 4049,
+      "start": 4042
+    },
+    {
+      "end": 4543,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 4470,
+      "start": 4463
+    },
+    {
+      "end": 4974,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 4553,
+      "start": 4546
+    },
+    {
+      "end": 5367,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 5137,
+      "start": 5130
+    },
+    {
+      "end": 5898,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 5377,
+      "start": 5370
+    },
+    {
+      "end": 6582,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 6229,
+      "start": 6222
+    },
+    {
+      "end": 7973,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 6592,
+      "start": 6585
+    },
+    {
+      "end": 8229,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 8133,
+      "start": 8126
+    },
+    {
+      "end": 8702,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 8239,
+      "start": 8232
+    },
+    {
+      "end": 8996,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 8900,
+      "start": 8893
+    },
+    {
+      "end": 9451,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 9006,
+      "start": 8999
+    },
+    {
+      "end": 9696,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "registration_id",
+      "name_start": 9585,
+      "start": 9578
+    },
+    {
+      "end": 9812,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "into_parts",
+      "name_start": 9713,
+      "start": 9699
+    },
+    {
+      "end": 10731,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "from_slices",
+      "name_start": 10040,
+      "start": 10033
+    },
+    {
+      "end": 11019,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "server_key_id",
+      "name_start": 10956,
+      "start": 10943
+    },
+    {
+      "end": 11138,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "aborted_state",
+      "name_start": 11034,
+      "start": 11021
+    },
+    {
+      "end": 11242,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "abort",
+      "name_start": 11147,
+      "start": 11140
+    },
+    {
+      "end": 12109,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "begin_response_authentication",
+      "name_start": 11399,
+      "start": 11392
+    },
+    {
+      "end": 12267,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 12147,
+      "start": 12140
+    },
+    {
+      "end": 12670,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 12277,
+      "start": 12270
+    },
+    {
+      "end": 13094,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 12858,
+      "start": 12851
+    },
+    {
+      "end": 13353,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 13104,
+      "start": 13097
+    },
+    {
+      "end": 13734,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "into_parts",
+      "name_start": 13505,
+      "start": 13491
+    },
+    {
+      "end": 14585,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "fields",
+      "name_start": 14346,
+      "start": 14343
+    },
+    {
+      "end": 15769,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "begin_beacon_init",
+      "name_start": 14856,
+      "start": 14849
+    },
+    {
+      "end": 16308,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 15893,
+      "start": 15886
+    },
+    {
+      "end": 17488,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 16318,
+      "start": 16311
+    },
+    {
+      "end": 17670,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 17584,
+      "start": 17577
+    },
+    {
+      "end": 18198,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 17680,
+      "start": 17673
+    },
+    {
+      "end": 18437,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 18364,
+      "start": 18357
+    },
+    {
+      "end": 18834,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 18447,
+      "start": 18440
+    },
+    {
+      "end": 19241,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 19047,
+      "start": 19040
+    },
+    {
+      "end": 19790,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 19251,
+      "start": 19244
+    },
+    {
+      "end": 20190,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "message",
+      "name_start": 20063,
+      "start": 20056
+    },
+    {
+      "end": 20590,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "publish",
+      "name_start": 20200,
+      "start": 20193
+    },
+    {
+      "end": 20816,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "into_parts",
+      "name_start": 20736,
+      "start": 20729
+    },
+    {
+      "end": 21233,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "begin_beacon_completion",
+      "name_start": 20965,
+      "start": 20958
+    },
+    {
+      "end": 21372,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 21281,
+      "start": 21268
+    },
+    {
+      "end": 22037,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 21382,
+      "start": 21375
+    },
+    {
+      "end": 23453,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "normalize_beacon_open",
+      "name_start": 22653,
+      "start": 22650
+    },
+    {
+      "end": 23591,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 23500,
+      "start": 23487
+    },
+    {
+      "end": 23993,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 23601,
+      "start": 23594
+    },
+    {
+      "end": 24143,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "transcript",
+      "name_start": 24049,
+      "start": 24036
+    },
+    {
+      "end": 24270,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "transcript_mut",
+      "name_start": 24153,
+      "start": 24146
+    },
+    {
+      "end": 24395,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "supplied_commitment",
+      "name_start": 24286,
+      "start": 24273
+    },
+    {
+      "end": 24599,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 24405,
+      "start": 24398
+    },
+    {
+      "end": 24725,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 24639,
+      "start": 24632
+    },
+    {
+      "end": 25975,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "finish",
+      "name_start": 24818,
+      "start": 24811
+    },
+    {
+      "end": 26430,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "into_parts",
+      "name_start": 26211,
+      "start": 26204
+    },
+    {
+      "end": 27466,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "begin_server_completion",
+      "name_start": 26638,
+      "start": 26631
+    },
+    {
+      "end": 27749,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 27658,
+      "start": 27645
+    },
+    {
+      "end": 28722,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 27759,
+      "start": 27752
+    },
+    {
+      "end": 28971,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 28880,
+      "start": 28867
+    },
+    {
+      "end": 29367,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 28981,
+      "start": 28974
+    },
+    {
+      "end": 29588,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 29512,
+      "start": 29505
+    },
+    {
+      "end": 30055,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 29598,
+      "start": 29591
+    },
+    {
+      "end": 30370,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "transcript",
+      "name_start": 30276,
+      "start": 30263
+    },
+    {
+      "end": 30489,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "transcript_mut",
+      "name_start": 30380,
+      "start": 30373
+    },
+    {
+      "end": 30923,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 30499,
+      "start": 30492
+    },
+    {
+      "end": 31176,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 31097,
+      "start": 31090
+    },
+    {
+      "end": 32470,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 31186,
+      "start": 31179
+    },
+    {
+      "end": 32883,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 32771,
+      "start": 32764
+    },
+    {
+      "end": 33395,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 32893,
+      "start": 32886
+    },
+    {
+      "end": 33886,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "request",
+      "name_start": 33678,
+      "start": 33671
+    },
+    {
+      "end": 34426,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "resume",
+      "name_start": 33896,
+      "start": 33889
+    },
+    {
+      "end": 35308,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "message",
+      "name_start": 34953,
+      "start": 34946
+    },
+    {
+      "end": 35845,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "publish",
+      "name_start": 35318,
+      "start": 35311
+    },
+    {
+      "end": 36309,
+      "file": "beaconcrypt-core/src/registration.rs",
+      "name": "into_parts",
+      "name_start": 36101,
+      "start": 36094
+    },
+    {
+      "end": 1107,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "new",
+      "name_start": 921,
+      "start": 908
+    },
+    {
+      "end": 1174,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "binding",
+      "name_start": 1123,
+      "start": 1110
+    },
+    {
+      "end": 1262,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "public_key",
+      "name_start": 1190,
+      "start": 1177
+    },
+    {
+      "end": 1351,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "fingerprint",
+      "name_start": 1278,
+      "start": 1265
+    },
+    {
+      "end": 2502,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "new",
+      "name_start": 1972,
+      "start": 1965
+    },
+    {
+      "end": 2587,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "init_hash",
+      "name_start": 2518,
+      "start": 2505
+    },
+    {
+      "end": 2672,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "server_pin",
+      "name_start": 2603,
+      "start": 2590
+    },
+    {
+      "end": 2770,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "associated_data",
+      "name_start": 2688,
+      "start": 2675
+    },
+    {
+      "end": 3199,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "matches_server",
+      "name_start": 2852,
+      "start": 2845
+    },
+    {
+      "end": 3645,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "finish",
+      "name_start": 3295,
+      "start": 3282
+    },
+    {
+      "end": 4889,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "from_trusted_metadata",
+      "name_start": 4307,
+      "start": 4300
+    },
+    {
+      "end": 4970,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "server_binding",
+      "name_start": 4905,
+      "start": 4892
+    },
+    {
+      "end": 5043,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "assigned_key_id",
+      "name_start": 4986,
+      "start": 4973
+    },
+    {
+      "end": 5163,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "beacon_identity_public_key",
+      "name_start": 5059,
+      "start": 5046
+    },
+    {
+      "end": 5266,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "server_fingerprint",
+      "name_start": 5179,
+      "start": 5166
+    },
+    {
+      "end": 5369,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "beacon_fingerprint",
+      "name_start": 5282,
+      "start": 5269
+    },
+    {
+      "end": 5467,
+      "file": "beaconcrypt-core/src/session.rs",
+      "name": "associated_data",
+      "name_start": 5385,
+      "start": 5372
+    },
+    {
+      "end": 810,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "complete_message_size_admitted",
+      "name_start": 725,
+      "start": 712
+    },
+    {
+      "end": 1077,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "argument_len",
+      "name_start": 898,
+      "start": 885
+    },
+    {
+      "end": 1266,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "new",
+      "name_start": 1147,
+      "start": 1144
+    },
+    {
+      "end": 1437,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "integer",
+      "name_start": 1272,
+      "start": 1269
+    },
+    {
+      "end": 1719,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "bytes",
+      "name_start": 1443,
+      "start": 1440
+    },
+    {
+      "end": 1873,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "finish",
+      "name_start": 1725,
+      "start": 1722
+    },
+    {
+      "end": 2156,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "encoded_frame_len",
+      "name_start": 1965,
+      "start": 1958
+    },
+    {
+      "end": 2459,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "encoded_init_len",
+      "name_start": 2244,
+      "start": 2237
+    },
+    {
+      "end": 2796,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "encoded_response_len",
+      "name_start": 2548,
+      "start": 2541
+    },
+    {
+      "end": 3172,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "protected_frame_len",
+      "name_start": 2890,
+      "start": 2883
+    },
+    {
+      "end": 3779,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "registration_response_len",
+      "name_start": 3259,
+      "start": 3252
+    },
+    {
+      "end": 4283,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "admit_frame",
+      "name_start": 4059,
+      "start": 4052
+    },
+    {
+      "end": 4714,
+      "file": "beaconcrypt-core/src/transport.rs",
+      "name": "normalize_registration_application",
+      "name_start": 4464,
+      "start": 4457
+    }
+  ],
+  "schema": 1,
+  "source_sha256": {
+    "beaconcrypt-core/src/agreement.rs": "cea8e603c7943f18ba79f95743cc113e3d16e8589c3614240b542ee3ac1109de",
+    "beaconcrypt-core/src/authentication.rs": "794db37d54728df926e9c5f150ded8734eb7521d5781fa3fc4e2f4b2c1f5d1ef",
+    "beaconcrypt-core/src/commitment.rs": "44bd939e02cbfd02671142fae08b83e9e971b8955c6a84c04cc309c17c087a48",
+    "beaconcrypt-core/src/constants.rs": "748979a5b3b340b692bc10a687a27250ef5e6e2a67d43876a32585177226ef0a",
+    "beaconcrypt-core/src/lib.rs": "f32716d2a108cdc1782274bd82cac40bbd70f36e50835e7d09cc31b94e167958",
+    "beaconcrypt-core/src/peer.rs": "df4b0fc85a7a303f56908b13a4d90fb7d9233601040b43e035a99d341bd757bc",
+    "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018",
+    "beaconcrypt-core/src/pqxdh/concrete.rs": "b3a22f8a7c4adb087e217d58e2d302a057fd5ae224cd8fe2c44777472e469c50",
+    "beaconcrypt-core/src/ratchet.rs": "3ed4d65ed1a63605819f8e685707d47b718a91ea9ee23069da88501c8031fa51",
+    "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
+    "beaconcrypt-core/src/ratchet/control.rs": "6c17cc0dbe7445be04dc3ab123a60ecbf3d757da6337a7132d5dafd3e06f5639",
+    "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
+    "beaconcrypt-core/src/record.rs": "530f820ec1998cb60ce9f2d6666f33feabcfcc597fd06997d1272d3abba9edc0",
+    "beaconcrypt-core/src/record_effects.rs": "dbdf79661a17c8d8c128ff349a7efe906d6713912e5510c9a0476b0c3efad2b5",
+    "beaconcrypt-core/src/registration.rs": "fb6f679499585a9d9976abaea31f8dbd8f68f53f6c0f1deb7462ee393acf9f25",
+    "beaconcrypt-core/src/session.rs": "3779c778ce4f8ec534c2fa610c0a334302ada76fc5cd601ade575802ff9c07c4",
+    "beaconcrypt-core/src/transport.rs": "bc3f347f251cb07e44c47699c6fa3db4c9ae8b73c6d1d54c6f9eb54911a463a9"
+  }
+}

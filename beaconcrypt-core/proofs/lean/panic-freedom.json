@@ -1159,6 +1159,21 @@
     "module": "BeaconcryptCore.PanicFreedom.Structural",
     "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_concrete_ConcreteRatchetKernel_send_sequence_total"
   },
+  "ratchet.concrete.ReceiveAdvanceKdf.cancel": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.TestUtils",
+    "theorem": "beaconcrypt_core.ratchet.concrete.ReceiveAdvanceKdf.cancel_total"
+  },
+  "ratchet.concrete.ReceiveAdvanceKdf.impl.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.TestUtils",
+    "theorem": "beaconcrypt_core.ratchet.concrete.ReceiveAdvanceKdf.request_total"
+  },
+  "ratchet.concrete.ReceiveAdvanceKdf.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.TestUtils",
+    "theorem": "beaconcrypt_core.ratchet.concrete.ReceiveAdvanceKdf.resume_total"
+  },
   "ratchet.concrete.ReceiveKdf.cancel": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Trivial",
@@ -1243,6 +1258,11 @@
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Effects",
     "theorem": "beaconcrypt_core.ratchet.concrete.begin_receive_total"
+  },
+  "ratchet.concrete.begin_receive_advance": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.TestUtils",
+    "theorem": "beaconcrypt_core.ratchet.concrete.begin_receive_advance_total"
   },
   "ratchet.concrete.begin_send": {
     "form": "exists",

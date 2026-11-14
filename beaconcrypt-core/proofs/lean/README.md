@@ -40,7 +40,7 @@ nix --extra-experimental-features 'nix-command flakes' \
   develop --no-update-lock-file 'path:..#proofs'
 ```
 
-The generated Lean project lives under:
+The Lean project and its ignored local LLBC intermediate live under:
 
 ```text
 proofs/lean/
@@ -48,6 +48,7 @@ proofs/lean/
 ├── apply-dependency-patches.sh            # verifies and applies reviewed Lean 4.35.0 overlays
 ├── lakefile.toml
 ├── lean-toolchain
+├── source-coverage.json                  # tracked source/extraction coverage receipt
 ├── patches/
 │   ├── README.md
 │   ├── aeneas-lean-4.35.patch
@@ -116,7 +117,7 @@ proofs/lean/
 │   │   └── VCVioFeasibility.lean         # bounded-ROM and private-state feasibility pilot
 │   └── Verification/
 │       └── ProofObligations.lean         # maintained proof entry point
-└── llbc/
+└── llbc/                                # ignored local extraction intermediate
     └── beaconcrypt_core.llbc
 ```
 
@@ -126,13 +127,16 @@ proofs/lean/
 
 ### Extract the Lean model
 
-The default production core is first-order at its cryptographic boundary and is translated without Charon module exclusions:
+The production core is first-order at its cryptographic boundary and is translated without Charon module exclusions, with `test-utils` enabled to include the additional receive-advance interface:
 
 ```bash
-cargo hax -C --locked ';' into lean
+cargo hax -C --locked ';' into lean \
+  --charon-args="--rustc-arg='--cfg=feature=\"test-utils\"'"
 ```
 
-This command uses the cargo-hax 0.4.2 extraction path, including `ratchet::control`, `ratchet::refined`, the production `ratchet::concrete` effect phases, deterministic PQXDH logic, the `pqxdh::concrete` initial-KDF phases, and the `authentication` transcript constructors. The current extraction uses 281-byte associated data and a 357-byte CTX preimage. Translation coverage is not theorem coverage: successful extraction shows that Charon and Aeneas accepted the Rust source, while the prepared Lean build checks the generated definitions and imported handwritten files. A refinement theorem is still needed before a newly translated transition can be called verified against the handwritten ideal model.
+The pinned Hax Lean backend does not forward global Cargo feature arguments to its nested Charon invocation. The maintained command supplies `--cfg=feature="test-utils"` directly to Charon's rustc arguments. The `test-utils` Cargo feature is empty, so this enables its entire conditional library interface without omitting any dependency activation. The coverage receipt pins this third rustc argument alongside `hax_compilation` and `hax_backend_lean`.
+
+For maintained extraction and coverage-receipt generation, run `make extract-lean`; its hax step uses the cargo-hax 0.4.2 extraction path, including `ratchet::control`, `ratchet::refined`, the production `ratchet::concrete` effect phases, deterministic PQXDH logic, the `pqxdh::concrete` initial-KDF phases, and the `authentication` transcript constructors. The current extraction uses 281-byte associated data and a 357-byte CTX preimage. Translation coverage is not theorem coverage: successful extraction shows that Charon and Aeneas accepted the Rust source, while the prepared Lean build checks the generated definitions and imported handwritten files. A refinement theorem is still needed before a newly translated transition can be called verified against the handwritten ideal model.
 
 The transcript refinements in `TranscriptAuth.lean`, `TranscriptAuthInputs.lean` and `TranscriptAuthParts.lean` use the global `beaconcrypt_core.authentication` namespace. The six isolated `AuthenticationExtraction/` files remain a pinned regeneration check; the maintained root does not import this second generated copy, avoiding a duplicate generated root instance. Deterministic PQXDH construction preserves the original 153-byte AD prefix and appends 128 zero bytes. The separate authenticated overwrite replaces those slots with two 64-byte ML-key fingerprints. Exact byte-construction refinements cover both operations, but the higher-level core composition still uses the zero-filled AD; it does not globally compose the adapter's ML verification and bound fingerprints. All verification stages passed across the original locked run and a locked Lean/inventory retry after resource-related thread-creation failures. The [audit repair record](https://github.com/0xd6cb6d73/beaconcrypt/blob/e9f5048b8e27144ef3648aa06b09bd063baa38d7/doc/impl/mldsa-audit-fixes.md) distinguishes the original command's nonzero exit from the successful 5,639-job Lean build and inventory retry.
 
@@ -214,7 +218,7 @@ To check that the extraction is reproducible from generated state:
 rm -rf proofs/lean/llbc
 rm -rf proofs/lean/.lake/build
 
-cargo hax -C --locked ';' into lean
+make extract-lean
 
 make check-lean
 ```
@@ -232,12 +236,14 @@ LEAN_DIR := proofs/lean
 
 extract-lean:
 	rm -rf $(LEAN_DIR)/llbc
-	cargo hax -C --locked ';' into lean
+	cargo hax -C --locked ';' into lean \
+		--charon-args="--rustc-arg='--cfg=feature=\"test-utils\"'"
+	python3 ../scripts/check_core_source_coverage.py --write
 
 prepare-lean-dependencies:
 	bash $(LEAN_DIR)/apply-dependency-patches.sh
 
-check-lean: prepare-lean-dependencies check-lean-policy check-lean-root
+check-lean: prepare-lean-dependencies check-lean-policy check-lean-root check-lean-panic-freedom
 	cd $(LEAN_DIR) && lake --rehash build
 
 verify-lean:
@@ -472,6 +478,8 @@ beaconcrypt-core
 ├── agreement                  extracted
 ├── authentication             extracted
 ├── commitment                 extracted
+├── constants                  extracted
+├── peer                       extracted
 ├── pqxdh                      extracted
 │   └── concrete               extracted
 ├── ratchet
@@ -481,16 +489,25 @@ beaconcrypt-core
 ├── record                     extracted
 ├── record_effects             extracted
 ├── registration               extracted
-└── session                    extracted
+├── session                    extracted
+└── transport                  extracted
 ```
 
-“Extracted” here means translated by Charon/Aeneas. The maintained root additionally checks all 463 unconditional panic-freedom contracts, exact phase semantics, complete cached and future publication, finite send/receive driver composition, structural validity and replay properties, conditional ideal and paired-session preservation, and generic plus conditional canonical restoration. Structural theorems need only valid control/material alignment; ideal provenance theorems state their stronger chain/key assumptions explicitly. The primitive, adapter, compiler, and persistence boundaries above remain external.
+“Extracted” here means translated by Charon/Aeneas. The maintained root additionally checks all 467 unconditional panic-freedom contracts, exact phase semantics, complete cached and future publication, finite send/receive driver composition, structural validity and replay properties, conditional ideal and paired-session preservation, and generic plus conditional canonical restoration. Structural theorems need only valid control/material alignment; ideal provenance theorems state their stronger chain/key assumptions explicitly. The primitive, adapter, compiler, and persistence boundaries above remain external.
 
 Any change that reintroduces higher-order executor plumbing or unsupported mutable-array operations should be expected to require source-level normalization. Reintroducing exclusions would reduce production coverage and must be documented as a trust-boundary regression rather than treated as a routine extractor workaround.
 
 ## Extracted-core panic freedom
 
-`BeaconcryptCore.PanicFreedom.API` contains normal-return certificates for all 463 non-helper `RustM` operations in the current default extraction, universally over their complete typed inputs. The item 3 surface retained 387 of its preceding checkpoint’s 391 operations, added 27 record-effect operations and 16 composed registration operations, and retired four complete-record callbacks. Item 4 adds 20 peer ownership and collection-effect operations, and item 5 adds 13 transport admission and sizing operations, with no further retired operation. The generated parser remains unchanged; the native normalization byte view is an explicit representation interpreter. The generated contracts have no state-validity or faithful-response premises. Their manifest is `panic-freedom.json`; regenerate the aggregate module with `python3 scripts/check_lean_panic_freedom.py --write` from the repository root after reviewing an extraction change. `make -C beaconcrypt-core check-lean` checks coverage, signatures, checker regressions, policy, and compilation. The current baseline still pins twelve reviewed model files, including the HB-88 response-encoding witness, HB-95 sequence-one transition and admission theorem, and additive ML-DSA transcript byte model. The audit migration changes `Pqxdh/Kdf.lean`, `Commit.lean` and `InstanceCommit.lean` to the current AD281/CTX357 layout; the remaining nine files are unchanged. The reviewed aggregate digest is `c7acbc9e3aa1b262a31fdcc68838de236bd6f52294e8e53f5ee9c3134f917518`. The transcript model retains its 19 guarded facts, and the migration adds no cryptographic axiom or weaker certificate premise. The earlier 279-operation build receipt is historical; the new coordinated validation results are recorded separately in the audit repair record.
+`BeaconcryptCore.PanicFreedom.API` contains normal-return certificates for all 467 non-helper `RustM` operations in the current extraction with `test-utils` enabled, universally over their complete typed inputs. The previous default extraction covered 463 operations; the expanded extraction additionally covers `begin_receive_advance` and `ReceiveAdvanceKdf::{request,cancel,resume}`. Its contracts have no state-validity or faithful-response premises, and an ordinary rejected operation still returns normally. Generated loops and closures are proved through the enclosing computations; pure constants and trait dictionaries are classified separately.
+
+The source gate checks all 388 handwritten runtime function spans in the seventeen core source files against the tracked `source-coverage.json` receipt and current Lean definitions, including source and extraction hashes. `make extract-lean` regenerates this receipt from validated LLBC source spans after running hax. The `llbc/` directory remains an ignored local intermediate. This closes the gap between the handwritten source inventory and the operation inventory; a manifest covering only existing generated definitions cannot detect a source function omitted during extraction. Unit-test bodies are excluded from the library inventory; compile-time assertions are checked during compilation. New external callable reexports and public function-pointer constants/statics require explicit review rather than bypassing the source-function inventory. The `proverif` feature supplies extraction annotations and termination measures rather than another runtime algorithm cohort.
+
+Their certificate manifest is `panic-freedom.json`; regenerate the aggregate module with `python3 scripts/check_lean_panic_freedom.py --write` from the repository root after reviewing an extraction change. Use `make -C beaconcrypt-core extract-lean` for maintained extraction and receipt generation. `make -C beaconcrypt-core check-lean` checks source coverage, exact generated signatures, checker regressions, policy, transitive certificate dependencies, and compilation. The aggregate dependency audit permits only Lean's `propext`, `Classical.choice`, and `Quot.sound` foundations.
+
+Native-only `Debug`, `Eq`, `PartialEq`, `Zeroize`, and `ZeroizeOnDrop` derives suppressed by `hax_compilation` are recorded explicitly as translation and native-library boundaries. Native drops and zeroization, arbitrary destructors of opaque generic values, and caller-supplied formatting implementations are not executed by the extracted proof. Their native behavior can therefore impose an additional normal-return obligation. The extraction/standard-library models, compiler correspondence, runtime and allocation behavior, external primitive/adapter execution, and physical erasure remain trusted boundaries.
+
+The current baseline still pins twelve reviewed model files, including the HB-88 response-encoding witness, HB-95 sequence-one transition and admission theorem, and additive ML-DSA transcript byte model. The earlier audit migration changed `Pqxdh/Kdf.lean`, `Commit.lean`, and `InstanceCommit.lean` to AD281/CTX357; the whole-core coverage audit does not change those ideal models or add a cryptographic premise. The reviewed aggregate digest remains `c7acbc9e3aa1b262a31fdcc68838de236bd6f52294e8e53f5ee9c3134f917518`. Earlier operation counts and successful build receipts apply to their named revisions. The current audit and its revision-specific validation receipt are recorded in `var/formal-verification-analysis.md` at the repository root.
 
 See [the historical F* declaration comparison](https://github.com/0xd6cb6d73/beaconcrypt/blob/e9f5048b8e27144ef3648aa06b09bd063baa38d7/doc/impl/ratchet-fstar-coverage.md). Runtime/compiler correspondence and adapter or primitive panics remain outside the extracted-core guarantee.
 
